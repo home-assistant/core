@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[select.mock_classicvario_filter_mode-entry]
+# name: test_setup[select.mock_aquarium_mock_classicvario_filter_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_classicvario_filter_mode',
+    'entity_id': 'select.mock_aquarium_mock_classicvario_filter_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -42,7 +42,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[select.mock_classicvario_filter_mode-state]
+# name: test_setup[select.mock_aquarium_mock_classicvario_filter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Filter mode',
@@ -53,14 +53,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_classicvario_filter_mode',
+    'entity_id': 'select.mock_aquarium_mock_classicvario_filter_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_constant_flow_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_constant_flow_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -92,7 +92,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_constant_flow_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_constant_flow_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -115,7 +115,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
-# name: test_setup[select.mock_filter_constant_flow_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_constant_flow_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Constant flow speed',
@@ -139,14 +139,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_constant_flow_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_constant_flow_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_day_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_day_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -178,7 +178,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_day_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_day_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -201,7 +201,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
-# name: test_setup[select.mock_filter_day_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_day_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Day speed',
@@ -225,14 +225,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_day_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_day_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_filter_mode-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_filter_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -253,7 +253,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_filter_mode',
+    'entity_id': 'select.mock_aquarium_mock_filter_filter_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -276,7 +276,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[select.mock_filter_filter_mode-state]
+# name: test_setup[select.mock_aquarium_mock_filter_filter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Filter mode',
@@ -288,14 +288,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_filter_mode',
+    'entity_id': 'select.mock_aquarium_mock_filter_filter_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_high_pulse_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_high_pulse_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -327,7 +327,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_high_pulse_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_high_pulse_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -350,7 +350,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
-# name: test_setup[select.mock_filter_high_pulse_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_high_pulse_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter High pulse speed',
@@ -374,14 +374,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_high_pulse_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_high_pulse_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_low_pulse_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_low_pulse_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -413,7 +413,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_low_pulse_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_low_pulse_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -436,7 +436,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
-# name: test_setup[select.mock_filter_low_pulse_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_low_pulse_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Low pulse speed',
@@ -460,14 +460,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_low_pulse_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_low_pulse_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_manual_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_manual_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -499,7 +499,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_manual_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_manual_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -522,7 +522,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_setup[select.mock_filter_manual_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_manual_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Manual speed',
@@ -546,14 +546,14 @@
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_manual_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_manual_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_filter_night_speed-entry]
+# name: test_setup[select.mock_aquarium_mock_filter_night_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -585,7 +585,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_filter_night_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_night_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -608,7 +608,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
   })
 # ---
-# name: test_setup[select.mock_filter_night_speed-state]
+# name: test_setup[select.mock_aquarium_mock_filter_night_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter Night speed',
@@ -632,14 +632,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_filter_night_speed',
+    'entity_id': 'select.mock_aquarium_mock_filter_night_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[select.mock_reeflex_operation_mode-entry]
+# name: test_setup[select.mock_aquarium_mock_reeflex_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -658,7 +658,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_reeflex_operation_mode',
+    'entity_id': 'select.mock_aquarium_mock_reeflex_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -681,7 +681,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[select.mock_reeflex_operation_mode-state]
+# name: test_setup[select.mock_aquarium_mock_reeflex_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex Operation mode',
@@ -691,7 +691,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_reeflex_operation_mode',
+    'entity_id': 'select.mock_aquarium_mock_reeflex_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

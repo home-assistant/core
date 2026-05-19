@@ -56,7 +56,9 @@ async def test_dynamic_entities(
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
-    assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
+    assert hass.states.get(
+        "number.mock_aquarium_mock_heater_night_temperature_offset"
+    ).state == str(
         eheimdigital_hub_mock.return_value.devices[
             "00:00:00:00:00:02"
         ].night_temperature_offset

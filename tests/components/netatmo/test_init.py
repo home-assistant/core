@@ -158,7 +158,7 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
 
     # Assert webhook is established successfully
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -546,7 +546,7 @@ async def test_device_remove_devices(
 
         await hass.async_block_till_done()
 
-    climate_entity_livingroom = "climate.livingroom"
+    climate_entity_livingroom = "climate.livingroom_livingroom"
     entity = entity_registry.async_get(climate_entity_livingroom)
 
     device_entry = device_registry.async_get(entity.device_id)

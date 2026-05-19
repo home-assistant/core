@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fan_setup[fan.test_fan-entry]
+# name: test_fan_setup[fan.test_area_test_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.test_fan',
+    'entity_id': 'fan.test_area_test_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,7 +38,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_setup[fan.test_fan-state]
+# name: test_fan_setup[fan.test_area_test_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Fan',
@@ -49,7 +49,7 @@
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.test_fan',
+    'entity_id': 'fan.test_area_test_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -36,7 +36,7 @@ from . import fire_hub_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-CLIMATE_ENTITY = "climate.living_room"
+CLIMATE_ENTITY = "climate.living_room_living_room"
 
 
 @pytest.fixture

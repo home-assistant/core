@@ -2244,6 +2244,61 @@ async def test_entity_name_influences_entity_id(
     assert entity_registry.async_get(expected_entity_id) is not None
 
 
+async def test_area_influences_entity_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is influenced by the device's area."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_create("Living Room")
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "abcd")},
+        identifiers={("hue", "1234")},
+        name="Device Bla",
+    )
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=True,
+                    name="Entity Blu",
+                ),
+            ],
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert (
+        entity_registry.async_get("test_domain.living_room_device_bla_entity_blu")
+        is not None
+    )
+
+
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "expected_entity_id"),
     [

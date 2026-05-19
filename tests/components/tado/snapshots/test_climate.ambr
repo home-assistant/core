@@ -93,7 +93,7 @@
     }),
   )
 # ---
-# name: test_entities[climate.air_conditioning-entry]
+# name: test_entities[climate.air_conditioning_air_conditioning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.air_conditioning',
+    'entity_id': 'climate.air_conditioning_air_conditioning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,7 +154,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.air_conditioning-state]
+# name: test_entities[climate.air_conditioning_air_conditioning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 60.9,
@@ -194,14 +194,14 @@
       'temperature': 17.8,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.air_conditioning',
+    'entity_id': 'climate.air_conditioning_air_conditioning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
   })
 # ---
-# name: test_entities[climate.air_conditioning_with_fanlevel-entry]
+# name: test_entities[climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -245,7 +245,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.air_conditioning_with_fanlevel',
+    'entity_id': 'climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -268,7 +268,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.air_conditioning_with_fanlevel-state]
+# name: test_entities[climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 70.9,
@@ -313,14 +313,14 @@
       'temperature': 25.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.air_conditioning_with_fanlevel',
+    'entity_id': 'climate.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
 # ---
-# name: test_entities[climate.air_conditioning_with_swing-entry]
+# name: test_entities[climate.air_conditioning_with_swing_air_conditioning_with_swing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.air_conditioning_with_swing',
+    'entity_id': 'climate.air_conditioning_with_swing_air_conditioning_with_swing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -385,7 +385,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.air_conditioning_with_swing-state]
+# name: test_entities[climate.air_conditioning_with_swing_air_conditioning_with_swing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 42.3,
@@ -430,14 +430,14 @@
       'temperature': 20.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.air_conditioning_with_swing',
+    'entity_id': 'climate.air_conditioning_with_swing_air_conditioning_with_swing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entities[climate.baseboard_heater-entry]
+# name: test_entities[climate.baseboard_heater_baseboard_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -465,7 +465,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.baseboard_heater',
+    'entity_id': 'climate.baseboard_heater_baseboard_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -488,7 +488,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.baseboard_heater-state]
+# name: test_entities[climate.baseboard_heater_baseboard_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 45.2,
@@ -517,7 +517,7 @@
       'temperature': 20.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.baseboard_heater',
+    'entity_id': 'climate.baseboard_heater_baseboard_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

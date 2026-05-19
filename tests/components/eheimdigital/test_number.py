@@ -54,19 +54,19 @@ async def test_setup(
             "heater_mock",
             [
                 (
-                    "number.mock_heater_temperature_offset",
+                    "number.mock_aquarium_mock_heater_temperature_offset",
                     0.4,
                     "offset",
                     4,
                 ),
                 (
-                    "number.mock_heater_night_temperature_offset",
+                    "number.mock_aquarium_mock_heater_night_temperature_offset",
                     0.4,
                     "nReduce",
                     4,
                 ),
                 (
-                    "number.mock_heater_system_led_brightness",
+                    "number.mock_aquarium_mock_heater_system_led_brightness",
                     20,
                     "sysLED",
                     20,
@@ -77,25 +77,25 @@ async def test_setup(
             "classic_vario_mock",
             [
                 (
-                    "number.mock_classicvario_manual_speed",
+                    "number.mock_aquarium_mock_classicvario_manual_speed",
                     72.1,
                     "rel_manual_motor_speed",
                     int(72.1),
                 ),
                 (
-                    "number.mock_classicvario_day_speed",
+                    "number.mock_aquarium_mock_classicvario_day_speed",
                     72.1,
                     "rel_motor_speed_day",
                     int(72.1),
                 ),
                 (
-                    "number.mock_classicvario_night_speed",
+                    "number.mock_aquarium_mock_classicvario_night_speed",
                     72.1,
                     "rel_motor_speed_night",
                     int(72.1),
                 ),
                 (
-                    "number.mock_classicvario_system_led_brightness",
+                    "number.mock_aquarium_mock_classicvario_system_led_brightness",
                     20,
                     "sysLED",
                     20,
@@ -106,13 +106,13 @@ async def test_setup(
             "filter_mock",
             [
                 (
-                    "number.mock_filter_low_pulse_duration",
+                    "number.mock_aquarium_mock_filter_low_pulse_duration",
                     20,
                     "time_low",
                     20,
                 ),
                 (
-                    "number.mock_filter_high_pulse_duration",
+                    "number.mock_aquarium_mock_filter_high_pulse_duration",
                     20,
                     "time_high",
                     20,
@@ -123,25 +123,25 @@ async def test_setup(
             "reeflex_mock",
             [
                 (
-                    "number.mock_reeflex_daily_burn_duration",
+                    "number.mock_aquarium_mock_reeflex_daily_burn_duration",
                     20,
                     "dailyBurnTime",
                     20,
                 ),
                 (
-                    "number.mock_reeflex_booster_duration",
+                    "number.mock_aquarium_mock_reeflex_booster_duration",
                     20,
                     "boosterTime",
                     20,
                 ),
                 (
-                    "number.mock_reeflex_pause_duration",
+                    "number.mock_aquarium_mock_reeflex_pause_duration",
                     20,
                     "pauseTime",
                     20,
                 ),
                 (
-                    "number.mock_reeflex_system_led_brightness",
+                    "number.mock_aquarium_mock_reeflex_system_led_brightness",
                     20,
                     "sysLED",
                     20,
@@ -186,21 +186,21 @@ async def test_set_value(
             "heater_mock",
             [
                 (
-                    "number.mock_heater_temperature_offset",
+                    "number.mock_aquarium_mock_heater_temperature_offset",
                     "heater_data",
                     "offset",
                     -11,
                     -1.1,
                 ),
                 (
-                    "number.mock_heater_night_temperature_offset",
+                    "number.mock_aquarium_mock_heater_night_temperature_offset",
                     "heater_data",
                     "nReduce",
                     -23,
                     -2.3,
                 ),
                 (
-                    "number.mock_heater_system_led_brightness",
+                    "number.mock_aquarium_mock_heater_system_led_brightness",
                     "usrdta",
                     "sysLED",
                     87,
@@ -212,28 +212,28 @@ async def test_set_value(
             "classic_vario_mock",
             [
                 (
-                    "number.mock_classicvario_manual_speed",
+                    "number.mock_aquarium_mock_classicvario_manual_speed",
                     "classic_vario_data",
                     "rel_manual_motor_speed",
                     34,
                     34,
                 ),
                 (
-                    "number.mock_classicvario_day_speed",
+                    "number.mock_aquarium_mock_classicvario_day_speed",
                     "classic_vario_data",
                     "rel_motor_speed_day",
                     72,
                     72,
                 ),
                 (
-                    "number.mock_classicvario_night_speed",
+                    "number.mock_aquarium_mock_classicvario_night_speed",
                     "classic_vario_data",
                     "rel_motor_speed_night",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_classicvario_system_led_brightness",
+                    "number.mock_aquarium_mock_classicvario_system_led_brightness",
                     "usrdta",
                     "sysLED",
                     20,
@@ -245,21 +245,21 @@ async def test_set_value(
             "filter_mock",
             [
                 (
-                    "number.mock_filter_low_pulse_duration",
+                    "number.mock_aquarium_mock_filter_low_pulse_duration",
                     "filter_data",
                     "pm_time_low",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_filter_high_pulse_duration",
+                    "number.mock_aquarium_mock_filter_high_pulse_duration",
                     "filter_data",
                     "pm_time_high",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_filter_system_led_brightness",
+                    "number.mock_aquarium_mock_filter_system_led_brightness",
                     "usrdta",
                     "sysLED",
                     20,
@@ -271,28 +271,28 @@ async def test_set_value(
             "reeflex_mock",
             [
                 (
-                    "number.mock_reeflex_daily_burn_duration",
+                    "number.mock_aquarium_mock_reeflex_daily_burn_duration",
                     "reeflex_data",
                     "dailyBurnTime",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_reeflex_booster_duration",
+                    "number.mock_aquarium_mock_reeflex_booster_duration",
                     "reeflex_data",
                     "boosterTime",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_reeflex_pause_duration",
+                    "number.mock_aquarium_mock_reeflex_pause_duration",
                     "reeflex_data",
                     "pauseTime",
                     20,
                     20,
                 ),
                 (
-                    "number.mock_reeflex_system_led_brightness",
+                    "number.mock_aquarium_mock_reeflex_system_led_brightness",
                     "usrdta",
                     "sysLED",
                     100,

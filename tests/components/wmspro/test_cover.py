@@ -61,7 +61,7 @@ async def test_cover_update(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
-    entity = hass.states.get("cover.markise")
+    entity = hass.states.get("cover.terrasse_markise")
     assert entity is not None
     assert entity == snapshot
 
@@ -79,17 +79,17 @@ async def test_cover_update(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )
@@ -162,17 +162,17 @@ async def test_cover_open_and_close(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )
@@ -226,17 +226,17 @@ async def test_cover_open_to_pos(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )

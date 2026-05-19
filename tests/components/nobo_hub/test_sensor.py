@@ -13,7 +13,7 @@ from . import fire_hub_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEMPERATURE_ENTITY = "sensor.floor_sensor_temperature"
+TEMPERATURE_ENTITY = "sensor.living_room_floor_sensor_temperature"
 
 
 @pytest.fixture

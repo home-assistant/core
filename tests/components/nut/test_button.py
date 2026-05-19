@@ -39,7 +39,7 @@ async def test_buttons_ups(
         list_commands_return_value=list_commands_return_value,
     )
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_1")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_1")
     assert not button
 
 
@@ -75,7 +75,7 @@ async def test_buttons_pdu_dynamic_outlets(
         list_commands_return_value=list_commands_return_value,
     )
 
-    entity_id = "button.ups1_power_cycle_outlet_a1"
+    entity_id = "button.device_location_ups1_power_cycle_outlet_a1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{unique_id_base}outlet.1.load.cycle"
@@ -95,8 +95,8 @@ async def test_buttons_pdu_dynamic_outlets(
     button = hass.states.get(entity_id)
     assert button.state != STATE_UNKNOWN
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_25")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_25")
     assert not button
 
-    button = hass.states.get("button.ups1_power_cycle_outlet_a25")
+    button = hass.states.get("button.device_location_ups1_power_cycle_outlet_a25")
     assert not button

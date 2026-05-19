@@ -58,5 +58,5 @@ async def test_keyboard_focus_entity_created_on_setup(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.living_room_keyboard_focus")
+    state = hass.states.get("binary_sensor.living_room_living_room_keyboard_focus")
     assert state is not None

@@ -64,7 +64,7 @@
     'state': 'docked',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-entry]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.theater_robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -85,7 +85,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.robot_vacuum_1',
+    'entity_id': 'vacuum.theater_robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -108,7 +108,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-state]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.theater_robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'fan_speed': 'smart',
@@ -122,7 +122,7 @@
       'supported_features': <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.robot_vacuum_1',
+    'entity_id': 'vacuum.theater_robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

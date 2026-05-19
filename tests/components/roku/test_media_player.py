@@ -71,7 +71,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
-TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
+TV_ENTITY_ID = f"{MP_DOMAIN}.living_room_58_onn_roku_tv"
 
 
 async def test_setup(

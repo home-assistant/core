@@ -49,7 +49,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+    assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "25"
 
     await trigger_update(
         hass,
@@ -60,7 +60,7 @@ async def test_state_update(
         20,
     )
 
-    assert hass.states.get("sensor.ac_office_granit_temperature").state == "20"
+    assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "20"
 
 
 @pytest.mark.parametrize(
@@ -363,14 +363,14 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+    assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "25"
 
     await trigger_health_update(
         hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
     )
 
     assert (
-        hass.states.get("sensor.ac_office_granit_temperature").state
+        hass.states.get("sensor.theater_ac_office_granit_temperature").state
         == STATE_UNAVAILABLE
     )
 
@@ -378,7 +378,7 @@ async def test_availability(
         hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+    assert hass.states.get("sensor.theater_ac_office_granit_temperature").state == "25"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -390,6 +390,6 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert (
-        hass.states.get("sensor.ac_office_granit_temperature").state
+        hass.states.get("sensor.theater_ac_office_granit_temperature").state
         == STATE_UNAVAILABLE
     )

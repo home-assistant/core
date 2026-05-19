@@ -194,7 +194,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-entry]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -216,7 +216,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -239,7 +239,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-state]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake fan',
@@ -256,7 +256,7 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

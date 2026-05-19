@@ -424,14 +424,14 @@ async def test_deleted_device_runtime(
     """Test devices that are deleted in runtime."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.OFF
 
     for call in devices.add_device_lifecycle_event_listener.call_args_list:
         if call[0][0] == Lifecycle.DELETE:
             call[0][1]("96a5ef74-5832-a84b-f1f7-ca799957065d")
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.ac_office_granit") is None
+    assert hass.states.get("climate.theater_ac_office_granit") is None
 
 
 @pytest.mark.parametrize(

@@ -14,7 +14,7 @@
   "firmwareVersion": "1.20",
   "zwavePlusVersion": 1,
   "name": "Bar Display Cases",
-  "location": "**REDACTED**",
+  "location": "",
   "deviceConfig": {
     "filename": "/Users/spike/zwavestore/.config-db/devices/0x001d/dz6hd.json",
     "isEmbedded": true,

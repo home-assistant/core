@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_tracker_snapshot[device_tracker.test_mower_1-entry]
+# name: test_device_tracker_snapshot[device_tracker.garden_test_mower_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.test_mower_1',
+    'entity_id': 'device_tracker.garden_test_mower_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker_snapshot[device_tracker.test_mower_1-state]
+# name: test_device_tracker_snapshot[device_tracker.garden_test_mower_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1',
@@ -48,7 +48,7 @@
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.test_mower_1',
+    'entity_id': 'device_tracker.garden_test_mower_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

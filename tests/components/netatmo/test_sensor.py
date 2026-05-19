@@ -252,6 +252,6 @@ async def test_climate_battery_sensor(
 
         await hass.async_block_till_done()
 
-    prefix = "sensor.livingroom_"
+    prefix = "sensor.livingroom_livingroom_"
 
     assert hass.states.get(f"{prefix}battery").state == "75"

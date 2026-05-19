@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_buttons[button.lunar_ddeeff_reset_timer-entry]
+# name: test_buttons[button.kitchen_lunar_ddeeff_reset_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_ddeeff_reset_timer',
+    'entity_id': 'button.kitchen_lunar_ddeeff_reset_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.lunar_ddeeff_reset_timer-state]
+# name: test_buttons[button.kitchen_lunar_ddeeff_reset_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Reset timer',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_ddeeff_reset_timer',
+    'entity_id': 'button.kitchen_lunar_ddeeff_reset_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.lunar_ddeeff_start_stop_timer-entry]
+# name: test_buttons[button.kitchen_lunar_ddeeff_start_stop_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
+    'entity_id': 'button.kitchen_lunar_ddeeff_start_stop_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,20 +86,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.lunar_ddeeff_start_stop_timer-state]
+# name: test_buttons[button.kitchen_lunar_ddeeff_start_stop_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_ddeeff_start_stop_timer',
+    'entity_id': 'button.kitchen_lunar_ddeeff_start_stop_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.lunar_ddeeff_tare-entry]
+# name: test_buttons[button.kitchen_lunar_ddeeff_tare-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lunar_ddeeff_tare',
+    'entity_id': 'button.kitchen_lunar_ddeeff_tare',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.lunar_ddeeff_tare-state]
+# name: test_buttons[button.kitchen_lunar_ddeeff_tare-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LUNAR-DDEEFF Tare',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lunar_ddeeff_tare',
+    'entity_id': 'button.kitchen_lunar_ddeeff_tare',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

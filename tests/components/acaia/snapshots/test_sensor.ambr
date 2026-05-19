@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.lunar_ddeeff_battery-entry]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lunar_ddeeff_battery',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,7 +38,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.lunar_ddeeff_battery-state]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -47,14 +47,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lunar_ddeeff_battery',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42',
   })
 # ---
-# name: test_sensors[sensor.lunar_ddeeff_volume_flow_rate-entry]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_volume_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lunar_ddeeff_volume_flow_rate',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_volume_flow_rate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,7 +96,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
   })
 # ---
-# name: test_sensors[sensor.lunar_ddeeff_volume_flow_rate-state]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_volume_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
@@ -105,14 +105,14 @@
       'unit_of_measurement': <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lunar_ddeeff_volume_flow_rate',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_volume_flow_rate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.23',
   })
 # ---
-# name: test_sensors[sensor.lunar_ddeeff_weight-entry]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_weight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -128,7 +128,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lunar_ddeeff_weight',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_weight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,7 +154,7 @@
     'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
   })
 # ---
-# name: test_sensors[sensor.lunar_ddeeff_weight-state]
+# name: test_sensors[sensor.kitchen_lunar_ddeeff_weight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
@@ -163,7 +163,7 @@
       'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lunar_ddeeff_weight',
+    'entity_id': 'sensor.kitchen_lunar_ddeeff_weight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

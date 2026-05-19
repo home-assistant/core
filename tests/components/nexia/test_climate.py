@@ -11,7 +11,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    state = hass.states.get("climate.nick_office")
+    state = hass.states.get("climate.nick_office_nick_office")
     assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -42,7 +42,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("climate.kitchen")
+    state = hass.states.get("climate.kitchen_kitchen")
     assert state.state == HVACMode.HEAT_COOL
 
     expected_attributes = {

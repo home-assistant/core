@@ -37,7 +37,7 @@
       'friendly_name': 'HEIZUNG LINKS',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.heizung_links',
+    'entity_id': 'switch.terasse_heizung_links',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

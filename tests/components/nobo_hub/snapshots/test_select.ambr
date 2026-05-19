@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_entities[select.living_room_week_profile-entry]
+# name: test_select_entities[select.living_room_living_room_week_profile-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.living_room_week_profile',
+    'entity_id': 'select.living_room_living_room_week_profile',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities[select.living_room_week_profile-state]
+# name: test_select_entities[select.living_room_living_room_week_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living room Week profile',
@@ -49,7 +49,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.living_room_week_profile',
+    'entity_id': 'select.living_room_living_room_week_profile',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

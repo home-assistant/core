@@ -101,7 +101,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-entry]
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.theater_2nd_floor_hallway_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
+    'entity_id': 'binary_sensor.theater_2nd_floor_hallway_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -138,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-state]
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.theater_2nd_floor_hallway_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
       'friendly_name': '2nd Floor Hallway Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
+    'entity_id': 'binary_sensor.theater_2nd_floor_hallway_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_sound-entry]
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.theater_2nd_floor_hallway_sound-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
+    'entity_id': 'binary_sensor.theater_2nd_floor_hallway_sound',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -189,21 +189,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_sound-state]
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.theater_2nd_floor_hallway_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'sound',
       'friendly_name': '2nd Floor Hallway Sound',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
+    'entity_id': 'binary_sensor.theater_2nd_floor_hallway_sound',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor-entry]
+# name: test_all_entities[contact_sensor][binary_sensor.theater_front_door_open_closed_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -217,7 +217,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor',
+    'entity_id': 'binary_sensor.theater_front_door_open_closed_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -240,14 +240,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor-state]
+# name: test_all_entities[contact_sensor][binary_sensor.theater_front_door_open_closed_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'garage_door',
       'friendly_name': '.Front Door Open/Closed Sensor',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor',
+    'entity_id': 'binary_sensor.theater_front_door_open_closed_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -456,7 +456,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -470,7 +470,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_child_lock',
+    'entity_id': 'binary_sensor.theater_microwave_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -493,20 +493,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_child_lock',
+    'entity_id': 'binary_sensor.theater_microwave_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_door-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -520,7 +520,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_door',
+    'entity_id': 'binary_sensor.theater_microwave_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -543,21 +543,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_door-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'opening',
       'friendly_name': 'Microwave Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_door',
+    'entity_id': 'binary_sensor.theater_microwave_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_power-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -571,7 +571,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_power',
+    'entity_id': 'binary_sensor.theater_microwave_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -594,21 +594,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_power-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Microwave Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_power',
+    'entity_id': 'binary_sensor.theater_microwave_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_remote_control-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -622,7 +622,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_remote_control',
+    'entity_id': 'binary_sensor.theater_microwave_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -645,13 +645,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_remote_control-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.theater_microwave_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_remote_control',
+    'entity_id': 'binary_sensor.theater_microwave_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1412,7 +1412,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_filter_status-entry]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_filter_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1426,7 +1426,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'entity_id': 'binary_sensor.theater_refrigerator_filter_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1449,21 +1449,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_filter_status-state]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_filter_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Refrigerator Filter status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'entity_id': 'binary_sensor.theater_refrigerator_filter_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-entry]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_freezer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1477,7 +1477,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'entity_id': 'binary_sensor.theater_refrigerator_freezer_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1500,21 +1500,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-state]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_freezer_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Refrigerator Freezer door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'entity_id': 'binary_sensor.theater_refrigerator_freezer_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_fridge_door-entry]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_fridge_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1528,7 +1528,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_fridge_door',
+    'entity_id': 'binary_sensor.theater_refrigerator_fridge_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1551,14 +1551,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_fridge_door-state]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.theater_refrigerator_fridge_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Refrigerator Fridge door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_fridge_door',
+    'entity_id': 'binary_sensor.theater_refrigerator_fridge_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2379,7 +2379,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2393,7 +2393,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.theater_dishwasher_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2416,20 +2416,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-state]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.theater_dishwasher_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_power-entry]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2443,7 +2443,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_power',
+    'entity_id': 'binary_sensor.theater_dishwasher_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2466,21 +2466,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_power-state]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Dishwasher Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_power',
+    'entity_id': 'binary_sensor.theater_dishwasher_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_remote_control-entry]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2494,7 +2494,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_remote_control',
+    'entity_id': 'binary_sensor.theater_dishwasher_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2517,13 +2517,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_remote_control-state]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.theater_dishwasher_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_remote_control',
+    'entity_id': 'binary_sensor.theater_dishwasher_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2984,7 +2984,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2998,7 +2998,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dryer_child_lock',
+    'entity_id': 'binary_sensor.theater_dryer_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3021,20 +3021,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_child_lock',
+    'entity_id': 'binary_sensor.theater_dryer_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3048,7 +3048,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dryer_power',
+    'entity_id': 'binary_sensor.theater_dryer_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3071,21 +3071,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Dryer Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_power',
+    'entity_id': 'binary_sensor.theater_dryer_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3099,7 +3099,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dryer_remote_control',
+    'entity_id': 'binary_sensor.theater_dryer_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3122,20 +3122,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_remote_control',
+    'entity_id': 'binary_sensor.theater_dryer_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_wrinkle_prevent_active-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_wrinkle_prevent_active-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3149,7 +3149,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dryer_wrinkle_prevent_active',
+    'entity_id': 'binary_sensor.theater_dryer_wrinkle_prevent_active',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3172,13 +3172,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_wrinkle_prevent_active-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.theater_dryer_wrinkle_prevent_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer Wrinkle prevent active',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_wrinkle_prevent_active',
+    'entity_id': 'binary_sensor.theater_dryer_wrinkle_prevent_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3587,7 +3587,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-entry]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3601,7 +3601,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_child_lock',
+    'entity_id': 'binary_sensor.theater_washer_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3624,20 +3624,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-state]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_child_lock',
+    'entity_id': 'binary_sensor.theater_washer_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-entry]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3651,7 +3651,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.theater_washer_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3674,21 +3674,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-state]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Washer Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.theater_washer_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-entry]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3702,7 +3702,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.theater_washer_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3725,13 +3725,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-state]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.theater_washer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.theater_washer_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4598,7 +4598,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door-entry]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.theater_deck_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4612,7 +4612,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.deck_door',
+    'entity_id': 'binary_sensor.theater_deck_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4635,21 +4635,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door-state]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.theater_deck_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Deck Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.deck_door',
+    'entity_id': 'binary_sensor.theater_deck_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-entry]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.theater_deck_door_acceleration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4663,7 +4663,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.deck_door_acceleration',
+    'entity_id': 'binary_sensor.theater_deck_door_acceleration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4686,14 +4686,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-state]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.theater_deck_door_acceleration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moving',
       'friendly_name': 'Deck Door Acceleration',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.deck_door_acceleration',
+    'entity_id': 'binary_sensor.theater_deck_door_acceleration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4751,7 +4751,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-entry]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.theater_virtual_water_sensor_moisture-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4765,7 +4765,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
+    'entity_id': 'binary_sensor.theater_virtual_water_sensor_moisture',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4788,14 +4788,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-state]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.theater_virtual_water_sensor_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'virtual water sensor Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
+    'entity_id': 'binary_sensor.theater_virtual_water_sensor_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

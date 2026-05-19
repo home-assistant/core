@@ -11,7 +11,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    state = hass.states.get("sensor.nick_office_temperature")
+    state = hass.states.get("sensor.nick_office_nick_office_temperature")
     assert round(float(state.state)) == 23
 
     expected_attributes = {
@@ -26,7 +26,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_setpoint_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_setpoint_status")
     assert state.state == "Permanent Hold"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -38,7 +38,7 @@ async def test_create_sensors(hass: HomeAssistant) -> None:
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_status")
     assert state.state == "Relieving Air"
 
     expected_attributes = {

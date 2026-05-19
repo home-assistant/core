@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_entities[sensor.floor_sensor_temperature-entry]
+# name: test_sensor_entities[sensor.living_room_floor_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.floor_sensor_temperature',
+    'entity_id': 'sensor.living_room_floor_sensor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities[sensor.floor_sensor_temperature-state]
+# name: test_sensor_entities[sensor.living_room_floor_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -50,7 +50,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.floor_sensor_temperature',
+    'entity_id': 'sensor.living_room_floor_sensor_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

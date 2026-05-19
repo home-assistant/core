@@ -58,7 +58,7 @@ async def test_installing_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.front_door_open_closed_sensor_firmware"},
+        {ATTR_ENTITY_ID: "update.theater_front_door_open_closed_sensor_firmware"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -79,7 +79,7 @@ async def test_state_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor_firmware").state
+        hass.states.get("update.theater_front_door_open_closed_sensor_firmware").state
         == STATE_ON
     )
 
@@ -93,7 +93,7 @@ async def test_state_update(
     )
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor_firmware").state
+        hass.states.get("update.theater_front_door_open_closed_sensor_firmware").state
         == STATE_OFF
     )
 
@@ -108,9 +108,9 @@ async def test_state_progress_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor_firmware").attributes[
-            ATTR_IN_PROGRESS
-        ]
+        hass.states.get(
+            "update.theater_front_door_open_closed_sensor_firmware"
+        ).attributes[ATTR_IN_PROGRESS]
         is False
     )
 
@@ -124,9 +124,9 @@ async def test_state_progress_update(
     )
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor_firmware").attributes[
-            ATTR_IN_PROGRESS
-        ]
+        hass.states.get(
+            "update.theater_front_door_open_closed_sensor_firmware"
+        ).attributes[ATTR_IN_PROGRESS]
         is True
     )
 
@@ -140,7 +140,7 @@ async def test_state_update_available(
     """Test state update available."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF
+    assert hass.states.get("update.theater_dimmer_debian_firmware").state == STATE_OFF
 
     await trigger_update(
         hass,
@@ -151,7 +151,7 @@ async def test_state_update_available(
         "16015011",
     )
 
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_ON
+    assert hass.states.get("update.theater_dimmer_debian_firmware").state == STATE_ON
 
 
 @pytest.mark.parametrize("device_fixture", ["centralite"])
@@ -163,19 +163,22 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF
+    assert hass.states.get("update.theater_dimmer_debian_firmware").state == STATE_OFF
 
     await trigger_health_update(
         hass, devices, "d0268a69-abfb-4c92-a646-61cec2e510ad", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("update.theater_dimmer_debian_firmware").state
+        == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "d0268a69-abfb-4c92-a646-61cec2e510ad", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF
+    assert hass.states.get("update.theater_dimmer_debian_firmware").state == STATE_OFF
 
 
 @pytest.mark.parametrize("device_fixture", ["centralite"])
@@ -186,4 +189,7 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("update.theater_dimmer_debian_firmware").state
+        == STATE_UNAVAILABLE
+    )

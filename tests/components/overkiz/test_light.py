@@ -35,7 +35,7 @@ from tests.common import snapshot_platform
 ONOFF_LIGHT = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/11944017",
-    "light.terrace_ceiling_light",
+    "light.maple_residence_terrace_ceiling_light",
 )
 DIMMABLE_LIGHT = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_3.json",

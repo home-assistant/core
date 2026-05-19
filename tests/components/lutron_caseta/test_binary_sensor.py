@@ -35,9 +35,11 @@ async def test_battery_sensor_is_attached_to_shade_device(
     """Test the battery sensor is registered under the same shade device."""
     await async_setup_integration(hass, MockBridge)
 
-    cover_entry = entity_registry.async_get("cover.basement_bedroom_left_shade")
+    cover_entry = entity_registry.async_get(
+        "cover.basement_bedroom_basement_bedroom_left_shade"
+    )
     binary_sensor_entry = entity_registry.async_get(
-        "binary_sensor.basement_bedroom_left_shade_battery"
+        "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
     )
 
     assert cover_entry is not None
@@ -58,7 +60,7 @@ async def test_battery_sensor_does_not_replace_shade_subscriber(
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
-    cover_entity_id = "cover.basement_bedroom_left_shade"
+    cover_entity_id = "cover.basement_bedroom_basement_bedroom_left_shade"
     instance.devices["802"]["current_state"] = 50
     instance.call_subscribers("802")
     await hass.async_block_till_done()
@@ -85,7 +87,9 @@ async def test_battery_sensor_updates_on_schedule(
     await async_setup_integration(hass, factory)
     await hass.async_block_till_done()
 
-    binary_sensor_entity_id = "binary_sensor.basement_bedroom_left_shade_battery"
+    binary_sensor_entity_id = (
+        "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+    )
     initial_state = hass.states.get(binary_sensor_entity_id)
     assert initial_state is not None
     assert initial_state.state == STATE_OFF

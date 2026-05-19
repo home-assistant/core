@@ -28,7 +28,7 @@ async def test_button_update(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
-    entity = hass.states.get("button.markise_identify")
+    entity = hass.states.get("button.terrasse_markise_identify")
     assert entity is not None
     assert entity == snapshot
 
@@ -50,7 +50,7 @@ async def test_button_press(
         return_value=True,
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
-        entity = hass.states.get("button.markise_identify")
+        entity = hass.states.get("button.terrasse_markise_identify")
         before_state = entity.state
 
         await hass.services.async_call(
@@ -60,7 +60,7 @@ async def test_button_press(
             blocking=True,
         )
 
-        entity = hass.states.get("button.markise_identify")
+        entity = hass.states.get("button.terrasse_markise_identify")
         assert entity is not None
         assert entity.state != before_state
         assert len(mock_hub_status_prod_awning.mock_calls) == before

@@ -42,10 +42,10 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("light_id", "data", "set_brightness"),
     [
-        (0, {ATTR_ENTITY_ID: "light.light"}, None),
+        (0, {ATTR_ENTITY_ID: "light.room_light"}, None),
         (
             1,
-            {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 50},
+            {ATTR_ENTITY_ID: "light.room_dimmable_light", ATTR_BRIGHTNESS: 50},
             50,
         ),
     ],
@@ -75,8 +75,8 @@ async def test_turning_on(
 @pytest.mark.parametrize(
     ("light_id", "entity_id"),
     [
-        (0, "light.light"),
-        (1, "light.dimmable_light"),
+        (0, "light.room_light"),
+        (1, "light.room_dimmable_light"),
     ],
 )
 async def test_turning_off(
@@ -110,27 +110,33 @@ async def test_updating(
     """Test turning on the light."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("light.light").state == STATE_ON
+    assert hass.states.get("light.room_light").state == STATE_ON
 
     light.state = 0
     await find_update_callback(mock_niko_home_control_connection, 1)(0)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.light").state == STATE_OFF
+    assert hass.states.get("light.room_light").state == STATE_OFF
 
-    assert hass.states.get("light.dimmable_light").state == STATE_ON
-    assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 100
+    assert hass.states.get("light.room_dimmable_light").state == STATE_ON
+    assert (
+        hass.states.get("light.room_dimmable_light").attributes[ATTR_BRIGHTNESS] == 100
+    )
 
     dimmable_light.state = 204
     await find_update_callback(mock_niko_home_control_connection, 2)(204)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.dimmable_light").state == STATE_ON
-    assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 204
+    assert hass.states.get("light.room_dimmable_light").state == STATE_ON
+    assert (
+        hass.states.get("light.room_dimmable_light").attributes[ATTR_BRIGHTNESS] == 204
+    )
 
     dimmable_light.state = 0
     await find_update_callback(mock_niko_home_control_connection, 2)(0)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.dimmable_light").state == STATE_OFF
-    assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] is None
+    assert hass.states.get("light.room_dimmable_light").state == STATE_OFF
+    assert (
+        hass.states.get("light.room_dimmable_light").attributes[ATTR_BRIGHTNESS] is None
+    )

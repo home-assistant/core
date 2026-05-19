@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[c2c_arlo_pro_3_switch][switch.2nd_floor_hallway-entry]
+# name: test_all_entities[c2c_arlo_pro_3_switch][switch.theater_2nd_floor_hallway-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.2nd_floor_hallway',
+    'entity_id': 'switch.theater_2nd_floor_hallway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[c2c_arlo_pro_3_switch][switch.2nd_floor_hallway-state]
+# name: test_all_entities[c2c_arlo_pro_3_switch][switch.theater_2nd_floor_hallway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '2nd Floor Hallway',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.2nd_floor_hallway',
+    'entity_id': 'switch.theater_2nd_floor_hallway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -149,56 +149,6 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][switch.ac_office_granit_purify-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.ac_office_granit_purify',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Purify',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Purify',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'purify',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_custom.spiMode_spiMode_spiMode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000001][switch.ac_office_granit_purify-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'AC Office Granit Purify',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.ac_office_granit_purify',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -249,7 +199,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-entry]
+# name: test_all_entities[da_ac_rac_000001][switch.theater_ac_office_granit_purify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +213,57 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'entity_id': 'switch.theater_ac_office_granit_purify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Purify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Purify',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'purify',
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main_custom.spiMode_spiMode_spiMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][switch.theater_ac_office_granit_purify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AC Office Granit Purify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.theater_ac_office_granit_purify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_display_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.theater_aire_dormitorio_principal_display_lighting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -286,20 +286,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-state]
+# name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_display_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aire Dormitorio Principal Display lighting',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'entity_id': 'switch.theater_aire_dormitorio_principal_display_lighting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-entry]
+# name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -313,7 +313,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
+    'entity_id': 'switch.theater_aire_dormitorio_principal_sound_effect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -336,13 +336,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-state]
+# name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_sound_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aire Dormitorio Principal Sound effect',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
+    'entity_id': 'switch.theater_aire_dormitorio_principal_sound_effect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -499,7 +499,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,7 +513,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.theater_refrigerator_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -536,20 +536,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-state]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.theater_refrigerator_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-entry]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_cool-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -563,7 +563,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.theater_refrigerator_power_cool',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -586,20 +586,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-state]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Power cool',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.theater_refrigerator_power_cool',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-entry]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_freeze-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -613,7 +613,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.theater_refrigerator_power_freeze',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -636,20 +636,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-state]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Power freeze',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.theater_refrigerator_power_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-entry]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_sabbath_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -663,7 +663,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'entity_id': 'switch.theater_refrigerator_sabbath_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -686,13 +686,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-state]
+# name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_sabbath_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Refrigerator Sabbath mode',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'entity_id': 'switch.theater_refrigerator_sabbath_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1249,7 +1249,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-entry]
+# name: test_all_entities[da_rvc_normal_000001][switch.theater_robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1263,7 +1263,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.robot_vacuum_1',
+    'entity_id': 'switch.theater_robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1286,13 +1286,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-state]
+# name: test_all_entities[da_rvc_normal_000001][switch.theater_robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Robot vacuum 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.robot_vacuum_1',
+    'entity_id': 'switch.theater_robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1349,7 +1349,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_high_temp_wash-entry]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_high_temp_wash-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1363,7 +1363,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_high_temp_wash',
+    'entity_id': 'switch.theater_dishwasher_high_temp_wash',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1386,20 +1386,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_high_temp_wash-state]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_high_temp_wash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher High temp wash',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_high_temp_wash',
+    'entity_id': 'switch.theater_dishwasher_high_temp_wash',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_sanitize-entry]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_sanitize-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1413,7 +1413,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.theater_dishwasher_sanitize',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1436,20 +1436,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_sanitize-state]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Sanitize',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.theater_dishwasher_sanitize',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_speed_booster-entry]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_speed_booster-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1463,7 +1463,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.theater_dishwasher_speed_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1486,13 +1486,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][switch.dishwasher_speed_booster-state]
+# name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_speed_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Speed booster',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.theater_dishwasher_speed_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1849,7 +1849,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-entry]
+# name: test_all_entities[da_wm_wd_000001][switch.theater_dryer_wrinkle_prevent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1863,7 +1863,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dryer_wrinkle_prevent',
+    'entity_id': 'switch.theater_dryer_wrinkle_prevent',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1886,13 +1886,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-state]
+# name: test_all_entities[da_wm_wd_000001][switch.theater_dryer_wrinkle_prevent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer Wrinkle prevent',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dryer_wrinkle_prevent',
+    'entity_id': 'switch.theater_dryer_wrinkle_prevent',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2249,7 +2249,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[smart_plug][switch.arlo_beta_basestation-entry]
+# name: test_all_entities[smart_plug][switch.theater_arlo_beta_basestation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2263,7 +2263,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.arlo_beta_basestation',
+    'entity_id': 'switch.theater_arlo_beta_basestation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2286,13 +2286,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[smart_plug][switch.arlo_beta_basestation-state]
+# name: test_all_entities[smart_plug][switch.theater_arlo_beta_basestation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Arlo Beta Basestation',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.arlo_beta_basestation',
+    'entity_id': 'switch.theater_arlo_beta_basestation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

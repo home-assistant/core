@@ -58,7 +58,7 @@ async def test_light_update(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity == snapshot
 
@@ -84,7 +84,7 @@ async def test_light_turn_on_and_off(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -102,7 +102,7 @@ async def test_light_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
@@ -121,7 +121,7 @@ async def test_light_turn_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -142,7 +142,7 @@ async def test_light_dimm_on_and_off(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -160,7 +160,7 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
@@ -179,7 +179,7 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] == 128
@@ -198,7 +198,7 @@ async def test_light_dimm_on_and_off(
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
