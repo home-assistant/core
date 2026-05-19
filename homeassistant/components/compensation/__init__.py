@@ -91,6 +91,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
 
+    # Exit early if no compensations are configured using the compensation: key in configuration.yaml.
+    # This allows us to create an issue if platform: compensation is present in the sensor: section.
     if DOMAIN not in config:
         return True
 
