@@ -36,11 +36,7 @@ from .models import FritzboxVpnConfigEntry, FritzboxVpnRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 SERVICE_REGISTRATION_FLAG = "_service_remove_unavailable_registered"
 
 SERVICE_SCHEMA_OPTIONAL_ENTRY_ID = vol.Schema({vol.Optional(CONF_CONFIG_ENTRY_ID): str})
