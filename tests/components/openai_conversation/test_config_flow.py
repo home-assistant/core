@@ -544,7 +544,7 @@ async def test_subentry_service_tier_list(
 async def test_subentry_unsupported_reasoning_effort(
     hass: HomeAssistant, mock_config_entry, mock_init_component, parameter, error
 ) -> None:
-    """Test the subentry form giving error about unsupported minimal reasoning effort."""
+    """Test subentry form error on unsupported reasoning effort."""
     subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -1380,7 +1380,10 @@ async def test_creating_stt_subentry(
         result["flow_id"],
         {
             "name": "Custom STT",
-            CONF_PROMPT: "Umm, let me think like, hmm… Okay, here’s what I’m, like, thinking.",
+            CONF_PROMPT: (
+                "Umm, let me think like, hmm\u2026 Okay,"
+                " here’s what I’m, like, thinking."
+            ),
             CONF_CHAT_MODEL: "gpt-4o-transcribe",
         },
     )
@@ -1388,7 +1391,9 @@ async def test_creating_stt_subentry(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Custom STT"
     assert result.get("data") == {
-        CONF_PROMPT: "Umm, let me think like, hmm… Okay, here’s what I’m, like, thinking.",
+        CONF_PROMPT: (
+            "Umm, let me think like, hmm\u2026 Okay, here’s what I’m, like, thinking."
+        ),
         CONF_CHAT_MODEL: "gpt-4o-transcribe",
     }
 

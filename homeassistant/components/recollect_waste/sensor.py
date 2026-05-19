@@ -1,7 +1,5 @@
 """Support for ReCollect Waste sensors."""
 
-from datetime import date
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -9,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
 from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
@@ -70,7 +69,9 @@ class ReCollectWasteSensor(ReCollectWasteEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        relevant_events = (e for e in self.coordinator.data if e.date >= date.today())  # noqa: DTZ011
+        relevant_events = (
+            e for e in self.coordinator.data if e.date >= dt_util.now().date()
+        )
         pickup_index = self.PICKUP_INDEX_MAP[self.entity_description.key]
 
         try:

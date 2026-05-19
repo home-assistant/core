@@ -52,14 +52,16 @@ async def async_get_calendars(
                 warned_calendars.add((url, comp))
                 if comp in ASSUMED_COMPONENTS:
                     _LOGGER.warning(
-                        "CalDAV server does not report supported components for calendar %s, "
+                        "CalDAV server does not report supported"
+                        " components for calendar %s, "
                         "assuming it supports the requested component '%s'",
                         name or url,
                         comp,
                     )
                 else:
                     _LOGGER.warning(
-                        "CalDAV server does not report supported components for calendar %s. "
+                        "CalDAV server does not report supported"
+                        " components for calendar %s. "
                         "Not assuming support for requested component '%s'",
                         name or url,
                         comp,
