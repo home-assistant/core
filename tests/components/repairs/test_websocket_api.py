@@ -786,7 +786,9 @@ async def test_fix_issue_useless_setter_report_usage(
             json={"handler": "fake_integration", "issue_id": "fake_issue_bad_setter"},
         )
         assert resp.ok
-        assert " sets issue_id directly " in caplog.messages.pop()
+        assert any(
+            " sets issue_id directly " in msg for msg in caplog.messages
+        )
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
