@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from kiosker import Blackout, ScreensaverState
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.kiosker.const import (
     ATTR_BACKGROUND,
@@ -140,6 +141,57 @@ async def test_service_entry_not_loaded(
             {ATTR_DEVICE_ID: device.id, ATTR_URL: "https://example.com"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service", "extra_data"),
+    [
+        pytest.param(
+            "navigate_url",
+            {},
+            id="navigate_url_missing_url",
+        ),
+        pytest.param(
+            "set_blackout",
+            {ATTR_BACKGROUND: [0, 0]},
+            id="set_blackout_rgb_too_short",
+        ),
+        pytest.param(
+            "set_blackout",
+            {ATTR_BACKGROUND: [0, 0, 300]},
+            id="set_blackout_rgb_out_of_range",
+        ),
+        pytest.param(
+            "set_blackout",
+            {ATTR_EXPIRE: "not_a_number"},
+            id="set_blackout_expire_non_integer",
+        ),
+    ],
+)
+async def test_schema_rejects_invalid_input(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    extra_data: dict[str, Any],
+) -> None:
+    """Test that invalid service data is rejected by schema validation."""
+    await _setup(hass, mock_kiosker_api, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    assert device is not None
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_DEVICE_ID: device.id, **extra_data},
+            blocking=True,
+        )
+
+    mock_kiosker_api.navigate_url.assert_not_called()
+    mock_kiosker_api.blackout_set.assert_not_called()
 
 
 async def test_service_non_kiosker_device(

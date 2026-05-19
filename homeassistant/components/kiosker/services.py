@@ -12,12 +12,13 @@ from kiosker import (
     IPAuthenticationError,
     TLSVerificationError,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     ATTR_BACKGROUND,
@@ -35,6 +36,38 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import KioskerDataUpdateCoordinator
+
+_RGB_COLOR = vol.All(
+    list,
+    vol.Length(min=3, max=3),
+    [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+)
+
+NAVIGATE_URL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.Any(str, [str]),
+        vol.Required(ATTR_URL): str,
+    }
+)
+
+SET_BLACKOUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.Any(str, [str]),
+        vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
+        vol.Optional(ATTR_TEXT): str,
+        vol.Optional(ATTR_BACKGROUND, default=[0, 0, 0]): _RGB_COLOR,
+        vol.Optional(ATTR_FOREGROUND, default=[255, 255, 255]): _RGB_COLOR,
+        vol.Optional(ATTR_ICON): str,
+        vol.Optional(ATTR_EXPIRE, default=60): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100000)
+        ),
+        vol.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
+        vol.Optional(ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]): _RGB_COLOR,
+        vol.Optional(ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]): _RGB_COLOR,
+        vol.Optional(ATTR_BUTTON_TEXT): str,
+        vol.Optional(ATTR_SOUND): str,
+    }
+)
 
 
 def handle_kiosker_api_errors(
@@ -122,23 +155,16 @@ async def navigate_url(call: ServiceCall) -> None:
 @handle_kiosker_api_errors
 async def set_blackout(call: ServiceCall) -> None:
     """Set blackout mode on the Kiosker device."""
-    background = _rgb_to_hex(call.data.get(ATTR_BACKGROUND, [0, 0, 0]))
-    foreground = _rgb_to_hex(call.data.get(ATTR_FOREGROUND, [255, 255, 255]))
-    button_background = _rgb_to_hex(
-        call.data.get(ATTR_BUTTON_BACKGROUND, [255, 255, 255])
-    )
-    button_foreground = _rgb_to_hex(call.data.get(ATTR_BUTTON_FOREGROUND, [0, 0, 0]))
-
     blackout = Blackout(
-        visible=call.data.get(ATTR_VISIBLE, True),
+        visible=call.data[ATTR_VISIBLE],
         text=call.data.get(ATTR_TEXT),
-        background=background,
-        foreground=foreground,
+        background=_rgb_to_hex(call.data[ATTR_BACKGROUND]),
+        foreground=_rgb_to_hex(call.data[ATTR_FOREGROUND]),
         icon=call.data.get(ATTR_ICON),
-        expire=call.data.get(ATTR_EXPIRE, 60),
-        dismissible=call.data.get(ATTR_DISMISSIBLE, False),
-        buttonBackground=button_background,
-        buttonForeground=button_foreground,
+        expire=call.data[ATTR_EXPIRE],
+        dismissible=call.data[ATTR_DISMISSIBLE],
+        buttonBackground=_rgb_to_hex(call.data[ATTR_BUTTON_BACKGROUND]),
+        buttonForeground=_rgb_to_hex(call.data[ATTR_BUTTON_FOREGROUND]),
         buttonText=call.data.get(ATTR_BUTTON_TEXT),
         sound=call.data.get(ATTR_SOUND),
     )
@@ -151,5 +177,9 @@ async def set_blackout(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Kiosker integration."""
-    hass.services.async_register(DOMAIN, "navigate_url", navigate_url)
-    hass.services.async_register(DOMAIN, "set_blackout", set_blackout)
+    hass.services.async_register(
+        DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
+    )
