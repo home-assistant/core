@@ -1,12 +1,11 @@
 """DataUpdateCoordinator for the Verisure integration."""
 
 import asyncio
-import re
 from datetime import timedelta
+import re
 from time import sleep
 
 import requests.exceptions
-
 from verisure import (
     Error as VerisureError,
     LoginError as VerisureLoginError,
