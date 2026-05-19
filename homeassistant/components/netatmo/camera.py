@@ -175,7 +175,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_is_on = False
                 self._attr_available = False
                 self._attr_is_streaming = False
-                self._monitoring = False
+                self._monitoring = None
                 self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
@@ -223,7 +223,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        if self._monitoring is False:
+        if not self.available or self._monitoring is not True:
             return None
         try:
             return cast(bytes, await self.device.async_get_live_snapshot())
