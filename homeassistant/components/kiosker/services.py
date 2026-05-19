@@ -174,9 +174,11 @@ async def set_blackout(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Kiosker integration."""
-    hass.services.async_register(
-        DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
-    )
+    if not hass.services.has_service(DOMAIN, "navigate_url"):
+        hass.services.async_register(
+            DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
+        )
+    if not hass.services.has_service(DOMAIN, "set_blackout"):
+        hass.services.async_register(
+            DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
+        )
