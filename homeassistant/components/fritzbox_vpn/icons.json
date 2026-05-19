@@ -24,10 +24,10 @@
   },
   "services": {
     "remove_unavailable_entities": {
-      "default": "mdi:delete-outline"
+      "service": "mdi:delete-outline"
     },
     "repair_entity_id_suffixes": {
-      "default": "mdi:wrench"
+      "service": "mdi:wrench"
     }
   }
 }
