@@ -68,6 +68,7 @@ class SubscriptionID:
         if self._available_ids:
             subscription_id = self._available_ids.pop()
             self._used_ids.add(subscription_id)
+            self._registered_subscriptions[topic] = subscription_id
             return subscription_id
 
         subscription_id = self._next_id
@@ -108,13 +109,6 @@ class SubscriptionID:
         ):
             self._used_ids.remove(subscription_id)
             self._available_ids.add(subscription_id)
-
-    def restore(self, subscription_id: int | None, topic: str) -> None:
-        """Restore a subscription."""
-        if subscription_id is None:
-            return
-        self._registered_subscriptions[topic] = subscription_id
-        self._used_ids.add(subscription_id)
 
 
 _LOGGER = logging.getLogger(__name__)
