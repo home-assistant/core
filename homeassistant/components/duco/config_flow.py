@@ -4,11 +4,7 @@ import logging
 from typing import Any
 
 from duco_connectivity import DucoClient
-from duco_connectivity.exceptions import (
-    DucoConnectionError,
-    DucoError,
-    DucoResponseError,
-)
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -117,9 +113,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                box_name, mac = await self._validate_reconfigure_input(
-                    user_input[CONF_HOST], reconfigure_entry.title
-                )
+                box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
@@ -185,23 +181,3 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         board_info = await async_get_supported_board_info(client)
         lan_info = await client.async_get_lan_info()
         return board_info.box_name, lan_info.mac
-
-    async def _validate_reconfigure_input(
-        self, host: str, fallback_title: str
-    ) -> tuple[str, str]:
-        """Validate connectivity and identity for an existing config entry."""
-        client = DucoClient(
-            session=async_get_clientsession(self.hass),
-            host=host,
-        )
-        try:
-            board_info = await client.async_get_board_info()
-        except DucoResponseError as err:
-            if err.status != 404:
-                raise
-            box_name = fallback_title
-        else:
-            box_name = board_info.box_name
-
-        lan_info = await client.async_get_lan_info()
-        return box_name, lan_info.mac

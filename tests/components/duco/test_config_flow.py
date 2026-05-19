@@ -417,12 +417,21 @@ async def test_reconfigure_flow_without_info_endpoint(
     mock_duco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfigure flow still succeeds when an existing board has no /info endpoint."""
+    """Test reconfigure flow rejects boards that do not expose the supported API."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_duco_client.async_get_board_info.side_effect = DucoResponseError(404, "/info")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_duco_client.async_get_board_info.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.168.1.200"}
     )
@@ -622,14 +631,24 @@ async def test_reconfigure_flow_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_board_info: BoardInfo,
     unsupported_board_info: BoardInfo,
 ) -> None:
-    """Test reconfigure flow still succeeds for existing unsupported boards."""
+    """Test reconfigure flow shows unsupported_board when board validation fails."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_duco_client.async_get_board_info.return_value = unsupported_board_info
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "unsupported_board"}
+
+    mock_duco_client.async_get_board_info.return_value = mock_board_info
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.168.1.200"}
     )
