@@ -23,6 +23,9 @@
           "password": "Password",
           "username": "Username"
         },
+        "data_description": {
+          "username": "Username used to authenticate against the FritzBox"
+        },
         "description": "Authentication failed for {host}. Enter valid credentials.",
         "title": "Reauthenticate Fritz!Box VPN"
       },
@@ -107,6 +110,9 @@
         "data": {
           "confirm": "Remove entities and reload integration"
         },
+        "data_description": {
+          "confirm": "Check to confirm removal and reload"
+        },
         "description": "Entities that refer to VPN connections no longer present on the Fritz!Box will be removed from the entity registry. Check the box below and submit to remove them and reload the integration.",
         "title": "Remove unavailable entities"
       },
@@ -139,6 +145,9 @@
       "repair_entity_ids_confirm": {
         "data": {
           "confirm": "Repair entity IDs and reload integration"
+        },
+        "data_description": {
+          "confirm": "Check to confirm repairing entity IDs and reload"
         },
         "description": "Entity IDs that got a _2, _3, _4 suffix (e.g. after faulty deactivation) will be renamed back to the base ID. The stale base entry will be removed. Reload will run after repair.",
         "title": "Repair entity ID suffixes"
