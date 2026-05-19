@@ -7,7 +7,7 @@ from fritzboxvpn import API_KEY_UID
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     UNIQUE_ID_SUFFIX_STATUS,
@@ -23,7 +23,7 @@ from .models import FritzboxVpnConfigEntry
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxVpnConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FritzBox VPN sensor entities."""
 

@@ -96,7 +96,7 @@ def entity_id_suffix_number(entity_id: str) -> int | None:
         return None
     try:
         return int(match.group(2))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 

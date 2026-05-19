@@ -7,7 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/fritzbox_vpn",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/rosch100/fritzbox-vpn/issues",
   "loggers": ["fritzboxvpn"],
   "quality_scale": "gold",
   "requirements": ["fritzboxvpn==1.0.0"],

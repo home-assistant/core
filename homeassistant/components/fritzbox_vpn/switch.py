@@ -7,7 +7,7 @@ from fritzboxvpn import API_KEY_ACTIVE, API_KEY_NAME
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEFAULT_NAME_UNKNOWN, UNIQUE_ID_SUFFIX_SWITCH
 from .coordinator import FritzBoxVPNCoordinator
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxVpnConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FritzBox VPN switch entities."""
 

@@ -131,7 +131,9 @@ def configure_schema(
             vol.Required(CONF_HOST, default=host_default): str,
             vol.Required(CONF_USERNAME, default=username_default): str,
             vol.Optional(CONF_PASSWORD, default=""): str,
-            vol.Required(CONF_UPDATE_INTERVAL, default=default_update_interval): vol.All(
+            vol.Required(
+                CONF_UPDATE_INTERVAL, default=default_update_interval
+            ): vol.All(
                 vol.Coerce(int),
                 vol.Range(min=UPDATE_INTERVAL_MIN, max=UPDATE_INTERVAL_MAX),
             ),

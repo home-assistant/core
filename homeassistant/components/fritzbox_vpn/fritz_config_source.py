@@ -23,14 +23,20 @@ def _entry_has_credentials(entry: config_entries.ConfigEntry) -> bool:
     return bool(password_from_sources(data, options))
 
 
-def _host_username_password_from_entry(entry: config_entries.ConfigEntry) -> dict[str, Any] | None:
+def _host_username_password_from_entry(
+    entry: config_entries.ConfigEntry,
+) -> dict[str, Any] | None:
     """Host, username, password from entry; None if no host."""
     config_data: dict[str, Any] = dict(entry.data) if entry.data else {}
     options_data: dict[str, Any] = dict(entry.options) if entry.options else {}
     host = (
         config_data.get(CONF_HOST)
         or config_data.get("host")
-        or (config_data.get("hosts", [None])[0] if isinstance(config_data.get("hosts"), list) and config_data.get("hosts") else None)
+        or (
+            config_data.get("hosts", [None])[0]
+            if isinstance(config_data.get("hosts"), list) and config_data.get("hosts")
+            else None
+        )
         or config_data.get("hostname")
         or config_data.get("ip_address")
         or options_data.get(CONF_HOST)
@@ -52,7 +58,11 @@ def _host_username_password_from_entry(entry: config_entries.ConfigEntry) -> dic
         password = password or password_from_sources(nested)
     if not host:
         return None
-    return {CONF_HOST: host, CONF_USERNAME: username or "", CONF_PASSWORD: password or ""}
+    return {
+        CONF_HOST: host,
+        CONF_USERNAME: username or "",
+        CONF_PASSWORD: password or "",
+    }
 
 
 async def get_existing_fritz_config(hass: HomeAssistant) -> dict[str, Any] | None:
@@ -72,14 +82,17 @@ async def get_existing_fritz_config(hass: HomeAssistant) -> dict[str, Any] | Non
             continue
 
         router_entries = [
-            e for e in entries
+            e
+            for e in entries
             if not any(ind in (e.title or "").lower() for ind in REPEATER_INDICATORS)
         ]
         if not router_entries:
             continue
 
         try:
-            entries_with_creds = [e for e in router_entries if _entry_has_credentials(e)]
+            entries_with_creds = [
+                e for e in router_entries if _entry_has_credentials(e)
+            ]
             entry = entries_with_creds[0] if entries_with_creds else router_entries[0]
             result = _host_username_password_from_entry(entry)
             if result:

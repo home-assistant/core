@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn import binary_sensor, sensor, switch
 from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
@@ -12,6 +11,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .fixtures import MOCK_VPN_CONNECTIONS
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio

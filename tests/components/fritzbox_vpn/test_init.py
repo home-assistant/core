@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn import (
     PLATFORMS,
@@ -15,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .fixtures import MOCK_VPN_CONNECTIONS
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
@@ -61,10 +62,13 @@ async def test_setup_entry_auth_failed(
         side_effect=ValueError("Login failed: Invalid SID")
     )
 
-    with patch(
-        "homeassistant.components.fritzbox_vpn.FritzBoxVPNCoordinator",
-        return_value=mock_coordinator,
-    ), pytest.raises(ConfigEntryAuthFailed):
+    with (
+        patch(
+            "homeassistant.components.fritzbox_vpn.FritzBoxVPNCoordinator",
+            return_value=mock_coordinator,
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
         await async_setup_entry(hass, mock_config_entry)
 
 
@@ -77,7 +81,9 @@ async def test_unload_entry(
     mock_coordinator = AsyncMock()
     mock_coordinator.fritz_session = AsyncMock()
     mock_coordinator.fritz_session.async_close = AsyncMock()
-    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(coordinator=mock_coordinator)
+    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(
+        coordinator=mock_coordinator
+    )
 
     with patch.object(
         hass.config_entries,

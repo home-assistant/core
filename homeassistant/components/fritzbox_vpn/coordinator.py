@@ -41,12 +41,16 @@ _LOGGER = logging.getLogger(__name__)
 
 def normalize_update_interval(value: Any) -> int:
     """Update interval as int in valid range. SSOT for parsing."""
+
     def clamp(n: int) -> int:
         if UPDATE_INTERVAL_MIN <= n <= UPDATE_INTERVAL_MAX:
             return n
         _LOGGER.warning(
             "update_interval %d out of range (%d–%d), using default %s",
-            n, UPDATE_INTERVAL_MIN, UPDATE_INTERVAL_MAX, DEFAULT_UPDATE_INTERVAL,
+            n,
+            UPDATE_INTERVAL_MIN,
+            UPDATE_INTERVAL_MAX,
+            DEFAULT_UPDATE_INTERVAL,
         )
         return DEFAULT_UPDATE_INTERVAL
 
@@ -56,7 +60,7 @@ def normalize_update_interval(value: Any) -> int:
         return clamp(value)
     try:
         return clamp(int(value))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         _LOGGER.warning(
             "Invalid update_interval value %r, using default %s",
             value,
@@ -89,7 +93,7 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
         options: dict[str, Any] | None = None,
         entry_id: str | None = None,
         on_orphaned_removed: Callable[[str, set[str]], None] | None = None,
-    ):
+    ) -> None:
         """Initialize FritzBox VPN coordinator."""
         update_interval_seconds = _resolve_update_interval_seconds(config, options)
 
@@ -176,7 +180,9 @@ class FritzBoxVPNCoordinator(DataUpdateCoordinator):
         except Exception as err:
             if self._is_auth_error(err):
                 self._schedule_reauth()
-                raise UpdateFailed(f"Unexpected error fetching VPN data: {err}") from err
+                raise UpdateFailed(
+                    f"Unexpected error fetching VPN data: {err}"
+                ) from err
             _LOGGER.exception("Unexpected error fetching VPN data")
             raise UpdateFailed(
                 f"Unexpected error fetching VPN data: {err}",

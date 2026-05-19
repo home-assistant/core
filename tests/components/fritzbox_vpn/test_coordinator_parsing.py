@@ -37,6 +37,8 @@ def test_resolve_update_interval() -> None:
 
 def test_pbkdf2_response_format() -> None:
     """PBKDF2 response uses expected format for valid challenge."""
-    challenge = "2$5$0123456789abcdef0123456789abcdef$5$fedcba9876543210fedcba9876543210"
+    challenge = (
+        "2$5$0123456789abcdef0123456789abcdef$5$fedcba9876543210fedcba9876543210"
+    )
     response = FritzBoxVPNSession._calculate_pbkdf2_response(challenge, "password")
     assert "$" in response

@@ -8,12 +8,13 @@ from fritzboxvpn.parsing import (
     normalize_connection_uid,
 )
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from homeassistant.core import HomeAssistant
 
 from .fixtures import MOCK_HOST, MOCK_VPN_CONNECTIONS
+
+from tests.common import MockConfigEntry
 
 
 def test_connection_active_from_api_variants() -> None:

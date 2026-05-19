@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn import (
     SERVICE_REGISTRATION_FLAG,
@@ -22,6 +21,8 @@ from homeassistant.helpers import entity_registry as er
 
 from .fixtures import MOCK_VPN_CONNECTIONS
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.asyncio
 async def test_remove_unavailable_entities_service(
@@ -36,10 +37,14 @@ async def test_remove_unavailable_entities_service(
         config_entry=mock_config_entry,
     )
 
-    with patch.object(hass.config_entries, "async_reload", new=AsyncMock()) as reload_mock:
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as reload_mock:
         await _async_remove_unavailable_entities(
             hass,
-            type("Call", (), {"data": {"config_entry_id": mock_config_entry.entry_id}})(),
+            type(
+                "Call", (), {"data": {"config_entry_id": mock_config_entry.entry_id}}
+            )(),
         )
 
     reload_mock.assert_awaited_once()
@@ -53,10 +58,13 @@ async def test_repair_entity_id_suffixes_service(
 ) -> None:
     """Service repairs suffixed entity IDs when configured."""
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.fritzbox_vpn.entity_registry.repair_entity_id_suffixes",
-        return_value=(0, []),
-    ), patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
+    with (
+        patch(
+            "homeassistant.components.fritzbox_vpn.entity_registry.repair_entity_id_suffixes",
+            return_value=(0, []),
+        ),
+        patch.object(hass.config_entries, "async_reload", new=AsyncMock()),
+    ):
         await _async_repair_entity_id_suffixes(
             hass,
             type("Call", (), {"data": {}})(),

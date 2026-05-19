@@ -134,7 +134,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         _LOGGER.exception("Autoconfiguration connection test failed")
                         errors["base"] = ERROR_KEY_UNKNOWN
             schema = credentials_schema(*credentials_defaults(self._existing_config))
-            return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+            return self.async_show_form(
+                step_id="user", data_schema=schema, errors=errors
+            )
 
         result = await self._try_create_entry_from_credentials(
             user_input,
@@ -187,8 +189,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="confirm",
-                data_schema=confirm_schema(self._existing_config, self._discovered_host),
-                description_placeholders={"host": self._discovered_host or DEFAULT_HOST},
+                data_schema=confirm_schema(
+                    self._existing_config, self._discovered_host
+                ),
+                description_placeholders={
+                    "host": self._discovered_host or DEFAULT_HOST
+                },
             )
 
         result = await self._try_create_entry_from_credentials(
@@ -255,10 +261,72 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=reauth_schema(
-                user_input.get(CONF_USERNAME, username_default)
-            ),
+            data_schema=reauth_schema(user_input.get(CONF_USERNAME, username_default)),
             description_placeholders={"host": host},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration flow for existing entries."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=configure_schema(
+                    dict(reconfigure_entry.data) if reconfigure_entry.data else {},
+                    dict(reconfigure_entry.options)
+                    if reconfigure_entry.options
+                    else {},
+                ),
+            )
+
+        errors: dict[str, str] = {}
+        user_input = dict(user_input)
+        fill_password_if_missing(
+            user_input,
+            dict(reconfigure_entry.data) if reconfigure_entry.data else {},
+        )
+
+        if not validate_host_on_submit(user_input, errors):
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=configure_schema(
+                    dict(reconfigure_entry.data) if reconfigure_entry.data else {},
+                    dict(reconfigure_entry.options)
+                    if reconfigure_entry.options
+                    else {},
+                ),
+                errors=errors,
+            )
+
+        try:
+            await validate_input(self.hass, user_input)
+        except (CannotConnect, InvalidAuth) as err:
+            set_validation_error(errors, err, log_unknown_details=True)
+        else:
+            config_data = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            update_interval = normalize_update_interval(
+                user_input.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+            )
+            options_data = {CONF_UPDATE_INTERVAL: update_interval}
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates=config_data,
+                options=options_data,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=configure_schema(
+                dict(reconfigure_entry.data) if reconfigure_entry.data else {},
+                dict(reconfigure_entry.options) if reconfigure_entry.options else {},
+            ),
             errors=errors,
         )
 
@@ -353,17 +421,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             await on_confirm(entry_id)
             return self.async_create_entry(
                 title="",
-                data=dict(config_entry.options)
-                if config_entry.options
-                else {},
+                data=dict(config_entry.options) if config_entry.options else {},
             )
 
         if user_input is not None or not pending:
             return self.async_create_entry(
                 title="",
-                data=dict(config_entry.options)
-                if config_entry.options
-                else {},
+                data=dict(config_entry.options) if config_entry.options else {},
             )
 
         return self.async_show_form(

@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import UNIQUE_ID_SUFFIX_CONNECTED
 from .coordinator import FritzBoxVPNCoordinator
@@ -20,7 +20,7 @@ from .models import FritzboxVpnConfigEntry
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxVpnConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FritzBox VPN binary sensor entities."""
 
@@ -30,7 +30,9 @@ async def async_setup_entry(
         if not coordinator.data:
             return []
         return [
-            FritzBoxVPNConnectedBinarySensor(coordinator, entry, uid, coordinator.data[uid])
+            FritzBoxVPNConnectedBinarySensor(
+                coordinator, entry, uid, coordinator.data[uid]
+            )
             for uid in uids
             if uid in coordinator.data
         ]

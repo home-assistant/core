@@ -1,7 +1,6 @@
 """Tests for diagnostics platform."""
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -10,6 +9,8 @@ from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.core import HomeAssistant
 
 from .fixtures import MOCK_VPN_CONNECTIONS
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
@@ -27,7 +28,9 @@ async def test_diagnostics_redacts_credentials(
             "data": MOCK_VPN_CONNECTIONS,
         },
     )()
-    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(coordinator=mock_coordinator)
+    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(
+        coordinator=mock_coordinator
+    )
 
     result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
@@ -48,7 +51,9 @@ async def test_diagnostics_skips_non_dict_connections(
         (),
         {"last_update_success": True, "data": {"bad": "value"}},
     )()
-    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(coordinator=mock_coordinator)
+    mock_config_entry.runtime_data = FritzboxVpnRuntimeData(
+        coordinator=mock_coordinator
+    )
     result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
     assert result["vpn_connection_count"] == 0
     assert result["vpn_connections"] == []

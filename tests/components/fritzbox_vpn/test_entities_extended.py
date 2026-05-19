@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn.binary_sensor import (
     FritzBoxVPNConnectedBinarySensor,
@@ -16,12 +15,16 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .fixtures import MOCK_VPN_CONNECTIONS
 
+from tests.common import MockConfigEntry
+
 
 def _coordinator(**overrides):
     coordinator = MagicMock()
     coordinator.data = overrides.get("data", MOCK_VPN_CONNECTIONS)
     coordinator.last_update_success = overrides.get("last_update_success", True)
-    coordinator.get_vpn_status = MagicMock(return_value=overrides.get("status", STATUS_CONNECTED))
+    coordinator.get_vpn_status = MagicMock(
+        return_value=overrides.get("status", STATUS_CONNECTED)
+    )
     coordinator.toggle_vpn = AsyncMock(return_value=overrides.get("toggle_ok", True))
     coordinator.async_request_refresh = AsyncMock()
     return coordinator

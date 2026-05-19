@@ -45,9 +45,7 @@ class QueuedAiohttpSession:
         try:
             return next(self._responses)
         except StopIteration as err:
-            raise AssertionError(
-                f"No mock response left for {method} {url}"
-            ) from err
+            raise AssertionError(f"No mock response left for {method} {url}") from err
 
     def get(self, url: str, **kwargs: Any) -> MockAiohttpResponse:
         """Return next queued GET response."""

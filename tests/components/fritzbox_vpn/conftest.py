@@ -1,15 +1,15 @@
 """Pytest fixtures for FritzBox VPN tests."""
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn.coordinator import FritzBoxVPNCoordinator
 from homeassistant.components.fritzbox_vpn.models import FritzboxVpnRuntimeData
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from .fixtures import MOCK_VPN_CONNECTIONS
 
-pytest_plugins = "pytest_homeassistant_custom_component"
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -28,7 +28,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 async def coordinator_with_data(
-    hass, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> FritzBoxVPNCoordinator:
     """Coordinator on entry.runtime_data with VPN sample data."""
     mock_config_entry.add_to_hass(hass)

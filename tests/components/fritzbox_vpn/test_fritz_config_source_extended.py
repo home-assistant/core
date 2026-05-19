@@ -1,7 +1,6 @@
 """Extended tests for Fritz config import."""
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.fritzbox_vpn.fritz_config_source import (
     _entry_has_credentials,
@@ -10,6 +9,8 @@ from homeassistant.components.fritzbox_vpn.fritz_config_source import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 def test_entry_has_credentials_from_options() -> None:
