@@ -929,6 +929,9 @@ split-on-trailing-comma = false
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
+# Some utils have constants that benefit from being uppercase
+"homeassistant/util/*" = ["N806"]
+
 # Allow relative imports within auth and within components
 "homeassistant/auth/*/*" = ["TID252"]
 "homeassistant/components/*/*/*" = ["TID252"]

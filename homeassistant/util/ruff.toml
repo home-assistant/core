@@ -1,7 +1,0 @@
-# This extend our general Ruff rules specifically for util
-extend = "../../pyproject.toml"
-
-[lint]
-extend-ignore = [
-    "N806",   # Some utils have constants that benefit from being uppercase
-]
