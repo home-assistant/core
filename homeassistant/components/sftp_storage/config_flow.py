@@ -1,7 +1,5 @@
 """Config flow to configure the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from pathlib import Path
 import shutil
@@ -60,11 +58,11 @@ class SFTPStorageException(Exception):
 
 
 class SFTPStorageInvalidPrivateKey(SFTPStorageException):
-    """Exception raised during config flow - when user provided invalid private key file."""
+    """Exception raised when user provided invalid private key file."""
 
 
 class SFTPStorageMissingPasswordOrPkey(SFTPStorageException):
-    """Exception raised during config flow - when user did not provide password or private key file."""
+    """Exception raised when user did not provide password or private key file."""
 
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -87,8 +85,10 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         Returns: the possibly updated `user_input`.
 
         Raises:
-            - SFTPStorageMissingPasswordOrPkey: Neither password nor private key provided
-            - SFTPStorageInvalidPrivateKey: The provided private key has an invalid format
+            - SFTPStorageMissingPasswordOrPkey: Neither password
+              nor private key provided
+            - SFTPStorageInvalidPrivateKey: The provided private
+              key has an invalid format
         """
 
         # If neither password nor private key is provided, error out;
@@ -155,9 +155,11 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 # - OSError, if host or port are not correct.
                 # - SFTPStorageInvalidPrivateKey, if private key is not valid format.
                 # - asyncssh.misc.PermissionDenied, if credentials are not correct.
-                # - SFTPStorageMissingPasswordOrPkey, if password and private key are not provided.
+                # - SFTPStorageMissingPasswordOrPkey, if password
+                #   and private key are not provided.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
-                # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
+                # - asyncssh.sftp.SFTPPermissionDenied,
+                #   if we don't have access to said directory
                 async with (
                     connect(
                         host=user_config.host,

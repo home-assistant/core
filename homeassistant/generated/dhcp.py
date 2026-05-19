@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
@@ -174,6 +172,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "duco",
+        "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -267,6 +269,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fumis",
+        "macaddress": "0016D0*",
+    },
+    {
         "domain": "fyta",
         "hostname": "fyta*",
     },
@@ -298,6 +304,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "guntamatic",
+        "hostname": "kessel*",
+        "macaddress": "0024BD*",
+    },
+    {
         "domain": "home_connect",
         "hostname": "balay-*",
         "macaddress": "C8D778*",
@@ -324,6 +335,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "iaqualink",
+        "hostname": "iaqualink-*",
     },
     {
         "domain": "incomfort",
@@ -464,6 +479,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*",
+    },
+    {
+        "domain": "nobo_hub",
+        "registered_devices": True,
+    },
+    {
+        "domain": "nobo_hub",
+        "hostname": "hub*",
+        "macaddress": "7C8306*",
     },
     {
         "domain": "nuheat",
@@ -1331,43 +1355,43 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "twinkly-*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "B4FBE4*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "802AA8*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "F09FC2*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "68D79A*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "18E829*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "245A4C*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "784558*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "E063DA*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "265A4C*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "74ACB9*",
     },
     {

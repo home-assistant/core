@@ -1,4 +1,4 @@
-"""Tests for iAqualink integration."""
+"""Tests for iAquaLink integration."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
+    AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
 from iaqualink.systems.iaqua.device import (
@@ -16,10 +17,11 @@ from iaqualink.systems.iaqua.device import (
     IaquaThermostat,
 )
 from iaqualink.systems.iaqua.system import IaquaSystem
+import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL
+from homeassistant.components.iaqualink.const import UPDATE_INTERVAL_BY_SYSTEM_TYPE
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -34,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
@@ -45,7 +48,9 @@ async def _advance_coordinator_time(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Advance time to trigger coordinator update interval."""
-    freezer.tick(delta=UPDATE_INTERVAL)
+    update_interval = UPDATE_INTERVAL_BY_SYSTEM_TYPE["iaqua"]
+
+    freezer.tick(delta=update_interval)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -82,8 +87,11 @@ async def test_system_refresh_failure_marks_entities_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    name = f"{LIGHT_DOMAIN}.{light.name}"
-    state = hass.states.get(name)
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -95,9 +103,60 @@ async def test_system_refresh_failure_marks_entities_unavailable(
 
     await _advance_coordinator_time(hass, freezer)
 
-    state = hass.states.get(name)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_system_rate_limited_keeps_entities_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rate-limited update keeps entities at their last known state."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+    light = get_aqualink_device(
+        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
+    )
+    devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value=devices)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    system.update = AsyncMock(side_effect=AqualinkServiceThrottledException)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert "Rate limited by iAquaLink" in caplog.text
 
 
 async def test_light_service_calls_update_entity_state(
@@ -140,7 +199,10 @@ async def test_light_service_calls_update_entity_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
+
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
@@ -408,6 +470,7 @@ async def test_setup_all_good_all_device_types(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     client: AqualinkClient,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup ending in one device of each type recognized."""
     config_entry.add_to_hass(hass)
@@ -469,6 +532,18 @@ async def test_setup_all_good_all_device_types(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
+    for domain in (
+        BINARY_SENSOR_DOMAIN,
+        CLIMATE_DOMAIN,
+        LIGHT_DOMAIN,
+        SENSOR_DOMAIN,
+        SWITCH_DOMAIN,
+    ):
+        for entity_id in hass.states.async_entity_ids(domain):
+            entry = entity_registry.async_get(entity_id)
+            assert entry is not None
+            assert entry.has_entity_name is True
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -511,7 +586,9 @@ async def test_multiple_updates(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
+    entity_id = entity_ids[0]
 
     def assert_state(expected_state: str) -> None:
         state = hass.states.get(entity_id)
@@ -632,9 +709,10 @@ async def test_entity_assumed_and_available(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
+    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert len(entity_ids) == 1
 
-    name = f"{LIGHT_DOMAIN}.{light.name}"
+    name = entity_ids[0]
 
     # None means maybe.
     light.system.online = None

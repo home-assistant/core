@@ -1,7 +1,5 @@
 """API helpers and Home Assistant exceptions for the NRGkick integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 
 import aiohttp

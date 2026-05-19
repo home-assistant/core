@@ -1,7 +1,5 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
@@ -100,8 +98,9 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
         As we set the override, we report back the override. The actual set point is
         is returned at a later time.
-        Some older thermostats do not clear the override setting in that case, in that case
-        we fallback to the returning actual setpoint.
+        Some older thermostats do not clear the override
+        setting in that case, so we fallback to the returning
+        actual setpoint.
         """
         if self._legacy_setpoint_status:
             return self._room.setpoint

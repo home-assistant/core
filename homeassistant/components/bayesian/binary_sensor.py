@@ -1,7 +1,5 @@
 """Use Bayesian Inference to trigger a binary sensor."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Callable
 import logging
@@ -84,14 +82,17 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
         below = config.get(CONF_BELOW)
         if above is None and below is None:
             _LOGGER.error(
-                "For bayesian numeric state for entity: %s at least one of 'above' or 'below' must be specified",
+                "For bayesian numeric state for entity: %s"
+                " at least one of 'above' or 'below'"
+                " must be specified",
                 config[CONF_ENTITY_ID],
             )
             raise vol.Invalid("above_or_below")
         if above is not None and below is not None:
             if above > below:
                 _LOGGER.error(
-                    "For bayesian numeric state 'above' (%s) must be less than 'below' (%s)",
+                    "For bayesian numeric state 'above' (%s)"
+                    " must be less than 'below' (%s)",
                     above,
                     below,
                 )
@@ -144,7 +145,10 @@ def no_overlapping(configs: list[dict]) -> list[dict]:
         for i, tup in enumerate(intervals):
             if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
                 _LOGGER.error(
-                    "Ranges for bayesian numeric state entities must not overlap, but %s has overlapping ranges, above:%s, below:%s overlaps with above:%s, below:%s",
+                    "Ranges for bayesian numeric state entities"
+                    " must not overlap, but %s has overlapping"
+                    " ranges, above:%s, below:%s overlaps"
+                    " with above:%s, below:%s",
                     ent_id,
                     tup.above,
                     tup.below,
@@ -227,7 +231,8 @@ async def async_setup_platform(
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
-    # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
+    # Should deprecate in some future version (2022.10 at time
+    # of writing) & make prob_given_false required in schemas.
     broken_observations: list[dict[str, Any]] = []
     for observation in observations:
         if CONF_P_GIVEN_F not in observation:
@@ -356,7 +361,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         Other methods in this class are designed to avoid directly modifying instance
         attributes, by instead focusing on returning relevant data back to this method.
 
-        The goal of this method is to ensure that `self.current_observations` and `self.probability`
+        The goal of this method is to ensure that
+        `self.current_observations` and `self.probability`
         are set on a best-effort basis when this entity is register with hass.
 
         In addition, this method must register the state listener defined within, which
@@ -413,7 +419,8 @@ class BayesianBinarySensor(BinarySensorEntity):
             for observation in self.observations_by_template[template]:
                 observation.observed = observed
 
-                # in some cases a template may update because of the absence of an entity
+                # in some cases a template may update because
+                # of the absence of an entity
                 if entity_id is not None:
                     observation.entity_id = entity_id
 
@@ -572,7 +579,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     def _process_numeric_state(
         self, entity_observation: Observation, multi: bool = False
     ) -> bool | None:
-        """Return True if numeric condition is met, return False if not, return None otherwise."""
+        """Return True if numeric condition is met, False if not, None otherwise."""
         entity_id = entity_observation.entity_id
         # if we are dealing with numeric_state observations entity_id cannot be None
         if TYPE_CHECKING:
@@ -637,7 +644,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         return {
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
-            # An entity can be in more than one observation so set then list to deduplicate
+            # An entity can be in more than one observation
+            # so set then list to deduplicate
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
                     observation.entity_id

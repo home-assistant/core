@@ -1,6 +1,7 @@
 """Tests for the Anthropic integration."""
 
 from pathlib import Path
+import re
 from unittest.mock import AsyncMock, patch
 
 from anthropic.types import Message, TextBlock, Usage
@@ -224,7 +225,10 @@ async def test_generate_structured_data_legacy_extended_thinking(
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation with legacy method and extended_thinking."""
+    """Test AI Task structured data generation.
+
+    Uses legacy method with extended_thinking.
+    """
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -280,7 +284,10 @@ async def test_generate_structured_data_legacy_extra_text_block(
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test AI Task structured data generation with legacy method and extra text block."""
+    """Test AI Task structured data generation.
+
+    Uses legacy method with extra text block.
+    """
     mock_create_stream.return_value = [
         (
             *create_thinking_block(
@@ -551,7 +558,11 @@ async def test_generate_data_invalid_attachments(
         ),
         pytest.raises(
             HomeAssistantError,
-            match="Only images and PDF are supported by the Anthropic API",
+            match=re.escape(
+                "The Claude Haiku 4.5 model does not support"
+                " text/plain file types"
+                " (for `doorbell_snapshot.txt`)"
+            ),
         ),
     ):
         await ai_task.async_generate_data(

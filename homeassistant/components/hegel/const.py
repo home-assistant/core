@@ -3,6 +3,7 @@
 DOMAIN = "hegel"
 DEFAULT_PORT = 50001
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_MODEL = "model"
 CONF_MAX_VOLUME = "max_volume"  # 1.0 means amp's internal max
 
@@ -81,6 +82,7 @@ MODEL_INPUTS = {
         "XLR 2",
         "Analog 1",
         "Analog 2",
+        "Analog 3",
         "BNC",
         "Coaxial",
         "Optical 1",

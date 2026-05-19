@@ -96,7 +96,7 @@ async def test_setup_auth_error_401_triggers_reauth(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test 401 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    """Test 401 authentication error triggers reauth flow."""
     mock_webhook_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
@@ -122,7 +122,7 @@ async def test_setup_auth_error_403_triggers_reauth(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test 403 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    """Test 403 authentication error triggers reauth flow."""
     mock_webhook_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
@@ -1075,7 +1075,7 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
 async def test_initial_state_conversion_error_valueerror(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test ValueError/TypeError during initial state float conversion (lines 212-213)."""
+    """Test ValueError/TypeError during initial state float conversion."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1144,7 +1144,8 @@ async def test_state_change_untracked_entity_explicit(hass: HomeAssistant) -> No
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Change state of a completely unrelated entity that doesn't exist in any mapping
+        # Change state of a completely unrelated entity that
+        # doesn't exist in any mapping
         hass.states.async_set("sensor.random_unrelated_entity", "100")
         await hass.async_block_till_done()
 
@@ -1228,7 +1229,8 @@ async def test_entry_unloading_flag_state_change(hass: HomeAssistant) -> None:
         del entry.runtime_data
 
         # Try to trigger state change handler - should hit the check at line 305
-        # Since we can't easily trigger the actual callback, we'll just ensure the entry is cleaned up properly
+        # Since we can't easily trigger the actual callback,
+        # we'll just ensure the entry is cleaned up properly
 
         assert not hasattr(entry, "runtime_data")
 
@@ -1283,7 +1285,7 @@ async def test_initial_state_conversion_error(
     mock_webhook_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test ValueError/TypeError during initial state float conversion (lines 212-213)."""
+    """Test ValueError/TypeError during initial state float conversion."""
     # Create entity with non-numeric state that will cause conversion error
     entity_entry = entity_registry.async_get_or_create(
         "sensor",

@@ -1,7 +1,5 @@
 """Select platform for OpenRGB integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError

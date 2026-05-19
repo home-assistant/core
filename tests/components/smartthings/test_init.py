@@ -61,11 +61,13 @@ async def test_fixtures() -> None:
     for fixture_name in DEVICE_FIXTURES:
         for device_details in get_device_response(fixture_name).items:
             assert device_details.device_id not in device_ids, (
-                f"Duplicate device ID {device_details.device_id} found in fixture {fixture_name}"
+                f"Duplicate device ID {device_details.device_id}"
+                f" found in fixture {fixture_name}"
             )
             device_ids.add(device_details.device_id)
             assert (label := device_details.label.lower()) not in device_labels, (
-                f"Duplicate device label {device_details.label} found in fixture {fixture_name}"
+                f"Duplicate device label {device_details.label}"
+                f" found in fixture {fixture_name}"
             )
             device_labels.add(label)
 
@@ -767,10 +769,10 @@ async def test_oauth_implementation_not_available(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test migration from minor version 2 to 3."""
@@ -797,10 +799,10 @@ async def test_3_3_migration(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration_fail(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
@@ -824,10 +826,10 @@ async def test_3_3_migration_fail(
 
 
 @pytest.mark.parametrize("old_data", [({})])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration_no_old_data(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test migration from minor version 2 to 3 when no old data is present."""

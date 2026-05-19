@@ -1,7 +1,5 @@
 """Module for SIA Alarm Control Panels."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING

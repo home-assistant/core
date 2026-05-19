@@ -1,7 +1,5 @@
 """The test for the sql sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from pathlib import Path
 import sqlite3
@@ -71,7 +69,10 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
 async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with CTE."""
     options = {
-        CONF_QUERY: "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        CONF_QUERY: (
+            "WITH test AS (SELECT 1 AS row_num, 10 AS state)"
+            " SELECT state FROM test WHERE row_num = 1 LIMIT 1;"
+        ),
         CONF_COLUMN_NAME: "state",
     }
     await init_integration(hass, title="Select value SQL query CTE", options=options)
@@ -115,7 +116,10 @@ async def test_template_query(
 ) -> None:
     """Test the SQL sensor with a query template."""
     options = {
-        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_QUERY: (
+            "SELECT {% if states('sensor.input1')=='on' %}"
+            " 5 {% else %} 6 {% endif %} as value"
+        ),
         CONF_COLUMN_NAME: "value",
         CONF_ADVANCED_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
@@ -196,9 +200,13 @@ async def test_broken_template_query_2(
     state = hass.states.get("sensor.count_tables")
     assert state.state == "0.005"
     assert (
-        "Error rendering query SELECT {{ states.sensor.input1.state | int / 1000}} as value"
-        " LIMIT 1;: ValueError: Template error: int got invalid input 'on' when rendering"
-        " template 'SELECT {{ states.sensor.input1.state | int / 1000}} as value LIMIT 1;'"
+        "Error rendering query SELECT"
+        " {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;: ValueError: Template error: int got invalid"
+        " input 'on' when rendering"
+        " template 'SELECT"
+        " {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;'"
         " but no default was specified" in caplog.text
     )
 

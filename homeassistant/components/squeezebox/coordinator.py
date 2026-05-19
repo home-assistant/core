@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
@@ -108,7 +106,8 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
         if self.available:
-            # Only update players available at last update, unavailable players are rediscovered instead
+            # Only update players available at last update,
+            # unavailable players are rediscovered instead
             await self.player.async_update()
 
             if not self.player.connected:

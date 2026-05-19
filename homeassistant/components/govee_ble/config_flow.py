@@ -1,7 +1,5 @@
 """Config flow for govee ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from govee_ble import GoveeBluetoothDeviceData as DeviceData
@@ -96,7 +94,10 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
                         {
-                            address: f"{device.get_device_name(None) or discovery_info.name} ({address})"
+                            address: (
+                                f"{device.get_device_name(None) or discovery_info.name}"
+                                f" ({address})"
+                            )
                             for address, (
                                 device,
                                 discovery_info,

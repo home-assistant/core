@@ -1,11 +1,10 @@
 """Constants for the Time & Date integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import Platform
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DISPLAY_OPTIONS = "display_options"
 DOMAIN: Final = "time_date"
 PLATFORMS = [Platform.SENSOR]

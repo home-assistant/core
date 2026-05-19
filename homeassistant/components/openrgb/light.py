@@ -1,7 +1,5 @@
 """OpenRGB light platform."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -187,7 +185,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             # If mode is Off, retain previous color mode to avoid changing the UI
             color_mode = self._attr_color_mode
         else:
-            # If the current mode is not Off and does not support color, change to ON/OFF mode
+            # If the current mode is not Off and does not support
+            # color, change to ON/OFF mode
             color_mode = ColorMode.ONOFF
 
         if not on_by_color:
@@ -360,8 +359,9 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             and (self._attr_brightness is None or self._attr_rgb_color is None)
         )
 
-        # If color/brightness restoration require color support but mode doesn't support it,
-        # switch to a color-capable mode
+        # If color/brightness restoration require color support
+        # but mode doesn't support it, switch to a color-capable
+        # mode
         if need_to_apply_color and not mode_supports_color:
             mode = self._preferred_no_effect_mode
 

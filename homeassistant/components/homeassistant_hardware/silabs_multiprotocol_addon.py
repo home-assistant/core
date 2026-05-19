@@ -1,7 +1,5 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import dataclasses
@@ -309,7 +307,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
@@ -451,7 +449,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the Silicon Labs Multiprotocol add-on."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
@@ -743,7 +741,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform initial backup and reconfigure ZHA."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
