@@ -169,6 +169,11 @@ class ItachClient:
         except asyncio.IncompleteReadError as err:
             await self.close()
             raise ItachConnectionError("Incomplete response from iTach") from err
+        except asyncio.LimitOverrunError as err:
+            await self.close()
+            raise ItachConnectionError(
+                "Response from iTach exceeded buffer limit"
+            ) from err
         except OSError as err:
             await self.close()
             raise ItachConnectionError(

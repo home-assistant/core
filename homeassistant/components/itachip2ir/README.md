@@ -329,7 +329,8 @@ Add the following to `configuration.yaml`:
 ```yaml
 logger:
   logs:
-    custom_components.itachip2ir: debug
+    homeassistant.components.itachip2ir: debug
+    homeassistant.components.itachip2ir.pyitach: debug
 ```
 
 ## Known limitations

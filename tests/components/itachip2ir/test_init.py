@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.itachip2ir import (
     ItachRuntimeData,
+    async_reload_entry,
     async_setup,
     async_setup_entry,
     async_unload_entry,
@@ -450,3 +451,51 @@ async def test_async_unload_entry_does_not_close_client_if_platform_unload_fails
     assert not await async_unload_entry(hass, entry)
 
     entry.runtime_data.client.close.assert_not_awaited()
+
+
+async def test_async_reload_entry_reloads_config_entry(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test reload delegates to the config entry manager."""
+    entry = _make_entry()
+    async_reload = AsyncMock()
+
+    monkeypatch.setattr(hass.config_entries, "async_reload", async_reload)
+
+    await async_reload_entry(hass, entry)
+
+    async_reload.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_async_setup_entry_starts_discovery_when_enabled(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test setup entry starts discovery when discovery is enabled."""
+    hass.data["itachip2ir_disable_discovery"] = False
+    entry = _make_entry()
+    entry.add_to_hass(hass)
+
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.ItachDiscovery",
+        _FakeDiscovery,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.ItachClient",
+        _FakeClient,
+    )
+
+    forward_setups = AsyncMock(return_value=True)
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        forward_setups,
+    )
+
+    assert await async_setup_entry(hass, entry)
+
+    assert len(_FakeDiscovery.instances) == 1
+    _FakeDiscovery.instances[0].async_start.assert_awaited_once()
+    assert hass.data[DOMAIN][DISCOVERY] is _FakeDiscovery.instances[0]
+    forward_setups.assert_awaited_once_with(entry, ["infrared", "remote"])

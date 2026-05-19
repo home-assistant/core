@@ -25,6 +25,7 @@ def async_create_repair_issue(
     """Create a Home Assistant repair issue for the integration."""
     translation_placeholders: dict[str, str] | None = placeholders
 
+    # Translation keys intentionally reuse the ISSUE_* identifiers here.
     if translation_key in {ISSUE_CANNOT_CONNECT, ISSUE_NO_IR_PORTS}:
         translation_placeholders = {
             **_DEFAULT_PLACEHOLDERS,
