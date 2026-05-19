@@ -1419,3 +1419,252 @@ async def test_options_flow_refresh_infrared_ports_uses_options_host_and_port(
 def test_normalize_command_name_returns_empty_for_symbols_only() -> None:
     """Test command names do not silently fallback to a default value."""
     assert _normalize_command_name(" !!! ") == ""
+
+
+async def test_options_flow_add_remote_rejects_unavailable_infrared_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test add remote rejects an unavailable infrared entity."""
+    entry = _entry()
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_add_remote(
+        {
+            CONF_REMOTE_NAME: "Bedroom TV",
+            CONF_INFRARED_ENTITY_ID: "infrared.not_owned_by_entry",
+        }
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_remote"
+    assert result["errors"] == {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"}
+
+
+async def test_options_flow_add_command_direct_step_without_selected_remote_redirects(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct add command step redirects when no remote is selected."""
+    entry = _entry(options={CONF_VIRTUAL_REMOTES: [_remote()]})
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_add_command()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_remote_for_command"
+
+
+async def test_options_flow_change_infrared_direct_step_without_selected_remote_redirects(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct change entity step redirects when no remote is selected."""
+    entry = _entry(options={CONF_VIRTUAL_REMOTES: [_remote()]})
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_change_remote_infrared_entity()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_remote_for_infrared_entity"
+
+
+async def test_options_flow_change_infrared_rejects_unavailable_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test changing a remote to an unavailable infrared entity is rejected."""
+    entry = _entry(options={CONF_VIRTUAL_REMOTES: [_remote()]})
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+    flow._selected_remote_id = "living_room_tv"
+
+    result = await flow.async_step_change_remote_infrared_entity(
+        {CONF_INFRARED_ENTITY_ID: "infrared.not_owned_by_entry"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "change_remote_infrared_entity"
+    assert result["errors"] == {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"}
+
+
+async def test_options_flow_select_command_edit_without_selected_remote_redirects(
+    hass: HomeAssistant,
+) -> None:
+    """Test command edit selection redirects when no remote is selected."""
+    entry = _entry(
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
+    )
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_select_command_for_edit()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_remote_for_command_edit"
+
+
+async def test_options_flow_select_command_edit_aborts_when_selected_remote_has_no_commands(
+    hass: HomeAssistant,
+) -> None:
+    """Test command edit selection aborts when the selected remote has no commands."""
+    entry = _entry(options={CONF_VIRTUAL_REMOTES: [_remote()]})
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+    flow._selected_remote_id = "living_room_tv"
+
+    result = await flow.async_step_select_command_for_edit()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_remote_commands"
+
+
+async def test_options_flow_edit_command_direct_step_without_selected_remote_redirects(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct edit command step redirects when no remote is selected."""
+    entry = _entry(
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
+    )
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_edit_command()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_remote_for_command_edit"
+
+
+async def test_options_flow_edit_command_direct_step_aborts_without_selected_remote(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct edit command step aborts with user input and no selected remote."""
+    entry = _entry(
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
+    )
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_edit_command(
+        {COMMAND_NAME: "POWER_ON", COMMAND_DATA: "100,200"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "remote_not_found"
+
+
+async def test_options_flow_edit_command_missing_selected_command_redirects_to_select(
+    hass: HomeAssistant,
+) -> None:
+    """Test edit command redirects when selected command is no longer present."""
+    entry = _entry(
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
+    )
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+    flow._selected_remote_id = "living_room_tv"
+    flow._selected_command_name = "POWER_OFF"
+
+    result = await flow.async_step_edit_command()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_command_for_edit"
+
+
+async def test_options_flow_remove_command_direct_step_without_selected_remote_redirects(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct remove command step redirects when no remote is selected."""
+    entry = _entry(
+        options={CONF_VIRTUAL_REMOTES: [_remote(commands={"POWER_ON": "100,200"})]}
+    )
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+
+    result = await flow.async_step_remove_command()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "select_remote_for_command_removal"
+
+
+async def test_options_flow_remove_command_aborts_when_selected_remote_has_no_commands(
+    hass: HomeAssistant,
+) -> None:
+    """Test remove command aborts when the selected remote has no commands."""
+    entry = _entry(options={CONF_VIRTUAL_REMOTES: [_remote()]})
+    _register_infrared_entities(hass, entry)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    flow = cast(Any, hass.config_entries.options._progress[result["flow_id"]])
+    flow._selected_remote_id = "living_room_tv"
+
+    result = await flow.async_step_remove_command()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_remote_commands"
+
+
+async def test_options_flow_ignores_unrelated_registry_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test infrared selectors ignore entities from other domains/platforms/entries."""
+    entry = _entry()
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="GlobalCache_000C1E654321",
+        entry_id="other-entry-id",
+        data={},
+        title="Other iTach IP2IR",
+    )
+    other_entry.add_to_hass(hass)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "sensor_from_same_entry",
+        suggested_object_id="same_entry_sensor",
+        config_entry=entry,
+    )
+    registry.async_get_or_create(
+        "infrared",
+        "other_platform",
+        "other_platform_infrared",
+        suggested_object_id="other_platform_ir",
+        config_entry=entry,
+    )
+    registry.async_get_or_create(
+        "infrared",
+        DOMAIN,
+        "other_entry_infrared",
+        suggested_object_id="other_entry_ir",
+        config_entry=other_entry,
+    )
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id,
+        context={"source": SOURCE_ADD_REMOTE},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_available_infrared_entities"

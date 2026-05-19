@@ -28,6 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+COMMAND_POWER_ON = "POWER_ON"
+COMMAND_POWER_OFF = "POWER_OFF"
+COMMAND_TOGGLE = "TOGGLE"
+COMMAND_POWER_TOGGLE = "POWER_TOGGLE"
+
 
 def _as_str_mapping(value: Any) -> dict[str, str] | None:
     """Return a string mapping or None when the value is malformed."""
@@ -145,29 +150,29 @@ class InfraredRemoteEntity(RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the virtual remote."""
-        if "power_on" not in self._commands:
+        if not self._has_configured_command(COMMAND_POWER_ON):
             return
 
-        await self._async_send_named_command("power_on", kwargs)
+        await self._async_send_named_command(COMMAND_POWER_ON, kwargs)
         self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the virtual remote."""
-        if "power_off" not in self._commands:
+        if not self._has_configured_command(COMMAND_POWER_OFF):
             return
 
-        await self._async_send_named_command("power_off", kwargs)
+        await self._async_send_named_command(COMMAND_POWER_OFF, kwargs)
         self._is_on = False
         self.async_write_ha_state()
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the virtual remote."""
         command = None
-        if "toggle" in self._commands:
-            command = "toggle"
-        elif "power_toggle" in self._commands:
-            command = "power_toggle"
+        if self._has_configured_command(COMMAND_TOGGLE):
+            command = COMMAND_TOGGLE
+        elif self._has_configured_command(COMMAND_POWER_TOGGLE):
+            command = COMMAND_POWER_TOGGLE
 
         if command is None:
             return
@@ -222,14 +227,35 @@ class InfraredRemoteEntity(RemoteEntity):
                 if delay_secs and sent < total:
                     await asyncio.sleep(delay_secs)
 
+    def _configured_command_payload(self, command: str) -> str | None:
+        """Return configured command payload using case-insensitive command names."""
+        if command in self._commands:
+            return self._commands[command]
+
+        normalized_command = command.upper()
+        for configured_command, payload in self._commands.items():
+            if configured_command.upper() == normalized_command:
+                return payload
+
+        return None
+
+    def _has_configured_command(self, command: str) -> bool:
+        """Return whether a configured command exists."""
+        return self._configured_command_payload(command) is not None
+
     async def _async_send_named_command(
         self,
         command: str,
         kwargs: dict[str, Any] | None = None,
     ) -> None:
         """Resolve and send a named or raw infrared command."""
-        command_is_configured = command in self._commands
-        raw_command = self._commands[command] if command_is_configured else command
+        configured_payload = self._configured_command_payload(command)
+        if configured_payload is not None:
+            command_is_configured = True
+            raw_command = configured_payload
+        else:
+            command_is_configured = False
+            raw_command = command
 
         try:
             ir_command = _parse_remote_command(raw_command, kwargs or {})

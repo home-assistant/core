@@ -246,12 +246,28 @@ async def test_pyitach_async_discover_once_socket_error(
     assert fake_socket.closed
 
 
+async def test_async_discover_once_returns_none_when_no_beacon(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test HA wrapper returns None when hardware discovery finds no beacon."""
+
+    async def fake_discover_once(timeout: float) -> None:
+        return None
+
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.discovery._async_discover_once",
+        fake_discover_once,
+    )
+
+    assert await async_discover_once(timeout=1.0) is None
+
+
 async def test_async_discover_once_filters_non_ip2ir(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test HA wrapper filters non-IP2IR Global Caché beacons."""
 
-    async def fake_discover_once(timeout: float):
+    async def fake_discover_once(timeout: float) -> ItachDiscoveryBeacon:
         return ItachDiscoveryBeacon(
             host=HOST,
             uuid=UNIQUE_ID,
@@ -271,7 +287,7 @@ async def test_async_discover_once_returns_ip2ir(
 ) -> None:
     """Test HA wrapper returns discovered IP2IR data."""
 
-    async def fake_discover_once(timeout: float):
+    async def fake_discover_once(timeout: float) -> ItachDiscoveryBeacon:
         return ItachDiscoveryBeacon(
             host=HOST,
             uuid=UNIQUE_ID,
@@ -295,7 +311,7 @@ async def test_async_wait_for_device_id_returns_matching_uuid(
 ) -> None:
     """Test waiting for a matching host returns the discovered UUID."""
 
-    async def fake_discover_once(timeout: float):
+    async def fake_discover_once(timeout: float) -> dict[str, str]:
         return {
             "host": HOST,
             "uuid": UNIQUE_ID,
@@ -315,7 +331,7 @@ async def test_async_wait_for_device_id_returns_none_for_no_result(
 ) -> None:
     """Test waiting for device ID returns None when discovery finds nothing."""
 
-    async def fake_discover_once(timeout: float):
+    async def fake_discover_once(timeout: float) -> None:
         return None
 
     monkeypatch.setattr(
@@ -331,7 +347,7 @@ async def test_async_wait_for_device_id_returns_none_for_host_mismatch(
 ) -> None:
     """Test waiting for device ID ignores beacons from another host."""
 
-    async def fake_discover_once(timeout: float):
+    async def fake_discover_once(timeout: float) -> dict[str, str]:
         return {
             "host": OTHER_HOST,
             "uuid": UNIQUE_ID,
@@ -379,7 +395,10 @@ def test_is_already_configured_true(hass: HomeAssistant) -> None:
     assert discovery._is_already_configured(UNIQUE_ID)
 
 
-def test_configured_device_host_update(hass: HomeAssistant) -> None:
+def test_configured_device_host_update(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test discovery updates host for an already configured entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -390,7 +409,6 @@ def test_configured_device_host_update(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
@@ -411,6 +429,7 @@ def test_configured_device_host_update(hass: HomeAssistant) -> None:
 
 def test_configured_device_host_update_preserves_custom_title(
     hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test discovery host update preserves user/custom entry title."""
     entry = MockConfigEntry(
@@ -422,7 +441,6 @@ def test_configured_device_host_update_preserves_custom_title(
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
@@ -442,6 +460,7 @@ def test_configured_device_host_update_preserves_custom_title(
 
 def test_configured_device_host_update_skips_options_override(
     hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test discovery does not update host when options override host."""
     entry = MockConfigEntry(
@@ -454,7 +473,6 @@ def test_configured_device_host_update_skips_options_override(
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
@@ -470,6 +488,7 @@ def test_configured_device_host_update_skips_options_override(
 
 def test_configured_device_host_update_skips_unchanged_host(
     hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test discovery skips update when host has not changed."""
     entry = MockConfigEntry(
@@ -481,7 +500,6 @@ def test_configured_device_host_update_skips_unchanged_host(
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
@@ -497,6 +515,7 @@ def test_configured_device_host_update_skips_unchanged_host(
 
 def test_configured_device_host_update_requires_same_host_confirmation(
     hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test host update confirmation resets when discovered host changes."""
     entry = MockConfigEntry(
@@ -508,7 +527,6 @@ def test_configured_device_host_update_requires_same_host_confirmation(
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
@@ -528,7 +546,10 @@ def test_configured_device_host_update_requires_same_host_confirmation(
     schedule_reload.assert_called_once_with(entry.entry_id)
 
 
-def test_flow_throttle(monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant) -> None:
+def test_flow_throttle(
+    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant,
+) -> None:
     """Test discovery flow throttling."""
     discovery = ItachDiscovery(hass)
 
@@ -546,7 +567,8 @@ def test_flow_throttle(monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant) -> 
 
 
 def test_flow_throttle_expires(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant,
 ) -> None:
     """Test expired discovery flow throttle entries are pruned."""
     discovery = ItachDiscovery(hass)
@@ -571,7 +593,8 @@ def test_flow_throttle_expires(
 
 
 async def test_async_start_listener_failure(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test discovery start handles listener start failure."""
     listener = MagicMock()
@@ -589,7 +612,8 @@ async def test_async_start_listener_failure(
 
 
 async def test_async_start_success_and_idempotent(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test discovery start creates one listener and is idempotent."""
     listener = MagicMock()
@@ -630,13 +654,16 @@ async def test_async_stop_cleanup(hass: HomeAssistant) -> None:
     listener.async_stop.assert_awaited_once()
 
 
-async def test_handle_beacon_triggers_flow() -> None:
+async def test_handle_beacon_triggers_flow(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test handler starts a discovery flow for a valid beacon."""
     hass = MagicMock()
     async_init = AsyncMock(return_value={"type": "form"})
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
-    hass.config_entries.async_entries = MagicMock(return_value=[])
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_entries",
+        MagicMock(return_value=[]),
+    )
 
     discovery = ItachDiscovery(hass)
 
@@ -657,11 +684,12 @@ async def test_handle_beacon_triggers_flow() -> None:
     )
 
 
-async def test_handle_beacon_ignores_missing_uuid() -> None:
+async def test_handle_beacon_ignores_missing_uuid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test handler ignores beacons missing UUID."""
     hass = MagicMock()
     async_init = AsyncMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
 
     discovery = ItachDiscovery(hass)
@@ -673,11 +701,12 @@ async def test_handle_beacon_ignores_missing_uuid() -> None:
     async_init.assert_not_awaited()
 
 
-async def test_handle_beacon_ignores_non_ip2ir() -> None:
+async def test_handle_beacon_ignores_non_ip2ir(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test handler ignores non-IP2IR Global Caché devices."""
     hass = MagicMock()
     async_init = AsyncMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
 
     discovery = ItachDiscovery(hass)
@@ -689,7 +718,9 @@ async def test_handle_beacon_ignores_non_ip2ir() -> None:
     async_init.assert_not_awaited()
 
 
-async def test_handle_beacon_ignores_already_configured_and_updates_host() -> None:
+async def test_handle_beacon_ignores_already_configured_and_updates_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test handler updates host and skips flow for configured device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -700,23 +731,17 @@ async def test_handle_beacon_ignores_already_configured_and_updates_host() -> No
 
     hass = MagicMock()
     async_init = AsyncMock()
-    monkeypatch = pytest.MonkeyPatch()
-    monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
-    hass.config_entries.async_entries = MagicMock(return_value=[entry])
     update_entry = MagicMock()
     schedule_reload = MagicMock()
 
-    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
     monkeypatch.setattr(
         hass.config_entries,
-        "async_update_entry",
-        update_entry,
+        "async_entries",
+        MagicMock(return_value=[entry]),
     )
-    monkeypatch.setattr(
-        hass.config_entries,
-        "async_schedule_reload",
-        schedule_reload,
-    )
+    monkeypatch.setattr(hass.config_entries, "async_update_entry", update_entry)
+    monkeypatch.setattr(hass.config_entries, "async_schedule_reload", schedule_reload)
 
     discovery = ItachDiscovery(hass)
 
@@ -742,13 +767,18 @@ async def test_handle_beacon_ignores_already_configured_and_updates_host() -> No
     schedule_reload.assert_called_once_with(entry.entry_id)
 
 
-async def test_handle_beacon_throttled(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_handle_beacon_throttled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test handler skips recently started discovery flows."""
     hass = MagicMock()
     async_init = AsyncMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
-    hass.config_entries.async_entries = MagicMock(return_value=[])
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_entries",
+        MagicMock(return_value=[]),
+    )
 
     discovery = ItachDiscovery(hass)
     monkeypatch.setattr(discovery, "_is_flow_throttled", lambda unique_id: True)
@@ -760,13 +790,18 @@ async def test_handle_beacon_throttled(monkeypatch: pytest.MonkeyPatch) -> None:
     async_init.assert_not_awaited()
 
 
-async def test_handle_beacon_flow_start_exception_is_handled() -> None:
+async def test_handle_beacon_flow_start_exception_is_handled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test handler handles discovery flow startup exceptions."""
     hass = MagicMock()
     async_init = AsyncMock(side_effect=RuntimeError("boom"))
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(hass.config_entries.flow, "async_init", async_init)
-    hass.config_entries.async_entries = MagicMock(return_value=[])
+    monkeypatch.setattr(
+        hass.config_entries,
+        "async_entries",
+        MagicMock(return_value=[]),
+    )
 
     discovery = ItachDiscovery(hass)
 
@@ -892,7 +927,8 @@ async def test_async_wait_for_device_id_returns_none_for_blank_host() -> None:
 
 
 async def test_async_wait_for_device_id_uses_discovery_cache(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test waiting for device ID uses the permanent discovery cache first."""
     discovery = ItachDiscovery(hass)
@@ -925,7 +961,10 @@ def test_configured_entry_invalid_unique_id_returns_none(hass: HomeAssistant) ->
     assert discovery._configured_entry("not-a-valid-id") is None
 
 
-def test_configured_device_host_update_blank_host_noops(hass: HomeAssistant) -> None:
+def test_configured_device_host_update_blank_host_noops(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test discovery host update ignores blank discovered host."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -936,7 +975,6 @@ def test_configured_device_host_update_blank_host_noops(hass: HomeAssistant) -> 
     entry.add_to_hass(hass)
 
     schedule_reload = MagicMock()
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(
         hass.config_entries,
         "async_schedule_reload",
