@@ -621,15 +621,13 @@ async def test_cloudhook_change_listener_update(
 
 
 @pytest.mark.usefixtures("create_registrations")
-async def test_unload_removes_live_activity_tokens(
+async def test_unload_preserves_live_activity_tokens(
     hass: HomeAssistant, webhook_client: TestClient
 ) -> None:
-    """Test that live activity tokens are removed from hass.data when entry is unloaded."""
-    # Use the cleartext (non-encrypted) entry
+    """Test that live activity tokens survive an unload so they are available after reload."""
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
     webhook_id = config_entry.data["webhook_id"]
 
-    # Store a live activity token via the webhook
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
         json={
@@ -643,8 +641,32 @@ async def test_unload_removes_live_activity_tokens(
     assert resp.status == HTTPStatus.OK
     assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
 
-    # Unload the config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    # Verify the token is removed so stale tokens cannot be used after reloads/unloads
+    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+
+@pytest.mark.usefixtures("create_registrations")
+async def test_remove_entry_cleans_live_activity_tokens(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> None:
+    """Test that live activity tokens are removed when the entry is deleted."""
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    webhook_id = config_entry.data["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "live_activity_tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
     assert webhook_id not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]

@@ -248,8 +248,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     webhook_unregister(hass, webhook_id)
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    if hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None) is not None:
-        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
     await hass_notify.async_reload(hass, DOMAIN)
 
     return True
@@ -257,7 +255,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 
