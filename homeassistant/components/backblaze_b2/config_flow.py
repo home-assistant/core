@@ -10,6 +10,7 @@ from b2sdk.v2 import exception
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -24,7 +25,6 @@ from .const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
-    CONF_PREFIX,
     DOMAIN,
 )
 
