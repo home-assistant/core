@@ -4,17 +4,20 @@ These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
 
+from typing import cast
+
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -22,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
+from .utils import service_feature_name
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
@@ -62,6 +66,15 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
+        key=CharacteristicsTypes.SET_DURATION,
+        name="Duration",
+        translation_key="duration",
+        has_entity_name=True,
+        device_class=NumberDeviceClass.DURATION,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
 }
 
 
@@ -80,7 +93,12 @@ async def async_setup_entry(
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := NUMBER_ENTITIES.get(char.type):
-            entities.append(HomeKitNumber(conn, info, char, description))
+            entity_class = (
+                HomeKitServiceNumber
+                if char.type == CharacteristicsTypes.SET_DURATION
+                else HomeKitNumber
+            )
+            entities.append(entity_class(conn, info, char, description))
         else:
             return False
 
@@ -146,4 +164,15 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
             {
                 self._char.type: value,
             }
+        )
+
+
+class HomeKitServiceNumber(HomeKitNumber):
+    """Representation of a HomeKit number named from its service."""
+
+    @property
+    def name(self) -> str:
+        """Return the name of the service feature."""
+        return service_feature_name(
+            self._char.service, cast("str", self.entity_description.name)
         )

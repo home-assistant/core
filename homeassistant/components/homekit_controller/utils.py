@@ -4,6 +4,8 @@ from functools import lru_cache
 from typing import cast
 
 from aiohomekit import Controller
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import bluetooth, zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -45,6 +47,29 @@ def unique_id_to_iids(unique_id: str) -> IidTuple | None:
 def folded_name(name: str) -> str:
     """Return a name that is used for matching a similar string."""
     return name.casefold().replace(" ", "")
+
+
+SERVICE_TYPE_NAMES = {
+    ServicesTypes.VALVE: "Valve",
+}
+
+
+def service_feature_name(service: Service, feature_name: str) -> str:
+    """Return a feature name scoped by the HomeKit service when needed."""
+    service_name = service.value(CharacteristicsTypes.NAME)
+    if service_name and folded_name(service_name) != folded_name(
+        service.accessory.name
+    ):
+        return f"{service_name} {feature_name}"
+
+    if (
+        service_label_index := service.value(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+    ) is not None:
+        if service_type_name := SERVICE_TYPE_NAMES.get(service.type):
+            return f"{service_type_name} {service_label_index} {feature_name}"
+        return f"{service_label_index} {feature_name}"
+
+    return feature_name
 
 
 async def async_get_controller(hass: HomeAssistant) -> Controller:
