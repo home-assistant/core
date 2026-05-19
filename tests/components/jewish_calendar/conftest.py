@@ -89,34 +89,34 @@ def _test_time(
 @pytest.fixture
 def results(
     request: pytest.FixtureRequest, tz_info: dt.tzinfo, language: str
-) -> Iterable:
+) -> Generator[Iterable | None]:
     """Return localized results."""
     if not hasattr(request, "param"):
-        return None
+        yield None
+        return
 
     previous_language = get_language()
 
     # If results are generated, by using the HDate library, we need to set the language
     set_language(language)
 
-    try:
-        if isinstance(request.param, dict):
-            result = {
-                key: value.replace(tzinfo=tz_info)
-                if isinstance(value, dt.datetime)
-                else value
-                for key, value in request.param.items()
+    if isinstance(request.param, dict):
+        result = {
+            key: value.replace(tzinfo=tz_info)
+            if isinstance(value, dt.datetime)
+            else value
+            for key, value in request.param.items()
+        }
+        if "attr" in result and isinstance(result["attr"], dict):
+            result["attr"] = {
+                key: value() if callable(value) else value
+                for key, value in result["attr"].items()
             }
-            if "attr" in result and isinstance(result["attr"], dict):
-                result["attr"] = {
-                    key: value() if callable(value) else value
-                    for key, value in result["attr"].items()
-                }
-            return result
+        yield result
+    else:
+        yield request.param
 
-        return request.param
-    finally:
-        set_language(previous_language)
+    set_language(previous_language)
 
 
 @pytest.fixture
