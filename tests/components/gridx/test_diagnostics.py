@@ -43,7 +43,7 @@ async def test_diagnostics_redacts_password(
     """Test diagnostics payload includes data and redacts secrets."""
     result = await async_get_config_entry_diagnostics(hass, setup_integration)
 
-    assert result["config_entry"][CONF_USERNAME] == USERNAME
+    assert result["config_entry"][CONF_USERNAME] == "**REDACTED**"
     assert result["config_entry"][CONF_PASSWORD] == "**REDACTED**"
     assert result["live_data"] == MOCK_LIVE_DATA
     assert result["historical_data"]["total"] == MOCK_HIST_DATA[0]["total"]

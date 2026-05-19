@@ -83,6 +83,8 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
     if not results:
         raise UpdateFailed("GridX returned no historical data")
 
+    _NON_AGGREGATABLE_KEYS = {"selfConsumptionRate", "selfSufficiencyRate", "directConsumptionRate"}
+
     total: dict[str, Any] = {}
     for result in results:
         result_total = result.get("total", {})
@@ -91,6 +93,8 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
         for key, value in result_total.items():
             current = total.get(key)
             if isinstance(value, int | float) and isinstance(current, int | float):
+                if key in _NON_AGGREGATABLE_KEYS:
+                    continue
                 total[key] = current + value
             elif key not in total:
                 total[key] = value

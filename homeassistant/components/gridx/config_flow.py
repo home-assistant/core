@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .client import async_create_connector, load_oem_config
-from .const import CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
+from .const import API_BASE_URL, CONF_OEM, DOMAIN, LOGGER, SUPPORTED_OEMS
 
 UNEXPECTED_AUTH_ERRORS = (RuntimeError, TypeError, ValueError)
 
@@ -38,11 +38,11 @@ async def _validate_credentials(
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,
-        base_url="https://api.gridx.de",
+        base_url=API_BASE_URL,
     )
     try:
         connector = await async_create_connector(config, httpx_client)
-    except BaseException:
+    except Exception:
         await httpx_client.aclose()
         raise
     try:

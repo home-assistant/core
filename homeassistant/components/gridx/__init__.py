@@ -8,12 +8,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .client import async_create_connector, load_oem_config
-from .const import CONF_OEM, DOMAIN, LOGGER
+from .const import API_BASE_URL, CONF_OEM, DOMAIN
 from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
 from .types import GridxConfigEntry, GridxData
 
 PLATFORMS = [Platform.SENSOR]
-API_BASE_URL = "https://api.gridx.de"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> bool:
@@ -33,7 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
         connector = await async_create_connector(config, httpx_client)
     except PermissionError as err:
         await httpx_client.aclose()
-        LOGGER.error("GridX authentication failed: %s", err)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
@@ -41,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     except httpx.HTTPStatusError as err:
         await httpx_client.aclose()
         status = err.response.status_code if err.response else None
-        LOGGER.error("Error connecting to GridX: %s", err)
         if status in (401, 403):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -53,14 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
         ) from err
     except httpx.HTTPError as err:
         await httpx_client.aclose()
-        LOGGER.error("Error connecting to GridX: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except (RuntimeError, TypeError, ValueError) as err:
         await httpx_client.aclose()
-        LOGGER.error("Error connecting to GridX: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
