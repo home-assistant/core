@@ -40,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Front Door Lock',
+      'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.front_door_lock',
