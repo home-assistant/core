@@ -311,7 +311,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             and self._set_temp_unit != self.temperature_unit
         ):
             return TemperatureConverter.convert(
-                value, self.temperature_unit, self._set_temp_unit
+                value, self._set_temp_unit, self.temperature_unit
             )
         return value
 
