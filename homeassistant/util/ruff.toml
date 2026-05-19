@@ -1,8 +1,7 @@
-# This extend our general Ruff rules specifically for tests
+# This extend our general Ruff rules specifically for util
 extend = "../../pyproject.toml"
 
 [lint]
-
 extend-ignore = [
-    "N806",   # Variable {name} in function should be lowercase
+    "N806",   # Some utils have constants that benefit from being uppercase
 ]
