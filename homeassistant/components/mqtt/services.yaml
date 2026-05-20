@@ -12,12 +12,10 @@ publish:
       selector:
         template:
     evaluate_payload:
-      advanced: true
       default: false
       selector:
         boolean:
     qos:
-      advanced: true
       default: 0
       selector:
         select:
