@@ -10,11 +10,16 @@ from google_air_quality_api.exceptions import GoogleAirQualityApiError
 from google_air_quality_api.model import AirQualityCurrentConditionsData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_COUNTRY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import (
+    CONF_ENABLE_CUSTOM_LAQI,
+    CUSTOM_LAQI,
+    CUSTOM_LOCAL_AQI_OPTIONS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +54,27 @@ class GoogleAirQualityUpdateCoordinator(
         subentry = config_entry.subentries[subentry_id]
         self.lat = subentry.data[CONF_LATITUDE]
         self.long = subentry.data[CONF_LONGITUDE]
+        self.custom_local_aqi: str | None = None
+        self.region_code: str | None = None
+        options = subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS)
+
+        if isinstance(options, dict) and options.get(CONF_ENABLE_CUSTOM_LAQI):
+            custom_laqi = options.get(CUSTOM_LAQI)
+            region_code = options.get(CONF_COUNTRY)
+
+            if custom_laqi is not None and region_code is not None:
+                self.custom_local_aqi = custom_laqi
+                self.region_code = region_code
 
     async def _async_update_data(self) -> AirQualityCurrentConditionsData:
         """Fetch air quality data for this coordinate."""
         try:
-            return await self.client.async_get_current_conditions(self.lat, self.long)
+            return await self.client.async_get_current_conditions(
+                lat=self.lat,
+                lon=self.long,
+                region_code=self.region_code,
+                custom_local_aqi=self.custom_local_aqi,
+            )
         except GoogleAirQualityApiError as ex:
             _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))
             raise UpdateFailed(
