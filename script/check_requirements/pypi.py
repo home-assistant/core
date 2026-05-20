@@ -182,9 +182,10 @@ def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
             if not kind:
                 continue
             safe_kind = _safe(kind) or ""
-            recognized = any(
-                token in safe_kind.lower() for token in _KNOWN_CI_PUBLISHERS
-            )
+            normalized_kind = safe_kind.strip().lower()
+            recognized = normalized_kind in {
+                token.strip().lower() for token in _KNOWN_CI_PUBLISHERS
+            }
             return ProvenanceResult(
                 has_attestation=True,
                 publisher_kind=safe_kind,
