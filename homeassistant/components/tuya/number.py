@@ -546,7 +546,11 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
-        if (device_class := self.device_class) is None:
+        if (
+            (device_class := self.device_class) is None
+            # we do not need to check mappings if the API UOM is allowed
+            or tuya_uom in NUMBER_DEVICE_CLASS_UNITS[device_class]
+        ):
             self._attr_native_unit_of_measurement = tuya_uom
             return
 
@@ -557,11 +561,6 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
         ):
             self._attr_native_unit_of_measurement = temp_unit
-            return
-
-        # We do not need to check mappings if the API UOM is allowed
-        if tuya_uom in NUMBER_DEVICE_CLASS_UNITS[device_class]:
-            self._attr_native_unit_of_measurement = tuya_uom
             return
 
         # Check mappings for compatible units of measurement for the device class
