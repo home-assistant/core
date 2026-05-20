@@ -112,10 +112,10 @@ class ExceptionTranslationsChecker(BaseChecker):
             "that does not exist in the integration's strings.json.",
         ),
         "W7419": (
-            "%s should not pass a message string when translation_key is set",
+            "%s should not pass positional arguments when translation_key is set",
             "home-assistant-exception-message-with-translation",
-            "Used when a HomeAssistantError subclass passes both a "
-            "positional message and a translation_key. The translation "
+            "Used when a HomeAssistantError subclass passes both "
+            "positional arguments and a translation_key. The translation "
             "system generates the message from the key.",
         ),
         "E7408": (

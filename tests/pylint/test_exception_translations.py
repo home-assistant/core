@@ -487,6 +487,114 @@ raise HomeAssistantError(
     assert messages[0].msg_id == "home-assistant-exception-placeholder-mismatch"
 
 
+def test_dict_unpacking_placeholders_ok(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that **dict unpacking is resolved for placeholder validation."""
+    integration_dir = _make_integration(
+        tmp_path,
+        exceptions={
+            "some_error": {"message": "Error for {name}: {reason}"},
+        },
+    )
+    root_node = astroid.parse(
+        f"""
+{_HA_IMPORTS}
+base = {{"name": device_name}}
+raise HomeAssistantError(
+    translation_domain=DOMAIN,
+    translation_key="some_error",
+    translation_placeholders={{**base, "reason": str(err)}},
+)
+""",
+        "homeassistant.components.test_int.coordinator",
+    )
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+def test_constant_placeholder_keys_ok(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that constant keys in placeholder dicts are resolved."""
+    integration_dir = _make_integration(
+        tmp_path,
+        exceptions={
+            "some_error": {"message": "Error for {name}"},
+        },
+    )
+    root_node = astroid.parse(
+        f"""
+{_HA_IMPORTS}
+ATTR_NAME = "name"
+raise HomeAssistantError(
+    translation_domain=DOMAIN,
+    translation_key="some_error",
+    translation_placeholders={{ATTR_NAME: device_name}},
+)
+""",
+        "homeassistant.components.test_int.coordinator",
+    )
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+def test_key_reference_resolution(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that [%key:component::...%] references are resolved for placeholders."""
+    # Create the referenced integration
+    ref_dir = tmp_path / "homeassistant" / "components" / "other_int"
+    ref_dir.mkdir(parents=True)
+    (ref_dir / "strings.json").write_text(
+        json.dumps({"exceptions": {"ref_error": {"message": "Error for {device}"}}})
+    )
+
+    # Create the integration that references it
+    integration_dir = _make_integration(
+        tmp_path,
+        exceptions={
+            "some_error": {
+                "message": "[%key:component::other_int::exceptions::ref_error::message%]"
+            },
+        },
+    )
+    root_node = astroid.parse(
+        f"""
+{_HA_IMPORTS}
+raise HomeAssistantError(
+    translation_domain=DOMAIN,
+    translation_key="some_error",
+    translation_placeholders={{"device": device_name}},
+)
+""",
+        "homeassistant.components.test_int.coordinator",
+    )
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 def test_no_strings_json_flags_missing_key(
     linter: UnittestLinter,
     translations_checker: ExceptionTranslationsChecker,
