@@ -3,8 +3,6 @@
 DOMAIN = "victron_gx"
 
 CONF_INSTALLATION_ID = "installation_id"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 
 # Binary sensor enum ids must be "on" for on and "off" for off.
