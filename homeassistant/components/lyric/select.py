@@ -1,7 +1,5 @@
 """Support for Honeywell Lyric select platform."""
 
-from __future__ import annotations
-
 import logging
 
 from aiolyric.objects.device import LyricDevice
@@ -11,6 +9,7 @@ from aiolyric.objects.priority import LyricRoom
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LYRIC_EXCEPTIONS
@@ -124,5 +123,7 @@ class LyricRoomPrioritySelect(LyricDeviceEntity, SelectEntity):
                 rooms=rooms,
             )
         except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+            raise HomeAssistantError(
+                f"Failed to set room priority: {exception}"
+            ) from exception
         await self.coordinator.async_refresh()
