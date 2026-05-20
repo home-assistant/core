@@ -157,6 +157,7 @@ async def async_setup_virtual_remote_entities(
     device_info_factory: DeviceInfoFactory,
     cleanup_devices: bool = False,
     device_identifier_domain: str = DOMAIN,
+    translation_domain: str = DOMAIN,
 ) -> None:
     """Set up configured virtual remote entities.
 
@@ -197,6 +198,7 @@ async def async_setup_virtual_remote_entities(
                 commands=commands,
                 unique_id_prefix=entry.entry_id,
                 device_info=device_info_factory(remote_id, name, remote_config),
+                translation_domain=translation_domain,
             )
         )
 
@@ -243,6 +245,7 @@ class InfraredRemoteEntity(RemoteEntity):
         commands: dict[str, str] | None,
         unique_id_prefix: str,
         device_info: DeviceInfo,
+        translation_domain: str = DOMAIN,
     ) -> None:
         """Initialize the virtual remote."""
         self._attr_name = name
@@ -250,6 +253,7 @@ class InfraredRemoteEntity(RemoteEntity):
         self._attr_device_info = device_info
         self._infrared_entity_id = infrared_entity_id
         self._commands = commands or {}
+        self._translation_domain = translation_domain
         self._is_on = True
 
     @property
@@ -310,7 +314,7 @@ class InfraredRemoteEntity(RemoteEntity):
 
         if not isinstance(num_repeats, int) or num_repeats < 1:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
+                translation_domain=self._translation_domain,
                 translation_key="remote_invalid_service_parameter",
                 translation_placeholders={
                     "error": "num_repeats must be a positive integer"
@@ -319,7 +323,7 @@ class InfraredRemoteEntity(RemoteEntity):
 
         if not isinstance(delay_secs, (int, float)) or delay_secs < 0:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
+                translation_domain=self._translation_domain,
                 translation_key="remote_invalid_service_parameter",
                 translation_placeholders={
                     "error": "delay_secs must be a non-negative number"
@@ -334,7 +338,7 @@ class InfraredRemoteEntity(RemoteEntity):
             for item in commands:
                 if not isinstance(item, str):
                     raise HomeAssistantError(
-                        translation_domain=DOMAIN,
+                        translation_domain=self._translation_domain,
                         translation_key="remote_invalid_service_parameter",
                         translation_placeholders={"error": "command must be a string"},
                     )
@@ -386,18 +390,22 @@ class InfraredRemoteEntity(RemoteEntity):
             )
             if looks_like_named_command:
                 raise HomeAssistantError(
-                    translation_domain=DOMAIN,
+                    translation_domain=self._translation_domain,
                     translation_key="remote_command_missing",
                     translation_placeholders={"command": command},
                 ) from err
-            raise
+            raise HomeAssistantError(
+                translation_domain=self._translation_domain,
+                translation_key="remote_invalid_command",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         entity_id = self._resolve_infrared_entity_id()
 
         hass = getattr(self, "hass", None)
         if hass is None:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
+                translation_domain=self._translation_domain,
                 translation_key="remote_infrared_missing",
                 translation_placeholders={"entity_id": entity_id},
             )
@@ -408,7 +416,7 @@ class InfraredRemoteEntity(RemoteEntity):
             raise
         except Exception as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
+                translation_domain=self._translation_domain,
                 translation_key="remote_send_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
@@ -422,7 +430,7 @@ class InfraredRemoteEntity(RemoteEntity):
         state = hass.states.get(self._infrared_entity_id)
         if state is None or state.state == STATE_UNAVAILABLE:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
+                translation_domain=self._translation_domain,
                 translation_key="remote_infrared_missing",
                 translation_placeholders={"entity_id": self._infrared_entity_id},
             )
