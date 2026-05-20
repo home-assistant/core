@@ -267,8 +267,7 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
         hass, "zone.home", ["device_tracker.test1"], ["zone.work"], 1000
     )
 
-    now = dt_util.utcnow()
-    with freeze_time(now) as freeze_now:
+    with freeze_time(dt_util.utcnow()) as freeze_now:
         hass.states.async_set(
             "device_tracker.test1",
             "not_home",
@@ -286,8 +285,8 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
         assert state.state == STATE_UNKNOWN
 
-        now = freeze_now.tick(timedelta(seconds=5))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         hass.states.async_set(
@@ -314,8 +313,7 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         hass, "zone.home", ["device_tracker.test1"], ["zone.work"], 10
     )
 
-    now = dt_util.utcnow()
-    with freeze_time(now) as freeze_now:
+    with freeze_time(dt_util.utcnow()) as freeze_now:
         hass.states.async_set(
             "device_tracker.test1",
             "not_home",
@@ -335,8 +333,8 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_speed")
         assert state.state == STATE_UNKNOWN
 
-        now = freeze_now.tick(timedelta(seconds=180))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=180))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         hass.states.async_set(
@@ -353,8 +351,8 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_speed")
         assert float(state.state) == pytest.approx(42.3, abs=0.1)
 
-        now = freeze_now.tick(timedelta(seconds=200))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=200))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
@@ -362,8 +360,8 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_speed")
         assert float(state.state) == pytest.approx(13.6, abs=0.1)
 
-        now = freeze_now.tick(timedelta(seconds=300))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
@@ -371,8 +369,8 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_speed")
         assert float(state.state) == pytest.approx(6.14, abs=0.1)
 
-        now = freeze_now.tick(timedelta(seconds=300))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
@@ -380,8 +378,8 @@ async def test_device_tracker_test1_decay(hass: HomeAssistant) -> None:
         state = hass.states.get(f"{entity_base_name}_speed")
         assert float(state.state) == pytest.approx(2.23, abs=0.1)
 
-        now = freeze_now.tick(timedelta(seconds=300))
-        async_fire_time_changed(hass, now)
+        freeze_now.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass, dt_util.utcnow())
         await hass.async_block_till_done()
 
         state = hass.states.get(f"{entity_base_name}_direction_of_travel")
