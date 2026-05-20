@@ -1,7 +1,5 @@
 """Config flow for TIS Control integration."""
 
-from __future__ import annotations
-
 import logging
 
 from TISApi.api import TISApi

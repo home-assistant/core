@@ -1,7 +1,5 @@
 """Switch platform for TIS Control."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict
 
 from TISApi.api import TISApi
