@@ -462,20 +462,30 @@ async def test_flow_fails_and_recovers(
 
 @pytest.mark.parametrize(
     "site_payload",
-    [[{"name": "default", "role": "admin", "desc": "Default", "_id": "default"}]],
+    [
+        [
+            {
+                "name": "default",
+                "role": "admin",
+                "desc": "Default",
+                "_id": "5d6d8b0632c8aa04c12af934",
+            }
+        ]
+    ],
 )
 @pytest.mark.parametrize(
     "system_information_payload",
     [[{"anonymous_controller_id": "controller-b", "mac": "10:00:00:00:00:02"}]],
 )
-async def test_flow_allows_second_controller_with_same_default_site(
+async def test_flow_allows_second_controller_with_same_api_site_id(
     hass: HomeAssistant,
     mock_requests: Callable[[str, str], None],
 ) -> None:
-    """A second controller with the same default site should create a new entry."""
+    """A second controller with the same API site ID should create a new entry."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="10:00:00:00:00:01::default",
+        unique_id="10:00:00:00:00:01::5d6d8b0632c8aa04c12af934",
+        version=2,
         data={
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "username",
@@ -486,25 +496,29 @@ async def test_flow_allows_second_controller_with_same_default_site(
         },
     )
     existing_entry.add_to_hass(hass)
+    mock_requests("10.0.1.1", "5d6d8b0632c8aa04c12af934")
     mock_requests("10.0.1.1", "default")
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "10.0.1.1",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 1234,
-            CONF_VERIFY_SSL: False,
-        },
-    )
+    with patch("homeassistant.components.unifi.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "10.0.1.1",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: False,
+            },
+        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.0.1.1 (Default)"
-    assert result["result"].unique_id == "10:00:00:00:00:02::default"
+    assert result["result"].unique_id == (
+        "10:00:00:00:00:02::5d6d8b0632c8aa04c12af934"
+    )
 
 
 @pytest.mark.parametrize(
