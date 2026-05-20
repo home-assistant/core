@@ -4135,7 +4135,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data=config,
             )
 
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise AbortFlow(
             "addon_connection_failed",
             description_placeholders={"addon": self._addon_manager.addon_name},
@@ -4150,7 +4149,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             addon_info = await addon_manager.async_get_addon_info()
         except AddonError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(
                 "addon_info_failed",
                 description_placeholders={"addon": self._addon_manager.addon_name},

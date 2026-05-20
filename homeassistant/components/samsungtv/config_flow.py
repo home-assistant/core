@@ -156,7 +156,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_set_device_unique_id(self, raise_on_progress: bool = True) -> None:
         """Set device unique_id."""
         if not await self._async_get_and_check_device_info():
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(RESULT_NOT_SUPPORTED)
         await self._async_set_unique_id_from_udn(raise_on_progress)
         self._async_update_and_abort_for_matching_unique_id()
@@ -175,7 +174,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._ssdp_rendering_control_location,
             self._ssdp_main_tv_agent_location,
         ):
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("already_configured")
         # Now that we have updated the config entry, we can raise
         # if another one is progressing
@@ -204,7 +202,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
             LOGGER.debug("No working config found for %s", self._host)
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(result)
         assert self._method is not None
         self._bridge = SamsungTVBridge.get_bridge(
@@ -231,7 +228,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try to get the device info."""
         result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(result)
         if not (info := self._device_info):
             return False
@@ -241,7 +237,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug(
                 "Host:%s has type: %s which is not supported", self._host, device_type
             )
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         name = dev_info.get("name")
@@ -329,7 +324,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 return self._get_entry_from_bridge()
             if result != RESULT_AUTH_MISSING:
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow(result)
             errors = {"base": RESULT_AUTH_MISSING}
 
@@ -462,14 +456,12 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if (entry := self._async_update_existing_matching_entry()) and entry.unique_id:
             # If we have the unique id and the mac we abort
             # as we do not need anything else
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("already_configured")
         self._async_abort_if_host_already_in_progress()
 
     @callback
     def _async_abort_if_host_already_in_progress(self) -> None:
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("already_in_progress")
 
     def is_matching(self, other_flow: Self) -> bool:
@@ -481,7 +473,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._manufacturer or not self._manufacturer.lower().startswith(
             "samsung"
         ):
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(

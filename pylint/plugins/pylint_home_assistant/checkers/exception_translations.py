@@ -32,8 +32,29 @@ from pylint_home_assistant.helpers.translations import (
 _HA_ERROR_QNAME = "homeassistant.exceptions.HomeAssistantError"
 
 
+def _accepts_translation_key(class_node: nodes.ClassDef) -> bool:
+    """Check if a class accepts translation_key in its constructor.
+
+    If the class overrides ``__init__`` without a ``translation_key``
+    parameter (and without ``**kwargs``), it doesn't support the
+    translation system.
+    """
+    for method in class_node.mymethods():
+        if method.name != "__init__":
+            continue
+        # Class has its own __init__, check if it accepts translation_key
+        if method.args.kwarg:
+            return True
+        return any(
+            arg.name == "translation_key"
+            for arg in method.args.args + method.args.kwonlyargs
+        )
+    # No __init__ override, inherits from parent (HomeAssistantError accepts it)
+    return True
+
+
 def _is_ha_exception(call: nodes.Call) -> str | None:
-    """Check if a call constructs a HomeAssistantError subclass.
+    """Check if a call constructs a HomeAssistantError subclass that supports translations.
 
     Returns the class name if it is, None otherwise.
     """
@@ -41,13 +62,16 @@ def _is_ha_exception(call: nodes.Call) -> str | None:
         for inferred in call.func.infer():
             if not isinstance(inferred, nodes.ClassDef):
                 continue
-            if inferred.qname() == _HA_ERROR_QNAME:
+            is_ha = inferred.qname() == _HA_ERROR_QNAME
+            if not is_ha:
+                try:
+                    is_ha = any(
+                        a.qname() == _HA_ERROR_QNAME for a in inferred.ancestors()
+                    )
+                except astroid.exceptions.InferenceError:
+                    continue
+            if is_ha and _accepts_translation_key(inferred):
                 return str(inferred.name)
-            try:
-                if any(a.qname() == _HA_ERROR_QNAME for a in inferred.ancestors()):
-                    return str(inferred.name)
-            except astroid.exceptions.InferenceError:
-                continue
     except astroid.exceptions.InferenceError:
         pass
     return None

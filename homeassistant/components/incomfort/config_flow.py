@@ -130,7 +130,6 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_schedule_reload(
                 existing_entries_without_unique_id[0].entry_id
             )
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("already_configured")
 
         await self.async_set_unique_id(unique_id)

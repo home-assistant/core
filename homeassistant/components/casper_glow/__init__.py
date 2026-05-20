@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_not_found",

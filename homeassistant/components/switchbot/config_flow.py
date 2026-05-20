@@ -224,7 +224,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "Failed to connect to SwitchBot API: %s", ex, exc_info=True
                 )
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow(
                     "api_error", description_placeholders={"error_detail": str(ex)}
                 ) from ex
@@ -339,7 +338,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("no_devices_found")
 
     async def _async_set_device(self, discovery: SwitchBotAdvertisement) -> None:
@@ -378,7 +376,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "Failed to connect to SwitchBot API: %s", ex, exc_info=True
                 )
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow(
                     "api_error", description_placeholders={"error_detail": str(ex)}
                 ) from ex

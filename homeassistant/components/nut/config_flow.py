@@ -70,7 +70,6 @@ async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     status = await nut_data.async_update()
 
     if not alias and not nut_data.ups_list:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise AbortFlow("no_ups_found")
 
     return {"ups_list": nut_data.ups_list, "available_resources": status}

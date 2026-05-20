@@ -164,7 +164,6 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 mac_address,
                 discovery_info.ip,
             )
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise AbortFlow("already_configured")
 
         if (
@@ -179,7 +178,6 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     discovery_info.ip,
                     existing_entry.data[CONF_HOST],
                 )
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
@@ -197,7 +195,6 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     err,
                     existing_entry.data[CONF_HOST],
                 )
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow("already_configured") from err
             if format_mac(host.api.mac_address) != mac_address:
                 _LOGGER.debug(
@@ -208,7 +205,6 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     mac_address,
                     existing_entry.data[CONF_HOST],
                 )
-                # pylint: disable-next=home-assistant-exception-not-translated
                 raise AbortFlow("already_configured")
 
         if existing_entry and existing_entry.data[CONF_HOST] != discovery_info.ip:

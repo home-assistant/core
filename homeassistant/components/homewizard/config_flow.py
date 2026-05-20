@@ -331,18 +331,15 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         return await energy_api.device()
 
     except DisabledError as ex:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise RecoverableError(
             "API disabled, API must be enabled in the app", "api_not_enabled"
         ) from ex
 
     except UnsupportedError as ex:
         LOGGER.error("API version unsuppored")
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise AbortFlow("unsupported_api_version") from ex
 
     except RequestError as ex:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise RecoverableError(
             "Device unreachable or unexpected response", "network_error"
         ) from ex
@@ -352,7 +349,6 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
 
     except Exception as ex:
         LOGGER.exception("Unexpected exception")
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise AbortFlow("unknown_error") from ex
 
     finally:
