@@ -3,8 +3,8 @@
 import math
 from typing import Any
 
-from enocean_async import ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -74,7 +74,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, bval, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        packet_type = ESP3PacketType(0x01)
+        packet_type = ESP3PacketType.RADIO_ERP1
         self.send_command(command, [], packet_type)
         self._attr_is_on = True
 
@@ -83,7 +83,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id)
         command.extend([0x00])
-        packet_type = ESP3PacketType(0x01)
+        packet_type = ESP3PacketType.RADIO_ERP1
         self.send_command(command, [], packet_type)
         self._attr_is_on = False
 
@@ -96,5 +96,6 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         if telegram.rorg == 0xA5 and telegram.telegram_data[0] == 0x02:
             val = telegram.telegram_data[1]
             self._attr_brightness = math.floor(val / 100.0 * 256.0)
+
             self._attr_is_on = bool(val != 0)
             self.schedule_update_ha_state()
