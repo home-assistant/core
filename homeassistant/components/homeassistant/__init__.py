@@ -458,6 +458,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass,
                 DOMAIN,
                 "unsupported_local_deps",
+                breaks_in_ha_version="2026.11.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
