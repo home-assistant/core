@@ -94,7 +94,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Device {self.name} is unavailable, could not send update request"
                 ) from error
         else:
-            # raise update failed if time for more than MAX_ERRORS has passed since last update
+            # raise update failed if time for more than
+            # MAX_ERRORS has passed since last update
             now = utcnow()
             elapsed_success = now - self._last_response_time
             if self.update_interval and elapsed_success >= timedelta(
@@ -115,7 +116,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._error_count = 0
             if self.last_update_success and self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
-                    f"Device {self.name} is unresponsive for too long and now unavailable"
+                    f"Device {self.name} is unresponsive for"
+                    " too long and now unavailable"
                 )
 
         self._last_response_time = utcnow()

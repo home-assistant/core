@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, ParamSpec
+from typing import Any
 
 from pyvlx import Node, PyVLXException
 
@@ -15,10 +15,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-P = ParamSpec("P")
 
-
-def wrap_pyvlx_call_exceptions(
+def wrap_pyvlx_call_exceptions[**P](
     func: Callable[P, Coroutine[Any, Any, None]],
 ) -> Callable[P, Coroutine[Any, Any, None]]:
     """Decorate pyvlx calls to handle exceptions.

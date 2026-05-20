@@ -6,13 +6,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
-from homeassistant.components.novy_cooker_hood.const import (
-    CONF_CODE,
-    CONF_TRANSMITTER,
-    DOMAIN,
-)
+from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as RF_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -133,7 +130,7 @@ async def test_recover_after_transmit_failure(
     mock_get_codes: MagicMock,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
-    """The user can Retry from `test_failed` and complete the flow on a fresh attempt."""
+    """The user can Retry from test_failed and complete the flow."""
     with patch(
         "homeassistant.components.novy_cooker_hood.config_flow.async_send_command",
         side_effect=HomeAssistantError("nope"),
@@ -302,7 +299,7 @@ async def test_reconfigure_retry_returns_to_picker(
     init_novy_cooker_hood: MockConfigEntry,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
-    """Picking Retry from the test menu during reconfigure shows the reconfigure form."""
+    """Picking Retry during reconfigure shows the reconfigure form."""
     result = await init_novy_cooker_hood.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

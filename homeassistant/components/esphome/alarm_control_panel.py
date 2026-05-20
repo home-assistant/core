@@ -37,8 +37,12 @@ _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
         ESPHomeAlarmControlPanelState.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
         ESPHomeAlarmControlPanelState.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
         ESPHomeAlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
-        ESPHomeAlarmControlPanelState.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-        ESPHomeAlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        ESPHomeAlarmControlPanelState.ARMED_VACATION: (
+            AlarmControlPanelState.ARMED_VACATION
+        ),
+        ESPHomeAlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS
+        ),
         ESPHomeAlarmControlPanelState.PENDING: AlarmControlPanelState.PENDING,
         ESPHomeAlarmControlPanelState.ARMING: AlarmControlPanelState.ARMING,
         ESPHomeAlarmControlPanelState.DISARMING: AlarmControlPanelState.DISARMING,

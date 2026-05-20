@@ -284,7 +284,8 @@ class CloudPreferences:
     def alexa_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Alexa.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_ALEXA_DEFAULT_EXPOSE)
 
@@ -342,7 +343,8 @@ class CloudPreferences:
     def google_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Google.
 
-        Can return None, in which case for backwards should be interpreted as allow all domains.
+        Can return None, in which case for backwards
+        should be interpreted as allow all domains.
         """
         return self._prefs.get(PREF_GOOGLE_DEFAULT_EXPOSE)
 
