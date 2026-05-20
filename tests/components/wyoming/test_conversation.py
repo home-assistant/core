@@ -270,12 +270,13 @@ async def test_multiple_intents_handle_error(
     """Test error during handling when multiple intents are recognized."""
     agent_id = "conversation.test_intent"
 
-    test_intent = Intent(name="TestIntent", entities=[], text="success")
+    test_intent_1 = Intent(name="TestIntent1", entities=[], text="success")
+    test_intent_2 = Intent(name="TestIntent2", entities=[], text="success")
 
     class TestIntentHandler1(intent.IntentHandler):
         """Test Intent Handler."""
 
-        intent_type = "TestIntent2"
+        intent_type = "TestIntent1"
 
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
@@ -295,7 +296,14 @@ async def test_multiple_intents_handle_error(
 
     with patch(
         "homeassistant.components.wyoming.conversation.AsyncTcpClient",
-        MockAsyncTcpClient([test_intent.event()]),
+        MockAsyncTcpClient(
+            [
+                IntentsStart().event(),
+                test_intent_1.event(),
+                test_intent_2.event(),
+                IntentsStop().event(),
+            ]
+        ),
     ):
         result = await conversation.async_converse(
             hass=hass,

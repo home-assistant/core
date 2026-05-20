@@ -265,43 +265,44 @@ class WyomingConversationEntity(
                         )
                     )
 
-                # Gather intent handling results
-                tool_calls: list[llm.ToolInput] = []
-                for intent_type, intent_slots, intent_text, intent_task in intent_tasks:
-                    intent_task_response = await intent_task
-                    intent_responses.append(intent_task_response)
-
-                    # For the chat log
-                    tool_calls.append(
-                        llm.ToolInput(
-                            tool_name=intent_type,
-                            tool_args=intent_slots,
-                            external=True,
-                        )
-                    )
-
-                    # Process speech
-                    if (not intent_task_response.speech) and intent_text:
-                        if template.is_template_string(intent_text):
-                            # Render text as a template
-                            intent_text = self._render_speech_template(
-                                intent_text, intent_task_response, intent_slots
-                            )
-
-                        intent_task_response.async_set_speech(intent_text)
-
-                # Add all tool calls to the chat log
-                chat_log.async_add_assistant_content_without_tools(
-                    conversation.AssistantContent(
-                        agent_id=user_input.agent_id,
-                        content=None,
-                        tool_calls=tool_calls,
-                    )
-                )
         except* intent.IntentError as err_group:
             # Bubble up first exception only.
             # There's nothing the caller can do with multiple intent errors.
             raise err_group.exceptions[0] from err_group
+
+        # Gather intent handling results
+        tool_calls: list[llm.ToolInput] = []
+        for intent_type, intent_slots, intent_text, intent_task in intent_tasks:
+            intent_task_response = await intent_task
+            intent_responses.append(intent_task_response)
+
+            # For the chat log
+            tool_calls.append(
+                llm.ToolInput(
+                    tool_name=intent_type,
+                    tool_args=intent_slots,
+                    external=True,
+                )
+            )
+
+            # Process speech
+            if (not intent_task_response.speech) and intent_text:
+                if template.is_template_string(intent_text):
+                    # Render text as a template
+                    intent_text = self._render_speech_template(
+                        intent_text, intent_task_response, intent_slots
+                    )
+
+                intent_task_response.async_set_speech(intent_text)
+
+        # Add all tool calls to the chat log
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=tool_calls,
+            )
+        )
 
         # Must be the case because an exception would have been thrown otherwise
         assert intent_responses
