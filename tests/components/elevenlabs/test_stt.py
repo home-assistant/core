@@ -121,7 +121,7 @@ async def test_stt_transcription_success(
     result = await entity.async_process_audio_stream(
         default_metadata, two_chunk_stream()
     )
-    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.result is stt.SpeechResultState.SUCCESS
     assert result.text == "hello world"
     entity._client.speech_to_text.convert.assert_called_once()
 
@@ -153,7 +153,7 @@ async def test_stt_transcription_success_auto_language(
     entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
     assert entity is not None
     result = await entity.async_process_audio_stream(metadata, simple_stream())
-    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.result is stt.SpeechResultState.SUCCESS
     assert result.text == "hello world"
     entity._client.speech_to_text.convert.assert_called_once()
     # Verify language_code is NOT passed when auto-detect is enabled
@@ -172,7 +172,7 @@ async def test_stt_transcription_passes_language_code(
     assert entity is not None
     assert not entity._auto_detect_language
     result = await entity.async_process_audio_stream(default_metadata, simple_stream())
-    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.result is stt.SpeechResultState.SUCCESS
     # Verify language_code IS passed when auto-detect is disabled
     call_kwargs = entity._client.speech_to_text.convert.call_args.kwargs
     assert call_kwargs["language_code"] == "en"
@@ -203,7 +203,7 @@ async def test_stt_edge_cases(
     stream = request.getfixturevalue(stream_fixture)
     assert not entity._auto_detect_language
     result = await entity.async_process_audio_stream(metadata, stream())
-    assert result.result == stt.SpeechResultState.ERROR
+    assert result.result is stt.SpeechResultState.ERROR
     assert result.text is None
 
 
@@ -218,7 +218,7 @@ async def test_stt_convert_api_error(
     assert entity is not None
     entity._client.speech_to_text.convert.side_effect = ApiError()
     result = await entity.async_process_audio_stream(default_metadata, simple_stream())
-    assert result.result == stt.SpeechResultState.ERROR
+    assert result.result is stt.SpeechResultState.ERROR
     assert result.text is None
 
 

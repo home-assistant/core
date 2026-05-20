@@ -42,7 +42,7 @@ async def test_select_entity(
     assert entry
     assert entry.unique_id == f"{diffuser.hublot}-room_size_square_meter"
     assert entry.unit_of_measurement == UnitOfArea.SQUARE_METERS
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_select_option(hass: HomeAssistant) -> None:

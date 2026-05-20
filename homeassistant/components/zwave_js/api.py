@@ -712,7 +712,7 @@ async def websocket_node_alerts(
                 [
                     strategy.value
                     for strategy in InclusionStrategy
-                    if strategy != InclusionStrategy.SMART_START
+                    if strategy is not InclusionStrategy.SMART_START
                 ]
             ),
         ),
@@ -869,7 +869,7 @@ async def websocket_add_node(
         )
         # Check for nodes that have been added but not fully included
         for node in controller.nodes.values():
-            if node.status != NodeStatus.DEAD and not node.ready:
+            if node.status is not NodeStatus.DEAD and not node.ready:
                 forward_node_added(
                     node,
                     not node.is_secure,
@@ -1470,7 +1470,7 @@ async def websocket_remove_node(
                 [
                     strategy.value
                     for strategy in InclusionStrategy
-                    if strategy != InclusionStrategy.SMART_START
+                    if strategy is not InclusionStrategy.SMART_START
                 ]
             ),
         ),

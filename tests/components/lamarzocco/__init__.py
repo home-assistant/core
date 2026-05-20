@@ -41,7 +41,7 @@ def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServic
     """Return a mocked BluetoothServiceInfo."""
     if model in (ModelName.GS3_AV, ModelName.GS3_MP):
         name = f"GS3_{serial}"
-    elif model == ModelName.LINEA_MINI:
+    elif model is ModelName.LINEA_MINI:
         name = f"MINI_{serial}"
     elif model == ModelName.LINEA_MICRA:
         name = f"MICRA_{serial}"

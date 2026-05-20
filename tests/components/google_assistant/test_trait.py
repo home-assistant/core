@@ -4307,7 +4307,7 @@ async def test_sensorstate(
         name = item[0]
         unit = item[1]
 
-        if sensor_type == sensor.SensorDeviceClass.AQI:
+        if sensor_type is sensor.SensorDeviceClass.AQI:
             assert trt.sync_attributes() == {
                 "sensorStatesSupported": [
                     {
@@ -4337,7 +4337,7 @@ async def test_sensorstate(
                 ]
             }
 
-        if sensor_type == sensor.SensorDeviceClass.AQI:
+        if sensor_type is sensor.SensorDeviceClass.AQI:
             assert trt.query_attributes() == {
                 "currentSensorStateData": [
                     {

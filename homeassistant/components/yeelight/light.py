@@ -639,7 +639,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             return
         if (
             not self.device.is_color_flow_enabled
-            and self.color_mode == ColorMode.HS
+            and self.color_mode is ColorMode.HS
             and self.hs_color == hs_color
         ):
             _LOGGER.debug("HS already set to: %s", hs_color)
@@ -664,7 +664,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             return
         if (
             not self.device.is_color_flow_enabled
-            and self.color_mode == ColorMode.RGB
+            and self.color_mode is ColorMode.RGB
             and self.rgb_color == rgb
         ):
             _LOGGER.debug("RGB already set to: %s", rgb)
@@ -690,7 +690,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
 
         if (
             not self.device.is_color_flow_enabled
-            and self.color_mode == ColorMode.COLOR_TEMP
+            and self.color_mode is ColorMode.COLOR_TEMP
             and self.color_temp_kelvin == temp_in_k
         ):
             _LOGGER.debug("Color temp already set to: %s", temp_in_k)

@@ -358,7 +358,7 @@ async def test_battery_level_template_repair(
         "template", f"deprecated_battery_level_{TEST_VACUUM.entity_id}"
     )
     assert issue.domain == "template"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["entity_name"] == TEST_VACUUM.object_id
     assert issue.translation_placeholders["entity_id"] == TEST_VACUUM.entity_id
     assert "Detected that integration 'template' is setting the" not in caplog.text

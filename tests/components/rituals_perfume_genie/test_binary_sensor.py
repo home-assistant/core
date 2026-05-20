@@ -31,4 +31,4 @@ async def test_binary_sensors(
     entry = entity_registry.async_get("binary_sensor.genie_charging")
     assert entry
     assert entry.unique_id == f"{hublot}-charging"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC

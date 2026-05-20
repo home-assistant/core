@@ -1542,7 +1542,7 @@ async def test_poe_port_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1_poe")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(
@@ -1786,7 +1786,7 @@ async def test_port_control_switches(
 
     ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1")
     assert (
-        ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+        ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
     )  # ✅ Disabled by default
 
     # Enable entity

@@ -1408,9 +1408,9 @@ class EntityRegistry(BaseRegistry):
                     if config_entry.disabled_by:
                         if disabled_by is None:
                             disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
-                    elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                    elif disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
                         disabled_by = None
-                elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                elif disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
                     disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
@@ -1800,9 +1800,9 @@ class EntityRegistry(BaseRegistry):
                 if config_entry.disabled_by:
                     if old.disabled_by is None:
                         new_values["disabled_by"] = RegistryEntryDisabler.CONFIG_ENTRY
-                elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
                     new_values["disabled_by"] = None
-            elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+            elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
                 new_values["disabled_by"] = None
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
@@ -1957,7 +1957,7 @@ class EntityRegistry(BaseRegistry):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
-        if new_config_entry_id == UNDEFINED and old.config_entry_id is not None:
+        if new_config_entry_id is UNDEFINED and old.config_entry_id is not None:
             raise ValueError(
                 f"new_config_entry_id required because {entity_id} is already linked "
                 "to a config entry"

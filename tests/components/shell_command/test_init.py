@@ -326,7 +326,7 @@ async def test_repair_issue_on_reserved_reload_name(
     issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
     assert issue is not None
     assert issue.translation_key == "reserved_reload_name"
-    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders["name"] == "reload"
     with patch(
         "homeassistant.config.load_yaml_config_file",

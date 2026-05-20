@@ -77,7 +77,7 @@ async def test_service_say(
             await retrieve_media(
                 hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.OK
+            is HTTPStatus.OK
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -117,7 +117,7 @@ async def test_service_say_with_effect(
             await retrieve_media(
                 hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.OK
+            is HTTPStatus.OK
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -157,7 +157,7 @@ async def test_service_say_http_error(
             await retrieve_media(
                 hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.INTERNAL_SERVER_ERROR
+            is HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
     mock_speak.assert_called_once()

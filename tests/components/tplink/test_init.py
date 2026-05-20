@@ -451,7 +451,7 @@ async def test_feature_no_category(
     entity_id = "switch.my_plug_led"
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert "Unhandled category Category.Unset, fallback to DIAGNOSTIC" in caplog.text
 
 

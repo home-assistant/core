@@ -42,7 +42,7 @@ async def test_roku_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_supports_airplay"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports AirPlay"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -52,7 +52,7 @@ async def test_roku_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_supports_ethernet"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports Ethernet"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -62,7 +62,7 @@ async def test_roku_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_supports_find_remote"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports find remote"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -119,7 +119,7 @@ async def test_rokutv_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_airplay"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports AirPlay'
@@ -135,7 +135,7 @@ async def test_rokutv_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_ethernet"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports Ethernet'
@@ -151,7 +151,7 @@ async def test_rokutv_binary_sensors(
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_find_remote"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)

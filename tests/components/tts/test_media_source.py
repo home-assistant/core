@@ -128,7 +128,7 @@ async def test_legacy_resolving(
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
-    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    assert await retrieve_media(hass, hass_client, media_id) is HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -144,7 +144,7 @@ async def test_legacy_resolving(
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
-    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    assert await retrieve_media(hass, hass_client, media_id) is HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -175,7 +175,7 @@ async def test_resolving(
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
-    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    assert await retrieve_media(hass, hass_client, media_id) is HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]
@@ -191,7 +191,7 @@ async def test_resolving(
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
-    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    assert await retrieve_media(hass, hass_client, media_id) is HTTPStatus.OK
 
     assert len(mock_get_tts_audio.mock_calls) == 1
     message, language = mock_get_tts_audio.mock_calls[0][1]

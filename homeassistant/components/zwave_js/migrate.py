@@ -160,7 +160,7 @@ def async_migrate_discovered_value(
     ]
 
     if (
-        disc_info.platform == Platform.BINARY_SENSOR
+        disc_info.platform is Platform.BINARY_SENSOR
         and disc_info.primary_value.command_class == CommandClass.NOTIFICATION
     ):
         for state_key in disc_info.primary_value.metadata.states:

@@ -433,7 +433,7 @@ async def test_event_property(hass: HomeAssistant) -> None:
             CONF_DAILY_EVENTS: [
                 event_type
                 for event_type in DailyCalendarEventType
-                if event_type != DailyCalendarEventType.DATE
+                if event_type is not DailyCalendarEventType.DATE
             ],
             CONF_YEARLY_EVENTS: [],
             CONF_LEARNING_SCHEDULE: [],

@@ -1322,7 +1322,7 @@ def integration_disabled_entities(
         for entity_entry in er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
-        if entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        if entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]
 
 

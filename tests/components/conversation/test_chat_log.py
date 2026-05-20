@@ -897,7 +897,7 @@ async def test_chat_log_subscription(
             )
         )
         # Check user content with attachments event
-        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        assert received_events[-1][1] is ChatLogEventType.CONTENT_ADDED
         user_event = received_events[-1][2]["content"]
         assert user_event["content"] == "Check this image"
         assert len(user_event["attachments"]) == 1
@@ -983,11 +983,11 @@ async def test_chat_log_subscription(
     assert len(received_events) == 8
 
     # Check the first event is CREATED
-    assert received_events[0][1] == ChatLogEventType.CREATED
+    assert received_events[0][1] is ChatLogEventType.CREATED
     assert received_events[0][2]["chat_log"]["conversation_id"] == conversation_id
 
     # Check the second event is CONTENT_ADDED (from mock_conversation_input)
-    assert received_events[1][1] == ChatLogEventType.CONTENT_ADDED
+    assert received_events[1][1] is ChatLogEventType.CONTENT_ADDED
     assert received_events[1][0] == conversation_id
 
     # Test cleanup functionality

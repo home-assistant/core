@@ -21,7 +21,7 @@ async def test_tailscale_sensors(
     assert entry
     assert state
     assert entry.unique_id == "123457_expires"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == "2022-02-25T09:49:06+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router Expires"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
@@ -41,7 +41,7 @@ async def test_tailscale_sensors(
     assert entry
     assert state
     assert entry.unique_id == "123457_ip"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == "100.11.11.112"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router IP address"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -53,7 +53,7 @@ async def test_tailscale_sensors(
     assert device_entry.manufacturer == "Tailscale Inc."
     assert device_entry.model == "linux"
     assert device_entry.name == "router"
-    assert device_entry.entry_type == dr.DeviceEntryType.SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.sw_version == "1.14.0-t5cff36945-g809e87bba"
     assert (
         device_entry.configuration_url

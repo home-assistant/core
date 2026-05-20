@@ -236,7 +236,7 @@ class ZhongHongClimate(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             if self.is_on:
                 self.turn_off()
             return

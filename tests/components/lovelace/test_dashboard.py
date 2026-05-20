@@ -375,7 +375,7 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.is_fixable is False
     assert issue.breaks_in_ha_version == "2026.8.0"
 

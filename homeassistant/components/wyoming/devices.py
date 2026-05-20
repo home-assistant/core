@@ -80,7 +80,7 @@ class SatelliteDevice:
     @callback
     def set_vad_sensitivity(self, vad_sensitivity: VadSensitivity) -> None:
         """Set VAD sensitivity."""
-        if vad_sensitivity != self.vad_sensitivity:
+        if vad_sensitivity is not self.vad_sensitivity:
             self.vad_sensitivity = vad_sensitivity
             if self._audio_settings_listener is not None:
                 self._audio_settings_listener()

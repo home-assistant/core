@@ -146,7 +146,7 @@ async def test_battery_sensor(
     entry = entity_registry.async_get(entity_id)
 
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_contact_sensor"])
@@ -172,7 +172,7 @@ async def test_battery_sensor_voltage(
     entry = entity_registry.async_get(entity_id)
 
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])

@@ -262,7 +262,7 @@ METRIC_SYSTEM = UnitSystem(
         **{
             ("atmospheric_pressure", unit): UnitOfPressure.HPA
             for unit in UnitOfPressure
-            if unit != UnitOfPressure.HPA
+            if unit is not UnitOfPressure.HPA
         },
         # Convert non-metric area
         ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_CENTIMETERS,
@@ -342,7 +342,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         **{
             ("atmospheric_pressure", unit): UnitOfPressure.INHG
             for unit in UnitOfPressure
-            if unit != UnitOfPressure.INHG
+            if unit is not UnitOfPressure.INHG
         },
         # Convert non-USCS areas
         ("area", UnitOfArea.SQUARE_METERS): UnitOfArea.SQUARE_FEET,

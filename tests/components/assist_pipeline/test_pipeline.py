@@ -896,7 +896,7 @@ async def test_tts_audio_output(
         await pipeline_input.execute()
 
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
+            if event.type is assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
                 await client.get(event.data["tts_output"]["url"])
@@ -960,7 +960,7 @@ async def test_tts_wav_preferred_format(
         await pipeline_input.execute()
 
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
+            if event.type is assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
                 await client.get(event.data["tts_output"]["url"])
@@ -1032,7 +1032,7 @@ async def test_tts_dict_preferred_format(
         await pipeline_input.execute()
 
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
+            if event.type is assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
                 await client.get(event.data["tts_output"]["url"])
@@ -1116,7 +1116,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
             (
                 e
                 for e in events
-                if e.type == assist_pipeline.PipelineEventType.INTENT_END
+                if e.type is assist_pipeline.PipelineEventType.INTENT_END
             ),
             None,
         )
@@ -1199,7 +1199,7 @@ async def test_prefer_local_intents(
             (
                 e
                 for e in events
-                if e.type == assist_pipeline.PipelineEventType.INTENT_END
+                if e.type is assist_pipeline.PipelineEventType.INTENT_END
             ),
             None,
         )
@@ -1420,7 +1420,7 @@ async def test_stt_language_used_instead_of_conversation_language(
         assert process_events(events) == snapshot
         intent_start: assist_pipeline.PipelineEvent | None = None
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+            if event.type is assist_pipeline.PipelineEventType.INTENT_START:
                 intent_start = event
                 break
 
@@ -1496,7 +1496,7 @@ async def test_tts_language_used_instead_of_conversation_language(
         assert process_events(events) == snapshot
         intent_start: assist_pipeline.PipelineEvent | None = None
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+            if event.type is assist_pipeline.PipelineEventType.INTENT_START:
                 intent_start = event
                 break
 
@@ -1572,7 +1572,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
         assert process_events(events) == snapshot
         intent_start: assist_pipeline.PipelineEvent | None = None
         for event in events:
-            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+            if event.type is assist_pipeline.PipelineEventType.INTENT_START:
                 intent_start = event
                 break
 
@@ -2026,7 +2026,7 @@ async def test_acknowledge(
 
     has_acknowledge_override: bool | None = None
     for event in events:
-        if event.type == PipelineEventType.TTS_START:
+        if event.type is PipelineEventType.TTS_START:
             assert event.data
             has_acknowledge_override = event.data["acknowledge_override"]
             break

@@ -69,7 +69,7 @@ async def test_iaq_sensor_entities_disabled_by_default(
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
-        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -81,7 +81,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     for entity_id in ("sensor.living_signal_strength",):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
-        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -369,7 +369,7 @@ async def test_ventilation_state_unknown_returns_state_unknown(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that VentilationState.UNKNOWN makes the sensor report unknown."""
-    box_node = next(n for n in mock_sensor_nodes if n.general.node_type == NodeType.BOX)
+    box_node = next(n for n in mock_sensor_nodes if n.general.node_type is NodeType.BOX)
     updated_nodes = [
         Node(
             node_id=box_node.node_id,

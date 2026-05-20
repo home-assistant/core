@@ -1215,7 +1215,7 @@ async def test_deprecated_installation_issue_os_armv7(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue.domain == "homeassistant"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
         "installation_guide": "https://www.home-assistant.io/installation/",
     }
@@ -1278,7 +1278,7 @@ async def test_deprecated_installation_issue_32bit_os(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_architecture")
     assert issue.domain == "homeassistant"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"installation_type": "OS", "arch": arch}
 
 
@@ -1341,7 +1341,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
         "homeassistant", "deprecated_method_architecture"
     )
     assert issue.domain == "homeassistant"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
         "installation_type": "Supervised",
         "arch": arch,
@@ -1404,7 +1404,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_method")
     assert issue.domain == "homeassistant"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
         "installation_type": "Supervised",
         "arch": arch,

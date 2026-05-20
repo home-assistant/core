@@ -3781,7 +3781,7 @@ async def test_manager_blocked_until_home_assistant_started(
     await setup_backup_integration(hass)
     manager = hass.data[DATA_MANAGER]
 
-    assert manager.state == BackupManagerState.BLOCKED
+    assert manager.state is BackupManagerState.BLOCKED
     assert manager.last_action_event is None
 
     # Fired when Home Assistant changes to starting state

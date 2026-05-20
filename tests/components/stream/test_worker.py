@@ -376,7 +376,7 @@ async def test_stream_open_fails(
         with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, STREAM_SOURCE)
         av_open.assert_called_once()
-        assert err.value.error_code == error_code
+        assert err.value.error_code is error_code
 
 
 async def test_stream_worker_success(hass: HomeAssistant) -> None:

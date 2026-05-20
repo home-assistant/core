@@ -1482,7 +1482,7 @@ async def test_working_location_entity(
 
     entity_entry = entity_registry.async_get("calendar.working_location")
     assert entity_entry
-    assert entity_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     entity_registry.async_update_entity(
         entity_id="calendar.working_location", disabled_by=None

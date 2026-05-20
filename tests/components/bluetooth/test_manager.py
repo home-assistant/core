@@ -1790,7 +1790,7 @@ async def test_repair_issue_created_for_degraded_scanner_in_docker(
         registry = ir.async_get(hass)
         issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
         assert issue is not None
-        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.severity is ir.IssueSeverity.WARNING
         assert not issue.is_fixable
         assert issue.translation_key == "bluetooth_adapter_missing_permissions"
 
@@ -1946,7 +1946,7 @@ async def test_repair_issue_created_for_passive_mode_fallback(
     registry = ir.async_get(hass)
     issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     # Should default to USB translation key when adapter type is unknown
     assert issue.translation_key == "bluetooth_adapter_passive_mode_usb"
     assert not issue.is_fixable
@@ -1997,7 +1997,7 @@ async def test_repair_issue_created_for_passive_mode_fallback_uart(
         registry = ir.async_get(hass)
         issue = registry.async_get_issue(bluetooth.DOMAIN, issue_id)
         assert issue is not None
-        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.severity is ir.IssueSeverity.WARNING
         assert issue.translation_key == "bluetooth_adapter_passive_mode_uart"
         assert not issue.is_fixable
 

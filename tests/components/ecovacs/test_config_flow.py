@@ -241,7 +241,7 @@ async def test_user_flow_self_hosted_error(
         mock_create_mqtt_config.assert_called_once()
         ssl_context = mock_create_mqtt_config.call_args[1]["ssl_context"]
         assert isinstance(ssl_context, ssl.SSLContext)
-        assert ssl_context.verify_mode == ssl.CERT_NONE
+        assert ssl_context.verify_mode is ssl.CERT_NONE
         assert ssl_context.check_hostname is False
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

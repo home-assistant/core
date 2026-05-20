@@ -288,10 +288,10 @@ async def test_pipeline_from_audio_stream_no_stt(
     )
 
     assert len(events) == 3
-    assert events[0].type == assist_pipeline.PipelineEventType.RUN_START
-    assert events[1].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[0].type is assist_pipeline.PipelineEventType.RUN_START
+    assert events[1].type is assist_pipeline.PipelineEventType.ERROR
     assert events[1].data["code"] == "validation-error"
-    assert events[2].type == assist_pipeline.PipelineEventType.RUN_END
+    assert events[2].type is assist_pipeline.PipelineEventType.RUN_END
 
 
 async def test_pipeline_from_audio_stream_unknown_pipeline(
@@ -367,13 +367,13 @@ async def test_pipeline_from_audio_stream_validation_pipeline_error(
     )
 
     assert len(events) == 3
-    assert events[0].type == assist_pipeline.PipelineEventType.RUN_START
-    assert events[1].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[0].type is assist_pipeline.PipelineEventType.RUN_START
+    assert events[1].type is assist_pipeline.PipelineEventType.ERROR
     assert events[1].data == {
         "code": "intent-not-supported",
         "message": "Intent recognition engine conversation.non_existing is not found",
     }
-    assert events[2].type == assist_pipeline.PipelineEventType.RUN_END
+    assert events[2].type is assist_pipeline.PipelineEventType.RUN_END
 
 
 async def test_pipeline_from_audio_stream_wake_word(
@@ -737,5 +737,5 @@ async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
 
     assert process_events(events) == snapshot
     assert len(events) == 4  # run start, stt start, error, run end
-    assert events[2].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[2].type is assist_pipeline.PipelineEventType.ERROR
     assert events[2].data["code"] == "cloud-auth-failed"

@@ -105,7 +105,7 @@ async def test_tts(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "marin")
     mock_create_speech.assert_called_once_with(
@@ -153,7 +153,7 @@ async def test_tts_preferred_format(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     mock_create_speech.assert_called_once_with(
         model="gpt-4o-mini-tts",
@@ -225,7 +225,7 @@ async def test_tts_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
     mock_create_speech.assert_called_once_with(
         model="gpt-4o-mini-tts",

@@ -94,7 +94,7 @@ def mock_make_request(install: str) -> Callable:
     ) -> JsonArrayType | JsonObjectType:
         """Return the JSON for a HTTP get of a given URL."""
 
-        if method != HTTPMethod.GET:
+        if method is not HTTPMethod.GET:
             pytest.fail(f"Unmocked method: {method} {url}")
 
         await self._headers()

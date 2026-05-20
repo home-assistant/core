@@ -627,7 +627,7 @@ async def test_poe_port_switches(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     ent_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_poe_power")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(
@@ -1050,10 +1050,10 @@ async def test_bandwidth_port_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     p1rx_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_rx")
-    assert p1rx_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert p1rx_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     p1tx_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_tx")
-    assert p1tx_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert p1tx_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(
@@ -1198,10 +1198,10 @@ async def test_port_link_speed_sensors(
 ) -> None:
     """Verify that port link speed sensors are working as expected."""
     p1_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_link_speed")
-    assert p1_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert p1_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     p2_reg_entry = entity_registry.async_get("sensor.mock_name_port_2_link_speed")
-    assert p2_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert p2_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Port with speed 0 should not create an entity
     assert not entity_registry.async_get("sensor.mock_name_port_3_link_speed")
@@ -1298,10 +1298,10 @@ async def test_device_client_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
     ent_reg_entry = entity_registry.async_get("sensor.wired_device_clients")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     ent_reg_entry = entity_registry.async_get("sensor.wireless_device_clients")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(
@@ -1564,7 +1564,7 @@ async def test_wan_monitor_latency(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     latency_entry = entity_registry.async_get(entity_id)
-    assert latency_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert latency_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
@@ -1746,7 +1746,7 @@ async def test_device_temperatures(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     temperature_entity = entity_registry.async_get(entity_id)
-    assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert temperature_entity.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
@@ -1813,7 +1813,7 @@ async def test_device_temperature_with_missing_value(
     entity_id = "sensor.device_cpu_temperature"
 
     temperature_entity = entity_registry.async_get(entity_id)
-    assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert temperature_entity.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)

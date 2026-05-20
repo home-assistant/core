@@ -164,7 +164,7 @@ async def setup_entity(
         **({"attributes": attributes} if attributes else {}),
         **(extra_config or {}),
     }
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, count, entity_config, extra_section_config
         )
@@ -200,7 +200,7 @@ async def setup_and_test_unique_id(
         {"name": "template_entity_1", **entity_config},
         {"name": "template_entity_2", **entity_config},
     ]
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(hass, platform_setup.domain, 1, entities)
     elif style == ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
@@ -232,7 +232,7 @@ async def setup_and_test_nested_unique_id(
         {"name": "test_b", "unique_id": "b", **(entity_config or {}), **state_config},
     ]
     extra_section_config = {"unique_id": "x"}
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, 1, entities, extra_section_config
         )

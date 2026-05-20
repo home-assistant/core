@@ -740,7 +740,7 @@ async def test_deprecated_installation_issue_core(
     for expected_issue, expected_placeholders in expected_issues:
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue.domain == DOMAIN
-        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.severity is ir.IssueSeverity.WARNING
         assert issue.translation_placeholders == expected_placeholders
 
 
@@ -781,5 +781,5 @@ async def test_deprecated_installation_issue_container_32bit(
     assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_container")
     assert issue.domain == DOMAIN
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"arch": arch}

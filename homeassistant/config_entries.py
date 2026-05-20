@@ -985,7 +985,7 @@ class ConfigEntry[_DataT = Any]:
             self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
-        if self.state == ConfigEntryState.NOT_LOADED:
+        if self.state is ConfigEntryState.NOT_LOADED:
             return True
 
         if not integration and (integration := self._integration_for_domain) is None:
@@ -1626,13 +1626,13 @@ class ConfigEntriesFlowManager(
         flow_type, flow_id = next_flow
         if flow_type not in FlowType:
             raise HomeAssistantError(f"Invalid flow type: {flow_type}")
-        if flow_type == FlowType.CONFIG_FLOW:
+        if flow_type is FlowType.CONFIG_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.flow.async_get(flow_id)
-        if flow_type == FlowType.OPTIONS_FLOW:
+        if flow_type is FlowType.OPTIONS_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.options.async_get(flow_id)
-        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+        if flow_type is FlowType.CONFIG_SUBENTRIES_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.subentries.async_get(flow_id)
 
@@ -1648,7 +1648,7 @@ class ConfigEntriesFlowManager(
         """
         flow = cast(ConfigFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
@@ -2177,7 +2177,7 @@ class ConfigEntries:
         """
         entries = self._entries.get_entries_for_domain(domain)
 
-        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
+        return [entry for entry in entries if entry.state is ConfigEntryState.LOADED]
 
     @callback
     def async_entry_for_domain_unique_id(
@@ -3338,7 +3338,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if next_flow is None:
             return
         flow_type, flow_id = next_flow
-        if flow_type != FlowType.CONFIG_FLOW:
+        if flow_type is not FlowType.CONFIG_FLOW:
             raise HomeAssistantError(
                 "next_flow only supports FlowType.CONFIG_FLOW; "
                 "use async_on_create_entry for options or subentry flows"
@@ -3651,7 +3651,7 @@ class ConfigSubentryFlowManager(
         """
         flow = cast(ConfigSubentryFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry_id, subentry_type = flow.handler
@@ -3874,7 +3874,7 @@ class OptionsFlowManager(
         """
         flow = cast(OptionsFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)

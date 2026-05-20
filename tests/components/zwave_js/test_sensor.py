@@ -326,7 +326,7 @@ async def test_config_parameter_sensor(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
         assert entity_entry.disabled
-        assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+        assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
         updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)

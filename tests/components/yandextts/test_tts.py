@@ -85,7 +85,7 @@ async def test_service_say(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -132,7 +132,7 @@ async def test_service_say_russian_config(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -176,7 +176,7 @@ async def test_service_say_russian_service(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -223,7 +223,7 @@ async def test_service_say_timeout(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -269,7 +269,7 @@ async def test_service_say_http_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
@@ -313,7 +313,7 @@ async def test_service_say_specified_speaker(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -359,7 +359,7 @@ async def test_service_say_specified_emotion(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -401,7 +401,7 @@ async def test_service_say_specified_low_speed(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -441,7 +441,7 @@ async def test_service_say_specified_speed(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -484,7 +484,7 @@ async def test_service_say_specified_options(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(aioclient_mock.mock_calls) == 1

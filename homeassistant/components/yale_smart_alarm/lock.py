@@ -97,9 +97,9 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.LOCKED
+        return LOCK_STATE_MAP.get(self.lock_data.state()) is LockState.LOCKED
 
     @property
     def is_open(self) -> bool | None:
         """Return true if the lock is open."""
-        return LOCK_STATE_MAP.get(self.lock_data.state()) == LockState.OPEN
+        return LOCK_STATE_MAP.get(self.lock_data.state()) is LockState.OPEN

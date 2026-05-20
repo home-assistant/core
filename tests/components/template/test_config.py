@@ -501,7 +501,7 @@ async def test_invalid_schema_raises_issue(
     issue = next(iter(issue_registry.issues.values()))
 
     assert issue.domain == "template"
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 async def test_multiple_configuration_keys(

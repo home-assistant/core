@@ -132,7 +132,7 @@ async def test_climate_condition_options_validation(
                 condition="climate.is_hvac_mode",
                 condition_options={"hvac_mode": [mode]},
                 target_states=[mode],
-                other_states=[m for m in HVACMode if m != mode],
+                other_states=[m for m in HVACMode if m is not mode],
             )
         ),
         *parametrize_condition_states_any(
@@ -200,7 +200,7 @@ async def test_climate_state_condition_behavior_any(
                 condition="climate.is_hvac_mode",
                 condition_options={"hvac_mode": [mode]},
                 target_states=[mode],
-                other_states=[m for m in HVACMode if m != mode],
+                other_states=[m for m in HVACMode if m is not mode],
             )
         ),
         *parametrize_condition_states_all(

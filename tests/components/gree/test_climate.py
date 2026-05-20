@@ -428,7 +428,7 @@ async def test_send_target_temperature(
     device().mode = HVAC_MODES_REVERSE.get(HVACMode.AUTO)
 
     fake_device = device()
-    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+    if units.temperature_unit is UnitOfTemperature.FAHRENHEIT:
         fake_device.temperature_units = 1
 
     await async_setup_gree(hass)
@@ -504,7 +504,7 @@ async def test_send_target_temperature_device_timeout(
 ) -> None:
     """Test sending target temperature command with device timeout."""
     hass.config.units = units
-    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+    if units.temperature_unit is UnitOfTemperature.FAHRENHEIT:
         device().temperature_units = 1
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -535,7 +535,7 @@ async def test_update_target_temperature(
 ) -> None:
     """Test for updating target temperature from the device."""
     hass.config.units = units
-    if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+    if units.temperature_unit is UnitOfTemperature.FAHRENHEIT:
         device().temperature_units = 1
     device().target_temperature = temperature
 

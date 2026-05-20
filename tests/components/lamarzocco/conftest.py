@@ -102,7 +102,7 @@ def mock_cloud_client() -> Generator[MagicMock]:
 def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
     """Return a mocked LM client."""
 
-    if device_fixture == ModelName.LINEA_MINI:
+    if device_fixture is ModelName.LINEA_MINI:
         config = load_json_object_fixture("config_mini.json", DOMAIN)
     elif device_fixture == ModelName.LINEA_MICRA:
         config = load_json_object_fixture("config_micra.json", DOMAIN)

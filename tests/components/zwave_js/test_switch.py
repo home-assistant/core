@@ -240,7 +240,7 @@ async def test_config_parameter_switch(
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)

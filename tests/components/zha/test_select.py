@@ -96,7 +96,7 @@ async def test_select(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(

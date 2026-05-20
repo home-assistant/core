@@ -64,7 +64,7 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_battery_temperature")
     assert entry
     assert entry.unique_id == "abcdef-123456-batteryTemperature"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_foreground_app")
     assert state
@@ -100,7 +100,7 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_internal_storage_free_space")
     assert entry
     assert entry.unique_id == "abcdef-123456-internalStorageFreeSpace"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_total_space")
     assert state
@@ -115,7 +115,7 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_internal_storage_total_space")
     assert entry
     assert entry.unique_id == "abcdef-123456-internalStorageTotalSpace"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_free_memory")
     assert state
@@ -127,7 +127,7 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_free_memory")
     assert entry
     assert entry.unique_id == "abcdef-123456-ramFreeMemory"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_total_memory")
     assert state
@@ -139,7 +139,7 @@ async def test_sensors_sensors(
     entry = entity_registry.async_get("sensor.amazon_fire_total_memory")
     assert entry
     assert entry.unique_id == "abcdef-123456-ramTotalMemory"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

@@ -340,7 +340,7 @@ async def test_enable_resume_command_on_pause(
         )
         if ha_id == appliance.ha_id:
             for command in array_of_commands.commands:
-                if command.key == CommandKey.BSH_COMMON_RESUME_PROGRAM:
+                if command.key is CommandKey.BSH_COMMON_RESUME_PROGRAM:
                     # Simulate that the resume command is not available initially
                     array_of_commands.commands.remove(command)
                     break

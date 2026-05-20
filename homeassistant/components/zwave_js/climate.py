@@ -159,7 +159,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             # temperature unit
             if (
                 not self._unit_value
-                and enum != ThermostatSetpointType.NA
+                and enum is not ThermostatSetpointType.NA
                 and self._setpoint_values[enum]
             ):
                 self._unit_value = self._setpoint_values[enum]
@@ -499,7 +499,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # When turning the HVAC off from an on state, store the last HVAC mode ID so we
         # can set it again when turning the device back on.
-        if hvac_mode == HVACMode.OFF and self._current_mode.value != ThermostatMode.OFF:
+        if hvac_mode is HVACMode.OFF and self._current_mode.value != ThermostatMode.OFF:
             self._last_hvac_mode_id_before_off = self._current_mode.value
         await self._async_set_value(self._current_mode, self._hvac_modes[hvac_mode])
 
@@ -510,7 +510,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         # If current mode is not off, do nothing
-        if self.hvac_mode != HVACMode.OFF:
+        if self.hvac_mode is not HVACMode.OFF:
             return
 
         # We can safely assert here because this function can only be called if the
@@ -542,7 +542,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 if mode in self._hvac_modes
             )
         except StopIteration:
-            hvac_mode = next(mode for mode in self._hvac_modes if mode != HVACMode.OFF)
+            hvac_mode = next(
+                mode for mode in self._hvac_modes if mode is not HVACMode.OFF
+            )
         await self.async_set_hvac_mode(hvac_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -554,7 +556,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 # Current preset mode doesn't map to a supported HVAC mode.
                 # Pick the first supported non-off mode.
                 hvac_mode = next(
-                    mode for mode in self._hvac_modes if mode != HVACMode.OFF
+                    mode for mode in self._hvac_modes if mode is not HVACMode.OFF
                 )
             await self.async_set_hvac_mode(hvac_mode)
             return

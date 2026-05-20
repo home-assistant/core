@@ -136,7 +136,7 @@ async def test_cleanup_on_cancellation(
     await websocket_client.send_json({"id": 4, "type": "cancel_in_handler"})
     await hass.async_block_till_done()
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.close
+    assert msg.type is WSMsgType.close
     assert len(subscriptions) == 0
 
 
@@ -204,7 +204,7 @@ async def test_ensure_disconnect_invalid_json(
     assert msg["type"] == "pong"
     await websocket_client.send_str("[--INVALID-JSON--]")
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSE
+    assert msg.type is WSMsgType.CLOSE
 
 
 async def test_ensure_disconnect_invalid_binary(
@@ -220,7 +220,7 @@ async def test_ensure_disconnect_invalid_binary(
     assert msg["type"] == "pong"
     await websocket_client.send_bytes(b"")
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSE
+    assert msg.type is WSMsgType.CLOSE
 
 
 async def test_pending_msg_peak(
@@ -290,11 +290,11 @@ async def test_pending_msg_peak_recovery(
 
     for _ in range(10):
         msg = await websocket_client.receive()
-        assert msg.type == WSMsgType.TEXT
+        assert msg.type is WSMsgType.TEXT
 
     instance._send_message({})
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.TEXT
+    assert msg.type is WSMsgType.TEXT
 
     # Cleanly shutdown
     instance._send_message({})
@@ -346,7 +346,7 @@ async def test_pending_msg_peak_but_does_not_overflow(
     )
 
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.TEXT
+    assert msg.type is WSMsgType.TEXT
 
     assert "Client unable to keep up with pending messages" not in caplog.text
 

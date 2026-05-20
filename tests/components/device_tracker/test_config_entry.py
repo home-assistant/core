@@ -778,7 +778,7 @@ async def test_register_mac(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -827,7 +827,7 @@ async def test_register_mac_not_found(
 
     test_entity_entry = entity_registry.async_get(entity_id)
     assert test_entity_entry is not None
-    assert test_entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert test_entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -839,7 +839,7 @@ async def test_register_mac_not_found(
     # The entity entry under test should still be disabled.
     test_entity_entry = entity_registry.async_get(entity_id)
     assert test_entity_entry is not None
-    assert test_entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert test_entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize(
@@ -862,7 +862,7 @@ async def test_register_mac_ignored(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -872,7 +872,7 @@ async def test_register_mac_ignored(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_connected_device_registered(

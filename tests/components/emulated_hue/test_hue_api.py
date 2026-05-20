@@ -1331,7 +1331,7 @@ async def perform_get_light_state_by_number(
 
     assert result.status == expected_status
 
-    if expected_status == HTTPStatus.OK:
+    if expected_status is HTTPStatus.OK:
         assert CONTENT_TYPE_JSON in result.headers["content-type"]
 
         return await result.json()

@@ -178,7 +178,7 @@ async def test_deprecated_platform_config(
     assert issue.breaks_in_ha_version == "2024.9.0"
     assert issue.is_fixable is False
     assert issue.is_persistent is False
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_tts_platform_config"
 
 
@@ -609,7 +609,7 @@ async def test_deprecated_voice(
     assert issue.breaks_in_ha_version == "2024.8.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_voice"
     assert issue.translation_placeholders == {
         "deprecated_voice": deprecated_voice,
@@ -778,7 +778,7 @@ async def test_deprecated_gender(
     assert issue.breaks_in_ha_version == "2024.10.0"
     assert issue.is_fixable is True
     assert issue.is_persistent is True
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "deprecated_gender"
     assert issue.translation_placeholders == {
         "integration_name": "Home Assistant Cloud",

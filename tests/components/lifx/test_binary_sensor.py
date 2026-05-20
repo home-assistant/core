@@ -63,7 +63,7 @@ async def test_hev_cycle_state(
     entry = entity_registry.async_get(entity_id)
     assert state
     assert entry.unique_id == f"{SERIAL}_hev_cycle_state"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     bulb.hev_cycle = {"duration": 7200, "remaining": 0, "last_power": False}
 

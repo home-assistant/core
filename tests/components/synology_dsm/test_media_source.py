@@ -410,7 +410,7 @@ async def test_browse_media_get_items(
     assert isinstance(item, BrowseMedia)
     assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg"
     assert item.title == "filename.jpg"
-    assert item.media_class == MediaClass.IMAGE
+    assert item.media_class is MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"
     assert item.can_play
     assert not item.can_expand
@@ -419,7 +419,7 @@ async def test_browse_media_get_items(
     assert isinstance(item, BrowseMedia)
     assert item.identifier == "mocked_syno_dsm_entry/1_/10_1298753/filename.jpg_shared"
     assert item.title == "filename.jpg"
-    assert item.media_class == MediaClass.IMAGE
+    assert item.media_class is MediaClass.IMAGE
     assert item.media_content_type == "image/jpeg"
     assert item.can_play
     assert not item.can_expand

@@ -1255,11 +1255,11 @@ async def test_async_subscribe_updates(
     assert isinstance(items[0], TodoItem)
     assert items[0].summary == "Item #1"
     assert items[0].uid == "1"
-    assert items[0].status == TodoItemStatus.NEEDS_ACTION
+    assert items[0].status is TodoItemStatus.NEEDS_ACTION
     assert isinstance(items[1], TodoItem)
     assert items[1].summary == "Item #2"
     assert items[1].uid == "2"
-    assert items[1].status == TodoItemStatus.COMPLETED
+    assert items[1].status is TodoItemStatus.COMPLETED
 
     # Verify items are copies (not the same objects)
     assert items[0] is not test_entity.todo_items[0]
@@ -1293,7 +1293,7 @@ async def test_async_subscribe_updates(
     assert len(items) == 1
     assert items[0].summary == "New item"
     assert items[0].uid == "4"
-    assert items[0].status == TodoItemStatus.NEEDS_ACTION
+    assert items[0].status is TodoItemStatus.NEEDS_ACTION
 
     # Unsubscribe and verify no more updates
     unsub()

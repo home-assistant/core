@@ -198,7 +198,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             self._radio_mgr.device_path = device_path
 
             probe_result = await self._radio_mgr.detect_radio_type()
-            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+            if probe_result is ProbeResult.WRONG_FIRMWARE_INSTALLED:
                 return self.async_abort(
                     reason="wrong_firmware_installed",
                     description_placeholders={"repair_url": REPAIR_MY_URL},
@@ -333,7 +333,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to set up the integration from scratch."""
-        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+        if self._flow_strategy is ZigbeeFlowStrategy.RECOMMENDED:
             # Fast path: automatically form a new network
             return await self.async_step_setup_strategy_recommended()
         if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
@@ -372,7 +372,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to deal with the current radio's settings during migration."""
-        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+        if self._flow_strategy is ZigbeeFlowStrategy.RECOMMENDED:
             # Fast path: automatically migrate everything
             return await self.async_step_migration_strategy_recommended()
         if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
@@ -852,7 +852,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             else:
                 probe_result = ProbeResult.RADIO_TYPE_DETECTED
 
-            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+            if probe_result is ProbeResult.WRONG_FIRMWARE_INSTALLED:
                 return self.async_abort(
                     reason="wrong_firmware_installed",
                     description_placeholders={"repair_url": REPAIR_MY_URL},

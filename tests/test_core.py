@@ -667,7 +667,7 @@ async def test_stage_shutdown_generic_error(
         assert patched_call.called
 
     assert "test_exception" in caplog.text
-    assert hass.state == ha.CoreState.stopped
+    assert hass.state is ha.CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
@@ -2056,12 +2056,12 @@ async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
         with patch("asyncio.wait", return_value=(set(), {asyncio.Future()})):
             await hass.async_start()
 
-        assert hass.state == ha.CoreState.running
+        assert hass.state is ha.CoreState.running
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
         await hass.async_stop()
-        assert hass.state == ha.CoreState.stopped
+        assert hass.state is ha.CoreState.stopped
 
 
 async def test_service_executed_with_subservices(hass: HomeAssistant) -> None:
@@ -3015,7 +3015,7 @@ async def test_get_release_channel(
 ) -> None:
     """Test if release channel detection works from Home Assistant version number."""
     with patch("homeassistant.core.__version__", f"{version}"):
-        assert get_release_channel() == release_channel
+        assert get_release_channel() is release_channel
 
 
 def test_is_callback_check_partial() -> None:
@@ -3029,19 +3029,19 @@ def test_is_callback_check_partial() -> None:
         pass
 
     assert ha.is_callback(callback_func)
-    assert HassJob(callback_func).job_type == ha.HassJobType.Callback
+    assert HassJob(callback_func).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(functools.partial(callback_func))
-    assert HassJob(functools.partial(callback_func)).job_type == ha.HassJobType.Callback
+    assert HassJob(functools.partial(callback_func)).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(
         functools.partial(functools.partial(callback_func))
     )
-    assert HassJob(functools.partial(functools.partial(callback_func))).job_type == (
+    assert HassJob(functools.partial(functools.partial(callback_func))).job_type is (
         ha.HassJobType.Callback
     )
     assert not ha.is_callback_check_partial(not_callback_func)
-    assert HassJob(not_callback_func).job_type == ha.HassJobType.Executor
+    assert HassJob(not_callback_func).job_type is ha.HassJobType.Executor
     assert not ha.is_callback_check_partial(functools.partial(not_callback_func))
-    assert HassJob(functools.partial(not_callback_func)).job_type == (
+    assert HassJob(functools.partial(not_callback_func)).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -3049,7 +3049,7 @@ def test_is_callback_check_partial() -> None:
     assert not ha.is_callback_check_partial(
         ha.callback(functools.partial(not_callback_func))
     )
-    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
+    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -3066,13 +3066,13 @@ def test_hassjob_passing_job_type() -> None:
 
     assert (
         HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
     # We should trust the job_type passed in
     assert (
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
 
