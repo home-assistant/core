@@ -119,13 +119,36 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
 
     @handle_sending_exception
     async def async_override_schedule(
-        self, override_mode: str, duration: timedelta
+        self,
+        override_mode: str,
+        duration: timedelta,
+        external_reason: int | None = None,
     ) -> None:
         """Override the schedule with mowing or parking."""
         if override_mode == MOW:
+            if external_reason is not None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="external_reason_mow",
+                )
             await self.coordinator.api.commands.start_for(self.mower_id, duration)
         if override_mode == PARK:
-            await self.coordinator.api.commands.park_for(self.mower_id, duration)
+            if (
+                external_reason is not None
+                and not self.mower_attributes.capabilities.work_areas
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="work_areas_not_supported",
+                )
+            if external_reason is not None and duration > timedelta(hours=25):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="external_reason",
+                )
+            await self.coordinator.api.commands.park_for(
+                self.mower_id, duration, external_reason
+            )
 
     @handle_sending_exception
     async def async_override_schedule_work_area(
