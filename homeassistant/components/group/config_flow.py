@@ -22,7 +22,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .button import async_create_preview_button
-from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
+from .const import CONF_GROUP_TYPE, CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
 from .event import async_create_preview_event
@@ -178,7 +178,7 @@ GROUP_TYPES = [
 
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to group_type."""
-    return cast(str, options["group_type"])
+    return cast(str, options[CONF_GROUP_TYPE])
 
 
 def set_group_type(
@@ -192,7 +192,7 @@ def set_group_type(
         handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
     ) -> dict[str, Any]:
         """Add group type to user input."""
-        return {"group_type": group_type, **user_input}
+        return {CONF_GROUP_TYPE: group_type, **user_input}
 
     return _set_group_type
 
@@ -428,7 +428,7 @@ def ws_start_preview(
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
         if not config_entry:
             raise HomeAssistantError
-        group_type = config_entry.options["group_type"]
+        group_type = config_entry.options[CONF_GROUP_TYPE]
         name = config_entry.options["name"]
         validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
         entity_registry = er.async_get(hass)

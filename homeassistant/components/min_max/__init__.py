@@ -3,12 +3,26 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+
+from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Min/Max from a config entry."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"migrate_to_group_sensor-{entry.entry_id}",
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=True,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="migrate_to_group_sensor",
+        data={"entry_id": entry.entry_id},
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

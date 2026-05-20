@@ -1,12 +1,15 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
 from datetime import datetime
+import hashlib
+import json
 import logging
 import statistics
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.group import CONF_ENTITIES
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -18,6 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
@@ -32,8 +36,10 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.util import yaml as yaml_util
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -50,6 +56,7 @@ ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
+
 
 ICON = "mdi:calculator"
 
@@ -103,6 +110,36 @@ async def async_setup_entry(
     )
 
 
+async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> None:
+    """Raise repair issue for YAML configuration deprecation."""
+    platform_config = config.copy()
+    platform_config[CONF_ENTITIES] = platform_config.pop(CONF_ENTITY_IDS)
+    platform_config.pop(CONF_ROUND_DIGITS)
+    platform_config.pop(CONF_PLATFORM)
+    if CONF_NAME not in platform_config:
+        platform_config[CONF_NAME] = f"{platform_config[CONF_TYPE]} sensor".capitalize()
+    yaml_config = yaml_util.dump(platform_config)
+    yaml_config = yaml_config.replace("\n", "\n    ")
+    yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
+
+    def make_hash(config: dict[str, Any]) -> str:
+        d = hashlib.sha1(json.dumps(config, sort_keys=True).encode())
+        return d.hexdigest()
+
+    issue_id = f"yaml_deprecated-{make_hash(platform_config)}"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        breaks_in_ha_version="2026.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://www.home-assistant.io/integrations/group/",
+        translation_key="yaml_deprecated",
+        translation_placeholders={"yaml_config": yaml_config},
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -117,6 +154,7 @@ async def async_setup_platform(
     unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await yaml_deprecation_notice(hass, config)
 
     async_add_entities(
         [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]

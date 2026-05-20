@@ -1953,7 +1953,7 @@ class EntityRegistry(BaseRegistry):
         """
         if (
             state := self.hass.states.get(entity_id)
-        ) is not None and state.state != STATE_UNKNOWN:
+        ) is not None and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]

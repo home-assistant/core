@@ -9,8 +9,10 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
@@ -49,14 +51,16 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): selector.TextSelector(),
-    }
-).extend(OPTIONS_SCHEMA.schema)
+CONFIG_SCHEMA = vol.Schema({})
+
+
+async def migrate_to_groups(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Abort flow as migrate to groups."""
+    raise AbortFlow("migrated_to_groups")
+
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
+    "user": SchemaFlowFormStep(migrate_to_groups),
 }
 
 OPTIONS_FLOW = {
