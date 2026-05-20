@@ -195,6 +195,13 @@ raise HomeAssistantError(
 """,
             id="domain_without_key",
         ),
+        pytest.param(
+            f"""
+{_HA_IMPORTS}
+raise HomeAssistantError("Something failed", translation_domain=DOMAIN)
+""",
+            id="hardcoded_with_domain_no_key",
+        ),
     ],
 )
 def test_translation_key_domain_mismatch_flagged(

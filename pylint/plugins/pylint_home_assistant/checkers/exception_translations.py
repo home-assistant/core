@@ -143,7 +143,20 @@ class ExceptionTranslationsChecker(BaseChecker):
         has_translation_key = translation_key_node is not None
         translation_key = _extract_const_string(translation_key_node)
 
-        # Case 1: Hardcoded string (has positional args, no translation_key keyword)
+        # Resolve domain presence
+        domain_node = _get_keyword_value(node, "translation_domain")
+        has_translation_domain = domain_node is not None
+
+        # Case 1: Only one of translation_key/translation_domain provided
+        if has_translation_key != has_translation_domain:
+            self.add_message(
+                "home-assistant-exception-translation-key-domain-mismatch",
+                node=node,
+                args=(exc_name,),
+            )
+            return
+
+        # Case 2: Hardcoded string (has positional args, no translation_key keyword)
         # Only enforced when quality scale rule exception-translations is done
         if node.args and not has_translation_key:
             if self._exception_translations_done:
@@ -154,32 +167,10 @@ class ExceptionTranslationsChecker(BaseChecker):
                 )
             return
 
-        # Case 2: Both message and translation_key (message overrides translation)
+        # Case 3: Both message and translation_key (message overrides translation)
         if node.args and has_translation_key:
             self.add_message(
                 "home-assistant-exception-message-with-translation",
-                node=node,
-                args=(exc_name,),
-            )
-            return
-
-        # Resolve domain presence
-        domain_node = _get_keyword_value(node, "translation_domain")
-        has_translation_domain = domain_node is not None
-
-        # Case 3: translation_key without translation_domain
-        if has_translation_key and not has_translation_domain:
-            self.add_message(
-                "home-assistant-exception-translation-key-domain-mismatch",
-                node=node,
-                args=(exc_name,),
-            )
-            return
-
-        # Case 4: translation_domain without translation_key
-        if has_translation_domain and not has_translation_key:
-            self.add_message(
-                "home-assistant-exception-translation-key-domain-mismatch",
                 node=node,
                 args=(exc_name,),
             )
