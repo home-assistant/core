@@ -23,7 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_SEVERITY = "severity"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LATITUDE = "latitude"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
