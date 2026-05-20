@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.fritz.const import CONF_FEATURE_WIREGUARD_VPN, DOMAIN
-from homeassistant.components.fritz.vpn_coordinator import FritzVpnCoordinator
+from homeassistant.components.fritz.vpn_coordinator import (
+    FritzVpnCoordinator,
+    vpn_auth_failed,
+    vpn_web_ui_protocol,
+)
 from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -202,3 +206,46 @@ async def test_vpn_coordinator_update_connection_error_retry_after(
         await vpn_coordinator.async_refresh()
 
     assert exc_info.value.retry_after == 300
+
+
+def test_vpn_web_ui_protocol_follows_conf_ssl() -> None:
+    """Web UI protocol matches FRITZ!Box Tools CONF_SSL."""
+    from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
+
+    from homeassistant.const import CONF_SSL
+
+    assert vpn_web_ui_protocol({CONF_SSL: False}) == PROTOCOL_HTTP
+    assert vpn_web_ui_protocol({CONF_SSL: True}) == PROTOCOL_HTTPS
+
+
+def test_vpn_auth_failed_detects_login_errors() -> None:
+    """vpn_auth_failed matches VPN auth indicator strings."""
+    assert vpn_auth_failed(Exception("login failed"))
+    assert not vpn_auth_failed(ConnectionError("timeout"))
+
+
+async def test_vpn_setup_auth_error_starts_reauth_when_loaded(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    mock_vpn_session: AsyncMock,
+) -> None:
+    """VPN auth failure during setup starts reauth after entry is loaded."""
+    mock_vpn_session.async_get_vpn_connections.side_effect = Exception("login failed")
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+            return_value=mock_vpn_session,
+        ),
+        patch.object(entry, "async_start_reauth") as mock_reauth,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
+    mock_reauth.assert_called_once_with(hass)

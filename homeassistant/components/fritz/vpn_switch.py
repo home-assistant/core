@@ -38,13 +38,14 @@ def _vpn_device_info(
     avm: AvmWrapper, connection_uid: str, connection: dict[str, Any]
 ) -> DeviceInfo:
     """Device registry entry for one WireGuard VPN connection."""
+    scheme = "https" if avm.use_tls else "http"
     return DeviceInfo(
         identifiers={(DOMAIN, f"{avm.unique_id}_vpn_{connection_uid}")},
         name=connection.get(API_KEY_NAME, connection_uid),
         manufacturer="FRITZ!",
         model=VPN_MODEL_WIREGUARD,
         via_device={(DOMAIN, avm.unique_id)},
-        configuration_url=f"http://{avm.host}",
+        configuration_url=f"{scheme}://{avm.host}",
         connections={(CONNECTION_NETWORK_MAC, avm.mac)},
     )
 
@@ -179,9 +180,16 @@ async def async_setup_vpn_switches(
             _create_vpn_switches(avm, vpn_data, initial_uids), update_before_add=True
         )
 
-    async def _add_new_entities() -> None:
+    async def _sync_vpn_entities() -> None:
         async with vpn_data.lock:
             current = set(coordinator.data) if coordinator.data else set()
+            pruned = known_uids - current
+            if pruned:
+                known_uids &= current
+                _LOGGER.debug(
+                    "WireGuard VPN: pruned %d uid(s) from known_uids (connections removed)",
+                    len(pruned),
+                )
             new_uids = current - known_uids
             if not new_uids:
                 return
@@ -197,6 +205,6 @@ async def async_setup_vpn_switches(
             )
 
     def _on_coordinator_update() -> None:
-        hass.async_create_task(_add_new_entities())
+        hass.async_create_task(_sync_vpn_entities())
 
     entry.async_on_unload(coordinator.async_add_listener(_on_coordinator_update))

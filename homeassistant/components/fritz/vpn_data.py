@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .vpn_coordinator import FritzVpnCoordinator
+from .vpn_coordinator import FritzVpnCoordinator, vpn_auth_failed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,21 @@ def vpn_entry_data(hass: HomeAssistant, entry_id: str) -> FritzVpnEntryData | No
     return hass.data.get(FRITZ_VPN_DATA_KEY, {}).get(entry_id)
 
 
+async def _start_reauth_when_entry_loaded(hass: HomeAssistant, entry_id: str) -> None:
+    """Start reauth after setup once the config entry is loaded."""
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None or entry.state != ConfigEntryState.LOADED:
+        return
+    _LOGGER.warning(
+        "WireGuard VPN authentication failed during setup; starting reauth for entry %s",
+        entry_id,
+    )
+    result = entry.async_start_reauth(hass)
+    if inspect.isawaitable(result):
+        await result
+
+
 async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Start WireGuard VPN coordinator for a FRITZ!Box Tools config entry."""
     vpn_coordinator = FritzVpnCoordinator(
@@ -50,6 +66,8 @@ async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
             err,
         )
         await vpn_coordinator.async_close()
+        if vpn_auth_failed(err):
+            hass.async_create_task(_start_reauth_when_entry_loaded(hass, entry.entry_id))
         return
 
     hass.data.setdefault(FRITZ_VPN_DATA_KEY, {})[entry.entry_id] = FritzVpnEntryData(

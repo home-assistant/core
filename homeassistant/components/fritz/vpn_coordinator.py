@@ -13,14 +13,16 @@ from fritzboxvpn import (
     API_KEY_NAME,
     FritzBoxVPNSession,
 )
+from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    DEFAULT_SSL,
     DOMAIN,
     LOG_MSG_VPN_CONNECTIONS_REMOVED,
     LOG_MSG_VPN_CONNECTIONS_REMOVED_HINT,
@@ -34,6 +36,17 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def vpn_auth_failed(error: BaseException) -> bool:
+    """Return True when the error indicates invalid VPN web UI credentials."""
+    message = str(error).lower()
+    return any(indicator in message for indicator in VPN_AUTH_INDICATORS)
+
+
+def vpn_web_ui_protocol(config: dict[str, Any]) -> str:
+    """Web UI protocol aligned with FRITZ!Box Tools CONF_SSL."""
+    return PROTOCOL_HTTPS if config.get(CONF_SSL, DEFAULT_SSL) else PROTOCOL_HTTP
 
 
 class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -61,6 +74,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config[CONF_HOST],
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
+            protocol=vpn_web_ui_protocol(config),
         )
 
     def get_vpn_status(self, connection_uid: str) -> str:
@@ -76,8 +90,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _is_auth_error(self, error: Exception) -> bool:
         """Return True when the error indicates invalid credentials."""
-        message = str(error).lower()
-        return any(indicator in message for indicator in VPN_AUTH_INDICATORS)
+        return vpn_auth_failed(error)
 
     def _schedule_reauth(self) -> None:
         """Start re-authentication once per auth failure cycle."""

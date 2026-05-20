@@ -182,3 +182,35 @@ async def test_vpn_switch_dynamic_new_connection(
     home_state = hass.states.get(entity_id)
     assert home_state is not None
     assert home_state.state == STATE_OFF
+
+
+async def test_vpn_switch_prunes_known_uids_when_connection_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    vpn_patch_session: AsyncMock,
+) -> None:
+    """Removed VPN UIDs are pruned from known_uids so they can be re-added later."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    vpn_data = hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id]
+    assert "uid-office" in vpn_data.known_uids
+
+    vpn_patch_session.async_get_vpn_connections.return_value = {}
+    await vpn_data.coordinator.async_request_refresh()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "uid-office" not in vpn_data.known_uids
+
+    vpn_patch_session.async_get_vpn_connections.return_value = MOCK_VPN_CONNECTIONS
+    await vpn_data.coordinator.async_request_refresh()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "uid-office" in vpn_data.known_uids
+    assert _vpn_entity_id(entity_registry, entry.entry_id, VPN_OFFICE_UNIQUE_ID)
