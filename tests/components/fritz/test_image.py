@@ -86,36 +86,41 @@ async def test_image_entity(
     """Test image entity."""
 
     # setup component with image platform only
-    with patch(
-        "homeassistant.components.fritz.PLATFORMS",
-        [Platform.IMAGE],
+    with (
+        patch(
+            "homeassistant.components.fritz.PLATFORMS",
+            [Platform.IMAGE],
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
 
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
 
-    # test image entity is generated as expected
-    states = hass.states.async_all(IMAGE_DOMAIN)
-    assert len(states) == 1
+        # test image entity is generated as expected
+        states = hass.states.async_all(IMAGE_DOMAIN)
+        assert len(states) == 1
 
-    state = states[0]
-    assert state.name == "Mock Title GuestWifi"
-    assert state.entity_id == "image.mock_title_guestwifi"
+        state = states[0]
+        assert state.name == "Mock Title GuestWifi"
+        assert state.entity_id == "image.mock_title_guestwifi"
 
-    access_token = state.attributes["access_token"]
-    assert state.attributes == {
-        "access_token": access_token,
-        "entity_picture": (
-            f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}"
-        ),
-        "friendly_name": "Mock Title GuestWifi",
-    }
+        access_token = state.attributes["access_token"]
+        assert state.attributes == {
+            "access_token": access_token,
+            "entity_picture": (
+                f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}"
+            ),
+            "friendly_name": "Mock Title GuestWifi",
+        }
 
-    assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
-    assert state.unique_id == f"{MOCK_SERIAL_NUMBER}-guest_wifi_qr_code"
+        assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
+        assert state.unique_id == f"{MOCK_SERIAL_NUMBER}-guest_wifi_qr_code"
 
     # test image download
     client = await hass_client()
@@ -138,33 +143,38 @@ async def test_image_update(
     """Test image update."""
 
     # setup component with image platform only
-    with patch(
-        "homeassistant.components.fritz.PLATFORMS",
-        [Platform.IMAGE],
+    with (
+        patch(
+            "homeassistant.components.fritz.PLATFORMS",
+            [Platform.IMAGE],
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
 
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
 
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
-    resp_body = await resp.read()
-    assert resp.status == HTTPStatus.OK
+        client = await hass_client()
+        resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
+        resp_body = await resp.read()
+        assert resp.status == HTTPStatus.OK
 
-    fc_class_mock().override_services({**MOCK_FB_SERVICES, **GUEST_WIFI_CHANGED})
+        fc_class_mock().override_services({**MOCK_FB_SERVICES, **GUEST_WIFI_CHANGED})
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
-    resp_body_new = await resp.read()
+        resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
+        resp_body_new = await resp.read()
 
-    assert resp_body != resp_body_new
-    assert resp_body_new == snapshot
+        assert resp_body != resp_body_new
+        assert resp_body_new == snapshot
 
 
 @pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
@@ -179,38 +189,43 @@ async def test_image_update_unavailable(
     entity_id = "image.mock_title_guestwifi"
 
     # setup component with image platform only
-    with patch(
-        "homeassistant.components.fritz.PLATFORMS",
-        [Platform.IMAGE],
+    with (
+        patch(
+            "homeassistant.components.fritz.PLATFORMS",
+            [Platform.IMAGE],
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
 
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get(entity_id)
+        assert hass.states.get(entity_id)
 
-    # fritzbox becomes unavailable
-    fc_class_mock().call_action_side_effect(ReadTimeout)
+        # fritzbox becomes unavailable
+        fc_class_mock().call_action_side_effect(ReadTimeout)
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNKNOWN
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNKNOWN
 
-    # fritzbox is available again
-    fc_class_mock().call_action_side_effect(None)
+        # fritzbox is available again
+        fc_class_mock().call_action_side_effect(None)
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state != STATE_UNKNOWN
+        assert (state := hass.states.get(entity_id))
+        assert state.state != STATE_UNKNOWN
 
 
 async def test_migrate_to_new_unique_id(
@@ -254,10 +269,15 @@ async def test_migrate_to_new_unique_id(
     assert entity_entry
     assert entity_entry.unique_id == old_unique_id
 
-    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.IMAGE]):
+    with (
+        patch("homeassistant.components.fritz.PLATFORMS", [Platform.IMAGE]),
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        ),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("image.mock_title_mywifi")
-    assert entity_entry
-    assert entity_entry.unique_id == new_unique_id
+        entity_entry = entity_registry.async_get("image.mock_title_mywifi")
+        assert entity_entry
+        assert entity_entry.unique_id == new_unique_id

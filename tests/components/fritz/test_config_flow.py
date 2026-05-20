@@ -786,6 +786,7 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock) -> None:
         CONF_OLD_DISCOVERY: False,
         CONF_CONSIDER_HOME: 37,
         CONF_FEATURE_DEVICE_TRACKING: True,
+        CONF_FEATURE_WIREGUARD_VPN: True,
     }
 
 

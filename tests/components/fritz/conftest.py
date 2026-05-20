@@ -199,3 +199,12 @@ def fs_class_mock() -> Generator[type[FritzStatus]]:
         patch.object(FritzStatus, "has_wan_enabled", True),
     ):
         yield result
+
+
+@pytest.fixture(autouse=True)
+def mock_vpn_session_autouse() -> Generator[AsyncMock]:
+    """Automatically mock FritzBoxVPNSession for all fritz tests."""
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+    ) as mock:
+        yield mock
