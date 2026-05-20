@@ -25,14 +25,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import media_player_entity_id
-from .utils import check_availability_follows_ir_entity
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, media_player_entity_id
 
 from tests.common import (
     MockConfigEntry,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
+from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_pm6006_integrated_amplifier"
@@ -203,7 +203,9 @@ async def test_media_player_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
-    await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, MEDIA_PLAYER_ENTITY_ID, MOCK_INFRARED_EMITTER_ENTITY_ID
+    )
 
 
 async def _setup_with_restore(
