@@ -26,6 +26,7 @@ class CheckKind(StrEnum):
     CI_UPLOAD = "ci_upload"
     RELEASE_PIPELINE = "release_pipeline"
     PR_LINK = "pr_link"
+    ASYNC_BLOCKING = "async_blocking"
 
 
 @dataclass(slots=True)

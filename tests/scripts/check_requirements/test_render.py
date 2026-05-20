@@ -26,6 +26,7 @@ def test_render_all_conclusive_collapses_details() -> None:
             CheckKind.CI_UPLOAD: _pass("attestation found"),
             CheckKind.RELEASE_PIPELINE: _pass("OIDC via attestation"),
             CheckKind.PR_LINK: _pass("link found"),
+            CheckKind.ASYNC_BLOCKING: _pass("no blocking calls in async"),
         },
     )
     result = CheckRunResult(pr_number=1, packages=[pkg])
@@ -49,6 +50,7 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
             CheckKind.CI_UPLOAD: CheckResult(CheckStatus.WARN, "no attestation"),
             CheckKind.RELEASE_PIPELINE: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.PR_LINK: CheckResult(CheckStatus.NEEDS_AGENT, ""),
+            CheckKind.ASYNC_BLOCKING: CheckResult(CheckStatus.NEEDS_AGENT, ""),
         },
     )
     rendered = render_comment(CheckRunResult(pr_number=1, packages=[pkg]))
@@ -57,6 +59,8 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
     assert "{{CHECK_CELL:pkg:release_pipeline}}" in rendered
     assert "{{CHECK_DETAIL:pkg:release_pipeline}}" in rendered
     assert "{{CHECK_CELL:pkg:pr_link}}" in rendered
+    assert "{{CHECK_CELL:pkg:async_blocking}}" in rendered
+    assert "{{CHECK_DETAIL:pkg:async_blocking}}" in rendered
     assert "<details open>" in rendered
 
 
