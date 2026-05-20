@@ -2,6 +2,7 @@
 
 from pytest_unordered import unordered
 
+from homeassistant.components.lovelace import LOVELACE_DATA
 from homeassistant.components.search import ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -464,16 +465,17 @@ async def test_search(
         },
     )
 
-    def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
+    async def search(item_type: ItemType, item_id: str) -> dict[str, set[str]]:
         """Search."""
         searcher = Searcher(hass, entity_sources)
-        return searcher.async_search(item_type, item_id)
+        return await searcher.async_search(item_type, item_id)
 
     #
     # Tests
     #
-    assert not search(ItemType.AREA, "unknown")
-    assert search(ItemType.AREA, bedroom_area.id) == {
+    assert not await search(ItemType.AREA, "unknown")
+    assert not await search(ItemType.DASHBOARD, "test-dashboard/test-view")
+    assert await search(ItemType.AREA, bedroom_area.id) == {
         ItemType.AUTOMATION: {"automation.scene", "automation.script"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.ENTITY: {
@@ -489,7 +491,7 @@ async def test_search(
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {script_scene_entity.entity_id, "script.nested"},
     }
-    assert search(ItemType.AREA, living_room_area.id) == {
+    assert await search(ItemType.AREA, living_room_area.id) == {
         ItemType.AUTOMATION: {"automation.wled_device", "automation.wled_entity"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -499,7 +501,7 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
-    assert search(ItemType.AREA, kitchen_area.id) == {
+    assert await search(ItemType.AREA, kitchen_area.id) == {
         ItemType.AUTOMATION: {"automation.area"},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -513,16 +515,16 @@ async def test_search(
         ItemType.SCRIPT: {"script.area", "script.device", "script.hue"},
     }
 
-    assert not search(ItemType.AUTOMATION, "automation.unknown")
-    assert search(ItemType.AUTOMATION, "automation.blueprint_automation_1") == {
+    assert not await search(ItemType.AUTOMATION, "automation.unknown")
+    assert await search(ItemType.AUTOMATION, "automation.blueprint_automation_1") == {
         ItemType.AUTOMATION_BLUEPRINT: {"test_event_service.yaml"},
         ItemType.ENTITY: {"light.kitchen"},
     }
-    assert search(ItemType.AUTOMATION, "automation.blueprint_automation_2") == {
+    assert await search(ItemType.AUTOMATION, "automation.blueprint_automation_2") == {
         ItemType.AUTOMATION_BLUEPRINT: {"test_event_service.yaml"},
         ItemType.ENTITY: {"light.kitchen"},
     }
-    assert search(ItemType.AUTOMATION, "automation.wled_entity") == {
+    assert await search(ItemType.AUTOMATION, "automation.wled_entity") == {
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -530,21 +532,21 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
-    assert search(ItemType.AUTOMATION, "automation.wled_device") == {
+    assert await search(ItemType.AUTOMATION, "automation.wled_device") == {
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
-    assert search(ItemType.AUTOMATION, "automation.floor") == {
+    assert await search(ItemType.AUTOMATION, "automation.floor") == {
         ItemType.FLOOR: {first_floor.floor_id},
     }
-    assert search(ItemType.AUTOMATION, "automation.area") == {
+    assert await search(ItemType.AUTOMATION, "automation.area") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.FLOOR: {first_floor.floor_id},
     }
-    assert search(ItemType.AUTOMATION, "automation.group") == {
+    assert await search(ItemType.AUTOMATION, "automation.group") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -559,7 +561,7 @@ async def test_search(
         ItemType.GROUP: {"group.wled_hue"},
         ItemType.INTEGRATION: {"hue", "wled"},
     }
-    assert search(ItemType.AUTOMATION, "automation.scene") == {
+    assert await search(ItemType.AUTOMATION, "automation.scene") == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -574,7 +576,7 @@ async def test_search(
         ItemType.INTEGRATION: {"hue", "wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
-    assert search(ItemType.AUTOMATION, "automation.script") == {
+    assert await search(ItemType.AUTOMATION, "automation.script") == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -592,16 +594,16 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
 
-    assert not search(ItemType.AUTOMATION_BLUEPRINT, "unknown.yaml")
-    assert search(ItemType.AUTOMATION_BLUEPRINT, "test_event_service.yaml") == {
+    assert not await search(ItemType.AUTOMATION_BLUEPRINT, "unknown.yaml")
+    assert await search(ItemType.AUTOMATION_BLUEPRINT, "test_event_service.yaml") == {
         ItemType.AUTOMATION: {
             "automation.blueprint_automation_1",
             "automation.blueprint_automation_2",
         }
     }
 
-    assert not search(ItemType.CONFIG_ENTRY, "unknown")
-    assert search(ItemType.CONFIG_ENTRY, hue_config_entry.entry_id) == {
+    assert not await search(ItemType.CONFIG_ENTRY, "unknown")
+    assert await search(ItemType.CONFIG_ENTRY, hue_config_entry.entry_id) == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {
@@ -614,7 +616,7 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.device", "script.hue"},
     }
-    assert search(ItemType.CONFIG_ENTRY, wled_config_entry.entry_id) == {
+    assert await search(ItemType.CONFIG_ENTRY, wled_config_entry.entry_id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id},
         ItemType.AUTOMATION: {"automation.wled_entity", "automation.wled_device"},
         ItemType.DEVICE: {wled_device.id},
@@ -629,8 +631,8 @@ async def test_search(
         ItemType.SCRIPT: {"script.wled"},
     }
 
-    assert not search(ItemType.DEVICE, "unknown")
-    assert search(ItemType.DEVICE, wled_device.id) == {
+    assert not await search(ItemType.DEVICE, "unknown")
+    assert await search(ItemType.DEVICE, wled_device.id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id},
         ItemType.AUTOMATION: {"automation.wled_entity", "automation.wled_device"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
@@ -645,7 +647,7 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
-    assert search(ItemType.DEVICE, hue_device.id) == {
+    assert await search(ItemType.DEVICE, hue_device.id) == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.ENTITY: {
@@ -659,8 +661,8 @@ async def test_search(
         ItemType.SCRIPT: {"script.device", "script.hue"},
     }
 
-    assert not search(ItemType.ENTITY, "sensor.unknown")
-    assert search(ItemType.ENTITY, wled_segment_1_entity.entity_id) == {
+    assert not await search(ItemType.ENTITY, "sensor.unknown")
+    assert await search(ItemType.ENTITY, wled_segment_1_entity.entity_id) == {
         ItemType.AREA: {living_room_area.id},
         ItemType.AUTOMATION: {"automation.wled_entity"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
@@ -671,7 +673,7 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_wled_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.wled"},
     }
-    assert search(ItemType.ENTITY, wled_segment_2_entity.entity_id) == {
+    assert await search(ItemType.ENTITY, wled_segment_2_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -680,7 +682,7 @@ async def test_search(
         ItemType.INTEGRATION: {"wled"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
-    assert search(ItemType.ENTITY, hue_segment_1_entity.entity_id) == {
+    assert await search(ItemType.ENTITY, hue_segment_1_entity.entity_id) == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -691,7 +693,7 @@ async def test_search(
         ItemType.SCENE: {"scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id},
         ItemType.SCRIPT: {"script.hue"},
     }
-    assert search(ItemType.ENTITY, hue_segment_2_entity.entity_id) == {
+    assert await search(ItemType.ENTITY, hue_segment_2_entity.entity_id) == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -700,40 +702,40 @@ async def test_search(
         ItemType.INTEGRATION: {"hue"},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
-    assert not search(ItemType.ENTITY, "automation.wled")
-    assert search(ItemType.ENTITY, script_scene_entity.entity_id) == {
+    assert not await search(ItemType.ENTITY, "automation.wled")
+    assert await search(ItemType.ENTITY, script_scene_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.AUTOMATION: {"automation.script"},
         ItemType.FLOOR: {second_floor.floor_id},
         ItemType.LABEL: {label_other.label_id},
         ItemType.SCRIPT: {"script.nested"},
     }
-    assert search(ItemType.ENTITY, "group.wled_hue") == {
+    assert await search(ItemType.ENTITY, "group.wled_hue") == {
         ItemType.AUTOMATION: {"automation.group"},
         ItemType.SCRIPT: {"script.group"},
     }
-    assert search(ItemType.ENTITY, person_paulus_entity.entity_id) == {
+    assert await search(ItemType.ENTITY, person_paulus_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.FLOOR: {second_floor.floor_id},
         ItemType.LABEL: {label_other.label_id},
     }
-    assert search(ItemType.ENTITY, scene_wled_hue_entity.entity_id) == {
+    assert await search(ItemType.ENTITY, scene_wled_hue_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.AUTOMATION: {"automation.scene"},
         ItemType.FLOOR: {second_floor.floor_id},
         ItemType.LABEL: {label_other.label_id},
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
-    assert search(ItemType.ENTITY, "device_tracker.paulus_iphone") == {
+    assert await search(ItemType.ENTITY, "device_tracker.paulus_iphone") == {
         ItemType.PERSON: {person_paulus_entity.entity_id},
     }
-    assert search(ItemType.ENTITY, "light.wled_config_entry_source") == {
+    assert await search(ItemType.ENTITY, "light.wled_config_entry_source") == {
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.INTEGRATION: {"wled"},
     }
 
-    assert not search(ItemType.FLOOR, "unknown")
-    assert search(ItemType.FLOOR, first_floor.floor_id) == {
+    assert not await search(ItemType.FLOOR, "unknown")
+    assert await search(ItemType.FLOOR, first_floor.floor_id) == {
         ItemType.AREA: {kitchen_area.id, living_room_area.id},
         ItemType.AUTOMATION: {
             "automation.area",
@@ -762,7 +764,7 @@ async def test_search(
             "script.wled",
         },
     }
-    assert search(ItemType.FLOOR, second_floor.floor_id) == {
+    assert await search(ItemType.FLOOR, second_floor.floor_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.AUTOMATION: {"automation.scene", "automation.script"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
@@ -778,8 +780,8 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id, "script.nested"},
     }
 
-    assert not search(ItemType.GROUP, "group.unknown")
-    assert search(ItemType.GROUP, "group.wled") == {
+    assert not await search(ItemType.GROUP, "group.unknown")
+    assert await search(ItemType.GROUP, "group.wled") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -790,7 +792,7 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id, second_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
-    assert search(ItemType.GROUP, "group.hue") == {
+    assert await search(ItemType.GROUP, "group.hue") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -801,7 +803,7 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"hue"},
     }
-    assert search(ItemType.GROUP, "group.wled_hue") == {
+    assert await search(ItemType.GROUP, "group.wled_hue") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
         ItemType.AUTOMATION: {"automation.group"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
@@ -817,15 +819,15 @@ async def test_search(
         ItemType.SCRIPT: {"script.group"},
     }
 
-    assert not search(ItemType.LABEL, "unknown")
-    assert search(ItemType.LABEL, label_christmas.label_id) == {
+    assert not await search(ItemType.LABEL, "unknown")
+    assert await search(ItemType.LABEL, label_christmas.label_id) == {
         ItemType.AUTOMATION: {"automation.label"},
         ItemType.DEVICE: {wled_device.id},
     }
-    assert search(ItemType.LABEL, label_energy.label_id) == {
+    assert await search(ItemType.LABEL, label_energy.label_id) == {
         ItemType.ENTITY: {hue_segment_1_entity.entity_id},
     }
-    assert search(ItemType.LABEL, label_other.label_id) == {
+    assert await search(ItemType.LABEL, label_other.label_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.ENTITY: {
             scene_wled_hue_entity.entity_id,
@@ -837,16 +839,16 @@ async def test_search(
         ItemType.SCRIPT: {"script.label", script_scene_entity.entity_id},
     }
 
-    assert not search(ItemType.PERSON, "person.unknown")
-    assert search(ItemType.PERSON, person_paulus_entity.entity_id) == {
+    assert not await search(ItemType.PERSON, "person.unknown")
+    assert await search(ItemType.PERSON, person_paulus_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id},
         ItemType.ENTITY: {"device_tracker.paulus_iphone"},
         ItemType.FLOOR: {second_floor.floor_id},
         ItemType.LABEL: {label_other.label_id},
     }
 
-    assert not search(ItemType.SCENE, "scene.unknown")
-    assert search(ItemType.SCENE, "scene.scene_wled_seg_1") == {
+    assert not await search(ItemType.SCENE, "scene.unknown")
+    assert await search(ItemType.SCENE, "scene.scene_wled_seg_1") == {
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -854,7 +856,7 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
-    assert search(ItemType.SCENE, "scene.scene_hue_seg_1") == {
+    assert await search(ItemType.SCENE, "scene.scene_hue_seg_1") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -862,7 +864,7 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"hue"},
     }
-    assert search(ItemType.SCENE, scene_wled_hue_entity.entity_id) == {
+    assert await search(ItemType.SCENE, scene_wled_hue_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
         ItemType.AUTOMATION: {"automation.scene"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
@@ -879,16 +881,16 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
 
-    assert not search(ItemType.SCRIPT, "script.unknown")
-    assert search(ItemType.SCRIPT, "script.blueprint_script_1") == {
+    assert not await search(ItemType.SCRIPT, "script.unknown")
+    assert await search(ItemType.SCRIPT, "script.blueprint_script_1") == {
         ItemType.ENTITY: {"light.kitchen"},
         ItemType.SCRIPT_BLUEPRINT: {"test_service.yaml"},
     }
-    assert search(ItemType.SCRIPT, "script.blueprint_script_2") == {
+    assert await search(ItemType.SCRIPT, "script.blueprint_script_2") == {
         ItemType.ENTITY: {"light.kitchen"},
         ItemType.SCRIPT_BLUEPRINT: {"test_service.yaml"},
     }
-    assert search(ItemType.SCRIPT, "script.wled") == {
+    assert await search(ItemType.SCRIPT, "script.wled") == {
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
@@ -896,7 +898,7 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
-    assert search(ItemType.SCRIPT, "script.hue") == {
+    assert await search(ItemType.SCRIPT, "script.hue") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
@@ -904,22 +906,22 @@ async def test_search(
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"hue"},
     }
-    assert search(ItemType.SCRIPT, "script.script_with_templated_services") == {}
-    assert search(ItemType.SCRIPT, "script.device") == {
+    assert await search(ItemType.SCRIPT, "script.script_with_templated_services") == {}
+    assert await search(ItemType.SCRIPT, "script.device") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.DEVICE: {hue_device.id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"hue"},
     }
-    assert search(ItemType.SCRIPT, "script.floor") == {
+    assert await search(ItemType.SCRIPT, "script.floor") == {
         ItemType.FLOOR: {first_floor.floor_id},
     }
-    assert search(ItemType.SCRIPT, "script.area") == {
+    assert await search(ItemType.SCRIPT, "script.area") == {
         ItemType.AREA: {kitchen_area.id},
         ItemType.FLOOR: {first_floor.floor_id},
     }
-    assert search(ItemType.SCRIPT, "script.group") == {
+    assert await search(ItemType.SCRIPT, "script.group") == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id, kitchen_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -934,7 +936,7 @@ async def test_search(
         ItemType.GROUP: {"group.wled_hue"},
         ItemType.INTEGRATION: {"hue", "wled"},
     }
-    assert search(ItemType.SCRIPT, script_scene_entity.entity_id) == {
+    assert await search(ItemType.SCRIPT, script_scene_entity.entity_id) == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -950,7 +952,7 @@ async def test_search(
         ItemType.LABEL: {label_other.label_id},
         ItemType.SCENE: {scene_wled_hue_entity.entity_id},
     }
-    assert search(ItemType.SCRIPT, "script.nested") == {
+    assert await search(ItemType.SCRIPT, "script.nested") == {
         ItemType.AREA: {bedroom_area.id, kitchen_area.id, living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id, hue_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id, hue_device.id},
@@ -968,8 +970,8 @@ async def test_search(
         ItemType.SCRIPT: {script_scene_entity.entity_id},
     }
 
-    assert not search(ItemType.SCRIPT_BLUEPRINT, "unknown.yaml")
-    assert search(ItemType.SCRIPT_BLUEPRINT, "test_service.yaml") == {
+    assert not await search(ItemType.SCRIPT_BLUEPRINT, "unknown.yaml")
+    assert await search(ItemType.SCRIPT_BLUEPRINT, "test_service.yaml") == {
         ItemType.SCRIPT: {"script.blueprint_script_1", "script.blueprint_script_2"},
     }
 
@@ -1006,4 +1008,73 @@ async def test_search(
             ["scene.scene_hue_seg_1", scene_wled_hue_entity.entity_id]
         ),
         ItemType.SCRIPT: unordered(["script.device", "script.hue"]),
+    }
+
+
+async def test_search_entity_dashboard_views(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test searching an entity includes Lovelace dashboard views."""
+    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, "search", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light",
+        suggested_object_id="dashboard_light",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": "badges-view",
+                        "badges": [{"entity": entity_entry.entity_id}],
+                    },
+                    {
+                        "path": "sections-view",
+                        "sections": [
+                            {
+                                "cards": [
+                                    {
+                                        "type": "tile",
+                                        "entity": entity_entry.entity_id,
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                    {
+                        "path": "other-view",
+                        "cards": [{"type": "entity", "entity": "light.other"}],
+                    },
+                ]
+            }
+        )
+    )
+
+    searcher = Searcher(hass, {})
+    assert await searcher.async_search(ItemType.ENTITY, entity_entry.entity_id) == {
+        ItemType.DASHBOARD: {
+            "test-dashboard/badges-view",
+            "test-dashboard/sections-view",
+        }
     }

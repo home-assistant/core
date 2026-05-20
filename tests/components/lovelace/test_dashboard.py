@@ -7,10 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, lovelace
 from homeassistant.components.lovelace import const, dashboard
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
@@ -847,3 +847,208 @@ async def test_lovelace_info_yaml_mode_fallback(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"resource_mode": "yaml"}
+
+
+async def test_dashboards_with_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test looking up dashboards that reference an entity."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light",
+        suggested_object_id="dashboard_light",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[const.LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": "badges-view",
+                        "badges": [{"entity": entity_entry.entity_id}],
+                    },
+                    {
+                        "path": "sections-view",
+                        "sections": [
+                            {
+                                "cards": [
+                                    {
+                                        "type": "tile",
+                                        "entity": entity_entry.entity_id,
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                    {
+                        "path": "other-view",
+                        "cards": [{"type": "entity", "entity": "light.other"}],
+                    },
+                ]
+            }
+        )
+    )
+
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "test-dashboard/badges-view",
+        "test-dashboard/sections-view",
+    }
+
+
+async def test_dashboards_with_entity_loads_unloaded_yaml_dashboard(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dashboard lookup loads YAML configs that are not yet in memory."""
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-yaml",
+        suggested_object_id="dashboard_light_yaml",
+    )
+
+    with patch(
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+        return_value={
+            "views": [
+                {
+                    "path": "yaml-view",
+                    "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                }
+            ]
+        },
+    ):
+        assert await async_setup_component(
+            hass,
+            "lovelace",
+            {
+                "lovelace": {
+                    "dashboards": {
+                        "test-dashboard": {
+                            "mode": "yaml",
+                            "title": "Test dashboard",
+                            "icon": "mdi:view-dashboard",
+                            "show_in_sidebar": True,
+                            "require_admin": False,
+                            "filename": "test-dashboard.yaml",
+                        }
+                    }
+                }
+            },
+        )
+
+        assert set(
+            await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)
+        ) == {"test-dashboard/yaml-view"}
+
+
+async def test_dashboards_with_entity_ignores_false_positive_strings_and_null_path(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test dashboard lookup only matches known entity keys and normalizes null paths."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-false-positive",
+        suggested_object_id="dashboard_light_false_positive",
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/create",
+            "url_path": "test-dashboard",
+            "title": "Test dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await (
+        hass.data[const.LOVELACE_DATA]
+        .dashboards["test-dashboard"]
+        .async_save(
+            {
+                "views": [
+                    {
+                        "path": None,
+                        "title": entity_entry.entity_id,
+                        "cards": [
+                            {"type": "markdown", "content": entity_entry.entity_id}
+                        ],
+                    },
+                    {
+                        "path": "entity-view",
+                        "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                    },
+                ]
+            }
+        )
+    )
+
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "test-dashboard/entity-view",
+    }
+
+
+async def test_dashboards_with_entity_uses_snapshot_while_loading(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dashboard lookup does not fail if dashboards change during loading."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "dashboard-light-snapshot",
+        suggested_object_id="dashboard_light_snapshot",
+    )
+
+    dashboards = hass.data[const.LOVELACE_DATA].dashboards
+
+    class MutableDashboard:
+        """Dashboard that mutates the dashboards dict while loading."""
+
+        url_path = "mutable-dashboard"
+
+        async def async_load(self, force: bool) -> dict[str, Any]:
+            dashboards["added-during-iteration"] = dashboards[None]
+            return {
+                "views": [
+                    {
+                        "path": "mutable-view",
+                        "cards": [{"type": "entity", "entity": entity_entry.entity_id}],
+                    }
+                ]
+            }
+
+    dashboards["mutable-dashboard"] = MutableDashboard()  # type: ignore[assignment]
+
+    assert set(await lovelace.dashboards_with_entity(hass, entity_entry.entity_id)) == {
+        "mutable-dashboard/mutable-view",
+    }

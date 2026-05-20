@@ -3,12 +3,20 @@
 from collections import defaultdict
 from collections.abc import Iterable
 from enum import StrEnum
+from inspect import isawaitable
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import automation, group, person, script, websocket_api
+from homeassistant.components import (
+    automation,
+    group,
+    lovelace,
+    person,
+    script,
+    websocket_api,
+)
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
@@ -38,6 +46,7 @@ class ItemType(StrEnum):
     AUTOMATION_BLUEPRINT = "automation_blueprint"
     CONFIG_ENTRY = "config_entry"
     DEVICE = "device"
+    DASHBOARD = "dashboard"
     ENTITY = "entity"
     FLOOR = "floor"
     GROUP = "group"
@@ -62,8 +71,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.Required("item_id"): str,
     }
 )
-@callback
-def websocket_search_related(
+@websocket_api.async_response
+async def websocket_search_related(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -71,7 +80,7 @@ def websocket_search_related(
     """Handle search."""
     searcher = Searcher(hass, get_entity_sources(hass))
     connection.send_result(
-        msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
+        msg["id"], await searcher.async_search(msg["item_type"], msg["item_id"])
     )
 
 
@@ -93,11 +102,19 @@ class Searcher:
         self._entity_sources = entity_sources
         self.results: defaultdict[ItemType, set[str]] = defaultdict(set)
 
-    @callback
-    def async_search(self, item_type: ItemType, item_id: str) -> dict[str, set[str]]:
+    async def async_search(
+        self, item_type: ItemType, item_id: str
+    ) -> dict[str, set[str]]:
         """Find results."""
         _LOGGER.debug("Searching for %s/%s", item_type, item_id)
-        getattr(self, f"_async_search_{item_type}")(item_id)
+        search_method = getattr(self, f"_async_search_{item_type}", None)
+        if search_method is None:
+            _LOGGER.debug("No search handler for item type %s", item_type)
+            return {}
+
+        result = search_method(item_id)
+        if isawaitable(result):
+            await result
 
         # Remove the original requested item from the results (if present)
         if item_type in self.results and item_id in self.results[item_type]:
@@ -275,23 +292,23 @@ class Searcher:
             automation.automations_with_blueprint(self.hass, blueprint_path),
         )
 
-    @callback
-    def _async_search_config_entry(self, config_entry_id: str) -> None:
+    async def _async_search_config_entry(self, config_entry_id: str) -> None:
         """Find results for a config entry."""
         for device_entry in dr.async_entries_for_config_entry(
             self._device_registry, config_entry_id
         ):
             self._add(ItemType.DEVICE, device_entry.id)
-            self._async_search_device(device_entry.id, entry_point=False)
+            await self._async_search_device(device_entry.id, entry_point=False)
 
         for entity_entry in er.async_entries_for_config_entry(
             self._entity_registry, config_entry_id
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
-            self._async_search_entity(entity_entry.entity_id, entry_point=False)
+            await self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
-    @callback
-    def _async_search_device(self, device_id: str, *, entry_point: bool = True) -> None:
+    async def _async_search_device(
+        self, device_id: str, *, entry_point: bool = True
+    ) -> None:
         """Find results for a device."""
         if not (device_entry := self._async_resolve_up_device(device_id)):
             return
@@ -315,10 +332,11 @@ class Searcher:
         ):
             self._add(ItemType.ENTITY, entity_entry.entity_id)
             # Add all entity information as well
-            self._async_search_entity(entity_entry.entity_id, entry_point=False)
+            await self._async_search_entity(entity_entry.entity_id, entry_point=False)
 
-    @callback
-    def _async_search_entity(self, entity_id: str, *, entry_point: bool = True) -> None:
+    async def _async_search_entity(
+        self, entity_id: str, *, entry_point: bool = True
+    ) -> None:
         """Find results for an entity."""
         # Resolve up the entity itself
         entity_entry = self._async_resolve_up_entity(entity_id)
@@ -344,6 +362,12 @@ class Searcher:
 
         # Scenes referencing this entity
         self._add(ItemType.SCENE, scene.scenes_with_entity(self.hass, entity_id))
+
+        # Dashboard/view combinations referencing this entity
+        self._add(
+            ItemType.DASHBOARD,
+            await lovelace.dashboards_with_entity(self.hass, entity_id),
+        )
 
     @callback
     def _async_search_floor(self, floor_id: str) -> None:
