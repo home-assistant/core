@@ -1,7 +1,5 @@
 """The TIS Control integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from dataclasses import dataclass
