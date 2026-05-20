@@ -4,7 +4,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import lru_cache, wraps
+from functools import lru_cache, partial, wraps
 from http import HTTPStatus
 import logging
 import secrets
@@ -99,6 +99,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    LIVE_ACTIVITY_SAVE_DELAY,
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
@@ -802,7 +803,9 @@ async def webhook_update_live_activity_token(
         "token": data[ATTR_PUSH_TOKEN],
         "stored_at": stored_at,
     }
-    await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+    hass.data[DOMAIN][DATA_STORE].async_delay_save(
+        partial(savable_state, hass), LIVE_ACTIVITY_SAVE_DELAY
+    )
 
     if hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] is None:
         # Local import to avoid a circular import with __init__.
@@ -832,6 +835,8 @@ async def webhook_live_activity_dismissed(
         # Clean up the device key if no activities remain.
         if not live_activity_tokens[webhook_id]:
             del live_activity_tokens[webhook_id]
-        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+        hass.data[DOMAIN][DATA_STORE].async_delay_save(
+            partial(savable_state, hass), LIVE_ACTIVITY_SAVE_DELAY
+        )
 
     return empty_okay_response()
