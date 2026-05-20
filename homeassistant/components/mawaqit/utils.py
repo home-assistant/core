@@ -212,6 +212,77 @@ def add_minutes_to_time(time_str, minutes_str):
         return None
 
 
+def compute_islamic_midnight(prayer_data: dict, date, timezone: str) -> datetime | None:
+    """Return the Islamic midnight for a given date.
+
+    Islamic midnight is the midpoint between Isha of `date` and Fajr of the
+    following day.  It is always timezone-aware and expressed in the mosque's
+    local timezone.
+
+    Args:
+        prayer_data: Full prayer data dict (must contain a ``calendar`` key).
+        date:        Civil date (datetime.date) whose Isha starts the interval.
+        timezone:    IANA timezone string (e.g. ``"Africa/Casablanca"``).
+
+    Returns:
+        Timezone-aware datetime, or None when Isha / Fajr data are unavailable.
+    """
+    calendar = prayer_data.get("calendar")
+    if not calendar:
+        return None
+
+    next_day = date + timedelta(days=1)
+
+    isha_str = extract_time_from_calendar(calendar, "isha", date, timezone)
+    fajr_str = extract_time_from_calendar(calendar, "fajr", next_day, timezone)
+
+    if not isha_str or not fajr_str:
+        _LOGGER.warning(
+            "Cannot compute Islamic midnight for %s: missing Isha or Fajr time", date
+        )
+        return None
+
+    isha_dt = time_with_timezone(timezone, date, isha_str)
+    fajr_dt = time_with_timezone(timezone, next_day, fajr_str)
+
+    if not isha_dt or not fajr_dt:
+        return None
+
+    return isha_dt + (fajr_dt - isha_dt) / 2
+
+
+def get_islamic_date(prayer_data: dict, timezone: str):
+    """Return the civil date that corresponds to the current Islamic day.
+
+    The Islamic day advances at Islamic midnight (the midpoint between
+    yesterday's Isha and today's Fajr).  Before that point (even though the
+    clock has already ticked past 00:00) we are still in the previous Islamic day.
+
+    Args:
+        prayer_data: Full prayer data dict.
+        timezone:    IANA timezone string.
+
+    Returns:
+        datetime.date for the active Islamic day, or civil today as fallback.
+    """
+    tz = dt_util.get_time_zone(timezone)
+    now = dt_util.now(tz) if tz else dt_util.now()
+    today = now.date()
+    yesterday = today - timedelta(days=1)
+
+    islamic_midnight = compute_islamic_midnight(prayer_data, yesterday, timezone)
+
+    if islamic_midnight is None:
+        _LOGGER.warning(
+            "Could not compute Islamic midnight for %s — falling back to civil date",
+            yesterday,
+        )
+        return today
+
+    # both now and islamic_midnight are timezone-aware so they can be compared directly
+    return today if now >= islamic_midnight else yesterday
+
+
 def get_next_friday():
     """Return the date of the next Friday after today.
 
@@ -325,8 +396,7 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
         _LOGGER.warning("Missing calendar or timezone data for %s", prayer_name)
         return None
 
-    tz = dt_util.get_time_zone(timezone)
-    day = dt_util.now(tz).date() if tz else dt_util.now().date()
+    day = get_islamic_date(prayer_data, timezone)
     prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
 
     if not prayer_time:
@@ -339,7 +409,7 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
 
 
 def get_shuruq_time(prayer_data: dict) -> datetime | None:
-    """Get Shuruq prayer time."""
+    """Get Shuruq time."""
     timezone = prayer_data.get("timezone")
     shuruq_time = prayer_data.get("shuruq")
 
@@ -350,8 +420,7 @@ def get_shuruq_time(prayer_data: dict) -> datetime | None:
     if not shuruq_time:
         return None
 
-    tz = dt_util.get_time_zone(timezone)
-    day = dt_util.now(tz).date() if tz else dt_util.now().date()
+    day = get_islamic_date(prayer_data, timezone)
     localized_prayer_time = time_with_timezone(timezone, day, shuruq_time)
     if localized_prayer_time:
         return localized_prayer_time.astimezone(dt_util.UTC)
@@ -387,8 +456,7 @@ def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
         _LOGGER.warning("Missing calendar data for %s Iqama", prayer_name)
         return None
 
-    tz = dt_util.get_time_zone(timezone)
-    day = dt_util.now(tz).date() if tz else dt_util.now().date()
+    day = get_islamic_date(prayer_data, timezone)
 
     # Get base prayer time
     prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
