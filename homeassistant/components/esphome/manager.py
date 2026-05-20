@@ -364,6 +364,7 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise HomeAssistantError(
                         f"Error rendering response template: {ex}"
                     ) from ex

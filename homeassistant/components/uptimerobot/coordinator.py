@@ -48,8 +48,10 @@ class UptimeRobotDataUpdateCoordinator(
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(exception) from exception
 
         if TYPE_CHECKING:

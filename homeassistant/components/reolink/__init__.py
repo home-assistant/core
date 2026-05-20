@@ -74,6 +74,7 @@ async def async_setup_entry(
         await host.async_init()
     except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(err) from err
     except (
         ReolinkException,

@@ -72,7 +72,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: This integration does not use icons.

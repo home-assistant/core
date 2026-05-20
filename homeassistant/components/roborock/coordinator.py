@@ -161,6 +161,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
         except RoborockException as err:
             _LOGGER.debug("Failed to get maps: %s", err)
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",

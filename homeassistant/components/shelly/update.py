@@ -344,6 +344,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
                 translation_placeholders={"device": self.coordinator.name},
             ) from err
         except RpcCallError as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_rpc_error",

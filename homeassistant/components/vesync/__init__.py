@@ -64,14 +64,17 @@ async def async_setup_entry(
     try:
         await manager.login()
     except VeSyncLoginError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except VeSyncServerError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="server_error"
         ) from err
     except VeSyncAPIResponseError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err

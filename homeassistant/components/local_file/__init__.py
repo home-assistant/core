@@ -15,6 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local file from a config entry."""
     file_path: str = entry.options[CONF_FILE_PATH]
     if not await hass.async_add_executor_job(check_file_path_access, file_path):
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="not_readable_path",
