@@ -1,0 +1,11 @@
+{
+  "domain": "virtual_remote",
+  "name": "Virtual Remote",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/virtual_remote",
+  "integration_type": "helper",
+  "iot_class": "local_push",
+  "requirements": [],
+  "version": "0.1.0"
+}
