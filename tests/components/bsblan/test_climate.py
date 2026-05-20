@@ -394,7 +394,7 @@ async def test_async_set_data(
 
     # Test error handling
     mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
-    error_message = "An error occurred while updating the BSBLAN device"
+    error_message = "An error occurred while sending the data to the BSB-LAN device"
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
