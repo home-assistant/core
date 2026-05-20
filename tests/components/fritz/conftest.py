@@ -22,6 +22,32 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
+MOCK_VPN_CONNECTIONS: dict[str, dict[str, Any]] = {
+    "uid-office": {
+        "name": "Office",
+        "active": True,
+        "connected": False,
+        "uid": "wg-1",
+    },
+}
+MOCK_VPN_CONNECTION_HOME: dict[str, dict[str, Any]] = {
+    "uid-home": {
+        "name": "Home",
+        "active": False,
+        "connected": False,
+        "uid": "wg-2",
+    },
+}
+
+
+@pytest.fixture
+def mock_vpn_wireguard() -> MagicMock:
+    """Mock fritzconnection FritzWireguard."""
+    wireguard = MagicMock()
+    wireguard.get_vpn_connections.return_value = MOCK_VPN_CONNECTIONS
+    wireguard.toggle_vpn.return_value = True
+    return wireguard
+
 
 class FritzServiceMock:
     """Service mocking."""
@@ -172,3 +198,25 @@ def fs_class_mock() -> Generator[type[FritzStatus]]:
         patch.object(FritzStatus, "has_wan_enabled", True),
     ):
         yield result
+
+
+@pytest.fixture(autouse=True)
+def mock_vpn_wireguard_autouse(mock_vpn_wireguard: MagicMock) -> Generator[MagicMock]:  # noqa: W0621
+    """Automatically mock FritzWireguard for all fritz tests."""
+    # Patch the FritzWireguard class in the coordinator module
+    # This will work whether or not the real class exists
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzWireguard",
+        return_value=mock_vpn_wireguard,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_avm_wrapper_qr() -> Generator[MagicMock]:
+    """Automatically mock get_wifi_qr_code for all fritz tests."""
+    with patch(
+        "homeassistant.components.fritz.image.FritzGuestWifiQRImage._fetch_image",
+        return_value=b"mock_qr_image_data",
+    ) as mock:
+        yield mock

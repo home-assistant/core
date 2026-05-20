@@ -16,6 +16,12 @@ from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import FritzGuestWLAN
+
+# Try to import FritzWireguard (available in fritzconnection >= 1.16.0)
+try:
+    from fritzconnection.lib.fritzwireguard import FritzWireguard
+except ImportError:
+    FritzWireguard = None
 import xmltodict
 
 from homeassistant.components.device_tracker import (
@@ -35,8 +41,10 @@ from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    CONF_FEATURE_WIREGUARD_VPN,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+    DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_SSL,
@@ -86,6 +94,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    vpn_connections: dict[str, dict[str, Any]]
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -138,6 +147,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     fritz_hosts: FritzHosts
     fritz_status: FritzStatus
     fritz_call: FritzCall
+    fritz_wireguard: FritzWireguard | None
 
     def __init__(
         self,
@@ -231,6 +241,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         self.fritz_call = FritzCall(fc=self.connection)
+        # Initialize Wireguard VPN (Web UI API) - lazy auth on first use
+        options = self._options or {}
+        wireguard_enabled = options.get(
+            CONF_FEATURE_WIREGUARD_VPN, DEFAULT_CONF_FEATURE_WIREGUARD_VPN
+        )
+        if wireguard_enabled and FritzWireguard is not None:
+            self.fritz_wireguard = FritzWireguard(fc=self.connection)
+        else:
+            self.fritz_wireguard = None
         try:
             info = self.fritz_status.get_device_info()
         except ParseError as ex:
@@ -312,6 +331,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "vpn_connections": {},
         }
         self.connection.clear_cache()
         try:
@@ -328,6 +348,21 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_data[
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
+
+            # Fetch VPN connections (non-critical, failures don't break main integration)
+            if self.fritz_wireguard:
+                try:
+                    entity_data[
+                        "vpn_connections"
+                    ] = await self.hass.async_add_executor_job(
+                        self.fritz_wireguard.get_vpn_connections
+                    )
+                except Exception as err:  # noqa: BLE001
+                    # VPN failures are non-critical - keep previous data to avoid flapping
+                    _LOGGER.debug("VPN update failed (non-critical): %s", err)
+                    entity_data["vpn_connections"] = self.data.get(
+                        "vpn_connections", {}
+                    )
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
@@ -937,4 +972,20 @@ class AvmWrapper(FritzBoxTools):
             "1",
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
+        )
+
+    async def async_toggle_vpn(self, connection_uid: str, enable: bool) -> bool:
+        """Toggle WireGuard VPN connection via Web UI API.
+
+        Args:
+            connection_uid: The unique identifier of the VPN connection.
+            enable: True to enable, False to disable.
+
+        Returns:
+            True if successful, False otherwise.
+        """
+        if not self.fritz_wireguard:
+            return False
+        return await self.hass.async_add_executor_job(
+            self.fritz_wireguard.toggle_vpn, connection_uid, enable
         )

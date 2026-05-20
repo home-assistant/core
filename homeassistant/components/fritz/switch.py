@@ -3,10 +3,30 @@
 import logging
 from typing import Any
 
+# Try to import FritzWireguard constants (available in fritzconnection >= 1.16.0)
+try:
+    from fritzconnection.lib.fritzwireguard import (
+        API_KEY_ACTIVE,
+        API_KEY_CONNECTED,
+        API_KEY_NAME,
+        API_KEY_UID,
+    )
+except ImportError:
+    # Define fallback constants if fritzconnection < 1.16.0
+    API_KEY_ACTIVE = "active"
+    API_KEY_CONNECTED = "connected"
+    API_KEY_NAME = "name"
+    API_KEY_UID = "uid"
+
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,11 +36,18 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
+    CONF_FEATURE_WIREGUARD_VPN,
+    DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_PROFILE,
     SWITCH_TYPE_WIFINETWORK,
+    VPN_MODEL_WIREGUARD,
+    VPN_STATUS_CONNECTED,
+    VPN_STATUS_DISABLED,
+    VPN_STATUS_ENABLED,
+    VPN_UNIQUE_ID_SUFFIX_SWITCH,
     MeshRoles,
     Platform,
 )
@@ -28,6 +55,7 @@ from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
+from .vpn_data import FritzVpnEntryData, vpn_entry_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,6 +340,12 @@ async def async_setup_entry(
             hass, avm_wrapper.signal_device_new, async_update_avm_device
         )
     )
+
+    # Only set up VPN switches if feature is enabled
+    if entry.options.get(
+        CONF_FEATURE_WIREGUARD_VPN, DEFAULT_CONF_FEATURE_WIREGUARD_VPN
+    ):
+        await async_setup_vpn_switches(hass, entry, async_add_entities)
 
 
 class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity):
@@ -668,3 +702,206 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         """Handle wifi switch."""
         self._wifi_info["NewEnable"] = turn_on
         await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
+
+
+def _vpn_unique_id(avm_unique_id: str, connection_uid: str) -> str:
+    """Return unique id for VPN switch."""
+    return f"{avm_unique_id}-{connection_uid}-{VPN_UNIQUE_ID_SUFFIX_SWITCH}"
+
+
+def _vpn_device_info(
+    avm: AvmWrapper, connection_uid: str, connection: dict[str, Any]
+) -> DeviceInfo:
+    """Return device info for VPN connection."""
+    scheme = "https" if avm.use_tls else "http"
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{avm.unique_id}_vpn_{connection_uid}")},
+        name=connection.get(API_KEY_NAME, connection_uid),
+        manufacturer="FRITZ!",
+        model=VPN_MODEL_WIREGUARD,
+        via_device=(DOMAIN, avm.unique_id),
+        configuration_url=f"{scheme}://{avm.host}",
+        connections={(CONNECTION_NETWORK_MAC, avm.mac)},
+    )
+
+
+class FritzVpnSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity):
+    """Switch entity for a WireGuard VPN connection."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "wireguard_vpn"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        avm: AvmWrapper,
+        vpn_data: FritzVpnEntryData,
+        connection_uid: str,
+        connection: dict[str, Any],
+    ) -> None:
+        """Initialize the WireGuard VPN switch."""
+        super().__init__(avm)
+        self._vpn_data = vpn_data
+        self._connection_uid = connection_uid
+        self._connection = connection
+        self._vpn_name = connection.get(API_KEY_NAME, connection_uid)
+        self._attr_unique_id = _vpn_unique_id(avm.unique_id, connection_uid)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information for the VPN connection."""
+        return _vpn_device_info(
+            self.coordinator, self._connection_uid, self._connection
+        )
+
+    def _get_vpn_data(self) -> dict[str, Any] | None:
+        """Return VPN connections from coordinator data."""
+        return self.coordinator.data.get("vpn_connections", {})
+
+    @property
+    def available(self) -> bool:
+        """Return True when the VPN connection is present in coordinator data."""
+        if not self.coordinator.last_update_success:
+            return False
+        vpn_data = self._get_vpn_data()
+        return vpn_data is not None and self._connection_uid in vpn_data
+
+    @property
+    def is_on(self) -> bool:
+        """Return True when the VPN connection is active."""
+        vpn_data = self._get_vpn_data()
+        if not vpn_data:
+            return False
+        conn = vpn_data.get(self._connection_uid)
+        return bool(conn.get(API_KEY_ACTIVE, False)) if conn else False
+
+    def _get_vpn_status(self, conn: dict[str, Any]) -> str:
+        """Return the VPN status string for a connection."""
+        if not conn.get(API_KEY_ACTIVE, False):
+            return VPN_STATUS_DISABLED
+        if conn.get(API_KEY_CONNECTED, False):
+            return VPN_STATUS_CONNECTED
+        return VPN_STATUS_ENABLED
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return VPN connection state attributes."""
+        vpn_data = self._get_vpn_data()
+        if not vpn_data:
+            return {}
+        conn = vpn_data.get(self._connection_uid)
+        if conn is None:
+            return {}
+        return {
+            API_KEY_NAME: conn.get(API_KEY_NAME),
+            "uid": self._connection_uid,
+            "vpn_uid": conn.get(API_KEY_UID),
+            API_KEY_ACTIVE: conn.get(API_KEY_ACTIVE, False),
+            API_KEY_CONNECTED: conn.get(API_KEY_CONNECTED, False),
+            "status": self._get_vpn_status(conn),
+        }
+
+    async def _async_toggle(self, enable: bool) -> None:
+        """Toggle VPN connection."""
+        try:
+            success = await self.coordinator.async_toggle_vpn(
+                self._connection_uid, enable
+            )
+        except Exception as err:
+            _LOGGER.exception("Failed to toggle WireGuard VPN: %s", self._vpn_name)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="vpn_toggle_failed",
+                translation_placeholders={
+                    "name": self._vpn_name,
+                    "error": f": {err}",
+                },
+            ) from err
+        await self.coordinator.async_request_refresh()
+        if not success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="vpn_toggle_failed",
+                translation_placeholders={"name": self._vpn_name, "error": ""},
+            )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the VPN connection on."""
+        await self._async_toggle(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the VPN connection off."""
+        await self._async_toggle(False)
+
+
+def _create_vpn_switches(
+    avm: AvmWrapper, vpn_data: FritzVpnEntryData, uids: set[str]
+) -> list[FritzVpnSwitch]:
+    """Create VPN switch entities."""
+    vpn_connections = avm.data.get("vpn_connections", {}) if avm.data else {}
+    if not vpn_connections:
+        return []
+    return [
+        FritzVpnSwitch(avm, vpn_data, uid, vpn_connections[uid])
+        for uid in uids
+        if uid in vpn_connections
+    ]
+
+
+async def async_setup_vpn_switches(
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up WireGuard VPN switch entities for a config entry."""
+    vpn_data = vpn_entry_data(hass, entry.entry_id)
+    if vpn_data is None:
+        return
+
+    avm = entry.runtime_data
+
+    vpn_connections = avm.data.get("vpn_connections", {}) if avm.data else {}
+    if vpn_connections:
+        initial_uids = set(vpn_connections)
+        vpn_data.known_uids.update(initial_uids)
+        async_add_entities(
+            _create_vpn_switches(avm, vpn_data, initial_uids), update_before_add=True
+        )
+
+    async def _sync_vpn_entities() -> None:
+        async with vpn_data.lock:
+            vpn_connections = avm.data.get("vpn_connections", {}) if avm.data else {}
+            current = set(vpn_connections)
+            removed_uids = vpn_data.known_uids - current
+            new_uids = current - vpn_data.known_uids
+
+            # Remove entities for deleted VPN connections
+            if removed_uids:
+                entity_reg = er.async_get(hass)
+                for uid in removed_uids:
+                    unique_id = _vpn_unique_id(avm.unique_id, uid)
+                    if entity_entry := entity_reg.async_get_entity_id(
+                        SWITCH_DOMAIN, DOMAIN, unique_id
+                    ):
+                        _LOGGER.debug(
+                            "Removing VPN switch entity for deleted connection: %s", uid
+                        )
+                        entity_reg.async_remove(entity_entry)
+                vpn_data.known_uids -= removed_uids
+
+            vpn_data.known_uids &= current
+
+            # Add entities for new VPN connections
+            if not new_uids:
+                return
+            entities = _create_vpn_switches(avm, vpn_data, new_uids)
+            if not entities:
+                return
+            vpn_data.known_uids.update(new_uids)
+            async_add_entities(entities)
+
+    @callback
+    def _handle_coordinator_update() -> None:
+        hass.async_create_task(_sync_vpn_entities())
+
+    entry.async_on_unload(avm.async_add_listener(_handle_coordinator_update))

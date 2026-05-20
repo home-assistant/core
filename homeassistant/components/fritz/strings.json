@@ -1,12 +1,14 @@
 {
   "common": {
     "data_description_feature_device_tracking": "Enable or disable the network device tracking feature.",
+    "data_description_feature_wireguard_vpn": "Enable switches to control WireGuard VPN connections.",
     "data_description_host": "The hostname or IP address of your FRITZ!Box router.",
     "data_description_password": "Password for the FRITZ!Box.",
     "data_description_port": "Leave empty to use the default port.",
     "data_description_ssl": "Use SSL to connect to the FRITZ!Box.",
     "data_description_username": "Username for the FRITZ!Box.",
-    "data_feature_device_tracking": "Enable network device tracking"
+    "data_feature_device_tracking": "Enable network device tracking",
+    "data_feature_wireguard_vpn": "Enable WireGuard VPN"
   },
   "config": {
     "abort": {
@@ -29,12 +31,14 @@
       "confirm": {
         "data": {
           "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_feature_wireguard_vpn%]",
           "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_description_feature_wireguard_vpn%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
           "ssl": "[%key:component::fritz::common::data_description_ssl%]",
           "username": "[%key:component::fritz::common::data_description_username%]"
@@ -71,6 +75,7 @@
       "user": {
         "data": {
           "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_feature_wireguard_vpn%]",
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -79,6 +84,7 @@
         },
         "data_description": {
           "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_description_feature_wireguard_vpn%]",
           "host": "[%key:component::fritz::common::data_description_host%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
           "port": "[%key:component::fritz::common::data_description_port%]",
@@ -208,6 +214,9 @@
     },
     "update_failed": {
       "message": "Error while updating the data: {error}"
+    },
+    "vpn_toggle_failed": {
+      "message": "Failed to toggle WireGuard VPN {name}: {error}"
     }
   },
   "issues": {
@@ -226,11 +235,13 @@
         "data": {
           "consider_home": "Seconds to consider a device at 'home'",
           "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_feature_wireguard_vpn%]",
           "old_discovery": "Enable old discovery method"
         },
         "data_description": {
           "consider_home": "Time in seconds to consider a device at home. Default is 180 seconds.",
           "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
+          "feature_wireguard_vpn": "[%key:component::fritz::common::data_description_feature_wireguard_vpn%]",
           "old_discovery": "Enable old discovery method. This is needed for some scenarios."
         }
       }

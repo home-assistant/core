@@ -39,7 +39,7 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -90,7 +90,7 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping 81',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -141,7 +141,7 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Guest',
+      'friendly_name': 'Office Mock Title Wi-Fi Guest',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
@@ -192,11 +192,67 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Main 2.4Ghz',
+      'friendly_name': 'Office Mock Title Wi-Fi Main 2.4Ghz',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_main_2_4ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data0][switch.office-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.office',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireguard_vpn',
+    'unique_id': '1CED6F123411-uid-office-wireguard_vpn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data0][switch.office-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active': True,
+      'connected': False,
+      'friendly_name': 'Office',
+      'name': 'Office',
+      'status': 'enabled',
+      'uid': 'uid-office',
+      'vpn_uid': 'wg-1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.office',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -293,7 +349,7 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -344,7 +400,7 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping 81',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -395,7 +451,7 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Guest',
+      'friendly_name': 'Office Mock Title Wi-Fi Guest',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
@@ -446,11 +502,67 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Main 2.4Ghz',
+      'friendly_name': 'Office Mock Title Wi-Fi Main 2.4Ghz',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_main_2_4ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data1][switch.office-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.office',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireguard_vpn',
+    'unique_id': '1CED6F123411-uid-office-wireguard_vpn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data1][switch.office-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active': True,
+      'connected': False,
+      'friendly_name': 'Office',
+      'name': 'Office',
+      'status': 'enabled',
+      'uid': 'uid-office',
+      'vpn_uid': 'wg-1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.office',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -547,7 +659,7 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -598,7 +710,7 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping 81',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -649,7 +761,7 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Guest',
+      'friendly_name': 'Office Mock Title Wi-Fi Guest',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
@@ -700,11 +812,67 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Main 2.4Ghz',
+      'friendly_name': 'Office Mock Title Wi-Fi Main 2.4Ghz',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_main_2_4ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data2][switch.office-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.office',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireguard_vpn',
+    'unique_id': '1CED6F123411-uid-office-wireguard_vpn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data2][switch.office-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active': True,
+      'connected': False,
+      'friendly_name': 'Office',
+      'name': 'Office',
+      'status': 'enabled',
+      'uid': 'uid-office',
+      'vpn_uid': 'wg-1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.office',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -802,7 +970,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'deflection_to_number': '+1234657890',
-      'friendly_name': 'Mock Title Call deflection 0',
+      'friendly_name': 'Office Call deflection 0',
       'icon': 'mdi:phone-forward',
       'mode': 'Immediately',
       'number': None,
@@ -858,7 +1026,7 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -909,7 +1077,7 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Port forward Test Port Mapping 81',
+      'friendly_name': 'Office Mock Title Port forward Test Port Mapping 81',
       'icon': 'mdi:check-network',
     }),
     'context': <ANY>,
@@ -960,7 +1128,7 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_wi_fi_guest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Guest',
+      'friendly_name': 'Office Mock Title Wi-Fi Guest',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
@@ -1011,11 +1179,67 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_wi_fi_main_2_4ghz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Wi-Fi Main 2.4Ghz',
+      'friendly_name': 'Office Mock Title Wi-Fi Main 2.4Ghz',
       'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_wi_fi_main_2_4ghz',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.office-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.office',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wireguard_vpn',
+    'unique_id': '1CED6F123411-uid-office-wireguard_vpn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[fc_data3][switch.office-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active': True,
+      'connected': False,
+      'friendly_name': 'Office',
+      'name': 'Office',
+      'status': 'enabled',
+      'uid': 'uid-office',
+      'vpn_uid': 'wg-1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.office',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

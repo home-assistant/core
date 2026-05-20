@@ -16,7 +16,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FEATURE_DEVICE_TRACKING,
+    CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+    DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
@@ -25,6 +27,7 @@ from .const import (
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
+from .vpn_data import async_setup_vpn, async_unload_vpn
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
 
     entry.runtime_data = avm_wrapper
 
+    if entry.options.get(
+        CONF_FEATURE_WIREGUARD_VPN, DEFAULT_CONF_FEATURE_WIREGUARD_VPN
+    ):
+        await async_setup_vpn(hass, entry.entry_id)
+
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -100,4 +108,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     if not bool(fritz_data.tracked):
         hass.data.pop(FRITZ_DATA_KEY)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    await async_unload_vpn(hass, entry.entry_id)
+
+    return unload_ok
