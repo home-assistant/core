@@ -31,9 +31,11 @@ async def test_brightness_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_brightness")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_brightness")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_brightness") == snapshot
+    assert (
+        entity_registry.async_get(f"{SENSOR_DOMAIN}.test_test_brightness") == snapshot
+    )
 
 
 async def test_temperature_sensor(
@@ -49,9 +51,11 @@ async def test_temperature_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_temperature")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_temperature")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_temperature") == snapshot
+    assert (
+        entity_registry.async_get(f"{SENSOR_DOMAIN}.test_test_temperature") == snapshot
+    )
 
 
 async def test_battery_sensor(
@@ -68,14 +72,14 @@ async def test_battery_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_battery")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_battery")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_battery") == snapshot
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_test_battery") == snapshot
 
     # Emulate websocket message: value changed
     test_gateway.publisher.dispatch("Test", ("Test", 10, "battery_level"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SENSOR_DOMAIN}.test_battery").state == "10"
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_test_battery").state == "10"
 
 
 async def test_consumption_sensor(
@@ -91,26 +95,30 @@ async def test_consumption_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_power")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_power")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_power") == snapshot
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_test_power") == snapshot
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_energy")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_energy")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_energy") == snapshot
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_test_energy") == snapshot
 
     # Emulate websocket message: value changed
     test_gateway.devices["Test"].consumption_property["devolo.Meter:Test"].total = 50.0
     test_gateway.publisher.dispatch("Test", ("devolo.Meter:Test", 50.0))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SENSOR_DOMAIN}.test_energy").state == "50.0"
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_test_energy").state == "50.0"
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SENSOR_DOMAIN}.test_power").state == STATE_UNAVAILABLE
-    assert hass.states.get(f"{SENSOR_DOMAIN}.test_energy").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get(f"{SENSOR_DOMAIN}.test_test_power").state == STATE_UNAVAILABLE
+    )
+    assert (
+        hass.states.get(f"{SENSOR_DOMAIN}.test_test_energy").state == STATE_UNAVAILABLE
+    )
 
 
 async def test_voltage_sensor(hass: HomeAssistant) -> None:
@@ -124,7 +132,7 @@ async def test_voltage_sensor(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_voltage")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_voltage")
     assert state is None
 
 
@@ -142,7 +150,7 @@ async def test_sensor_change(hass: HomeAssistant) -> None:
     # Emulate websocket message: value changed
     test_gateway.publisher.dispatch("Test", ("devolo.MultiLevelSensor:Test", 50.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_temperature")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_temperature")
     assert state.state == "50.0"
 
     # Emulate websocket message: device went offline
@@ -150,7 +158,8 @@ async def test_sensor_change(hass: HomeAssistant) -> None:
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
     assert (
-        hass.states.get(f"{SENSOR_DOMAIN}.test_temperature").state == STATE_UNAVAILABLE
+        hass.states.get(f"{SENSOR_DOMAIN}.test_test_temperature").state
+        == STATE_UNAVAILABLE
     )
 
 
@@ -165,7 +174,7 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SENSOR_DOMAIN}.test_temperature")
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_test_temperature")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

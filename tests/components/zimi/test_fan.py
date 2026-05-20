@@ -21,7 +21,7 @@ async def test_fan_entity(
     """Tests fan entity."""
 
     device_name = "Fan Controller"
-    entity_key = "fan.fan_controller_test_entity_name"
+    entity_key = "fan.test_entity_room_fan_controller_test_entity_name"
     entity_type = Platform.FAN
 
     mock_api.fans = [mock_api_device(device_name=device_name, entity_type=entity_type)]
