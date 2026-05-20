@@ -955,6 +955,16 @@ async def test_config_is_allowed_path() -> None:
         for path in valid:
             assert config.is_allowed_path(path)
 
+        dangling_symlink = os.path.join(tmp_dir, "dangling_symlink")
+        dangling_target = os.path.join(
+            os.path.dirname(tmp_dir), "outside", "missing_target.jpg"
+        )
+        await asyncio.get_running_loop().run_in_executor(
+            None, os.symlink, dangling_target, dangling_symlink
+        )
+
+        assert not config.is_allowed_path(dangling_symlink)
+
         config.allowlist_external_dirs = {"/home", "/var"}
 
         invalid = [
