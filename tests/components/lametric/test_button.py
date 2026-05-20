@@ -37,7 +37,7 @@ async def test_button_app_next(
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
     assert entry.unique_id == "SA110405124500W00BS9-app_next"
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -85,7 +85,7 @@ async def test_button_app_previous(
     entry = entity_registry.async_get("button.frenck_s_lametric_previous_app")
     assert entry
     assert entry.unique_id == "SA110405124500W00BS9-app_previous"
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -134,7 +134,7 @@ async def test_button_dismiss_current_notification(
     )
     assert entry
     assert entry.unique_id == "SA110405124500W00BS9-dismiss_current"
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -183,7 +183,7 @@ async def test_button_dismiss_all_notifications(
     )
     assert entry
     assert entry.unique_id == "SA110405124500W00BS9-dismiss_all"
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

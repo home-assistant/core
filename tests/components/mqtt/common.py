@@ -2494,7 +2494,7 @@ async def help_test_entity_category(
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
     assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry is not None and entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry is not None and entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Discover an entity with entity category set to "no_such_category"
     unique_id = "veryunique3"

@@ -170,7 +170,7 @@ async def test_restore_number_restore_state(
 
     assert entity0.native_max == native_max
     assert entity0.native_min == native_min
-    assert entity0.mode == TextMode.TEXT
+    assert entity0.mode is TextMode.TEXT
     assert entity0.pattern is None
     assert entity0.native_value == native_value
     assert isinstance(entity0.native_value, native_value_type)

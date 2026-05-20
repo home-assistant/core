@@ -101,7 +101,7 @@ async def test_esphome_device_subscribe_logs(
     async with async_call_logger_set_level(
         "homeassistant.components.esphome", "DEBUG", hass=hass, caplog=caplog
     ):
-        assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
+        assert device.current_log_level is LogLevel.LOG_LEVEL_VERY_VERBOSE
 
         caplog.set_level(logging.DEBUG)
         device.mock_on_log_message(
@@ -3260,17 +3260,17 @@ async def test_service_registration_response_types(
     # STATUS -> SupportsResponse.NONE (no data returned to HA)
     assert (
         hass.services.supports_response(DOMAIN, "test_none_service")
-        == SupportsResponse.NONE
+        is SupportsResponse.NONE
     )
     assert (
         hass.services.supports_response(DOMAIN, "test_optional_service")
-        == SupportsResponse.OPTIONAL
+        is SupportsResponse.OPTIONAL
     )
     assert (
         hass.services.supports_response(DOMAIN, "test_only_service")
-        == SupportsResponse.ONLY
+        is SupportsResponse.ONLY
     )
     assert (
         hass.services.supports_response(DOMAIN, "test_status_service")
-        == SupportsResponse.NONE
+        is SupportsResponse.NONE
     )

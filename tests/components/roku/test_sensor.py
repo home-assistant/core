@@ -35,7 +35,7 @@ async def test_roku_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_active_app"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == "Roku"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -45,7 +45,7 @@ async def test_roku_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{UPNP_SERIAL}_active_app_id"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Active app ID"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -82,7 +82,7 @@ async def test_rokutv_sensors(
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_active_app"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == "Antenna TV"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app'
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -92,7 +92,7 @@ async def test_rokutv_sensors(
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_active_app_id"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     assert state.state == "tvinput.dtv"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Active app ID'
     assert ATTR_DEVICE_CLASS not in state.attributes

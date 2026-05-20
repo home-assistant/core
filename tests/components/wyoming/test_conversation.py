@@ -104,7 +104,7 @@ async def test_intent(
         "device_id": device_id,
     }
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
@@ -157,8 +157,8 @@ async def test_intent_handle_error(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
 
 
 async def test_not_recognized(
@@ -180,8 +180,8 @@ async def test_not_recognized(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.NO_INTENT_MATCH
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
 
@@ -218,7 +218,7 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
         "device_id": device_id,
     }
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
@@ -243,8 +243,8 @@ async def test_not_handled(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
 
@@ -268,8 +268,8 @@ async def test_connection_lost(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == snapshot
 
@@ -297,8 +297,8 @@ async def test_oserror(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == snapshot
 

@@ -218,7 +218,7 @@ async def test_unsupported_issues(
 @pytest.mark.usefixtures("all_setup_requests")
 @pytest.mark.parametrize(
     "unsupported_reason",
-    [r for r in UnsupportedReason if r != UnsupportedReason.PRIVILEGED],
+    [r for r in UnsupportedReason if r is not UnsupportedReason.PRIVILEGED],
 )
 async def test_unsupported_reasons(
     hass: HomeAssistant,

@@ -83,7 +83,7 @@ async def test_config_entry_unload(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     await hass.async_block_till_done()
 
@@ -1190,7 +1190,7 @@ async def test_service_get_tts_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 

@@ -241,7 +241,7 @@ async def test_coordinator_migration(
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 @pytest.mark.parametrize(

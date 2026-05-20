@@ -114,7 +114,7 @@ async def test_wlan_qr_code(
     assert len(hass.states.async_entity_ids(IMAGE_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get("image.ssid_1_qr_code")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(

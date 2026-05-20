@@ -289,7 +289,7 @@ async def test_wlan_button_entities(
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get(entity_id)
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
     # Enable entity
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)

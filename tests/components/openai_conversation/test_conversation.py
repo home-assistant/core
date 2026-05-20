@@ -115,7 +115,7 @@ async def test_error_handling(
         hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
 
@@ -167,7 +167,7 @@ async def test_incomplete_response(
         agent_id="conversation.openai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
         == f"OpenAI response incomplete: {message}"
@@ -191,7 +191,7 @@ async def test_incomplete_response(
         agent_id="conversation.openai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
         == f"OpenAI response incomplete: {message}"
@@ -230,7 +230,7 @@ async def test_failed_response(
         agent_id="conversation.openai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
 
@@ -338,7 +338,7 @@ async def test_function_call(
         agent_id="conversation.openai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
     assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
@@ -382,7 +382,7 @@ async def test_function_call_without_reasoning(
         agent_id="conversation.openai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
 
@@ -568,7 +568,7 @@ async def test_store_responses_forwarded_for_conversation_agent(
         hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
 
@@ -637,7 +637,7 @@ async def test_web_search(
             },
         }
     ]
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # Test follow-up message in multi-turn conversation
     mock_create_stream.return_value = [
@@ -707,7 +707,7 @@ async def test_code_interpreter(
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
         {"type": "code_interpreter", "container": {"type": "auto"}}
     ]
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
     # Test follow-up message in multi-turn conversation
@@ -765,7 +765,7 @@ async def test_flex_tier_retry(
     )
 
     assert mock_create_stream.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == "How can I assist?", (
         result.response.speech
     )

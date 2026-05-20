@@ -390,7 +390,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             unit = self.find_key_from_matching_set(
                 multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )
-            if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
+            if sensor_type is MultilevelSensorType.TARGET_TEMPERATURE:
                 return NumericSensorDataTemplateData(
                     ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit
                 )

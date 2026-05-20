@@ -363,7 +363,7 @@ async def test_sensors(
         entity_registry.async_get(
             "sensor.hue_dimmer_switch_1_battery_level"
         ).entity_category
-        == EntityCategory.DIAGNOSTIC
+        is EntityCategory.DIAGNOSTIC
     )
 
 

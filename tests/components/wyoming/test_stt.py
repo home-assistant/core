@@ -44,7 +44,7 @@ async def test_streaming_audio(
     ) as mock_client:
         result = await entity.async_process_audio_stream(metadata, audio_stream())
 
-    assert result.result == stt.SpeechResultState.SUCCESS
+    assert result.result is stt.SpeechResultState.SUCCESS
     assert result.text == "Hello world"
     assert mock_client.written == snapshot
 
@@ -65,7 +65,7 @@ async def test_streaming_audio_connection_lost(
     ):
         result = await entity.async_process_audio_stream(metadata, audio_stream())
 
-    assert result.result == stt.SpeechResultState.ERROR
+    assert result.result is stt.SpeechResultState.ERROR
     assert result.text is None
 
 
@@ -90,5 +90,5 @@ async def test_streaming_audio_oserror(
     ):
         result = await entity.async_process_audio_stream(metadata, audio_stream())
 
-    assert result.result == stt.SpeechResultState.ERROR
+    assert result.result is stt.SpeechResultState.ERROR
     assert result.text is None

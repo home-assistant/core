@@ -1443,7 +1443,7 @@ def async_discover_single_configuration_value(
 ) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
-        if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
+        if value.configuration_value_type is ConfigurationValueType.ENUMERATED:
             yield ZwaveDiscoveryInfo(
                 node=value.node,
                 primary_value=value,
@@ -1480,7 +1480,7 @@ def async_discover_single_configuration_value(
                 entity_registry_enabled_default=False,
             )
     elif not value.metadata.writeable and value.metadata.readable:
-        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+        if value.configuration_value_type is ConfigurationValueType.BOOLEAN:
             yield ZwaveDiscoveryInfo(
                 node=value.node,
                 primary_value=value,

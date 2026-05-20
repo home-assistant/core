@@ -449,7 +449,7 @@ async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
     climate.hass = hass
 
     await climate.async_turn_on()
-    assert climate.hvac_mode == HVACMode.HEAT
+    assert climate.hvac_mode is HVACMode.HEAT
 
     await climate.async_turn_off()
     assert climate.hvac_mode == HVACMode.OFF

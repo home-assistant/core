@@ -496,7 +496,7 @@ async def test_loading_saving_data(
     assert new_entry2.disabled_by is er.RegistryEntryDisabler.HASS
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
-    assert new_entry2.hidden_by == er.RegistryEntryHider.INTEGRATION
+    assert new_entry2.hidden_by is er.RegistryEntryHider.INTEGRATION
     assert new_entry2.has_entity_name is True
     assert new_entry2.labels == {"label1", "label2"}
     assert new_entry2.name == "User Name"

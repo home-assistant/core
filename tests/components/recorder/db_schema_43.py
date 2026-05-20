@@ -371,7 +371,7 @@ class EventData(Base):
         event: Event, dialect: SupportedDialect | None
     ) -> bytes:
         """Create shared_data from an event."""
-        if dialect == SupportedDialect.POSTGRESQL:
+        if dialect is SupportedDialect.POSTGRESQL:
             bytes_result = json_bytes_strip_null(event.data)
         bytes_result = json_bytes(event.data)
         if len(bytes_result) > MAX_EVENT_DATA_BYTES:
@@ -613,7 +613,7 @@ class StateAttributes(Base):
                 exclude_attrs -= _MATCH_ALL_KEEP
         else:
             exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
-        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        encoder = json_bytes_strip_null if dialect is PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )

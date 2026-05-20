@@ -49,7 +49,7 @@ async def test_diagnostics_are_disabled_by_default(
         for entry in entity_registry.entities.get_entries_for_config_entry_id(
             mock_entry.entry_id
         )
-        if entry.entity_category == EntityCategory.DIAGNOSTIC
+        if entry.entity_category is EntityCategory.DIAGNOSTIC
     ]
 
     assert len(entries) == 5

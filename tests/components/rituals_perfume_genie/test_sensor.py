@@ -51,7 +51,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     entry = entity_registry.async_get("sensor.genie_battery")
     assert entry
     assert entry.unique_id == f"{hublot}-battery_percentage"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.genie_wi_fi_signal")
     assert state
@@ -62,4 +62,4 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     entry = entity_registry.async_get("sensor.genie_wi_fi_signal")
     assert entry
     assert entry.unique_id == f"{hublot}-wifi_percentage"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC

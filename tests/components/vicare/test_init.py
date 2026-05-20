@@ -169,7 +169,7 @@ async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
 
     issue = ir.async_get(hass).async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

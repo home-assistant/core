@@ -291,7 +291,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
             media_id = play_item.url
 
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             await self.async_turn_on()
 
         if media_id:
@@ -468,7 +468,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             supported_features |= MediaPlayerEntityFeature.PLAY
             supported_features |= MediaPlayerEntityFeature.STOP
 
-        if self.state != MediaPlayerState.OFF:
+        if self.state is not MediaPlayerState.OFF:
             supported_features |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         return supported_features
@@ -729,7 +729,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             if entity.entity_id in group_members
         ]
 
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             await self.async_turn_on()
 
         if not self.is_server and self.musiccast_zone_entity.is_server:
@@ -812,7 +812,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         # If we should join the group, which is served by the main zone,
         # we can simply select main_sync as input.
         _LOGGER.debug("%s called service client join", self.entity_id)
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             await self.async_turn_on()
         if self.ip_address == server.ip_address:
             if server.zone == DEFAULT_ZONE:

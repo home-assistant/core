@@ -437,7 +437,7 @@ async def test_detect_radio_type_success(radio_manager: ZhaRadioManager) -> None
         ),
     ):
         assert (
-            await radio_manager.detect_radio_type() == ProbeResult.RADIO_TYPE_DETECTED
+            await radio_manager.detect_radio_type() is ProbeResult.RADIO_TYPE_DETECTED
         )
         assert radio_manager.radio_type == RadioType.znp
 
@@ -455,7 +455,7 @@ async def test_detect_radio_type_failure_wrong_firmware(
     ):
         assert (
             await radio_manager.detect_radio_type()
-            == ProbeResult.WRONG_FIRMWARE_INSTALLED
+            is ProbeResult.WRONG_FIRMWARE_INSTALLED
         )
         assert radio_manager.radio_type is None
 
@@ -471,7 +471,7 @@ async def test_detect_radio_type_failure_no_detect(
             return_value=False,
         ),
     ):
-        assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED
+        assert await radio_manager.detect_radio_type() is ProbeResult.PROBING_FAILED
         assert radio_manager.radio_type is None
 
 

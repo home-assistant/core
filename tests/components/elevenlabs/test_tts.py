@@ -248,7 +248,7 @@ async def test_tts_service_speak(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(stream_calls) == 1
     voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "voice1")
@@ -315,7 +315,7 @@ async def test_tts_service_speak_lang_config(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(stream_calls) == 1
@@ -369,7 +369,7 @@ async def test_tts_service_speak_error(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
     assert len(stream_calls) == 1
@@ -444,7 +444,7 @@ async def test_tts_service_speak_voice_settings(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(stream_calls) == 1
@@ -497,7 +497,7 @@ async def test_tts_service_speak_without_options(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
     assert len(stream_calls) == 1

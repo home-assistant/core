@@ -234,7 +234,7 @@ async def test_yaml_import_creates_deprecation_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 async def test_yaml_import_with_name(
@@ -294,7 +294,7 @@ async def test_yaml_import_abort_creates_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 async def test_binary_sensor_update_callback(

@@ -154,7 +154,7 @@ async def test_tts_service(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
 
@@ -211,7 +211,7 @@ async def test_service_say_german_config(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
@@ -268,7 +268,7 @@ async def test_service_say_german_service(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
@@ -324,7 +324,7 @@ async def test_service_say_en_uk_config(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
@@ -381,7 +381,7 @@ async def test_service_say_en_uk_service(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
     assert mock_gtts.mock_calls[0][2] == {
@@ -438,7 +438,7 @@ async def test_service_say_en_couk(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
     assert len(mock_gtts.mock_calls) == 2
 
@@ -496,6 +496,6 @@ async def test_service_say_error(
         await retrieve_media(
             hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
         )
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(mock_gtts.mock_calls) == 2

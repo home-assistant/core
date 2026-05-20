@@ -39,7 +39,7 @@ async def test_binary_sensors(
     entry = entity_registry.async_get("binary_sensor.amazon_fire_plugged_in")
     assert entry
     assert entry.unique_id == "abcdef-123456-plugged"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("binary_sensor.amazon_fire_kiosk_mode")
     assert state
@@ -50,7 +50,7 @@ async def test_binary_sensors(
     entry = entity_registry.async_get("binary_sensor.amazon_fire_kiosk_mode")
     assert entry
     assert entry.unique_id == "abcdef-123456-kioskMode"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("binary_sensor.amazon_fire_device_admin")
     assert state
@@ -61,7 +61,7 @@ async def test_binary_sensors(
     entry = entity_registry.async_get("binary_sensor.amazon_fire_device_admin")
     assert entry
     assert entry.unique_id == "abcdef-123456-isDeviceAdmin"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

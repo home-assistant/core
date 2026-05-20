@@ -178,7 +178,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type == assist_pipeline.PipelineEventType.RUN_END:
+        if event.type is assist_pipeline.PipelineEventType.RUN_END:
             # Pipeline run is complete — always update bookkeeping state
             # even after a disconnect so follow-up reconnects don't retain
             # stale _is_pipeline_running / _pipeline_ended_event state.
@@ -192,7 +192,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Satellite disconnected, don't try to write to the client
             return
 
-        if event.type == assist_pipeline.PipelineEventType.RUN_START:
+        if event.type is assist_pipeline.PipelineEventType.RUN_START:
             if event.data and (tts_output := event.data.get("tts_output")):
                 # Get stream token early.
                 # If "tts_start_streaming" is True in INTENT_PROGRESS event, we
@@ -861,7 +861,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         _LOGGER.debug("Timer event: type=%s, info=%s", event_type, timer)
         event: Event | None = None
-        if event_type == intent.TimerEventType.STARTED:
+        if event_type is intent.TimerEventType.STARTED:
             event = TimerStarted(
                 id=timer.id,
                 total_seconds=timer.seconds,

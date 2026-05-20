@@ -91,7 +91,7 @@ async def test_root_object(hass: HomeAssistant) -> None:
     assert len(root) == 1
     item = root[0]
     assert item.title == "Dashboards"
-    assert item.media_class == MediaClass.APP
+    assert item.media_class is MediaClass.APP
     assert item.media_content_id == ""
     assert item.media_content_type == lovelace_cast.DOMAIN
     assert item.thumbnail == "/api/brands/integration/lovelace/logo.png"

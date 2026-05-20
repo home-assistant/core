@@ -87,7 +87,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         # Failed to probe, we can't tell if the wrong firmware is installed
         return False
 
-    if app_type == ApplicationType.EZSP:
+    if app_type is ApplicationType.EZSP:
         # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
         # reconnect, it should work
         raise AlreadyRunningEZSP
@@ -102,7 +102,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         severity=ir.IssueSeverity.ERROR,
         translation_key=(
             ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
-            + ("_nabucasa" if hardware_type != HardwareType.OTHER else "_other")
+            + ("_nabucasa" if hardware_type is not HardwareType.OTHER else "_other")
         ),
         translation_placeholders={"firmware_type": app_type.name},
     )

@@ -808,7 +808,7 @@ async def test_browse_media_event(
 
     assert browse.identifier == "test_id:event:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MediaClass.VIDEO
+    assert browse.media_class is MediaClass.VIDEO
     assert title == expected_title
 
 
@@ -841,7 +841,7 @@ async def test_browse_media_eventthumb(
 
     assert browse.identifier == "test_id:eventthumb:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MediaClass.IMAGE
+    assert browse.media_class is MediaClass.IMAGE
 
 
 @pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")

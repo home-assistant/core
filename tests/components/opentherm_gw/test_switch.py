@@ -50,7 +50,7 @@ async def test_switch_added_disabled(
     ) is not None
 
     assert (entity_entry := entity_registry.async_get(switch_entity_id)) is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

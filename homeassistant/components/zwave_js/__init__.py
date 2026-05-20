@@ -576,7 +576,7 @@ class ControllerEvents:
             # We don't want to remove the device so we can keep the user customizations
             return
 
-        if reason == RemoveNodeReason.RESET:
+        if reason is RemoveNodeReason.RESET:
             device_name = device.name_by_user or device.name or f"Node {node.node_id}"
             identifier = get_network_identifier_for_notification(
                 self.hass, self.config_entry, self.driver_events.driver.controller
@@ -1207,7 +1207,7 @@ async def async_ensure_addon_running(
     if addon_has_esphome and socket_path is not None:
         addon_config[CONF_ADDON_SOCKET] = socket_path
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_config,
             catch_error=True,

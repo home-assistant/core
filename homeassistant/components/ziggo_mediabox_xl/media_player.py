@@ -104,7 +104,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
         try:
             if self._mediabox.test_connection():
                 if self._mediabox.turned_on():
-                    if self.state != MediaPlayerState.PAUSED:
+                    if self.state is not MediaPlayerState.PAUSED:
                         self._attr_state = MediaPlayerState.PLAYING
                 else:
                     self._attr_state = MediaPlayerState.OFF
@@ -151,7 +151,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerEntity):
     def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self.send_keys(["PAUSE"])
-        if self.state == MediaPlayerState.PAUSED:
+        if self.state is MediaPlayerState.PAUSED:
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.PAUSED

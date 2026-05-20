@@ -424,7 +424,7 @@ async def test_special_repair_issue_created_when_enabled(
     assert issue.domain == DOMAIN
     assert issue.translation_key == "special_repair"
     assert issue.is_fixable is False
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
 
 
 async def test_special_repair_preview_feature_toggle(

@@ -277,7 +277,7 @@ async def test_entity_attributes(
     hass: HomeAssistant, mock_provider_entity: MockProviderEntity
 ) -> None:
     """Test that the provider entity attributes match expectations."""
-    assert mock_provider_entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert mock_provider_entity.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_list_wake_words(

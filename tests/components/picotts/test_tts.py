@@ -125,7 +125,7 @@ async def test_tts_service(
             await retrieve_media(
                 hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.OK
+            is HTTPStatus.OK
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 

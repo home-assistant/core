@@ -301,7 +301,7 @@ async def test_auth_sending_invalid_json_disconnects(
         await ws.send_str("[--INVALID--JSON--]")
 
         auth_msg = await ws.receive()
-        assert auth_msg.type == WSMsgType.close
+        assert auth_msg.type is WSMsgType.close
 
 
 async def test_auth_sending_binary_disconnects(
@@ -390,7 +390,7 @@ async def test_auth_sending_unknown_type_disconnects(
 
         await ws._writer.send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
-        assert auth_msg.type == WSMsgType.close
+        assert auth_msg.type is WSMsgType.close
 
 
 async def test_error_right_after_auth_disconnects(

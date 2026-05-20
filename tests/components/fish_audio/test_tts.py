@@ -205,7 +205,7 @@ async def test_tts_service_speak(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
 
@@ -236,7 +236,7 @@ async def test_tts_service_speak_with_language(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.OK
+        is HTTPStatus.OK
     )
 
 
@@ -273,7 +273,7 @@ async def test_tts_service_speak_server_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
@@ -310,5 +310,5 @@ async def test_tts_service_speak_rate_limit_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.INTERNAL_SERVER_ERROR
+        is HTTPStatus.INTERNAL_SERVER_ERROR
     )

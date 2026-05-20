@@ -156,7 +156,7 @@ async def test_vad_sensitivity_select(
     state = hass.states.get(vs_entity_id)
     assert state is not None
     assert state.state == VadSensitivity.DEFAULT
-    assert satellite_device.vad_sensitivity == VadSensitivity.DEFAULT
+    assert satellite_device.vad_sensitivity is VadSensitivity.DEFAULT
 
     # Change setting
     with patch.object(satellite_device, "set_vad_sensitivity") as mock_vs_changed:
@@ -188,4 +188,4 @@ async def test_vad_sensitivity_select(
         blocking=True,
     )
 
-    assert satellite_device.vad_sensitivity == VadSensitivity.RELAXED
+    assert satellite_device.vad_sensitivity is VadSensitivity.RELAXED

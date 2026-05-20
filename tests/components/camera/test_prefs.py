@@ -30,7 +30,7 @@ async def test_get_dynamic_camera_stream_settings_success(hass: HomeAssistant) -
 
     # Test with default settings
     settings = await get_dynamic_camera_stream_settings(hass, "camera.test")
-    assert settings.orientation == Orientation.NO_TRANSFORM
+    assert settings.orientation is Orientation.NO_TRANSFORM
     assert settings.preload_stream is False
 
 
@@ -52,7 +52,7 @@ async def test_get_dynamic_camera_stream_settings_with_custom_orientation(
     prefs._dynamic_stream_settings_by_entity_id["camera.test"] = test_settings
 
     settings = await get_dynamic_camera_stream_settings(hass, "camera.test")
-    assert settings.orientation == Orientation.ROTATE_LEFT
+    assert settings.orientation is Orientation.ROTATE_LEFT
     assert settings.preload_stream is False
 
 
@@ -72,5 +72,5 @@ async def test_get_dynamic_camera_stream_settings_with_preload_stream(
     prefs._dynamic_stream_settings_by_entity_id["camera.test"] = test_settings
 
     settings = await get_dynamic_camera_stream_settings(hass, "camera.test")
-    assert settings.orientation == Orientation.NO_TRANSFORM
+    assert settings.orientation is Orientation.NO_TRANSFORM
     assert settings.preload_stream is True

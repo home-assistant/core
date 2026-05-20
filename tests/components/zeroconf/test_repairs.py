@@ -89,7 +89,7 @@ async def test_instance_id_conflict_creates_repair_issue_remove(
             domain="zeroconf", issue_id="duplicate_instance_id"
         )
         assert issue
-        assert issue.severity == ir.IssueSeverity.ERROR
+        assert issue.severity is ir.IssueSeverity.ERROR
         assert issue.translation_key == "duplicate_instance_id"
         assert issue.translation_placeholders == {
             "other_host_url": "other-host.local",
@@ -135,7 +135,7 @@ async def test_instance_id_conflict_creates_repair_issue_changing_id(
             domain="zeroconf", issue_id="duplicate_instance_id"
         )
         assert issue
-        assert issue.severity == ir.IssueSeverity.ERROR
+        assert issue.severity is ir.IssueSeverity.ERROR
         assert issue.translation_key == "duplicate_instance_id"
         assert issue.translation_placeholders == {
             "other_host_url": "other-host.local",

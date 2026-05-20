@@ -531,7 +531,7 @@ class DeletedDeviceEntry:
             if config_entry.disabled_by:
                 if disabled_by is None:
                     disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
-            elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+            elif disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
                 disabled_by = None
         else:
             disabled_by = disabled_by if disabled_by is not UNDEFINED else None

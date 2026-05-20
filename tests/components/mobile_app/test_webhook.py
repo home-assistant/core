@@ -1126,7 +1126,7 @@ async def test_reregister_sensor(
     assert entry.unit_of_measurement == "%"
     assert entry.entity_category == "diagnostic"
     assert entry.original_icon == "mdi:new-icon"
-    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     reg_resp = await webhook_client.post(
         webhook_url,

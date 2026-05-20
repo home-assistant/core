@@ -73,7 +73,7 @@ async def test_build_item_response(
         ),
     )
     assert browse_item.title == "Abbey Road"
-    assert browse_item.media_class == MediaClass.ALBUM
+    assert browse_item.media_class is MediaClass.ALBUM
     assert browse_item.media_content_id == "A:ALBUM/Abbey%20Road"
     assert len(browse_item.children) == 2
     assert browse_item.children[0].media_class == MediaClass.TRACK

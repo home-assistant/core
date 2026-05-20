@@ -932,7 +932,7 @@ async def test_access_control_lock_state_notification_sensors(
         and entry.original_name == "Lock jammed"
     )
     assert jammed_entry.original_device_class == BinarySensorDeviceClass.PROBLEM
-    assert jammed_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert jammed_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     jammed_state = hass.states.get(jammed_entry.entity_id)
     assert jammed_state
@@ -963,7 +963,7 @@ async def test_access_control_catch_all_with_opening_state_present(
         for reg_entry in entity_registry.entities.values()
         if reg_entry.domain == "binary_sensor"
         and reg_entry.platform == "zwave_js"
-        and reg_entry.entity_category == EntityCategory.DIAGNOSTIC
+        and reg_entry.entity_category is EntityCategory.DIAGNOSTIC
         and reg_entry.original_name
         and "barrier" in reg_entry.original_name.lower()
     ]
@@ -988,7 +988,7 @@ async def test_config_parameter_binary_sensor(
     entity_entry = entity_registry.async_get(binary_sensor_entity_id)
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     updated_entry = entity_registry.async_update_entity(
         binary_sensor_entity_id, disabled_by=None
@@ -1020,7 +1020,7 @@ async def test_smoke_co_notification_sensors(
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.SMOKE
     entity_entry = entity_registry.async_get(smoke_sensor)
     assert entity_entry
-    assert entity_entry.entity_category != EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is not EntityCategory.DIAGNOSTIC
 
     # Test smoke alarm diagnostic sensor
     smoke_diagnostic = "binary_sensor.zcombo_g_smoke_co_alarm_smoke_alarm_test"
@@ -1029,7 +1029,7 @@ async def test_smoke_co_notification_sensors(
     assert state.state == STATE_OFF
     entity_entry = entity_registry.async_get(smoke_diagnostic)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Test CO alarm sensor
     co_sensor = "binary_sensor.zcombo_g_smoke_co_alarm_carbon_monoxide_detected"
@@ -1039,7 +1039,7 @@ async def test_smoke_co_notification_sensors(
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.CO
     entity_entry = entity_registry.async_get(co_sensor)
     assert entity_entry
-    assert entity_entry.entity_category != EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is not EntityCategory.DIAGNOSTIC
 
     # Test diagnostic entities
     entity_ids = [
@@ -1053,7 +1053,7 @@ async def test_smoke_co_notification_sensors(
     for entity_id in entity_ids:
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
-        assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+        assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     # Test that no idle states are created as entities
     entity_id = "binary_sensor.zcombo_g_smoke_co_alarm_idle"

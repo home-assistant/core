@@ -93,7 +93,7 @@ async def test_form(
     await hass.async_block_till_done(wait_background_tasks=True)
     subentry_flows = hass.config_entries.subentries.async_progress()
     assert len(subentry_flows) == 1
-    assert result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
+    assert result["next_flow"][0] is FlowType.CONFIG_SUBENTRIES_FLOW
     result = await hass.config_entries.subentries.async_configure(
         result["next_flow"][1], {"next_step_id": "add_topic"}
     )

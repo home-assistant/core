@@ -626,7 +626,7 @@ async def test_reset_hidden_by(
 
     # Check hidden by is reset
     switch_entity_entry = entity_registry.async_get(switch_entity_entry.entity_id)
-    assert switch_entity_entry.hidden_by == hidden_by_after
+    assert switch_entity_entry.hidden_by is hidden_by_after
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

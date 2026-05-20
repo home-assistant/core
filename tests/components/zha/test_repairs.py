@@ -83,21 +83,21 @@ async def test_detect_radio_hardware(hass: HomeAssistant) -> None:
     await async_setup_component(hass, SKYCONNECT_DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.SKYCONNECT
-    assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
+    assert _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) is HardwareType.SKYCONNECT
+    assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) is HardwareType.SKYCONNECT
     assert (
-        _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER
+        _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") is HardwareType.OTHER
     )
-    assert _detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.OTHER
+    assert _detect_radio_hardware(hass, "/dev/ttyAMA1") is HardwareType.OTHER
 
     with patch(
         "homeassistant.components.homeassistant_yellow.hardware.get_os_info",
         return_value={"board": "yellow"},
     ):
-        assert _detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.YELLOW
-        assert _detect_radio_hardware(hass, "/dev/ttyAMA2") == HardwareType.OTHER
+        assert _detect_radio_hardware(hass, "/dev/ttyAMA1") is HardwareType.YELLOW
+        assert _detect_radio_hardware(hass, "/dev/ttyAMA2") is HardwareType.OTHER
         assert (
-            _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
+            _detect_radio_hardware(hass, SKYCONNECT_DEVICE) is HardwareType.SKYCONNECT
         )
 
 
@@ -114,7 +114,7 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
             side_effect=HomeAssistantError(),
         ),
     ):
-        assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
+        assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) is HardwareType.OTHER
 
 
 @pytest.mark.parametrize(

@@ -1098,7 +1098,7 @@ async def test_enable_entity_disabled_device(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.config_entry_id == config_entry.entry_id
     assert entity_entry.device_id == device.id
-    assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
+    assert entity_entry.disabled_by is RegistryEntryDisabler.DEVICE
 
     # UPDATE DISABLED_BY TO NONE
     await client.send_json_auto_id(

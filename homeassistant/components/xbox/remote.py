@@ -113,7 +113,7 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.data.status.power_state == PowerState.On
+        return self.data.status.power_state is PowerState.On
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -33,7 +33,7 @@ async def test_window_shuttler(
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03"
-    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -59,7 +59,7 @@ async def test_window_shuttler_battery(
     assert entity_registry.async_is_registered(BATTERY_ENTITY_ID)
     entity = entity_registry.async_get(BATTERY_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03_battery"
-    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state is not None

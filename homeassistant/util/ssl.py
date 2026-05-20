@@ -90,7 +90,7 @@ def _client_context_no_verify(
         # This only works for OpenSSL >= 1.0.0
         sslcontext.options |= ssl.OP_NO_COMPRESSION
     sslcontext.set_default_verify_paths()
-    if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
+    if ssl_cipher_list is not SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
     # from mutating the shared SSL context with different protocol settings.
@@ -114,7 +114,7 @@ def _create_client_context(
     sslcontext = ssl.create_default_context(
         purpose=ssl.Purpose.SERVER_AUTH, cafile=cafile
     )
-    if ssl_cipher_list != SSLCipherList.PYTHON_DEFAULT:
+    if ssl_cipher_list is not SSLCipherList.PYTHON_DEFAULT:
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
     # Set ALPN protocols to prevent downstream libraries (e.g., httpx/httpcore)
     # from mutating the shared SSL context with different protocol settings.

@@ -139,7 +139,7 @@ async def test_cost_sensor_attributes(
     entry = entity_registry.async_get(cost_sensor_entity_id)
     assert entry.entity_category is None
     assert entry.disabled_by is None
-    assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
 
 @pytest.mark.parametrize(

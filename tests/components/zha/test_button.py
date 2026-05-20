@@ -103,7 +103,7 @@ async def test_button(
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     with patch(
         "zigpy.zcl.Cluster.request",

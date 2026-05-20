@@ -559,7 +559,7 @@ async def test_default_disabling_entity(
 
     assert (
         entity_registry.async_get("sensor.test_1_battery_state").disabled_by
-        == er.RegistryEntryDisabler.INTEGRATION
+        is er.RegistryEntryDisabler.INTEGRATION
     )
 
 

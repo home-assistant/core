@@ -121,7 +121,7 @@ async def test_config_flow_registered_entity(
     }
 
     switch_entity_entry = entity_registry.async_get("switch.ceiling")
-    assert switch_entity_entry.hidden_by == hidden_by_after
+    assert switch_entity_entry.hidden_by is hidden_by_after
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

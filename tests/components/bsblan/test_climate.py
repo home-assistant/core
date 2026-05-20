@@ -163,12 +163,12 @@ async def test_hvac_action_uses_library_mapping(
     mock_action = MagicMock()
     mock_action.value = HeatingCircuitStatus.HEATING_COMFORT
     result = await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
-    assert result == HVACAction.HEATING
+    assert result is HVACAction.HEATING
 
     # Test unknown status code defaults to IDLE
     mock_action.value = 1  # Unknown status code
     result = await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
-    assert result == HVACAction.IDLE
+    assert result is HVACAction.IDLE
 
 
 async def test_climate_without_current_temperature_sensor(

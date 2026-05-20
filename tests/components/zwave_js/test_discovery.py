@@ -288,7 +288,7 @@ async def test_zooz_zen72(
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(entity_id) is None  # disabled by default
     entity_registry.async_update_entity(entity_id, disabled_by=None)
@@ -327,7 +327,7 @@ async def test_zooz_zen72(
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
     assert entity_entry.disabled_by is None
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
@@ -373,7 +373,7 @@ async def test_indicator_test(
     ):
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry
-        assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+        assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
         assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         assert hass.states.get(entity_id) is None  # disabled by default
         entity_registry.async_update_entity(entity_id, disabled_by=None)
@@ -381,7 +381,7 @@ async def test_indicator_test(
     entity_id = switch_entity_id
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(entity_id) is None  # disabled by default
     entity_registry.async_update_entity(entity_id, disabled_by=None)

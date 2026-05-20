@@ -19,5 +19,5 @@ async def test_tplink_lte_repair_issue(
 
     assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
     issue = issue_registry.async_get_issue(DOMAIN, DOMAIN)
-    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_key == "integration_removed"

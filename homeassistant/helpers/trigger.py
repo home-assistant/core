@@ -738,7 +738,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if (current_value := self._get_tracked_value(state)) is None:
             return False
 
-        if self._threshold_type == NumericThresholdType.ANY:
+        if self._threshold_type is NumericThresholdType.ANY:
             # If the threshold type is "any" we always trigger on valid state
             # changes
             return True

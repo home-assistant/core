@@ -340,4 +340,4 @@ async def test_manual_trigger_sensor_entity_with_date(
         "2025-01-01T00:00:00+00:00", entity.entity_id, entity.device_class
     )
     assert entity.state == "2025-01-01T00:00:00+00:00"
-    assert entity.device_class == device_class
+    assert entity.device_class is device_class

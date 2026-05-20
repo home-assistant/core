@@ -535,7 +535,7 @@ async def test_segments_changed_issue(
     issue_id = f"segments_changed_{entity_entry.id}"
     issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
     assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "segments_changed"
 
     entity_registry.async_update_entity_options(

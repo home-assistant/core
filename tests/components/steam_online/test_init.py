@@ -48,7 +48,7 @@ async def test_device_info(
     device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "https://store.steampowered.com"
-    assert device.entry_type == dr.DeviceEntryType.SERVICE
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == DEFAULT_NAME
     assert device.name == DEFAULT_NAME

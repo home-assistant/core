@@ -660,7 +660,7 @@ def async_set_service_schema(
 
     if (
         response := hass.services.supports_response(domain, service)
-    ) != SupportsResponse.NONE:
+    ) is not SupportsResponse.NONE:
         description["response"] = {
             "optional": response == SupportsResponse.OPTIONAL,
         }

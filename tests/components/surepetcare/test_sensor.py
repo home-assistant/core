@@ -66,5 +66,5 @@ async def test_default_disabled_sensors(
     for entity_id in DEFAULT_DISABLED_ENTITIES:
         entity = entity_registry.async_get(entity_id)
         assert entity
-        assert entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+        assert entity.disabled_by is RegistryEntryDisabler.INTEGRATION
         assert not hass.states.get(entity_id)

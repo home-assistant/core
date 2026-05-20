@@ -1623,7 +1623,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
         """Validate the passed selection."""
         validators: list[Callable[[Any], Any]] = [_NUMERIC_THRESHOLD_VALUE_SCHEMA]
         mode = self.config["mode"]
-        if mode != NumericThresholdMode.CHANGED:
+        if mode is not NumericThresholdMode.CHANGED:
             validators.append(_validate_numeric_threshold_not_any)
         if allowed_units := self.config.get("unit_of_measurement"):
             validators.append(_validate_numeric_threshold_unit(allowed_units))

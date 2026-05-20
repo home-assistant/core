@@ -1008,12 +1008,12 @@ class _ScriptRun:
             supports_response = self._hass.services.supports_response(
                 params[CONF_DOMAIN], params[CONF_SERVICE]
             )
-            if supports_response == SupportsResponse.ONLY and not return_response:
+            if supports_response is SupportsResponse.ONLY and not return_response:
                 raise vol.Invalid(
                     f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
                     f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
                 )
-            if supports_response == SupportsResponse.NONE and return_response:
+            if supports_response is SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
                     f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}'"
