@@ -54,7 +54,7 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
 
 # Other tools may write unrelated files ending in `.metadata.json` into the
 # bucket; such files must be skipped rather than crashing the backup listing.
-REQUIRED_METADATA_KEYS = {"metadata_version", "backup_id", "backup_metadata"}
+REQUIRED_METADATA_KEYS = frozenset({"metadata_version", "backup_id", "backup_metadata"})
 
 
 def _parse_metadata(raw_content: str) -> dict[str, Any]:
@@ -64,7 +64,7 @@ def _parse_metadata(raw_content: str) -> dict[str, Any]:
     except json.JSONDecodeError as err:
         raise ValueError(f"Invalid JSON format: {err}") from err
     if not isinstance(data, dict):
-        raise ValueError("JSON content is not a dictionary")
+        raise TypeError("JSON content is not a dictionary")
     missing = REQUIRED_METADATA_KEYS - data.keys()
     if missing:
         raise ValueError(f"Missing required metadata keys: {sorted(missing)}")
