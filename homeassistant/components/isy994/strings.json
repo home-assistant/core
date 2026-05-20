@@ -9,7 +9,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "The host entry was not in full URL format, e.g., {sample_ip}",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "ssl_error": "TLS handshake failed. The controller may be pinned to TLS 1.1 (upgrade to ≥ 1.2 in HTTPS Server Settings) or, if 'Verify SSL' is enabled, the certificate is self-signed.",
+      "ssl_error": "TLS handshake failed. The controller may require a newer TLS version, or SSL verification may be failing due to a self-signed certificate.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({host})",
