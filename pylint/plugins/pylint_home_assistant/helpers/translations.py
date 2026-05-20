@@ -1,12 +1,12 @@
 """Helpers for reading integration translation files."""
 
 import contextlib
-import json
 from pathlib import Path
 import re
 
 import astroid
 from astroid import nodes
+import orjson
 
 from .integration import get_integration_dir
 
@@ -33,8 +33,8 @@ def _load_translations_from_dir(integration_dir: Path) -> dict | None:
     ):
         if candidate.exists():
             result: dict | None = None
-            with contextlib.suppress(json.JSONDecodeError, OSError):
-                parsed = json.loads(candidate.read_text())
+            with contextlib.suppress(orjson.JSONDecodeError, OSError):
+                parsed = orjson.loads(candidate.read_bytes())
                 if isinstance(parsed, dict):
                     result = parsed
             _translations_cache[cache_key] = result
