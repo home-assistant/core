@@ -5,11 +5,11 @@ system (``translation_domain``, ``translation_key``) instead of hardcoded
 English strings. Also verifies that referenced translation keys exist in
 the integration's ``strings.json`` and that placeholders match.
 
-This checker reports three levels of issues:
-
-- ``W7417``: Exception raised with a hardcoded string instead of translations
-- ``E7406``: Translation key referenced but not found in ``strings.json``
-- ``W7418``: Placeholder mismatch between code and ``strings.json``
+- ``W7417``: Hardcoded string instead of translations (quality-scale-gated)
+- ``W7419``: Both a message string and ``translation_key`` provided
+- ``E7406``: Translation key not found in ``strings.json``
+- ``E7408``: Only one of ``translation_key``/``translation_domain`` provided
+- ``E7418``: Placeholder mismatch between code and ``strings.json``
 """
 
 import astroid
