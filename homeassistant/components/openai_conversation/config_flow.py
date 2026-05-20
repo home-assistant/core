@@ -739,6 +739,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                             "gpt-4o-transcribe",
                             "gpt-4o-mini-transcribe",
                             "whisper-1",
+                            "gpt-realtime-whisper",
                         ],
                         mode=SelectSelectorMode.DROPDOWN,
                         custom_value=True,
