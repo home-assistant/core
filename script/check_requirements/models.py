@@ -26,6 +26,8 @@ class CheckKind(StrEnum):
     CI_UPLOAD = "ci_upload"
     RELEASE_PIPELINE = "release_pipeline"
     PR_LINK = "pr_link"
+    YANKED = "yanked"
+    VULNERABILITIES = "vulnerabilities"
 
 
 @dataclass(slots=True)

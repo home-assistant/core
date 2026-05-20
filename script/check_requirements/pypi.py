@@ -1,6 +1,6 @@
 """PyPI metadata + PEP 740 provenance attestation lookups."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any
@@ -69,6 +69,17 @@ _HEADERS = {
 _TIMEOUT = 30.0
 
 
+@dataclass(slots=True, frozen=True)
+class Vulnerability:
+    """One advisory entry for a specific package version (OSV / PyPA / GHSA)."""
+
+    id: str
+    aliases: tuple[str, ...]
+    summary: str
+    fixed_in: tuple[str, ...]
+    link: str
+
+
 @dataclass(slots=True)
 class PypiPackageInfo:
     """The subset of PyPI metadata we care about for a specific version."""
@@ -77,6 +88,9 @@ class PypiPackageInfo:
     repo_url: str | None
     file_provenance_urls: list[str]  # may be empty
     found: bool  # False if the version doesn't exist on PyPI
+    yanked: bool = False
+    yanked_reason: str | None = None
+    vulnerabilities: list[Vulnerability] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -157,7 +171,40 @@ def fetch_package_info(name: str, version: str) -> PypiPackageInfo:
         repo_url=_pick_repo_url(project_urls),
         file_provenance_urls=provenance_urls,
         found=True,
+        yanked=bool(info.get("yanked")),
+        yanked_reason=_safe(info.get("yanked_reason")),
+        vulnerabilities=_parse_vulnerabilities(versioned.get("vulnerabilities")),
     )
+
+
+def _parse_vulnerabilities(raw: Any) -> list[Vulnerability]:
+    """Extract non-withdrawn advisories from the PyPI `vulnerabilities` field."""
+    if not isinstance(raw, list):
+        return []
+    out: list[Vulnerability] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("withdrawn"):
+            # Withdrawn means the advisory was removed by the maintainer and should not be treated as valid.
+            continue
+        vid = _safe(entry.get("id"))
+        if not vid:
+            continue
+        aliases_raw = entry.get("aliases") or []
+        aliases = tuple(a for a in (_safe(str(x)) for x in aliases_raw if x) if a)
+        fixed_raw = entry.get("fixed_in") or []
+        fixed_in = tuple(f for f in (_safe(str(x)) for x in fixed_raw if x) if f)
+        out.append(
+            Vulnerability(
+                id=vid,
+                aliases=aliases,
+                summary=_safe(entry.get("summary")) or "",
+                fixed_in=fixed_in,
+                link=_safe(entry.get("link")) or "",
+            )
+        )
+    return out
 
 
 def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
@@ -176,7 +223,7 @@ def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
         if not bundle:
             continue
         any_bundle_fetched = True
-        for entry in bundle.get("attestation_bundles", []) or []:
+        for entry in bundle.get("attestation_bundles") or []:
             publisher = entry.get("publisher") or {}
             kind = publisher.get("kind")
             if not kind:
