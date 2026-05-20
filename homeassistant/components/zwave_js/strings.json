@@ -292,14 +292,89 @@
     }
   },
   "exceptions": {
+    "access_control_not_supported": {
+      "message": "Access control is not supported on this device"
+    },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
+    "credential_data_invalid_length": {
+      "message": "Credential of type {credential_type} must be between {min_length} and {max_length} characters long."
+    },
+    "credential_data_pin_not_digits": {
+      "message": "PIN code must contain only digits."
+    },
+    "credential_rejected_add_occupied": {
+      "message": "Cannot add credential: the target slot is already in use."
+    },
+    "credential_rejected_duplicate": {
+      "message": "This credential is already registered on the device."
+    },
+    "credential_rejected_manufacturer_rules": {
+      "message": "The credential violates the device's manufacturer security rules (for example, it is too short, too long, or uses a disallowed pattern)."
+    },
+    "credential_rejected_modify_empty": {
+      "message": "Cannot modify credential: the slot is empty."
+    },
+    "credential_rejected_unknown": {
+      "message": "The device rejected the credential without giving a reason."
+    },
+    "credential_rejected_wrong_uuid": {
+      "message": "The device rejected the credential because the user unique identifier does not match."
+    },
+    "credential_slot_out_of_range": {
+      "message": "Credential slot for {credential_type} must be between 1 and {max_slot}."
+    },
+    "credential_type_not_supported": {
+      "message": "Credential type {credential_type} is not supported on this device"
+    },
+    "delete_all_credentials_failed": {
+      "message": "Failed to delete all credentials for user {user_id}: {error}"
+    },
+    "delete_all_credentials_partial_failure": {
+      "message": "Failed to delete {failed_count} credentials for user {user_id}. See logs for details."
+    },
+    "delete_all_users_failed": {
+      "message": "Failed to delete all users: {error}"
+    },
+    "delete_credential_failed": {
+      "message": "Failed to delete credential: {error}"
+    },
+    "delete_user_failed": {
+      "message": "Failed to delete user {user_id}: {error}"
+    },
+    "get_credential_capabilities_failed": {
+      "message": "Failed to get credential capabilities: {error}"
     },
     "get_lock_usercode_not_found": {
       "message": "Code slot {code_slot} not found on lock {entity_id}"
     },
+    "get_users_failed": {
+      "message": "Failed to get users: {error}"
+    },
+    "no_available_credential_slots": {
+      "message": "No available {credential_type} credential slots on this device"
+    },
+    "no_available_user_slots": {
+      "message": "No available user slots on this device"
+    },
+    "set_credential_failed": {
+      "message": "Failed to set credential: {error}"
+    },
     "set_lock_usercode_failed": {
       "message": "Unable to set lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
+    "set_user_failed": {
+      "message": "Failed to set user: {error}"
+    },
+    "user_rejected_add_occupied": {
+      "message": "Cannot add user: the target slot is already in use."
+    },
+    "user_rejected_modify_empty": {
+      "message": "Cannot modify user: the slot is empty."
+    },
+    "user_rejected_unknown": {
+      "message": "The device rejected the user update without giving a reason."
     }
   },
   "issues": {
@@ -395,6 +470,52 @@
       },
       "name": "Clear lock user code"
     },
+    "delete_all_credentials": {
+      "description": "Deletes all credentials for a user on a lock.",
+      "fields": {
+        "user_id": {
+          "description": "User slot index to delete all credentials for.",
+          "name": "User index"
+        }
+      },
+      "name": "Delete all credentials"
+    },
+    "delete_all_users": {
+      "description": "Deletes all access-control users from a lock.",
+      "name": "Delete all users"
+    },
+    "delete_credential": {
+      "description": "Deletes a single credential from a lock.",
+      "fields": {
+        "credential_slot": {
+          "description": "Credential slot index to delete.",
+          "name": "Credential slot"
+        },
+        "credential_type": {
+          "description": "The type of credential to delete (pin_code or password).",
+          "name": "Credential type"
+        },
+        "user_id": {
+          "description": "User slot index that owns the credential.",
+          "name": "User index"
+        }
+      },
+      "name": "Delete credential"
+    },
+    "delete_user": {
+      "description": "Deletes a single access-control user from a lock.",
+      "fields": {
+        "user_id": {
+          "description": "User slot index to delete.",
+          "name": "User index"
+        }
+      },
+      "name": "Delete user"
+    },
+    "get_credential_capabilities": {
+      "description": "Queries the credential management capabilities of a lock.",
+      "name": "Get credential capabilities"
+    },
     "get_lock_usercode": {
       "description": "Gets user codes from a lock.",
       "fields": {
@@ -404,6 +525,10 @@
         }
       },
       "name": "Get lock user code"
+    },
+    "get_users": {
+      "description": "Lists all access-control users and their credential references on a lock.",
+      "name": "Get users"
     },
     "invoke_cc_api": {
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
@@ -611,6 +736,28 @@
       },
       "name": "Set device configuration parameter"
     },
+    "set_credential": {
+      "description": "Adds or updates a credential (PIN code or password) for an existing user on a lock entity. Call `set_user` first to create a user if needed.",
+      "fields": {
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
+        "credential_slot": {
+          "description": "Credential slot index. If not specified, the first available slot is used.",
+          "name": "Credential slot"
+        },
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
+        },
+        "user_id": {
+          "description": "User slot index to assign the credential to. Must refer to an existing user.",
+          "name": "User index"
+        }
+      },
+      "name": "Set credential"
+    },
     "set_lock_configuration": {
       "description": "Sets the configuration for a lock.",
       "fields": {
@@ -654,6 +801,32 @@
         }
       },
       "name": "Set lock user code"
+    },
+    "set_user": {
+      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_id for each targeted lock entity.",
+      "fields": {
+        "active": {
+          "description": "Whether the user is active.",
+          "name": "Active"
+        },
+        "credential_rule": {
+          "description": "Credential rule for the user (single, dual, or triple).",
+          "name": "Credential rule"
+        },
+        "user_id": {
+          "description": "User slot index. If not specified, the first available slot is used.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "Display name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user (e.g. general, programming, remote_only).",
+          "name": "User type"
+        }
+      },
+      "name": "Set user"
     },
     "set_value": {
       "description": "Changes any value that Z-Wave recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
