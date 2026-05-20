@@ -26,7 +26,7 @@ from tests.common import snapshot_platform
 MEMORIZED_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/12184029",
-    "number.garden_house_shutter_my_position",
+    "number.office_garden_house_shutter_my_position",
 )
 OFFICE_BLINDS_MEMORIZED_POSITION = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
@@ -36,12 +36,12 @@ OFFICE_BLINDS_MEMORIZED_POSITION = FixtureDevice(
 EXPECTED_NUMBER_OF_SHOWER = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#1",
-    "number.patio_water_heating_expected_number_of_shower",
+    "number.my_home_patio_water_heating_expected_number_of_shower",
 )
 COMFORT_ROOM_TEMPERATURE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "ovp://1234-5678-1698/374762#1",
-    "number.terrace_radiator_comfort_room_temperature",
+    "number.maple_residence_terrace_radiator_comfort_room_temperature",
 )
 
 SNAPSHOT_FIXTURES = [
