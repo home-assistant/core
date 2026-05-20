@@ -8,7 +8,7 @@ from freebox_api.exceptions import HttpRequestError
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, PLATFORMS
@@ -113,3 +113,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: FreeboxConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    router = config_entry.runtime_data
+    router_mac = dr.format_mac(router.mac)
+
+    # Persisted identifiers and connections may pre-date MAC normalisation, so
+    # always compare the format_mac()-normalised value rather than the raw one.
+    for domain, identifier in device_entry.identifiers:
+        if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
+            return False
+
+    for connection_type, connection_value in device_entry.connections:
+        if connection_type != dr.CONNECTION_NETWORK_MAC:
+            continue
+        connection_mac = dr.format_mac(connection_value)
+        # Never allow removal of the Freebox router itself, nor of a tracked
+        # LAN device whose MAC is still reported by the Freebox.
+        if connection_mac == router_mac or connection_mac in router.devices:
+            return False
+
+    return True

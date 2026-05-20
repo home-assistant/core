@@ -3,8 +3,12 @@
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,11 +30,32 @@ async def async_setup_entry(
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 
+    @callback
+    def remove_stale_entities() -> None:
+        """Drop entities for MACs the Freebox no longer reports."""
+        entity_registry = er.async_get(hass)
+        current_macs = set(router.devices)
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        ):
+            if registry_entry.domain != DEVICE_TRACKER_DOMAIN:
+                continue
+            stale_mac = dr.format_mac(registry_entry.unique_id)
+            if stale_mac not in current_macs:
+                entity_registry.async_remove(registry_entry.entity_id)
+                tracked.discard(stale_mac)
+
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
     )
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, router.signal_device_update, remove_stale_entities
+        )
+    )
 
     update_router()
+    remove_stale_entities()
 
 
 @callback
@@ -62,7 +87,7 @@ class FreeboxDevice(ScannerEntity):
         """Initialize a Freebox device."""
         self._router = router
         self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
-        self._mac = device["l2ident"]["id"]
+        self._mac = dr.format_mac(device["l2ident"]["id"])
         self._manufacturer = device["vendor_name"]
         self._attr_icon = icon_for_freebox_device(device)
         self._active = False
@@ -71,7 +96,10 @@ class FreeboxDevice(ScannerEntity):
     @callback
     def async_update_state(self) -> None:
         """Update the Freebox device."""
-        device = self._router.devices[self._mac]
+        # The router prunes stale devices on each scan; if this entity's MAC
+        # was just dropped, skip until the cleanup callback removes us.
+        if (device := self._router.devices.get(self._mac)) is None:
+            return
         self._active = device["active"]
         if device.get("attrs") is None:
             # device
