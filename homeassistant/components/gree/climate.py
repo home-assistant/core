@@ -175,7 +175,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             self.coordinator.device.power = False
             await self.coordinator.push_state_update()
             self.async_write_ha_state()
@@ -300,7 +300,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         units = self.coordinator.device.temperature_units
         if (
             units == TemperatureUnits.C
-            and self._attr_temperature_unit != UnitOfTemperature.CELSIUS
+            and self._attr_temperature_unit is not UnitOfTemperature.CELSIUS
         ):
             _LOGGER.debug("Setting temperature unit to Celsius")
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -308,7 +308,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_max_temp = TEMP_MAX
         elif (
             units == TemperatureUnits.F
-            and self._attr_temperature_unit != UnitOfTemperature.FAHRENHEIT
+            and self._attr_temperature_unit is not UnitOfTemperature.FAHRENHEIT
         ):
             _LOGGER.debug("Setting temperature unit to Fahrenheit")
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT

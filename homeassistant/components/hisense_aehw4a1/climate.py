@@ -249,7 +249,7 @@ class ClimateAehW4a1(ClimateEntity):
             )
             return
         if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.FAN_ONLY) and (
-            self._attr_hvac_mode != HVACMode.FAN_ONLY or fan_mode != FAN_AUTO
+            self._attr_hvac_mode is not HVACMode.FAN_ONLY or fan_mode != FAN_AUTO
         ):
             _LOGGER.debug(
                 "Setting fan mode of %s to %s", self._attr_unique_id, fan_mode
@@ -338,7 +338,7 @@ class ClimateAehW4a1(ClimateEntity):
         _LOGGER.debug(
             "Setting operation mode of %s to %s", self._attr_unique_id, hvac_mode
         )
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             await self._device.command(HA_STATE_TO_AC[hvac_mode])

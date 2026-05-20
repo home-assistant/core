@@ -78,10 +78,10 @@ async def add_switch_entities(
         for attribute in node.attributes
         if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
         and not (
-            attribute.type == AttributeType.ON_OFF and node.profile in LIGHT_PROFILES
+            attribute.type is AttributeType.ON_OFF and node.profile in LIGHT_PROFILES
         )
         and not (
-            attribute.type == AttributeType.MANUAL_OPERATION
+            attribute.type is AttributeType.MANUAL_OPERATION
             and node.profile in CLIMATE_PROFILES
         )
     )
@@ -112,7 +112,7 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         super().__init__(attribute, entry)
         self.entity_description = description
         if attribute.instance == 0:
-            if attribute.type == AttributeType.ON_OFF:
+            if attribute.type is AttributeType.ON_OFF:
                 self._attr_name = None
             else:
                 self._attr_translation_key = description.key

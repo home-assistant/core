@@ -197,7 +197,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             # Score up or down if item status changed
             if (
                 current_item.status is TodoItemStatus.NEEDS_ACTION
-                and item.status == TodoItemStatus.COMPLETED
+                and item.status is TodoItemStatus.COMPLETED
             ):
                 score_result = await self.coordinator.habitica.update_score(
                     UUID(item.uid), Direction.UP
@@ -205,7 +205,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 refresh_required = True
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
-                and item.status == TodoItemStatus.NEEDS_ACTION
+                and item.status is TodoItemStatus.NEEDS_ACTION
             ):
                 score_result = await self.coordinator.habitica.update_score(
                     UUID(item.uid), Direction.DOWN

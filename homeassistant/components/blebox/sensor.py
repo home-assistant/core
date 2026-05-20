@@ -153,7 +153,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
-        if self.state_class != SensorStateClass.TOTAL:
+        if self.state_class is not SensorStateClass.TOTAL:
             return None
         native_implementation = getattr(self._feature, "last_reset", None)
         return native_implementation or super().last_reset

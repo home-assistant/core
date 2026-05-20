@@ -23,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 def is_valid_zone(zone: evo.Zone) -> bool:
     """Check if an Evohome zone should have climate and button entities."""
     return (
-        zone.model == EvoZoneModelType.HEATING_ZONE
-        or zone.type == EvoZoneType.THERMOSTAT
+        zone.model is EvoZoneModelType.HEATING_ZONE
+        or zone.type is EvoZoneType.THERMOSTAT
     )
 
 

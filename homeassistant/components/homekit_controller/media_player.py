@@ -185,7 +185,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             _LOGGER.debug("Cannot play while already playing")
             return
 
@@ -200,7 +200,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state == MediaPlayerState.PAUSED:
+        if self.state is MediaPlayerState.PAUSED:
             _LOGGER.debug("Cannot pause while already paused")
             return
 
@@ -215,7 +215,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if self.state == MediaPlayerState.IDLE:
+        if self.state is MediaPlayerState.IDLE:
             _LOGGER.debug("Cannot stop when already idle")
             return
 

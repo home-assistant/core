@@ -161,7 +161,7 @@ class FibaroLight(FibaroEntity, LightEntity):
             if rgbw == (0, 0, 0, 0) and self.fibaro_device.last_color_set.has_color:
                 rgbw = self.fibaro_device.last_color_set.rgbw_color
 
-            if self.color_mode == ColorMode.RGB:
+            if self.color_mode is ColorMode.RGB:
                 self._attr_rgb_color = rgbw[:3]
             else:
                 self._attr_rgbw_color = rgbw

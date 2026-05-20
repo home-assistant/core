@@ -530,7 +530,7 @@ class _KnxLight(LightEntity):
                 await self._device.set_brightness(brightness)
                 return
             # brightness without color in kwargs; set via color
-            if self._attr_color_mode == ColorMode.XY:
+            if self._attr_color_mode is ColorMode.XY:
                 await self._device.set_xyy_color(XYYColor(brightness=brightness))
                 return
             # default to white if color not known for RGB(W)

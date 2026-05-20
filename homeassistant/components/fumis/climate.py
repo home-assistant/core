@@ -99,7 +99,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
     @fumis_exception_handler
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             await self.coordinator.client.turn_on()
         else:
             await self.coordinator.client.turn_off()

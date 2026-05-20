@@ -239,7 +239,7 @@ class ChannelsPlayer(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the player."""
-        if media_type == MediaType.CHANNEL:
+        if media_type is MediaType.CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
         elif media_type in {MediaType.MOVIE, MediaType.EPISODE, MediaType.TVSHOW}:

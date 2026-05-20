@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
         if (platform := TYPE_TO_PLATFORM.get(remote["Type"])) is None:
             continue
         uuid = remote["UUID"]
-        if platform == Platform.CLIMATE:
+        if platform is Platform.CLIMATE:
             updater = _async_climate_updater(lookin_protocol, uuid)
         else:
             updater = _async_remote_updater(lookin_protocol, uuid)

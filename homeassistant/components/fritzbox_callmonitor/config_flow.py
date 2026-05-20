@@ -151,7 +151,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         result = await self.hass.async_add_executor_job(self._try_connect)
 
-        if result == ConnectResult.INVALID_AUTH:
+        if result is ConnectResult.INVALID_AUTH:
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA_USER,

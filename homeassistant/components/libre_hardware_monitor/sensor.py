@@ -96,7 +96,7 @@ class LibreHardwareMonitorSensor(
         max_value = sensor_data.max
         unit = sensor_data.unit
 
-        if not is_deprecated_lhm_version and sensor_data.type == SensorType.THROUGHPUT:
+        if not is_deprecated_lhm_version and sensor_data.type is SensorType.THROUGHPUT:
             # Temporary fix: convert the B/s value to KB/s to not break existing entries
             # This will be migrated properly once SensorDeviceClass is introduced
             value = f"{(float(value) / 1024):.1f}" if value else None

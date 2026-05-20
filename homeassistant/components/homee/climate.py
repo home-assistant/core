@@ -163,7 +163,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         assert self._heating_mode is not None
         await self.async_set_homee_value(
             self._heating_mode,
-            (hvac_mode == HVACMode.HEAT) + self._heating_mode.minimum,
+            (hvac_mode is HVACMode.HEAT) + self._heating_mode.minimum,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

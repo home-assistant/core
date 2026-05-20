@@ -590,7 +590,7 @@ def device_class_and_uom(
     dsmr_object = getattr(data, entity_description.obis_reference)
     uom: str | None = dsmr_object.unit or None
     with suppress(ValueError):
-        if entity_description.device_class == SensorDeviceClass.GAS and (
+        if entity_description.device_class is SensorDeviceClass.GAS and (
             enery_uom := UnitOfEnergy(str(uom))
         ):
             return (SensorDeviceClass.ENERGY, enery_uom)
@@ -994,7 +994,7 @@ class DSMREntity(SensorEntity):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
-        if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
+        if not value and self.state_class is SensorStateClass.TOTAL_INCREASING:
             return None
 
         return value

@@ -28,7 +28,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     DormakabaDkeyBinarySensorDescription(
         key="door_position",
         device_class=BinarySensorDeviceClass.DOOR,
-        is_on=lambda state: state.door_position == DoorPosition.OPEN,
+        is_on=lambda state: state.door_position is DoorPosition.OPEN,
     ),
     DormakabaDkeyBinarySensorDescription(
         key="security_locked",

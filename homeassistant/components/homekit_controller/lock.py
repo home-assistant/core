@@ -81,7 +81,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
         return (
             CURRENT_STATE_MAP[current_value] == LockState.UNLOCKED
-            and REVERSED_TARGET_STATE_MAP.get(target_value) == LockState.LOCKED
+            and REVERSED_TARGET_STATE_MAP.get(target_value) is LockState.LOCKED
         )
 
     @property
@@ -95,7 +95,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
         return (
             CURRENT_STATE_MAP[current_value] == LockState.LOCKED
-            and REVERSED_TARGET_STATE_MAP.get(target_value) == LockState.UNLOCKED
+            and REVERSED_TARGET_STATE_MAP.get(target_value) is LockState.UNLOCKED
         )
 
     @property

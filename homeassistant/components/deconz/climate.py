@@ -166,7 +166,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
         if len(self._attr_hvac_modes) == 2:  # Only allow turn on and off thermostat
             await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
-                on=hvac_mode != HVACMode.OFF,
+                on=hvac_mode is not HVACMode.OFF,
             )
         else:
             await self.hub.api.sensors.thermostat.set_config(
@@ -180,10 +180,10 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
         Preset 'BOOST' is interpreted as 'state_on'.
         """
-        if self._device.mode == ThermostatMode.OFF:
+        if self._device.mode is ThermostatMode.OFF:
             return HVACAction.OFF
 
-        if self._device.state_on or self._device.preset == ThermostatPreset.BOOST:
+        if self._device.state_on or self._device.preset is ThermostatPreset.BOOST:
             if self._device.mode == ThermostatMode.COOL:
                 return HVACAction.COOLING
             return HVACAction.HEATING
@@ -218,7 +218,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if self._device.mode == ThermostatMode.COOL and self._device.cooling_setpoint:
+        if self._device.mode is ThermostatMode.COOL and self._device.cooling_setpoint:
             return self._device.scaled_cooling_setpoint
 
         if self._device.heating_setpoint:
@@ -231,7 +231,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        if self._device.mode == ThermostatMode.COOL:
+        if self._device.mode is ThermostatMode.COOL:
             await self.hub.api.sensors.thermostat.set_config(
                 id=self._device.resource_id,
                 cooling_setpoint=kwargs[ATTR_TEMPERATURE] * 100,

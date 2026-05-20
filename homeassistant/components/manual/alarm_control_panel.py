@@ -64,7 +64,7 @@ SUPPORTED_STATES = [
 ]
 
 SUPPORTED_PRETRIGGER_STATES = [
-    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.TRIGGERED
+    state for state in SUPPORTED_STATES if state is not AlarmControlPanelState.TRIGGERED
 ]
 
 SUPPORTED_ARMING_STATES = [
@@ -257,7 +257,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
     @property
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        if self._state == AlarmControlPanelState.TRIGGERED:
+        if self._state is AlarmControlPanelState.TRIGGERED:
             if self._within_pending_time(self._state):
                 return AlarmControlPanelState.PENDING
             trigger_time: datetime.timedelta = self._trigger_time_by_state[
@@ -359,7 +359,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     def _async_update_state(self, state: AlarmControlPanelState) -> None:
         """Update the state."""
-        if self._state == state:
+        if self._state is state:
             return
 
         self._previous_state = self._state
@@ -370,7 +370,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     def _async_set_state_update_events(self) -> None:
         state = self._state
-        if state == AlarmControlPanelState.TRIGGERED:
+        if state is AlarmControlPanelState.TRIGGERED:
             pending_time = self._pending_time(state)
             async_track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time

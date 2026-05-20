@@ -21,7 +21,7 @@ class VadSensitivity(StrEnum):
     def to_seconds(sensitivity: VadSensitivity | str) -> float:
         """Return seconds of silence for sensitivity level."""
         sensitivity = VadSensitivity(sensitivity)
-        if sensitivity == VadSensitivity.RELAXED:
+        if sensitivity is VadSensitivity.RELAXED:
             return 1.25
 
         if sensitivity == VadSensitivity.AGGRESSIVE:

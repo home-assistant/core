@@ -270,7 +270,7 @@ class AlexaIntentResponse:
 
         card = {"type": card_type.value}
 
-        if card_type == CardType.link_account:
+        if card_type is CardType.link_account:
             self.card = card
             return
 
@@ -282,7 +282,7 @@ class AlexaIntentResponse:
         """Add speech to the response."""
         assert self.speech is None
 
-        key = "ssml" if speech_type == SpeechType.ssml else "text"
+        key = "ssml" if speech_type is SpeechType.ssml else "text"
 
         self.speech = {"type": speech_type.value, key: text}
 
@@ -290,7 +290,7 @@ class AlexaIntentResponse:
         """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
-        key = "ssml" if speech_type == SpeechType.ssml else "text"
+        key = "ssml" if speech_type is SpeechType.ssml else "text"
 
         self.should_end_session = False
 

@@ -90,7 +90,7 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         features = BASE_FEATURES
         if self.client.state.pre_amp_mode:
             features |= PREAMP_FEATURES
-        if self.client.state.control_bus == ControlBusMode.AMPLIFIER:
+        if self.client.state.control_bus is ControlBusMode.AMPLIFIER:
             features |= MediaPlayerEntityFeature.VOLUME_STEP
         if TransportControl.PLAY_PAUSE in controls:
             features |= MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE

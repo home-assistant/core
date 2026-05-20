@@ -190,12 +190,12 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             value = list(rgbww)
 
         if rgb is not None:
-            if self.color_mode == ColorMode.RGB and brightness is None:
+            if self.color_mode is ColorMode.RGB and brightness is None:
                 brightness = self.brightness
             value = list(rgb)
 
         if brightness is not None:
-            if self.color_mode == ColorMode.COLOR_TEMP:
+            if self.color_mode is ColorMode.COLOR_TEMP:
                 value = feature.return_color_temp_with_brightness(
                     self._color_temp_to_native_scale(self.color_temp_kelvin),
                     brightness,

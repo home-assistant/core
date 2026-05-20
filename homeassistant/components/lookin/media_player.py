@@ -48,7 +48,7 @@ async def async_setup_entry(
     entities = []
 
     for remote in lookin_data.devices:
-        if TYPE_TO_PLATFORM.get(remote["Type"]) != Platform.MEDIA_PLAYER:
+        if TYPE_TO_PLATFORM.get(remote["Type"]) is not Platform.MEDIA_PLAYER:
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]

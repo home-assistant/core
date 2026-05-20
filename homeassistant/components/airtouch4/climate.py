@@ -152,7 +152,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
             return
         await self._airtouch.SetCoolingModeForAc(
@@ -260,10 +260,10 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
             return
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             await self.async_turn_on()
         self._unit = self._airtouch.GetGroups()[self._group_number]
         _LOGGER.debug(

@@ -214,7 +214,7 @@ async def websocket_run(
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
         )
-    elif start_stage == PipelineStage.INTENT:
+    elif start_stage is PipelineStage.INTENT:
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:

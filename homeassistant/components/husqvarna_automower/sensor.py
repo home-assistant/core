@@ -88,7 +88,7 @@ def _get_restricted_reason(data: MowerAttributes) -> str:
     If there is an external reason, return that instead, if it's available.
     """
     if (
-        data.planner.restricted_reason == RestrictedReasons.EXTERNAL
+        data.planner.restricted_reason is RestrictedReasons.EXTERNAL
         and data.planner.external_reason is not None
     ):
         return data.planner.external_reason
@@ -176,7 +176,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         option_fn=lambda data: list(MowerModes),
         value_fn=(
             lambda data: (
-                data.mower.mode if data.mower.mode != MowerModes.UNKNOWN else None
+                data.mower.mode if data.mower.mode is not MowerModes.UNKNOWN else None
             )
         ),
     ),

@@ -152,7 +152,7 @@ CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
 SELECTABLE_MODELS: list[str] = [
-    model.value for model in BeoModel if model != BeoModel.BEOREMOTE_ONE
+    model.value for model in BeoModel if model is not BeoModel.BEOREMOTE_ONE
 ]
 
 MANUFACTURER: Final[str] = "Bang & Olufsen"

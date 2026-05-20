@@ -239,7 +239,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             return None
 
         mediastate = self.state
-        if self._last_status_update is None or mediastate == MediaPlayerState.IDLE:
+        if self._last_status_update is None or mediastate is MediaPlayerState.IDLE:
             return None
 
         position = self._status.seconds

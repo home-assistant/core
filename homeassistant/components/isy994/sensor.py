@@ -162,7 +162,7 @@ def _check_volume_flow_rate_uom(
     uom: str | list[str] | None,
 ) -> SensorDeviceClass | None:
     """Check if the volume flow rate unit is supported."""
-    if device_class != SensorDeviceClass.VOLUME_FLOW_RATE:
+    if device_class is not SensorDeviceClass.VOLUME_FLOW_RATE:
         return device_class
     # Backwards compatibility for ISYv4 firmware which may return a list.
     if isinstance(uom, list):

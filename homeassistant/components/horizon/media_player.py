@@ -105,12 +105,12 @@ class HorizonDevice(MediaPlayerEntity):
 
     def turn_on(self) -> None:
         """Turn the device on."""
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
     def turn_off(self) -> None:
         """Turn the device off."""
-        if self.state != MediaPlayerState.OFF:
+        if self.state is not MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
     def media_previous_track(self) -> None:
@@ -136,7 +136,7 @@ class HorizonDevice(MediaPlayerEntity):
     def media_play_pause(self) -> None:
         """Send play/pause command."""
         self._send_key(self._keys.PAUSE)
-        if self.state == MediaPlayerState.PAUSED:
+        if self.state is MediaPlayerState.PAUSED:
             self._attr_state = MediaPlayerState.PLAYING
         else:
             self._attr_state = MediaPlayerState.PAUSED
@@ -145,7 +145,7 @@ class HorizonDevice(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media / switch to channel."""
-        if media_type == MediaType.CHANNEL:
+        if media_type is MediaType.CHANNEL:
             try:
                 self._select_channel(int(media_id))
                 self._attr_state = MediaPlayerState.PLAYING

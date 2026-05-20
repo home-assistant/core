@@ -538,7 +538,7 @@ def _find_timer(
     if find_filter:
         # Filter by active state
         has_filter = True
-        if find_filter == FindTimerFilter.ONLY_ACTIVE:
+        if find_filter is FindTimerFilter.ONLY_ACTIVE:
             matching_timers = [t for t in matching_timers if t.is_active]
         elif find_filter == FindTimerFilter.ONLY_INACTIVE:
             matching_timers = [t for t in matching_timers if not t.is_active]

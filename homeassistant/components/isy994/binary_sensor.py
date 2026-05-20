@@ -154,7 +154,7 @@ async def async_setup_entry(
                 entities.append(entity)
             continue
         if (
-            device_class == BinarySensorDeviceClass.MOTION
+            device_class is BinarySensorDeviceClass.MOTION
             and device_type is not None
             and any(device_type.startswith(t) for t in TYPE_INSTEON_MOTION)
         ):

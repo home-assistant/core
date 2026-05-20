@@ -116,7 +116,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
         # Config schema only allows for:
         # UnitOfTemperature.CELSIUS and
         # UnitOfTemperature.FAHRENHEIT
-        if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:
+        if self.unit is pypck.lcn_defs.VarUnit.FAHRENHEIT:
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS
 
@@ -142,7 +142,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             if not await self.device_connection.lock_regulator(
                 self.regulator_id, False
             ):
@@ -188,11 +188,11 @@ class LcnClimate(LcnEntity, ClimateEntity):
         if not isinstance(input_obj, pypck.inputs.ModStatusVar):
             return
         self._attr_available = True
-        if input_obj.get_var() == self.variable:
+        if input_obj.get_var() is self.variable:
             self._attr_current_temperature = float(
                 input_obj.get_value().to_var_unit(self.unit)
             )
-        elif input_obj.get_var() == self.setpoint:
+        elif input_obj.get_var() is self.setpoint:
             self._is_on = not input_obj.get_value().is_locked_regulator()
             if self._is_on:
                 self._attr_target_temperature = float(

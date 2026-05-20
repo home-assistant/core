@@ -25,7 +25,7 @@ async def async_setup_entry(
     entities = []
 
     for remote in lookin_data.devices:
-        if TYPE_TO_PLATFORM.get(remote["Type"]) != Platform.LIGHT:
+        if TYPE_TO_PLATFORM.get(remote["Type"]) is not Platform.LIGHT:
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]

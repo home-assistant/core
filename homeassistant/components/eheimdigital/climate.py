@@ -106,7 +106,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
                 await self._device.set_active(active=True)
 
     def _async_update_attrs(self) -> None:
-        if self._device.temperature_unit == HeaterUnit.CELSIUS:
+        if self._device.temperature_unit is HeaterUnit.CELSIUS:
             self._attr_min_temp = 18
             self._attr_max_temp = 32
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS

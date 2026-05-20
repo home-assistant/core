@@ -171,7 +171,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             return await self.async_set_temperature(temperature=MIN_TEMP)
         if hvac_mode == HVACMode.HEAT:
             return await self.async_set_temperature(temperature=MAX_TEMP)

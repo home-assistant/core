@@ -311,7 +311,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         hvac_mode = self.hvac_mode
-        if hvac_mode == HVACMode.COOL:
+        if hvac_mode is HVACMode.COOL:
             return self._cool_setpoint
         if hvac_mode == HVACMode.HEAT:
             return self._heat_setpoint
@@ -320,14 +320,14 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the high target temperature for auto mode."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._cool_setpoint
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the low target temperature for auto mode."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._heat_setpoint
         return None
 
@@ -368,7 +368,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         # Handle temperature range for auto mode
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             if low_temp is not None:
                 if self.temperature_unit == UnitOfTemperature.CELSIUS:
                     await c4_climate.setHeatSetpointC(low_temp)

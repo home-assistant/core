@@ -330,7 +330,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             await self._player.play_quick_select(index)
             return
 
-        if media_type == MediaType.PLAYLIST:
+        if media_type is MediaType.PLAYLIST:
             playlists = await self.coordinator.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:

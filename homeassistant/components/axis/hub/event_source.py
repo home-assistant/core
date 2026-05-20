@@ -47,7 +47,7 @@ class AxisEventSource:
     @callback
     def _disconnect_from_stream(self) -> None:
         """Stop stream."""
-        if self.api.stream.state != State.STOPPED:
+        if self.api.stream.state is not State.STOPPED:
             self.api.stream.connection_status_callback.clear()
         self.api.stream.stop()
 
@@ -59,7 +59,7 @@ class AxisEventSource:
             # This means the user has too low privileges
             return
 
-        if status.status.state == ClientState.ACTIVE:
+        if status.status.state is ClientState.ACTIVE:
             self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
                     hass, f"{status.config.device_topic_prefix}/#", self._mqtt_message
@@ -85,6 +85,6 @@ class AxisEventSource:
         Only signal state change if state change is true.
         """
 
-        if self.available != (status == Signal.PLAYING):
+        if self.available != (status is Signal.PLAYING):
             self.available = not self.available
             async_dispatcher_send(self.hass, self.signal_reachable)

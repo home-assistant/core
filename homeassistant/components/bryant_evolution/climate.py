@@ -199,7 +199,7 @@ class BryantEvolutionClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.HEAT_COOL:
+        if hvac_mode is HVACMode.HEAT_COOL:
             hvac_mode = HVACMode.AUTO
         if not await self._client.set_hvac_mode(hvac_mode):
             raise HomeAssistantError(
@@ -230,7 +230,7 @@ class BryantEvolutionClimate(ClimateEntity):
             temp = int(value)
             fn = (
                 self._client.set_heating_setpoint
-                if self.hvac_mode == HVACMode.HEAT
+                if self.hvac_mode is HVACMode.HEAT
                 else self._client.set_cooling_setpoint
             )
             if not await fn(temp):

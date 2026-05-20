@@ -26,7 +26,7 @@ async def add_siren_entities(
         HomeeSiren(attribute, config_entry)
         for node in nodes
         for attribute in node.attributes
-        if attribute.type == AttributeType.SIREN
+        if attribute.type is AttributeType.SIREN
     )
 
 

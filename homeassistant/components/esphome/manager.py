@@ -703,7 +703,7 @@ class ESPHomeManager:
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""
-        if request.type != ZWaveProxyRequestType.HOME_ID_CHANGE:
+        if request.type is not ZWaveProxyRequestType.HOME_ID_CHANGE:
             return
         # ESPHome will send a home id change on every connection
         # if the Z-Wave controller is connected to the ESPHome device
@@ -896,7 +896,7 @@ class ESPHomeManager:
     def _async_handle_logging_changed(self, _event: Event) -> None:
         """Handle when the logging level changes."""
         self.cli.set_debug(_LOGGER.isEnabledFor(logging.DEBUG))
-        if self.entry.options.get(CONF_SUBSCRIBE_LOGS) and self._log_level != (
+        if self.entry.options.get(CONF_SUBSCRIBE_LOGS) and self._log_level is not (
             new_log_level := self._async_get_equivalent_log_level()
         ):
             self._async_subscribe_logs(new_log_level)
@@ -1165,7 +1165,7 @@ async def execute_service(
     # Determine if we should wait for a response
     # NONE: fire and forget
     # OPTIONAL/ONLY/STATUS: always wait for success/error confirmation
-    wait_for_response = supports_response != SupportsResponseType.NONE
+    wait_for_response = supports_response is not SupportsResponseType.NONE
 
     if not wait_for_response:
         # Fire and forget - no response expected
@@ -1188,7 +1188,7 @@ async def execute_service(
     # ONLY: always need response_data
     # OPTIONAL: only if caller requested it
     # STATUS: never need response_data (just success/error)
-    need_response_data = supports_response == SupportsResponseType.ONLY or (
+    need_response_data = supports_response is SupportsResponseType.ONLY or (
         supports_response == SupportsResponseType.OPTIONAL and call.return_response
     )
 

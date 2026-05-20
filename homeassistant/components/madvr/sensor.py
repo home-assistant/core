@@ -276,7 +276,7 @@ class MadvrSensor(MadVREntity, SensorEntity):
         """Return the state of the sensor."""
         val = self.entity_description.value_fn(self.coordinator)
         # check if sensor is enum
-        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+        if self.entity_description.device_class is SensorDeviceClass.ENUM:
             if (
                 self.entity_description.options
                 and val in self.entity_description.options

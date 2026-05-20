@@ -47,7 +47,7 @@ SENSORS: tuple[AcaiaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         unit_fn=lambda data: (
             UnitOfMass.OUNCES
-            if data.units == AcaiaUnitOfMass.OUNCES
+            if data.units is AcaiaUnitOfMass.OUNCES
             else UnitOfMass.GRAMS
         ),
         value_fn=lambda scale: scale.weight,

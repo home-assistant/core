@@ -91,7 +91,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get the precision based on the unit."""
         return (
             PRECISION_HALVES
-            if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
+            if self.hass.config.units.temperature_unit is UnitOfTemperature.CELSIUS
             else PRECISION_WHOLE
         )
 
@@ -169,7 +169,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         hvac_mode = self.hvac_mode
 
-        if hvac_mode == HVACMode.COOL:
+        if hvac_mode is HVACMode.COOL:
             return self.target_temperature_high
         if hvac_mode == HVACMode.HEAT:
             return self.target_temperature_low
@@ -181,7 +181,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get the step for the target temperature based on the unit."""
         return (
             0.5
-            if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
+            if self.hass.config.units.temperature_unit is UnitOfTemperature.CELSIUS
             else 1
         )
 

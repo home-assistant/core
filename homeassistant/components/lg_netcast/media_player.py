@@ -259,7 +259,7 @@ class LgTVDevice(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Tune to channel."""
-        if media_type != MediaType.CHANNEL:
+        if media_type is not MediaType.CHANNEL:
             raise ValueError(f"Invalid media type: {media_type}")
 
         for name, channel in self._sources.items():

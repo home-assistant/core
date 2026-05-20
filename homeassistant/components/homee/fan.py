@@ -33,7 +33,7 @@ async def add_fan_entities(
     async_add_entities(
         HomeeFan(node, config_entry)
         for node in nodes
-        if node.profile == NodeProfile.VENTILATION_CONTROL
+        if node.profile is NodeProfile.VENTILATION_CONTROL
     )
 
 

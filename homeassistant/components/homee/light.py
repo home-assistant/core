@@ -60,7 +60,7 @@ def get_light_attribute_sets(
     """Return the lights with their attributes as found in the node."""
     lights: list[dict[AttributeType, HomeeAttribute]] = []
     on_off_attributes = [
-        i for i in node.attributes if i.type == AttributeType.ON_OFF and i.editable
+        i for i in node.attributes if i.type is AttributeType.ON_OFF and i.editable
     ]
     for a in on_off_attributes:
         attribute_dict: dict[AttributeType, HomeeAttribute] = {a.type: a}

@@ -53,7 +53,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
         """Return true if the add-on is on."""
         return (
             self.coordinator.data.addons[self._addon_slug].addon.state
-            == AddonState.STARTED
+            is AddonState.STARTED
         )
 
     @property

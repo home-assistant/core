@@ -129,7 +129,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         """Return dynamic feature flags based on the current mode."""
         flags = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             flags |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         elif self.client.mode_supports_temperature():
             flags |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -257,7 +257,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return await self.client.async_set_temperature(
                 self.temperature_unit,
                 **{
@@ -297,7 +297,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
 
         # Select the first supported non-off mode when turning on
         for mode in modes:
-            if mode != HVACMode.OFF:
+            if mode is not HVACMode.OFF:
                 await self.async_set_hvac_mode(mode)
                 return
 

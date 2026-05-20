@@ -975,7 +975,7 @@ class PipelineRun:
 
         _LOGGER.debug("speech-to-text result %s", result)
 
-        if result.result != stt.SpeechResultState.SUCCESS:
+        if result.result is not stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
                 code="stt-stream-failed",
                 message="speech-to-text failed",
@@ -1355,7 +1355,7 @@ class PipelineRun:
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
         if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
+            intent_response.response_type is not intent.IntentResponseType.ACTION_DONE
             or not intent_response.matched_states
         ):
             return False
@@ -1718,7 +1718,7 @@ class PipelineInput:
                     # Volume multiplier only
                     stt_processed_stream = self.run.process_volume_only(self.stt_stream)
 
-            if current_stage == PipelineStage.WAKE_WORD:
+            if current_stage is PipelineStage.WAKE_WORD:
                 # wake-word-detection
                 assert stt_processed_stream is not None
                 detect_result = await self.run.wake_word_detection(
@@ -1732,7 +1732,7 @@ class PipelineInput:
 
             # speech-to-text
             intent_input = self.intent_input
-            if current_stage == PipelineStage.STT:
+            if current_stage is PipelineStage.STT:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
@@ -1782,11 +1782,11 @@ class PipelineInput:
                 )
                 current_stage = PipelineStage.INTENT
 
-            if self.run.end_stage != PipelineStage.STT:
+            if self.run.end_stage is not PipelineStage.STT:
                 tts_input = self.tts_input
                 all_targets_in_satellite_area = False
 
-                if current_stage == PipelineStage.INTENT:
+                if current_stage is PipelineStage.INTENT:
                     # intent-recognition
                     assert intent_input is not None
                     (
@@ -1805,7 +1805,7 @@ class PipelineInput:
 
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
-                    if current_stage == PipelineStage.TTS:
+                    if current_stage is PipelineStage.TTS:
                         if all_targets_in_satellite_area:
                             # Use acknowledge media instead of full response
                             await self.run.text_to_speech(
@@ -1842,7 +1842,7 @@ class PipelineInput:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech-to-text"
                 )
-        elif self.run.start_stage == PipelineStage.INTENT:
+        elif self.run.start_stage is PipelineStage.INTENT:
             if self.intent_input is None:
                 raise PipelineRunValidationError(
                     "intent_input is required for intent recognition"
@@ -1852,7 +1852,7 @@ class PipelineInput:
                 raise PipelineRunValidationError(
                     "tts_input is required for text-to-speech"
                 )
-        if self.run.end_stage == PipelineStage.TTS:
+        if self.run.end_stage is PipelineStage.TTS:
             if self.run.pipeline.tts_engine is None:
                 raise PipelineRunValidationError(
                     "the pipeline does not support text-to-speech"

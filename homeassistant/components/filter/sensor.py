@@ -401,7 +401,7 @@ class SensorFilter(SensorEntity):
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        if self._state is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
+        if self._state is not None and self.device_class is SensorDeviceClass.TIMESTAMP:
             return datetime.fromisoformat(str(self._state))
 
         return self._state

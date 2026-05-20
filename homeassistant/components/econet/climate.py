@@ -121,7 +121,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     @property
     def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self._econet.cool_set_point
         if self.hvac_mode == HVACMode.HEAT:
             return self._econet.heat_set_point
@@ -130,14 +130,14 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     @property
     def target_temperature_low(self) -> int | None:
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._econet.heat_set_point
         return None
 
     @property
     def target_temperature_high(self) -> int | None:
         """Return the higher bound temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._econet.cool_set_point
         return None
 

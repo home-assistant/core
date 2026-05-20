@@ -300,7 +300,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.hass.config.units.temperature_unit is UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -652,7 +652,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # then we can just turn on the other mode.
         if len(self.hvac_modes) == 2 and HVACMode.OFF in self.hvac_modes:
             for mode in self.hvac_modes:
-                if mode != HVACMode.OFF:
+                if mode is not HVACMode.OFF:
                     await self.async_set_hvac_mode(mode)
                     return
 
@@ -695,7 +695,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         # We assume that since turn_off is supported, HVACMode.OFF is as well.
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()

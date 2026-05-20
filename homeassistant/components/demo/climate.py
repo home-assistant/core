@@ -64,7 +64,7 @@ async def async_setup_entry(
                 hvac_action=HVACAction.COOLING,
                 target_temp_high=None,
                 target_temp_low=None,
-                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT_COOL],
+                hvac_modes=[cls for cls in HVACMode if cls is not HVACMode.HEAT_COOL],
                 target_humidity_step=5,
             ),
             DemoClimate(
@@ -84,7 +84,7 @@ async def async_setup_entry(
                 hvac_action=None,
                 target_temp_high=24,
                 target_temp_low=21,
-                hvac_modes=[cls for cls in HVACMode if cls != HVACMode.HEAT],
+                hvac_modes=[cls for cls in HVACMode if cls is not HVACMode.HEAT],
             ),
         ]
     )

@@ -383,7 +383,7 @@ class ItunesDevice(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
-        if media_type == MediaType.PLAYLIST:
+        if media_type is MediaType.PLAYLIST:
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 

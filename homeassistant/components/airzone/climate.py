@@ -217,7 +217,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         slave_raise = False
 
         params = {}
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             params[API_ON] = 0
         else:
             mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
@@ -273,7 +273,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if (
             self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+            and self._attr_hvac_mode is HVACMode.HEAT_COOL
         ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_COOL_TEMP_SET

@@ -127,13 +127,13 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._options_map: dict[str, str] = {}
-        if self.device_class == SensorDeviceClass.ENUM:
+        if self.device_class is SensorDeviceClass.ENUM:
             self._options_map = coordinator.get_options_map(self.command.name)
 
     @property
     def options(self) -> list[str] | None:
         """Return a set of possible options."""
-        if self.device_class == SensorDeviceClass.ENUM:
+        if self.device_class is SensorDeviceClass.ENUM:
             return list(self._options_map.values())
         return None
 
@@ -145,7 +145,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
         if value is None:
             return None
 
-        if self.device_class == SensorDeviceClass.ENUM:
+        if self.device_class is SensorDeviceClass.ENUM:
             return self._options_map.get(value)
 
         return value

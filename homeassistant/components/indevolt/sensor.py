@@ -872,7 +872,7 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
         # Sort options (prevent randomization) for ENUM values
-        if description.device_class == SensorDeviceClass.ENUM:
+        if description.device_class is SensorDeviceClass.ENUM:
             self._attr_options = sorted(set(description.state_mapping.values()))
 
     @property
@@ -893,7 +893,7 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
             return None
 
         # Return descriptions for ENUM values
-        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+        if self.entity_description.device_class is SensorDeviceClass.ENUM:
             return self.entity_description.state_mapping.get(raw_value)
 
         return cast(str | int | float, raw_value)

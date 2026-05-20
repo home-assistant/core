@@ -134,7 +134,7 @@ class HomeConnectRuntimeData:
                     retry_time = 10
                     event_message_ha_id = event_message.ha_id
                     if event_message_ha_id in self.appliance_coordinators:
-                        if event_message.type == EventType.DEPAIRED:
+                        if event_message.type is EventType.DEPAIRED:
                             appliance_coordinator = self.appliance_coordinators.pop(
                                 event_message.ha_id
                             )
@@ -147,7 +147,7 @@ class HomeConnectRuntimeData:
                                 appliance_coordinator.data.info.connected = True
                                 appliance_coordinator.call_all_event_listeners()
 
-                    elif event_message.type == EventType.PAIRED:
+                    elif event_message.type is EventType.PAIRED:
                         appliance_coordinator = HomeConnectApplianceCoordinator(
                             self.hass,
                             self.config_entry,
@@ -291,7 +291,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             value=event.value,
                         )
                     if (
-                        status_key == StatusKey.BSH_COMMON_OPERATION_STATE
+                        status_key is StatusKey.BSH_COMMON_OPERATION_STATE
                         and event.value == BSH_OPERATION_STATE_PAUSE
                         and CommandKey.BSH_COMMON_RESUME_PROGRAM
                         not in (commands := self.data.commands)
@@ -542,7 +542,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                             # options from the favorite program.
                             # We can attempt to get the base program and get the options
                             for option in program_options:
-                                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
+                                if option.key is OptionKey.BSH_COMMON_BASE_PROGRAM:
                                     current_program_key = ProgramKey(option.value)
                                     break
 

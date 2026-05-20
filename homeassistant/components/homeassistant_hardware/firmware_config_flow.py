@@ -241,7 +241,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
             firmware_install_required = self._probed_firmware_info is None or (
                 self._probed_firmware_info.firmware_type
-                != expected_installed_firmware_type
+                is not expected_installed_firmware_type
             )
 
             session = async_get_clientsession(self.hass)
@@ -400,7 +400,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     async def _async_continue_picked_firmware(self) -> ConfigFlowResult:
         """Continue to the picked firmware step."""
-        if self._picked_firmware_type == PickedFirmwareType.ZIGBEE:
+        if self._picked_firmware_type is PickedFirmwareType.ZIGBEE:
             return await self.async_step_install_zigbee_firmware()
 
         return await self.async_step_install_thread_firmware()
@@ -418,7 +418,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
 
         if addon_info.state == AddonState.RUNNING:
@@ -460,7 +460,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
         assert self._hardware_name is not None
 
-        if self._zigbee_integration == ZigbeeIntegration.OTHER:
+        if self._zigbee_integration is ZigbeeIntegration.OTHER:
             return await self.async_step_show_z2m_docs_url()
 
         result = await self.hass.config_entries.flow.async_init(

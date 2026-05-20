@@ -255,7 +255,7 @@ class LunatoneLineBroadcastLight(
     def available(self) -> bool:
         """Return True if entity is available."""
         line_status = self.coordinator.data.lines[str(self._broadcast.line)].line_status
-        return super().available and line_status == LineStatus.OK
+        return super().available and line_status is LineStatus.OK
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the line to turn on."""

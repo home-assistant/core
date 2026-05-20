@@ -50,5 +50,5 @@ class DataGrandLyonVelovBinarySensor(DataGrandLyonVelovEntity, BinarySensorEntit
     def is_on(self) -> bool:
         """Return true if the station is open."""
         return (
-            self.coordinator.data[self._subentry_id].status == VelovStationStatus.OPEN
+            self.coordinator.data[self._subentry_id].status is VelovStationStatus.OPEN
         )

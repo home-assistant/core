@@ -402,7 +402,7 @@ class BackupManager:
             """Set manager to idle after start."""
             self.async_on_backup_event(IdleEvent())
 
-        if self.state == BackupManagerState.BLOCKED:
+        if self.state is BackupManagerState.BLOCKED:
             # If we're not finishing a restore job, set the manager to idle after start
             start.async_at_started(self.hass, set_manager_idle_after_start)
 
@@ -1441,7 +1441,7 @@ class BackupManager:
         event: ManagerStateEvent,
     ) -> None:
         """Forward event to subscribers."""
-        if (current_state := self.state) != (new_state := event.manager_state):
+        if (current_state := self.state) is not (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         if not isinstance(event, UploadBackupEvent):
             self.last_event = event

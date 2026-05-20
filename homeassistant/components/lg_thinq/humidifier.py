@@ -118,7 +118,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self._attr_action = (
                 HumidifierAction.DRYING
                 if self.entity_description.device_class
-                == HumidifierDeviceClass.DEHUMIDIFIER
+                is HumidifierDeviceClass.DEHUMIDIFIER
                 else HumidifierAction.HUMIDIFYING
             )
         else:

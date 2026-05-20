@@ -160,7 +160,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             continue
         if (entity_entry := registry.async_get(entity_id)) is None:
             continue
-        if entity_entry.hidden_by != er.RegistryEntryHider.INTEGRATION:
+        if entity_entry.hidden_by is not er.RegistryEntryHider.INTEGRATION:
             continue
 
         registry.async_update_entity(entity_id, hidden_by=None)

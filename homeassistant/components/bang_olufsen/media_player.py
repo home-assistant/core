@@ -673,7 +673,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
 
     async def async_media_play_pause(self) -> None:
         """Toggle play/pause media player."""
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             await self.async_media_pause()
         elif self.state in (MediaPlayerState.PAUSED, MediaPlayerState.IDLE):
             await self.async_media_play()

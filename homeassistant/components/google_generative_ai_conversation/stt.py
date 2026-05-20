@@ -229,7 +229,7 @@ class GoogleGenerativeAISttEntity(
         audio_data = b""
         async for chunk in stream:
             audio_data += chunk
-        if metadata.format == stt.AudioFormats.WAV:
+        if metadata.format is stt.AudioFormats.WAV:
             audio_data = convert_to_wav(
                 audio_data,
                 f"audio/L{metadata.bit_rate.value};rate={metadata.sample_rate.value}",

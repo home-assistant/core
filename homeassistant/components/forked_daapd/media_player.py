@@ -156,7 +156,7 @@ class ForkedDaapdZone(MediaPlayerEntity):
 
     async def async_toggle(self) -> None:
         """Toggle the power on the zone."""
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -434,7 +434,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         Default media player component method counts idle as off.
         We consider idle to be on but just not playing.
         """
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -688,7 +688,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
-                clear=enqueue == MediaPlayerEnqueue.REPLACE,
+                clear=enqueue is MediaPlayerEnqueue.REPLACE,
             )
             return
 
@@ -700,7 +700,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             ),
             0,
         )
-        if enqueue == MediaPlayerEnqueue.NEXT:
+        if enqueue is MediaPlayerEnqueue.NEXT:
             await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
@@ -757,7 +757,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             await self.api.add_to_queue(
                 uris=self._sources_uris[self._source], clear=True
             )
-            if saved_state == MediaPlayerState.PLAYING:
+            if saved_state is MediaPlayerState.PLAYING:
                 await self.async_media_play()
             return
         if not saved_queue:
@@ -770,7 +770,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             clear=True,
         )
         await self.api.seek(position_ms=saved_song_position)
-        if saved_state == MediaPlayerState.PAUSED:
+        if saved_state is MediaPlayerState.PAUSED:
             await self.async_media_pause()
             return
         if saved_state != MediaPlayerState.PLAYING:

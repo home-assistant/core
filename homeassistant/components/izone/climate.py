@@ -429,7 +429,7 @@ class ControllerDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.wrap_and_catch(self._controller.set_on(False))
             return
         if not self._controller.is_on:

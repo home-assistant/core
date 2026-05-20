@@ -95,7 +95,7 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self._device.async_request(self._device.api.set_power, 0)
         else:
             await self._device.async_request(self._device.api.set_power, 1)

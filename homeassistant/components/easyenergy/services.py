@@ -191,7 +191,7 @@ async def __get_prices(
     data: Electricity | Gas
     prices: list[dict[str, float | datetime]]
 
-    if service_price_type == ServicePriceType.GAS:
+    if service_price_type is ServicePriceType.GAS:
         data = await coordinator.easyenergy.gas_prices(
             start_date=start_date,
             end_date=end_date,

@@ -170,7 +170,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
                         uuid=item.uid,
                     ),
                     BringItemOperation.ADD
-                    if item.status == TodoItemStatus.NEEDS_ACTION
+                    if item.status is TodoItemStatus.NEEDS_ACTION
                     else BringItemOperation.COMPLETE,
                 )
             except BringRequestException as e:
@@ -195,7 +195,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
                             spec=item.description or "",
                             uuid=str(uuid.uuid4()),
                             operation=BringItemOperation.ADD
-                            if item.status == TodoItemStatus.NEEDS_ACTION
+                            if item.status is TodoItemStatus.NEEDS_ACTION
                             else BringItemOperation.COMPLETE,
                         ),
                     ],

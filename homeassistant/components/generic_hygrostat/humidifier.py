@@ -278,7 +278,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             if old_state.state:
                 self._state = old_state.state == STATE_ON
         if self._target_humidity is None:
-            if self._device_class == HumidifierDeviceClass.HUMIDIFIER:
+            if self._device_class is HumidifierDeviceClass.HUMIDIFIER:
                 self._target_humidity = self.min_humidity
             else:
                 self._target_humidity = self.max_humidity
@@ -448,7 +448,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         if new_state.state == STATE_ON:
-            if self._device_class == HumidifierDeviceClass.DEHUMIDIFIER:
+            if self._device_class is HumidifierDeviceClass.DEHUMIDIFIER:
                 self._attr_action = HumidifierAction.DRYING
             else:
                 self._attr_action = HumidifierAction.HUMIDIFYING
@@ -528,9 +528,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             too_wet = self._cur_humidity - self._target_humidity >= wet_tolerance
             if self._is_device_active:
                 if (
-                    self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_wet
+                    self._device_class is HumidifierDeviceClass.HUMIDIFIER and too_wet
                 ) or (
-                    self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_dry
+                    self._device_class is HumidifierDeviceClass.DEHUMIDIFIER and too_dry
                 ):
                     _LOGGER.debug("Turning off humidifier %s", self._switch_entity_id)
                     await self._async_device_turn_off()
@@ -538,8 +538,8 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                     # The time argument is passed only in keep-alive case
                     await self._async_device_turn_on()
             elif (
-                self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
-            ) or (self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet):
+                self._device_class is HumidifierDeviceClass.HUMIDIFIER and too_dry
+            ) or (self._device_class is HumidifierDeviceClass.DEHUMIDIFIER and too_wet):
                 _LOGGER.debug("Turning on humidifier %s", self._switch_entity_id)
                 await self._async_device_turn_on()
             elif time is not None:

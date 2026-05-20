@@ -529,7 +529,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 return None
             state_classes.append(_state_class)
 
-        if all(x == state_classes[0] for x in state_classes):
+        if all(x is state_classes[0] for x in state_classes):
             async_delete_issue(
                 self.hass, SENSOR_DOMAIN, f"{self.entity_id}_state_classes_not_matching"
             )
@@ -585,7 +585,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 return None
             device_classes.append(SensorDeviceClass(_device_class))
 
-        if all(x == device_classes[0] for x in device_classes):
+        if all(x is device_classes[0] for x in device_classes):
             async_delete_issue(
                 self.hass,
                 SENSOR_DOMAIN,

@@ -1071,7 +1071,7 @@ async def _create_automation_entities(
         automation_id: str | None = config_block.get(CONF_ID)
         name = _automation_name(automation_config)
 
-        if automation_config.validation_status != ValidationStatus.OK:
+        if automation_config.validation_status is not ValidationStatus.OK:
             entities.append(
                 UnavailableAutomationEntity(
                     automation_id,

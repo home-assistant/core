@@ -246,7 +246,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._attr_state != MediaPlayerState.OFF:
+        if self._attr_state is not MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
@@ -430,7 +430,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play selected media or channel."""
-        if media_type != MediaType.CHANNEL:
+        if media_type is not MediaType.CHANNEL:
             _LOGGER.error(
                 "Got %s, but frontier_silicon only supports playing channels",
                 media_type,

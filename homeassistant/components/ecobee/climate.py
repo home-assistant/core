@@ -399,7 +399,7 @@ class Thermostat(ClimateEntity):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode != HVACMode.OFF:
+        if self.hvac_mode is not HVACMode.OFF:
             self._last_active_hvac_mode = self.hvac_mode
 
     @property
@@ -444,14 +444,14 @@ class Thermostat(ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
@@ -483,7 +483,7 @@ class Thermostat(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return None
         if self.hvac_mode == HVACMode.HEAT:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -782,7 +782,7 @@ class Thermostat(ClimateEntity):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.hvac_mode == HVACMode.HEAT_COOL and (
+        if self.hvac_mode is HVACMode.HEAT_COOL and (
             low_temp is not None or high_temp is not None
         ):
             self.set_auto_temp_hold(low_temp, high_temp)

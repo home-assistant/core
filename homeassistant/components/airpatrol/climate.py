@@ -152,7 +152,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         """Set new target hvac mode."""
         params = self.params.copy()
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             params["PumpPower"] = "off"
         else:
             params["PumpPower"] = "on"

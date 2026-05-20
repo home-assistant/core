@@ -246,7 +246,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self._device.raw_ui_data["CoolLowerSetptLimit"]
         if self.hvac_mode == HVACMode.HEAT:
             return self._device.raw_ui_data["HeatLowerSetptLimit"]
@@ -264,7 +264,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self._device.raw_ui_data["CoolUpperSetptLimit"]
         if self.hvac_mode == HVACMode.HEAT:
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
@@ -292,7 +292,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             return HVACAction.OFF
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
@@ -304,7 +304,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self._device.setpoint_cool
         if self.hvac_mode == HVACMode.HEAT:
             return self._device.setpoint_heat
@@ -313,14 +313,14 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._device.setpoint_cool
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self._device.setpoint_heat
         return None
 
