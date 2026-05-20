@@ -271,6 +271,19 @@ class FreeboxRouter:
             _LOGGER.warning("Home access is not granted")
             return
 
+        # Drop Home nodes the Freebox no longer reports (e.g. unpaired via the
+        # Freebox app). Mirrors the LAN-device prune in update_device_trackers,
+        # but only when the API actually returned something — an empty list is
+        # likely a transient failure rather than a wholesale unpair.
+        if home_nodes:
+            current_ids = {
+                home_node["id"]
+                for home_node in home_nodes
+                if home_node["category"] in HOME_COMPATIBLE_CATEGORIES
+            }
+            for stale_id in set(self.home_devices) - current_ids:
+                del self.home_devices[stale_id]
+
         new_device = False
         for home_node in home_nodes:
             if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:

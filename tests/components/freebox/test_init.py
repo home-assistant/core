@@ -1,11 +1,15 @@
 """Tests for the Freebox init."""
 
-from unittest.mock import ANY, Mock
+from unittest.mock import ANY, AsyncMock, Mock
 
+from freezegun.api import FrozenDateTimeFactory
 from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox import async_remove_config_entry_device
+from homeassistant.components.freebox import (
+    SCAN_INTERVAL,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,9 +19,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .const import DATA_LAN_GET_HOSTS_LIST, DATA_SYSTEM_GET_CONFIG, MOCK_HOST, MOCK_PORT
+from .const import (
+    DATA_HOME_GET_NODES,
+    DATA_LAN_GET_HOSTS_LIST,
+    DATA_SYSTEM_GET_CONFIG,
+    MOCK_HOST,
+    MOCK_PORT,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, router: Mock) -> None:
@@ -129,6 +139,12 @@ async def test_remove_config_entry_device(
     assert router_device is not None
     assert await async_remove_config_entry_device(hass, entry, router_device) is False
 
+    # A Home node still reported by the Freebox cannot be removed
+    # (node id 7 is the alarm system in the test fixture).
+    home_device = device_registry.async_get_device(identifiers={(DOMAIN, 7)})
+    assert home_device is not None
+    assert await async_remove_config_entry_device(hass, entry, home_device) is False
+
     # A tracked LAN device whose MAC is still on the Freebox cannot be removed.
     tracked_device = device_registry.async_get_device(
         connections={
@@ -141,6 +157,15 @@ async def test_remove_config_entry_device(
     assert tracked_device is not None
     assert await async_remove_config_entry_device(hass, entry, tracked_device) is False
 
+    # A Home node that the Freebox no longer reports can be removed.
+    stale_home_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+    )
+    assert (
+        await async_remove_config_entry_device(hass, entry, stale_home_device) is True
+    )
+
     # A LAN device whose MAC is gone from the Freebox can be removed.
     stale_tracked_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -150,3 +175,35 @@ async def test_remove_config_entry_device(
         await async_remove_config_entry_device(hass, entry, stale_tracked_device)
         is True
     )
+
+
+async def test_stale_home_devices_are_pruned(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    router: Mock,
+) -> None:
+    """Unpaired Home nodes are dropped, enabling removal."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Sanity: while reported, the alarm (node id 7) is protected.
+    alarm_device = device_registry.async_get_device(identifiers={(DOMAIN, 7)})
+    assert alarm_device is not None
+    assert await async_remove_config_entry_device(hass, entry, alarm_device) is False
+
+    # Simulate the user unpairing the alarm from the Freebox app.
+    remaining_nodes = [node for node in DATA_HOME_GET_NODES if node["id"] != 7]
+    router().home.get_home_nodes = AsyncMock(return_value=remaining_nodes)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert await async_remove_config_entry_device(hass, entry, alarm_device) is True

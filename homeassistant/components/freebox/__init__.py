@@ -61,11 +61,20 @@ async def async_remove_config_entry_device(
     """Remove a config entry from a device."""
     router = config_entry.runtime_data
     router_mac = dr.format_mac(router.mac)
+    # Home node ids are integers in router state but persisted as strings on
+    # the (DOMAIN, identifier) tuple, so compare stringified ids.
+    home_device_ids = {str(node_id) for node_id in router.home_devices}
 
-    # Persisted identifiers and connections may pre-date MAC normalisation, so
-    # always compare the format_mac()-normalised value rather than the raw one.
+    # Block removal of the Freebox router itself or any Home node the Freebox
+    # still reports. Router identifiers are MAC strings (which may pre-date
+    # MAC normalisation, so compare via format_mac); Home node identifiers
+    # are integers, compared as strings.
     for domain, identifier in device_entry.identifiers:
-        if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
+        if domain != DOMAIN:
+            continue
+        if str(identifier) in home_device_ids:
+            return False
+        if isinstance(identifier, str) and dr.format_mac(identifier) == router_mac:
             return False
 
     for connection_type, connection_value in device_entry.connections:

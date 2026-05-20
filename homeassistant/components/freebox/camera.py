@@ -101,7 +101,14 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
     async def async_update_signal(self) -> None:
         """Update the camera node."""
-        self.update_node(self._router.home_devices[self._id])
+        # When the router prunes our Home node, mark the entity unavailable so
+        # the user notices and can remove it via the device's Delete action.
+        if (node := self._router.home_devices.get(self._id)) is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        self._attr_available = True
+        self.update_node(node)
         self.async_write_ha_state()
 
     def update_node(self, node: dict[str, Any]) -> None:
