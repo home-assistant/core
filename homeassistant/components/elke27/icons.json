@@ -1,0 +1,7 @@
+{
+  "services": {
+    "alarm_arm_automatic": {
+      "service": "mdi:shield-lock"
+    }
+  }
+}

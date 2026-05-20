@@ -1737,6 +1737,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "elke27": {
+      "name": "Elk E27 Alarm Engine",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "elkm1": {
       "name": "Elk-M1 Control",
       "integration_type": "hub",
