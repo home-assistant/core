@@ -202,5 +202,9 @@ class EcobeeFanMinOnTime(EcobeeBaseEntity, NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set new fan minimum on time value."""
-        self.data.ecobee.set_fan_min_on_time(self.thermostat_index, int(value))
+        step = self._attr_native_step
+        aligned_value = int(round(value / step) * step)
+        self.data.ecobee.set_fan_min_on_time(
+            self.thermostat_index, aligned_value
+        )
         self.update_without_throttle = True
