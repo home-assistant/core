@@ -1070,6 +1070,9 @@ h2==4.3.0
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
 
+# homeassistant.components.garmin_connect
+ha-garmin==0.1.1
+
 # homeassistant.components.iotawatt
 ha-iotawattpy==0.1.2
 
