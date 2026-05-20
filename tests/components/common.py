@@ -2621,7 +2621,7 @@ async def assert_availability_follows_source_entity(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    hass.states.async_set(source_entity_id, "2026-01-01T00:00:00.000")
+    hass.states.async_set(source_entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
