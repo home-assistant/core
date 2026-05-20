@@ -19,6 +19,12 @@ TEST_LOGIN_RESP = {
     "country": "United States",
 }
 
+TEST_LOGIN_ENTRY_DATA = {
+    **TEST_LOGIN_RESP,
+    "country_code": TEST_COUNTRY,
+    "password": TEST_PASSWORD,
+}
+
 ENTITY_LIGHT = "light.test_light"
 LIGHT_DOMAIN = "light"
 

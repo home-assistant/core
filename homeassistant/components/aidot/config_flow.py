@@ -30,6 +30,12 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
 
 class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle aidot config flow."""
@@ -59,9 +65,52 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"{user_input[CONF_USERNAME]} {user_input[CONF_COUNTRY_CODE]}",
-                    data=login_info,
+                    data={
+                        **login_info,
+                        CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            client = AidotClient(
+                session=async_get_clientsession(self.hass),
+                country_code=reauth_entry.data[CONF_COUNTRY_CODE],
+                username=reauth_entry.data[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+            )
+            try:
+                login_info = await client.async_post_login()
+            except AidotUserOrPassIncorrect:
+                errors["base"] = "invalid_auth"
+            except TimeoutError, ClientError:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=login_info
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            description_placeholders={
+                "username": reauth_entry.data.get(CONF_USERNAME, "")
+            },
+            errors=errors,
         )
