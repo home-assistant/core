@@ -2,10 +2,17 @@
 
 from unittest import mock
 
+from aiopnsense import OPNsenseConnectionError
+import pytest
+
 from homeassistant.components import device_tracker
 from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.components.opnsense.coordinator import (
+    OPNsenseDeviceTrackerCoordinator,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -122,3 +129,26 @@ async def test_device_tracker_with_interfaces_filter(
     ]
 
     assert len(device_tracker_entities) == 0
+
+
+async def test_device_tracker_coordinator_update_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+) -> None:
+    """Test coordinator wraps client errors as UpdateFailed."""
+    mock_opnsense_client.return_value.get_arp_table.side_effect = (
+        OPNsenseConnectionError("connection failed")
+    )
+
+    coordinator = OPNsenseDeviceTrackerCoordinator(
+        hass,
+        mock_config_entry,
+        mock_opnsense_client.return_value,
+        [],
+    )
+
+    with pytest.raises(UpdateFailed, match="Error communicating with OPNsense router"):
+        await coordinator._async_update_data()
+
+    mock_opnsense_client.return_value.get_arp_table.assert_awaited_once_with(True)
