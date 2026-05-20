@@ -280,7 +280,7 @@ class AveaLight(LightEntity):
         connected = self._light.connect()
 
         try:
-            if connected and not self._device_info_updated:
+            if not self._device_info_updated:
                 self._update_device_info()
             brightness = self._light.get_brightness()
             rgb_color = self._light.get_rgb()
