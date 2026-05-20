@@ -184,14 +184,10 @@ async def test_get_image_http_truncated_log_credentials_redacted(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Credentials must be redacted in the truncated-response warning too.
-
-    The 'Discarding truncated image response' warning is a second log site
-    that carries the upstream URL. It needs the same credential redaction
-    the 'Error retrieving proxied image' path already has.
-    """
+    """Test credentials are redacted in the truncated-response warning."""
     url = "http://vi:pass@example.com/truncated.jpg"
-    truncated = b"\xff\xd8\xff\xe0" + b"\x00" * 200  # JPEG SOI without EOI
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -201,9 +197,7 @@ async def test_get_image_http_truncated_log_credentials_redacted(
         )
         await hass.async_block_till_done()
         state = hass.states.get("media_player.bedroom")
-        aioclient_mock.get(
-            url, content=truncated, headers={"Content-Type": "image/jpeg"}
-        )
+        aioclient_mock.get(url, content=body, headers=headers)
         client = await hass_client_no_auth()
         resp = await client.get(state.attributes["entity_picture"])
 
@@ -261,58 +255,16 @@ async def test_get_image_http_aiohttp_failure_returns_500(
     assert f"Error retrieving proxied image from {url}" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("response_body", "response_headers", "expect_status", "expect_log_fragment"),
-    [
-        pytest.param(
-            b"\xff\xd8\xff\xe0" + b"\x00" * 1024,
-            {"Content-Type": "image/jpeg"},
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "Discarding truncated image response",
-            id="jpeg_missing_eoi",
-        ),
-        pytest.param(
-            b"\x89PNG\r\n\x1a\n" + b"\x00" * 1024,
-            {"Content-Type": "image/png"},
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "Discarding truncated image response",
-            id="png_missing_iend",
-        ),
-        pytest.param(
-            b"hello-world",
-            {"Content-Type": "image/jpeg", "Content-Length": "9999"},
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            "Discarding truncated image response",
-            id="content_length_mismatch",
-        ),
-        pytest.param(
-            b"\xff\xd8\xff\xe0" + b"\x00" * 1024 + b"\xff\xd9",
-            {"Content-Type": "image/jpeg"},
-            HTTPStatus.OK,
-            None,
-            id="jpeg_complete_with_eoi",
-        ),
-    ],
-)
 async def test_get_image_http_truncated_response(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
-    response_body: bytes,
-    response_headers: dict[str, str],
-    expect_status: HTTPStatus,
-    expect_log_fragment: str | None,
 ) -> None:
-    """Test silently-truncated image responses are discarded, not cached.
-
-    aiohttp can return partial bytes without raising when an upstream
-    chunked stream is reset mid-body, or when a Content-Length is
-    advertised but the connection closes early. async_fetch_image must
-    detect this and avoid caching the partial body as if it were the
-    full image (which would otherwise persist for the cache lifetime).
-    """
+    """Test responses with Content-Length larger than the body are discarded."""
     url = "http://example.com/truncated.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -323,17 +275,41 @@ async def test_get_image_http_truncated_response(
         await hass.async_block_till_done()
 
         state = hass.states.get("media_player.bedroom")
-        aioclient_mock.get(url, content=response_body, headers=response_headers)
+        aioclient_mock.get(url, content=body, headers=headers)
         client = await hass_client_no_auth()
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == expect_status
-    if expect_log_fragment is not None:
-        assert expect_log_fragment in caplog.text
-    else:
-        assert "Discarding truncated image response" not in caplog.text
-        body = await resp.read()
-        assert body == response_body
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert "Discarding truncated image response" in caplog.text
+
+
+async def test_get_image_http_complete_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test responses whose body matches Content-Length are served."""
+    url = "http://example.com/complete.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.OK
+    assert "Discarding truncated image response" not in caplog.text
+    assert await resp.read() == body
 
 
 async def test_get_image_http_truncated_fetch_is_not_cached(
@@ -341,18 +317,11 @@ async def test_get_image_http_truncated_fetch_is_not_cached(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A truncated fetch must not be cached so a later retry can succeed.
-
-    Before this behavior change, async_fetch_image returning (None, None)
-    was cached the same as a successful response, which made any failure
-    permanent for the cache lifetime. The truncation guard would have
-    turned the original half-rendered image symptom into a fully broken
-    one. The cache write is now skipped on failure so the next request
-    retries from the source.
-    """
+    """Test that a truncated fetch is not cached so a later retry can succeed."""
     url = "http://example.com/recoverable.jpg"
-    truncated = b"\xff\xd8\xff\xe0" + b"\x00" * 1024
-    complete = b"\xff\xd8\xff\xe0" + b"\x00" * 1024 + b"\xff\xd9"
+    body = b"hello-world"
+    truncated_headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    complete_headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
     with patch(
         "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
         url,
@@ -364,22 +333,15 @@ async def test_get_image_http_truncated_fetch_is_not_cached(
         state = hass.states.get("media_player.bedroom")
         client = await hass_client_no_auth()
 
-        # First request: upstream returns a truncated JPEG.
-        aioclient_mock.get(
-            url, content=truncated, headers={"Content-Type": "image/jpeg"}
-        )
+        aioclient_mock.get(url, content=body, headers=truncated_headers)
         resp1 = await client.get(state.attributes["entity_picture"])
         assert resp1.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
-        # Second request, same URL: upstream now returns the complete JPEG.
-        # If the failure had been cached, this would still 500.
         aioclient_mock.clear_requests()
-        aioclient_mock.get(
-            url, content=complete, headers={"Content-Type": "image/jpeg"}
-        )
+        aioclient_mock.get(url, content=body, headers=complete_headers)
         resp2 = await client.get(state.attributes["entity_picture"])
         assert resp2.status == HTTPStatus.OK
-        assert await resp2.read() == complete
+        assert await resp2.read() == body
 
 
 async def test_get_async_get_browse_image(

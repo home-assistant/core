@@ -17,7 +17,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1213,12 +1213,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         (content, content_type) = await self._async_fetch_image(url)
 
-        # Only cache successful fetches. Caching a failed fetch (None) makes
-        # the failure permanent until the URL changes or the cache is evicted,
-        # which is especially harmful for intermittent upstream issues such as
-        # the truncated-chunked-stream case async_fetch_image now detects.
-        # Letting failures fall through means the next request retries from
-        # the source, which usually succeeds.
         if content is not None:
             async with cache_images[url][CACHE_LOCK]:
                 cache_images[url][CACHE_CONTENT] = content, content_type
@@ -1454,56 +1448,30 @@ async def websocket_search_media(
     connection.send_result(msg["id"], result)
 
 
-# Total budget for a proxied image fetch. The previous 10 second value was too
-# short for several real upstream sources: Sonos for instance regularly takes
-# 8 to 9 seconds to stream a 2 to 4 MB album cover via /getaa, with no headroom
-# for retries or slow links. 30 seconds is conservative enough to cover those
-# cases while still bounding obviously stuck fetches.
 _FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30)
-
-# Trailer markers for image formats whose completeness we can verify cheaply.
-# Each entry maps a normalized image MIME type to the bytes the body must end
-# with for the image to be considered intact. Used to discard truncated bodies
-# that aiohttp accepts silently when an upstream chunked stream is reset
-# mid-body without raising (e.g. some Sonos /getaa artwork responses).
-_IMAGE_TRAILERS: Final[dict[str, bytes]] = {
-    "image/jpeg": b"\xff\xd9",
-    "image/png": b"\x49\x45\x4e\x44\xae\x42\x60\x82",
-    "image/gif": b"\x3b",
-}
 
 
 def _image_response_appears_complete(
-    response: aiohttp.ClientResponse, body: bytes, content_type: str | None
+    response: aiohttp.ClientResponse, body: bytes
 ) -> bool:
-    """Return False when the response body looks like it was truncated.
+    """Return False when Content-Length disagrees with the body received."""
+    content_length = response.headers.get(CONTENT_LENGTH)
+    if content_length is None:
+        return True
+    try:
+        return int(content_length) == len(body)
+    except ValueError:
+        return True
 
-    aiohttp does not always raise when an upstream connection drops mid-body:
-    a non-chunked source can close after some bytes but the advertised
-    Content-Length goes unchecked, and some chunked sources emit what looks
-    like a clean stream end while sending fewer bytes than the underlying
-    object. Both produce silently-truncated bodies that, if cached, leave
-    users with permanently broken artwork. This is a best-effort check that
-    catches the common shapes without per-source logic.
-    """
-    # Skip the Content-Length comparison when the body has been transparently
-    # decompressed by aiohttp; in that case the advertised length is the
-    # encoded size and len(body) is the decoded size so a mismatch is
-    # expected, not a truncation. `identity` and the empty value both mean
-    # "no encoding applied" per RFC 9110 §8.4 and should still be validated.
-    cl = response.headers.get(CONTENT_LENGTH)
-    ce = (response.headers.get(CONTENT_ENCODING) or "").strip().lower()
-    if cl is not None and ce in ("", "identity"):
-        try:
-            expected = int(cl)
-        except ValueError:
-            pass
-        else:
-            if expected != len(body):
-                return False
-    if content_type and (trailer := _IMAGE_TRAILERS.get(content_type.lower())):
-        return body.endswith(trailer)
-    return True
+
+def _redact_credentials(url: str) -> str:
+    """Return url with any user/password replaced by placeholders."""
+    parts = URL(url)
+    if parts.user is not None:
+        parts = parts.with_user("xxxx")
+    if parts.password is not None:
+        parts = parts.with_password("xxxxxxxx")
+    return str(parts)
 
 
 async def async_fetch_image(
@@ -1512,42 +1480,27 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-
-    # Build a redacted form of the URL up front so every log line in this
-    # function uses it. Credentials in the URL (`http://user:pass@host/...`)
-    # must never reach the log; the fetch itself still uses the original.
-    url_parts = URL(url)
-    if url_parts.user is not None:
-        url_parts = url_parts.with_user("xxxx")
-    if url_parts.password is not None:
-        url_parts = url_parts.with_password("xxxxxxxx")
-    redacted_url = str(url_parts)
-
-    # Also suppress aiohttp.ClientError so that ClientPayloadError raised by
-    # the chunked-stream path (and any other client-side aiohttp failure)
-    # falls into the same "Error retrieving proxied image" path as a timeout
-    # rather than propagating as an unhandled exception. This is a no-op for
-    # the read-until-EOF case today (aiohttp does not raise there), but picks
-    # up the clean signal once that path is fixed upstream.
     with suppress(TimeoutError, aiohttp.ClientError):
         async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
             if response.status == HTTPStatus.OK:
                 body = await response.read()
                 ct_header = response.headers.get(CONTENT_TYPE)
                 ct = ct_header.split(";")[0] if ct_header else None
-                if _image_response_appears_complete(response, body, ct):
+                if _image_response_appears_complete(response, body):
                     content = body
                     content_type = ct
                 else:
                     logger.warning(
                         "Discarding truncated image response from %s "
                         "(%d bytes, content-type %s)",
-                        redacted_url,
+                        _redact_credentials(url),
                         len(body),
                         ct,
                     )
 
     if content is None:
-        logger.warning("Error retrieving proxied image from %s", redacted_url)
+        logger.warning(
+            "Error retrieving proxied image from %s", _redact_credentials(url)
+        )
 
     return content, content_type
