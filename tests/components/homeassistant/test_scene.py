@@ -61,7 +61,7 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
 async def test_reload_config_service_failed(
     hass: HomeAssistant, files_patch: dict[str, str], expected_error: str
 ) -> None:
-    """Test the reload config service."""
+    """Test error handling when the reload config service fails."""
     assert await async_setup_component(hass, "scene", {})
     await hass.async_block_till_done()
 
