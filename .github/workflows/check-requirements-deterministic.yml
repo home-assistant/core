@@ -8,16 +8,12 @@ name: Check requirements (deterministic)
 
 # yamllint disable-line rule:truthy
 on:
-  # Auto-trigger on PRs that touch tracked requirement files is disabled
-  # for now while we iterate — testing the workflow_run handoff to the
-  # agentic stage is hard with an auto-trigger. Re-enable once the chain
-  # has been validated end-to-end.
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
-  #   paths:
-  #     - "requirements*.txt"
-  #     - "homeassistant/package_constraints.txt"
-  #     - "pyproject.toml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/requirements*.txt"
+      - "homeassistant/package_constraints.txt"
+      - "pyproject.toml"
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -28,7 +24,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.pull_request_number }}
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -54,13 +50,13 @@ jobs:
       - name: Collect PR diff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ inputs.pull_request_number }}
+          PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
         run: |
           mkdir -p deterministic
           gh pr diff "${PR_NUMBER}" > deterministic/pr.diff
       - name: Run deterministic checks
         env:
-          PR_NUMBER: ${{ inputs.pull_request_number }}
+          PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
         run: |
           python -m script.check_requirements \
             --pr-number "${PR_NUMBER}" \
