@@ -27,18 +27,18 @@ def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
     bulb.name = "Unknown"
-    bulb.fw_version = AVEA_FIRMWARE_VERSION
-    bulb.hardware_revision = "Elgato Avea"
-    bulb.manufacturer_name = "Elgato Systems GmbH"
-    bulb.serial_number = AVEA_SERIAL_NUMBER
+    bulb.fw_version = "Unknown"
+    bulb.hardware_revision = "Unknown"
+    bulb.manufacturer_name = "Unknown"
+    bulb.serial_number = "Unknown"
     bulb.brightness = 0
     bulb.connect.return_value = True
     bulb.get_brightness.return_value = 0
-    bulb.get_fw_version.return_value = bulb.fw_version
-    bulb.get_hardware_revision.return_value = bulb.hardware_revision
-    bulb.get_manufacturer_name.return_value = bulb.manufacturer_name
+    bulb.get_fw_version.return_value = AVEA_FIRMWARE_VERSION
+    bulb.get_hardware_revision.return_value = "Elgato Avea"
+    bulb.get_manufacturer_name.return_value = "Elgato Systems GmbH"
     bulb.get_rgb.return_value = (0, 0, 0)
-    bulb.get_serial_number.return_value = bulb.serial_number
+    bulb.get_serial_number.return_value = AVEA_SERIAL_NUMBER
     return bulb
 
 
@@ -74,9 +74,9 @@ async def test_init_state(
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
 
 
-@pytest.mark.usefixtures("setup_integration")
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(hass: HomeAssistant, setup_integration: MagicMock) -> None:
     """Test the device info."""
+    bulb = setup_integration
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
@@ -89,6 +89,10 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == "Elgato Avea"
     assert device.sw_version == AVEA_FIRMWARE_VERSION
     assert device.serial_number == AVEA_SERIAL_NUMBER
+    bulb.get_manufacturer_name.assert_called_once()
+    bulb.get_hardware_revision.assert_called_once()
+    bulb.get_fw_version.assert_called_once()
+    bulb.get_serial_number.assert_called_once()
 
 
 async def test_turn_on_and_off(

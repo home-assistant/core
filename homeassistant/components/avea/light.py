@@ -1,5 +1,6 @@
 """Light platform for Avea."""
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 from typing import Any
@@ -32,7 +33,6 @@ from .const import DOMAIN, INTEGRATION_TITLE, MODEL, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
-DEVICE_INFO_EXCEPTIONS = (*UPDATE_EXCEPTIONS, AttributeError)
 BREAKS_IN_HA_VERSION = "2026.12.0"
 AVEA_MAX_BRIGHTNESS = 4095
 
@@ -42,6 +42,13 @@ def _normalize_name(name: str | None) -> str | None:
     if not name or name == UNKNOWN_NAME:
         return None
     return name
+
+
+def _read_device_info_value(read: Callable[[], str | None]) -> str | None:
+    """Read a device information value from an Avea bulb."""
+    with suppress(*UPDATE_EXCEPTIONS):
+        return _normalize_name(read())
+    return None
 
 
 def _ha_brightness_to_avea(brightness: int) -> int:
@@ -97,26 +104,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    await hass.async_add_executor_job(_update_bulb_device_info, entry.runtime_data)
     async_add_entities([AveaLight(entry.runtime_data, entry)], update_before_add=True)
-
-
-def _update_bulb_device_info(light: avea.Bulb) -> None:
-    """Update device info details from an Avea bulb."""
-    with suppress(*DEVICE_INFO_EXCEPTIONS):
-        if not light.connect():
-            return
-        try:
-            for read in (
-                light.get_manufacturer_name,
-                light.get_hardware_revision,
-                light.get_fw_version,
-                light.get_serial_number,
-            ):
-                with suppress(*DEVICE_INFO_EXCEPTIONS):
-                    read()
-        finally:
-            light.disconnect()
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -203,23 +191,35 @@ class AveaLight(LightEntity):
 
     def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
         """Initialize an AveaLight."""
+        assert entry.unique_id is not None
         self._light = light
         self._attr_unique_id = entry.unique_id
         self._attr_name = entry.title
         self._attr_brightness = light.brightness
         self._last_brightness = 255
+        self._device_info_updated = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title,
-            model=_normalize_name(light.hardware_revision) or MODEL,
+            model=MODEL,
         )
-        if serial_number := _normalize_name(light.serial_number):
-            self._attr_device_info["serial_number"] = serial_number
-        if manufacturer := _normalize_name(light.manufacturer_name):
-            self._attr_device_info["manufacturer"] = manufacturer
-        if firmware_version := _normalize_name(light.fw_version):
-            self._attr_device_info["sw_version"] = firmware_version
+
+    def _update_device_info(self) -> None:
+        """Fetch device information from the Avea bulb."""
+        device_info = self._attr_device_info
+        assert device_info is not None
+        if manufacturer := _read_device_info_value(self._light.get_manufacturer_name):
+            device_info["manufacturer"] = manufacturer
+        if hardware_revision := _read_device_info_value(
+            self._light.get_hardware_revision
+        ):
+            device_info["model"] = hardware_revision
+        if firmware_version := _read_device_info_value(self._light.get_fw_version):
+            device_info["sw_version"] = firmware_version
+        if serial_number := _read_device_info_value(self._light.get_serial_number):
+            device_info["serial_number"] = serial_number
+        self._device_info_updated = True
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -246,6 +246,8 @@ class AveaLight(LightEntity):
         connected = self._light.connect()
 
         try:
+            if connected and not self._device_info_updated:
+                self._update_device_info()
             brightness = self._light.get_brightness()
             rgb_color = self._light.get_rgb()
         finally:
