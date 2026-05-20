@@ -68,7 +68,7 @@
       "message": "Cannot connect to endpoint"
     },
     "invalid_auth": {
-      "message": "Authentication failed using the provided Key ID and Application Key."
+      "message": "Authentication failed using the provided key ID and application key."
     },
     "invalid_bucket_name": {
       "message": "Bucket does not exist or is not writable by the provided credentials."
