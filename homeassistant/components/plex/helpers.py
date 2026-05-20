@@ -27,7 +27,7 @@ class PlexData(TypedDict):
 def get_plex_data(hass: HomeAssistant) -> PlexData:
     """Get typed data from hass.data."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     return hass.data[DOMAIN]
 
 

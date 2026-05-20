@@ -56,6 +56,35 @@
         "name": "Screensaver"
       }
     },
+    "button": {
+      "clear_cache": {
+        "name": "Clear cache"
+      },
+      "clear_cookies": {
+        "name": "Clear cookies"
+      },
+      "navigate_backward": {
+        "name": "Go back"
+      },
+      "navigate_forward": {
+        "name": "Go forward"
+      },
+      "navigate_home": {
+        "name": "Go home"
+      },
+      "navigate_refresh": {
+        "name": "Refresh page"
+      },
+      "ping": {
+        "name": "Ping"
+      },
+      "print": {
+        "name": "Print page"
+      },
+      "screensaver_interact": {
+        "name": "Dismiss screensaver"
+      }
+    },
     "sensor": {
       "ambient_light": {
         "name": "Ambient light"
@@ -65,6 +94,11 @@
       },
       "last_motion": {
         "name": "Last motion"
+      }
+    },
+    "switch": {
+      "disable_screensaver": {
+        "name": "Disable screensaver"
       }
     }
   }

@@ -560,8 +560,12 @@ class ConfigEntry[_DataT = Any]:
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
         return (
-            f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
-            f"title={self.title} state={self.state} unique_id={self.unique_id}>"
+            f"<ConfigEntry entry_id={self.entry_id}"
+            f" version={self.version}"
+            f" domain={self.domain}"
+            f" title={self.title}"
+            f" state={self.state}"
+            f" unique_id={self.unique_id}>"
         )
 
     def __setattr__(self, key: str, value: Any) -> None:
@@ -625,7 +629,9 @@ class ConfigEntry[_DataT = Any]:
                             subentry_flow_handler, "async_step_reconfigure"
                         )
                     }
-                    for subentry_flow_type, subentry_flow_handler in supported_flows.items()
+                    for subentry_flow_type, subentry_flow_handler in (
+                        supported_flows.items()
+                    )
                 },
             )
         return self._supported_subentry_types or {}
@@ -663,7 +669,9 @@ class ConfigEntry[_DataT = Any]:
             "disabled_by": self.disabled_by,
             "reason": self.reason,
             "error_reason_translation_key": self.error_reason_translation_key,
-            "error_reason_translation_placeholders": self.error_reason_translation_placeholders,
+            "error_reason_translation_placeholders": (
+                self.error_reason_translation_placeholders
+            ),
             "num_subentries": len(self.subentries),
         }
         return json_fragment(json_bytes(json_repr))
@@ -703,7 +711,8 @@ class ConfigEntry[_DataT = Any]:
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
-        # Log setup to the integration logger so it's visible when debug logs are enabled.
+        # Log setup to the integration logger so it's visible
+        # when debug logs are enabled.
         logger = self.logger
 
         # Only store setup result as state if it was not forwarded.
@@ -892,8 +901,9 @@ class ConfigEntry[_DataT = Any]:
                 await self._async_process_on_unload(hass)
 
         #
-        # After successfully calling async_setup_entry, it is important that this function
-        # does not yield to the event loop by using `await` or `async with` or
+        # After successfully calling async_setup_entry, it is important
+        # that this function does not yield to the event loop by using
+        # `await` or `async with` or
         # similar until after the state has been set by calling self._async_set_state.
         #
         # Otherwise we risk that any `call_soon`s
@@ -1901,8 +1911,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data = self.data
         self.check_unique_id(entry)
         if entry_id in data:
-            # This is likely a bug in a test that is adding the same entry twice.
-            # In the future, once we have fixed the tests, this will raise HomeAssistantError.
+            # This is likely a bug in a test that is adding the same
+            # entry twice. In the future, once we have fixed the tests,
+            # this will raise HomeAssistantError.
             entry.logger.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
@@ -2317,7 +2328,8 @@ class ConfigEntries:
                 await loader.async_get_integration(self.hass, entry.domain)
             except loader.IntegrationNotFound:
                 entry.logger.info(
-                    "Integration for ignored config entry %s not found. Creating repair issue",
+                    "Integration for ignored config entry %s"
+                    " not found. Creating repair issue",
                     entry,
                 )
                 ir.async_create_issue(
@@ -2344,9 +2356,10 @@ class ConfigEntries:
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
-                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
-                f" '{entry.entry_id}' cannot be set up because it is in state "
-                f"{entry.state}, but needs to be in the {ConfigEntryState.NOT_LOADED} state"
+                f"The config entry '{entry.title}' ({entry.domain})"
+                f" with entry_id '{entry.entry_id}' cannot be set up"
+                f" because it is in state {entry.state}, but needs to"
+                f" be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
         # Setup Component if not set up yet
@@ -2603,7 +2616,8 @@ class ConfigEntries:
         for listener in entry.update_listeners:
             self.hass.async_create_task(
                 listener(self.hass, entry),
-                f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+                "config entry update listener"
+                f" {entry.title} {entry.domain} {entry.domain}",
             )
 
         self._async_schedule_save()
@@ -2999,7 +3013,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def async_update_title_placeholders(
         self, title_placeholders: Mapping[str, str]
     ) -> None:
-        """Update title placeholders for the discovery notification and notify listeners.
+        """Update title placeholders for the discovery notification.
+
+        Notifies listeners.
 
         This updates the flow context title_placeholders and notifies listeners
         (such as the frontend) to reload the flow state, updating the discovery
@@ -3207,8 +3223,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         is called when the user ignores a discovered device or service, we then store
         the key for the flow being ignored.
 
-        Once the ignore config entry is created, ConfigEntriesFlowManager.async_finish_flow
-        will make sure the discovery key is kept up to date since it may not be stable
+        Once the ignore config entry is created,
+        ConfigEntriesFlowManager.async_finish_flow will make sure the
+        discovery key is kept up to date since it may not be stable
         unlike the unique id.
         """
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
@@ -3402,7 +3419,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> bool:
         """Update config entry and return result.
 
-        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        Internal to be used by update_and_abort and
+        update_reload_and_abort methods only.
         """
 
         if data_updates is not UNDEFINED:
@@ -3613,7 +3631,8 @@ class ConfigSubentryFlowManager(
         subentry_types = handler.async_get_supported_subentry_types(entry)
         if subentry_type not in subentry_types:
             raise data_entry_flow.UnknownHandler(
-                f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
+                f"Config entry '{entry.domain}' does not support"
+                f" subentry '{subentry_type}'"
             )
         subentry_flow = subentry_types[subentry_type]()
         subentry_flow.init_step = context["source"]
@@ -3705,7 +3724,8 @@ class ConfigSubentryFlow(
     ) -> bool:
         """Update config subentry and return result.
 
-        Internal to be used by update_and_abort and update_reload_and_abort methods only.
+        Internal to be used by update_and_abort and
+        update_reload_and_abort methods only.
         """
 
         if data_updates is not UNDEFINED:
@@ -3866,7 +3886,8 @@ class OptionsFlowManager(
 
             if automatic_reload and entry.update_listeners:
                 raise ValueError(
-                    "Config entry update listeners should not be used with OptionsFlowWithReload"
+                    "Config entry update listeners should not be"
+                    " used with OptionsFlowWithReload"
                 )
 
             if (

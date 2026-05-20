@@ -108,7 +108,7 @@ async def test_switch_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the switch state trigger fires when any switch state changes to a specific state."""
+    """Test switch trigger fires when any switch changes to a state."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_switches,
@@ -140,7 +140,7 @@ async def test_switch_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the switch state trigger fires when the first switch changes to a specific state."""
+    """Test switch trigger fires when the first switch changes state."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_switches,
@@ -172,7 +172,7 @@ async def test_switch_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the switch state trigger fires when the last switch changes to a specific state."""
+    """Test switch trigger fires when the last switch changes state."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_switches,

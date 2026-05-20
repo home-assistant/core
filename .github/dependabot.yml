@@ -11,3 +11,6 @@ updates:
       - github_actions
     cooldown:
       default-days: 7
+    ignore:
+      # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
+      - dependency-name: "github/gh-aw-actions/**"

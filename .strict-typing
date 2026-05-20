@@ -139,6 +139,7 @@ homeassistant.components.cambridge_audio.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.casper_glow.*
+homeassistant.components.centriconnect.*
 homeassistant.components.cert_expiry.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
@@ -249,6 +250,7 @@ homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
+homeassistant.components.guntamatic.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
@@ -356,6 +358,7 @@ homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
+homeassistant.components.marantz_infrared.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -422,6 +425,7 @@ homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.otp.*
+homeassistant.components.ouman_eh_800.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
@@ -488,6 +492,7 @@ homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
+homeassistant.components.samsung_infrared.*
 homeassistant.components.samsungtv.*
 homeassistant.components.saunum.*
 homeassistant.components.scene.*

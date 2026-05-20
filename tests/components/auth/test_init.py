@@ -125,7 +125,7 @@ async def test_login_new_user_and_trying_refresh_token(
 async def test_auth_code_checks_local_only_user(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
-    """Test local only user cannot exchange auth code for refresh tokens when external."""
+    """Test local only user cannot exchange auth code when external."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post(
         "/auth/login_flow",

@@ -50,7 +50,8 @@ def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
     mapped_condition = CONDITION_MAP.get(condition, condition)
     if force_day and mapped_condition == ATTR_CONDITION_CLEAR_NIGHT:
-        # Meteo-France can return clear night condition instead of sunny for daily weather, so we map it to sunny
+        # Meteo-France can return clear night condition instead
+        # of sunny for daily weather, so we map it to sunny
         return ATTR_CONDITION_SUNNY
     return mapped_condition
 
@@ -100,7 +101,8 @@ class MeteoFranceWeather(
         super().__init__(coordinator)
         self._attr_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._attr_unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        pos = self.coordinator.data.position
+        self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -195,7 +197,8 @@ class MeteoFranceWeather(
                 )
         else:
             for forecast in self.coordinator.data.daily_forecast:
-                # stop when we don't have a weather condition (can happen around last days of forecast, max 14)
+                # stop when we don't have a weather condition
+                # (can happen around last days of forecast, max 14)
                 if not forecast.get("weather12H"):
                     break
                 forecast_data.append(
