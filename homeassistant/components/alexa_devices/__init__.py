@@ -51,6 +51,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
         on_reauth_required=_on_http2_reauth_required,
     )
 
+    async def _stop_http2() -> None:
+        try:
+            await coordinator.api.stop_http2_processing()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Error while stopping HTTP/2 processing")
+
+    entry.async_on_unload(_stop_http2)
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -106,8 +114,4 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Unload a config entry."""
-    try:
-        await entry.runtime_data.api.stop_http2_processing()
-    except Exception:  # noqa: BLE001
-        _LOGGER.error("Error while stopping http2 task", exc_info=True)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -184,3 +184,27 @@ async def test_http2_stop_processing_called_on_unload(
     await hass.async_block_till_done()
 
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+
+
+async def test_http2_stop_processing_exception_logged_on_unload(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an exception from stop_http2_processing is logged and does not propagate on unload."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_amazon_devices_client.stop_http2_processing.side_effect = Exception(
+        "HTTP/2 shutdown error"
+    )
+
+    with patch("homeassistant.components.alexa_devices._LOGGER") as mock_logger:
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_logger.exception.assert_called_once_with(
+            "Error while stopping HTTP/2 processing"
+        )
+
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
