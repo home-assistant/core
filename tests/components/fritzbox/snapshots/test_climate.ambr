@@ -67,6 +67,7 @@
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 19.5,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fake_name',

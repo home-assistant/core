@@ -56,6 +56,7 @@
       'min_temp': 0.0,
       'supported_features': <ClimateEntityFeature: 385>,
       'temperature': None,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.testmodule_climate1',

@@ -99,6 +99,7 @@
       ]),
       'target_temp_step': 2,
       'temperature': 66,
+      'temperature_unit': <UnitOfTemperature.FAHRENHEIT: '°F'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_air_conditioner',

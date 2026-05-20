@@ -66,6 +66,7 @@
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 40.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fakespa',

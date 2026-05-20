@@ -76,6 +76,7 @@
       'target_temp_high': None,
       'target_temp_low': None,
       'temperature': 72,
+      'temperature_unit': <UnitOfTemperature.FAHRENHEIT: '°F'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.system_1_zone_1',

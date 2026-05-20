@@ -34,5 +34,6 @@
     'target_temp_high': None,
     'target_temp_low': None,
     'temperature': None,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

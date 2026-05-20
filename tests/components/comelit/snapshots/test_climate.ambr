@@ -70,6 +70,7 @@
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 0.1,
       'temperature': 5.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.climate0',

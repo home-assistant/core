@@ -72,6 +72,7 @@
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 0.5,
       'temperature': 22.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.device_name',
