@@ -138,11 +138,21 @@ def _resolve_string_key(key: nodes.NodeNG) -> str | None:
 def _keys_from_dict(node: nodes.Dict) -> set[str]:
     """Extract string keys from a Dict node.
 
-    Handles both literal string keys and constant references
-    (e.g., ``CONF_DOMAIN``) via astroid inference.
+    Handles literal string keys, constant references (e.g., ``CONF_DOMAIN``)
+    via astroid inference, and ``**expr`` dict unpacking by inferring the
+    unpacked expression.
     """
     keys: set[str] = set()
-    for key, _ in node.items:
+    for key, value in node.items:
+        if isinstance(key, nodes.DictUnpack):
+            # Resolve the unpacked dict to extract its keys
+            try:
+                for inferred in value.infer():
+                    if isinstance(inferred, nodes.Dict):
+                        keys.update(_keys_from_dict(inferred))
+            except _InferenceError:
+                pass
+            continue
         resolved = _resolve_string_key(key)
         if resolved is not None:
             keys.add(resolved)

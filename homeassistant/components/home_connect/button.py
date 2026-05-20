@@ -105,7 +105,6 @@ class HomeConnectCommandButtonEntity(HomeConnectButtonEntity):
                 value=True,
             )
         except HomeConnectError as error:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="execute_command",
