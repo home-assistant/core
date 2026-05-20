@@ -25,7 +25,9 @@ class VistapoolData:
 
     auth: AquariteAuth
     api: AquariteClient
-    coordinators: dict[str, VistapoolDataUpdateCoordinator] = field(default_factory=dict)
+    coordinators: dict[str, VistapoolDataUpdateCoordinator] = field(
+        default_factory=dict
+    )
 
 
 type VistapoolConfigEntry = ConfigEntry[VistapoolData]
