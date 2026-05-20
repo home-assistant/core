@@ -1,4 +1,4 @@
-"""The AquaRite integration."""
+"""The Vistapool integration."""
 
 from dataclasses import dataclass, field
 import logging
@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import AquariteDataUpdateCoordinator
+from .coordinator import VistapoolDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,19 +20,19 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 @dataclass
-class AquariteData:
-    """Runtime data for an AquaRite account (holds one coordinator per pool)."""
+class VistapoolData:
+    """Runtime data for a Vistapool account (holds one coordinator per pool)."""
 
     auth: AquariteAuth
     api: AquariteClient
-    coordinators: dict[str, AquariteDataUpdateCoordinator] = field(default_factory=dict)
+    coordinators: dict[str, VistapoolDataUpdateCoordinator] = field(default_factory=dict)
 
 
-type AquariteConfigEntry = ConfigEntry[AquariteData]
+type VistapoolConfigEntry = ConfigEntry[VistapoolData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> bool:
-    """Set up AquaRite from a config entry.
+async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+    """Set up Vistapool from a config entry.
 
     One config entry represents a Hayward account; the account can contain
     multiple pools, each exposed as a separate device.
@@ -63,11 +63,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
             translation_key="no_pools",
         )
 
-    data = AquariteData(auth=auth, api=api)
+    data = VistapoolData(auth=auth, api=api)
 
     try:
         for pool_id, pool_name in pools.items():
-            coordinator = AquariteDataUpdateCoordinator(
+            coordinator = VistapoolDataUpdateCoordinator(
                 hass, entry, auth, api, pool_id, pool_name
             )
             data.coordinators[pool_id] = coordinator
@@ -87,6 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> bool:
-    """Unload AquaRite config entry."""
+async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+    """Unload Vistapool config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

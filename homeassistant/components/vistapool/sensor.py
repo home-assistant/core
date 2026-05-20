@@ -1,4 +1,4 @@
-"""AquaRite Sensor entities."""
+"""Vistapool Sensor entities."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AquariteConfigEntry
+from . import VistapoolConfigEntry
 from .const import (
     PATH_HASCD,
     PATH_HASCL,
@@ -29,8 +29,8 @@ from .const import (
     PATH_HASRX,
     PATH_HASUV,
 )
-from .coordinator import AquariteDataUpdateCoordinator
-from .entity import AquariteEntity
+from .coordinator import VistapoolDataUpdateCoordinator
+from .entity import VistapoolEntity
 
 PARALLEL_UPDATES = 1
 
@@ -44,23 +44,23 @@ def _convert_tenths(value: Any) -> float:
 
 
 @dataclass(frozen=True, kw_only=True)
-class AquariteSensorEntityDescription(SensorEntityDescription):
-    """Describes an AquaRite sensor entity."""
+class VistapoolSensorEntityDescription(SensorEntityDescription):
+    """Describes a Vistapool sensor entity."""
 
     value_path: str
     value_fn: Callable[[Any], float | int] = float
     exists_path: str | None = None
 
 
-SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
-    AquariteSensorEntityDescription(
+SENSOR_DESCRIPTIONS: tuple[VistapoolSensorEntityDescription, ...] = (
+    VistapoolSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="main.temperature",
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="conductivity",
         translation_key="conductivity",
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,7 +68,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_fn=_convert_hundredths,
         exists_path=PATH_HASCD,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="chlorine",
         translation_key="chlorine",
         state_class=SensorStateClass.MEASUREMENT,
@@ -76,7 +76,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_fn=_convert_hundredths,
         exists_path=PATH_HASCL,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="ph",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -84,7 +84,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_fn=_convert_hundredths,
         exists_path=PATH_HASPH,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="redox_potential",
         translation_key="redox_potential",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
@@ -93,7 +93,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_fn=int,
         exists_path=PATH_HASRX,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="uv",
         translation_key="uv",
         state_class=SensorStateClass.MEASUREMENT,
@@ -101,7 +101,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_fn=_convert_hundredths,
         exists_path=PATH_HASUV,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="filtration_intel_time",
         translation_key="filtration_intel_time",
         device_class=SensorDeviceClass.DURATION,
@@ -111,7 +111,7 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_path="filtration.intel.time",
         value_fn=int,
     ),
-    AquariteSensorEntityDescription(
+    VistapoolSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -127,11 +127,11 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: AquariteConfigEntry,
+    entry: VistapoolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up AquaRite sensors for every pool on the account."""
-    entities: list[AquariteSensorEntity] = []
+    """Set up Vistapool sensors for every pool on the account."""
+    entities: list[VistapoolSensorEntity] = []
 
     for coordinator in entry.runtime_data.coordinators.values():
         for description in SENSOR_DESCRIPTIONS:
@@ -139,15 +139,15 @@ async def async_setup_entry(
                 description.exists_path
             ):
                 continue
-            entities.append(AquariteSensorEntity(coordinator, description))
+            entities.append(VistapoolSensorEntity(coordinator, description))
 
         # Electrolysis/hydrolysis: dynamic key based on hardware type
         if coordinator.get_value(PATH_HASHIDRO):
             is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
             entities.append(
-                AquariteSensorEntity(
+                VistapoolSensorEntity(
                     coordinator,
-                    AquariteSensorEntityDescription(
+                    VistapoolSensorEntityDescription(
                         key="electrolysis" if is_electrolysis else "hydrolysis",
                         translation_key=(
                             "electrolysis" if is_electrolysis else "hydrolysis"
@@ -163,15 +163,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AquariteSensorEntity(AquariteEntity, SensorEntity):
-    """Generic AquaRite sensor driven by an entity description."""
+class VistapoolSensorEntity(VistapoolEntity, SensorEntity):
+    """Generic Vistapool sensor driven by an entity description."""
 
-    entity_description: AquariteSensorEntityDescription
+    entity_description: VistapoolSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: AquariteDataUpdateCoordinator,
-        description: AquariteSensorEntityDescription,
+        coordinator: VistapoolDataUpdateCoordinator,
+        description: VistapoolSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

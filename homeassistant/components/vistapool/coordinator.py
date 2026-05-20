@@ -1,4 +1,4 @@
-"""Data coordinator for the AquaRite integration."""
+"""Data coordinator for the Vistapool integration."""
 
 import logging
 from typing import TYPE_CHECKING, Any
@@ -16,20 +16,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import AquariteConfigEntry
+    from . import VistapoolConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """AquaRite coordinator for a single pool's Firestore subscription."""
+class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Vistapool coordinator for a single pool's Firestore subscription."""
 
-    config_entry: AquariteConfigEntry
+    config_entry: VistapoolConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: AquariteConfigEntry,
+        entry: VistapoolConfigEntry,
         auth: AquariteAuth,
         api: AquariteClient,
         pool_id: str,
@@ -45,7 +45,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=f"AquaRite {pool_name}",
+            name=f"Vistapool {pool_name}",
             update_interval=None,
             config_entry=entry,
         )

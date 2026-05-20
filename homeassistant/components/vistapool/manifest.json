@@ -1,9 +1,9 @@
 {
-  "domain": "aquarite",
-  "name": "AquaRite",
+  "domain": "vistapool",
+  "name": "Vistapool",
   "codeowners": ["@fdebrus"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/aquarite",
+  "documentation": "https://www.home-assistant.io/integrations/vistapool",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioaquarite"],

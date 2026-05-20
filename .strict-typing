@@ -95,7 +95,6 @@ homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
-homeassistant.components.aquarite.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*
@@ -610,6 +609,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
+homeassistant.components.vistapool.*
 homeassistant.components.vivotek.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
