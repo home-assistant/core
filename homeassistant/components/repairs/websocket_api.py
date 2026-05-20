@@ -1,7 +1,8 @@
 """The repairs websocket API."""
 
+from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
@@ -19,6 +21,7 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
+from .issue_handler import RepairsFlowManager, RepairsFlowResult, UnknownIssue
 
 
 @callback
@@ -73,6 +76,23 @@ def ws_ignore_issue(
     connection.send_result(msg["id"])
 
 
+def _serialize_issue(issue: ir.IssueEntry) -> dict[str, Any]:
+    return {
+        "breaks_in_ha_version": issue.breaks_in_ha_version,
+        "created": issue.created,
+        "dismissed_version": issue.dismissed_version,
+        "ignored": issue.dismissed_version is not None,
+        "domain": issue.domain,
+        "is_fixable": issue.is_fixable,
+        "issue_domain": issue.issue_domain,
+        "issue_id": issue.issue_id,
+        "learn_more_url": issue.learn_more_url,
+        "severity": issue.severity,
+        "translation_key": issue.translation_key,
+        "translation_placeholders": issue.translation_placeholders,
+    }
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "repairs/list_issues",
@@ -85,27 +105,14 @@ def ws_list_issues(
     """Return a list of issues."""
     issue_registry = ir.async_get(hass)
     issues = [
-        {
-            "breaks_in_ha_version": issue.breaks_in_ha_version,
-            "created": issue.created,
-            "dismissed_version": issue.dismissed_version,
-            "ignored": issue.dismissed_version is not None,
-            "domain": issue.domain,
-            "is_fixable": issue.is_fixable,
-            "issue_domain": issue.issue_domain,
-            "issue_id": issue.issue_id,
-            "learn_more_url": issue.learn_more_url,
-            "severity": issue.severity,
-            "translation_key": issue.translation_key,
-            "translation_placeholders": issue.translation_placeholders,
-        }
+        _serialize_issue(issue)
         for issue in issue_registry.issues.values()
         if issue.active
     ]
     connection.send_result(msg["id"], {"issues": issues})
 
 
-class RepairsFlowIndexView(FlowManagerIndexView):
+class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowResult]):
     """View to create issue fix flows."""
 
     url = "/api/repairs/issues/fix"
@@ -126,22 +133,28 @@ class RepairsFlowIndexView(FlowManagerIndexView):
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
-        except data_entry_flow.UnknownHandler:
-            return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.UnknownStep:
+        except data_entry_flow.UnknownStep as ex:
+            return self.json_message(str(ex), HTTPStatus.NOT_FOUND)
+        except UnknownIssue as ex:
+            return self.json_message(str(ex), HTTPStatus.NOT_FOUND)
+        except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
+                str(ex) or "next_flow is unknown", HTTPStatus.NOT_FOUND
             )
+        except data_entry_flow.FlowError as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
 
         return self.json(
-            self._prepare_result_json(result),
+            _prepare_repairs_flow_result_json(result, self._prepare_result_json)
         )
 
 
-class RepairsFlowResourceView(FlowManagerResourceView):
-    """View to interact with the option flow manager."""
+class RepairsFlowResourceView(
+    FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
+):
+    """View to interact with the repairs flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
@@ -155,3 +168,25 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
+
+    @override
+    def _prepare_result_json(self, result: RepairsFlowResult) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
+        return _prepare_repairs_flow_result_json(result, super()._prepare_result_json)
+
+
+def _prepare_repairs_flow_result_json(
+    result: RepairsFlowResult,
+    prepare_result_json: Callable[[RepairsFlowResult], dict[str, Any]],
+) -> dict[str, Any]:
+    """Convert result to JSON."""
+    if "result" not in result:
+        return prepare_result_json(result)
+    data = {key: val for key, val in result.items() if key not in ("data", "context")}
+    if isinstance(result["result"], ConfigEntry):
+        entry: ConfigEntry = result["result"]
+        data["result"] = entry.as_json_fragment
+        return data
+    issue: ir.IssueEntry = result["result"]
+    data["result"] = _serialize_issue(issue)
+    return data

@@ -20,16 +20,21 @@ _FlowManagerT = TypeVar(
 )
 
 
-class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
+_FlowResultT = TypeVar(
+    "_FlowResultT",
+    bound=data_entry_flow.FlowResult[Any, Any],
+    default=data_entry_flow.FlowResult,
+)
+
+
+class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResultT]):
     """Foundation for flow manager views."""
 
     def __init__(self, flow_mgr: _FlowManagerT) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    def _prepare_result_json(
-        self, result: data_entry_flow.FlowResult
-    ) -> dict[str, Any]:
+    def _prepare_result_json(self, result: _FlowResultT) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
         if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
             assert "result" not in result
@@ -53,7 +58,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         return data
 
 
-class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
+class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):
     """View to create config flows."""
 
     @RequestDataValidator(
@@ -96,7 +101,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
         return {"show_advanced_options": data["show_advanced_options"]}
 
 
-class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):
+class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT, _FlowResultT]):
     """View to interact with the flow manager."""
 
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
