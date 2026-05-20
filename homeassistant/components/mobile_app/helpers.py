@@ -9,7 +9,12 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.json import json_bytes
@@ -21,8 +26,6 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
