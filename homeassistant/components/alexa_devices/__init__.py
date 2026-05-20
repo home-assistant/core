@@ -58,6 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
 
+    async def _stop_http2() -> None:
+        try:
+            await coordinator.api.stop_http2_processing()
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Error while stopping HTTP/2 processing")
+
     _update_lock = asyncio.Lock()
 
     async def _async_update_alexa_media(
@@ -85,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
                     )
                     media_player_loaded = True
             else:
-                await coordinator.api.stop_http2_processing()
+                await _stop_http2()
                 if media_player_loaded:
                     await hass.config_entries.async_unload_platforms(
                         entry, [Platform.MEDIA_PLAYER]
@@ -109,12 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
             _async_update_alexa_media,
         )
     )
-
-    async def _stop_http2() -> None:
-        try:
-            await coordinator.api.stop_http2_processing()
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Error while stopping HTTP/2 processing")
 
     entry.async_on_unload(_stop_http2)
 
