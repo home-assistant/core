@@ -17,7 +17,8 @@ OAUTH2_TOKEN = "https://visionlogin.b2clogin.com/visionlogin.onmicrosoft.com/B2C
 OAUTH2_SCOPES = [
     "openid",
     "offline_access",
-    "https://visionlogin.onmicrosoft.com/homeassistant-api/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/vision/brand.watts",
+    "https://visionlogin.onmicrosoft.com/vision/homeassistant.read",
 ]
 
 # Update intervals
