@@ -35,7 +35,6 @@ from .deprecation import deprecated_function
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
-from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -818,11 +817,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
-    _loaded_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -831,11 +830,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
-
-    @callback
-    def async_setup(self) -> None:
-        """Set up the registry."""
-        self._loaded_event = asyncio.Event()
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
@@ -1522,8 +1516,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     async def _async_load(self) -> None:
         """Load the device registry."""
-        assert self._loaded_event is not None
-        assert not self._loaded_event.is_set()
+        if self._loaded_event.is_set():
+            raise RuntimeError("Device registry is already loaded")
 
         async_setup_cleanup(self.hass, self)
 
@@ -1625,12 +1619,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._loaded_event.set()
 
     async def async_wait_loaded(self) -> None:
-        """Wait until the device registry is fully loaded.
-
-        Will only wait if the registry had already been set up.
-        """
-        if self._loaded_event is not None:
-            await self._loaded_event.wait()
+        """Wait until the device registry is fully loaded."""
+        await self._loaded_event.wait()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
@@ -1772,16 +1762,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
-@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    return DeviceRegistry(hass)
+    try:
+        return hass.data[DATA_REGISTRY]
+    except KeyError as ex:
+        raise RuntimeError("Device registry not set up") from ex
 
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up device registry."""
-    assert DATA_REGISTRY not in hass.data
-    async_get(hass).async_setup()
+    if DATA_REGISTRY in hass.data:
+        raise RuntimeError("Device registry is already set up")
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
 
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
