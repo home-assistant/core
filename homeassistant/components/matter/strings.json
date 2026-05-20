@@ -606,6 +606,31 @@
       "voltage": {
         "name": "Voltage"
       },
+      "wifi_channel": {
+        "name": "Wi-Fi channel"
+      },
+      "wifi_security_type": {
+        "name": "Wi-Fi security type",
+        "state": {
+          "none": "None",
+          "wep": "WEP",
+          "wpa": "WPA",
+          "wpa2": "WPA2",
+          "wpa3": "WPA3"
+        }
+      },
+      "wifi_version": {
+        "name": "Wi-Fi version",
+        "state": {
+          "wifi_1": "Wi-Fi 1 (802.11b)",
+          "wifi_2": "Wi-Fi 2 (802.11a)",
+          "wifi_3": "Wi-Fi 3 (802.11g)",
+          "wifi_4": "Wi-Fi 4 (802.11n)",
+          "wifi_5": "Wi-Fi 5 (802.11ac)",
+          "wifi_6": "Wi-Fi 6 (802.11ax)",
+          "wifi_ah": "Wi-Fi HaLow (802.11ah)"
+        }
+      },
       "window_covering_target_position": {
         "name": "Target opening position"
       }
