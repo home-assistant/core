@@ -35,7 +35,6 @@ from .deprecation import deprecated_function
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
-from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -1753,10 +1752,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
 
 @callback
-@singleton(DATA_REGISTRY)
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
-    raise RuntimeError("Device registry not set up")
+    try:
+        return hass.data[DATA_REGISTRY]
+    except KeyError as ex:
+        raise RuntimeError("Device registry not set up") from ex
 
 
 def async_setup(hass: HomeAssistant) -> None:
