@@ -106,6 +106,10 @@ EVENT_PROG_END = {
             "BSH.Common.EnumType.OperationState.Ready"
         ),
     },
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 25,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+    },
 }
 
 
@@ -322,6 +326,14 @@ ENTITY_ID_STATES = {
         "99",
         "99",
         STATE_UNAVAILABLE,
+    ),
+    "sensor.dishwasher_program_duration": (
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        STATE_UNAVAILABLE,
+        "25",
     ),
 }
 
