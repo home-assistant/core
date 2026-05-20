@@ -7,7 +7,7 @@ LABS_PREVIEW_FEATURES = {
     "alexa_devices": {
         "alexa_media": {
             "feedback_url": "https://discord.gg/9P75ptv8WT",
-            "learn_more_url": "https://github.com/chemelli74/aioamazondevices/wiki",
+            "learn_more_url": "https://github.com/chemelli74/aioamazondevices/wiki/Media-Player-Testing",
             "report_issue_url": "https://github.com/chemelli74/aioamazondevices/issues/new",
         },
     },
