@@ -16,10 +16,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -209,17 +209,51 @@ class AveaLight(LightEntity):
         """Fetch device information from the Avea bulb."""
         device_info = self._attr_device_info
         assert device_info is not None
-        if manufacturer := _read_device_info_value(self._light.get_manufacturer_name):
+        manufacturer = _read_device_info_value(self._light.get_manufacturer_name)
+        hardware_revision = _read_device_info_value(self._light.get_hardware_revision)
+        firmware_version = _read_device_info_value(self._light.get_fw_version)
+        serial_number = _read_device_info_value(self._light.get_serial_number)
+
+        if manufacturer:
             device_info["manufacturer"] = manufacturer
-        if hardware_revision := _read_device_info_value(
-            self._light.get_hardware_revision
-        ):
-            device_info["model"] = hardware_revision
-        if firmware_version := _read_device_info_value(self._light.get_fw_version):
+        if hardware_revision:
+            device_info["hw_version"] = hardware_revision
+        if firmware_version:
             device_info["sw_version"] = firmware_version
-        if serial_number := _read_device_info_value(self._light.get_serial_number):
+        if serial_number:
             device_info["serial_number"] = serial_number
+        if not (
+            manufacturer and hardware_revision and firmware_version and serial_number
+        ):
+            return
         self._device_info_updated = True
+        if self.device_entry:
+            self.hass.add_job(
+                self._async_update_device_registry,
+                manufacturer,
+                hardware_revision,
+                firmware_version,
+                serial_number,
+            )
+
+    @callback
+    def _async_update_device_registry(
+        self,
+        manufacturer: str,
+        hardware_revision: str,
+        firmware_version: str,
+        serial_number: str,
+    ) -> None:
+        """Update device registry values after entity setup."""
+        if not self.device_entry:
+            return
+        dr.async_get(self.hass).async_update_device(
+            self.device_entry.id,
+            manufacturer=manufacturer,
+            hw_version=hardware_revision,
+            sw_version=firmware_version,
+            serial_number=serial_number,
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
