@@ -42,14 +42,14 @@
       "boiler_temperature": {
         "name": "Boiler temperature"
       },
+      "buffer_bottom_0_temperature": {
+        "name": "Buffer 0 bottom temperature"
+      },
       "buffer_bottom_1_temperature": {
         "name": "Buffer 1 bottom temperature"
       },
       "buffer_bottom_2_temperature": {
         "name": "Buffer 2 bottom temperature"
-      },
-      "buffer_bottom_3_temperature": {
-        "name": "Buffer 3 bottom temperature"
       },
       "buffer_bottom_temperature": {
         "name": "Buffer bottom temperature"
@@ -71,6 +71,9 @@
       },
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
+      },
+      "circuit_0_temp": {
+        "name": "Heating circuit 0 temperature"
       },
       "circuit_1_temp": {
         "name": "Heating circuit 1 temperature"
@@ -98,9 +101,6 @@
       },
       "co2_content": {
         "name": "Flue CO2 content"
-      },
-      "circuit_0_temp": {
-        "name": "Heating circuit 0 temperature"
       },
       "dhw_pump_0": {
         "name": "DHW pump 0"
