@@ -4,7 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import ATTR_LOCATION, ATTR_STATE
+from homeassistant.const import ATTR_LOCATION
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -174,19 +174,6 @@ CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
 CONTAINER_STATS = "stats"
-CONTAINER_INFO = "info"
-
-# This is a mapping of which endpoint the key in the addon data
-# is obtained from so we know which endpoint to update when the
-# coordinator polls for updates.
-KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
-    ATTR_VERSION_LATEST: {CONTAINER_INFO},
-    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
-    ATTR_CPU_PERCENT: {CONTAINER_STATS},
-    ATTR_VERSION: {CONTAINER_INFO},
-    ATTR_STATE: {CONTAINER_INFO},
-}
-
 REQUEST_REFRESH_DELAY = 10
 
 HELP_URLS = {
