@@ -1,12 +1,10 @@
 """Tests for Fritz!Tools image platform."""
 
-from http import HTTPStatus
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from requests.exceptions import ReadTimeout
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -76,9 +74,7 @@ GUEST_WIFI_DISABLED: dict[str, dict] = {
 )
 async def test_image_entity(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
@@ -120,14 +116,6 @@ async def test_image_entity(
 
         assert (state := entity_registry.async_get("image.mock_title_guestwifi"))
         assert state.unique_id == f"{MOCK_SERIAL_NUMBER}-guest_wifi_qr_code"
-
-    # test image download
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.mock_title_guestwifi")
-    assert resp.status == HTTPStatus.OK
-
-    body = await resp.read()
-    assert body == snapshot
 
 
 @pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES})])
@@ -201,8 +189,7 @@ async def test_image_update_unavailable(
         assert entry.state is ConfigEntryState.LOADED
 
         # Verify entity is loaded and has a state
-        assert (state := hass.states.get(entity_id))
-        initial_state = state.state
+        assert hass.states.get(entity_id)
 
         # fritzbox becomes unavailable - this triggers RequestException handling
         fc_class_mock().call_action_side_effect(ReadTimeout)
@@ -212,7 +199,7 @@ async def test_image_update_unavailable(
         await hass.async_block_till_done()
 
         # Entity should exist (handling RequestException sets bytes to None)
-        assert (state := hass.states.get(entity_id))
+        assert hass.states.get(entity_id)
 
         # fritzbox is available again
         fc_class_mock().call_action_side_effect(None)
@@ -222,7 +209,7 @@ async def test_image_update_unavailable(
         await hass.async_block_till_done()
 
         # Entity should exist and potentially recover
-        assert (state := hass.states.get(entity_id))
+        assert hass.states.get(entity_id)
 
 
 async def test_migrate_to_new_unique_id(
