@@ -43,7 +43,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> PanasonicVieraOptionsFlow:
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return PanasonicVieraOptionsFlow()
 

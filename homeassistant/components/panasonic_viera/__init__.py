@@ -78,7 +78,7 @@ async def async_setup_entry(
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    on_action = config_entry.options.get(CONF_ON_ACTION, config[CONF_ON_ACTION])
+    on_action = config_entry.options.get(CONF_ON_ACTION, config.get(CONF_ON_ACTION))
     if on_action:
         on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
     else:
