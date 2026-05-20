@@ -11,6 +11,7 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
+from mcp.types import InitializeResult
 import voluptuous as vol
 from voluptuous_openapi import convert_to_voluptuous
 
@@ -38,7 +39,7 @@ async def mcp_client(
     hass: HomeAssistant,
     url: str,
     token_manager: TokenManager | None = None,
-) -> AsyncGenerator[ClientSession]:
+) -> AsyncGenerator[tuple[ClientSession, InitializeResult]]:
     """Create an MCP client.
 
     This is an asynccontext manager that exists to wrap other async context managers
@@ -57,8 +58,8 @@ async def mcp_client(
             ) as (read_stream, write_stream, _),
             ClientSession(read_stream, write_stream) as session,
         ):
-            await session.initialize()
-            yield session
+            result = await session.initialize()
+            yield session, result
     except ExceptionGroup as streamable_err:
         main_error = streamable_err.exceptions[0]
         # Method not Allowed likely means this is not a streamable HTTP server,
@@ -78,8 +79,8 @@ async def mcp_client(
                     sse_client(url=url, headers=headers) as streams,
                     ClientSession(*streams) as session,
                 ):
-                    await session.initialize()
-                    yield session
+                    result = await session.initialize()
+                    yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
                 raise sse_err.exceptions[0] from sse_err
@@ -115,9 +116,10 @@ class ModelContextProtocolTool(llm.Tool):
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
-                async with mcp_client(
-                    hass, self.server_url, self.token_manager
-                ) as session:
+                async with mcp_client(hass, self.server_url, self.token_manager) as (
+                    session,
+                    _,
+                ):
                     result = await session.call_tool(
                         tool_input.tool_name, tool_input.tool_args
                     )
@@ -161,7 +163,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
-                ) as session:
+                ) as (session, _):
                     result = await session.list_tools()
         except TimeoutError as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
