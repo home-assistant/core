@@ -446,7 +446,7 @@ async def test_user_v5_connection_works(
 
     result = await hass.config_entries.flow.async_init(
         "mqtt",
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 

@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -16,8 +17,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant, HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 
@@ -46,7 +48,7 @@ async def test_switch_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch can be turned on."""
-    entity_id = "switch.test_pet_tracker_led"
+    entity_id = "switch.tracker_device_id_123_led"
 
     await init_integration(hass, mock_config_entry)
 
@@ -85,7 +87,7 @@ async def test_switch_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch can be turned off."""
-    entity_id = "switch.test_pet_tracker_buzzer"
+    entity_id = "switch.tracker_device_id_123_buzzer"
 
     await init_integration(hass, mock_config_entry)
 
@@ -125,7 +127,7 @@ async def test_live_tracking_switch(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the live_tracking switch."""
-    entity_id = "switch.test_pet_live_tracking"
+    entity_id = "switch.tracker_device_id_123_live_tracking"
 
     await init_integration(hass, mock_config_entry)
 
@@ -170,7 +172,7 @@ async def test_switch_on_with_exception(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch turn on with exception."""
-    entity_id = "switch.test_pet_tracker_led"
+    entity_id = "switch.tracker_device_id_123_led"
 
     await init_integration(hass, mock_config_entry)
 
@@ -206,7 +208,7 @@ async def test_switch_off_with_exception(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch turn off with exception."""
-    entity_id = "switch.test_pet_tracker_buzzer"
+    entity_id = "switch.tracker_device_id_123_buzzer"
 
     await init_integration(hass, mock_config_entry)
 
@@ -244,7 +246,7 @@ async def test_switch_unavailable(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the switch is navailable when the tracker is in the energy saving zone."""
-    entity_id = "switch.test_pet_tracker_buzzer"
+    entity_id = "switch.tracker_device_id_123_buzzer"
 
     await init_integration(hass, mock_config_entry)
 
@@ -274,3 +276,29 @@ async def test_switch_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_switch_device_assignment(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that switch entities are assigned to the tracker device."""
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SWITCH]):
+        await init_integration(hass, mock_config_entry)
+
+    tracker_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "device_id_123")}
+    )
+    assert tracker_device is not None
+
+    for entity_id in (
+        "switch.tracker_device_id_123_buzzer",
+        "switch.tracker_device_id_123_led",
+        "switch.tracker_device_id_123_live_tracking",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.device_id == tracker_device.id
