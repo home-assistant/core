@@ -5696,7 +5696,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '32.1',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_main_serial_number-entry]
