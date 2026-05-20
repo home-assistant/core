@@ -257,7 +257,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         severity=IssueSeverity.CRITICAL,
                         translation_key="import_failed_missing_interfaces",
                         translation_placeholders={
-                            "url": verified_data[CONF_URL],
                             "missing": ", ".join(missing),
                             "found": ", ".join(known_interfaces),
                             "integration_title": "OPNsense",
@@ -266,7 +265,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(
                         reason="import_failed_missing_interfaces",
                         description_placeholders={
-                            "url": verified_data[CONF_URL],
                             "missing": ", ".join(missing),
                             "found": ", ".join(known_interfaces),
                             "integration_title": "OPNsense",
