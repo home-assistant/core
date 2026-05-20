@@ -51,6 +51,7 @@
       'target_temp_high': 63,
       'target_temp_low': 57,
       'temperature': 60,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.test_device',
