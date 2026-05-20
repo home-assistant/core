@@ -500,7 +500,12 @@ class ONVIFDevice:
         tilt=None,
         zoom=None,
     ):
-        """Perform a PTZ action on the camera."""
+        """Perform a PTZ action on the camera.
+
+        For ContinuousMove operations, calling this service with
+        continuous_duration = 0 disables the automatic Stop call; other move
+        modes do not auto-stop.
+        """
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
@@ -544,12 +549,17 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                if continuous_duration:
+                    await asyncio.sleep(continuous_duration)
+                    req = ptz_service.create_type("Stop")
+                    req.ProfileToken = profile.token
+                    await ptz_service.Stop(
+                        {
+                            "ProfileToken": req.ProfileToken,
+                            "PanTilt": True,
+                            "Zoom": False,
+                        }
+                    )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:
