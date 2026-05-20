@@ -14,7 +14,13 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -36,10 +42,8 @@ FAN_SPEED = "fan_speed"
 SEGMENTS = "segments"
 STATE = "state"
 
-STATE_IDLE = "idle"
 STATE_DOCKED = "docked"
 STATE_ERROR = "error"
-STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
 
