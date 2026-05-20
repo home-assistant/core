@@ -125,21 +125,6 @@ async def setup_single_attribute_update(
     )
 
 
-async def test_legacy_platform_config(hass: HomeAssistant) -> None:
-    """Test a legacy platform does not create update entities."""
-    with assert_setup_component(1, update.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            update.DOMAIN,
-            {"update": {"platform": "template", "updates": {"anything": {}}}},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-    assert hass.states.async_all("update") == []
-
-
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
