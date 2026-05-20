@@ -117,7 +117,6 @@ class VirtualRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_virtual_remotes")
 
         first_remote = virtual_remotes[0]
-        current_remote_id = str(first_remote[CONF_REMOTE_ID])
         current_name = str(first_remote[CONF_REMOTE_NAME])
         current_entity_id = str(first_remote[CONF_INFRARED_ENTITY_ID])
 
