@@ -2602,3 +2602,28 @@ async def assert_numerical_condition_unit_conversion(
         for state in fail_states:
             set_or_remove_state(hass, entity_id, state)
             assert cond.async_check() is False
+
+
+async def assert_availability_follows_source_entity(
+    hass: HomeAssistant,
+    entity_id: str,
+    source_entity_id: str,
+) -> None:
+    """Check that entity becomes unavailable when source entity is unavailable."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    hass.states.async_set(source_entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(source_entity_id, "2026-01-01T00:00:00.000")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
