@@ -96,7 +96,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
     @property
     def precision(self) -> float:
         """Return the precision of the system."""
-        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.hass.config.units.temperature_unit is UnitOfTemperature.CELSIUS:
             return PRECISION_HALVES
         return PRECISION_WHOLE
 

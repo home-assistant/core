@@ -184,7 +184,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             vol.Required(CONF_COUNTRY): selector.CountrySelector(),
         }
-        if self._mode == InstanceMode.SELF_HOSTED:
+        if self._mode is InstanceMode.SELF_HOSTED:
             schema.update(
                 {
                     vol.Required(CONF_OVERRIDE_REST_URL): selector.TextSelector(

@@ -278,7 +278,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
     async def async_source_start(self, uri: str, source_type: SourceType | str) -> None:
         """Select source by uri."""
-        if source_type == SourceType.APP:
+        if source_type is SourceType.APP:
             await self.client.set_active_app(uri)
         else:
             await self.client.set_play_content(uri)
@@ -290,7 +290,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if query.startswith(("extInput:", "tv:", "com.sony.dtv.")):
             return await self.async_source_start(query, source_type)
         coarse_uri = None
-        is_numeric_search = source_type == SourceType.CHANNEL and query.isnumeric()
+        is_numeric_search = source_type is SourceType.CHANNEL and query.isnumeric()
         for uri, item in self.source_map.items():
             if item["type"] == source_type:
                 if is_numeric_search:
@@ -355,7 +355,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     @catch_braviatv_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if self.media_content_type == MediaType.CHANNEL:
+        if self.media_content_type is MediaType.CHANNEL:
             await self.client.channel_up()
         else:
             await self.client.next_track()
@@ -363,7 +363,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     @catch_braviatv_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if self.media_content_type == MediaType.CHANNEL:
+        if self.media_content_type is MediaType.CHANNEL:
             await self.client.channel_down()
         else:
             await self.client.previous_track()

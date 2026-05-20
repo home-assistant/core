@@ -138,7 +138,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         """Start the device."""
         if self.data.current_state == State.SLEEP:
             value = State.WAKE_UP
-        elif self._attr_activity == VacuumActivity.PAUSED:
+        elif self._attr_activity is VacuumActivity.PAUSED:
             value = State.RESUME
         else:
             value = State.START

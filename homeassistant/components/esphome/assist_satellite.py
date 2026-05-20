@@ -343,7 +343,7 @@ class EsphomeAssistSatellite(
             return
 
         data_to_send: dict[str, Any] = {}
-        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+        if event_type is VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
             if (
                 self._has_multi_channel_audio
                 and event.data
@@ -471,7 +471,7 @@ class EsphomeAssistSatellite(
             for supported_format in chain(
                 *self._entry_data.media_player_formats.values()
             ):
-                if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
+                if supported_format.purpose is MediaPlayerFormatPurpose.ANNOUNCEMENT:
                     format_to_use = supported_format
                     break
 
@@ -668,7 +668,7 @@ class EsphomeAssistSatellite(
         """Update the TTS format from the first media player."""
         for supported_format in chain(*self._entry_data.media_player_formats.values()):
             # Find first announcement format
-            if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
+            if supported_format.purpose is MediaPlayerFormatPurpose.ANNOUNCEMENT:
                 self._attr_tts_options = {
                     tts.ATTR_PREFERRED_FORMAT: supported_format.format,
                 }

@@ -120,7 +120,7 @@ class GooglePhotosMediaSource(MediaSource):
             raise BrowseError(f"Could not parse identifier: {item.identifier}") from err
         if (
             identifier.media_id is None
-            or identifier.id_type != PhotosIdentifierType.PHOTO
+            or identifier.id_type is not PhotosIdentifierType.PHOTO
         ):
             raise BrowseError(
                 f"Could not resolve identiifer that is not a Photo: {identifier}"
@@ -186,7 +186,7 @@ class GooglePhotosMediaSource(MediaSource):
             return source
 
         if (
-            identifier.id_type != PhotosIdentifierType.ALBUM
+            identifier.id_type is not PhotosIdentifierType.ALBUM
             or identifier.media_id is None
         ):
             raise BrowseError(f"Unsupported identifier: {identifier}")

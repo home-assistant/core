@@ -150,7 +150,7 @@ class AutomowerControlEntity(AutomowerBaseEntity):
         return (
             super().available
             and self.mower_attributes.metadata.connected
-            and self.mower_attributes.mower.state != MowerStates.OFF
+            and self.mower_attributes.mower.state is not MowerStates.OFF
         )
 
 

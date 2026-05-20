@@ -44,7 +44,7 @@ async def add_lock_entities(
         HomeeLock(attribute, config_entry)
         for node in nodes
         for attribute in node.attributes
-        if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
+        if (attribute.type is AttributeType.LOCK_STATE and attribute.editable)
     )
 
 
@@ -118,7 +118,7 @@ class HomeeLock(HomeeEntity, LockEntity):
         changed_by_name = get_name_for_enum(
             AttributeChangedBy, self._attribute.changed_by
         )
-        if self._attribute.changed_by == AttributeChangedBy.USER:
+        if self._attribute.changed_by is AttributeChangedBy.USER:
             user = self._entry.runtime_data.get_user_by_id(
                 self._attribute.changed_by_id
             )

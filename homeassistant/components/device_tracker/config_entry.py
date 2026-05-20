@@ -155,7 +155,7 @@ def _async_register_mac(
                 is not None
                 and config_entry.pref_disable_new_entities
             )
-            or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
+            or entity_entry.disabled_by is not er.RegistryEntryDisabler.INTEGRATION
         ):
             return
 

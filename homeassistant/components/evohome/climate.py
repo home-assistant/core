@@ -264,9 +264,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
 
         if (until := kwargs.get("until")) is None:
-            if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
+            if self._evo_device.mode is EvoZoneMode.TEMPORARY_OVERRIDE:
                 until = self._evo_device.until
-            if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
+            if self._evo_device.mode is EvoZoneMode.FOLLOW_SCHEDULE:
                 await self._update_schedule()
                 until = self.setpoints.get("next_sp_from")
 
@@ -292,7 +292,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         regardless of any override mode, e.g. 'HeatingOff', Zones to (by default) 5C,
         and 'Away', Zones to (by default) 12C.
         """
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.coordinator.call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
@@ -303,7 +303,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EvoZoneMode.FOLLOW_SCHEDULE)
 
-        if evo_preset_mode == EvoZoneMode.FOLLOW_SCHEDULE:
+        if evo_preset_mode is EvoZoneMode.FOLLOW_SCHEDULE:
             await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
@@ -450,7 +450,7 @@ class EvoController(EvoClimateEntity):
 
         evo_mode: EvoSystemMode
 
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             evo_mode = (
                 EvoSystemMode.AUTO
                 if EvoSystemMode.AUTO in self._evo_modes

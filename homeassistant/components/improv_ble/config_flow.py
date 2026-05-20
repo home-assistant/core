@@ -357,7 +357,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._provision_result = self.async_abort(reason=err.reason)
                     return
                 except improv_ble_errors.ProvisioningFailed as err:
-                    if err.error == Error.NOT_AUTHORIZED:
+                    if err.error is Error.NOT_AUTHORIZED:
                         _LOGGER.debug("Need authorization when calling provision")
                         self._provision_result = await self.async_step_authorize()
                         return
@@ -479,7 +479,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
             def on_state_update(state: State) -> None:
                 _LOGGER.debug("State update: %s", state.name)
-                if state != State.AUTHORIZATION_REQUIRED:
+                if state is not State.AUTHORIZATION_REQUIRED:
                     authorized_event.set()
 
             try:

@@ -50,7 +50,7 @@ async def get_remotes(client: MozartClient) -> list[PairedRemote]:
 def get_device_buttons(model: BeoModel) -> list[str]:
     """Get supported buttons for a given model."""
     # Beoconnect Core does not have any buttons
-    if model == BeoModel.BEOCONNECT_CORE:
+    if model is BeoModel.BEOCONNECT_CORE:
         return []
 
     buttons = DEVICE_BUTTONS.copy()

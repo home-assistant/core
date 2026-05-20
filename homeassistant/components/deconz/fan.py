@@ -73,12 +73,12 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.fan_speed != LightFanSpeed.OFF
+        return self._device.fan_speed is not LightFanSpeed.OFF
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if self._device.fan_speed == LightFanSpeed.OFF:
+        if self._device.fan_speed is LightFanSpeed.OFF:
             return 0
         if self._device.fan_speed not in ORDERED_NAMED_FAN_SPEEDS:
             return None

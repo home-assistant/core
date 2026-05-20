@@ -267,7 +267,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE}
             )
@@ -503,7 +503,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
         if (
-            (mode == HVACMode.HEAT_COOL)
+            (mode is HVACMode.HEAT_COOL)
             and (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
             )
@@ -545,7 +545,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         """Return the temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT, HVACMode.COOL}) or (
-            (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL)
+            (MODE_HOMEKIT_TO_HASS.get(value) is HVACMode.HEAT_COOL)
             and ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             not in self.supported_features
         ):
@@ -556,7 +556,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) is HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             return self.service.value(
@@ -568,7 +568,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) is HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             return self.service.value(
@@ -580,7 +580,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) is HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             min_temp = self.service[
@@ -602,7 +602,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) is HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             max_temp = self.service[
@@ -664,7 +664,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         # If a device has a fan state (such as an Ecobee thermostat)
         # show the Fan state when the device is otherwise idle.
         if (
-            current_hass_value == HVACAction.IDLE
+            current_hass_value is HVACAction.IDLE
             and self.service.has(CharacteristicsTypes.FAN_STATE_CURRENT)
             and self.service.value(CharacteristicsTypes.FAN_STATE_CURRENT)
             == CurrentFanStateValues.ACTIVE

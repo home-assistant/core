@@ -121,7 +121,7 @@ class LunatoneSensor(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
         if (
-            self.sensor.data.address_type == SensorAddressType.DALI
+            self.sensor.data.address_type is SensorAddressType.DALI
             and self.sensor.data.dali_sensor_address
         ):
             device_info = DeviceInfo(

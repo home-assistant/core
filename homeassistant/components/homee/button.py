@@ -77,7 +77,7 @@ class HomeeButton(HomeeEntity, ButtonEntity):
         super().__init__(attribute, entry)
         self.entity_description = description
         if attribute.instance == 0:
-            if attribute.type == AttributeType.IMPULSE:
+            if attribute.type is AttributeType.IMPULSE:
                 self._attr_name = None
             else:
                 self._attr_translation_key = description.key

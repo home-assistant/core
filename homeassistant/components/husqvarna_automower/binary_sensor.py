@@ -33,13 +33,13 @@ class AutomowerBinarySensorEntityDescription(BinarySensorEntityDescription):
 MOWER_BINARY_SENSOR_TYPES: tuple[AutomowerBinarySensorEntityDescription, ...] = (
     AutomowerBinarySensorEntityDescription(
         key="battery_charging",
-        value_fn=lambda data: data.mower.activity == MowerActivities.CHARGING,
+        value_fn=lambda data: data.mower.activity is MowerActivities.CHARGING,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
     AutomowerBinarySensorEntityDescription(
         key="leaving_dock",
         translation_key="leaving_dock",
-        value_fn=lambda data: data.mower.activity == MowerActivities.LEAVING,
+        value_fn=lambda data: data.mower.activity is MowerActivities.LEAVING,
     ),
 )
 

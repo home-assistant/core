@@ -79,7 +79,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             return LawnMowerActivity.ERROR
         if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
+        if mower_attributes.mower.activity is MowerActivities.GOING_HOME:
             return LawnMowerActivity.RETURNING
         if (
             mower_attributes.mower.state is MowerStates.RESTRICTED
@@ -94,7 +94,8 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
     def available(self) -> bool:
         """Return the available attribute of the entity."""
         return (
-            super().available and self.mower_attributes.mower.state != MowerStates.OFF
+            super().available
+            and self.mower_attributes.mower.state is not MowerStates.OFF
         )
 
     @property

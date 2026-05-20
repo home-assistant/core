@@ -415,7 +415,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
         Need to be one of CURRENT_HVAC_*.
         """
-        if self._hvac_mode == HVACMode.OFF:
+        if self._hvac_mode is HVACMode.OFF:
             return HVACAction.OFF
         if not self._is_device_active:
             return HVACAction.IDLE
@@ -430,7 +430,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             self._hvac_mode = HVACMode.HEAT
             await self._async_control_heating(force=True)
         elif hvac_mode == HVACMode.COOL:
@@ -489,7 +489,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def _check_switch_initial_state(self) -> None:
         """Prevent the device from keep running if HVACMode.OFF."""
-        if self._hvac_mode == HVACMode.OFF and self._is_device_active:
+        if self._hvac_mode is HVACMode.OFF and self._is_device_active:
             _LOGGER.warning(
                 (
                     "The climate mode is OFF, but the switch device is ON. Turning off"
@@ -556,7 +556,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self._target_temp,
                 )
 
-            if not self._active or self._hvac_mode == HVACMode.OFF:
+            if not self._active or self._hvac_mode is HVACMode.OFF:
                 return
 
             if force and called_by_timer and self.max_cycle_duration:

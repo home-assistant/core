@@ -238,7 +238,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         set_power_setting: SetPowerSetting
         set_ac_mode: SetAcMode
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             set_power_setting = SetPowerSetting.SET_TO_OFF
             set_ac_mode = SetAcMode.KEEP_AC_MODE
         else:

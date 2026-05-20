@@ -154,7 +154,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self.target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
             return self.target_temperature_low
@@ -190,9 +190,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp is not None:
-            if self.hvac_mode == HVACMode.COOL:
+            if self.hvac_mode is HVACMode.COOL:
                 target_temp_high = target_temp
-            if self.hvac_mode == HVACMode.HEAT:
+            if self.hvac_mode is HVACMode.HEAT:
                 target_temp_low = target_temp
         if target_temp_low is not None:
             await self._node.set_climate_setpoint_heat(int(target_temp_low))

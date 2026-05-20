@@ -77,11 +77,11 @@ SUPPORTED_STATES = [
 ]
 
 SUPPORTED_PRETRIGGER_STATES = [
-    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.TRIGGERED
+    state for state in SUPPORTED_STATES if state is not AlarmControlPanelState.TRIGGERED
 ]
 
 SUPPORTED_PENDING_STATES = [
-    state for state in SUPPORTED_STATES if state != AlarmControlPanelState.DISARMED
+    state for state in SUPPORTED_STATES if state is not AlarmControlPanelState.DISARMED
 ]
 
 ATTR_PRE_PENDING_STATE = "pre_pending_state"

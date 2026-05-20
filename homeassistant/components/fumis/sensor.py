@@ -73,7 +73,7 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
             *(
                 alert.name.lower()
                 for alert in StoveAlert
-                if alert != StoveAlert.UNKNOWN
+                if alert is not StoveAlert.UNKNOWN
             ),
         ],
         value_fn=lambda data: _code_to_state(data.controller.stove_alert),
@@ -97,7 +97,7 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
         options=[
             status.name.lower()
             for status in StoveStatus
-            if status != StoveStatus.UNKNOWN
+            if status is not StoveStatus.UNKNOWN
         ],
         value_fn=lambda data: (
             None
@@ -115,7 +115,7 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
             *(
                 error.name.lower()
                 for error in StoveError
-                if error != StoveError.UNKNOWN
+                if error is not StoveError.UNKNOWN
             ),
         ],
         value_fn=lambda data: _code_to_state(data.controller.stove_error),
@@ -229,7 +229,9 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
         key="stove_status",
         translation_key="stove_status",
         device_class=SensorDeviceClass.ENUM,
-        options=[state.value for state in StoveState if state != StoveState.UNKNOWN],
+        options=[
+            state.value for state in StoveState if state is not StoveState.UNKNOWN
+        ],
         value_fn=lambda data: (
             None
             if data.controller.state is StoveState.UNKNOWN

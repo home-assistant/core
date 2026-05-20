@@ -478,7 +478,7 @@ class AssistSatelliteEntity(entity.Entity):
             return
 
         if (self._ask_question_future is not None) and (
-            start_stage == PipelineStage.STT
+            start_stage is PipelineStage.STT
         ):
             end_stage = PipelineStage.STT
 

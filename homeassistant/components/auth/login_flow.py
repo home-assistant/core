@@ -251,7 +251,7 @@ class AuthProvidersView(HomeAssistantView):
 
 def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return {
             key: val for key, val in result.items() if key not in ("result", "data")
         }
@@ -289,7 +289,7 @@ class LoginFlowBaseView(HomeAssistantView):
         result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (

@@ -201,7 +201,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         position = self._progress
 
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             position += int(
                 (dt_util.utcnow() - self._progress_updated_at).total_seconds()
             )
@@ -214,7 +214,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             return self._progress_updated_at
         return None
 

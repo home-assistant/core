@@ -315,7 +315,7 @@ class EcovacsLifespanSensor(
         await super().async_added_to_hass()
 
         async def on_event(event: LifeSpanEvent) -> None:
-            if event.type == self.entity_description.component:
+            if event.type is self.entity_description.component:
                 self._attr_native_value = self.entity_description.value_fn(event)
                 self.async_write_ha_state()
 

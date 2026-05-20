@@ -174,7 +174,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
                 if issue.key == self.issue.key or issue.type != self.issue.type:
                     continue
 
-                if issue.context == ContextType.CORE:
+                if issue.context is ContextType.CORE:
                     components.insert(0, "Home Assistant")
                 elif issue.context == ContextType.ADDON:
                     components.append(

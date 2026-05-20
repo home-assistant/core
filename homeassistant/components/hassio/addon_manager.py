@@ -165,7 +165,7 @@ class AddonManager:
         """Return the current state of the managed add-on."""
         addon_state = AddonState.NOT_RUNNING
 
-        if addon_info.state == SupervisorAddonState.STARTED:
+        if addon_info.state is SupervisorAddonState.STARTED:
             addon_state = AddonState.RUNNING
         if self._install_task and not self._install_task.done():
             addon_state = AddonState.INSTALLING

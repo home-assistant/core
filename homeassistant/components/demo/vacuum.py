@@ -121,14 +121,14 @@ class StateDemoVacuum(StateVacuumEntity):
 
     def start(self) -> None:
         """Start or resume the cleaning task."""
-        if self._attr_activity != VacuumActivity.CLEANING:
+        if self._attr_activity is not VacuumActivity.CLEANING:
             self._attr_activity = VacuumActivity.CLEANING
             self._cleaned_area += 1.32
             self.schedule_update_ha_state()
 
     def pause(self) -> None:
         """Pause the cleaning task."""
-        if self._attr_activity == VacuumActivity.CLEANING:
+        if self._attr_activity is VacuumActivity.CLEANING:
             self._attr_activity = VacuumActivity.PAUSED
             self.schedule_update_ha_state()
 

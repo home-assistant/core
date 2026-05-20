@@ -212,7 +212,7 @@ class ControllerEntity(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVACMode.HEAT))
+        await self.wrap_and_catch(self._controller.set_on(hvac_mode is HVACMode.HEAT))
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

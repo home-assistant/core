@@ -73,7 +73,7 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     @refresh_system
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Turn the underlying heater switch on or off."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             await await_or_reraise(self.dev.turn_on())
         elif hvac_mode == HVACMode.OFF:
             await await_or_reraise(self.dev.turn_off())

@@ -244,7 +244,7 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        is_enabled = hvac_mode != HVACMode.OFF
+        is_enabled = hvac_mode is not HVACMode.OFF
         await self._zone.enable(is_enabled)
 
     @actron_air_command

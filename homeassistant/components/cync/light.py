@@ -140,7 +140,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
             converted_color_temp = self._normalize_color_temp(color_temp)
         elif kwargs.get(ATTR_RGB_COLOR) is not None:
             rgb = kwargs.get(ATTR_RGB_COLOR)
-        elif self.color_mode == ColorMode.RGB:
+        elif self.color_mode is ColorMode.RGB:
             rgb = self._device.rgb
         elif self.color_mode == ColorMode.COLOR_TEMP:
             converted_color_temp = self._device.color_temp
@@ -148,7 +148,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             brightness = kwargs.get(ATTR_BRIGHTNESS)
             converted_brightness = self._normalize_brightness(brightness)
-        elif self.color_mode != ColorMode.ONOFF:
+        elif self.color_mode is not ColorMode.ONOFF:
             converted_brightness = self._device.brightness
 
         await self._device.set_combo(

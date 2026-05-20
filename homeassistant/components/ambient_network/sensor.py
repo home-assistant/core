@@ -304,7 +304,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         value = self.coordinator.data.get(self.entity_description.key)
 
         # Treatments for special units.
-        if value is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
+        if value is not None and self.device_class is SensorDeviceClass.TIMESTAMP:
             value = datetime.fromtimestamp(
                 value / 1000, tz=dt_util.get_default_time_zone()
             )

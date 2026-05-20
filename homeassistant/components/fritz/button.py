@@ -135,7 +135,7 @@ async def async_setup_entry(
         FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS
     ]
 
-    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+    if avm_wrapper.mesh_role is MeshRoles.SLAVE:
         async_add_entities(entities_list)
         repair_issue_cleanup(hass, avm_wrapper)
         repair_issue_firmware_update(hass, avm_wrapper)

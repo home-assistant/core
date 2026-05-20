@@ -104,7 +104,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
             ThermostatMode.EMERGENCY_HEAT,
         ):
             return self._element.heat_setpoint
-        if self._element.mode == ThermostatMode.COOL:
+        if self._element.mode is ThermostatMode.COOL:
             return self._element.cool_setpoint
         return None
 
@@ -161,7 +161,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = ELK_TO_HASS_HVAC_MODES[self._element.mode]
             if (
-                self._attr_hvac_mode == HVACMode.OFF
-                and self._element.fan == ThermostatFan.ON
+                self._attr_hvac_mode is HVACMode.OFF
+                and self._element.fan is ThermostatFan.ON
             ):
                 self._attr_hvac_mode = HVACMode.FAN_ONLY

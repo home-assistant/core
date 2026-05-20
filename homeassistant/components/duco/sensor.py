@@ -56,11 +56,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         options=[
             state.lower()
             for state in VentilationState
-            if state != VentilationState.UNKNOWN
+            if state is not VentilationState.UNKNOWN
         ],
         value_fn=lambda node: (
             node.ventilation.state.lower()
-            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            if node.ventilation
+            and node.ventilation.state is not VentilationState.UNKNOWN
             else None
         ),
         node_types=(NodeType.BOX,),
@@ -177,7 +178,7 @@ async def async_setup_entry(
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
                 continue
-            if node.general.node_type == NodeType.UNKNOWN:
+            if node.general.node_type is NodeType.UNKNOWN:
                 # Do not add the node to known_nodes so that it is re-evaluated
                 # on every coordinator update. This allows entities to be
                 # created automatically once a firmware update or library

@@ -253,7 +253,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current hvac action."""
         action = HVAC_ACTIONS.get(self.device.operation_status.mode)
-        if action == HVACAction.OFF and self.hvac_mode != HVACMode.OFF:
+        if action is HVACAction.OFF and self.hvac_mode is not HVACMode.OFF:
             action = HVACAction.IDLE
         return action
 
@@ -268,10 +268,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device = self.device
         if (
             device.changeable_values.auto_changeover_active
-            or HVAC_MODES[device.changeable_values.mode] == HVACMode.OFF
+            or HVAC_MODES[device.changeable_values.mode] is HVACMode.OFF
         ):
             return None
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return device.changeable_values.cool_setpoint
         return device.changeable_values.heat_setpoint
 
@@ -281,7 +281,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device = self.device
         if (
             not device.changeable_values.auto_changeover_active
-            or HVAC_MODES[device.changeable_values.mode] == HVACMode.OFF
+            or HVAC_MODES[device.changeable_values.mode] is HVACMode.OFF
         ):
             return None
         return device.changeable_values.cool_setpoint
@@ -292,7 +292,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device = self.device
         if (
             not device.changeable_values.auto_changeover_active
-            or HVAC_MODES[device.changeable_values.mode] == HVACMode.OFF
+            or HVAC_MODES[device.changeable_values.mode] is HVACMode.OFF
         ):
             return None
         return device.changeable_values.heat_setpoint
@@ -330,7 +330,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             return
 
         device = self.device
@@ -401,7 +401,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             # otherwise it turns to Auto briefly and then reverts to Off.
             # This is the behavior that happens with the native app as well,
             # so likely a bug in the api itself.
-            if HVAC_MODES[self.device.changeable_values.mode] == HVACMode.OFF:
+            if HVAC_MODES[self.device.changeable_values.mode] is HVACMode.OFF:
                 _LOGGER.debug(
                     "HVAC mode passed to lyric: %s",
                     HVAC_MODES[LYRIC_HVAC_MODE_COOL],

@@ -87,7 +87,7 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
                         id=item.uid,
                         name="",
                         description="",
-                        is_owned=item.status == TodoItemStatus.COMPLETED,
+                        is_owned=item.status is TodoItemStatus.COMPLETED,
                     )
                 ]
             )
@@ -160,7 +160,7 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
             new_item = CookidooAdditionalItem(
                 id=item.uid,
                 name=item.summary,
-                is_owned=item.status == TodoItemStatus.COMPLETED,
+                is_owned=item.status is TodoItemStatus.COMPLETED,
             )
             await self.coordinator.cookidoo.edit_additional_items_ownership([new_item])
             await self.coordinator.cookidoo.edit_additional_items([new_item])

@@ -542,7 +542,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
 
         data = self.coordinator.data[key]
 
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
             # The date could be "N/A" for certain fields
             # (e.g., XOFFBATT), indicating there is no value yet.
             if data == "N/A":

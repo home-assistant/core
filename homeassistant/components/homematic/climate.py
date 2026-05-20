@@ -151,7 +151,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode is HVACMode.AUTO:
             self._hmdevice.MODE = self._hmdevice.AUTO_MODE
         elif hvac_mode == HVACMode.HEAT:
             self._hmdevice.MODE = self._hmdevice.MANU_MODE

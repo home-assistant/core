@@ -119,7 +119,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             and ATTR_COLOR_TEMP_KELVIN not in kwargs
             and self.supported_color_modes
             and ColorMode.HS in self.supported_color_modes
-            and self.color_mode == ColorMode.COLOR_TEMP
+            and self.color_mode is ColorMode.COLOR_TEMP
         ):
             temperature_kelvin = self.color_temp_kelvin
 

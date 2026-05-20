@@ -286,7 +286,7 @@ class LGDevice(MediaPlayerEntity):
 
     def media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             self.media_pause()
         else:
             self.media_play()

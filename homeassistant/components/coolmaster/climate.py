@@ -184,7 +184,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id, hvac_mode)
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             self._unit = await self._unit.set_mode(HA_STATE_TO_CM[hvac_mode])

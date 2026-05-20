@@ -106,7 +106,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             "Setting mode to [%s] - using last temp: %s", hvac_mode, self.last_temp
         )
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.coordinator.control_api.turn_off_thermostat()
             return
 

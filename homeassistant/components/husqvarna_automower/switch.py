@@ -106,7 +106,7 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.mower_attributes.mower.mode != MowerModes.HOME
+        return self.mower_attributes.mower.mode is not MowerModes.HOME
 
     @handle_sending_exception
     async def async_turn_off(self, **kwargs: Any) -> None:

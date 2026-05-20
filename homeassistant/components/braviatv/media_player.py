@@ -245,7 +245,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
-        if media_content_type == MediaType.APP and media_content_id:
+        if media_content_type is MediaType.APP and media_content_id:
             if icon := self.coordinator.source_map[media_content_id].get("icon"):
                 (content, content_type) = await self._async_fetch_image(icon)
                 if content_type:

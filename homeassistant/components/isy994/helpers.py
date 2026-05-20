@@ -113,12 +113,12 @@ def _check_for_insteon_type(
             subnode_id = int(node.address.split(" ")[-1], 16)
 
             # FanLinc, which has a light module as one of its nodes.
-            if platform == Platform.FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
+            if platform is Platform.FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
                 isy_data.nodes[Platform.LIGHT].append(node)
                 return True
 
             # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
-            if platform == Platform.CLIMATE and subnode_id in (
+            if platform is Platform.CLIMATE and subnode_id in (
                 SUBNODE_CLIMATE_COOL,
                 SUBNODE_CLIMATE_HEAT,
             ):
@@ -127,7 +127,7 @@ def _check_for_insteon_type(
 
             # IOLincs which have a sensor and relay on 2 different nodes
             if (
-                platform == Platform.BINARY_SENSOR
+                platform is Platform.BINARY_SENSOR
                 and device_type.startswith(TYPE_CATEGORY_SENSOR_ACTUATORS)
                 and subnode_id == SUBNODE_IOLINC_RELAY
             ):
@@ -136,7 +136,7 @@ def _check_for_insteon_type(
 
             # Smartenit EZIO2X4
             if (
-                platform == Platform.SWITCH
+                platform is Platform.SWITCH
                 and device_type.startswith(TYPE_EZIO2X4)
                 and subnode_id in SUBNODE_EZIO2X4_SENSORS
             ):
@@ -410,7 +410,7 @@ def _categorize_programs(isy_data: IsyData, programs: Programs) -> None:
                 )
                 continue
 
-            if platform != Platform.BINARY_SENSOR:
+            if platform is not Platform.BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(

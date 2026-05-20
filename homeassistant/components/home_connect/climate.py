@@ -211,12 +211,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             HVACMode.OFF
             if power_state is not None and power_state.value != BSH_POWER_ON
             else PROGRAMS_HVAC_MODES_MAP.get(program_key)
-            if program_key and program_key != active_clean
+            if program_key and program_key is not active_clean
             else None
         )
         self._attr_preset_mode = (
             PROGRAMS_PRESET_MODES_MAP.get(program_key)
-            if program_key == active_clean
+            if program_key is active_clean
             else None
         )
 

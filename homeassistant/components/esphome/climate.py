@@ -269,10 +269,10 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                 ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
                 | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
             )
-            and self.hvac_mode != HVACMode.AUTO
+            and self.hvac_mode is not HVACMode.AUTO
         ):
             return self._state.target_temperature
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode is HVACMode.HEAT:
             return self._state.target_temperature_low
         if self.hvac_mode == HVACMode.COOL:
             return self._state.target_temperature_high
@@ -282,7 +282,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             return None
         return self._state.target_temperature_low
 
@@ -290,7 +290,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             return None
         return self._state.target_temperature_high
 
@@ -316,7 +316,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                 data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
             else:
                 hvac_mode = kwargs.get(ATTR_HVAC_MODE) or self.hvac_mode
-                if hvac_mode == HVACMode.HEAT:
+                if hvac_mode is HVACMode.HEAT:
                     data["target_temperature_low"] = kwargs[ATTR_TEMPERATURE]
                 elif hvac_mode == HVACMode.COOL:
                     data["target_temperature_high"] = kwargs[ATTR_TEMPERATURE]

@@ -583,7 +583,7 @@ class EventCapabilities(AlexaEntity):
         """Return the display categories for this entity."""
         attrs = self.entity.attributes
         device_class: event.EventDeviceClass | None = attrs.get(ATTR_DEVICE_CLASS)
-        if device_class == event.EventDeviceClass.DOORBELL:
+        if device_class is event.EventDeviceClass.DOORBELL:
             return [DisplayCategory.DOORBELL]
         return None
 

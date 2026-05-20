@@ -83,7 +83,7 @@ async def async_migrate_cloud_pipeline_engine(
     # We need to make sure that both stt and tts are loaded before this migration.
     # Assist pipeline will call default engine when setting up the store.
     # Wait for the stt or tts platform loaded event here.
-    if platform == Platform.STT:
+    if platform is Platform.STT:
         wait_for_platform = Platform.TTS
         pipeline_attribute = "stt_engine"
     elif platform == Platform.TTS:

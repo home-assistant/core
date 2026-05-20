@@ -253,7 +253,7 @@ class AbstractConfig(ABC):
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self.async_report_state(payload, agent_user_id, event_id)
         assert status is not None
-        if status == HTTPStatus.NOT_FOUND:
+        if status is HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 

@@ -83,13 +83,13 @@ class IsyData:
         for platform in VARIABLE_PLATFORMS:
             for node in self.variables[platform]:
                 current_unique_ids.add((platform, self.uid_base(node)))
-                if platform == Platform.NUMBER:
+                if platform is Platform.NUMBER:
                     current_unique_ids.add((platform, f"{self.uid_base(node)}_init"))
 
         for platform in ROOT_NODE_PLATFORMS:
             for node in self.root_nodes[platform]:
                 current_unique_ids.add((platform, f"{self.uid_base(node)}_query"))
-                if platform == Platform.BUTTON and node.protocol == PROTO_INSTEON:
+                if platform is Platform.BUTTON and node.protocol == PROTO_INSTEON:
                     current_unique_ids.add((platform, f"{self.uid_base(node)}_beep"))
 
         for node in self.net_resources:

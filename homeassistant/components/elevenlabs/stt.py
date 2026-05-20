@@ -149,14 +149,14 @@ class ElevenLabsSTTEntity(SpeechToTextEntity):
             lang_code = language.split("-")[0]
 
         raw_pcm_compatible = (
-            metadata.codec == AudioCodecs.PCM
-            and metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
-            and metadata.channel == AudioChannels.CHANNEL_MONO
-            and metadata.bit_rate == AudioBitRates.BITRATE_16
+            metadata.codec is AudioCodecs.PCM
+            and metadata.sample_rate is AudioSampleRates.SAMPLERATE_16000
+            and metadata.channel is AudioChannels.CHANNEL_MONO
+            and metadata.bit_rate is AudioBitRates.BITRATE_16
         )
         if raw_pcm_compatible:
             file_format = "pcm_s16le_16"
-        elif metadata.codec == AudioCodecs.PCM:
+        elif metadata.codec is AudioCodecs.PCM:
             _LOGGER.warning("PCM input does not meet expected raw format requirements")
             return stt.SpeechResult(None, SpeechResultState.ERROR)
         else:

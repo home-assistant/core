@@ -718,7 +718,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
         """Initialize a sensor entity."""
         super().__init__(coordinator, entity_description, property_id)
 
-        if entity_description.device_class == SensorDeviceClass.ENUM:
+        if entity_description.device_class is SensorDeviceClass.ENUM:
             self._attr_options = self.data.options
 
         self._device_state: str | None = None
@@ -750,7 +750,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             ):
                 # Reset to None when power_off
                 value = None
-            elif self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            elif self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
                 if self.entity_description.key in TIME_SENSOR_DESC:
                     # Set timestamp for absolute time
                     value = local_now.replace(hour=value.hour, minute=value.minute)

@@ -214,7 +214,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_SET_MIN)
         if (
             self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+            and self._attr_hvac_mode is HVACMode.HEAT_COOL
         ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_TEMP_SET_COOL_AIR
@@ -390,7 +390,7 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
         params: dict[str, Any] = {
             API_PARAMS: {},
         }
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             params[API_PARAMS][API_POWER] = False
         else:
             mode = HVAC_MODE_HASS_TO_LIB[hvac_mode]
@@ -419,7 +419,7 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         params: dict[str, Any] = {}
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             params[API_POWER] = {
                 API_VALUE: False,
             }
@@ -492,7 +492,7 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         slave_raise = False
 
         params: dict[str, Any] = {}
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             params[API_POWER] = {
                 API_VALUE: False,
             }

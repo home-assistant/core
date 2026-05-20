@@ -170,7 +170,7 @@ class FibaroController:
                 platform = Platform.SENSOR
 
         # Switches that control lights should show up as lights
-        if platform == Platform.SWITCH and device.properties.get("isLight", False):
+        if platform is Platform.SWITCH and device.properties.get("isLight", False):
             platform = Platform.LIGHT
         return platform
 
@@ -256,7 +256,7 @@ class FibaroController:
                     platform,
                     str(device),
                 )
-                if platform != Platform.CLIMATE:
+                if platform is not Platform.CLIMATE:
                     self.fibaro_devices[platform].append(device)
                     continue
                 # We group climate devices into groups with the same

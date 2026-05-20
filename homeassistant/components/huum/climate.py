@@ -85,7 +85,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             # Make sure to send integers
             # The temperature is not always an integer if the user uses Fahrenheit
             temperature = int(self.target_temperature)
@@ -97,7 +97,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None or self.hvac_mode != HVACMode.HEAT:
+        if temperature is None or self.hvac_mode is not HVACMode.HEAT:
             return
         temperature = int(temperature)
 

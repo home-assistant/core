@@ -71,8 +71,8 @@ def _item_payload(
         media_class=media_class,
         media_content_type=MediaClass.CHANNEL,
         media_content_id=media_content_id,
-        can_play=(media_class != MediaClass.DIRECTORY),
-        can_expand=(media_class == MediaClass.DIRECTORY),
+        can_play=(media_class is not MediaClass.DIRECTORY),
+        can_expand=(media_class is MediaClass.DIRECTORY),
     )
 
 

@@ -207,7 +207,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
             f"{device.mac_id}_{description.key}",
         )
         self.entity_description = description
-        if description.device_class == SensorDeviceClass.TEMPERATURE:
+        if description.device_class is SensorDeviceClass.TEMPERATURE:
             if device.units == "Fahrenheit":
                 self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:
@@ -243,7 +243,7 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
             f"{parentDevice.mac_id}_room{room.id}_acc{accessory.id}_{description.key}",
         )
         self.entity_description = description
-        if description.device_class == SensorDeviceClass.TEMPERATURE:
+        if description.device_class is SensorDeviceClass.TEMPERATURE:
             if parentDevice.units == "Fahrenheit":
                 self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:

@@ -41,7 +41,7 @@ ADDON_ENTITY_DESCRIPTIONS = (
         translation_key="state",
         value_fn=lambda entity: (
             entity.coordinator.data.addons[entity.addon_slug].addon.state
-            == AddonState.STARTED
+            is AddonState.STARTED
         ),
     ),
 )
@@ -53,7 +53,7 @@ MOUNT_ENTITY_DESCRIPTIONS = (
         key="state",
         translation_key="mount",
         value_fn=lambda entity: (
-            entity.coordinator.data.mounts[entity.mount_name].state == MountState.ACTIVE
+            entity.coordinator.data.mounts[entity.mount_name].state is MountState.ACTIVE
         ),
     ),
 )

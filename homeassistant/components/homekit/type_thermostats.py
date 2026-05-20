@@ -592,7 +592,7 @@ class Thermostat(HomeAccessory):
             if (
                 s in hc_modes
                 and not (
-                    (s == HVACMode.AUTO and HVACMode.HEAT_COOL in hc_modes)
+                    (s is HVACMode.AUTO and HVACMode.HEAT_COOL in hc_modes)
                     or (
                         s in (HVACMode.DRY, HVACMode.FAN_ONLY)
                         and HVACMode.COOL in hc_modes

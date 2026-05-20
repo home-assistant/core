@@ -57,7 +57,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
             media_type = MediaType.MUSIC
         elif media_type.startswith("video/"):
             media_type = MediaType.VIDEO
-        if media_type == MediaType.MUSIC:
+        if media_type is MediaType.MUSIC:
             self._attr_media_content_type = MediaType.MUSIC
             await self.coordinator.fully.playSound(media_id, AUDIOMANAGER_STREAM_MUSIC)
         elif media_type == MediaType.VIDEO:

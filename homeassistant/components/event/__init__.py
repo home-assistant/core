@@ -190,7 +190,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await super().async_internal_added_to_hass()
 
         if (
-            self.device_class == EventDeviceClass.DOORBELL
+            self.device_class is EventDeviceClass.DOORBELL
             and DoorbellEventType.RING not in self.event_types
         ):
             report_issue = self._suggest_report_issue()

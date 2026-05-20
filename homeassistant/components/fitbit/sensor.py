@@ -76,7 +76,7 @@ def _clock_format_12h(result: dict[str, Any]) -> str:
 
 def _weight_unit(unit_system: FitbitUnitSystem) -> UnitOfMass:
     """Determine the weight unit."""
-    if unit_system == FitbitUnitSystem.EN_US:
+    if unit_system is FitbitUnitSystem.EN_US:
         return UnitOfMass.POUNDS
     if unit_system == FitbitUnitSystem.EN_GB:
         return UnitOfMass.STONES
@@ -85,21 +85,21 @@ def _weight_unit(unit_system: FitbitUnitSystem) -> UnitOfMass:
 
 def _distance_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
     """Determine the distance unit."""
-    if unit_system == FitbitUnitSystem.EN_US:
+    if unit_system is FitbitUnitSystem.EN_US:
         return UnitOfLength.MILES
     return UnitOfLength.KILOMETERS
 
 
 def _elevation_unit(unit_system: FitbitUnitSystem) -> UnitOfLength:
     """Determine the elevation unit."""
-    if unit_system == FitbitUnitSystem.EN_US:
+    if unit_system is FitbitUnitSystem.EN_US:
         return UnitOfLength.FEET
     return UnitOfLength.METERS
 
 
 def _water_unit(unit_system: FitbitUnitSystem) -> UnitOfVolume:
     """Determine the water unit."""
-    if unit_system == FitbitUnitSystem.EN_US:
+    if unit_system is FitbitUnitSystem.EN_US:
         return UnitOfVolume.FLUID_OUNCES
     return UnitOfVolume.MILLILITERS
 

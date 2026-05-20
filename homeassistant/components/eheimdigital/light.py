@@ -115,6 +115,6 @@ class EheimDigitalClassicLEDControlLight(
         )
         self._attr_effect = (
             EFFECT_DAYCL_MODE
-            if self._device.light_mode == LightMode.DAYCL_MODE
+            if self._device.light_mode is LightMode.DAYCL_MODE
             else EFFECT_OFF
         )

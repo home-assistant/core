@@ -171,7 +171,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        if media_type == MediaType.CHANNEL:
+        if media_type is MediaType.CHANNEL:
             if not media_id.isnumeric():
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,

@@ -28,12 +28,12 @@ def get_consumptions(
     """Get consumption readings and sort in ascending order by date."""
     result: list = []
     if consumptions := data.get(
-        "costs" if value_type == IstaValueType.COSTS else "consumptions", []
+        "costs" if value_type is IstaValueType.COSTS else "consumptions", []
     ):
         result = [
             {
                 "readings": readings.get("costsByEnergyType")
-                if value_type == IstaValueType.COSTS
+                if value_type is IstaValueType.COSTS
                 else readings.get("readings"),
                 "date": last_day_of_month(**readings["date"]),
             }
@@ -118,7 +118,7 @@ def get_statistics(
                     )
                 ).get(
                     "additionalValue"
-                    if value_type == IstaValueType.ENERGY
+                    if value_type is IstaValueType.ENERGY
                     and consumption.get("additionalValue") is not None
                     else "value"
                 )

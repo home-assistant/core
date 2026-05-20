@@ -58,7 +58,7 @@ def _create_daily_event(
 ) -> CalendarEvent | None:
     """Create a daily calendar event."""
     # Hebrew date
-    if event_type == DailyCalendarEventType.DATE:
+    if event_type is DailyCalendarEventType.DATE:
         return CalendarEvent(
             start=target_date,
             end=target_date,
@@ -88,7 +88,7 @@ def _create_yearly_event(
     zmanim: Zmanim,
 ) -> list[CalendarEvent] | CalendarEvent | None:
     """Create a yearly calendar event."""
-    if event_type == YearlyCalendarEventType.HOLIDAY and info.holidays:
+    if event_type is YearlyCalendarEventType.HOLIDAY and info.holidays:
         return [
             CalendarEvent(
                 start=target_date,
@@ -101,7 +101,7 @@ def _create_yearly_event(
             for holiday in info.holidays
         ]
 
-    if event_type == YearlyCalendarEventType.WEEKLY_PORTION:
+    if event_type is YearlyCalendarEventType.WEEKLY_PORTION:
         is_shabbat = target_date.weekday() == _SATURDAY
         is_simchat_torah = any(
             holiday.name == _SIMCHAT_TORAH for holiday in info.holidays
@@ -149,7 +149,7 @@ def _create_learning_event(
     zmanim: Zmanim,
 ) -> CalendarEvent | None:
     """Create a learning schedule event."""
-    if event_type == LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
+    if event_type is LearningScheduleEventType.DAF_YOMI and info.daf_yomi:
         return CalendarEvent(
             start=target_date,
             end=target_date,

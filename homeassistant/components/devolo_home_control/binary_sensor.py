@@ -84,7 +84,7 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._value = self._binary_sensor_property.state
 
-        if self._attr_device_class == BinarySensorDeviceClass.SAFETY:
+        if self._attr_device_class is BinarySensorDeviceClass.SAFETY:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         if element_uid.startswith("devolo.WarningBinaryFI:"):

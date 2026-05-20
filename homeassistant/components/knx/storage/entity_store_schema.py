@@ -717,7 +717,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     options=[
                         cls.value
                         for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
+                        if cls is not SensorDeviceClass.ENUM
                     ],
                     translation_key="component.knx.selector.sensor_device_class",
                     sort=True,

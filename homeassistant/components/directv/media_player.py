@@ -317,7 +317,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Select input source."""
-        if media_type != MediaType.CHANNEL:
+        if media_type is not MediaType.CHANNEL:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,

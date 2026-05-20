@@ -114,7 +114,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             config=speech_v1.RecognitionConfig(
                 encoding=(
                     speech_v1.RecognitionConfig.AudioEncoding.OGG_OPUS
-                    if metadata.codec == AudioCodecs.OPUS
+                    if metadata.codec is AudioCodecs.OPUS
                     else speech_v1.RecognitionConfig.AudioEncoding.LINEAR16
                 ),
                 sample_rate_hertz=metadata.sample_rate,

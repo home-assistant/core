@@ -263,7 +263,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         source = self._state.get_source()
-        if source == SourceCodes.DAB:
+        if source is SourceCodes.DAB:
             value = self._state.get_dab_station()
         elif source == SourceCodes.FM:
             value = self._state.get_rds_information()
@@ -274,7 +274,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if self._state.get_source() == SourceCodes.DAB:
+        if self._state.get_source() is SourceCodes.DAB:
             value = self._state.get_dls_pdt()
         else:
             value = None

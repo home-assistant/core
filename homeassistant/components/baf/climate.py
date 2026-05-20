@@ -51,7 +51,7 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        self._device.auto_comfort_enable = hvac_mode == HVACMode.FAN_ONLY
+        self._device.auto_comfort_enable = hvac_mode is HVACMode.FAN_ONLY
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""

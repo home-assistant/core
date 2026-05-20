@@ -226,7 +226,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             color_mode,
             self.brightness,
             (self.color_temp_kelvin,)
-            if color_mode == ColorMode.COLOR_TEMP
+            if color_mode is ColorMode.COLOR_TEMP
             else self.rgb_color,
         )
 
@@ -234,7 +234,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         if self._last_color_state:
             color_mode, brightness, color = self._last_color_state
             if color:
-                if color_mode == ColorMode.RGB:
+                if color_mode is ColorMode.RGB:
                     await self.coordinator.set_rgb_color(self._device, *color)
                 elif color_mode == ColorMode.COLOR_TEMP:
                     await self.coordinator.set_temperature(self._device, *color)

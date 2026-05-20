@@ -179,7 +179,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
-            if hvac_mode == HVACMode.OFF:
+            if hvac_mode is HVACMode.OFF:
                 await self.device.set_ventilation_mode(VENTILATION_MODE_STOP)
             else:
                 await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)

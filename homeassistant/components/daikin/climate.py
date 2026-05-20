@@ -408,7 +408,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
         """Return the zone target temperature for the active mode."""
         heating, cooling = _zone_temperature_lists(self.device)
         mode = self.hvac_mode
-        if mode == HVACMode.HEAT:
+        if mode is HVACMode.HEAT:
             return _zone_temperature_from_list(heating, self._zone_id)
         if mode == HVACMode.COOL:
             return _zone_temperature_from_list(cooling, self._zone_id)
@@ -475,7 +475,7 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
             raise _zone_error("zone_parameters_unavailable")
 
         mode = self.hvac_mode
-        if mode == HVACMode.HEAT:
+        if mode is HVACMode.HEAT:
             zone_key = DAIKIN_ZONE_TEMP_HEAT
         elif mode == HVACMode.COOL:
             zone_key = DAIKIN_ZONE_TEMP_COOL

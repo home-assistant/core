@@ -89,7 +89,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     @api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Duotecno does not support setting this, we can only display it."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self._unit.turn_off()
         else:
             await self._unit.turn_on()

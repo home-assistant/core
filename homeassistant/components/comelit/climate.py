@@ -170,7 +170,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         """Set new target temperature."""
         if (
             (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None
-            or self.hvac_mode == HVACMode.OFF
+            or self.hvac_mode is HVACMode.OFF
             or self._attr_preset_mode == PRESET_MODE_AUTO
         ):
             return
@@ -185,7 +185,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
-        if self._attr_hvac_mode == HVACMode.OFF:
+        if self._attr_hvac_mode is HVACMode.OFF:
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaComelitCommand.ON
             )
@@ -198,7 +198,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 
-        if self._attr_hvac_mode == HVACMode.OFF:
+        if self._attr_hvac_mode is HVACMode.OFF:
             return
 
         await self.coordinator.api.set_clima_status(

@@ -96,7 +96,7 @@ class FitbitApi(ABC):
         """
         if (
             self._unit_system is not None
-            and self._unit_system != FitbitUnitSystem.LEGACY_DEFAULT
+            and self._unit_system is not FitbitUnitSystem.LEGACY_DEFAULT
         ):
             return self._unit_system
         # Use units consistent with the account user profile or fallback to the

@@ -178,12 +178,12 @@ class EsphomeMediaPlayer(
         format_to_use: MediaPlayerSupportedFormat | None = None
         for supported_format in supported_formats:
             if (format_to_use is None) and (
-                supported_format.purpose == MediaPlayerFormatPurpose.DEFAULT
+                supported_format.purpose is MediaPlayerFormatPurpose.DEFAULT
             ):
                 # First default format
                 format_to_use = supported_format
             elif announcement and (
-                supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT
+                supported_format.purpose is MediaPlayerFormatPurpose.ANNOUNCEMENT
             ):
                 # First announcement format
                 format_to_use = supported_format

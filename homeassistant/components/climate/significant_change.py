@@ -88,7 +88,7 @@ def async_check_significant_change(
             ATTR_TARGET_TEMP_LOW,
             ATTR_TEMPERATURE,
         ]:
-            if ha_unit == UnitOfTemperature.FAHRENHEIT:
+            if ha_unit is UnitOfTemperature.FAHRENHEIT:
                 absolute_change = 1.0
             else:
                 absolute_change = 0.5

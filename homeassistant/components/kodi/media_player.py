@@ -104,7 +104,7 @@ def cmd[_KodiEntityT: KodiEntity, **_P](
             await func(obj, *args, **kwargs)
         except (TransportError, ProtocolError) as exc:
             # If Kodi is off, we expect calls to fail.
-            if obj.state == MediaPlayerState.OFF:
+            if obj.state is MediaPlayerState.OFF:
                 log_function = _LOGGER.debug
             else:
                 log_function = _LOGGER.error
@@ -503,7 +503,7 @@ class KodiEntity(MediaPlayerEntity):
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         state_attr: dict[str, str | None] = {}
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             return state_attr
 
         state_attr["dynamic_range"] = "sdr"
