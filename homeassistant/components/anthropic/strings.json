@@ -51,13 +51,11 @@
         "advanced": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::prompt_caching%]",
-            "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::prompt_caching%]"
           },
           "data_description": {
             "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::prompt_caching%]",
-            "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::temperature%]"
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::prompt_caching%]"
           },
           "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
         },
@@ -120,13 +118,11 @@
         "advanced": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "Caching strategy",
-            "temperature": "Temperature"
+            "prompt_caching": "Caching strategy"
           },
           "data_description": {
             "chat_model": "The model to serve the responses.",
-            "prompt_caching": "Optimize your API cost and response times based on your usage.",
-            "temperature": "Control the randomness of the response, trading off between creativity and coherence."
+            "prompt_caching": "Optimize your API cost and response times based on your usage."
           },
           "title": "Advanced settings"
         },
