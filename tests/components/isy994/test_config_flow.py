@@ -2,10 +2,11 @@
 
 import re
 import ssl
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
@@ -213,6 +214,41 @@ async def test_form_isy_ssl_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "ssl_error"}
+
+
+@pytest.mark.parametrize("verify_ssl", [True, False])
+async def test_form_forwards_verify_ssl_to_connection(
+    hass: HomeAssistant, verify_ssl: bool
+) -> None:
+    """Test verify_ssl is forwarded to the pyisy Connection used during validation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            f"{INTEGRATION}.config_flow.Connection",
+        ) as mock_connection_cls,
+        patch(
+            PATCH_ASYNC_SETUP_ENTRY,
+            return_value=True,
+        ),
+    ):
+        mock_connection_cls.return_value.test_connection = AsyncMock(
+            return_value=MOCK_CONFIG_RESPONSE
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                **MOCK_USER_INPUT,
+                CONF_HOST: f"https://{MOCK_HOSTNAME}",
+                CONF_VERIFY_SSL: verify_ssl,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_connection_cls.call_args.kwargs["verify_ssl"] is verify_ssl
 
 
 async def test_form_isy_parse_response_error(hass: HomeAssistant) -> None:
