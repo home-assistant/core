@@ -22,7 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by MeteoAlarm"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_COUNTRY = "country"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_LANGUAGE = "language"
 CONF_PROVINCE = "province"
 

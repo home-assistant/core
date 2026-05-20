@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_SENSORS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -113,7 +112,6 @@ async def async_setup_platform(
         TriggerSensorEntity,
         async_add_entities,
         discovery_info,
-        legacy_key=CONF_SENSORS,
     )
 
 
