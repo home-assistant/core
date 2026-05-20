@@ -162,8 +162,9 @@ class TISSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to Home Assistant."""
-        # Register the HASS update method as the callback
-        self.device_api.register_callback(self._handle_update)
+        # Register the HASS update method as the callback and store the unsubscribe hook.
+        # Home Assistant will automatically call `unsubscribe()` when the entity is removed.
+        self.async_on_remove(self.device_api.register_callback(self._handle_update))
 
     async def async_update(self) -> None:
         """Update the entity state."""
