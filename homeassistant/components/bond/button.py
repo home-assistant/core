@@ -14,7 +14,7 @@ from .models import BondData
 from .utils import BondDevice
 
 # The api requires a step size even though it does not
-# seem to matter what is is as the underlying device is likely
+# seem to matter what is as the underlying device is likely
 # getting an increase/decrease signal only
 STEP_SIZE = 10
 

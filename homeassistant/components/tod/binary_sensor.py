@@ -237,7 +237,7 @@ class TodSensor(BinarySensorEntity):
         )
 
     def _turn_to_next_day(self) -> None:
-        """Turn to to the next day."""
+        """Turn to the next day."""
         if _is_sun_event(self._after):
             self._time_after = get_astral_event_next(
                 self.hass, self._after, self._time_after - self._after_offset
