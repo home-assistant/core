@@ -4,9 +4,10 @@ import asyncio
 from dataclasses import dataclass, field
 import logging
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.hass_dict import HassKey
 
