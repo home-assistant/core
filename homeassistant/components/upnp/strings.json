@@ -33,14 +33,23 @@
       "download_speed": {
         "name": "Download speed"
       },
+      "download_speed_no_rollover": {
+        "name": "Download speed without rollover handling"
+      },
       "external_ip": {
         "name": "External IP"
       },
       "packet_download_speed": {
         "name": "Packet download speed"
       },
+      "packet_download_speed_no_rollover": {
+        "name": "Packet download speed without rollover handling"
+      },
       "packet_upload_speed": {
         "name": "Packet upload speed"
+      },
+      "packet_upload_speed_no_rollover": {
+        "name": "Packet upload speed without rollover handling"
       },
       "packets_received": {
         "name": "Packets received"
@@ -53,6 +62,9 @@
       },
       "upload_speed": {
         "name": "Upload speed"
+      },
+      "upload_speed_no_rollover": {
+        "name": "Upload speed without rollover handling"
       },
       "uptime": {
         "name": "Uptime"
