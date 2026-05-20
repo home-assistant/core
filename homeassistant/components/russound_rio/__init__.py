@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
         _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
-        if _callback_type == CallbackType.CONNECTION:
+        if _callback_type is CallbackType.CONNECTION:
             if _client.is_connected():
                 _LOGGER.warning("Reconnected to device at %s", entry.data[CONF_HOST])
             else:

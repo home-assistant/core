@@ -130,7 +130,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             )
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
-        if media_type != MediaType.MUSIC:
+        if media_type is not MediaType.MUSIC:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="only_music_supported",

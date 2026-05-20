@@ -86,7 +86,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""
         super().__init__(coordinator)
-        if self.wemo.fan_mode != FanMode.Off:
+        if self.wemo.fan_mode is not FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         else:
             self._last_fan_on_mode = FanMode.High
@@ -121,7 +121,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.wemo.fan_mode != FanMode.Off:
+        if self.wemo.fan_mode is not FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         super()._handle_coordinator_update()
 

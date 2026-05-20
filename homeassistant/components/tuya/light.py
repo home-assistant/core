@@ -489,7 +489,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             ATTR_HS_COLOR in kwargs
             or (
                 ATTR_BRIGHTNESS in kwargs
-                and self.color_mode == ColorMode.HS
+                and self.color_mode is ColorMode.HS
                 and ATTR_WHITE not in kwargs
                 and ATTR_COLOR_TEMP_KELVIN not in kwargs
             )
@@ -536,7 +536,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         # If the light is currently in color mode,
         # extract the brightness from the color data
-        if self.color_mode == ColorMode.HS and self._color_data_wrapper:
+        if self.color_mode is ColorMode.HS and self._color_data_wrapper:
             hsv_data = self._read_wrapper(self._color_data_wrapper)
             return None if hsv_data is None else round(hsv_data[2])
 

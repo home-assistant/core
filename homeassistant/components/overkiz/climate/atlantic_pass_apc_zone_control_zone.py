@@ -221,10 +221,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # Device is Stopped, it means the air flux is flowing
         # but its venting door is closed.
         if (
-            (device_hvac_mode == HVACMode.COOL and cooling_is_off)
-            or (device_hvac_mode == HVACMode.HEAT and heating_is_off)
+            (device_hvac_mode is HVACMode.COOL and cooling_is_off)
+            or (device_hvac_mode is HVACMode.HEAT and heating_is_off)
             or (
-                device_hvac_mode == HVACMode.HEAT_COOL
+                device_hvac_mode is HVACMode.HEAT_COOL
                 and cooling_is_off
                 and heating_is_off
             )
@@ -245,7 +245,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         on_off_target_command_param = (
             OverkizCommandParam.OFF
-            if hvac_mode == HVACMode.OFF
+            if hvac_mode is HVACMode.OFF
             else OverkizCommandParam.ON
         )
 
@@ -315,7 +315,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         device_hvac_mode = self.device_hvac_mode
 
-        if device_hvac_mode == HVACMode.HEAT_COOL:
+        if device_hvac_mode is HVACMode.HEAT_COOL:
             return None
 
         if device_hvac_mode == HVACMode.COOL:
@@ -342,7 +342,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach (cooling)."""
 
-        if self.device_hvac_mode != HVACMode.HEAT_COOL:
+        if self.device_hvac_mode is not HVACMode.HEAT_COOL:
             return None
 
         return cast(
@@ -354,7 +354,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach (heating)."""
 
-        if self.device_hvac_mode != HVACMode.HEAT_COOL:
+        if self.device_hvac_mode is not HVACMode.HEAT_COOL:
             return None
 
         return cast(
@@ -374,7 +374,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         hvac_mode = self.hvac_mode
 
-        if hvac_mode == HVACMode.HEAT_COOL:
+        if hvac_mode is HVACMode.HEAT_COOL:
             if target_temp_low is not None:
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
@@ -447,7 +447,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        if device_hvac_mode == HVACMode.COOL:
+        if device_hvac_mode is HVACMode.COOL:
             return cast(
                 float,
                 self.executor.select_state(
@@ -463,7 +463,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         device_hvac_mode = self.device_hvac_mode
 
-        if device_hvac_mode == HVACMode.HEAT:
+        if device_hvac_mode is HVACMode.HEAT:
             return cast(
                 float,
                 self.executor.select_state(

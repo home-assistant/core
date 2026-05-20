@@ -103,7 +103,7 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         attribute_adjustment_only = False
         # set white temperature
         if (
-            self.color_mode == ColorMode.COLOR_TEMP
+            self.color_mode is ColorMode.COLOR_TEMP
             and ATTR_COLOR_TEMP_KELVIN in kwargs
             and hasattr(self.device, "set_color_temp")
         ):

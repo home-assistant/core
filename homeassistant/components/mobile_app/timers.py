@@ -19,7 +19,7 @@ def async_handle_timer_event(
     timer_info: TimerInfo,
 ) -> None:
     """Handle timer events."""
-    if event_type != TimerEventType.FINISHED:
+    if event_type is not TimerEventType.FINISHED:
         return
 
     if timer_info.name:

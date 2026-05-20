@@ -189,7 +189,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         timer_info: TimerInfo,
     ) -> None:
         """Handle timer event."""
-        if event_type != TimerEventType.FINISHED:
+        if event_type is not TimerEventType.FINISHED:
             return
 
         if timer_info.name:
@@ -507,7 +507,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type == PipelineEventType.STT_END:
+        if event.type is PipelineEventType.STT_END:
             if (self._tones & Tones.PROCESSING) == Tones.PROCESSING:
                 self._processing_tone_done.clear()
                 self.config_entry.async_create_background_task(

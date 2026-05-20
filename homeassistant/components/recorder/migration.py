@@ -3109,7 +3109,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
             # Only drop the index if there are no more event_ids in the states table
             # ex all NULL
             assert instance.engine is not None, "engine should never be None"
-            if instance.dialect_name == SupportedDialect.SQLITE:
+            if instance.dialect_name is SupportedDialect.SQLITE:
                 # SQLite does not support dropping foreign key constraints
                 # so we have to rebuild the table
                 fk_remove_ok = rebuild_sqlite_table(

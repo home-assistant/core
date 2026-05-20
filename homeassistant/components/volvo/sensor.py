@@ -426,7 +426,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
         elif isinstance(api_field, VolvoCarsValue):
             native_value = api_field.value
 
-        if self.device_class == SensorDeviceClass.ENUM and native_value:
+        if self.device_class is SensorDeviceClass.ENUM and native_value:
             # Entities having an "unknown" value should report None as the state
             native_value = str(native_value)
             native_value = (

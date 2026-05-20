@@ -94,7 +94,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         """Return the target temperature."""
         state = (
             OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
-            if self.hvac_mode == HVACMode.AUTO
+            if self.hvac_mode is HVACMode.AUTO
             else OverkizState.CORE_TARGET_TEMPERATURE
         )
 
@@ -114,7 +114,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE, temperature
             )

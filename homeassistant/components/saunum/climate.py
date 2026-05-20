@@ -160,14 +160,14 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-        if hvac_mode == HVACMode.HEAT and self.coordinator.data.door_open:
+        if hvac_mode is HVACMode.HEAT and self.coordinator.data.door_open:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="door_open",
             )
 
         try:
-            if hvac_mode == HVACMode.HEAT:
+            if hvac_mode is HVACMode.HEAT:
                 await self.coordinator.client.async_start_session()
             else:
                 await self.coordinator.client.async_stop_session()

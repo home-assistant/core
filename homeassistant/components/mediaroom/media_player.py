@@ -196,7 +196,7 @@ class MediaroomDevice(MediaPlayerEntity):
             "STB(%s) Play media: %s (%s)", self.stb.stb_ip, media_id, media_type
         )
         command: str | int
-        if media_type == MediaType.CHANNEL:
+        if media_type is MediaType.CHANNEL:
             if not media_id.isdigit():
                 _LOGGER.error("Invalid media_id %s: Must be a channel number", media_id)
                 return

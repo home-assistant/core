@@ -198,7 +198,7 @@ TRANSFORM_MATRIX_TOP = (
 
 def transform_init(init: bytes, orientation: Orientation) -> bytes:
     """Change the transformation matrix in the header."""
-    if orientation == Orientation.NO_TRANSFORM:
+    if orientation is Orientation.NO_TRANSFORM:
         return init
     # Find moov
     moov_location = next(find_box(init, b"moov"))

@@ -112,7 +112,7 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             AirConEntity._check_service_request(
                 await self._appliance.set_power_on(False)
             )

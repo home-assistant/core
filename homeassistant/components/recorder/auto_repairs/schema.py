@@ -46,7 +46,7 @@ def validate_table_schema_supports_utf8(
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
     # Lack of full utf8 support is only an issue for MySQL / MariaDB
-    if instance.dialect_name != SupportedDialect.MYSQL:
+    if instance.dialect_name is not SupportedDialect.MYSQL:
         return schema_errors
 
     try:
@@ -67,7 +67,7 @@ def validate_table_schema_has_correct_collation(
     """Verify the table has the correct collation."""
     schema_errors: set[str] = set()
     # Lack of full utf8 support is only an issue for MySQL / MariaDB
-    if instance.dialect_name != SupportedDialect.MYSQL:
+    if instance.dialect_name is not SupportedDialect.MYSQL:
         return schema_errors
 
     try:

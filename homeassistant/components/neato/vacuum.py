@@ -294,7 +294,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         try:
-            if self._attr_activity == VacuumActivity.CLEANING:
+            if self._attr_activity is VacuumActivity.CLEANING:
                 self.robot.pause_cleaning()
             self._attr_activity = VacuumActivity.RETURNING
             self.robot.send_to_base()

@@ -47,14 +47,14 @@ class ShoppingTodoListEntity(TodoListEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         await self._data.async_add(
-            item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
+            item.summary, complete=(item.status is TodoItemStatus.COMPLETED)
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item to the To-do list."""
         data = {
             "name": item.summary,
-            "complete": item.status == TodoItemStatus.COMPLETED,
+            "complete": item.status is TodoItemStatus.COMPLETED,
         }
         try:
             await self._data.async_update(item.uid, data)

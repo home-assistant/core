@@ -149,7 +149,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         )
 
         if (
-            self.state == MediaPlayerState.OFF
+            self.state is MediaPlayerState.OFF
             and (state := await self.async_get_last_state()) is not None
         ):
             self._supported_features = (
@@ -204,7 +204,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 icon = tv_state.apps[tv_state.current_app_id]["icon"]
             self._attr_media_image_url = icon
 
-        if self.state != MediaPlayerState.OFF or not self._supported_features:
+        if self.state is not MediaPlayerState.OFF or not self._supported_features:
             supported = SUPPORT_WEBOSTV
             if tv_state.sound_output == "external_speaker":
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
@@ -235,7 +235,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                     self._attr_state = MediaPlayerState.IDLE
 
         tv_info = self._client.tv_info
-        if self.state != MediaPlayerState.OFF:
+        if self.state is not MediaPlayerState.OFF:
             maj_v = tv_info.software.get("major_ver")
             min_v = tv_info.software.get("minor_ver")
             if maj_v and min_v:
@@ -248,7 +248,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 self._attr_device_info["serial_number"] = serial_number
 
         self._attr_extra_state_attributes = {}
-        if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
+        if tv_state.sound_output is not None or self.state is not MediaPlayerState.OFF:
             self._attr_extra_state_attributes = {
                 ATTR_SOUND_OUTPUT: tv_state.sound_output
             }
@@ -407,7 +407,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
-        if media_type == MediaType.CHANNEL and self._client.tv_state.channels:
+        if media_type is MediaType.CHANNEL and self._client.tv_state.channels:
             _LOGGER.debug("Searching channel")
             partial_match_channel_id = None
             perfect_match_channel_id = None

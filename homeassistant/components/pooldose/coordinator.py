@@ -57,7 +57,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
                 f"Failed to connect to PoolDose device while fetching data: {err}"
             ) from err
 
-        if status != RequestStatus.SUCCESS:
+        if status is not RequestStatus.SUCCESS:
             raise UpdateFailed(f"API returned status: {status}")
 
         if not instant_values:

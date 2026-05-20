@@ -139,7 +139,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             ):
                 self._checked_playlist_id = context.uri
                 self._playlist = None
-                if context.context_type == ContextType.PLAYLIST:
+                if context.context_type is ContextType.PLAYLIST:
                     # Make sure any playlist lookups don't break the current
                     # playback state update
                     try:

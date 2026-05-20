@@ -134,16 +134,16 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state == CoverState.OPENING
+        return self._state is CoverState.OPENING
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state == CoverState.CLOSING
+        return self._state is CoverState.CLOSING
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        if self._state == CoverState.CLOSED:
+        if self._state is CoverState.CLOSED:
             return True
         return None if self._state is None else False

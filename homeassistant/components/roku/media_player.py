@@ -256,7 +256,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Fetch media browser image to serve via proxy."""
-        if media_content_type == MediaType.APP and media_content_id:
+        if media_content_type is MediaType.APP and media_content_id:
             image_url = self.coordinator.roku.app_icon_url(media_content_id)
             return await self._async_fetch_image(image_url)
 
@@ -305,7 +305,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler()
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self.state != MediaPlayerState.OFF:
+        if self.state is not MediaPlayerState.OFF:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
@@ -392,7 +392,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
             if (
                 media_type == MediaType.URL
-                and STREAM_FORMAT_TO_MEDIA_TYPE[extra[ATTR_FORMAT]] == MediaType.MUSIC
+                and STREAM_FORMAT_TO_MEDIA_TYPE[extra[ATTR_FORMAT]] is MediaType.MUSIC
             ):
                 media_type = MediaType.MUSIC
 
@@ -407,7 +407,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             if extra.get(ATTR_NAME) is None:
                 extra[ATTR_NAME] = stream_name
 
-        if media_type == MediaType.APP:
+        if media_type is MediaType.APP:
             params = {
                 param: extra[attr]
                 for attr, param in ATTRS_TO_LAUNCH_PARAMS.items()

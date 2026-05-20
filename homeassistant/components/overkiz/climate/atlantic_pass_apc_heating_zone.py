@@ -194,7 +194,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
                 temperature,

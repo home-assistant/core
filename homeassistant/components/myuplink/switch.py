@@ -66,7 +66,7 @@ async def async_setup_entry(
         for point_id, device_point in point_data.items():
             if skip_entity(device_point.category, device_point):
                 continue
-            if find_matching_platform(device_point) == Platform.SWITCH:
+            if find_matching_platform(device_point) is Platform.SWITCH:
                 description = get_description(device_point)
 
                 entities.append(

@@ -593,7 +593,7 @@ class MQTT:
         @callback
         def _async_misc() -> None:
             """Start the MQTT client misc loop."""
-            if self._mqttc.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
+            if self._mqttc.loop_misc() is mqtt.MQTT_ERR_SUCCESS:
                 self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)
 
         self._misc_timer = self.loop.call_at(self.loop.time() + 1, _async_misc)

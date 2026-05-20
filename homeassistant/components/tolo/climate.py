@@ -100,7 +100,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Execute HVAC action."""
-        if self.coordinator.data.status.calefaction == Calefaction.HEAT:
+        if self.coordinator.data.status.calefaction is Calefaction.HEAT:
             return HVACAction.HEATING
         if self.coordinator.data.status.calefaction == Calefaction.KEEP:
             return HVACAction.IDLE
@@ -119,11 +119,11 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             self._set_power_and_fan(False, False)
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             self._set_power_and_fan(True, False)
-        if hvac_mode == HVACMode.DRY:
+        if hvac_mode is HVACMode.DRY:
             self._set_power_and_fan(False, True)
 
     def set_fan_mode(self, fan_mode: str) -> None:

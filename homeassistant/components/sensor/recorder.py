@@ -939,7 +939,7 @@ def _update_issues(
                 (metadata_mean_type := metadata[1]["mean_type"]) is not None
                 and state_class
                 and (state_mean_type := DEFAULT_STATISTICS[state_class].mean_type)
-                != metadata_mean_type
+                is not metadata_mean_type
             ):
                 # The mean type has changed and the old statistics are not valid anymore
                 report_issue(

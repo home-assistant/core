@@ -243,7 +243,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     def _set_operation_mode(self, operation_mode: HVACMode):
         """Change the operation mode (internal)."""
-        if operation_mode == HVACMode.HEAT:
+        if operation_mode is HVACMode.HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
         elif operation_mode == HVACMode.COOL:
             success = self._client.set_mode(self._client.MODE_COOL)

@@ -513,13 +513,13 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
     @property
     def options(self) -> list[str]:
         """Return available cleaning modes."""
-        return [mode.value for mode in YXCleanType if mode != YXCleanType.UNKNOWN]
+        return [mode.value for mode in YXCleanType if mode is not YXCleanType.UNKNOWN]
 
     @property
     def current_option(self) -> str | None:
         """Get the current cleaning mode."""
         clean_mode = self.coordinator.api.status.clean_mode
-        if clean_mode is None or clean_mode == YXCleanType.UNKNOWN:
+        if clean_mode is None or clean_mode is YXCleanType.UNKNOWN:
             return None
         return clean_mode.value
 

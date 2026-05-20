@@ -111,7 +111,7 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode, **kwargs: Any) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             return await self.async_turn_off()
         return await self.async_turn_on()
 

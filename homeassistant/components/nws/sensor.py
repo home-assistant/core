@@ -232,6 +232,6 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
+        if self.device_class is SensorDeviceClass.TIMESTAMP:
             return parse_datetime(value)
         return value

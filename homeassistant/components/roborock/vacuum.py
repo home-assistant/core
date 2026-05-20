@@ -527,7 +527,9 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     _attr_translation_key = DOMAIN
     _attr_name = None
     _attr_fan_speed_list = [
-        fan_level.value for fan_level in YXFanLevel if fan_level != YXFanLevel.UNKNOWN
+        fan_level.value
+        for fan_level in YXFanLevel
+        if fan_level is not YXFanLevel.UNKNOWN
     ]
 
     def __init__(

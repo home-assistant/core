@@ -94,7 +94,7 @@ class OverkizExecutor:
         # Set the execution duration to 0 seconds for RTS devices on supported commands
         # Default execution duration is 30 seconds and will block consecutive commands
         if (
-            self.device.protocol == Protocol.RTS
+            self.device.protocol is Protocol.RTS
             and command_name not in COMMANDS_WITHOUT_DELAY
         ):
             parameters.append(0)

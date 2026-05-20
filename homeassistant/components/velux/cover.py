@@ -162,7 +162,7 @@ class VeluxDualRollerShutter(VeluxCover):
     ) -> None:
         """Initialize VeluxDualRollerShutter."""
         super().__init__(node, config_entry_id)
-        if part == VeluxDualRollerPart.DUAL:
+        if part is VeluxDualRollerPart.DUAL:
             self._attr_name = None
         else:
             self._attr_unique_id = f"{self._attr_unique_id}_{part}"
@@ -172,7 +172,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @property
     def _part_position(self) -> Position:
         """Return the pyvlx Position for this part of the shutter."""
-        if self.part == VeluxDualRollerPart.UPPER:
+        if self.part is VeluxDualRollerPart.UPPER:
             return self.node.position_upper_curtain
         if self.part == VeluxDualRollerPart.LOWER:
             return self.node.position_lower_curtain

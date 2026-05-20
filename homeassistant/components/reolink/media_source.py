@@ -83,7 +83,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
-        if vod_type == VodRequestType.NVR_DOWNLOAD:
+        if vod_type is VodRequestType.NVR_DOWNLOAD:
             filename = f"{start_time}_{end_time}"
 
         if vod_type in {

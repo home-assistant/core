@@ -248,13 +248,13 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @rpc_call
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != MediaPlayerState.PLAYING:
+        if self.state is not MediaPlayerState.PLAYING:
             await self.coordinator.device.media_play_or_pause()
 
     @rpc_call
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             await self.coordinator.device.media_play_or_pause()
 
     @rpc_call

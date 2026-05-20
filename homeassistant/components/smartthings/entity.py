@@ -70,7 +70,7 @@ class SmartThingsEntity(Entity):
         self._update_attr()
 
     def _availability_handler(self, event: DeviceHealthEvent) -> None:
-        self._attr_available = event.status != HealthStatus.OFFLINE
+        self._attr_available = event.status is not HealthStatus.OFFLINE
         self.async_write_ha_state()
 
     def _update_handler(self, event: DeviceEvent) -> None:

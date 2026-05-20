@@ -52,7 +52,7 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""
         return (
-            self.coordinator.data.doors[self.door_id].state == TailwindDoorState.CLOSED
+            self.coordinator.data.doors[self.door_id].state is TailwindDoorState.CLOSED
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:

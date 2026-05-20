@@ -137,7 +137,7 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             await self.async_turn_on()
@@ -299,7 +299,7 @@ class TeslemetryStreamingClimateEntity(
             self.vehicle.stream_vehicle.listen_RightHandDrive(self._async_handle_rhd)
         )
 
-        if self.side == TeslemetryClimateSide.DRIVER:
+        if self.side is TeslemetryClimateSide.DRIVER:
             if self.rhd:
                 self.async_on_remove(
                     self.vehicle.stream_vehicle.listen_HvacRightTemperatureRequest(
@@ -412,7 +412,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
         """Set the climate mode and state."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await handle_vehicle_command(
                 self.api.set_cabin_overheat_protection(on=False, fan_only=False)
             )

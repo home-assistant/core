@@ -99,7 +99,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
-            data.status.clean_fluid_status == CleanFluidStatus.empty_not_installed
+            data.status.clean_fluid_status is CleanFluidStatus.empty_not_installed
             if data.status.clean_fluid_status is not None
             else None
         ),

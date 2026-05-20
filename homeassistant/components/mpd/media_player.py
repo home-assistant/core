@@ -444,7 +444,7 @@ class MpdDevice(MediaPlayerEntity):
                 )
                 media_id = async_process_play_media_url(self.hass, play_item.url)
 
-            if media_type == MediaType.PLAYLIST:
+            if media_type is MediaType.PLAYLIST:
                 LOGGER.debug("Playing playlist: %s", media_id)
                 if self._attr_source_list and media_id in self._attr_source_list:
                     self._current_playlist = media_id
@@ -472,7 +472,7 @@ class MpdDevice(MediaPlayerEntity):
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         async with self.connection():
-            if repeat == RepeatMode.OFF:
+            if repeat is RepeatMode.OFF:
                 await self._client.repeat(0)
                 await self._client.single(0)
             else:

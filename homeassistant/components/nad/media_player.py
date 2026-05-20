@@ -154,7 +154,7 @@ class NAD(MediaPlayerEntity):
             else MediaPlayerState.OFF
         )
 
-        if self.state == MediaPlayerState.ON:
+        if self.state is MediaPlayerState.ON:
             self._attr_is_volume_muted = self._nad_receiver.main_mute("?") == "On"
             volume = self._nad_receiver.main_volume("?")
             # Some receivers cannot report the volume, e.g. C 356BEE,

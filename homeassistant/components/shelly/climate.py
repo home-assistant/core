@@ -234,10 +234,10 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             assert self._thermostat_enable_key is not None
 
         await self.coordinator.device.boolean_set(
-            get_rpc_key_id(self._thermostat_enable_key), hvac_mode != HVACMode.OFF
+            get_rpc_key_id(self._thermostat_enable_key), hvac_mode is not HVACMode.OFF
         )
 
-        if self._working_mode_key is None or hvac_mode == HVACMode.OFF:
+        if self._working_mode_key is None or hvac_mode is HVACMode.OFF:
             return
 
         await self.coordinator.device.enum_set(
@@ -584,13 +584,13 @@ class BlockSleepingClimate(
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             if isinstance(self.target_temperature, float):
                 self._last_target_temp = self.target_temperature
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=self._attr_min_temp
             )
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=self._last_target_temp
             )

@@ -268,13 +268,13 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
         now = utcnow()
 
         if (
-            self._current_run_state == RunStates.NOT_RUNNING
+            self._current_run_state is RunStates.NOT_RUNNING
             and self._previous_run_state in (RunStates.QUEUED, RunStates.RUNNING)
         ):
             # If the activity goes from queued/running to not running, update the
             # state to be right now (i.e., the time the zone stopped running):
             self._attr_native_value = now
-        elif self._current_run_state == RunStates.RUNNING:
+        elif self._current_run_state is RunStates.RUNNING:
             seconds_remaining = self.calculate_seconds_remaining()
             new_timestamp = now + timedelta(seconds=seconds_remaining)
 

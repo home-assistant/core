@@ -90,7 +90,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
 
         As with hvac_mode, we don't really have an option here.
         """
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             return
         raise NotImplementedError(hvac_mode)
 

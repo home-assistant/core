@@ -110,7 +110,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
             if (
                 item == todo_item.uid
                 or item.casefold() == (todo_item.summary or "").casefold()
-            ) and todo_item.status == TodoItemStatus.NEEDS_ACTION:
+            ) and todo_item.status is TodoItemStatus.NEEDS_ACTION:
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:

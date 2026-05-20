@@ -189,9 +189,9 @@ class PS4Device(MediaPlayerEntity):
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )
-                elif self.state != MediaPlayerState.IDLE:
+                elif self.state is not MediaPlayerState.IDLE:
                     self.idle()
-            elif self.state != MediaPlayerState.OFF:
+            elif self.state is not MediaPlayerState.OFF:
                 self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
@@ -387,7 +387,7 @@ class PS4Device(MediaPlayerEntity):
     def entity_picture(self) -> str | None:
         """Return picture."""
         if (
-            self.state == MediaPlayerState.PLAYING
+            self.state is MediaPlayerState.PLAYING
             and self.media_content_id is not None
             and (image_hash := self.media_image_hash) is not None
         ):

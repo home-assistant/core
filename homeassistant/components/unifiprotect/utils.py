@@ -65,7 +65,7 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
                 for family, _, _, _, raw in await hass.loop.getaddrinfo(
                     host, None, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP
                 )
-                if family == socket.AF_INET
+                if family is socket.AF_INET
             ),
             None,
         )

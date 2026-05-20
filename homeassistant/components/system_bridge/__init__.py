@@ -217,7 +217,7 @@ async def async_setup_entry(
 
     # Set up all platforms except notify
     await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+        entry, [platform for platform in PLATFORMS if platform is not Platform.NOTIFY]
     )
 
     # Set up notify platform
@@ -458,7 +458,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+        entry, [platform for platform in PLATFORMS if platform is not Platform.NOTIFY]
     )
     if unload_ok:
         coordinator = entry.runtime_data

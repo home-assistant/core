@@ -124,7 +124,7 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.station.uuid}_{description.key}"
 
-        if description.device_class != SensorDeviceClass.PH:
+        if description.device_class is not SensorDeviceClass.PH:
             self._attr_native_unit_of_measurement = self.measurement.uom
 
         if self.station.latitude and self.station.longitude:

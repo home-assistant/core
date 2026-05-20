@@ -44,7 +44,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
         """Return if entity is available."""
         return (
             self.coordinator.data.status.lamp_on
-            and self.coordinator.data.settings.lamp_mode == LampMode.MANUAL
+            and self.coordinator.data.settings.lamp_mode is LampMode.MANUAL
         )
 
     def press(self) -> None:

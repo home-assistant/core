@@ -176,7 +176,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             )
             media_id = play_item.url
 
-        if media_type != MediaType.URL:
+        if media_type is not MediaType.URL:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
             return
 

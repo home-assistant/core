@@ -683,7 +683,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             """Render RGBx payload."""
             rgb_color_str = ",".join(str(channel) for channel in color)
             keys = ["red", "green", "blue"]
-            if color_mode == ColorMode.RGBW:
+            if color_mode is ColorMode.RGBW:
                 keys.append("white")
             elif color_mode == ColorMode.RGBWW:
                 keys.extend(["cold_white", "warm_white"])

@@ -87,7 +87,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             state_key = OverkizState.SOMFY_THERMOSTAT_HEATING_MODE
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
@@ -109,7 +109,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             if self.preset_mode == PRESET_NONE:
                 return None
             return cast(
@@ -139,7 +139,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode is HVACMode.AUTO:
             await self.executor.async_execute_command(OverkizCommand.EXIT_DEROGATION)
             await self.executor.async_execute_command(OverkizCommand.REFRESH_STATE)
         else:

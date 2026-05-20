@@ -44,21 +44,21 @@ TRYDAN_SWITCHES = (
     V2CSwitchEntityDescription(
         key="locked",
         translation_key="locked",
-        value_fn=lambda evse_data: evse_data.locked == LockState.ENABLED,
+        value_fn=lambda evse_data: evse_data.locked is LockState.ENABLED,
         turn_on_fn=lambda evse: evse.lock(),
         turn_off_fn=lambda evse: evse.unlock(),
     ),
     V2CSwitchEntityDescription(
         key="timer",
         translation_key="timer",
-        value_fn=lambda evse_data: evse_data.timer == ChargePointTimerState.TIMER_ON,
+        value_fn=lambda evse_data: evse_data.timer is ChargePointTimerState.TIMER_ON,
         turn_on_fn=lambda evse: evse.timer(),
         turn_off_fn=lambda evse: evse.timer_disable(),
     ),
     V2CSwitchEntityDescription(
         key="dynamic",
         translation_key="dynamic",
-        value_fn=lambda evse_data: evse_data.dynamic == DynamicState.ENABLED,
+        value_fn=lambda evse_data: evse_data.dynamic is DynamicState.ENABLED,
         turn_on_fn=lambda evse: evse.dynamic(),
         turn_off_fn=lambda evse: evse.dynamic_disable(),
     ),
@@ -67,7 +67,7 @@ TRYDAN_SWITCHES = (
         translation_key="pause_dynamic",
         icon="mdi:pause",
         value_fn=lambda evse_data: (
-            evse_data.pause_dynamic == PauseDynamicState.NOT_MODULATING
+            evse_data.pause_dynamic is PauseDynamicState.NOT_MODULATING
         ),
         turn_on_fn=lambda evse: evse.pause_dynamic(),
         turn_off_fn=lambda evse: evse.resume_dynamic(),

@@ -1073,7 +1073,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             await self.async_media_pause()
         else:
             await self.async_media_play()
@@ -1081,7 +1081,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             return None
 
         if self.media_image_remotely_accessible:
@@ -1127,7 +1127,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             return state_attr
 
         for attr in ATTR_TO_PROPERTY:

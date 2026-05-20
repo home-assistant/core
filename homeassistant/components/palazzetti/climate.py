@@ -78,7 +78,7 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
-            await self.coordinator.client.set_on(hvac_mode != HVACMode.OFF)
+            await self.coordinator.client.set_on(hvac_mode is not HVACMode.OFF)
         except CommunicationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="cannot_connect"

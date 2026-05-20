@@ -138,7 +138,7 @@ async def async_setup_entry(
         )
         for device in entry_data.devices.values()
         if (
-            device.device.components[MAIN].manufacturer_category == Category.DISHWASHER
+            device.device.components[MAIN].manufacturer_category is Category.DISHWASHER
             and Capability.CUSTOM_SUPPORTED_OPTIONS in device.status[MAIN]
         )
     )

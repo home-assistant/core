@@ -226,7 +226,7 @@ async def async_setup_entry(
         for point_id, device_point in point_data.items():
             if skip_entity(device_point.category, device_point):
                 continue
-            if find_matching_platform(device_point) == Platform.SENSOR:
+            if find_matching_platform(device_point) is Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor
                 # Ignore sensors without a description that provide non-numeric values
@@ -236,7 +236,7 @@ async def async_setup_entry(
                     continue
                 if (
                     description is not None
-                    and description.device_class == SensorDeviceClass.ENUM
+                    and description.device_class is SensorDeviceClass.ENUM
                 ):
                     entities.append(
                         MyUplinkEnumRawSensor(

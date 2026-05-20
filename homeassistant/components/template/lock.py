@@ -164,18 +164,18 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
                 self._attr_supported_features |= supported_feature
 
     def _set_state(self, state: LockState | None) -> None:
-        self._attr_is_jammed = state == LockState.JAMMED
-        self._attr_is_opening = state == LockState.OPENING
-        self._attr_is_locking = state == LockState.LOCKING
-        self._attr_is_open = state == LockState.OPEN
-        self._attr_is_unlocking = state == LockState.UNLOCKING
+        self._attr_is_jammed = state is LockState.JAMMED
+        self._attr_is_opening = state is LockState.OPENING
+        self._attr_is_locking = state is LockState.LOCKING
+        self._attr_is_open = state is LockState.OPEN
+        self._attr_is_unlocking = state is LockState.UNLOCKING
 
         # All other parameters need to be set False in order
         # for the lock to be unknown.
         if state is None:
             self._attr_is_locked = state
         else:
-            self._attr_is_locked = state == LockState.LOCKED
+            self._attr_is_locked = state is LockState.LOCKED
 
     @callback
     def _update_code_format(self, render: str | TemplateError | None):

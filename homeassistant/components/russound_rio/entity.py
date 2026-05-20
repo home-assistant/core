@@ -85,7 +85,7 @@ class RussoundBaseEntity(Entity):
         self, _client: RussoundRIOClient, _callback_type: CallbackType
     ) -> None:
         """Call when the device is notified of changes."""
-        if _callback_type == CallbackType.CONNECTION:
+        if _callback_type is CallbackType.CONNECTION:
             self._attr_available = _client.is_connected()
         self._controller = _client.controllers[self._controller.controller_id]
         self.async_write_ha_state()

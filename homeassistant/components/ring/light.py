@@ -85,7 +85,7 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
         """Update light state, and causes Home Assistant to correctly update."""
         await self._device.async_set_lights(new_state)
 
-        self._attr_is_on = new_state == OnOffState.ON
+        self._attr_is_on = new_state is OnOffState.ON
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.async_write_ha_state()
 

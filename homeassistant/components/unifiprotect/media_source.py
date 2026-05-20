@@ -325,7 +325,7 @@ class ProtectMediaSource(MediaSource):
             _bad_identifier(item.identifier)
 
         # {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
-        if time_type == IdentifierTimeType.RECENT:
+        if time_type is IdentifierTimeType.RECENT:
             try:
                 days = int(parts.pop(0))
             except (IndexError, ValueError) as err:

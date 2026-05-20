@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+        entry, [platform for platform in PLATFORMS if platform is not Platform.NOTIFY]
     )
 
     return True

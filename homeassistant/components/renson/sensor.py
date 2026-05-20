@@ -254,7 +254,7 @@ class RensonSensor(RensonEntity, SensorEntity):
 
         if self.raw_format:
             self._attr_native_value = value
-        elif self.entity_description.device_class == SensorDeviceClass.ENUM:
+        elif self.entity_description.device_class is SensorDeviceClass.ENUM:
             self._attr_native_value = self.api.parse_value(
                 value, self.data_type
             ).lower()

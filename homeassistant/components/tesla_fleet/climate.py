@@ -163,7 +163,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             await self.async_turn_on()
@@ -307,7 +307,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         self.async_write_ha_state()
 
     async def _async_set_cop(self, hvac_mode: HVACMode) -> None:
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await handle_vehicle_command(
                 self.api.set_cabin_overheat_protection(on=False, fan_only=False)
             )

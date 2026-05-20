@@ -139,7 +139,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         sensor_type = SUPPORTED_MODEL_TYPES[model_name]
 
         options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
-        if sensor_type == SupportedModels.CURTAIN:
+        if sensor_type is SupportedModels.CURTAIN:
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
         return self.async_create_entry(

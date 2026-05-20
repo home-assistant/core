@@ -355,7 +355,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
-        if media_type == MediaType.APP:
+        if media_type is MediaType.APP:
             await self._async_launch_app(media_id)
             return
 

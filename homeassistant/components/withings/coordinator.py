@@ -215,7 +215,7 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
         self, notification_category: NotificationCategory
     ) -> None:
         """Only set new in bed value instead of refresh."""
-        self.in_bed = notification_category == NotificationCategory.IN_BED
+        self.in_bed = notification_category is NotificationCategory.IN_BED
         self.async_update_listeners()
 
     async def _internal_update_data(self) -> None:

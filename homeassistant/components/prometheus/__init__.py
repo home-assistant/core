@@ -658,7 +658,7 @@ class PrometheusMetrics:
         if (temp := state.attributes.get(attr)) is None:
             return
 
-        if self._climate_units == UnitOfTemperature.FAHRENHEIT:
+        if self._climate_units is UnitOfTemperature.FAHRENHEIT:
             temp = TemperatureConverter.convert(
                 temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
             )

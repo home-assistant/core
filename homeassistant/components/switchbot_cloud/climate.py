@@ -140,7 +140,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
             hvac_mode,
             self._attr_hvac_mode,
         )
-        if new_hvac_mode == HVACMode.OFF:
+        if new_hvac_mode is HVACMode.OFF:
             return _SWITCHBOT_HVAC_MODES.get(
                 self._attr_hvac_mode, _DEFAULT_SWITCHBOT_HVAC_MODE
             )
@@ -157,7 +157,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         new_fan_speed = _SWITCHBOT_FAN_MODES.get(
             fan_mode or self._attr_fan_mode, _DEFAULT_SWITCHBOT_FAN_MODE
         )
-        new_power_state = "on" if hvac_mode != HVACMode.OFF else "off"
+        new_power_state = "on" if hvac_mode is not HVACMode.OFF else "off"
         command = f"{int(new_temperature)},{new_mode},{new_fan_speed},{new_power_state}"
         _LOGGER.debug("Sending command to %s: %s", self._attr_unique_id, command)
         await self.send_api_command(
@@ -195,7 +195,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         Uses the last known hvac_mode (if not OFF), otherwise defaults to FAN_ONLY.
         """
         hvac_mode = self._attr_hvac_mode
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             hvac_mode = HVACMode.FAN_ONLY
         await self.async_set_hvac_mode(hvac_mode)
 

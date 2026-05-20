@@ -254,7 +254,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         ]
 
         self._attr_group_members = group_members_entity_ids
-        if player.type == PlayerType.GROUP:
+        if player.type is PlayerType.GROUP:
             volume: int | None = player.group_volume
         else:
             volume = player.volume_level
@@ -512,7 +512,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if not source_player:
             # no source player given; try to find a playing player(queue)
             for queue in self.mass.player_queues:
-                if queue.state == MassPlayerState.PLAYING:
+                if queue.state is MassPlayerState.PLAYING:
                     source_queue_id = queue.queue_id
                     break
             else:
@@ -674,7 +674,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # queue is playing regular media item
         self._attr_media_title = media_item.name
         # for tracks we can extract more info
-        if media_item.media_type == MediaType.TRACK:
+        if media_item.media_type is MediaType.TRACK:
             if TYPE_CHECKING:
                 assert isinstance(media_item, Track)
             self._attr_media_artist = media_item.artist_str

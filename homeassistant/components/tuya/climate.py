@@ -190,7 +190,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ):
                 if (
                     ha_mode := _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode)
-                ) and ha_mode != HVACMode.OFF:
+                ) and ha_mode is not HVACMode.OFF:
                     # OFF is always added first
                     self._attr_hvac_modes.append(ha_mode)
 
@@ -243,7 +243,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if self._switch_wrapper:
             commands.extend(
                 self._switch_wrapper.get_update_commands(
-                    self.device, hvac_mode != HVACMode.OFF
+                    self.device, hvac_mode is not HVACMode.OFF
                 )
             )
         if (

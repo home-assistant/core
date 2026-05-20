@@ -205,7 +205,7 @@ class Volumio(MediaPlayerEntity):
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        if repeat == RepeatMode.OFF:
+        if repeat is RepeatMode.OFF:
             await self._volumio.repeatAll("false")
         else:
             await self._volumio.repeatAll("true")

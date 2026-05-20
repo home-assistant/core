@@ -195,7 +195,7 @@ class OpenhomeDevice(MediaPlayerEntity):
             )
             media_id = play_item.url
 
-        if media_type != MediaType.MUSIC:
+        if media_type is not MediaType.MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,

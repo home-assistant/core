@@ -121,7 +121,7 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off the device."""
-        if self._attr_state == MediaPlayerState.ON:
+        if self._attr_state is MediaPlayerState.ON:
             await self._tv.sendKey("Standby")
             self._attr_state = MediaPlayerState.OFF
             await self._async_update_soon()
@@ -226,7 +226,7 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
-        if media_type == MediaType.CHANNEL:
+        if media_type is MediaType.CHANNEL:
             await self.async_play_media_channel(media_id)
         elif media_type == MediaType.APP:
             if app := self._tv.applications.get(media_id):
@@ -415,9 +415,9 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
     ) -> tuple[bytes | None, str | None]:
         """Serve album art. Returns (content, content_type)."""
         try:
-            if media_content_type == MediaType.APP and media_content_id:
+            if media_content_type is MediaType.APP and media_content_id:
                 return await self._tv.getApplicationIcon(media_content_id)
-            if media_content_type == MediaType.CHANNEL and media_content_id:
+            if media_content_type is MediaType.CHANNEL and media_content_id:
                 list_id, _, channel_id = media_content_id.partition("/")
                 if not channel_id:
                     channel_id = list_id

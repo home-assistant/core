@@ -80,7 +80,7 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self.coordinator.async_set_cooling(hvac_mode == HVACMode.COOL)
+        await self.coordinator.async_set_cooling(hvac_mode is HVACMode.COOL)
 
     @property
     def hvac_action(self) -> HVACAction:

@@ -97,7 +97,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                     assert self.unique_id is not None
                 sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
                 if (
-                    self.device_class == SensorDeviceClass.TEMPERATURE
+                    self.device_class is SensorDeviceClass.TEMPERATURE
                     and sensor_unique_id == "battery_temperature"
                 ):
                     config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
@@ -121,7 +121,7 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
             and isinstance(state, str)
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
-            if device_class == SensorDeviceClass.DATE:
+            if device_class is SensorDeviceClass.DATE:
                 return timestamp.date()
             return timestamp
 

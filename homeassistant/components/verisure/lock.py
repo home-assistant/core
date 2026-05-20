@@ -120,7 +120,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         """Send set lock state command."""
         command = (
             self.coordinator.verisure.door_lock(self.serial_number, code)
-            if state == LockState.LOCKED
+            if state is LockState.LOCKED
             else self.coordinator.verisure.door_unlock(self.serial_number, code)
         )
         lock_request = await self.hass.async_add_executor_job(
@@ -129,7 +129,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
         LOGGER.debug("Verisure doorlock %s", state)
         transaction_id = lock_request.get("data", {}).get(command["operationName"])
-        target_state = "LOCKED" if state == LockState.LOCKED else "UNLOCKED"
+        target_state = "LOCKED" if state is LockState.LOCKED else "UNLOCKED"
         lock_status = None
         attempts = 0
         while lock_status is None:
@@ -152,7 +152,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             )
             LOGGER.debug("Lock status is %s", lock_status)
         if lock_status == "OK":
-            self._attr_is_locked = state == LockState.LOCKED
+            self._attr_is_locked = state is LockState.LOCKED
             self.async_write_ha_state()
 
     def disable_autolock(self) -> None:

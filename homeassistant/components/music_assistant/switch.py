@@ -46,7 +46,7 @@ async def async_setup_entry(
         for player_option in player.options:
             if (
                 not player_option.read_only
-                and player_option.type == PlayerOptionType.BOOLEAN
+                and player_option.type is PlayerOptionType.BOOLEAN
             ):
                 # we ignore entities with unknown translation keys.
                 if player_option.translation_key not in PLAYER_OPTIONS_SWITCH:

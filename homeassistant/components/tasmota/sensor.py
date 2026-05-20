@@ -318,7 +318,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     @callback
     def sensor_state_updated(self, state: Any, **kwargs: Any) -> None:
         """Handle state updates."""
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
+        if self.device_class is SensorDeviceClass.TIMESTAMP:
             self._state_timestamp = state
         else:
             self._state = state
@@ -327,6 +327,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     @property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
-        if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:
+        if self._state_timestamp and self.device_class is SensorDeviceClass.TIMESTAMP:
             return self._state_timestamp
         return self._state

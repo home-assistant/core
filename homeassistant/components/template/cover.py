@@ -225,13 +225,13 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         """Update the state of the cover."""
         if state:
             if CONF_POSITION not in self._templates:
-                if state == CoverState.OPEN:
+                if state is CoverState.OPEN:
                     self._attr_current_cover_position = 100
                 else:
                     self._attr_current_cover_position = 0
 
-            self._attr_is_opening = state == CoverState.OPENING
-            self._attr_is_closing = state == CoverState.CLOSING
+            self._attr_is_opening = state is CoverState.OPENING
+            self._attr_is_closing = state is CoverState.CLOSING
         else:
             if CONF_POSITION not in self._templates:
                 self._attr_current_cover_position = None
