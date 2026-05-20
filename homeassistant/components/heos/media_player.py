@@ -37,7 +37,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -624,7 +623,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
-    ) -> BrowseMediaSource:
+    ) -> media_source.BrowseMediaSource | media_source.RootBrowseMediaSource:
         """Browse a media source item."""
         return await media_source.async_browse_media(
             self.hass,
