@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Create Virtual Remote",
+        "description": "Create a virtual remote linked to an infrared entity.",
+        "data": {
+          "remote_name": "Remote name",
+          "infrared_entity_id": "Infrared entity"
+        }
+      }
+    },
+    "error": {
+      "remote_name_required": "Remote name is required.",
+      "infrared_entity_unavailable": "Selected infrared entity is unavailable."
+    },
+    "abort": {
+      "no_available_infrared_entities": "No infrared entities are available.",
+      "single_instance_allowed": "Only one Virtual Remote configuration is allowed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Virtual Remote Options"
+      },
+      "add_remote": {
+        "title": "Add Virtual Remote"
+      },
+      "edit_remote": {
+        "title": "Edit Virtual Remote"
+      },
+      "delete_remote": {
+        "title": "Delete Virtual Remote"
+      },
+      "manage_commands": {
+        "title": "Manage Commands"
+      },
+      "add_command": {
+        "title": "Add Command"
+      },
+      "edit_command": {
+        "title": "Edit Command"
+      },
+      "delete_command": {
+        "title": "Delete Command"
+      }
+    }
+  }
+}
