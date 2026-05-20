@@ -1040,6 +1040,9 @@ govee-local-api==2.4.0
 # homeassistant.components.gpsd
 gps3==0.33.3
 
+# homeassistant.components.grandstream_home
+grandstream-home-api==0.1.5
+
 # homeassistant.components.gree
 greeclimate==2.1.1
 

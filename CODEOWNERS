@@ -685,6 +685,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/govee_light_local/ @Galorhallen
 /homeassistant/components/gpsd/ @fabaff @jrieger
 /tests/components/gpsd/ @fabaff @jrieger
+/homeassistant/components/grandstream_home/ @wtxu-gs
+/tests/components/grandstream_home/ @wtxu-gs
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
 /homeassistant/components/green_planet_energy/ @petschni
