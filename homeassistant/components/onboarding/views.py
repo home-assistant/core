@@ -198,14 +198,18 @@ class UserOnboardingView(_BaseOnboardingStepView):
             if await async_wait_component(hass, "person"):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
-            # Create default areas using the users supplied language,
+            # Create default areas using the user-supplied language,
             # falling back to English for any missing keys.
+            language = data["language"]
             english_translations = await async_get_translations(
                 hass, "en", "area", {DOMAIN}
             )
-            translations = await async_get_translations(
-                hass, data["language"], "area", {DOMAIN}
-            )
+            if language == "en":
+                translations = english_translations
+            else:
+                translations = await async_get_translations(
+                    hass, language, "area", {DOMAIN}
+                )
 
             area_registry = ar.async_get(hass)
 
