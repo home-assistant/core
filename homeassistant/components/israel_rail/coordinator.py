@@ -80,12 +80,13 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
             ) from e
 
         offset = 0
+        now = dt_util.now()
         while offset < len(train_routes):
             route = train_routes[offset]
             if route is None:
                 break
             route_departure = departure_time(route)
-            if route_departure is None or route_departure >= dt_util.now():
+            if route_departure is None or route_departure >= now:
                 break
             offset += 1
 
