@@ -184,7 +184,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             await self.coordinator.client.thermostat(**data, circuit=self._circuit)
         except BSBLANError as err:
             raise HomeAssistantError(
-                "An error occurred while updating the BSBLAN device",
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err
