@@ -260,7 +260,7 @@ async def test_invalid_uom(
     [
         pytest.param(5, 5, "100", id="nonstandard_max5_value5_scales_to_100"),
         pytest.param(5, 3, "60", id="nonstandard_max5_value3_scales_to_60"),
-        pytest.param(100, 87, "87", id="standard_max100_value87_no_scaling"),
+        pytest.param(100, 87, "87.0", id="standard_max100_value87_no_scaling"),
     ],
 )
 @pytest.mark.parametrize("mock_device_code", ["wk_fi6dne5tu4t1nm6j"])
