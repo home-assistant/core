@@ -67,11 +67,8 @@ VPN_AUTH_INDICATORS = (
 )
 
 LOG_MSG_VPN_CONNECTIONS_REMOVED = (
-    "WireGuard VPN connection(s) no longer available on the FRITZ!Box: %s"
-)
-LOG_MSG_VPN_CONNECTIONS_REMOVED_HINT = (
-    "VPN switches will show as unavailable until the connection is restored "
-    "or the integration is reloaded."
+    "WireGuard VPN connection(s) no longer on the FRITZ!Box: %s; "
+    "switches show unavailable until restored or the integration is reloaded"
 )
 
 DSL_CONNECTION: Literal["dsl"] = "dsl"

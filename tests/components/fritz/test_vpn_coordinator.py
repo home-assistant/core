@@ -209,7 +209,6 @@ async def test_vpn_coordinator_update_connection_error_retry_after(
 
 
 def test_vpn_web_ui_protocol_follows_conf_ssl() -> None:
-    """Web UI protocol matches FRITZ!Box Tools CONF_SSL."""
     from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
 
     from homeassistant.const import CONF_SSL
@@ -218,8 +217,7 @@ def test_vpn_web_ui_protocol_follows_conf_ssl() -> None:
     assert vpn_web_ui_protocol({CONF_SSL: True}) == PROTOCOL_HTTPS
 
 
-def test_vpn_auth_failed_detects_login_errors() -> None:
-    """vpn_auth_failed matches VPN auth indicator strings."""
+def test_vpn_auth_failed() -> None:
     assert vpn_auth_failed(Exception("login failed"))
     assert not vpn_auth_failed(ConnectionError("timeout"))
 
