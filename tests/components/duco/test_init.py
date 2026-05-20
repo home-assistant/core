@@ -67,27 +67,41 @@ _UNSUPPORTED_BOARD_INFOS = [
 
 
 @pytest.mark.parametrize(
-    ("method", "exception", "expected_state"),
+    (
+        "method",
+        "exception",
+        "expected_state",
+        "expected_translation_key",
+        "expected_translation_placeholders",
+    ),
     [
         (
             "async_get_board_info",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
+            None,
+            None,
         ),
         (
             "async_get_board_info",
             DucoError("Unexpected API error"),
             ConfigEntryState.SETUP_ERROR,
+            "api_error",
+            {"error": "DucoError('Unexpected API error')"},
         ),
         (
             "async_get_board_info",
             DucoResponseError(500, "/info"),
             ConfigEntryState.SETUP_ERROR,
+            "api_error",
+            {"error": "DucoResponseError('Unexpected response 500 for /info')"},
         ),
         (
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
+            None,
+            None,
         ),
     ],
 )
@@ -98,6 +112,8 @@ async def test_setup_entry_error(
     method: str,
     exception: Exception,
     expected_state: ConfigEntryState,
+    expected_translation_key: str | None,
+    expected_translation_placeholders: dict[str, str] | None,
 ) -> None:
     """Test that fetch errors during setup result in the correct state."""
     getattr(mock_duco_client, method).side_effect = exception
@@ -106,6 +122,11 @@ async def test_setup_entry_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == expected_translation_key
+    assert (
+        mock_config_entry.error_reason_translation_placeholders
+        == expected_translation_placeholders
+    )
 
 
 @pytest.mark.usefixtures("mock_duco_client")
