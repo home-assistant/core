@@ -1,10 +1,8 @@
 """WireGuard VPN runtime storage (separate from AvmWrapper runtime_data)."""
 
-from __future__ import annotations
-
 import asyncio
-import logging
 from dataclasses import dataclass, field
+import logging
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST
@@ -26,12 +24,15 @@ FRITZ_VPN_DATA_KEY: HassKey[dict[str, FritzVpnEntryData]] = HassKey(f"{DOMAIN}_v
 
 @dataclass
 class FritzVpnEntryData:
+    """Runtime data for WireGuard VPN on a FRITZ!Box Tools config entry."""
+
     coordinator: FritzVpnCoordinator
     known_uids: set[str] = field(default_factory=set)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 def vpn_entry_data(hass: HomeAssistant, entry_id: str) -> FritzVpnEntryData | None:
+    """Return VPN runtime data for a config entry, if present."""
     return hass.data.get(FRITZ_VPN_DATA_KEY, {}).get(entry_id)
 
 
@@ -44,6 +45,7 @@ async def _reauth_after_setup(hass: HomeAssistant, entry_id: str) -> None:
 
 
 async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the WireGuard VPN coordinator for a config entry."""
     coordinator = FritzVpnCoordinator(
         hass,
         dict(entry.data),
@@ -68,6 +70,7 @@ async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_unload_vpn(hass: HomeAssistant, entry_id: str) -> None:
+    """Tear down WireGuard VPN for a config entry."""
     store = hass.data.get(FRITZ_VPN_DATA_KEY)
     if not store:
         return

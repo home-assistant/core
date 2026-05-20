@@ -1,19 +1,12 @@
 """WireGuard VPN switches for FRITZ!Box Tools."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-from fritzboxvpn import (
-    API_KEY_ACTIVE,
-    API_KEY_CONNECTED,
-    API_KEY_NAME,
-    API_KEY_UID,
-)
+from fritzboxvpn import API_KEY_ACTIVE, API_KEY_CONNECTED, API_KEY_NAME, API_KEY_UID
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,7 +35,7 @@ def _vpn_device_info(
         name=connection.get(API_KEY_NAME, connection_uid),
         manufacturer="FRITZ!",
         model=VPN_MODEL_WIREGUARD,
-        via_device={(DOMAIN, avm.unique_id)},
+        via_device=(DOMAIN, avm.unique_id),
         configuration_url=f"{scheme}://{avm.host}",
         connections={(CONNECTION_NETWORK_MAC, avm.mac)},
     )
@@ -57,6 +50,8 @@ def _connection(
 
 
 class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
+    """Switch entity for a WireGuard VPN connection."""
+
     _attr_has_entity_name = True
     _attr_translation_key = "wireguard_vpn"
 
@@ -67,6 +62,7 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
         connection_uid: str,
         connection: dict[str, Any],
     ) -> None:
+        """Initialize the WireGuard VPN switch."""
         super().__init__(vpn_data.coordinator)
         self._connection_uid = connection_uid
         self._connection = connection
@@ -76,17 +72,20 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
 
     @property
     def available(self) -> bool:
+        """Return True when the VPN connection is present in coordinator data."""
         if not self.coordinator.last_update_success:
             return False
         return _connection(self.coordinator, self._connection_uid) is not None
 
     @property
     def is_on(self) -> bool:
+        """Return True when the VPN connection is active."""
         conn = _connection(self.coordinator, self._connection_uid)
         return bool(conn.get(API_KEY_ACTIVE, False)) if conn else False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return VPN connection state attributes."""
         conn = _connection(self.coordinator, self._connection_uid)
         if conn is None:
             return {}
@@ -123,9 +122,11 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the VPN connection on."""
         await self._async_toggle(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the VPN connection off."""
         await self._async_toggle(False)
 
 
@@ -145,17 +146,17 @@ async def async_setup_vpn_switches(
     entry: FritzConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
+    """Set up WireGuard VPN switch entities for a config entry."""
     vpn_data = vpn_entry_data(hass, entry.entry_id)
     if vpn_data is None:
         return
 
     avm = entry.runtime_data
     coordinator = vpn_data.coordinator
-    known_uids = vpn_data.known_uids
 
     if coordinator.data:
         initial_uids = set(coordinator.data)
-        known_uids.update(initial_uids)
+        vpn_data.known_uids.update(initial_uids)
         async_add_entities(
             _create_vpn_switches(avm, vpn_data, initial_uids), update_before_add=True
         )
@@ -163,18 +164,18 @@ async def async_setup_vpn_switches(
     async def _sync_vpn_entities() -> None:
         async with vpn_data.lock:
             current = set(coordinator.data) if coordinator.data else set()
-            known_uids &= current
-            new_uids = current - known_uids
+            vpn_data.known_uids &= current
+            new_uids = current - vpn_data.known_uids
             if not new_uids:
                 return
             entities = _create_vpn_switches(avm, vpn_data, new_uids)
             if not entities:
                 return
-            known_uids.update(new_uids)
+            vpn_data.known_uids.update(new_uids)
             async_add_entities(entities)
 
-    entry.async_on_unload(
-        coordinator.async_add_listener(
-            lambda: hass.async_create_task(_sync_vpn_entities())
-        )
-    )
+    @callback
+    def _handle_coordinator_update() -> None:
+        hass.async_create_task(_sync_vpn_entities())
+
+    entry.async_on_unload(coordinator.async_add_listener(_handle_coordinator_update))

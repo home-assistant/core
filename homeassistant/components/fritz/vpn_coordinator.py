@@ -1,11 +1,8 @@
 """WireGuard VPN coordinator for FRITZ!Box Tools (web UI API)."""
 
-from __future__ import annotations
-
-import inspect
-import logging
 from datetime import timedelta
-from typing import Any
+import logging
+from typing import Any, cast
 
 from fritzboxvpn import (
     API_KEY_ACTIVE,
@@ -38,18 +35,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def vpn_auth_failed(error: BaseException) -> bool:
+    """Return True when the error indicates invalid VPN credentials."""
     message = str(error).lower()
     return any(indicator in message for indicator in VPN_AUTH_INDICATORS)
 
 
 def vpn_web_ui_protocol(config: dict[str, Any]) -> str:
-    return PROTOCOL_HTTPS if config.get(CONF_SSL, DEFAULT_SSL) else PROTOCOL_HTTP
+    """Return the WireGuard web UI protocol for the config entry."""
+    return cast(
+        str,
+        PROTOCOL_HTTPS if config.get(CONF_SSL, DEFAULT_SSL) else PROTOCOL_HTTP,
+    )
 
 
 async def async_start_entry_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    result = entry.async_start_reauth(hass)
-    if inspect.isawaitable(result):
-        await result
+    """Start a reauth flow for the config entry."""
+    entry.async_start_reauth(hass)
 
 
 class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -62,6 +63,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         *,
         entry_id: str,
     ) -> None:
+        """Initialize the WireGuard VPN coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -79,6 +81,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def get_vpn_status(self, connection_uid: str) -> str:
+        """Return the VPN status string for a connection."""
         if not self.data or connection_uid not in self.data:
             return VPN_STATUS_UNKNOWN
         conn = self.data[connection_uid]
@@ -97,7 +100,9 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._reauth_scheduled = True
         self.hass.async_create_task(async_start_entry_reauth(self.hass, entry))
 
-    def _update_failed(self, err: Exception, *, unexpected: bool = False) -> UpdateFailed:
+    def _update_failed(
+        self, err: Exception, *, unexpected: bool = False
+    ) -> UpdateFailed:
         if vpn_auth_failed(err):
             self._schedule_reauth()
         prefix = "Unexpected error" if unexpected else "Error"
@@ -108,7 +113,9 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return UpdateFailed(message)
         return UpdateFailed(message, retry_after=VPN_RETRY_AFTER_SECONDS)
 
-    def _log_removed_connections(self, previous_uids: set[str], connections: dict[str, Any]) -> None:
+    def _log_removed_connections(
+        self, previous_uids: set[str], connections: dict[str, Any]
+    ) -> None:
         removed = previous_uids - connections.keys()
         if not removed:
             return
@@ -126,15 +133,20 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._log_removed_connections(previous_uids, connections)
         self._reauth_scheduled = False
-        return connections
+        return cast(dict[str, Any], connections)
 
     async def async_toggle_vpn(self, connection_uid: str, enable: bool) -> bool:
+        """Toggle a WireGuard VPN connection on or off."""
         try:
-            return await self.fritz_session.async_toggle_vpn(connection_uid, enable)
+            return cast(
+                bool,
+                await self.fritz_session.async_toggle_vpn(connection_uid, enable),
+            )
         except Exception as err:
             if vpn_auth_failed(err):
                 self._schedule_reauth()
             raise
 
     async def async_close(self) -> None:
+        """Close the WireGuard VPN session."""
         await self.fritz_session.async_close()

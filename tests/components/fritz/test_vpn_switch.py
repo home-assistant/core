@@ -11,7 +11,6 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,9 +21,7 @@ from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
-VPN_OFFICE_UNIQUE_ID = (
-    f"{MOCK_SERIAL_NUMBER}-uid-office-{VPN_UNIQUE_ID_SUFFIX_SWITCH}"
-)
+VPN_OFFICE_UNIQUE_ID = f"{MOCK_SERIAL_NUMBER}-uid-office-{VPN_UNIQUE_ID_SUFFIX_SWITCH}"
 
 
 def _vpn_entity_id(
@@ -73,9 +70,12 @@ async def test_vpn_switch_uses_fritz_serial_unique_id(
         identifiers={(DOMAIN, f"{MOCK_SERIAL_NUMBER}_vpn_uid-office")}
     )
     assert vpn_device is not None
-    assert vpn_device.via_device_id == device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
-    ).id
+    assert (
+        vpn_device.via_device_id
+        == device_registry.async_get_device(
+            identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+        ).id
+    )
 
 
 async def test_vpn_switch_turn_on_off(
@@ -107,7 +107,9 @@ async def test_vpn_switch_turn_on_off(
         **MOCK_VPN_CONNECTIONS,
         "uid-office": {**MOCK_VPN_CONNECTIONS["uid-office"], "active": False},
     }
-    await hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id].coordinator.async_request_refresh()
+    await hass.data[FRITZ_VPN_DATA_KEY][
+        entry.entry_id
+    ].coordinator.async_request_refresh()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     office_state = hass.states.get(entity_id)
@@ -175,7 +177,9 @@ async def test_vpn_switch_dynamic_new_connection(
         **MOCK_VPN_CONNECTIONS,
         **MOCK_VPN_CONNECTION_HOME,
     }
-    await hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id].coordinator.async_request_refresh()
+    await hass.data[FRITZ_VPN_DATA_KEY][
+        entry.entry_id
+    ].coordinator.async_request_refresh()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = _vpn_entity_id(entity_registry, entry.entry_id, home_unique_id)

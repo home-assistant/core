@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
 import pytest
+
 from homeassistant.components.fritz.const import CONF_FEATURE_WIREGUARD_VPN, DOMAIN
 from homeassistant.components.fritz.vpn_coordinator import (
     FritzVpnCoordinator,
@@ -11,6 +13,7 @@ from homeassistant.components.fritz.vpn_coordinator import (
 )
 from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -21,7 +24,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def vpn_coordinator(hass: HomeAssistant, mock_vpn_session: AsyncMock) -> FritzVpnCoordinator:
+def vpn_coordinator(
+    hass: HomeAssistant, mock_vpn_session: AsyncMock
+) -> FritzVpnCoordinator:
     """FritzVpnCoordinator with mocked fritzboxvpn session."""
     with patch(
         "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
@@ -209,15 +214,13 @@ async def test_vpn_coordinator_update_connection_error_retry_after(
 
 
 def test_vpn_web_ui_protocol_follows_conf_ssl() -> None:
-    from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
-
-    from homeassistant.const import CONF_SSL
-
+    """Web UI protocol follows CONF_SSL."""
     assert vpn_web_ui_protocol({CONF_SSL: False}) == PROTOCOL_HTTP
     assert vpn_web_ui_protocol({CONF_SSL: True}) == PROTOCOL_HTTPS
 
 
 def test_vpn_auth_failed() -> None:
+    """Detect auth-related VPN errors."""
     assert vpn_auth_failed(Exception("login failed"))
     assert not vpn_auth_failed(ConnectionError("timeout"))
 
