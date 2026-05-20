@@ -58,8 +58,23 @@ def mock_api() -> Generator[MagicMock]:
             f"gpe_price_{hour:02d}_tomorrow": 25.0 + (hour * 1.0) for hour in range(24)
         }
 
-        # Combine all prices
-        all_prices = {**today_prices, **tomorrow_prices}
+        today_15min = {
+            f"gpe_price_{hour:02d}_{minute:02d}": 20.0 + hour + minute / 100
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+        tomorrow_15min = {
+            f"gpe_price_{hour:02d}_{minute:02d}_tomorrow": 25.0 + hour + minute / 100
+            for hour in range(24)
+            for minute in (0, 15, 30, 45)
+        }
+
+        all_prices = {
+            **today_prices,
+            **tomorrow_prices,
+            **today_15min,
+            **tomorrow_15min,
+        }
 
         # Make get_electricity_prices async since coordinator uses it
         mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)
