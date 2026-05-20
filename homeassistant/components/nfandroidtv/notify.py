@@ -86,7 +86,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 _LOGGER.debug("Full exception:", exc_info=True)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="connection_Failed",
+                    translation_key="connection_failed",
                     translation_placeholders={CONF_HOST: self.host},
                 ) from err
 
@@ -207,7 +207,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             _LOGGER.debug("Full exception:", exc_info=True)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="connection_Failed",
+                translation_key="connection_failed",
                 translation_placeholders={CONF_HOST: self.host},
             ) from err
 
