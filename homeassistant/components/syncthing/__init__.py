@@ -3,6 +3,7 @@
 import asyncio
 from asyncio import Task
 import logging
+from typing import Any
 
 import aiosyncthing
 
@@ -18,7 +19,15 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import EVENTS, RECONNECT_INTERVAL, SERVER_AVAILABLE, SERVER_UNAVAILABLE
+from .const import (
+    DEVICE_EVENTS,
+    DOMAIN,
+    FOLDER_EVENTS,
+    INITIAL_EVENTS_READY,
+    RECONNECT_INTERVAL,
+    SERVER_AVAILABLE,
+    SERVER_UNAVAILABLE,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -82,6 +91,8 @@ class SyncthingClient:
         self._client = client
         self._server_id = server_id
         self._listen_task: Task[None] | None = None
+        self._initial_events: list[dict[str, Any]] = []
+        self._inital_events_processed: bool = False
 
     @property
     def server_id(self) -> str:
@@ -103,9 +114,18 @@ class SyncthingClient:
         """Get system namespace client."""
         return self._client.system
 
+    @property
+    def config(self) -> aiosyncthing.Config:
+        """Get config namespace client."""
+        return self._client.config
+
     def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
+
+    def get_initial_events(self) -> list[dict[str, Any]]:
+        """Get initial events received upon subscription."""
+        return self._initial_events
 
     async def unsubscribe(self) -> None:
         """Stop event listener coroutine."""
@@ -132,18 +152,41 @@ class SyncthingClient:
                 continue
             try:
                 async for event in events.listen():
-                    if events.last_seen_id == 0:
-                        continue  # skipping historical events from the first batch
-                    if event["type"] not in EVENTS:
+                    if events.last_seen_id == 0 and event["type"] in DEVICE_EVENTS:
+                        # Storing initial events to find current device state
+                        self._initial_events.append(event)
                         continue
 
-                    signal_name = EVENTS[event["type"]]
-                    folder = event["data"].get("folder") or event["data"]["id"]
-                    async_dispatcher_send(
-                        self._hass,
-                        f"{signal_name}-{self._server_id}-{folder}",
-                        event,
-                    )
+                    # Triggering device status check once initial events are ready
+                    if not self._inital_events_processed and events.last_seen_id != 0:
+                        self._inital_events_processed = True
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{INITIAL_EVENTS_READY}-{self._server_id}",
+                        )
+
+                    if (
+                        event["type"] not in FOLDER_EVENTS
+                        and event["type"] not in DEVICE_EVENTS
+                    ):
+                        continue
+
+                    if event["type"] in DEVICE_EVENTS:
+                        signal_name = DEVICE_EVENTS[event["type"]]
+                        device = event["data"].get("device") or event["data"]["id"]
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{signal_name}-{self._server_id}-{device}",
+                            event,
+                        )
+                    elif event["type"] in FOLDER_EVENTS:
+                        signal_name = FOLDER_EVENTS[event["type"]]
+                        folder = event["data"].get("folder") or event["data"]["id"]
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{signal_name}-{self._server_id}-{folder}",
+                            event,
+                        )
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.warning(
                     (
