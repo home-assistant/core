@@ -1,0 +1,618 @@
+{
+  "common": {
+    "cooling": "Cooling",
+    "electric_lock_setting": "Electric lock setting",
+    "lock": "Lock",
+    "mute_off": "Mute OFF",
+    "mute_on": "Mute ON",
+    "mute_setting": "Mute setting",
+    "no_setting": "No setting",
+    "non_auto": "Non-auto",
+    "off_timer_reservation_setting": "OFF timer reservation setting",
+    "on_timer_reservation_setting": "ON timer reservation setting",
+    "operation_mode_setting": "Operation mode setting",
+    "permitted": "Permitted",
+    "prohibited": "Prohibited",
+    "re_interconnection_permission_setting": "Re-interconnection permission setting",
+    "reservation_off": "Reservation OFF",
+    "reservation_on": "Reservation ON",
+    "set": "Set",
+    "timer_operation_setting": "Timer operation setting",
+    "unlock": "Unlock",
+    "ventilation_auto_setting": "Ventilation Auto setting"
+  },
+  "config": {
+    "abort": {
+      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "reconfigure_successful": "Network interface updated successfully",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Unexpected error while validating the configuration"
+    },
+    "error": {
+      "cannot_connect": "[%key:component::echonet_lite::config::abort::cannot_connect%]",
+      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0).",
+      "unknown": "[%key:component::echonet_lite::config::abort::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "interface": "Network interface"
+        },
+        "data_description": {
+          "interface": "Select the network interface to use for ECHONET Lite communication. Select Auto to let Home Assistant automatically detect the appropriate interface."
+        },
+        "description": "Change the network interface for ECHONET Lite communication.",
+        "title": "Reconfigure ECHONET Lite"
+      },
+      "user": {
+        "data": {
+          "interface": "[%key:component::echonet_lite::config::step::reconfigure::data::interface%]"
+        },
+        "data_description": {
+          "interface": "[%key:component::echonet_lite::config::step::reconfigure::data_description::interface%]"
+        },
+        "description": "Home Assistant automatically binds to the ECHONET Lite multicast channel (224.0.23.0:3610) and begins listening for devices.",
+        "title": "Set up ECHONET Lite"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "class_0000_epc_80": {
+        "name": "Operation status",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_0000_epc_8f": {
+        "name": "Power-saving operation setting",
+        "state": {
+          "off": "Normal Operation",
+          "on": "Power saving Operation"
+        }
+      },
+      "class_0130_epc_b1": {
+        "name": "Automatic temperature control setting",
+        "state": {
+          "off": "Non-automatic",
+          "on": "Automatic"
+        }
+      },
+      "class_0130_epc_c1": {
+        "name": "Humidifier function setting",
+        "state": {
+          "off": "Humidifier function OFF",
+          "on": "Humidifier function ON"
+        }
+      },
+      "class_0130_epc_cf": {
+        "name": "Air purification mode setting",
+        "state": {
+          "off": "Air purification OFF",
+          "on": "Air purification ON"
+        }
+      },
+      "class_0133_epc_bf": {
+        "name": "[%key:component::echonet_lite::common::ventilation_auto_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::non_auto%]",
+          "on": "[%key:common::state::auto%]"
+        }
+      },
+      "class_0134_epc_b0": {
+        "name": "Ventilation mode automatic setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::non_auto%]",
+          "on": "[%key:common::state::auto%]"
+        }
+      },
+      "class_0134_epc_b1": {
+        "name": "Ventilation method setting",
+        "state": {
+          "off": "Air conditioning ventilation",
+          "on": "Blowing ventilation"
+        }
+      },
+      "class_0134_epc_bf": {
+        "name": "[%key:component::echonet_lite::common::ventilation_auto_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::non_auto%]",
+          "on": "[%key:common::state::auto%]"
+        }
+      },
+      "class_0134_epc_e0": {
+        "name": "Heat exchanger operation setting",
+        "state": {
+          "off": "Heat exchanger OFF",
+          "on": "Heat exchanger ON"
+        }
+      },
+      "class_0135_epc_c2": {
+        "name": "Optical catalyst operation setting",
+        "state": {
+          "off": "Optical catalyst OFF",
+          "on": "Optical catalyst ON"
+        }
+      },
+      "class_0260_epc_90": {
+        "name": "[%key:component::echonet_lite::common::timer_operation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_0260_epc_d4": {
+        "name": "Automatic operation setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_0260_epc_e5": {
+        "name": "[%key:component::echonet_lite::common::electric_lock_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::unlock%]",
+          "on": "[%key:component::echonet_lite::common::lock%]"
+        }
+      },
+      "class_0263_epc_90": {
+        "name": "[%key:component::echonet_lite::common::timer_operation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_0263_epc_e5": {
+        "name": "[%key:component::echonet_lite::common::electric_lock_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::unlock%]",
+          "on": "[%key:component::echonet_lite::common::lock%]"
+        }
+      },
+      "class_026b_epc_90": {
+        "name": "ON timer setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_026b_epc_b1": {
+        "name": "Automatic water temperature control setting",
+        "state": {
+          "off": "Automatic water temperature control function not used",
+          "on": "Automatic water temperature control function used"
+        }
+      },
+      "class_026b_epc_c0": {
+        "name": "Daytime reheating permission setting",
+        "state": {
+          "off": "Daytime reheating not permitted",
+          "on": "Daytime reheating permitted"
+        }
+      },
+      "class_026b_epc_c7": {
+        "name": "Participation in energy shift",
+        "state": {
+          "off": "Non Participation",
+          "on": "Participation"
+        }
+      },
+      "class_026b_epc_d7": {
+        "name": "[%key:component::echonet_lite::common::mute_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::mute_off%]",
+          "on": "[%key:component::echonet_lite::common::mute_on%]"
+        }
+      },
+      "class_026b_epc_e3": {
+        "name": "Automatic Bath Water Heating Mode Setting",
+        "state": {
+          "off": "Automatic bath water heating mode OFF",
+          "on": "Automatic bath water heating mode ON"
+        }
+      },
+      "class_026b_epc_e4": {
+        "name": "Manual bath reheating operation setting",
+        "state": {
+          "off": "Bath reheating OFF",
+          "on": "Bath reheating ON"
+        }
+      },
+      "class_026b_epc_e5": {
+        "name": "Manual bath hot water addition function setting",
+        "state": {
+          "off": "Addition of hot water function OFF",
+          "on": "Addition of hot water function ON"
+        }
+      },
+      "class_026b_epc_e6": {
+        "name": "Manual lukewarm water temperature lowering function setting.",
+        "state": {
+          "off": "Lukewarm water temperature function OFF",
+          "on": "Lukewarm water temperature function ON"
+        }
+      },
+      "class_026f_epc_e0": {
+        "name": "Lock setting 1",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::unlock%]",
+          "on": "[%key:component::echonet_lite::common::lock%]"
+        }
+      },
+      "class_026f_epc_e1": {
+        "name": "Lock setting 2",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::unlock%]",
+          "on": "[%key:component::echonet_lite::common::lock%]"
+        }
+      },
+      "class_026f_epc_e6": {
+        "name": "Auto lock mode setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_026f_epc_e7": {
+        "name": "Battery level",
+        "state": {
+          "off": "Ordinary level",
+          "on": "Notification of battery replacement"
+        }
+      },
+      "class_0272_epc_90": {
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_0272_epc_d2": {
+        "name": "Hot water warmer setting",
+        "state": {
+          "off": "Hot water warmer operation resetting",
+          "on": "Hot water warmer operation"
+        }
+      },
+      "class_0272_epc_d7": {
+        "name": "[%key:component::echonet_lite::common::mute_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::mute_off%]",
+          "on": "[%key:component::echonet_lite::common::mute_on%]"
+        }
+      },
+      "class_0272_epc_e3": {
+        "name": "Bath Auto mode setting",
+        "state": {
+          "off": "Auto OFF",
+          "on": "Auto ON"
+        }
+      },
+      "class_0272_epc_e4": {
+        "name": "Bath additional boil-up operation setting",
+        "state": {
+          "off": "Additional boil-up OFF",
+          "on": "Additional boil-up ON"
+        }
+      },
+      "class_0272_epc_e5": {
+        "name": "Bath hot water adding operation setting",
+        "state": {
+          "off": "Hot water addition OFF",
+          "on": "Hot water addition ON"
+        }
+      },
+      "class_0272_epc_e6": {
+        "name": "Bath water temperature lowering operation setting",
+        "state": {
+          "off": "Hot water temperature lowering OFF",
+          "on": "Hot water temperature lowering ON"
+        }
+      },
+      "class_0272_epc_ec": {
+        "name": "Hot water warmer ON timer reservation setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_0273_epc_90": {
+        "name": "On timer reservation setting 1",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_0273_epc_94": {
+        "name": "[%key:component::echonet_lite::common::off_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_0273_epc_cf": {
+        "name": "Filter cleaning reminder sign setting",
+        "state": {
+          "off": "Not lit",
+          "on": "Lit"
+        }
+      },
+      "class_0279_epc_a2": {
+        "name": "Function to control purchase surplus electricity setting",
+        "state": {
+          "off": "Invalid",
+          "on": "Valid"
+        }
+      },
+      "class_027a_epc_90": {
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_027a_epc_94": {
+        "name": "[%key:component::echonet_lite::common::off_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_027a_epc_e0": {
+        "name": "[%key:component::echonet_lite::common::operation_mode_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::cooling%]",
+          "on": "Heating"
+        }
+      },
+      "class_027b_epc_90": {
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_027b_epc_94": {
+        "name": "[%key:component::echonet_lite::common::off_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_027c_epc_ca": {
+        "name": "Power generation setting",
+        "state": {
+          "off": "Power generation OFF",
+          "on": "Power generation ON"
+        }
+      },
+      "class_027c_epc_d2": {
+        "name": "Designated power generation status",
+        "state": {
+          "off": "Load following power generation",
+          "on": "Power generation at the maximum rating"
+        }
+      },
+      "class_027d_epc_cc": {
+        "name": "[%key:component::echonet_lite::common::re_interconnection_permission_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::prohibited%]",
+          "on": "[%key:component::echonet_lite::common::permitted%]"
+        }
+      },
+      "class_027d_epc_cd": {
+        "name": "Operation permission setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::prohibited%]",
+          "on": "[%key:component::echonet_lite::common::permitted%]"
+        }
+      },
+      "class_027d_epc_ce": {
+        "name": "Independent operation permission setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::prohibited%]",
+          "on": "[%key:component::echonet_lite::common::permitted%]"
+        }
+      },
+      "class_027e_epc_df": {
+        "name": "[%key:component::echonet_lite::common::re_interconnection_permission_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::prohibited%]",
+          "on": "[%key:component::echonet_lite::common::permitted%]"
+        }
+      },
+      "class_0290_epc_90": {
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_0290_epc_94": {
+        "name": "[%key:component::echonet_lite::common::off_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_02a4_epc_c6": {
+        "name": "Automatic operation controlling setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_02a6_epc_b6": {
+        "name": "Hot water supply mode setting for auxiliary heat source machine",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::no_setting%]",
+          "on": "[%key:component::echonet_lite::common::set%]"
+        }
+      },
+      "class_02a6_epc_b7": {
+        "name": "Heater mode setting for auxiliary heat source machine.",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::no_setting%]",
+          "on": "[%key:component::echonet_lite::common::set%]"
+        }
+      },
+      "class_02a7_epc_c0": {
+        "name": "Control point",
+        "state": {
+          "off": "Power receiving point",
+          "on": "Device point"
+        }
+      },
+      "class_03b7_epc_a8": {
+        "name": "Refrigerator compartment humidification function setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03b7_epc_a9": {
+        "name": "Vegetable compartment humidification function setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03b7_epc_ad": {
+        "name": "Deodorization function setting",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03b9_epc_a1": {
+        "name": "Child lock setting",
+        "state": {
+          "off": "Child lock off",
+          "on": "Child lock on"
+        }
+      },
+      "class_03b9_epc_a2": {
+        "name": "Radiant heater lock setting",
+        "state": {
+          "off": "Radiant heater lock off",
+          "on": "Radiant heater lock on"
+        }
+      },
+      "class_03bb_epc_90": {
+        "name": "Rice cooking reservation setting",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_03bb_epc_b2": {
+        "name": "Rice cooking control setting",
+        "state": {
+          "off": "Rice cooking suspension",
+          "on": "Rice cooking start/restart"
+        }
+      },
+      "class_03bb_epc_e1": {
+        "name": "Warmer setting",
+        "state": {
+          "off": "Warmer disabled",
+          "on": "Warmer enabled"
+        }
+      },
+      "class_03ce_epc_e0": {
+        "name": "Indicates on/off status of lighting installed inside the showcase.",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03ce_epc_e1": {
+        "name": "Indicates ON/OFF status of lighting installed outside the showcase.",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03ce_epc_e2": {
+        "name": "Indicates on/off status of compressor when showcase and compressor are a single unit.",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_03d3_epc_90": {
+        "name": "[%key:component::echonet_lite::common::on_timer_reservation_setting%]",
+        "state": {
+          "off": "[%key:component::echonet_lite::common::reservation_off%]",
+          "on": "[%key:component::echonet_lite::common::reservation_on%]"
+        }
+      },
+      "class_03d3_epc_ec": {
+        "name": "Wrinkling minimization setting",
+        "state": {
+          "off": "Wrinkling minimization function off",
+          "on": "Wrinkling minimization function on"
+        }
+      },
+      "class_03d3_epc_ee": {
+        "name": "Door/cover lock setting",
+        "state": {
+          "off": "[%key:common::state::unlocked%]",
+          "on": "[%key:common::state::locked%]"
+        }
+      },
+      "class_03d4_epc_b0": {
+        "name": "[%key:component::echonet_lite::common::operation_mode_setting%]",
+        "state": {
+          "off": "Non-cooling",
+          "on": "[%key:component::echonet_lite::common::cooling%]"
+        }
+      },
+      "class_03d4_epc_e2": {
+        "name": "Indicates compressor ON/OFF status.",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "class_0602_epc_b0": {
+        "name": "Display control setting",
+        "state": {
+          "off": "Displaying disabled",
+          "on": "Displaying enabled"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "epc_not_writable": {
+      "message": "EPC {epc_list} is not writable by the device."
+    },
+    "target_node_unknown": {
+      "message": "The target node address is unknown."
+    }
+  },
+  "issues": {
+    "runtime_client_error": {
+      "description": "The ECHONET Lite integration encountered an error: {error}. This may be caused by network issues or device disconnection. Check your network configuration and ensure your ECHONET Lite devices are powered on.",
+      "title": "ECHONET Lite runtime error"
+    },
+    "runtime_inactive": {
+      "description": "No frames have been received from ECHONET Lite devices for more than {minutes} minutes. This may indicate that devices are offline or there is a network issue. Check that your ECHONET Lite devices are powered on and connected to the network.",
+      "title": "ECHONET Lite devices not responding"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_experimental": "Enable experimental device classes"
+        },
+        "data_description": {
+          "enable_experimental": "When enabled, device classes that have not been verified with real hardware will also be registered. These may not work correctly."
+        }
+      }
+    }
+  }
+}

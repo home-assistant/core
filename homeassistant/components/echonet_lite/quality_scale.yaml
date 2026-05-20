@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register Home Assistant actions or services.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: done
+    comment: Covered by tests/components/echonet_lite/test_config_flow.py
+  config-flow: done
+  dependency-transparency:
+    status: done
+    comment: pyhems runtime listed in manifest requirements.
+  docs-actions:
+    status: exempt
+    comment: No custom actions or services are exposed.
+  docs-high-level-description:
+    status: done
+    comment: Documented in docs/integration/echonet_lite.md.
+  docs-installation-instructions:
+    status: done
+    comment: Installation steps detailed in docs/integration/echonet_lite.md.
+  docs-removal-instructions:
+    status: done
+    comment: Removal steps detailed in docs/integration/echonet_lite.md.
+  entity-event-setup:
+    status: done
+    comment: Entities subscribe to coordinator listeners registered in sensor.py.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: done
+    comment: tests/components/echonet_lite/test_config_flow.py exercises all paths.
+  test-before-setup:
+    status: done
+    comment: tests/components/echonet_lite/test_init.py covers setup/unload.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: done
+    comment: >-
+      EchonetLiteEntity.available returns False once the runtime has been
+      silent for longer than RUNTIME_MONITOR_MAX_SILENCE.
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: ECHONET Lite protocol does not require authentication.
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: >-
+      Device addresses are learned from ECHONET Lite multicast announcements
+      (HemsInstanceListEvent) rather than from a HA-level discovery source,
+      so there is no external discovery payload to push updates from.
+  discovery:
+    status: exempt
+    comment: >-
+      The integration itself performs ECHONET Lite node discovery over
+      multicast. There is no separate HA discovery source (zeroconf, DHCP,
+      SSDP, ...) that can advertise devices before the integration is
+      configured.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: done
+    comment: >-
+      Diagnostic EPCs (0x86 manufacturer fault code, 0x88 fault status,
+      0x89 fault description, 0x9A cumulative operating time) are created
+      with ``entity_registry_enabled_default=False`` via
+      ``infer_entity_registry_enabled_default``.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: done
+    comment: >-
+      runtime_client_error and runtime_inactive issues are created via
+      issue_registry and automatically cleared once the runtime recovers.
+  stale-devices: todo
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: Uses UDP multicast via pyhems; no HTTP or aiohttp sessions.
+  strict-typing: done
