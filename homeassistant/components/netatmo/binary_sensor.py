@@ -14,11 +14,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    CONF_URL_CONTROL,
+    CONF_URL_ENERGY,
     CONF_URL_SECURITY,
+    DOMAIN,
     DOORTAG_CATEGORY_DOOR,
     DOORTAG_CATEGORY_FURNITURE,
     DOORTAG_CATEGORY_GARAGE,
@@ -104,6 +108,15 @@ NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS: Final[
     ),
 ]
 
+NETATMO_LEGACY_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS: Final[
+    list[NetatmoBinarySensorEntityDescription]
+] = [
+    NetatmoBinarySensorEntityDescription(
+        key="reachable",
+        entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+]
 # Assuming a Module object with the following attributes:
 # {'battery_level': 5780,
 #  'battery_percent': None,
@@ -137,6 +150,8 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
 
 DEVICE_CATEGORY_BINARY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.meter: CONF_URL_ENERGY,
+    NetatmoDeviceCategory.switch: CONF_URL_CONTROL,
 }
 
 DEVICE_CATEGORY_WEATHER_BINARY_SENSORS: Final[
@@ -150,6 +165,8 @@ DEVICE_CATEGORY_CONNECTIVITY_BINARY_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoBinarySensorEntityDescription]]
 ] = {
     NetatmoDeviceCategory.opening: NETATMO_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.meter: NETATMO_LEGACY_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.switch: NETATMO_LEGACY_CONNECTIVITY_BINARY_SENSOR_DESCRIPTIONS,
 }
 
 DEVICE_CATEGORY_OPENING_BINARY_SENSORS: Final[
@@ -284,6 +301,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         super().__init__(netatmo_device, **kwargs)
 
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.parent_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
         # Register publishers for the entity if needed
@@ -335,6 +359,13 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, NetatmoBinarySensor
         """Initialize a Netatmo weather binary sensor."""
 
         super().__init__(netatmo_device, description=description)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
 
 
 class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
@@ -348,9 +379,17 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
         netatmo_device: NetatmoDevice,
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
-        """Initialize a Netatmo binary sensor."""
+        """Initialize a Netatmo opening binary sensor."""
 
         super().__init__(netatmo_device, description)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
 
         # Apply Dynamic Device Class override
         self._attr_device_class = OPENING_CATEGORY_TO_DEVICE_CLASS.get(
@@ -399,3 +438,20 @@ class NetatmoConnectivityBinarySensor(NetatmoBinarySensor):
 
     entity_description: NetatmoBinarySensorEntityDescription
     _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize a Netatmo connectivity binary sensor."""
+
+        super().__init__(netatmo_device, description)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.device.entity_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
+        )
