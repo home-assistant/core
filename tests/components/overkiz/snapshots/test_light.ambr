@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.garage_ceiling_light-entry]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_garage_ceiling_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.garage_ceiling_light',
+    'entity_id': 'light.maple_residence_garage_ceiling_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.garage_ceiling_light-state]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_garage_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
@@ -51,14 +51,14 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.garage_ceiling_light',
+    'entity_id': 'light.maple_residence_garage_ceiling_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.study_ceiling_light-entry]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_study_ceiling_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.study_ceiling_light',
+    'entity_id': 'light.maple_residence_study_ceiling_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.study_ceiling_light-state]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_study_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
@@ -110,14 +110,14 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.study_ceiling_light',
+    'entity_id': 'light.maple_residence_study_ceiling_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.terrace_ceiling_light-entry]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_terrace_ceiling_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -135,7 +135,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.terrace_ceiling_light',
+    'entity_id': 'light.maple_residence_terrace_ceiling_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -158,7 +158,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.terrace_ceiling_light-state]
+# name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_terrace_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
@@ -169,7 +169,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.terrace_ceiling_light',
+    'entity_id': 'light.maple_residence_terrace_ceiling_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

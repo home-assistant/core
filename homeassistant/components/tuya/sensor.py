@@ -55,6 +55,7 @@ from .const import (
 )
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_device_temp_unit_convert
 
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
 POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
@@ -1766,6 +1767,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             or tuya_uom in SENSOR_DEVICE_CLASS_UNITS[device_class]
         ):
             self._attr_native_unit_of_measurement = tuya_uom
+            return
+
+        # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
+        if (
+            device_class is SensorDeviceClass.TEMPERATURE
+            and not tuya_uom
+            and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
+        ):
+            self._attr_native_unit_of_measurement = temp_unit
             return
 
         # Check mappings for compatible units of measurement for the device class
