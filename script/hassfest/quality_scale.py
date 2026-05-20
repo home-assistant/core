@@ -217,7 +217,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "canary",
     "cast",
     "ccm15",
-    "cert_expiry",
     "chacon_dio",
     "channels",
     "circuit",
