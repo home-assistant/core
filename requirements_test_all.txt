@@ -621,7 +621,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.4
+bluetooth-data-tools==1.29.11
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1059,7 +1059,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.6.0
+guntamatic==1.8.0
 
 # homeassistant.components.profiler
 guppy3==3.1.6
@@ -2313,7 +2313,7 @@ python-qube-heatpump==1.10.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==5.5.1
+python-roborock==5.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
