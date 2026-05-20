@@ -1,5 +1,6 @@
 """Provides device automations for RFXCOM RFXtrx."""
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -42,6 +43,19 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+# Legacy X10 security tamper status subtypes from pyRFXtrx < 0.32.0,
+# mapped to their replacement base sensor status. With pyRFXtrx 0.32.0+
+# the tamper bit is reported as a separate ``Tamper`` boolean field on
+# Security1 events.
+LEGACY_STATUS_TAMPER_SUBTYPES = {
+    "Normal Tamper": "Normal",
+    "Normal Delayed Tamper": "Normal Delayed",
+    "Alarm Tamper": "Alarm",
+    "Alarm Delayed Tamper": "Alarm Delayed",
+    "Motion Tamper": "Motion",
+    "No Motion Tamper": "No Motion",
+}
+
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
@@ -73,7 +87,17 @@ async def async_validate_trigger_config(
     action_type = config[CONF_TYPE]
     sub_type = config[CONF_SUBTYPE]
     commands = getattr(device, TRIGGER_SELECTION[action_type], {})
-    if config[CONF_SUBTYPE] not in commands.values():
+    valid_subtypes = commands.values()
+    # Accept legacy ``*_Tamper`` subtypes saved from pyRFXtrx < 0.32.0 as
+    # long as the device is a Security1 device that still supports the
+    # corresponding base subtype. Tamper was only ever a Security1 concept.
+    base_sub_type = (
+        LEGACY_STATUS_TAMPER_SUBTYPES.get(sub_type)
+        if action_type == CONF_TYPE_STATUS
+        and isinstance(device, rfxtrxmod.SecurityDevice)
+        else None
+    )
+    if sub_type not in valid_subtypes and base_sub_type not in valid_subtypes:
         raise InvalidDeviceAutomationConfig(
             f"Subtype {sub_type} not found in device triggers {commands}"
         )
@@ -91,11 +115,25 @@ async def async_attach_trigger(
     config = TRIGGER_SCHEMA(config)
 
     event_data = {ATTR_DEVICE_ID: config[CONF_DEVICE_ID]}
+    sub_type = config[CONF_SUBTYPE]
 
     if config[CONF_TYPE] == CONF_TYPE_COMMAND:
-        event_data["values"] = {"Command": config[CONF_SUBTYPE]}
+        event_data["values"] = {"Command": sub_type}
     elif config[CONF_TYPE] == CONF_TYPE_STATUS:
-        event_data["values"] = {"Sensor Status": config[CONF_SUBTYPE]}
+        # Tamper was only ever a Security1 concept. For Security1 devices,
+        # discriminate on the ``Tamper`` boolean introduced in pyRFXtrx
+        # 0.32.0 so that legacy automations using ``Motion`` and
+        # ``Motion Tamper`` (etc.) keep firing on disjoint event sets,
+        # matching the pre-0.32.0 behaviour.
+        device = async_get_device_object(hass, config[CONF_DEVICE_ID])
+        if isinstance(device, rfxtrxmod.SecurityDevice):
+            base_sub_type = LEGACY_STATUS_TAMPER_SUBTYPES.get(sub_type)
+            event_data["values"] = {
+                "Sensor Status": base_sub_type or sub_type,
+                "Tamper": base_sub_type is not None,
+            }
+        else:
+            event_data["values"] = {"Sensor Status": sub_type}
 
     event_config = event_trigger.TRIGGER_SCHEMA(
         {

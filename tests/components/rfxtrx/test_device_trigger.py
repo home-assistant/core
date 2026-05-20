@@ -43,6 +43,12 @@ EVENT_FIREALARM_1 = EventTestData(
     "08200300a109000670", DEVICE_FIREALARM_1, "status", "Panic"
 )
 
+DEVICE_X10SECURITY_1 = {("rfxtrx", "20", "0", "d3dc54:32")}
+# Status byte 0x84 = Motion (0x04) with the tamper bit (0x80) set.
+EVENT_X10SECURITY_MOTION_TAMPER = "0820004dd3dc548489"
+# Status byte 0x04 = Motion (0x04) without the tamper bit.
+EVENT_X10SECURITY_MOTION = "0820004dd3dc540489"
+
 
 async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
@@ -170,14 +176,100 @@ async def test_firing_event(
     assert calls[0].data["some"] == "device"
 
 
+@pytest.mark.parametrize(
+    ("trigger_subtype", "firing_event", "non_firing_event"),
+    [
+        pytest.param(
+            "Motion Tamper",
+            EVENT_X10SECURITY_MOTION_TAMPER,
+            EVENT_X10SECURITY_MOTION,
+            id="legacy_tamper_subtype_only_matches_tamper_event",
+        ),
+        pytest.param(
+            "Motion",
+            EVENT_X10SECURITY_MOTION,
+            EVENT_X10SECURITY_MOTION_TAMPER,
+            id="base_subtype_only_matches_non_tamper_event",
+        ),
+    ],
+)
+async def test_firing_security1_status_trigger(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    rfxtrx,
+    trigger_subtype: str,
+    firing_event: str,
+    non_firing_event: str,
+) -> None:
+    """Test Security1 status triggers discriminate on the new ``Tamper`` field.
+
+    pyRFXtrx 0.32.0 split the X10 security tamper bit into a separate
+    ``Tamper`` boolean. Pre-0.32.0 ``Motion`` and ``Motion Tamper`` were
+    distinct subtypes firing on disjoint events; that behaviour must be
+    preserved so existing automations keep working without migration.
+    """
+    await setup_entry(
+        hass,
+        {firing_event: {"fire_event": True}, non_firing_event: {"fire_event": True}},
+    )
+
+    device_entry = device_registry.async_get_device(identifiers=DEVICE_X10SECURITY_1)
+    assert device_entry
+
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "type": "status",
+                        "subtype": trigger_subtype,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{trigger.platform}}"},
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await rfxtrx.signal(non_firing_event)
+    assert len(calls) == 0
+
+    await rfxtrx.signal(firing_event)
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "device"
+
+
+@pytest.mark.parametrize(
+    ("event", "trigger_type", "trigger_subtype"),
+    [
+        pytest.param(EVENT_LIGHTING_1, "command", "invalid", id="unknown_command"),
+        pytest.param(
+            EVENT_LIGHTING_1,
+            "status",
+            "Motion Tamper",
+            id="legacy_tamper_on_non_security_device",
+        ),
+    ],
+)
 async def test_invalid_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    event: EventTestData,
+    trigger_type: str,
+    trigger_subtype: str,
 ) -> None:
-    """Test for invalid actions."""
-    event = EVENT_LIGHTING_1
-
+    """Test that unknown subtypes and misplaced legacy tamper subtypes are rejected."""
     await setup_entry(hass, {event.code: {"fire_event": True}})
 
     device_identifiers: Any = event.device_identifiers
@@ -194,12 +286,12 @@ async def test_invalid_trigger(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
-                        "type": event.type,
-                        "subtype": "invalid",
+                        "type": trigger_type,
+                        "subtype": trigger_subtype,
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": ("{{trigger.platform}}")},
+                        "data_template": {"some": "{{trigger.platform}}"},
                     },
                 },
             ]
@@ -207,4 +299,4 @@ async def test_invalid_trigger(
     )
     await hass.async_block_till_done()
 
-    assert "Subtype invalid not found in device triggers" in caplog.text
+    assert f"Subtype {trigger_subtype} not found in device triggers" in caplog.text
