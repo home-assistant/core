@@ -22,7 +22,7 @@ class SwitchDescription(TypedDict):
     channel_number: int
     device_id: list[int]
     is_protected: bool
-    gateway: str | None
+    gateway: str
 
 
 async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
@@ -93,7 +93,7 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
                 channel_number=channel_number,
                 device_id=device_id,
                 is_protected=appliance.get("is_protected", False),
-                gateway=appliance.get("gateway"),
+                gateway=appliance.get("gateway") or "",
             )
         )
 
