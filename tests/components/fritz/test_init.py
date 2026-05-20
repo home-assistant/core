@@ -37,12 +37,15 @@ async def test_setup(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
+        await hass.config_entries.async_unload(entry.entry_id)
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_options_reload(
@@ -60,10 +63,15 @@ async def test_options_reload(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=None,
-    ) as mock_reload:
+    with (
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=None,
+        ) as mock_reload,
+        patch(
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        ),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED

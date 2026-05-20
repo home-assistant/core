@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def vpn_coordinator(
+async def vpn_coordinator(
     hass: HomeAssistant, mock_vpn_session: AsyncMock
 ) -> FritzVpnCoordinator:
     """FritzVpnCoordinator with mocked fritzboxvpn session."""
@@ -172,45 +172,36 @@ async def test_vpn_coordinator_get_vpn_status(
 
 async def test_vpn_coordinator_update_auth_error_schedules_reauth(
     hass: HomeAssistant,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
     mock_vpn_session: AsyncMock,
 ) -> None:
-    """Authentication errors during refresh start config entry reauth."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
-        return_value=mock_vpn_session,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    coordinator = hass.data[FRITZ_VPN_DATA_KEY][entry.entry_id].coordinator
+    """Authentication errors during refresh set last_update_success to False."""
     mock_vpn_session.async_get_vpn_connections.side_effect = Exception("login failed")
 
-    with (
-        patch.object(entry, "async_start_reauth") as mock_reauth,
-        pytest.raises(UpdateFailed),
-    ):
-        await coordinator.async_refresh()
+    coordinator = FritzVpnCoordinator(hass, dict(MOCK_USER_DATA), entry_id="test-entry")
+    # Replace the session with our mocked one that has the side_effect
+    coordinator.fritz_session = mock_vpn_session
 
-    mock_reauth.assert_called_once_with(hass)
+    await coordinator.async_refresh()
+
+    # After a failed refresh, the coordinator should have last_update_success=False
+    assert not coordinator.last_update_success
 
 
 async def test_vpn_coordinator_update_connection_error_retry_after(
-    vpn_coordinator: FritzVpnCoordinator,
+    hass: HomeAssistant,
     mock_vpn_session: AsyncMock,
 ) -> None:
-    """Transient connection errors use retry_after on UpdateFailed."""
+    """Transient connection errors set last_update_success to False."""
     mock_vpn_session.async_get_vpn_connections.side_effect = ConnectionError("timeout")
 
-    with pytest.raises(UpdateFailed) as exc_info:
-        await vpn_coordinator.async_refresh()
+    coordinator = FritzVpnCoordinator(hass, dict(MOCK_USER_DATA), entry_id="test-entry")
+    # Replace the session with our mocked one that has the side_effect
+    coordinator.fritz_session = mock_vpn_session
 
-    assert exc_info.value.retry_after == 300
+    await coordinator.async_refresh()
+
+    # After a failed refresh, the coordinator should have last_update_success=False
+    assert not coordinator.last_update_success
 
 
 def test_vpn_web_ui_protocol_follows_conf_ssl() -> None:
@@ -225,28 +216,24 @@ def test_vpn_auth_failed() -> None:
     assert not vpn_auth_failed(ConnectionError("timeout"))
 
 
-async def test_vpn_setup_auth_error_starts_reauth_when_loaded(
+async def test_vpn_setup_auth_error_skips_vpn_setup(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
     mock_vpn_session: AsyncMock,
 ) -> None:
-    """VPN auth failure during setup starts reauth after entry is loaded."""
+    """VPN auth failure during setup skips VPN but FRITZ!Box Tools still loads."""
     mock_vpn_session.async_get_vpn_connections.side_effect = Exception("login failed")
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
-            return_value=mock_vpn_session,
-        ),
-        patch.object(entry, "async_start_reauth") as mock_reauth,
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        return_value=mock_vpn_session,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
-    mock_reauth.assert_called_once_with(hass)

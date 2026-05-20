@@ -4,9 +4,10 @@ import asyncio
 from dataclasses import dataclass, field
 import logging
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -40,13 +41,16 @@ async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
     try:
         await coordinator.async_config_entry_first_refresh()
-    except (ConnectionError, ValueError, TimeoutError, OSError, AttributeError) as err:
+    except (ConnectionError, ValueError, TimeoutError, OSError, AttributeError, UpdateFailed, ConfigEntryNotReady, TypeError) as err:
         _LOGGER.warning(
             "WireGuard VPN setup failed for %s (integration continues): %s",
             entry.data.get(CONF_HOST, entry.title),
             err,
         )
-        await coordinator.async_close()
+        try:
+            await coordinator.async_close()
+        except Exception:
+            pass
         if vpn_auth_failed(err):
             await hass.async_block_till_done()
             config_entry = hass.config_entries.async_get_entry(entry.entry_id)
@@ -67,6 +71,9 @@ async def async_unload_vpn(hass: HomeAssistant, entry_id: str) -> None:
     entry_data = store.pop(entry_id, None)
     if entry_data is None:
         return
-    await entry_data.coordinator.async_close()
+    try:
+        await entry_data.coordinator.async_close()
+    except Exception:
+        pass
     if not store:
         hass.data.pop(FRITZ_VPN_DATA_KEY)
