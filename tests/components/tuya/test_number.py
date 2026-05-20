@@ -187,25 +187,25 @@ async def test_invalid_uom(
         pytest.param(
             "c",
             METRIC_SYSTEM,
-            28.0,
+            "28.0",
             id="device_c_ha_c",
         ),
         pytest.param(
             "c",
             US_CUSTOMARY_SYSTEM,
-            82.4,
+            "82.4",
             id="device_c_ha_f",
         ),
         pytest.param(
             "f",
             METRIC_SYSTEM,
-            -2.2,
+            "-2.2",
             id="device_f_ha_c",
         ),
         pytest.param(
             "f",
             US_CUSTOMARY_SYSTEM,
-            28.0,
+            "28.0",
             id="device_f_ha_f",
         ),
     ],
@@ -217,7 +217,7 @@ async def test_temp_unit_convert_number(
     mock_device: CustomerDevice,
     temp_unit_convert: str,
     ha_unit_system: str,
-    expected_value: float,
+    expected_value: str,
 ) -> None:
     """Test temperature number entities respect TEMP_UNIT_CONVERT and HA unit system."""
     hass.config.units = ha_unit_system
@@ -226,7 +226,7 @@ async def test_temp_unit_convert_number(
 
     state = hass.states.get("number.inverter_pool_heat_pump_temperature")
     assert state is not None
-    assert float(state.state) == pytest.approx(expected_value, rel=1e-3)
+    assert state.state == expected_value
 
 
 @pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])

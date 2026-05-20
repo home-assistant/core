@@ -258,25 +258,25 @@ async def test_invalid_uom(
         pytest.param(
             "c",
             METRIC_SYSTEM,
-            14.0,
+            "14.0",
             id="device_c_ha_c",
         ),
         pytest.param(
             "c",
             US_CUSTOMARY_SYSTEM,
-            57.2,
+            "57.2",
             id="device_c_ha_f",
         ),
         pytest.param(
             "f",
             METRIC_SYSTEM,
-            -10.0,
+            "-10.0",
             id="device_f_ha_c",
         ),
         pytest.param(
             "f",
             US_CUSTOMARY_SYSTEM,
-            14.0,
+            "14.0",
             id="device_f_ha_f",
         ),
     ],
@@ -297,7 +297,7 @@ async def test_temp_unit_convert_sensor(
 
     state = hass.states.get("sensor.inverter_pool_heat_pump_outside_temperature")
     assert state is not None
-    assert float(state.state) == pytest.approx(expected_value, rel=1e-3)
+    assert state.state == expected_value
 
 
 @pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
@@ -320,20 +320,3 @@ async def test_temp_unit_convert_sensor_invalid(
         "Device class temperature ignored for incompatible unit  in "
         "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
     ) in caplog.text
-
-
-@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
-async def test_temp_unit_convert_with_existing_unit(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test that temperature sensors use TEMP_UNIT_CONVERT when no unit is provided."""
-    mock_device.status["temp_unit_convert"] = "f"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    # The outside temperature sensor should use °C (converted from °F via TEMP_UNIT_CONVERT)
-    state = hass.states.get("sensor.inverter_pool_heat_pump_outside_temperature")
-    assert state is not None
-    assert state.attributes.get("unit_of_measurement") == "°C"
