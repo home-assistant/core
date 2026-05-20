@@ -180,7 +180,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
     ),
     TeslaFleetSensorEntityDescription(
         key="vehicle_state_odometer",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=0,
@@ -512,11 +512,14 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
-                if isinstance(sensor_data.native_value, float | int):
-                    self._previous_value = float(sensor_data.native_value)
+
+        restored_sensor_data = await self.async_get_last_sensor_data()
+
+        if (
+            self.coordinator.data.get("state") != TeslaFleetState.ONLINE
+            and restored_sensor_data is not None
+        ):
+            self._attr_native_value = restored_sensor_data.native_value
 
         if (
             self.entity_description.key in CHARGE_ENERGY_RESET_KEYS

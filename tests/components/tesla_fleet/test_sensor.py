@@ -8,10 +8,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import ENERGY_HISTORY, VEHICLE_DATA, VEHICLE_DATA_ALT
@@ -179,6 +181,86 @@ async def test_charge_energy_restore_last_reset(
     # last_reset should be restored
     state = hass.states.get(entity_id)
     assert state.attributes["last_reset"] == last_reset
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_odometer_state_class_total(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test that the odometer is exposed as state_class TOTAL.
+
+    Recorder handles non-monotonic TOTAL readings between last_reset points,
+    so server-side jitter no longer needs in-entity clamping.
+    """
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    entity_id = "sensor.test_odometer"
+
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 6481.02
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    expected_km = DistanceConverter.convert(
+        6481.02, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL
+    assert float(state.state) == pytest.approx(expected_km)
+
+    # Slightly lower follow-up reading must pass through verbatim now that
+    # there is no clamp; recorder treats TOTAL between resets as non-monotonic.
+    lower_data = deepcopy(VEHICLE_DATA)
+    lower_data["response"]["vehicle_state"]["odometer"] = 6481.01
+    mock_vehicle_data.return_value = lower_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    expected_lower = DistanceConverter.convert(
+        6481.01, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_lower)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_odometer_restore_when_vehicle_asleep(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Regression: restore the persisted odometer value when the vehicle is asleep."""
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    entity_id = "sensor.test_odometer"
+
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 9999.0
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    expected_km = DistanceConverter.convert(
+        9999.0, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+    )
+    assert float(state.state) == pytest.approx(expected_km)
+
+    # Reload with the vehicle asleep so coordinator.data has no odometer key.
+    mock_vehicle_data.side_effect = VehicleOffline
+
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_km)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
