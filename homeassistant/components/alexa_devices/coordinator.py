@@ -79,7 +79,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
 
-
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
@@ -183,5 +182,3 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def todo_items_lookup(self) -> dict[str, dict[str, ListItem]]:
         "Current todo_items."
         return self._list_items_lookup
-
-
