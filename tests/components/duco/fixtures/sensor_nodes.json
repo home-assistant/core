@@ -1,0 +1,80 @@
+[
+  {
+    "node_id": 60,
+    "general": {
+      "node_type": "VLVRH",
+      "sub_type": 0,
+      "network_type": "WI",
+      "parent": 1,
+      "asso": 1,
+      "name": "Bedroom valve",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": null,
+      "iaq_co2": null,
+      "rh": 48.0,
+      "iaq_rh": 88,
+      "temp": 21.3
+    }
+  },
+  {
+    "node_id": 61,
+    "general": {
+      "node_type": "VLVCO2",
+      "sub_type": 0,
+      "network_type": "WI",
+      "parent": 1,
+      "asso": 1,
+      "name": "Hall valve",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": 512,
+      "iaq_co2": 76,
+      "rh": null,
+      "iaq_rh": null,
+      "temp": 20.1
+    }
+  },
+  {
+    "node_id": 62,
+    "general": {
+      "node_type": "VLVCO2RH",
+      "sub_type": 0,
+      "network_type": "WI",
+      "parent": 1,
+      "asso": 1,
+      "name": "Study valve",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": 645,
+      "iaq_co2": 95,
+      "rh": 54.0,
+      "iaq_rh": 92,
+      "temp": 20.7
+    }
+  }
+]
