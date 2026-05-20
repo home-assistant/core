@@ -600,7 +600,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.avea
-avea==1.6.1
+avea==1.8.0
 
 # homeassistant.components.avion
 # avion==0.10
