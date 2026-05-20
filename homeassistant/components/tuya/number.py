@@ -26,6 +26,7 @@ from .const import (
 )
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_device_temp_unit_convert
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -404,6 +405,28 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.WG2: (
+        NumberEntityDescription(
+            key=DPCode.DELAY_SET,
+            # This setting is called "Arm Delay" in the official Tuya app
+            translation_key="arm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_DELAY_TIME,
+            translation_key="alarm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            # This setting is called "Siren Duration" in the official Tuya app
+            translation_key="siren_duration",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.WK: (
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
@@ -529,6 +552,15 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             or tuya_uom in NUMBER_DEVICE_CLASS_UNITS[device_class]
         ):
             self._attr_native_unit_of_measurement = tuya_uom
+            return
+
+        # If the device provides TEMP_UNIT_CONVERT and no unit is set, use it.
+        if (
+            device_class is NumberDeviceClass.TEMPERATURE
+            and not tuya_uom
+            and (temp_unit := get_device_temp_unit_convert(self.device)) is not None
+        ):
+            self._attr_native_unit_of_measurement = temp_unit
             return
 
         # Check mappings for compatible units of measurement for the device class

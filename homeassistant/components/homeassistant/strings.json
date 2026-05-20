@@ -167,10 +167,6 @@
       "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue.",
       "title": "The support for legacy templates is being removed"
     },
-    "no_platform_setup": {
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}",
-      "title": "Unused YAML configuration for the {platform} integration"
-    },
     "orphaned_ignored_config_entry": {
       "fix_flow": {
         "abort": {
@@ -189,9 +185,17 @@
       },
       "title": "Orphaned ignored config entry for {domain}"
     },
+    "platform_config_not_supported": {
+      "description": "Configuring the {integration_domain} integration by adding `{platform_key}` under the `{platform_domain}:` key is not supported. The {integration_domain} integration must be configured under its own `{integration_domain}:` key instead.\n\nTo resolve this:\n\n1. Remove the following from your YAML configuration file:\n\n{yaml_example}\n\n2. Move the configuration under the `{integration_domain}:` key instead.\n\n3. Restart Home Assistant.\n\nTo see the detailed documentation, select Learn more.",
+      "title": "Unsupported YAML configuration for the {integration_domain} integration"
+    },
     "platform_only": {
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
       "title": "The {domain} integration does not support YAML configuration under its own key"
+    },
+    "platform_setup_not_supported": {
+      "description": "It's not possible to configure {integration_domain} {platform_domain} by adding `{platform_key}` to the {platform_domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n\n1. Remove `{platform_key}` occurrences from the `{platform_domain}:` configuration in your YAML configuration file.\n\n2. Restart Home Assistant.",
+      "title": "Unused YAML configuration for the {integration_domain} integration"
     },
     "storage_corruption": {
       "fix_flow": {
