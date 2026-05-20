@@ -258,7 +258,7 @@ class MobileAppNotificationService(BaseNotificationService):
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if stored := device_tokens.get(tag):
             if (
-                dt_util.utcnow().timestamp() - stored.get("stored_at", 0)
+                dt_util.utcnow().timestamp() - stored["stored_at"]
                 < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
             ):
                 return stored["token"]

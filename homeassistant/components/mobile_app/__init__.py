@@ -109,7 +109,7 @@ async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
         device_tokens = live_activity_tokens[wh_id]
         for tag in list(device_tokens):
             expires_at = (
-                device_tokens[tag].get("stored_at", 0) + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+                device_tokens[tag]["stored_at"] + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
             )
             if expires_at <= now:
                 del device_tokens[tag]
