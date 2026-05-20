@@ -226,7 +226,7 @@ async def test_form_already_configured_case_insensitive(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test config flow aborts when the same account is configured with different casing."""
+    """Test config flow aborts when same account has different casing."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

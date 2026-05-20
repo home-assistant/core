@@ -707,7 +707,7 @@ async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creating a pipeline from an audio stream but the cloud authentication fails."""
+    """Test pipeline from audio stream when cloud authentication fails."""
 
     events: list[assist_pipeline.PipelineEvent] = []
 

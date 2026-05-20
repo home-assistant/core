@@ -65,6 +65,7 @@ from .typing import XiaomiMiioConfigEntry
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODE = "mode"
 
 _LOGGER = logging.getLogger(__name__)

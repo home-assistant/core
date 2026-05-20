@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .config_entry import (  # noqa: F401
+    BaseScannerEntity,
     ScannerEntity,
     ScannerEntityDescription,
     TrackerEntity,

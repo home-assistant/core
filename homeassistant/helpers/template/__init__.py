@@ -4,6 +4,7 @@ from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable
+import contextlib
 from datetime import timedelta
 from functools import lru_cache, partial
 import logging
@@ -34,6 +35,27 @@ from .context import (
     render_with_context,
     template_context_manager,
     template_cv,
+)
+from .extensions import (
+    AreaExtension,
+    Base64Extension,
+    CollectionExtension,
+    ConfigEntryExtension,
+    CryptoExtension,
+    DateTimeExtension,
+    DeviceExtension,
+    EntityExtension,
+    FloorExtension,
+    FunctionalExtension,
+    IssuesExtension,
+    LabelExtension,
+    MathExtension,
+    RegexExtension,
+    SerializationExtension,
+    StateExtension,
+    StringExtension,
+    TypeCastExtension,
+    VersionExtension,
 )
 from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
@@ -432,7 +454,7 @@ class Template:
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            if template_render_thread.is_alive():
+            with contextlib.suppress(ValueError):
                 template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -721,37 +743,25 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
-        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.CollectionExtension"
-        )
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.DateTimeExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.FunctionalExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.IssuesExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.SerializationExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.StateExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.TypeCastExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
+        self.add_extension(AreaExtension)
+        self.add_extension(Base64Extension)
+        self.add_extension(CollectionExtension)
+        self.add_extension(ConfigEntryExtension)
+        self.add_extension(CryptoExtension)
+        self.add_extension(DateTimeExtension)
+        self.add_extension(DeviceExtension)
+        self.add_extension(EntityExtension)
+        self.add_extension(FloorExtension)
+        self.add_extension(FunctionalExtension)
+        self.add_extension(IssuesExtension)
+        self.add_extension(LabelExtension)
+        self.add_extension(MathExtension)
+        self.add_extension(RegexExtension)
+        self.add_extension(SerializationExtension)
+        self.add_extension(StateExtension)
+        self.add_extension(StringExtension)
+        self.add_extension(TypeCastExtension)
+        self.add_extension(VersionExtension)
 
         if hass is not None:
             # This environment has access to hass, attach its loader

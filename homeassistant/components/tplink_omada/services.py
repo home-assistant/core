@@ -15,6 +15,7 @@ from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MAC = "mac"
 
@@ -27,7 +28,8 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
         if not entry:
             raise ServiceValidationError("Specified TP-Link Omada controller not found")
     else:
-        # Assume first loaded entry if none specified (for backward compatibility/99% use case)
+        # Assume first loaded entry if none specified
+        # (for backward compatibility/99% use case)
         entries = call.hass.config_entries.async_entries(DOMAIN)
         if len(entries) == 0:
             raise ServiceValidationError("No active TP-Link Omada controllers found")

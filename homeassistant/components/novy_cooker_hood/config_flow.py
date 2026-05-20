@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
+from homeassistant.const import CONF_CODE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
@@ -22,7 +23,6 @@ from .commands import COMMAND_LIGHT
 from .const import (
     CODE_MAX,
     CODE_MIN,
-    CONF_CODE,
     CONF_TRANSMITTER,
     DEFAULT_CODE,
     DOMAIN,

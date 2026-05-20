@@ -1206,7 +1206,8 @@ async def test_option_flow_import(hass: HomeAssistant, mock_panel) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options_io"
 
-    # confirm the defaults are set based on current config - we"ll spot check this throughout
+    # confirm the defaults are set based on current config -
+    # we'll spot check this throughout
     schema = result["data_schema"]({})
     assert schema["1"] == "Binary Sensor"
     assert schema["2"] == "Digital Sensor"
