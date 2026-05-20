@@ -9,11 +9,12 @@ from dataclasses import dataclass
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MarantzIrConfigEntry
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, CONF_MODEL, MODELS
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, MODELS
 from .entity import MarantzIrEntity
 
 PARALLEL_UPDATES = 1

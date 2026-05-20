@@ -9,11 +9,10 @@ import pytest
 from homeassistant.components.marantz_infrared import PLATFORMS
 from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
-    CONF_MODEL,
     DOMAIN,
     MODELS,
 )
-from homeassistant.const import Platform
+from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import slugify
 
