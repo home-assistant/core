@@ -86,8 +86,8 @@ The JSON has this shape:
   with the rendered body.
 - `needs_agent` — `true` iff any package's check needs resolution.
 - `packages[]` — one entry per changed package. Each entry has:
-  - `name`, `type` (`new` or `bump`), `old_version`, `new_version`,
-    `repo_url`, `publisher_kind`.
+  - `name`, `old_version` (`null` for a newly added package; otherwise the
+    previous pin), `new_version`, `repo_url`, `publisher_kind`.
   - `checks` — a dict keyed by **check kind** (string). Each value has a
     `status` (`pass`, `warn`, `fail`, or `needs_agent`) and `details`.
 - `rendered_comment` — the final PR comment body, already rendered. For
@@ -172,7 +172,7 @@ Verify the PR description contains the right link for the change.
 1. Fetch the PR body via the GitHub MCP tool, using the `pr_number`
    field from the artifact.
 2. Extract all URLs from the body.
-3. For a **new package** (`package.type == "new"`):
+3. For a **new package** (`package.old_version` is `null`):
    - The PR body must contain a URL that points at `package.repo_url`
      (any sub-path of the same `owner/repo` on the same host is
      acceptable). A PyPI link is **not** sufficient.
@@ -180,7 +180,7 @@ Verify the PR description contains the right link for the change.
    - ❌ otherwise:
      `PR description must link to the source repository at <repo_url>.
      A PyPI page link is not sufficient.`
-4. For a **version bump** (`package.type == "bump"`):
+4. For a **version bump** (`package.old_version` is not `null`):
    - The PR body must contain a URL on the same host as
      `package.repo_url` that references **both** `package.old_version`
      and `package.new_version` (e.g. a GitHub compare URL

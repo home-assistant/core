@@ -13,7 +13,6 @@ from script.check_requirements.models import (
     CheckRunResult,
     CheckStatus,
     PackageChange,
-    PackageChangeType,
 )
 from script.check_requirements.pypi import (
     ProvenanceResult,
@@ -41,7 +40,7 @@ from script.check_requirements.runner import run_checks
                 "-bumped==1.2.3\n"
                 "+bumped==1.3.0\n"
             ),
-            [("bumped", PackageChangeType.BUMP, "1.2.3", "1.3.0")],
+            [("bumped", "1.2.3", "1.3.0")],
             id="single-bump",
         ),
         pytest.param(
@@ -53,7 +52,7 @@ from script.check_requirements.runner import run_checks
                 " keep==1.0.0\n"
                 "+brand-new==4.5.6\n"
             ),
-            [("brand-new", PackageChangeType.NEW, None, "4.5.6")],
+            [("brand-new", None, "4.5.6")],
             id="single-new",
         ),
         pytest.param(
@@ -77,7 +76,7 @@ from script.check_requirements.runner import run_checks
                 "-Foo_Bar==1.0\n"
                 "+foo-bar==1.1\n"
             ),
-            [("foo-bar", PackageChangeType.BUMP, "1.0", "1.1")],
+            [("foo-bar", "1.0", "1.1")],
             id="pep503-normalisation",
         ),
         pytest.param(
@@ -101,18 +100,18 @@ from script.check_requirements.runner import run_checks
                 "-pkg==1.0.0\n"
                 "+pkg==2.0.0\n"
             ),
-            [("pkg", PackageChangeType.BUMP, "1.0.0", "2.0.0")],
+            [("pkg", "1.0.0", "2.0.0")],
             id="wildcard-matched-requirements-file",
         ),
     ],
 )
 def test_parse_diff(
     diff_text: str,
-    expected: list[tuple[str, PackageChangeType, str | None, str]],
+    expected: list[tuple[str, str | None, str]],
 ) -> None:
     """Test that parse_diff extracts the expected package changes."""
     changes = parse_diff(diff_text)
-    actual = [(c.name, c.change_type, c.old_version, c.new_version) for c in changes]
+    actual = [(c.name, c.old_version, c.new_version) for c in changes]
     assert actual == expected
 
 
@@ -203,7 +202,6 @@ def test_pick_repo_url_strips_dangerous_chars() -> None:
 def _pkg(checks: dict[CheckKind, CheckResult]) -> PackageChange:
     return PackageChange(
         name="pkg",
-        change_type=PackageChangeType.NEW,
         old_version=None,
         new_version="1.0.0",
         checks=checks,
@@ -258,7 +256,6 @@ def test_render_all_conclusive_collapses_details() -> None:
     """When every check passes, the rendered details section is collapsed."""
     pkg = PackageChange(
         name="pkg",
-        change_type=PackageChangeType.BUMP,
         old_version="1.0.0",
         new_version="1.1.0",
         repo_url="https://github.com/x/pkg",
@@ -282,7 +279,6 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
     """Each NEEDS_AGENT check produces cell and detail placeholders for the agent."""
     pkg = PackageChange(
         name="pkg",
-        change_type=PackageChangeType.NEW,
         old_version=None,
         new_version="1.0.0",
         repo_url="https://github.com/x/pkg",

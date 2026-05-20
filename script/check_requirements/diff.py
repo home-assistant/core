@@ -6,7 +6,7 @@ import re
 
 from unidiff import PatchSet
 
-from .models import PackageChange, PackageChangeType
+from .models import PackageChange
 
 # Glob patterns; kept in sync with the `paths:`
 # filter of the deterministic workflow in
@@ -77,7 +77,6 @@ def parse_diff(diff_text: str) -> list[PackageChange]:
             changes.append(
                 PackageChange(
                     name=add.raw_name,
-                    change_type=PackageChangeType.NEW,
                     old_version=None,
                     new_version=add.version,
                 )
@@ -86,7 +85,6 @@ def parse_diff(diff_text: str) -> list[PackageChange]:
             changes.append(
                 PackageChange(
                     name=add.raw_name,
-                    change_type=PackageChangeType.BUMP,
                     old_version=rem.version,
                     new_version=add.version,
                 )

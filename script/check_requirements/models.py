@@ -28,13 +28,6 @@ class CheckKind(StrEnum):
     PR_LINK = "pr_link"
 
 
-class PackageChangeType(StrEnum):
-    """How a package changed in the PR."""
-
-    NEW = "new"
-    BUMP = "bump"
-
-
 @dataclass(slots=True)
 class CheckResult:
     """Result of a single check (deterministic or pending agent)."""
@@ -51,13 +44,13 @@ class CheckResult:
 class PackageChange:
     """A package change identified from the diff plus its check results.
 
-    `checks` is keyed by `CheckKind`. A missing entry means the check did not
-    run for this package (e.g. a check whose prerequisite was unmet); the
-    renderer displays such checks as skipped (—).
+    `old_version` is `None` for a newly added package; otherwise it is a
+    version bump. `checks` is keyed by `CheckKind`. A missing entry means
+    the check did not run for this package (e.g. a check whose prerequisite
+    was unmet); the renderer displays such checks as skipped (—).
     """
 
     name: str
-    change_type: PackageChangeType
     old_version: str | None
     new_version: str
 
@@ -74,7 +67,6 @@ class PackageChange:
         """Return a JSON-serialisable representation of this package change."""
         return {
             "name": self.name,
-            "type": self.change_type.value,
             "old_version": self.old_version,
             "new_version": self.new_version,
             "repo_url": self.repo_url,

@@ -46,9 +46,8 @@ def _icon(result: CheckResult | None) -> str:
     return _ICONS.get(result.status, SKIPPED)
 
 
-def _version_cell(pkg: PackageChange) -> str:
-    old = pkg.old_version or SKIPPED
-    return f"{old}→{pkg.new_version}"
+def _old_cell(pkg: PackageChange) -> str:
+    return pkg.old_version or SKIPPED
 
 
 def _overall_status(pkg: PackageChange) -> CheckStatus | None:
@@ -81,14 +80,14 @@ def _cell(pkg: PackageChange, kind: CheckKind) -> str:
 def _table(packages: list[PackageChange]) -> str:
     labels = [label for _, label in _CHECK_DISPLAY]
     rows = [
-        "| Package | Type | Old→New | " + " | ".join(labels) + " |",
+        "| Package | Old | New | " + " | ".join(labels) + " |",
         "|" + "|".join("---" for _ in range(3 + len(labels))) + "|",
     ]
     for pkg in packages:
         cells = [_cell(pkg, kind) for kind, _ in _CHECK_DISPLAY]
         rows.append(
             "| "
-            + " | ".join([pkg.name, pkg.change_type.value, _version_cell(pkg), *cells])
+            + " | ".join([pkg.name, _old_cell(pkg), pkg.new_version, *cells])
             + " |"
         )
     return "\n".join(rows)
@@ -106,10 +105,12 @@ def _bullet(pkg: PackageChange, kind: CheckKind, label: str) -> str:
 def _details_block(pkg: PackageChange) -> str:
     overall = _overall_status(pkg)
     is_open = overall != CheckStatus.PASS
-    summary = (
-        f"<summary><strong>{pkg.name} 📦 {pkg.change_type.value} "
-        f"{_version_cell(pkg)}</strong></summary>"
+    version = (
+        f"{pkg.old_version} → {pkg.new_version}"
+        if pkg.old_version
+        else f"{pkg.new_version} **(NEW)**"
     )
+    summary = f"<summary><strong>📦 {pkg.name}: {version}</strong></summary>"
     open_attr = " open" if is_open else ""
     body_lines = [_bullet(pkg, kind, label) for kind, label in _CHECK_DISPLAY]
     return (
