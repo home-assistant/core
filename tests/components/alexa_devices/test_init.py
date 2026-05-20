@@ -223,7 +223,7 @@ async def test_http2_stop_processing_exception_logged_on_unload(
             "Error while stopping HTTP/2 processing"
         )
 
-    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -248,5 +248,5 @@ async def test_alexa_media_labs_disabled_unloads_media_player(
     )
     await hass.async_block_till_done()
 
-    mock_amazon_devices_client.stop_http2_processing.assert_called_once()
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited()
     assert hass.states.get("media_player.echo_test") is None
