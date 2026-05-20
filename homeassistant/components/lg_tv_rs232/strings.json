@@ -56,9 +56,6 @@
     },
     "command_rejected": {
       "message": "The TV rejected the command: {error}"
-    },
-    "invalid_source": {
-      "message": "{source} is not a valid input source."
     }
   }
 }

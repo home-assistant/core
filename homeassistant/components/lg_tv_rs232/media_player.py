@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -183,12 +183,4 @@ class LGTVRS232MediaPlayer(MediaPlayerEntity):
     @catch_command_errors
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        input_source = INPUT_SOURCE_HA_TO_LG.get(source)
-        if input_source is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_source",
-                translation_placeholders={"source": source},
-            )
-
-        await self._tv.select_input_source(input_source)
+        await self._tv.select_input_source(INPUT_SOURCE_HA_TO_LG[source])

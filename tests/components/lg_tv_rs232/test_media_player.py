@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import call
 
+from freezegun.api import FrozenDateTimeFactory
 from lg_rs232_tv import CommandRejected, InputSource, PowerState, TVState
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -35,9 +36,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json
 
 from .conftest import MockLGTV, _default_state
@@ -64,7 +64,9 @@ async def test_entities_created(
     mock_lgtv.query.assert_awaited()
 
 
-async def test_polling_updates_state(hass: HomeAssistant, mock_lgtv: MockLGTV) -> None:
+async def test_polling_updates_state(
+    hass: HomeAssistant, mock_lgtv: MockLGTV, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the entity polls the TV on the scan interval and reflects changes."""
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -72,7 +74,8 @@ async def test_polling_updates_state(hass: HomeAssistant, mock_lgtv: MockLGTV) -
     off_state.power = PowerState.OFF
     mock_lgtv.query.side_effect = lambda _attrs: mock_lgtv.mock_state(off_state)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     mock_lgtv.query.assert_awaited()
@@ -222,17 +225,6 @@ async def test_source_state_and_controls(
         blocking=True,
     )
     assert mock_lgtv.select_input_source.await_args == call(InputSource.HDMI3)
-
-
-async def test_invalid_source_raises(hass: HomeAssistant) -> None:
-    """Test selecting an invalid source raises a validation error."""
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "NONEXISTENT"},
-            blocking=True,
-        )
 
 
 @pytest.mark.parametrize(

@@ -70,7 +70,7 @@ class LGTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_DEVICE]
-            set_id = int(user_input[CONF_SET_ID])
+            set_id = user_input[CONF_SET_ID]
 
             self._async_abort_entries_match({CONF_DEVICE: port, CONF_SET_ID: set_id})
             error = await _async_attempt_connect(port, set_id)
