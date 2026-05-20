@@ -223,3 +223,16 @@ async def test_send_command_success_after_unavailable_marks_available() -> None:
     assert entity.available
     write_state.assert_called_once()
     assert client.calls
+
+
+def test_command_to_gc_timings_rejects_empty_raw_timings() -> None:
+    """Test raw timing conversion rejects commands without raw timings."""
+    entity = _entity()
+    command = MagicMock()
+    command.get_raw_timings.return_value = []
+
+    with pytest.raises(
+        ValueError,
+        match="IR command contains no usable raw timings",
+    ):
+        entity._command_to_gc_timings(command, 38_000)

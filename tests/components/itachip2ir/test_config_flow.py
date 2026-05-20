@@ -15,6 +15,7 @@ from homeassistant.components.itachip2ir.config_flow import (
     CannotConnect,
     CannotIdentify,
     InvalidDeviceId,
+    Itachip2irConfigFlow,
     NoIrPorts,
     _get_discovery,
     _identify_device,
@@ -25,7 +26,13 @@ from homeassistant.components.itachip2ir.config_flow import (
 )
 from homeassistant.components.itachip2ir.const import DISCOVERY, DOMAIN
 from homeassistant.components.itachip2ir.discovery import ItachDiscovery
-from homeassistant.components.itachip2ir.pyitach import DEFAULT_PORT, ItachError
+from homeassistant.components.itachip2ir.pyitach import (
+    DEFAULT_PORT,
+    ItachCommandError,
+    ItachConnectionError,
+    ItachError,
+    ItachResponseError,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -1239,3 +1246,132 @@ async def test_reconfigure_flow_preserves_entry_data_on_validation_failure(
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data[CONF_HOST] == HOST
     assert entry.data[CONF_PORT] == PORT
+
+
+async def test_validate_device_connection_error_maps_to_cannot_connect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test connection errors during validation map to CannotConnect."""
+    _patch_client(monkeypatch, module_error=ItachConnectionError("offline"))
+
+    with pytest.raises(CannotConnect):
+        await _validate_device(HOST, PORT)
+
+
+async def test_validate_device_no_ir_module_command_error_maps_to_no_ir_ports(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test missing IR module command error maps to NoIrPorts."""
+    _patch_client(
+        monkeypatch,
+        module_error=ItachCommandError("No IR module found", "getdevices\r"),
+    )
+
+    with pytest.raises(NoIrPorts):
+        await _validate_device(HOST, PORT)
+
+
+async def test_validate_device_other_command_error_is_not_remapped(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test unrelated command errors are re-raised unchanged."""
+    error = ItachCommandError("ERR_01", "getdevices\r")
+    _patch_client(monkeypatch, module_error=error)
+
+    with pytest.raises(ItachCommandError) as exc_info:
+        await _validate_device(HOST, PORT)
+
+    assert exc_info.value is error
+
+
+async def test_validate_device_protocol_error_is_not_remapped(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test protocol response errors are re-raised unchanged."""
+    error = ItachResponseError("bad response")
+    _patch_client(monkeypatch, module_error=error)
+
+    with pytest.raises(ItachResponseError) as exc_info:
+        await _validate_device(HOST, PORT)
+
+    assert exc_info.value is error
+
+
+async def test_validate_discovered_input_blank_unique_id_raises_cannot_identify(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test discovered validation rejects a blank normalized unique ID."""
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.config_flow._validate_device",
+        AsyncMock(
+            return_value={
+                CONF_IR_MODULE: 1,
+                CONF_IR_PORTS: 3,
+                CONF_IR_ENABLED_PORTS: [1, 3],
+                CONF_IR_CONNECTOR_MODES: {"1": "IR", "3": "IR_BLASTER"},
+            }
+        ),
+    )
+
+    with pytest.raises(CannotIdentify):
+        await _validate_discovered_input(HOST, PORT, "")
+
+
+async def test_discovery_flow_blank_unique_id_aborts_cannot_identify(
+    hass: HomeAssistant,
+) -> None:
+    """Test UDP discovery aborts when the normalized unique ID is blank."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DISCOVERY},
+        data={CONF_HOST: HOST, CONF_PORT: PORT, "unique_id": "", "model": "iTachIP2IR"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_identify"
+
+
+async def test_confirm_discovery_without_discovery_info_aborts_unknown() -> None:
+    """Test confirm discovery aborts if called without discovery context."""
+    flow = Itachip2irConfigFlow()
+
+    result = await flow.async_step_confirm_discovery()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
+async def test_confirm_discovery_cannot_identify_shows_form_error(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test discovery confirmation handles CannotIdentify errors."""
+    _patch_client(monkeypatch)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DISCOVERY},
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            "unique_id": UNIQUE_ID,
+            "model": "iTachIP2IR",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm_discovery"
+
+    monkeypatch.setattr(
+        "homeassistant.components.itachip2ir.config_flow._validate_discovered_input",
+        AsyncMock(side_effect=CannotIdentify),
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm_discovery"
+    assert result["errors"] == {"base": "cannot_identify"}

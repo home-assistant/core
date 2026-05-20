@@ -118,7 +118,7 @@ async def _validate_device(host: str, port: int) -> dict[str, Any]:
                 port,
                 ir_capability.ports,
             )
-    except CannotConnect, NoIrPorts:
+    except NoIrPorts:
         raise
     except ItachConnectionError as err:
         _LOGGER.debug(

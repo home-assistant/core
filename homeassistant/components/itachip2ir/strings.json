@@ -5,7 +5,6 @@
       "cannot_connect": "Failed to connect.",
       "cannot_identify": "Could not identify the device. Enter the MAC address manually.",
       "invalid_discovery": "The discovered device information is invalid.",
-      "no_change": "No changes were made.",
       "no_changes": "No changes were made.",
       "no_ir_ports": "No infrared-capable ports were found.",
       "not_ip2ir": "The discovered Global Caché device does not expose infrared-capable ports.",

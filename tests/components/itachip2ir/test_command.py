@@ -7,6 +7,8 @@ from homeassistant.components.itachip2ir.command import (
     RawInfraredCommand,
     _is_hex_word,
     _looks_like_pronto,
+    _parse_json_command,
+    _parse_pronto_command,
     parse_remote_command,
     validate_raw_command,
     validate_remote_command_payload,
@@ -231,3 +233,20 @@ def test_parse_remote_command_rejects_invalid_kwargs_modulation() -> None:
     assert exc_info.value.translation_placeholders == {
         "error": "modulation must be an integer"
     }
+
+
+def test_parse_json_command_rejects_primitive_json_payload() -> None:
+    """Test JSON parser rejects primitive JSON payloads."""
+    with pytest.raises(
+        CommandParseError, match="Command JSON must be an object or timing array"
+    ):
+        _parse_json_command("123", 38_000)
+
+
+def test_parse_pronto_command_rejects_unsupported_pronto_type() -> None:
+    """Test raw Pronto parser rejects unsupported Pronto types."""
+    with pytest.raises(
+        CommandParseError,
+        match="Only learned raw Pronto commands beginning with 0000 are supported",
+    ):
+        _parse_pronto_command("0100 006D 0001 0000 0015 0016")
