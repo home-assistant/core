@@ -37,6 +37,14 @@ PRESET_MODES = [
     PRESET_NONE,
 ]
 
+SUPPORTED_FEATURES = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
+
+SUPPORTED_FEATURES_WITH_PRESET = SUPPORTED_FEATURES | ClimateEntityFeature.PRESET_MODE
+
 # Mapping from Home Assistant HVACMode to BSB-LAN integer values
 # BSB-LAN uses: 0=off, 1=auto, 2=eco/reduced, 3=heat/comfort
 HA_TO_BSBLAN_HVAC_MODE: Final[dict[HVACMode, int]] = {
@@ -78,15 +86,9 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     _attr_name = None
-    # Determine preset modes
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
+    _attr_supported_features = SUPPORTED_FEATURES_WITH_PRESET
 
-    _attr_preset_modes = PRESET_MODES
+    _attr_preset_modes: list[str] | None = PRESET_MODES
     _attr_hvac_modes = HVAC_MODES
 
     def __init__(
@@ -97,7 +99,12 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Initialize BSBLAN climate device."""
         super().__init__(data.fast_coordinator, data, circuit)
         self._circuit = circuit
+        self._uses_pps_bus = data.device.is_pps_bus
         mac = format_mac(data.device.MAC)
+
+        if self._uses_pps_bus:
+            self._attr_supported_features = SUPPORTED_FEATURES
+            self._attr_preset_modes = None
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
@@ -177,6 +184,8 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
+        if self._uses_pps_bus:
+            return None
         # BSB-LAN mode 2 is eco/reduced mode
         if self._hvac_mode_value == 2:
             return PRESET_ECO

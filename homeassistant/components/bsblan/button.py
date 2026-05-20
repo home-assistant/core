@@ -34,6 +34,7 @@ async def async_setup_entry(
     async_add_entities(
         BSBLanButtonEntity(data.fast_coordinator, data, description)
         for description in BUTTON_DESCRIPTIONS
+        if data.device.supports_time_sync
     )
 
 
