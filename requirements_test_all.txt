@@ -2231,7 +2231,7 @@ python-aidot==0.3.53
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==5.2.1
+python-bsblan==6.0.1
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
