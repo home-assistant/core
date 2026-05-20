@@ -159,9 +159,9 @@
       },
       "name": "Test action {meep_1}",
       "sections": {
-        "advanced_fields": {
-          "description": "Some very advanced things",
-          "name": "Advanced options"
+        "additional_fields": {
+          "description": "Some additional things",
+          "name": "Additional options"
         }
       }
     }
