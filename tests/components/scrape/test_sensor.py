@@ -16,6 +16,7 @@ from homeassistant.components.scrape.const import (
 )
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -35,7 +36,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -45,9 +46,28 @@ from homeassistant.util import dt as dt_util
 
 from . import MockRestData, return_integration_config
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+)
 
 DOMAIN = "scrape"
+
+
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        SENSOR_DOMAIN,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def test_scrape_sensor(hass: HomeAssistant) -> None:
