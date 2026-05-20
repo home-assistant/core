@@ -139,8 +139,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self.positions.primary is None:
+            return None
         return self.positions.primary <= CLOSED_POSITION
 
     @property
@@ -527,8 +529,10 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         return self.positions.tilt
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self.positions.tilt is None:
+            return None
         return self.positions.tilt <= CLOSED_POSITION
 
 
@@ -555,8 +559,10 @@ class PowerViewShadeTopDown(PowerViewShadeBase):
         await self._async_set_cover_position(MAX_POSITION - kwargs[ATTR_POSITION])
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self.positions.primary is None:
+            return None
         return (MAX_POSITION - self.positions.primary) <= CLOSED_POSITION
 
 
@@ -643,9 +649,11 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         return False
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         # top shade needs to check other motor
+        if self.positions.secondary is None:
+            return None
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
@@ -742,9 +750,11 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
         self._attr_unique_id = f"{self._attr_unique_id}_combined"
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         # if rear shade is down it is closed
+        if self.positions.secondary is None:
+            return None
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
@@ -873,9 +883,11 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         return False
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         # if rear shade is down it is closed
+        if self.positions.secondary is None:
+            return None
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
