@@ -7,13 +7,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, NotRequired, TypedDict, cast
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
 import httpx
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_BINARY_SENSORS,
@@ -29,7 +30,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -50,6 +57,13 @@ from .helpers import service_signal
 from .sensor import SENSOR_KEYS
 from .services import async_setup_services
 from .switch import SWITCH_KEYS
+
+PLATFORMS: tuple[Platform, ...] = (
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -318,11 +332,20 @@ def _monitor_events(
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
+    stop_event: threading.Event | None = None,
 ) -> None:
-    while True:
-        api.available_flag.wait()
+    """Monitor camera events. Exits when stop_event is set (config flow only)."""
+    while stop_event is None or not stop_event.is_set():
+        if stop_event:
+            api.available_flag.wait(timeout=1.0)
+        else:
+            api.available_flag.wait()
+        if stop_event and stop_event.is_set():
+            break
         try:
             for code, payload in api.event_actions("All"):
+                if stop_event and stop_event.is_set():
+                    return
                 event_data = {"camera": name, "event": code, "payload": payload}
                 hass.bus.fire("amcrest", event_data)
                 if code in event_codes:
@@ -344,21 +367,24 @@ def _start_event_monitor(
     name: str,
     api: AmcrestChecker,
     event_codes: set[str],
-) -> None:
+    stop_event: threading.Event | None = None,
+) -> threading.Event | None:
+    """Start event monitor. Returns stop_event when provided (for config flow)."""
     thread = threading.Thread(
         target=_monitor_events,
         name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes),
-        daemon=True,
+        args=(hass, name, api, event_codes, stop_event),
+        daemon=stop_event is None,
     )
     thread.start()
+    return stop_event
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
-    for device in config[DOMAIN]:
+    for device in config.get(DOMAIN, []):
         name: str = device[CONF_NAME]
         username: str = device[CONF_USERNAME]
         password: str = device[CONF_PASSWORD]
@@ -443,12 +469,126 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-    if not hass.data[DATA_AMCREST][DEVICES]:
-        return False
-
     async_setup_services(hass)
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Amcrest from a config entry."""
+    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
+
+    # unique id is set by the config flow using the serial number
+    serial = entry.unique_id
+    if not serial:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="no_serial_number"
+        )
+
+    config_data = dict(entry.data)
+    config_data.update(entry.options)
+
+    config_data.setdefault(CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION)
+    config_data.setdefault(CONF_RESOLUTION, DEFAULT_RESOLUTION)
+    config_data.setdefault(CONF_STREAM_SOURCE, STREAM_SOURCE_LIST[0])
+    config_data.setdefault(CONF_FFMPEG_ARGUMENTS, DEFAULT_ARGUMENTS)
+    config_data.setdefault(CONF_CONTROL_LIGHT, True)
+
+    name: str = entry.title
+    username: str = config_data[CONF_USERNAME]
+    password: str = config_data[CONF_PASSWORD]
+
+    api = AmcrestChecker(
+        hass, name, config_data[CONF_HOST], config_data[CONF_PORT], username, password
+    )
+
+    ffmpeg_arguments = config_data[CONF_FFMPEG_ARGUMENTS]
+    resolution = RESOLUTION_LIST[config_data[CONF_RESOLUTION]]
+    stream_source = config_data[CONF_STREAM_SOURCE]
+    control_light = config_data.get(CONF_CONTROL_LIGHT, True)
+
+    if config_data.get(CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION) == (
+        HTTP_BASIC_AUTHENTICATION
+    ):
+        authentication: aiohttp.BasicAuth | None = aiohttp.BasicAuth(username, password)
+    else:
+        authentication = None
+
+    device = AmcrestDevice(
+        api,
+        authentication,
+        ffmpeg_arguments,
+        stream_source,
+        resolution,
+        control_light,
+    )
+    device.name = name
+    device.serial_number = serial
+    device.device_info = None
+
+    try:
+        fetched_serial = (await api.async_serial_number or "").strip()
+    except AmcrestError:
+        fetched_serial = ""
+
+    if fetched_serial and fetched_serial != serial:
+        _LOGGER.debug(
+            "Config entry unique_id (%s) does not match device serial (%s)",
+            serial,
+            fetched_serial,
+        )
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, serial)},
+        name=name,
+        serial_number=serial,
+        manufacturer="Amcrest",
+        configuration_url=api.get_base_url(),
+    )
+    device.device_info = DeviceInfo(
+        identifiers={(DOMAIN, serial)},
+        name=name,
+        serial_number=serial,
+        manufacturer="Amcrest",
+        configuration_url=api.get_base_url(),
+    )
+
+    event_codes = {
+        event_code
+        for sensor in BINARY_SENSORS
+        if not sensor.should_poll and sensor.event_codes is not None
+        for event_code in sensor.event_codes
+    }
+
+    # Platforms expect this to exist during async_setup_entry.
+    entry.runtime_data = {"device": device}
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    stop_event = threading.Event()
+    _start_event_monitor(hass, name, api, event_codes, stop_event)
+
+    runtime_data = cast(AmcrestConfigEntryData, entry.runtime_data)
+    runtime_data["stop_event"] = stop_event
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if runtime_data := cast(AmcrestConfigEntryData | None, entry.runtime_data):
+        if stop_event := runtime_data.get("stop_event"):
+            stop_event.set()
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+class AmcrestConfigEntryData(TypedDict):
+    """Runtime data for an Amcrest config entry."""
+
+    device: AmcrestDevice
+    stop_event: NotRequired[threading.Event]
 
 
 @dataclass
@@ -457,8 +597,12 @@ class AmcrestDevice:
 
     api: AmcrestChecker
     authentication: aiohttp.BasicAuth | None
-    ffmpeg_arguments: list[str]
+    ffmpeg_arguments: str
     stream_source: str
     resolution: int
     control_light: bool
     channel: int = 0
+    # Populated for config entries (and safe for YAML entities to ignore)
+    name: str = ""
+    serial_number: str = ""
+    device_info: DeviceInfo | None = None

@@ -2,15 +2,19 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
@@ -31,16 +35,41 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_PTZ_PRESET,
         name="PTZ Preset",
         icon="mdi:camera-iris",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=SENSOR_SDCARD,
         name="SD Used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:sd",
+        entity_registry_enabled_default=False,
     ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up sensors for an Amcrest config entry."""
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
+    name = device.name
+    serial = device.serial_number
+
+    entities = [
+        AmcrestSensor(
+            name,
+            device,
+            description,
+            unique_id=f"{serial}-{description.key}-{device.channel}",
+        )
+        for description in SENSOR_TYPES
+    ]
+    async_add_entities(entities, True)
 
 
 async def async_setup_platform(
@@ -70,7 +99,11 @@ class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
     def __init__(
-        self, name: str, device: AmcrestDevice, description: SensorEntityDescription
+        self,
+        name: str,
+        device: AmcrestDevice,
+        description: SensorEntityDescription,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize a sensor for Amcrest camera."""
         self.entity_description = description
@@ -78,8 +111,14 @@ class AmcrestSensor(SensorEntity):
         self._api = device.api
         self._channel = device.channel
 
-        self._attr_name = f"{name} {description.name}"
+        if device.device_info is not None:
+            self._attr_device_info = device.device_info
+            self._attr_has_entity_name = True
+        else:
+            self._attr_name = f"{name} {description.name}"
         self._attr_extra_state_attributes = {}
+        if unique_id:
+            self._attr_unique_id = unique_id
 
     @property
     def available(self) -> bool:
@@ -95,10 +134,12 @@ class AmcrestSensor(SensorEntity):
         sensor_type = self.entity_description.key
 
         try:
-            if self._attr_unique_id is None and (
-                serial_number := (await self._api.async_serial_number)
-            ):
-                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
+            if self._attr_unique_id is None:
+                serial_number = await self._api.async_serial_number
+                if serial_number:
+                    self._attr_unique_id = (
+                        f"{serial_number}-{sensor_type}-{self._channel}"
+                    )
 
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = await self._api.async_ptz_presets_count
@@ -122,9 +163,9 @@ class AmcrestSensor(SensorEntity):
                         f"{storage['used'][0]} {storage['used'][1]}"
                     )
                 try:
-                    self._attr_native_value = f"{storage['used_percent']:.2f}"
-                except ValueError:
-                    self._attr_native_value = storage["used_percent"]
+                    self._attr_native_value = f"{float(storage['used_percent']):.2f}"
+                except ValueError, TypeError:
+                    self._attr_native_value = None
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 

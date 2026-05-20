@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -13,6 +13,7 @@ from haffmpeg.camera import CameraMjpeg
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import (
@@ -20,8 +21,12 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -55,6 +60,26 @@ _ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up an Amcrest camera from a config entry."""
+    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    device = runtime_data["device"]
+    serial = device.serial_number
+    unique_id = f"{serial}-{device.resolution}-{device.channel}"
+    entity = AmcrestCam(
+        device.name,
+        device,
+        get_ffmpeg_manager(hass),
+        device_info=device.device_info,
+        unique_id=unique_id,
+    )
+    async_add_entities([entity], True)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -86,11 +111,26 @@ class AmcrestCam(Camera):
     _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
-    def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestDevice,
+        ffmpeg: FFmpegManager,
+        device_info: DeviceInfo | None = None,
+        unique_id: str | None = None,
+    ) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
-        self._name = name
+        self._signal_name = name
         self._api = device.api
+        if device_info is not None:
+            self._attr_device_info = device_info
+            self._attr_has_entity_name = True
+            self._attr_name = None
+        else:
+            self._attr_name = name
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
@@ -136,7 +176,7 @@ class AmcrestCam(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        _LOGGER.debug("Take snapshot from %s", self._name)
+        _LOGGER.debug("Take snapshot from %s", self._signal_name)
         try:
             # Amcrest cameras only support one snapshot command at a time.
             # Hence need to wait if a previous snapshot has not yet finished.
@@ -144,7 +184,9 @@ class AmcrestCam(Camera):
             # and before initiating snapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
-                _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
+                _LOGGER.debug(
+                    "Waiting for previous snapshot from %s", self._signal_name
+                )
                 await self._snapshot_task
             self._check_snapshot_ok()
             # Run snapshot command in separate Task that can't be cancelled so
@@ -202,11 +244,6 @@ class AmcrestCam(Camera):
             await stream.close()
 
     # Entity property overrides
-
-    @property
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -270,7 +307,7 @@ class AmcrestCam(Camera):
         self._unsub_dispatcher.append(
             async_dispatcher_connect(
                 self.hass,
-                service_signal(SERVICE_UPDATE, self.name),
+                service_signal(SERVICE_UPDATE, self._signal_name),
                 self.async_on_demand_update,
             )
         )
@@ -301,7 +338,7 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                serial_number = (await self._api.async_serial_number).strip()
+                serial_number = (await self._api.async_serial_number or "").strip()
                 if serial_number:
                     self._attr_unique_id = (
                         f"{serial_number}-{self._resolution}-{self._channel}"
