@@ -1,6 +1,7 @@
 """Support for Tuya sensors."""
 
 from dataclasses import dataclass
+import json
 
 from tuya_device_handlers.definition.sensor import (
     SensorDefinition,
@@ -1802,7 +1803,27 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self._read_wrapper(self._dpcode_wrapper)
+        value = self._read_wrapper(self._dpcode_wrapper)
+        if (
+            isinstance(value, (int, float))
+            and self.entity_description.key == DPCode.BATTERY_PERCENTAGE
+            and (
+                status_range := self.device.status_range.get(DPCode.BATTERY_PERCENTAGE)
+            )
+        ):
+            try:
+                range_values = json.loads(status_range.values)
+                if (
+                    isinstance(range_values, dict)
+                    and isinstance(
+                        max_value := range_values.get("max", 100), (int, float)
+                    )
+                    and 0 < max_value < 100
+                ):
+                    return round(int(value) / max_value * 100)
+            except ValueError, TypeError:
+                pass
+        return value
 
     async def _process_device_update(
         self,
