@@ -193,8 +193,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        # This is CO2 content in a flue, it's measured in % and goes really high
-        # does not make sense to measure this as ppm as one does for air quality
+        # This is CO2 content in a flue. It is measured in % and goes really high.
+        # It does not make sense to measure this as ppm as one does for air quality.
         key="co2_content",
         translation_key="co2_content",
         state_class=SensorStateClass.MEASUREMENT,
