@@ -37,19 +37,25 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
+    ATTR_LIVE_ACTIVITY_TOKEN,
+    ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
+    ATTR_PUSH_TAG,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
@@ -234,12 +240,44 @@ class MobileAppNotificationService(BaseNotificationService):
                 " not connected to local push notifications"
             )
 
+    async def _get_live_activity_token(
+        self, entry: ConfigEntry, data: dict[str, Any]
+    ) -> str | None:
+        """Return the Live Activity APNs token for this notification, or None."""
+        notification_data = data.get(ATTR_DATA) or {}
+        if not notification_data.get(ATTR_LIVE_UPDATE):
+            return None
+
+        tag = notification_data.get(ATTR_PUSH_TAG)
+        if not tag:
+            return None
+
+        # Per-activity token — the activity is already running on the device.
+        webhook_id = entry.data[ATTR_WEBHOOK_ID]
+        live_activity_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+        device_tokens = live_activity_tokens.get(webhook_id, {})
+        if stored := device_tokens.get(tag):
+            if (
+                dt_util.utcnow().timestamp() - stored["stored_at"]
+                < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+            ):
+                return stored["token"]
+
+        # Push-to-start token — start a new activity remotely (iOS 17.2+).
+        app_data = entry.data[ATTR_APP_DATA]
+        return app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN)
+
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
-    ):
+    ) -> None:
         """Send a message to a target."""
         try:
-            await _send_message(async_get_clientsession(self.hass), entry, data)
+            await _send_message(
+                async_get_clientsession(self.hass),
+                entry,
+                data,
+                live_activity_token=await self._get_live_activity_token(entry, data),
+            )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
                 _LOGGER.warning(str(e))
@@ -248,7 +286,11 @@ class MobileAppNotificationService(BaseNotificationService):
 
 
 async def _send_message(
-    session: ClientSession, entry: ConfigEntry, data: dict[str, Any]
+    session: ClientSession,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    *,
+    live_activity_token: str | None = None,
 ) -> None:
     """Shared internal helper to send messages via cloud push notification services."""
     reg_info = {
@@ -259,15 +301,19 @@ async def _send_message(
     if ATTR_OS_VERSION in entry.data:
         reg_info[ATTR_OS_VERSION] = entry.data[ATTR_OS_VERSION]
 
+    payload: dict[str, Any] = {
+        **data,
+        ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
+        "registration_info": reg_info,
+    }
+    if live_activity_token:
+        payload[ATTR_LIVE_ACTIVITY_TOKEN] = live_activity_token
+
     try:
         async with asyncio.timeout(10):
             response = await session.post(
                 entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
-                json={
-                    **data,
-                    ATTR_PUSH_TOKEN: entry.data[ATTR_APP_DATA][ATTR_PUSH_TOKEN],
-                    "registration_info": reg_info,
-                },
+                json=payload,
             )
             result: dict[str, Any] = await response.json()
 

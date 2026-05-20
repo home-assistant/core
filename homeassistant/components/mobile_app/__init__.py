@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
+from datetime import datetime
 from functools import partial
 from typing import Any
 
@@ -19,14 +20,16 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 # Pre-import the platforms so they get loaded when the integration
 # is imported as they are almost always going to be loaded and its
@@ -46,13 +49,17 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_CLEANUP,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
     DATA_STORE,
     DOMAIN,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
@@ -70,25 +77,86 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class _MobileAppStore(Store[dict[str, Any]]):
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate mobile_app storage to the current version."""
+        if old_major_version == 1 and old_minor_version < 2:
+            old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
+        return old_data
+
+
+@callback
+def _schedule_token_cleanup(hass: HomeAssistant, next_expiry: float) -> None:
+    """Schedule a cleanup task to run when the next live activity token expires."""
+    delay = next_expiry - dt_util.utcnow().timestamp()
+
+    async def _run_cleanup(_now: datetime) -> None:
+        await _async_cleanup_live_activity_tokens(hass)
+
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] = async_call_later(
+        hass, delay, _run_cleanup
+    )
+
+
+async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
+    """Remove expired live activity tokens and reschedule for the next expiry."""
+    now = dt_util.utcnow().timestamp()
+    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    next_expiry: float | None = None
+    changed = False
+
+    for wh_id in list(live_activity_tokens):
+        device_tokens = live_activity_tokens[wh_id]
+        for tag in list(device_tokens):
+            expires_at = (
+                device_tokens[tag]["stored_at"] + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+            )
+            if expires_at <= now:
+                del device_tokens[tag]
+                changed = True
+            elif next_expiry is None or expires_at < next_expiry:
+                next_expiry = expires_at
+        if not device_tokens:
+            del live_activity_tokens[wh_id]
+
+    # Settle the next cleanup before the save: a webhook storing a token
+    # during the await checks this handle to decide whether to restart it.
+    if next_expiry is not None:
+        _schedule_token_cleanup(hass, next_expiry)
+    else:
+        hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] = None
+
+    if changed:
+        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    store = _MobileAppStore(
+        hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+    )
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
-        app_config = {
-            DATA_CONFIG_ENTRIES: {},
-            DATA_DELETED_IDS: [],
-        }
+        app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
-        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
+        DATA_DELETED_IDS: app_config[DATA_DELETED_IDS],
         DATA_DEVICES: {},
+        DATA_LIVE_ACTIVITY_CLEANUP: None,
+        DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
+
+    hass.async_create_task(_async_cleanup_live_activity_tokens(hass))
 
     hass.http.register_view(RegistrationsView())
 
@@ -243,7 +311,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 

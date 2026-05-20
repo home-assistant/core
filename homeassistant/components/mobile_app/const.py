@@ -8,6 +8,10 @@ DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
+
+LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
+LIVE_ACTIVITY_SAVE_DELAY = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_REMOTE_UI_URL = "remote_ui_url"
@@ -30,6 +34,7 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
+ATTR_PUSH_TAG = "tag"
 ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
@@ -39,6 +44,13 @@ ATTR_PUSH_RATE_LIMITS_MAXIMUM = "maximum"
 ATTR_PUSH_RATE_LIMITS_RESETS_AT = "resetsAt"
 ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = "successful"
 ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
+
+ATTR_LIVE_UPDATE = "live_update"
+ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
+ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
+ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
+DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
+DATA_LIVE_ACTIVITY_CLEANUP = "live_activity_cleanup"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"
@@ -92,6 +104,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # will connect via websocket channel to receive
         # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
+        vol.Optional(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
