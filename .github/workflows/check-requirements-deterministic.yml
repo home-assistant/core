@@ -8,12 +8,16 @@ name: Check requirements (deterministic)
 
 # yamllint disable-line rule:truthy
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "**/requirements*.txt"
-      - "homeassistant/package_constraints.txt"
-      - "pyproject.toml"
+  # Auto-trigger on PRs that touch tracked requirement files is disabled
+  # for now while we iterate — testing the workflow_run handoff to the
+  # agentic stage is hard with an auto-trigger. Re-enable once the chain
+  # has been validated end-to-end.
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  #   paths:
+  #     - "**/requirements*.txt"
+  #     - "homeassistant/package_constraints.txt"
+  #     - "pyproject.toml"
   workflow_dispatch:
     inputs:
       pull_request_number:

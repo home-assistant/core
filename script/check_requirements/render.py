@@ -106,9 +106,7 @@ def _details_block(pkg: PackageChange) -> str:
     overall = _overall_status(pkg)
     is_open = overall != CheckStatus.PASS
     version = (
-        f"{pkg.old_version} → {pkg.new_version}"
-        if pkg.old_version
-        else f"{pkg.new_version} **(NEW)**"
+        f"{pkg.old_version} → {pkg.new_version}" if pkg.old_version else pkg.new_version
     )
     summary = f"<summary><strong>📦 {pkg.name}: {version}</strong></summary>"
     open_attr = " open" if is_open else ""
