@@ -11,10 +11,13 @@ import asyncio
 from asyncio import Lock
 import base64
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 import hashlib
 from http import HTTPStatus
 import json
+from json import JSONDecodeError
 import logging
+from random import randint
 import secrets
 import time
 from typing import Any, cast
@@ -394,6 +397,276 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         return encoded.decode("ascii").replace("=", "")
 
 
+class DeviceFlowImplementation(AbstractOAuth2Implementation):
+    """Device Flow OAuth2 implementation (RFC 8628).
+
+    The call sequence is:
+    1. Call async_register_device to start the flow. The returned dict is the
+       raw device authorization response (RFC 8628, 3.2).
+       An optional interval (default 5 sec.) controls the polling frequency.
+    2. Display user_code and verification_uri to the user so they can
+       authorize on a device.
+    3. Pass the entire response dict from step 1 directly to
+       async_check_device_activation, which polls the token endpoint using
+       device_code until the user approves, the code expires, or an
+       unrecoverable error occurs
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+    ) -> None:
+        """Initialize device flow implementation."""
+        self.hass = hass
+        self._domain = domain
+        self.client_id = client_id
+        self.authorize_url = authorize_url
+        self.token_url = token_url
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return "Local application credentials"
+
+    @property
+    def domain(self) -> str:
+        """Domain providing the implementation."""
+        return self._domain
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the device authorization request."""
+        return {}
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data for the token resolve request."""
+        return {}
+
+    async def async_generate_authorize_url(self, flow_id: str) -> str:
+        """Generate a url for the user to authorize."""
+        return str(URL(self.authorize_url))
+
+    def _device_authorization_data(self) -> dict[str, str]:
+        """All form params for the device authorization request."""
+        data: dict[str, str] = {"client_id": self.client_id}
+        data.update(
+            {
+                key: str(value)
+                for key, value in self.extra_authorize_data.items()
+                if value is not None
+            }
+        )
+        return data
+
+    async def async_register_device(self) -> dict[str, Any]:
+        """Register the device and return the device code response."""
+        session = async_get_clientsession(self.hass)
+
+        try:
+            _LOGGER.debug(
+                "Sending device authorization request to %s", self.authorize_url
+            )
+            resp = await session.post(
+                self.authorize_url,
+                data=self._device_authorization_data(),
+                headers={"Accept": "application/json"},
+            )
+            if resp.status >= 400:
+                try:
+                    error_response = await resp.json()
+                except ClientError, JSONDecodeError:
+                    error_response = {}
+                error_code = error_response.get("error", "unknown")
+                error_description = error_response.get(
+                    "error_description", "unknown error"
+                )
+                _LOGGER.error(
+                    "Device authorization request for %s failed (%s): %s",
+                    self.domain,
+                    error_code,
+                    error_description,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
+        return cast(dict, await resp.json())
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        request_data: dict = {
+            "grant_type": "authorization_code",
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
+        }
+        request_data.update(self.extra_token_resolve_data)
+        return await self._token_request(request_data)
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
+
+    async def async_check_device_activation(self, device: dict) -> dict[str, str]:
+        """Wait for the user to activate the device."""
+        expires_at = datetime.timestamp(datetime.now()) + device["expires_in"]
+        jitter = randint(1, 3)  # Jitter to avoid being throttled
+        token_request = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "device_code": device["device_code"],
+        }
+        session = async_get_clientsession(self.hass)
+        interval = device.get("interval", 5)
+        while True:
+            if expires_at < datetime.timestamp(datetime.now()):
+                raise DeviceFlowTimeout
+
+            try:
+                async with asyncio.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
+                    resp = await session.post(
+                        self.token_url,
+                        data=token_request,
+                        headers={"Accept": "application/json"},
+                    )
+                    response = await resp.json()
+            except TimeoutError as err:
+                _LOGGER.error("Timeout resolving OAuth token: %s", err)
+                raise DeviceFlowTimeout from err
+            except (ClientResponseError, ClientError) as err:
+                _LOGGER.error("Error resolving OAuth token: %s", err)
+                raise DeviceFlowError from err
+
+            match response.get("error"):
+                case "authorization_pending":
+                    _LOGGER.debug(
+                        "User has not authorized device yet. Continue polling"
+                    )
+                case "slow_down":
+                    # See if the API sends a new interval.
+                    # Else, resort back to RFC's suggestion of increasing interval by 5 seconds
+                    interval = response.get("interval", interval + 5)
+                    _LOGGER.debug(
+                        "API asked to slow down. Increasing polling interval to %s",
+                        interval,
+                    )
+                case "access_denied":
+                    raise DeviceFlowUnauthorized
+                case "expired_token":
+                    raise DeviceFlowTimeout
+                case None:
+                    break
+
+            await asyncio.sleep(interval + jitter)
+        return cast(dict, response)
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request.
+
+        Raises OAuth2TokenRequestError on token request failure.
+        """
+        session = async_get_clientsession(self.hass)
+
+        data["client_id"] = self.client_id
+
+        _LOGGER.debug("Sending token request to %s", self.token_url)
+
+        try:
+            resp = await session.post(self.token_url, data=data)
+            if resp.status >= 400:
+                error_body = ""
+                try:
+                    error_body = await resp.text()
+                    error_data = json.loads(error_body)
+                    error_code = error_data.get("error", "unknown error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
+                except ClientError, ValueError, AttributeError:
+                    detail = error_body[:200] if error_body else "unknown error"
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self._domain,
+                    resp.status,
+                    detail,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
+        return cast(dict, await resp.json())
+
+
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     """Handle a config flow."""
 
@@ -607,6 +880,98 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         async_register_implementation(hass, cls.DOMAIN, local_impl)
 
 
+class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMeta):
+    """Handle a device flow config flow."""
+
+    flow_impl: DeviceFlowImplementation
+
+    def __init__(self) -> None:
+        """Instantiate device flow handler."""
+        super().__init__()
+
+        self.login_task: asyncio.Task | None = None
+        self.device_token: dict[str, str] | None = None
+        self.device_flow_error: BaseException | None = None
+        self.device_registry: dict[str, Any] = {}
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Run the auth step for device flow."""
+        return await self.async_step_device_flow()
+
+    async def async_step_device_flow(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Create an entry for device flow."""
+        if self.login_task is None:
+            try:
+                async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
+                    device_registry = await self.flow_impl.async_register_device()
+            except TimeoutError as err:
+                _LOGGER.error("Timeout registering device: %s", err)
+                return self.async_abort(reason="authorize_url_timeout")
+            except (
+                OAuth2TokenRequestError,
+                ClientError,
+            ) as err:
+                _LOGGER.error("Error registering device: %s", err)
+                if isinstance(err, OAuth2TokenRequestReauthError):
+                    return self.async_abort(reason="oauth_unauthorized")
+                return self.async_abort(reason="oauth_failed")
+
+            self.device_registry = device_registry
+
+            async def _wait_for_login() -> dict[str, str]:
+                """Wait for the user to authorize the device."""
+                return await self.flow_impl.async_check_device_activation(
+                    device_registry
+                )
+
+            _LOGGER.info("Starting login task")
+            self.login_task = self.hass.async_create_task(_wait_for_login())
+
+        if self.login_task.done():
+            if self.login_task.exception():
+                self.device_flow_error = self.login_task.exception()
+                return self.async_show_progress_done(next_step_id="device_flow_error")
+            self.device_token = self.login_task.result()
+            return self.async_show_progress_done(next_step_id="device_flow_complete")
+
+        return self.async_show_progress(
+            step_id="device_flow",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": self.device_registry["verification_uri"],
+                "code": self.device_registry["user_code"],
+            },
+            progress_task=self.login_task,
+        )
+
+    async def async_step_device_flow_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle completion of device flow step."""
+        return await self.async_oauth_create_entry(
+            {"auth_implementation": self.flow_impl.domain, "token": self.device_token}
+        )
+
+    async def async_step_device_flow_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle errors raised during device flow login."""
+        match self.device_flow_error:
+            case DeviceFlowTimeout():
+                reason = "oauth_timeout"
+            case DeviceFlowUnauthorized():
+                reason = "user_rejected_authorize"
+            case DeviceFlowError():
+                reason = "oauth_error"
+            case _:
+                reason = "oauth_error"
+        return self.async_abort(reason=reason)
+
+
 @callback
 def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
@@ -805,3 +1170,15 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return jwt.decode(encoded, secret, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None
+
+
+class DeviceFlowError(HomeAssistantError):
+    """Exception raised for device flow errors."""
+
+
+class DeviceFlowTimeout(DeviceFlowError):
+    """Exception raised when device flow times out."""
+
+
+class DeviceFlowUnauthorized(DeviceFlowError):
+    """Exception raised when user denies authorization in device flow."""
