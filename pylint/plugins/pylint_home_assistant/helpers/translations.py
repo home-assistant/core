@@ -177,23 +177,28 @@ def resolve_translation_reference(message: str, components_dir: Path | None) -> 
     if len(parts) < 3:
         return message
 
-    if parts[0] == "component" and len(parts) >= 4:
-        domain = parts[1]
-        target_dir = components_dir / domain
-        if not target_dir.is_dir():
-            return message
-        data = _load_translations_from_dir(target_dir)
-        if data is None:
-            return message
-        # Walk the remaining path: parts[2:]
-        current: dict | str = data
-        for part in parts[2:]:
-            if not isinstance(current, dict):
-                return message
-            current = current.get(part, message)
-        return str(current) if isinstance(current, str) else message
+    data: dict | None = None
+    walk_parts: list[str] = []
 
-    return message
+    if parts[0] == "component" and len(parts) >= 4:
+        data = _load_translations_from_dir(components_dir / parts[1])
+        walk_parts = parts[2:]
+    elif parts[0] == "common":
+        # common:: references live in homeassistant/strings.json
+        data = _load_translations_from_dir(components_dir.parent)
+        walk_parts = parts  # walk from "common" onwards
+    else:
+        return message
+
+    if data is None:
+        return message
+
+    current: dict | str = data
+    for part in walk_parts:
+        if not isinstance(current, dict):
+            return message
+        current = current.get(part, message)
+    return str(current) if isinstance(current, str) else message
 
 
 def get_message_placeholders(
