@@ -759,7 +759,6 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
-    dr.async_get.cache_clear()
     return registry
 
 
