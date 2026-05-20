@@ -13,10 +13,7 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
-from homeassistant.components.zone import (
-    ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
-    HOME_ZONE,
-)
+from homeassistant.components.zone import ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -24,9 +21,8 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    STATE_HOME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -97,6 +93,15 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
+def _zone_state(hass: HomeAssistant, data: dict[str, Any]) -> State | None:
+    """Return the state of the zone matching the location name in data, if any."""
+    if not (location_name := data.get(ATTR_LOCATION_NAME)):
+        return None
+    # If a location name is set, set the location to the center of the zone
+    # to allow the `in_zones` attribute to be populated by the base class.
+    return hass.states.get(ZONE_ENTITY_ID_FORMAT.format(location_name))
+
+
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
@@ -129,13 +134,17 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
+        if ATTR_GPS not in self._data:
+            return 0
         return self._data.get(ATTR_GPS_ACCURACY, 0)
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
-            return None
+            if not (zone_state := _zone_state(self.hass, self._data)):
+                return None
+            return zone_state.attributes.get(ATTR_LATITUDE)
 
         return gps[0]
 
@@ -143,22 +152,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
-            return None
+            if not (zone_state := _zone_state(self.hass, self._data)):
+                return None
+            return zone_state.attributes.get(ATTR_LONGITUDE)
 
         return gps[1]
-
-    @property
-    def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
-        if location_name := self._data.get(ATTR_LOCATION_NAME):
-            if location_name == HOME_ZONE:
-                return STATE_HOME
-            if zone_state := self.hass.states.get(
-                ZONE_ENTITY_ID_FORMAT.format(location_name)
-            ):
-                return zone_state.name
-            return location_name
-        return None
 
     @property
     def name(self) -> str:

@@ -55,9 +55,9 @@ async def setup_zone(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("extra_webhook_data", "expected_attributes", "expected_state"),
     [
-        # Send coordinates + location_name: Location name has precedence
+        # Send coordinates + location_name: Coordinates have precedence
         (
-            {"gps": [10, 20], "location_name": "home"},
+            {"gps": [10, 20], "gps_accuracy": 30, "location_name": "home"},
             {
                 "latitude": 10,
                 "longitude": 20,
@@ -67,7 +67,7 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "home",
         ),
         (
-            {"gps": [20, 30], "location_name": "office"},
+            {"gps": [20, 30], "gps_accuracy": 30, "location_name": "office"},
             {
                 "latitude": 20,
                 "longitude": 30,
@@ -77,7 +77,7 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "Office",
         ),
         (
-            {"gps": [30, 40], "location_name": "school"},
+            {"gps": [30, 40], "gps_accuracy": 30, "location_name": "school"},
             {
                 "latitude": 30,
                 "longitude": 40,
@@ -86,30 +86,88 @@ async def setup_zone(hass: HomeAssistant) -> None:
             },
             "School",
         ),
-        # Send wrong coordinates + location_name: Location name has precedence
+        # Send wrong coordinates + location_name: Coordinates have precedence
         (
-            {"gps": [10, 10], "location_name": "home"},
+            {"gps": [10, 10], "gps_accuracy": 30, "location_name": "home"},
             {"latitude": 10, "longitude": 10, "gps_accuracy": 30, "in_zones": []},
+            "not_home",
+        ),
+        (
+            {"gps": [10, 10], "gps_accuracy": 30, "location_name": "office"},
+            {"latitude": 10, "longitude": 10, "gps_accuracy": 30, "in_zones": []},
+            "not_home",
+        ),
+        (
+            {"gps": [10, 10], "gps_accuracy": 30, "location_name": "school"},
+            {"latitude": 10, "longitude": 10, "gps_accuracy": 30, "in_zones": []},
+            "not_home",
+        ),
+        # Send location_name only
+        (
+            {"location_name": "home"},
+            {
+                "latitude": 10,
+                "longitude": 20,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.home"],
+            },
             "home",
         ),
         (
-            {"gps": [10, 10], "location_name": "office"},
-            {"latitude": 10, "longitude": 10, "gps_accuracy": 30, "in_zones": []},
+            {"location_name": "office"},
+            {
+                "latitude": 20,
+                "longitude": 30,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.office"],
+            },
             "Office",
         ),
         (
-            {"gps": [10, 10], "location_name": "school"},
-            {"latitude": 10, "longitude": 10, "gps_accuracy": 30, "in_zones": []},
+            {"location_name": "school"},
+            {
+                "latitude": 30,
+                "longitude": 40,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.school"],
+            },
             "School",
         ),
-        # Send location_name only
-        ({"location_name": "home"}, {"in_zones": []}, "home"),
-        ({"location_name": "office"}, {"in_zones": []}, "Office"),
-        ({"location_name": "school"}, {"in_zones": []}, "School"),
-        ({"location_name": "no_such_zone"}, {"in_zones": []}, "no_such_zone"),
+        ({"location_name": "no_such_zone"}, {"in_zones": []}, "unknown"),
+        # Send location_name and accuracy
+        (
+            {"location_name": "home", "gps_accuracy": 30},
+            {
+                "latitude": 10,
+                "longitude": 20,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.home"],
+            },
+            "home",
+        ),
+        (
+            {"location_name": "office", "gps_accuracy": 30},
+            {
+                "latitude": 20,
+                "longitude": 30,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.office"],
+            },
+            "Office",
+        ),
+        (
+            {"location_name": "school", "gps_accuracy": 30},
+            {
+                "latitude": 30,
+                "longitude": 40,
+                "gps_accuracy": 0,
+                "in_zones": ["zone.school"],
+            },
+            "School",
+        ),
         # Send coordinates only - location is determined by coordinates
         (
-            {"gps": [10, 20]},
+            {"gps": [10, 20], "gps_accuracy": 30},
             {
                 "latitude": 10,
                 "longitude": 20,
@@ -119,7 +177,7 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "home",
         ),
         (
-            {"gps": [20, 30]},
+            {"gps": [20, 30], "gps_accuracy": 30},
             {
                 "latitude": 20,
                 "longitude": 30,
@@ -129,7 +187,7 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "Office",
         ),
         (
-            {"gps": [30, 40]},
+            {"gps": [30, 40], "gps_accuracy": 30},
             {
                 "latitude": 30,
                 "longitude": 40,
@@ -154,7 +212,6 @@ async def test_sending_location(
         json={
             "type": "update_location",
             "data": {
-                "gps_accuracy": 30,
                 "battery": 40,
                 "altitude": 50,
                 "course": 60,
