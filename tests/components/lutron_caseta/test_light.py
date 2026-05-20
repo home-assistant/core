@@ -13,10 +13,11 @@ async def test_light_unique_id(
     """Test a light unique id."""
     await async_setup_integration(hass, MockBridge)
 
-    ra3_entity_id = "light.basement_bedroom_main_lights"
-    caseta_entity_id = "light.kitchen_main_lights"
+    ra3_entity_id = "light.basement_bedroom_basement_bedroom_main_lights"
+    caseta_entity_id = "light.kitchen_kitchen_main_lights"
 
-    # Assert that RA3 lights will have the bridge serial hash and the zone id as the uniqueID
+    # Assert that RA3 lights will have the bridge serial hash
+    # and the zone id as the uniqueID
     assert entity_registry.async_get(ra3_entity_id).unique_id == "000004d2_801"
 
     # Assert that Caseta lights will have the serial number as the uniqueID

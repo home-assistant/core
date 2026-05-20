@@ -60,7 +60,8 @@ def async_migrate_yaml_uids(
             break
     else:
         _LOGGER.info(
-            "No YAML entry found to migrate fan entity '%s' unique_id from '%s'. Removing entry",
+            "No YAML entry found to migrate fan entity '%s'"
+            " unique_id from '%s'. Removing entry",
             none_entity_id,
             invalid_uid,
         )
@@ -80,7 +81,8 @@ def async_migrate_yaml_uids(
             new_uid,
         )
     except ValueError:
-        # New unique_id already exists - remove invalid entry. User might have changed YAML
+        # New unique_id already exists - remove invalid
+        # entry. User might have changed YAML
         _LOGGER.info(
             "Failed to migrate fan entity '%s' unique_id from '%s' to '%s'. "
             "Removing the invalid entry",

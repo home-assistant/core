@@ -128,7 +128,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"backoff"}},
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -202,7 +201,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
-    "opensensemap": {"opensensemap-api": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
@@ -306,14 +304,10 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
-    # https://github.com/danifus/pyzipper
-    "knx": {"xknxproject": {"pyzipper"}},
     # https://github.com/hthiery/python-lacrosse
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
     "linode": {"homeassistant": {"linode-api"}},
-    # https://github.com/timmo001/aiolyric
-    "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {
         "homeassistant": {"microbeespy"},
@@ -662,8 +656,10 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     ):
         integration.add_error(
             "requirements",
-            f"Integration {integration.domain} runtime files dependency exceptions "
-            "have been resolved, please remove from `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -769,7 +765,8 @@ def check_dependency_files(
         integration.add_warning_or_error(
             pkg in package_exceptions,
             "requirements",
-            f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
         integration.add_warning_or_error(

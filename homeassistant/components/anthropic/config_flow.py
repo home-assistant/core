@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -44,12 +44,13 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -452,11 +453,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(
                     CONF_WEB_SEARCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): int,
+                ): cv.positive_int,
                 vol.Optional(
                     CONF_WEB_SEARCH_USER_LOCATION,
                     default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                 ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH,
+                    default=DEFAULT[CONF_WEB_FETCH],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH_MAX_USES,
+                    default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
+                ): cv.positive_int,
             }
         )
 
@@ -546,7 +555,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
+                        description=(
+                            "Free text input for the city, e.g. `San Francisco`"
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_WEB_SEARCH_REGION,

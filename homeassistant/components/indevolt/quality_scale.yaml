@@ -40,12 +40,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: Integration does not support network discovery
-  discovery:
-    status: exempt
-    comment: Integration does not support network discovery
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -60,7 +56,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:

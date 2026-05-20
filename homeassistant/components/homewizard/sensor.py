@@ -673,11 +673,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Heat meter",
     ),
-    ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="warm_water_meter",
-        suggested_device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Warm water meter",
+    ExternalDevice.DeviceType.WARM_WATER_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="warm_water_meter",
+            suggested_device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Warm water meter",
+        )
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="water_meter",
@@ -685,11 +687,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Water meter",
     ),
-    ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="inlet_heat_meter",
-        suggested_device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Inlet heat meter",
+    ExternalDevice.DeviceType.INLET_HEAT_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="inlet_heat_meter",
+            suggested_device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Inlet heat meter",
+        )
     ),
 }
 
