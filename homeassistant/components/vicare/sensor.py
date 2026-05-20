@@ -7,6 +7,7 @@ import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFloorHeating import FloorHeating
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -1273,6 +1274,16 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     SUPPLY_TEMPERATURE_SENSOR,
 )
 
+FLOOR_HEATING_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="active_mode",
+        translation_key="active_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cooling", "heating", "standby"],
+        value_getter=lambda api: api.getActiveMode(),
+    ),
+)
+
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="burner_starts",
@@ -1508,6 +1519,18 @@ def _build_entities(
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
         )
+        # add device-class-specific entities
+        if isinstance(device.api, FloorHeating):
+            entities.extend(
+                ViCareSensor(
+                    description,
+                    get_device_serial(device.api),
+                    device.config,
+                    device.api,
+                )
+                for description in FLOOR_HEATING_SENSORS
+                if is_supported(description.key, description.value_getter, device.api)
+            )
         # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
