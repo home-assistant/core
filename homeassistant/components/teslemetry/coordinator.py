@@ -23,6 +23,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
+from homeassistant.util import dt as dt_util
+
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
 
@@ -292,20 +294,29 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
             ) from e
 
-        if not data or not isinstance(data.get("time_series"), list):
+        if (
+            not data
+            or not isinstance(time_series := data.get("time_series"), list)
+            or not time_series
+            or not isinstance(first_period := time_series[0], dict)
+            or not isinstance(timestamp := first_period.get("timestamp"), str)
+            or (period_start := dt_util.parse_datetime(timestamp)) is None
+        ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed_invalid_data",
             )
 
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data.get("time_series", []):
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in time_series:
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
                     if output[key] is None:
                         output[key] = period[key]
                     else:
                         output[key] += period[key]
+
+        output["_period_start"] = period_start
 
         return output

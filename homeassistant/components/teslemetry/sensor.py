@@ -47,6 +47,20 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
+CHARGE_ENERGY_RESET_KEYS = frozenset(
+    {"charge_state_charge_energy_added", "dc_charging_energy_in"}
+)
+CHARGE_ENERGY_RESET_THRESHOLD = 1.0  # kWh
+
+
+def _is_charge_energy_reset(previous_value: float | None, new_value: float) -> bool:
+    """Return if a charge energy value indicates a reset."""
+    return previous_value is not None and (
+        (new_value == 0 and previous_value != 0)
+        or new_value < previous_value - CHARGE_ENERGY_RESET_THRESHOLD
+    )
+
+
 BMS_STATES = {
     "Standby": "standby",
     "Drive": "drive",
@@ -243,7 +257,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_ACChargingEnergyIn(
             callback
         ),
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=1,
@@ -622,7 +636,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         streaming_listener=lambda vehicle, callback: vehicle.listen_DCChargingEnergyIn(
             callback
         ),
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1574,7 +1588,7 @@ ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=(
             key.startswith("total") or key == "grid_energy_imported"
         ),
@@ -1660,6 +1674,7 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
     """Base class for Teslemetry vehicle streaming sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
+    _previous_value: float | None = None
 
     def __init__(
         self,
@@ -1676,6 +1691,15 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
+            if isinstance(sensor_data.native_value, float | int):
+                self._previous_value = float(sensor_data.native_value)
+
+        if (
+            self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
+            and (last_state := await self.async_get_last_state()) is not None
+            and (last_reset := last_state.attributes.get("last_reset")) is not None
+        ):
+            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
         if self.entity_description.streaming_listener is not None:
             self.async_on_remove(
@@ -1686,14 +1710,21 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
 
     def _async_value_from_stream(self, value: StateType) -> None:
         """Update the value of the entity."""
+        if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS and isinstance(
+            value, float | int
+        ):
+            if _is_charge_energy_reset(self._previous_value, float(value)):
+                self._attr_last_reset = dt_util.utcnow()
+            self._previous_value = float(value)
         self._attr_native_value = value
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
+class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, RestoreSensor):
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
+    _previous_value: float | None = None
 
     def __init__(
         self,
@@ -1704,13 +1735,29 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
         self.entity_description = description
         super().__init__(data, description.key)
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (
+            self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
+            and (last_state := await self.async_get_last_state()) is not None
+            and (last_reset := last_state.attributes.get("last_reset")) is not None
+        ):
+            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.entity_description.nullable or self._value is not None:
             self._attr_available = True
-            self._attr_native_value = self.entity_description.polling_value_fn(
-                self._value
-            )
+            new_value = self.entity_description.polling_value_fn(self._value)
+            if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS and isinstance(
+                new_value, float | int
+            ):
+                if _is_charge_energy_reset(self._previous_value, float(new_value)):
+                    self._attr_last_reset = dt_util.utcnow()
+                self._previous_value = float(new_value)
+            self._attr_native_value = new_value
         else:
             self._attr_available = False
             self._attr_native_value = None
@@ -1862,6 +1909,7 @@ class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
+        self._attr_last_reset = self.coordinator.data.get("_period_start")
 
 
 class TeslemetryCreditBalanceSensor(RestoreSensor):
