@@ -35,7 +35,7 @@
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
     "field_xy_color_name": "XY-color",
-    "section_advanced_fields_name": "Advanced options",
+    "section_additional_fields_name": "Additional options",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
@@ -396,8 +396,8 @@
       },
       "name": "Toggle light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     },
@@ -415,8 +415,8 @@
       },
       "name": "Turn off light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     },
@@ -490,8 +490,8 @@
       },
       "name": "Turn on light",
       "sections": {
-        "advanced_fields": {
-          "name": "[%key:component::light::common::section_advanced_fields_name%]"
+        "additional_fields": {
+          "name": "[%key:component::light::common::section_additional_fields_name%]"
         }
       }
     }
