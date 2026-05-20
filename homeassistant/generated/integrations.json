@@ -3408,6 +3408,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "itachip2ir": {
+      "name": "iTach IP2IR",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ituran": {
       "name": "Ituran",
       "integration_type": "hub",

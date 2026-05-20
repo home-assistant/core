@@ -381,6 +381,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "itachip2ir",
+        "macaddress": "000C1E*",
+    },
+    {
         "domain": "knocki",
         "hostname": "knc*",
     },
