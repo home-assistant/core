@@ -1349,6 +1349,9 @@ incomfort-client==0.7.0
 # homeassistant.components.indevolt
 indevolt-api==1.8.0
 
+# homeassistant.components.inet
+inet-control==1.0.0
+
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
 

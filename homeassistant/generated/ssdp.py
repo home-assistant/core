@@ -179,6 +179,12 @@ SSDP = {
             "st": "upnp:rootdevice",
         },
     ],
+    "inet": [
+        {
+            "manufacturer": "Busch-Jaeger",
+            "modelName": "Radio iNet",
+        },
+    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
