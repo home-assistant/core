@@ -9,15 +9,18 @@ from .const import DOMAIN
 
 
 async def safe_library_call(
-    method: Callable[..., Awaitable[Any]],
+    method: Callable[..., Any],
     *args: Any,
     translation_key: str,
     translation_placeholders: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
-    """Call a player method safely and raise HomeAssistantError on failure."""
+    """Call a player method (sync or async) safely and raise HomeAssistantError on failure."""
     try:
-        result = await method(*args, **kwargs)
+        result = method(*args, **kwargs)
+        if isinstance(result, Awaitable):
+            result = await result
+
     except ValueError:
         result = None
 
