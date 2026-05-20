@@ -1,7 +1,8 @@
 """Models for the HomeKit component."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+import asyncio
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -18,3 +19,5 @@ class HomeKitEntryData:
     homekit: HomeKit
     pairing_qr: bytes | None = None
     pairing_qr_secret: str | None = None
+    last_options: dict[str, Any] = field(default_factory=dict)
+    visibility_lock: asyncio.Lock = field(default_factory=asyncio.Lock)

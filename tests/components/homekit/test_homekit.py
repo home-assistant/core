@@ -27,6 +27,7 @@ from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
+    CONF_HOMEKIT_HIDDEN_SOURCES,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
@@ -2514,3 +2515,69 @@ async def test_wait_for_port_to_free(
         await hass.async_block_till_done()
         assert "Waiting for the HomeKit server to shutdown" in caplog.text
         assert port_mock.called
+
+
+async def test_update_listener_skips_reload_for_visibility_only(
+    hass: HomeAssistant,
+) -> None:
+    """A homekit_hidden_sources-only options change must not reload the entry."""
+    entity_id = "media_player.tv"
+    initial_options = {
+        CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 1"]},
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "test", CONF_PORT: 12345},
+        options=initial_options,
+    )
+    entry.add_to_hass(hass)
+    entry.runtime_data = HomeKitEntryData(
+        homekit=Mock(),
+        last_options=dict(initial_options),
+    )
+
+    new_options = {
+        CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 1", "HDMI 2"]},
+    }
+    hass.config_entries.async_update_entry(entry, options=new_options)
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as mock_reload:
+        await homekit_base._async_update_listener(hass, entry)
+
+    mock_reload.assert_not_called()
+    assert entry.runtime_data.last_options == new_options
+
+
+async def test_update_listener_reloads_when_other_options_change(
+    hass: HomeAssistant,
+) -> None:
+    """Changes outside homekit_hidden_sources still trigger an entry reload."""
+    initial_options = {
+        "filter": {"include_domains": ["light"]},
+        CONF_HOMEKIT_HIDDEN_SOURCES: {"media_player.tv": ["HDMI 1"]},
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "test", CONF_PORT: 12345},
+        options=initial_options,
+    )
+    entry.add_to_hass(hass)
+    entry.runtime_data = HomeKitEntryData(
+        homekit=Mock(),
+        last_options=dict(initial_options),
+    )
+
+    new_options = {
+        "filter": {"include_domains": ["light", "switch"]},
+        CONF_HOMEKIT_HIDDEN_SOURCES: {"media_player.tv": ["HDMI 1"]},
+    }
+    hass.config_entries.async_update_entry(entry, options=new_options)
+
+    with patch.object(
+        hass.config_entries, "async_reload", new_callable=AsyncMock
+    ) as mock_reload:
+        await homekit_base._async_update_listener(hass, entry)
+
+    mock_reload.assert_called_once_with(entry.entry_id)

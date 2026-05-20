@@ -1,6 +1,7 @@
 """Class to hold remote accessories."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -13,6 +14,7 @@ from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -21,6 +23,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import State, callback
+from homeassistant.helpers.debounce import Debouncer
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -35,6 +38,8 @@ from .const import (
     CHAR_NAME,
     CHAR_REMOTE_KEY,
     CHAR_SLEEP_DISCOVER_MODE,
+    CHAR_TARGET_VISIBILITY_STATE,
+    CONF_HOMEKIT_HIDDEN_SOURCES,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
     KEY_ARROW_DOWN,
     KEY_ARROW_LEFT,
@@ -52,7 +57,10 @@ from .const import (
     SERV_INPUT_SOURCE,
     SERV_TELEVISION,
 )
+from .models import HomeKitEntryData
 from .util import cleanup_name_for_homekit
+
+VISIBILITY_PERSIST_COOLDOWN = 1.0
 
 MAXIMUM_SOURCES = (
     90  # Maximum services per accessory is 100. The base acccessory uses 9
@@ -133,9 +141,20 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         self.char_input_source = serv_tv.configure_char(
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
         )
+        self._hidden_sources: set[str] = set(self._async_load_hidden_sources())
+        self._input_current_visibility_chars: dict[str, Any] = {}
+        self._visibility_debouncer = Debouncer(
+            self.hass,
+            _LOGGER,
+            cooldown=VISIBILITY_PERSIST_COOLDOWN,
+            immediate=False,
+            function=self._async_persist_hidden_sources,
+        )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
+                SERV_INPUT_SOURCE,
+                [CHAR_IDENTIFIER, CHAR_NAME, CHAR_TARGET_VISIBILITY_STATE],
+                unique_id=source,
             )
             serv_tv.add_linked_service(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
@@ -144,8 +163,107 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
             input_type = 3 if "hdmi" in source.lower() else 0
             serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
-            serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
+            initial_hidden = 1 if source in self._hidden_sources else 0
+            char_current_visibility = serv_input.configure_char(
+                CHAR_CURRENT_VISIBILITY_STATE, value=initial_hidden
+            )
+            self._input_current_visibility_chars[source] = char_current_visibility
+            serv_input.configure_char(
+                CHAR_TARGET_VISIBILITY_STATE,
+                value=initial_hidden,
+                setter_callback=self._make_visibility_setter(source),
+            )
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    def _async_load_hidden_sources(self) -> list[str]:
+        """Return the persisted hidden source list for this entity, if any."""
+        entry_id = self.driver.entry_id
+        if not entry_id:
+            return []
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return []
+        hidden_map = entry.options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {})
+        return list(hidden_map.get(self.entity_id, []))
+
+    def _make_visibility_setter(self, source: str) -> Callable[[int], None]:
+        """Build a setter bound to a single input source."""
+
+        def _setter(value: int) -> None:
+            self._async_set_input_visibility(source, value)
+
+        return _setter
+
+    @callback
+    def _async_set_input_visibility(self, source: str, value: int) -> None:
+        """Apply a visibility change requested from HomeKit and queue a persist."""
+        is_hidden = bool(value)
+        if is_hidden:
+            self._hidden_sources.add(source)
+        else:
+            self._hidden_sources.discard(source)
+        if (char := self._input_current_visibility_chars.get(source)) is not None:
+            char.set_value(int(is_hidden))
+        self._visibility_debouncer.async_schedule_call()
+
+    async def _async_persist_hidden_sources(self) -> None:
+        """Write the current hidden-source set back to the config entry options."""
+        entry_id = self.driver.entry_id
+        if not entry_id:
+            return
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return
+        # Serialise the read-modify-write so sibling accessories on the same
+        # bridge can't drop each other's updates. The lock lives on the entry's
+        # runtime data and is reclaimed with the entry on unload; if runtime
+        # data isn't present (unit tests that build accessories directly) we
+        # fall through without locking — there's no real concurrency in those.
+        entry_data = getattr(entry, "runtime_data", None)
+        lock = (
+            entry_data.visibility_lock
+            if isinstance(entry_data, HomeKitEntryData)
+            else None
+        )
+        if lock is not None:
+            async with lock:
+                self._async_write_hidden_sources(entry)
+        else:
+            _LOGGER.warning(
+                "%s: persisting visibility without a lock — runtime_data is not "
+                "HomeKitEntryData; concurrent sibling accessories may race",
+                self.entity_id,
+            )
+            self._async_write_hidden_sources(entry)
+
+    @callback
+    def _async_write_hidden_sources(self, entry: ConfigEntry) -> None:
+        """Compute and apply the new options for this entity's hide list."""
+        new_options = dict(entry.options)
+        hidden_map = dict(new_options.get(CONF_HOMEKIT_HIDDEN_SOURCES, {}))
+        sorted_sources = sorted(self._hidden_sources)
+        if sorted_sources:
+            hidden_map[self.entity_id] = sorted_sources
+        else:
+            hidden_map.pop(self.entity_id, None)
+        if hidden_map:
+            new_options[CONF_HOMEKIT_HIDDEN_SOURCES] = hidden_map
+        else:
+            new_options.pop(CONF_HOMEKIT_HIDDEN_SOURCES, None)
+        if new_options == dict(entry.options):
+            return
+        self.hass.config_entries.async_update_entry(entry, options=new_options)
+
+    @callback
+    def async_stop(self) -> None:
+        """Flush any pending visibility persist before tearing down."""
+        if (debouncer := getattr(self, "_visibility_debouncer", None)) is not None:
+            debouncer.async_cancel()
+            self.hass.async_create_background_task(
+                self._async_persist_hidden_sources(),
+                name=f"homekit_flush_visibility_{self.entity_id}",
+            )
+        super().async_stop()
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
         """Return a dict of sources mapped to their homekit safe name."""
