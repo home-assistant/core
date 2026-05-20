@@ -62,21 +62,19 @@ async def async_remove_config_entry_device(
     router = config_entry.runtime_data
     router_mac = dr.format_mac(router.mac)
 
-    # Never allow removal of the Freebox router itself. Persisted identifiers
-    # may pre-date MAC normalisation, so compare the format_mac()-normalised
-    # value of every (DOMAIN, …) identifier rather than the raw one.
+    # Persisted identifiers and connections may pre-date MAC normalisation, so
+    # always compare the format_mac()-normalised value rather than the raw one.
     for domain, identifier in device_entry.identifiers:
         if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
             return False
-    if (dr.CONNECTION_NETWORK_MAC, router_mac) in device_entry.connections:
-        return False
 
-    # Block removal of device-tracker entries whose MAC is still on the LAN.
     for connection_type, connection_value in device_entry.connections:
-        if (
-            connection_type == dr.CONNECTION_NETWORK_MAC
-            and connection_value in router.devices
-        ):
+        if connection_type != dr.CONNECTION_NETWORK_MAC:
+            continue
+        connection_mac = dr.format_mac(connection_value)
+        # Never allow removal of the Freebox router itself, nor of a tracked
+        # LAN device whose MAC is still reported by the Freebox.
+        if connection_mac == router_mac or connection_mac in router.devices:
             return False
 
     return True
