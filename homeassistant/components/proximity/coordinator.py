@@ -519,8 +519,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         * A deep copy of entities_data is built from scratch each run; there is
           no partial mutation of self.data before a potential exception, so
           self.data stays fully consistent after each successful update.
-        * self._movement is the sole persistent store between runs and is only
-          updated when the full calculation completes successfully.
+        * self._movement is the sole persistent store between runs. Its
+          EntityMovementState members may be updated incrementally during the
+          calculation; self.data is rebuilt from scratch and published
+          after a successful update.
         """
         zone_state = self.hass.states.get(self.proximity_zone_id)
         if zone_state is None:
