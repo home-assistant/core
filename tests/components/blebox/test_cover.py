@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
+from blebox_uniapi.cover import UnifiedCoverType
 import pytest
 
 from homeassistant.components.cover import (
@@ -52,6 +53,7 @@ def shutterbox_fixture():
         has_tilt=True,
         is_slider=True,
         is_position_inverted=True,
+        cover_type=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
@@ -73,6 +75,7 @@ def gatebox_fixture():
         has_stop=False,
         is_slider=False,
         is_position_inverted=False,
+        cover_type=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
@@ -94,6 +97,7 @@ def gate_fixture():
         has_stop=True,
         is_slider=True,
         is_position_inverted=True,
+        cover_type=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
@@ -194,6 +198,51 @@ async def test_init_gatebox(
     assert device.manufacturer == "BleBox"
     assert device.model == "gateBox"
     assert device.sw_version == "1.23"
+
+
+@pytest.mark.parametrize(
+    ("cover_type", "expected_device_class"),
+    [
+        pytest.param(UnifiedCoverType.AWNING, CoverDeviceClass.AWNING, id="awning"),
+        pytest.param(UnifiedCoverType.BLIND, CoverDeviceClass.BLIND, id="blind"),
+        pytest.param(UnifiedCoverType.CURTAIN, CoverDeviceClass.CURTAIN, id="curtain"),
+        pytest.param(UnifiedCoverType.DAMPER, CoverDeviceClass.DAMPER, id="damper"),
+        pytest.param(UnifiedCoverType.DOOR, CoverDeviceClass.DOOR, id="door"),
+        pytest.param(UnifiedCoverType.GARAGE, CoverDeviceClass.GARAGE, id="garage"),
+        pytest.param(UnifiedCoverType.GATE, CoverDeviceClass.GATE, id="gate"),
+        pytest.param(UnifiedCoverType.SHADE, CoverDeviceClass.SHADE, id="shade"),
+        pytest.param(UnifiedCoverType.SHUTTER, CoverDeviceClass.SHUTTER, id="shutter"),
+        pytest.param(UnifiedCoverType.WINDOW, CoverDeviceClass.WINDOW, id="window"),
+    ],
+)
+async def test_device_class_from_unified_cover_type(
+    hass: HomeAssistant,
+    cover_type: UnifiedCoverType,
+    expected_device_class: CoverDeviceClass,
+) -> None:
+    """Test that device class is resolved from unified cover type when available."""
+    feature = mock_feature(
+        "covers",
+        blebox_uniapi.cover.Cover,
+        unique_id="BleBox-shutterBox-2bee34e750b8-position",
+        full_name="shutterBox-position",
+        device_class="shutter",
+        current=None,
+        tilt_current=None,
+        state=None,
+        has_stop=True,
+        has_tilt=False,
+        is_slider=True,
+        is_position_inverted=True,
+        cover_type=cover_type,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My shutter")
+    type(product).model = PropertyMock(return_value="shutterBox")
+
+    entity_id = "cover.my_shutter_shutterbox_position"
+    entry = await async_setup_entity(hass, entity_id)
+    assert entry.original_device_class == expected_device_class
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
