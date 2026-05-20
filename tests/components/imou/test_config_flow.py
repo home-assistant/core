@@ -1,6 +1,6 @@
 """Tests for the Imou config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from pyimouapi.exceptions import (
     ConnectFailedException,
@@ -20,7 +20,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .util import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
+from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 async def test_user_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +54,7 @@ async def test_user_flow_success(
 async def test_user_flow_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate entry is aborted."""
@@ -86,12 +86,12 @@ async def test_user_flow_duplicate_entry(
 async def test_user_flow_exception_then_recover(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
     """Errors map to stable keys; clearing the failure allows completing the flow."""
-    mock_api_client.async_get_token.side_effect = side_effect
+    mock_imou_openapi_client.async_get_token.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -108,12 +108,12 @@ async def test_user_flow_exception_then_recover(
     assert "errors" in result
     assert result["errors"]["base"] == expected_error
 
-    # Patch away the failure, then complete the same flow again (must end in CREATE_ENTRY).
-    with patch.object(mock_api_client.async_get_token, "side_effect", None):
-        recover = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=USER_INPUT,
-        )
+    mock_imou_openapi_client.async_get_token.reset_mock(side_effect=True)
+
+    recover = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
 
     assert recover["type"] is FlowResultType.CREATE_ENTRY
     assert recover["title"] == DOMAIN
@@ -126,7 +126,7 @@ async def test_user_flow_exception_then_recover(
 async def test_user_flow_success_per_region(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_api_client: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
     region: str,
 ) -> None:
     """Each supported API region can complete the config flow."""

@@ -45,18 +45,13 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await api_client.async_get_token()
+            except InvalidAppIdOrSecretException:
+                errors["base"] = "invalid_auth"
+            except ConnectFailedException, RequestFailedException:
+                errors["base"] = "cannot_connect"
             except ImouException as exception:
-                if isinstance(exception, InvalidAppIdOrSecretException):
-                    errors["base"] = "invalid_auth"
-                elif isinstance(
-                    exception, ConnectFailedException | RequestFailedException
-                ):
-                    errors["base"] = "cannot_connect"
-                else:
-                    _LOGGER.debug(
-                        "Imou error during config flow: %s", exception.message
-                    )
-                    errors["base"] = "unknown"
+                _LOGGER.debug("Imou error during config flow: %s", exception.message)
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=DOMAIN,

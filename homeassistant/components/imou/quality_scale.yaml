@@ -28,11 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
-    comment: >-
-      Button presses raise HomeAssistantError when the vendor API fails, surfacing
-      failures to the user action path.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -52,9 +48,9 @@ rules:
   discovery:
     status: exempt
     comment: >-
-      Devices are reached via Imou Open Platform cloud APIs (App ID / secret). Local
-      discovery (mDNS hostname, MAC, LAN presence) is not documented by the vendor
-      for this integration path; if that becomes available, discovery can be revisited.
+      Devices are reached via Imou Open Platform cloud APIs (App ID / secret). No
+      supported local discovery flow today; example cues if investigated later:
+      hostname `IPC-ABCD.imou.local`, MAC `aa:bb:cc:dd:ee:ff`.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -71,9 +67,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices:
-    status: todo
-    comment: Stale device removal was deferred to a later PR.
+  stale-devices: todo
 
   # Platinum
   async-dependency: todo

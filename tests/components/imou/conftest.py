@@ -1,46 +1,23 @@
 """Test configuration and fixtures for Imou integration."""
 
-from collections.abc import AsyncGenerator, Generator, Iterator
-from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import AsyncMock, patch
 
+from pyimouapi.ha_device import ImouHaDevice
 import pytest
 
-from homeassistant.components.imou.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .util import (
-    CONFIG_ENTRY_DATA,
-    create_mock_device_manager,
-    new_imou_openapi_client_mock,
-)
+from .const import CONFIG_ENTRY_DATA, DEFAULT_MOCK_DEVICES
 
 from tests.common import MockConfigEntry
 
+PATCH_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
 PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT = (
     "homeassistant.components.imou.config_flow.ImouOpenApiClient"
 )
-PATCH_PACKAGE_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
-PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER = (
-    "homeassistant.components.imou.ImouHaDeviceManager"
-)
-
-
-@contextmanager
-def imou_package_setup_patches(mock_device_manager: MagicMock) -> Iterator[None]:
-    """Patch OpenAPI client and HA device manager where async_setup_entry resolves them."""
-    with (
-        patch(
-            PATCH_PACKAGE_IMOU_OPENAPI_CLIENT,
-            return_value=new_imou_openapi_client_mock(),
-        ),
-        patch(
-            PATCH_PACKAGE_IMOU_HA_DEVICE_MANAGER,
-            return_value=mock_device_manager,
-        ),
-    ):
-        yield
+PATCH_IMOU_HA_DEVICE_MANAGER = "homeassistant.components.imou.ImouHaDeviceManager"
 
 
 @pytest.fixture
@@ -50,20 +27,45 @@ def mock_config_entry() -> MockConfigEntry:
         title="Imou",
         domain=DOMAIN,
         data=CONFIG_ENTRY_DATA,
-        unique_id=CONFIG_ENTRY_DATA["app_id"],
+        unique_id=CONFIG_ENTRY_DATA[CONF_APP_ID],
         entry_id="test_entry_id",
     )
 
 
 @pytest.fixture
-def mock_api_client() -> Generator[MagicMock]:
-    """Create a mock API client used by the config flow."""
+def mock_imou_openapi_client() -> Generator[AsyncMock]:
+    """Mock ImouOpenApiClient for config flow and setup entry (Mealie-style)."""
+    with (
+        patch(
+            PATCH_IMOU_OPENAPI_CLIENT,
+            autospec=True,
+        ) as mock_client,
+        patch(
+            PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
+            new=mock_client,
+        ),
+    ):
+        yield mock_client.return_value
+
+
+@pytest.fixture
+def imou_mock_devices(request: pytest.FixtureRequest) -> list[ImouHaDevice]:
+    """Devices returned by ImouHaDeviceManager.async_get_devices (override via indirect)."""
+    return getattr(request, "param", DEFAULT_MOCK_DEVICES)
+
+
+@pytest.fixture
+def mock_imou_ha_device_manager(
+    imou_mock_devices: list[ImouHaDevice],
+) -> Generator[AsyncMock]:
+    """Mock ImouHaDeviceManager with a default device list."""
     with patch(
-        PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT,
-    ) as mock_client:
-        mock_instance = new_imou_openapi_client_mock()
-        mock_client.return_value = mock_instance
-        yield mock_instance
+        PATCH_IMOU_HA_DEVICE_MANAGER,
+        autospec=True,
+    ) as mock_manager:
+        device_manager = mock_manager.return_value
+        device_manager.async_get_devices.return_value = imou_mock_devices
+        yield device_manager
 
 
 @pytest.fixture
@@ -77,27 +79,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def imou_mock_devices(request: pytest.FixtureRequest) -> list:
-    """Devices returned by ImouHaDeviceManager.async_get_devices (override via indirect)."""
-    return getattr(request, "param", [])
-
-
-@pytest.fixture
-async def imou_integration(
+async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    imou_mock_devices: list,
-) -> AsyncGenerator[MagicMock]:
-    """Set up Imou with mocked pyimouapi clients; yields the device manager mock."""
-    mock_dm = create_mock_device_manager()
-    mock_dm.async_get_devices = AsyncMock(return_value=imou_mock_devices)
-    with imou_package_setup_patches(mock_dm):
-        mock_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        try:
-            yield mock_dm
-        finally:
-            if mock_config_entry.state is ConfigEntryState.LOADED:
-                await hass.config_entries.async_unload(mock_config_entry.entry_id)
-                await hass.async_block_till_done()
+    mock_imou_openapi_client: AsyncMock,
+    mock_imou_ha_device_manager: AsyncMock,
+) -> AsyncGenerator[AsyncMock]:
+    """Set up Imou with mocked library clients; yields the HA device manager mock."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_imou_ha_device_manager
