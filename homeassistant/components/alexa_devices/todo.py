@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import EntityDescription
 from .const import DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
+from .utils import alexa_api_call
 
 if TYPE_CHECKING:
     from aioamazondevices.structures import ListInfo, ListItem
@@ -98,14 +99,12 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         Returns:
             List of TodoItems in the list.
         """
-        todo_items: list[ListItem] = self._coordinator.api.todo_list_items.get(
-            self._list.id, []
-        )
+        todo_items: list[ListItem] = self._coordinator.todo_items.get(self._list.id, [])
 
         return [
             TodoItem(
                 uid=item.id,
-                summary=(item.name[0].upper() + item.name[1:]) if item.name else "",
+                summary=item.name,
                 status=TodoItemStatus.COMPLETED
                 if is_item_complete(item)
                 else TodoItemStatus.NEEDS_ACTION,
@@ -113,6 +112,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             for item in todo_items
         ]
 
+    @alexa_api_call
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list.
 
@@ -141,10 +141,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             self._list.name,
         )
 
-        # Update the list (important to get new version number)
-        await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
-        self.async_write_ha_state()
-
+    @alexa_api_call
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the to-do list.
 
@@ -154,9 +151,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         """
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
 
-        list_items_lookup = self._coordinator.api.todo_list_items_lookup.get(
-            self._list.id
-        )
+        list_items_lookup = self._coordinator.todo_items_lookup.get(self._list.id)
 
         if list_items_lookup is None:
             raise ServiceValidationError(
@@ -192,9 +187,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 uid,
                 existing_item.version,
             )
-        await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
-        self.async_write_ha_state()
 
+    @alexa_api_call
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list.
 
@@ -211,41 +205,52 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="exceptions.todo_item_summary_uid_required",
             )
 
-        existing_item = self._coordinator.api.todo_list_items_lookup[self._list.id][
-            item.uid
-        ]
+        list_items_lookup = self._coordinator.todo_items_lookup.get(self._list.id)
 
-        updated = False
+        if list_items_lookup is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="exceptions.todo_items_lookup_not_found",
+                translation_placeholders={"list_name": self._list.name},
+            )
+
+        existing_item = list_items_lookup.get(item.uid)
+
+        if existing_item is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="exceptions.todo_item_not_found",
+                translation_placeholders={
+                    "uid": item.uid,
+                    "list_name": self._list.name,
+                },
+            )
 
         if is_item_complete(existing_item) != (item.status == TodoItemStatus.COMPLETED):
             # Update the checked status
             _LOGGER.debug(
                 "Updating item %s with checked status %s", item.uid, item.status
             )
+
             await self._coordinator.api.set_todo_list_item_checked_status(
                 self._list.id,
                 item.uid,
                 item.status == TodoItemStatus.COMPLETED,
                 existing_item.version,
             )
-            updated = True
+
             _LOGGER.debug(
                 "Successfully updated item %s with checked status %s",
                 item.uid,
                 item.status,
             )
+
         if existing_item.name != item.summary:
             # Name has changed, update it
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
             await self._coordinator.api.rename_todo_list_item(
                 self._list.id, item.uid, item.summary, existing_item.version
             )
-            updated = True
             _LOGGER.debug(
                 "Successfully updated item %s with new name %s", item.uid, item.summary
             )
-
-        if updated:
-            # Update the list (important to get new version number)
-            await self._coordinator.api.update_todo_list_items(list_id=self._list.id)
-            self.async_write_ha_state()
