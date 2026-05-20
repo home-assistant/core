@@ -120,7 +120,7 @@ async def test_new_config_entry(
     assert len(hass.states.async_entity_ids("weather")) == 1
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 28
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 41
 
 
 async def test_legacy_config_entry(
@@ -138,7 +138,7 @@ async def test_legacy_config_entry(
     assert len(hass.states.async_entity_ids("weather")) == 3
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 30
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 43
 
 
 async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -> None:
@@ -158,6 +158,7 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
             "windGust",
             "cloudCover",
             "precipitationType",
+            "altimeterSetting",
             "pollutantCO",
             "mepIndex",
             "mepHealthConcern",
@@ -171,6 +172,7 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
             "epaPrimaryPollutant",
             "temperatureApparent",
             "fireIndex",
+            "freezingRainIntensity",
             "pollutantNO2",
             "pollutantO3",
             "particulateMatter10",
@@ -178,8 +180,13 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
             "grassIndex",
             "treeIndex",
             "weedIndex",
+            "precipitationIntensity",
+            "precipitationProbability",
             "precipitationType",
             "pressureSurfaceLevel",
+            "rainIntensity",
+            "sleetIntensity",
+            "snowIntensity",
             "solarGHI",
             "pollutantSO2",
             "uvIndex",
