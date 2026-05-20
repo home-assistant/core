@@ -72,7 +72,7 @@ _UNSUPPORTED_BOARD_INFOS = [
         "exception",
         "expected_state",
         "expected_translation_key",
-        "expected_translation_placeholders",
+        "has_error_translation_placeholder",
     ),
     [
         (
@@ -80,28 +80,28 @@ _UNSUPPORTED_BOARD_INFOS = [
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
             None,
-            None,
+            False,
         ),
         (
             "async_get_board_info",
             DucoError("Unexpected API error"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            {"error": "DucoError('Unexpected API error')"},
+            True,
         ),
         (
             "async_get_board_info",
             DucoResponseError(500, "/info"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            {"error": "DucoResponseError('Unexpected response 500 for /info')"},
+            True,
         ),
         (
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
             None,
-            None,
+            False,
         ),
     ],
 )
@@ -113,7 +113,7 @@ async def test_setup_entry_error(
     exception: Exception,
     expected_state: ConfigEntryState,
     expected_translation_key: str | None,
-    expected_translation_placeholders: dict[str, str] | None,
+    has_error_translation_placeholder: bool,
 ) -> None:
     """Test that fetch errors during setup result in the correct state."""
     getattr(mock_duco_client, method).side_effect = exception
@@ -123,10 +123,12 @@ async def test_setup_entry_error(
 
     assert mock_config_entry.state is expected_state
     assert mock_config_entry.error_reason_translation_key == expected_translation_key
-    assert (
-        mock_config_entry.error_reason_translation_placeholders
-        == expected_translation_placeholders
-    )
+    if has_error_translation_placeholder:
+        assert mock_config_entry.error_reason_translation_placeholders == {
+            "error": repr(exception)
+        }
+    else:
+        assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 @pytest.mark.usefixtures("mock_duco_client")
@@ -153,6 +155,8 @@ async def test_setup_entry_unsupported_board_info(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unsupported_board"
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 async def test_setup_entry_unsupported_board_without_info_endpoint(
@@ -168,6 +172,8 @@ async def test_setup_entry_unsupported_board_without_info_endpoint(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unsupported_board"
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 async def test_unload_entry(
