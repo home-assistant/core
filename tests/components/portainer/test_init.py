@@ -21,6 +21,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -178,6 +180,46 @@ async def test_migration_v3_to_v5(
         (DOMAIN, f"{entry.entry_id}_1_adguard"),
     }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_unload_entry."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    mock_portainer_watcher.stop.assert_called_once()
+
+
+async def test_watcher_start_stop(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that watcher starts and stops on HA events."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    mock_portainer_watcher.start.assert_called_once()
+
+    mock_portainer_watcher.stop.reset_mock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_portainer_watcher.stop.assert_called_once()
 
 
 async def test_migration_v4_to_v5(
