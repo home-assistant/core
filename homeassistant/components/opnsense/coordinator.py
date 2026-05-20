@@ -48,6 +48,12 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         self.client = client
         self.interfaces = interfaces
         self.tracked_devices: dict[str, OPNsenseDeviceTrackerEntity] = {}
+        self._attr_router_unique_id = config_entry.unique_id
+
+    @property
+    def router_unique_id(self) -> str | None:
+        """Return the unique ID of the router."""
+        return self._attr_router_unique_id
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""

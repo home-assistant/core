@@ -61,6 +61,7 @@ class OPNsenseDeviceTrackerEntity(
         """Initialize the device tracker entity."""
         super().__init__(coordinator)
         self._attr_mac_address = mac_address
+        self._attr_unique_id = f"{self.coordinator.router_unique_id} {mac_address}"
 
     @property
     def device_data(self) -> DeviceDetails | None:
