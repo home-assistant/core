@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_all_entities[select.fake_email_gmail_com_default_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Echo Test',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.fake_email_gmail_com_default_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Default device',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Default device',
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'default_device',
+    'unique_id': 'amzn1_account_fake_user_id-default_device',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.fake_email_gmail_com_default_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'fake_email@gmail.com Default device',
+      'options': list([
+        'Echo Test',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.fake_email_gmail_com_default_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Echo Test',
+  })
+# ---
