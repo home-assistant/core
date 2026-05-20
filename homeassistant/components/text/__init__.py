@@ -11,7 +11,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MAX_LENGTH_STATE_STATE
+from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -23,7 +23,6 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_PATTERN,
     ATTR_VALUE,
     DOMAIN,
