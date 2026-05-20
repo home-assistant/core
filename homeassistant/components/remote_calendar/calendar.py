@@ -7,7 +7,7 @@ from ical.event import Event
 from ical.timeline import Timeline, materialize_timeline
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -58,6 +58,7 @@ class RemoteCalendarEntity(
         self._attr_name = entry.data[CONF_CALENDAR_NAME]
         self._attr_unique_id = entry.entry_id
         self._timeline: Timeline | None = None
+        self._manual_update_in_progress = False
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -85,14 +86,8 @@ class RemoteCalendarEntity(
 
         return await self.hass.async_add_executor_job(events_in_range)
 
-    async def async_update(self) -> None:
-        """Refresh the timeline.
-
-        This is called when the coordinator updates. Creating the timeline may
-        require walking through the entire calendar and handling recurring
-        events, so it is done as a separate task without blocking the event loop.
-        """
-        await super().async_update()
+    async def _async_update_timeline(self) -> None:
+        """Refresh the materialized timeline."""
 
         def _get_timeline() -> Timeline | None:
             """Return a materialized timeline with upcoming events."""
@@ -106,6 +101,39 @@ class RemoteCalendarEntity(
             )
 
         self._timeline = await self.hass.async_add_executor_job(_get_timeline)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            self.async_write_ha_state()
+            return
+
+        if self._manual_update_in_progress:
+            return
+
+        self.coordinator.config_entry.async_create_task(
+            self.hass,
+            self._async_handle_coordinator_update(),
+            name="remote calendar timeline update",
+        )
+
+    async def _async_handle_coordinator_update(self) -> None:
+        """Refresh the timeline and write state."""
+        await self._async_update_timeline()
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Refresh the coordinator and materialized timeline."""
+        self._manual_update_in_progress = True
+        try:
+            await super().async_update()
+        finally:
+            self._manual_update_in_progress = False
+        if self.coordinator.last_update_success:
+            await self._async_update_timeline()
+            if self.entity_id is not None:
+                self.async_write_ha_state()
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

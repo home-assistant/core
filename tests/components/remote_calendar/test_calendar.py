@@ -296,6 +296,58 @@ async def test_upcoming_event(
     }
 
 
+@pytest.mark.freeze_time("2026-05-18 06:00:00+00:00")
+@respx.mock
+async def test_coordinator_refresh_updates_upcoming_event_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a coordinator refresh updates the materialized upcoming event."""
+    original_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260518T064000
+        DTEND:20260518T065500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    updated_calendar = textwrap.dedent(
+        """\
+        BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:Wake up
+        DTSTART:20260518T080000
+        DTEND:20260518T081500
+        END:VEVENT
+        END:VCALENDAR
+        """
+    )
+    respx.get(CALENDER_URL).mock(
+        side_effect=[
+            Response(status_code=200, text=original_calendar),
+            Response(status_code=200, text=original_calendar),
+            Response(status_code=200, text=updated_calendar),
+        ]
+    )
+    await setup_integration(hass, config_entry)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["start_time"] == "2026-05-18 06:40:00"
+
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["start_time"] == "2026-05-18 08:00:00"
+
+
 @respx.mock
 async def test_recurring_event(
     get_events: GetEventsFn,
