@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -73,7 +74,7 @@ async def test_media_player(
     assert entry
     assert entry.device_id
     assert entry.entity_category is None
-    assert entry.unique_id == "SERVER-UUID-SESSION-UUID"
+    assert entry.unique_id == "SERVER-UUID-USER-UUID-DEVICE-UUID"
 
     assert len(mock_api.sessions.mock_calls) == 1
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
@@ -91,7 +92,7 @@ async def test_media_player(
     assert device.connections == set()
     assert device.entry_type is None
     assert device.hw_version is None
-    assert device.identifiers == {(DOMAIN, "DEVICE-UUID")}
+    assert device.identifiers == {(DOMAIN, "SERVER-UUID-USER-UUID-DEVICE-UUID")}
     assert device.manufacturer == "Jellyfin"
     assert device.name == "JELLYFIN-DEVICE"
     assert device.sw_version == "1.0.0"
@@ -135,9 +136,9 @@ async def test_media_player_music(
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
-    assert entry.device_id is None
+    assert entry.device_id is not None
     assert entry.entity_category is None
-    assert entry.unique_id == "SERVER-UUID-SESSION-UUID-FOUR"
+    assert entry.unique_id == "SERVER-UUID-USER-UUID-DEVICE-UUID-FOUR"
 
 
 async def test_services(
@@ -641,3 +642,58 @@ async def test_mute_requires_both_commands(
     # But should still have other features
     assert features_six & MediaPlayerEntityFeature.PLAY
     assert features_six & MediaPlayerEntityFeature.VOLUME_SET
+
+
+async def test_ephemeral_device_unavailable_when_session_ends(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test that ephemeral device entities become unavailable when their session ends.
+
+    Ephemeral devices (SupportsPersistentIdentifier=False) are not persisted,
+    but their entities remain in the registry and show unavailable when offline
+    rather than being removed.
+    """
+    # DEVICE-UUID-SIX is ephemeral — verify it has an entity initially
+    assert hass.states.get("media_player.jellyfin_device_six") is not None
+
+    # DEVICE-UUID is persistent — verify it exists too
+    assert hass.states.get("media_player.jellyfin_device") is not None
+
+    # Switch to sessions-new-client.json which drops DEVICE-UUID-SIX
+    mock_api.sessions.return_value = await async_load_json_fixture(
+        hass, "sessions-new-client.json"
+    )
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    # Ephemeral device SIX should be unavailable but still in the registry
+    state = hass.states.get("media_player.jellyfin_device_six")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Persistent device should still exist and remain active (still in sessions-new-client)
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_persistent_device_remains_offline(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test that persistent devices stay in HA showing OFF when their session ends."""
+    assert hass.states.get("media_player.jellyfin_device") is not None
+
+    mock_api.sessions.return_value = []
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
