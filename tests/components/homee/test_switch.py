@@ -191,7 +191,7 @@ async def test_homeegram_button_press(
         blocking=True,
     )
 
-    mock_homee.play_homeegram.assert_called_once_with(3)
+    mock_homee.play_homeegram.assert_awaited_once_with(3)
 
 
 async def test_homeegram_turn_off_not_supported(

@@ -214,5 +214,5 @@ class HomeegramSwitch(SwitchEntity):
         """Return if the homeegram should be enabled by default."""
         # Only enable homeegram switches by default if there is more than 1 homeegram action.
         return (
-            sum(len(action_type) for action_type in homeegram.actions.data.values()) > 1
+            sum(len(action_list) for action_list in homeegram.actions.data.values()) > 1
         )
