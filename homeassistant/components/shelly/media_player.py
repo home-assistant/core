@@ -2,6 +2,7 @@
 
 import base64
 import binascii
+import contextlib
 from dataclasses import dataclass
 import datetime
 import hashlib
@@ -110,6 +111,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     _last_media_position: int | None = None
     _last_media_position_updated_at: datetime.datetime | None = None
+
+    _cached_thumb: str | None = None
+    _cached_thumb_result: tuple[bytes, str] | None = None
 
     def __init__(
         self,
@@ -444,19 +448,22 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     def _decode_image_data(self, thumb: str) -> tuple[bytes, str] | None:
         """Return image_bytes and mime_type for a valid image data or None."""
-        if not thumb.startswith("data"):
-            return None
+        if thumb == self._cached_thumb:
+            return self._cached_thumb_result
 
-        try:
-            prefix, image_data = thumb.split(",", 1)
-            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except IndexError, ValueError:
-            return None
+        result: tuple[bytes, str] | None = None
+        if thumb.startswith("data"):
+            try:
+                prefix, image_data = thumb.split(",", 1)
+                mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+            except IndexError, ValueError:
+                pass
+            else:
+                if mime in ALLOWED_IMAGE_MIME_TYPES:
+                    with contextlib.suppress(binascii.Error):
+                        result = base64.b64decode(image_data, validate=True), mime
 
-        if mime not in ALLOWED_IMAGE_MIME_TYPES:
-            return None
+        self._cached_thumb = thumb
+        self._cached_thumb_result = result
 
-        try:
-            return base64.b64decode(image_data, validate=True), mime
-        except binascii.Error:
-            return None
+        return result
