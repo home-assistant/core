@@ -52,7 +52,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
             url = URL(user_input[CONF_URL])
             if url.explicit_port is None:
                 url = url.with_port(url.port)
-            user_input[CONF_URL] = url.human_repr()
+            user_input[CONF_URL] = str(url)
 
             try:
                 if result := await validate_input(self.hass, user_input):

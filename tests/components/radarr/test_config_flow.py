@@ -173,6 +173,7 @@ async def test_url_rewrite(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_URL] == expected_url
 
 
