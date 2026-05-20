@@ -87,6 +87,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
                 translation_key="auth_failed",
             ) from ex
         except SolarLogUpdateError as ex:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -154,6 +155,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                 translation_key="auth_failed",
             ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -283,6 +285,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 translation_key="auth_failed",
             ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

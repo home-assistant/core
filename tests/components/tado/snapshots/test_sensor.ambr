@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor.air_conditioning_ac-entry]
+# name: test_entities[sensor.air_conditioning_air_conditioning_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_ac',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_ac-state]
+# name: test_entities[sensor.air_conditioning_air_conditioning_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning AC',
       'time': '2020-03-05T04:01:07.162Z',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_ac',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ON',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_humidity-entry]
+# name: test_entities[sensor.air_conditioning_air_conditioning_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -66,7 +66,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_humidity',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -89,7 +89,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_humidity-state]
+# name: test_entities[sensor.air_conditioning_air_conditioning_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -99,14 +99,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_humidity',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60.9',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_tado_mode-entry]
+# name: test_entities[sensor.air_conditioning_air_conditioning_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -120,7 +120,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_tado_mode',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,20 +143,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_tado_mode-state]
+# name: test_entities[sensor.air_conditioning_air_conditioning_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_tado_mode',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HOME',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_temperature-entry]
+# name: test_entities[sensor.air_conditioning_air_conditioning_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -172,7 +172,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_temperature',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -198,7 +198,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_temperature-state]
+# name: test_entities[sensor.air_conditioning_air_conditioning_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -209,14 +209,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_temperature',
+    'entity_id': 'sensor.air_conditioning_air_conditioning_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.76',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_ac-entry]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -230,7 +230,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_ac',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -253,21 +253,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_ac-state]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning with fanlevel AC',
       'time': '2022-07-13T18: 06: 58.183Z',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_ac',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ON',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_humidity-entry]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -283,7 +283,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_humidity',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -306,7 +306,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_humidity-state]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -316,14 +316,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_humidity',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70.9',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_tado_mode-entry]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -337,7 +337,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_tado_mode',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -360,20 +360,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_tado_mode-state]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning with fanlevel Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_tado_mode',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HOME',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_temperature-entry]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -389,7 +389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_temperature',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -415,7 +415,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_fanlevel_temperature-state]
+# name: test_entities[sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -426,14 +426,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_fanlevel_temperature',
+    'entity_id': 'sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.3',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_ac-entry]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_ac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -447,7 +447,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_swing_ac',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_ac',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -470,21 +470,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_ac-state]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning with swing AC',
       'time': '2020-03-27T23:02:22.260Z',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_swing_ac',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_ac',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ON',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_humidity-entry]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -500,7 +500,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_swing_humidity',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -523,7 +523,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_humidity-state]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -533,14 +533,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_swing_humidity',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42.3',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_tado_mode-entry]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -554,7 +554,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_swing_tado_mode',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -577,20 +577,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_tado_mode-state]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Air Conditioning with swing Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_swing_tado_mode',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HOME',
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_temperature-entry]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -606,7 +606,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.air_conditioning_with_swing_temperature',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -632,7 +632,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.air_conditioning_with_swing_temperature-state]
+# name: test_entities[sensor.air_conditioning_with_swing_air_conditioning_with_swing_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -643,14 +643,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_conditioning_with_swing_temperature',
+    'entity_id': 'sensor.air_conditioning_with_swing_air_conditioning_with_swing_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.88',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_heating-entry]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -666,7 +666,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.baseboard_heater_heating',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -689,7 +689,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_heating-state]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baseboard Heater Heating',
@@ -698,14 +698,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.baseboard_heater_heating',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_humidity-entry]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -721,7 +721,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.baseboard_heater_humidity',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -744,7 +744,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_humidity-state]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -754,14 +754,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.baseboard_heater_humidity',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.2',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_tado_mode-entry]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -775,7 +775,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.baseboard_heater_tado_mode',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -798,20 +798,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_tado_mode-state]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baseboard Heater Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.baseboard_heater_tado_mode',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HOME',
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_temperature-entry]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -827,7 +827,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.baseboard_heater_temperature',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -853,7 +853,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.baseboard_heater_temperature-state]
+# name: test_entities[sensor.baseboard_heater_baseboard_heater_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -864,7 +864,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.baseboard_heater_temperature',
+    'entity_id': 'sensor.baseboard_heater_baseboard_heater_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1186,7 +1186,7 @@
     'state': 'fog',
   })
 # ---
-# name: test_entities[sensor.second_water_heater_tado_mode-entry]
+# name: test_entities[sensor.second_water_heater_second_water_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1200,7 +1200,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.second_water_heater_tado_mode',
+    'entity_id': 'sensor.second_water_heater_second_water_heater_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1223,20 +1223,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.second_water_heater_tado_mode-state]
+# name: test_entities[sensor.second_water_heater_second_water_heater_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Second Water Heater Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.second_water_heater_tado_mode',
+    'entity_id': 'sensor.second_water_heater_second_water_heater_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'HOME',
   })
 # ---
-# name: test_entities[sensor.water_heater_tado_mode-entry]
+# name: test_entities[sensor.water_heater_water_heater_tado_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1250,7 +1250,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.water_heater_tado_mode',
+    'entity_id': 'sensor.water_heater_water_heater_tado_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1273,13 +1273,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.water_heater_tado_mode-state]
+# name: test_entities[sensor.water_heater_water_heater_tado_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Water Heater Tado mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.water_heater_tado_mode',
+    'entity_id': 'sensor.water_heater_water_heater_tado_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

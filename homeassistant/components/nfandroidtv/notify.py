@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ATTR_ICON, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -25,7 +25,6 @@ from .const import (
     ATTR_COLOR,
     ATTR_DURATION,
     ATTR_FONTSIZE,
-    ATTR_ICON,
     ATTR_ICON_AUTH,
     ATTR_ICON_AUTH_DIGEST,
     ATTR_ICON_PASSWORD,
@@ -83,8 +82,11 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             try:
                 self.notify = Notifications(self.host)
             except ConnectError as err:
+                _LOGGER.debug("Full exception:", exc_info=True)
                 raise HomeAssistantError(
-                    f"Failed to connect to host: {self.host}"
+                    translation_domain=DOMAIN,
+                    translation_key="connection_failed",
+                    translation_placeholders={CONF_HOST: self.host},
                 ) from err
 
         data: dict | None = kwargs.get(ATTR_DATA)
@@ -158,8 +160,8 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=imagedata.get(ATTR_IMAGE_AUTH),
                     )
                 else:
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
-                        "Invalid image provided",
                         translation_domain=DOMAIN,
                         translation_key="invalid_notification_image",
                         translation_placeholders={"type": type(imagedata).__name__},
@@ -180,8 +182,8 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=icondata.get(ATTR_ICON_AUTH),
                     )
                 else:
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
-                        "Invalid Icon provided",
                         translation_domain=DOMAIN,
                         translation_key="invalid_notification_icon",
                         translation_placeholders={"type": type(icondata).__name__},
@@ -201,7 +203,12 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 image_file=image_file,
             )
         except ConnectError as err:
-            raise HomeAssistantError(f"Failed to connect to host: {self.host}") from err
+            _LOGGER.debug("Full exception:", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={CONF_HOST: self.host},
+            ) from err
 
     def load_file(
         self,

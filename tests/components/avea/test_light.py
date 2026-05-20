@@ -108,6 +108,57 @@ async def test_turn_on_and_off(
     bulb.set_brightness.assert_called_with(0)
 
 
+async def test_turn_on_restores_last_brightness(
+    hass: HomeAssistant,
+    setup_integration: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test turning the light on restores the last brightness."""
+    bulb = setup_integration
+
+    bulb.get_brightness.side_effect = [3212, None, None, None]
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.attributes[ATTR_BRIGHTNESS] == 200
+
+    bulb.set_brightness.reset_mock()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: "light.bedroom", ATTR_BRIGHTNESS: 10},
+        blocking=True,
+    )
+    bulb.set_brightness.assert_called_with(161)
+
+    bulb.set_brightness.reset_mock()
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {ATTR_ENTITY_ID: "light.bedroom"},
+        blocking=True,
+    )
+    bulb.set_brightness.assert_called_with(0)
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_BRIGHTNESS] is None
+
+    bulb.set_brightness.reset_mock()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: "light.bedroom"},
+        blocking=True,
+    )
+    bulb.set_brightness.assert_called_with(161)
+
+
 async def test_update_state(
     hass: HomeAssistant, setup_integration: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
