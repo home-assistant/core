@@ -401,6 +401,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Fetch data."""
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error_sleeping_device",
@@ -670,6 +671,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error_sleeping_device",

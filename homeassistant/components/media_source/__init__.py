@@ -21,7 +21,13 @@ from .const import (
 )
 from .error import MediaSourceError, Unresolvable
 from .helper import async_browse_media, async_resolve_media
-from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
+from .models import (
+    BrowseMediaSource,
+    MediaSource,
+    MediaSourceItem,
+    PlayMedia,
+    RootBrowseMediaSource,
+)
 
 __all__ = [
     "DOMAIN",
@@ -32,6 +38,7 @@ __all__ = [
     "MediaSourceError",
     "MediaSourceItem",
     "PlayMedia",
+    "RootBrowseMediaSource",
     "Unresolvable",
     "async_browse_media",
     "async_resolve_media",
@@ -57,7 +64,7 @@ def is_media_source_id(media_content_id: str) -> bool:
 
 def generate_media_source_id(domain: str, identifier: str) -> str:
     """Generate a media source ID."""
-    uri = f"{URI_SCHEME}{domain or ''}"
+    uri = f"{URI_SCHEME}{domain}"
     if identifier:
         uri += f"/{identifier}"
     return uri

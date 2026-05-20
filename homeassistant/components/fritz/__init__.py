@@ -70,6 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
         and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
     ):
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Missing UPnP configuration")
 
     await avm_wrapper.async_config_entry_first_refresh()
