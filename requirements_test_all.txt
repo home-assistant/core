@@ -2850,7 +2850,7 @@ weheat==2026.4.8
 whirlpool-sixth-sense==1.0.3
 
 # homeassistant.components.whois
-whois==0.9.27
+whoisdomain==1.20260326.1
 
 # homeassistant.components.wiffi
 wiffi==1.1.2

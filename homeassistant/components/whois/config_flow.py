@@ -3,8 +3,8 @@
 from typing import Any
 
 import voluptuous as vol
-import whois
-from whois.exceptions import (
+import whoisdomain
+from whoisdomain.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,
@@ -39,7 +39,7 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await self.hass.async_add_executor_job(whois.query, domain)
+                await self.hass.async_add_executor_job(whoisdomain.query, domain)
             except UnknownTld:
                 errors["base"] = "unknown_tld"
             except WhoisCommandFailed:
