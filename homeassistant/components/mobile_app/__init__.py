@@ -128,41 +128,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ):
         app_config = {DATA_DELETED_IDS: [], DATA_LIVE_ACTIVITY_TOKENS: {}}
 
-    now = dt_util.utcnow().timestamp()
-    cutoff = now - LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-    live_activity_tokens: dict[str, Any] = {}
-    next_expiry: float | None = None
-    found_expired = False
-
-    for wh_id, tags in app_config[DATA_LIVE_ACTIVITY_TOKENS].items():
-        valid = {}
-        for tag, entry in tags.items():
-            stored_at = entry.get("stored_at", 0)
-            if stored_at > cutoff:
-                valid[tag] = entry
-                expires_at = stored_at + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-                if next_expiry is None or expires_at < next_expiry:
-                    next_expiry = expires_at
-            else:
-                found_expired = True
-        if valid:
-            live_activity_tokens[wh_id] = valid
-
     hass.data[DOMAIN] = {
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config[DATA_DELETED_IDS],
         DATA_DEVICES: {},
-        DATA_LIVE_ACTIVITY_TOKENS: live_activity_tokens,
+        DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
-    if found_expired:
-        await store.async_save(savable_state(hass))
-
-    if next_expiry is not None:
-        _schedule_token_cleanup(hass, next_expiry)
+    hass.async_create_task(_async_cleanup_live_activity_tokens(hass))
 
     hass.http.register_view(RegistrationsView())
 
