@@ -223,7 +223,6 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "ppm",
               "write": false
             }
           }
@@ -265,7 +264,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "kWh",
+              "unit": "Wh",
               "write": false
             }
           }
