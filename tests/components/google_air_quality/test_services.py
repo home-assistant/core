@@ -61,7 +61,7 @@ async def test_get_forecast_service_unknown_subentry(
     setup_integration: None,
 ) -> None:
     """Test fetching a forecast for an unknown subentry."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_FORECAST,
@@ -72,3 +72,5 @@ async def test_get_forecast_service_unknown_subentry(
             blocking=True,
             return_response=True,
         )
+
+    assert exc_info.value.translation_key == "device_not_found"
