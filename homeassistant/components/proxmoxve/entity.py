@@ -5,6 +5,7 @@ from typing import Any
 from yarl import URL
 
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -137,8 +138,6 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox VM entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._vm_data = vm_data
-        self._node_name = node_data.node["node"]
         self.device_id = vm_data["vmid"]
         self.device_name = vm_data["name"]
 
@@ -163,13 +162,17 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.vmid_node_map.get(self.device_id)
+        if node is None:
+            raise HomeAssistantError(f"VM {self.device_id} not found on any node")
+        return node
+
+    @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].vms
-        )
+        return super().available and self.device_id in self.coordinator.vmid_node_map
 
     @property
     def vm_data(self) -> dict[str, Any]:
@@ -190,8 +193,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Initialize the Proxmox Container entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._container_data = container_data
-        self._node_name = node_data.node["node"]
         self.device_id = container_data["vmid"]
         self.device_name = container_data["name"]
 
@@ -219,13 +220,19 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Resolve current node from coordinator's centralized map."""
+        node = self.coordinator.ctid_node_map.get(self.device_id)
+        if node is None:
+            raise HomeAssistantError(
+                f"Container {self.device_id} not found on any node"
+            )
+        return node
+
+    @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].containers
-        )
+        return super().available and self.device_id in self.coordinator.ctid_node_map
 
     @property
     def container_data(self) -> dict[str, Any]:
