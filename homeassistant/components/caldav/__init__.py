@@ -17,6 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
+from .const import TIMEOUT
+
 type CalDavConfigEntry = ConfigEntry[caldav.DAVClient]
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
-        timeout=30,
+        timeout=TIMEOUT,
     )
     try:
         await hass.async_add_executor_job(client.principal)
