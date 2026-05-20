@@ -1,9 +1,10 @@
 """Support for Vivotek IP Cameras."""
 
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
-from libpyvivotek.vivotek import VivotekCamera
+from libpyvivotek.vivotek import VivotekCamera, VivotekCameraError
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -26,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -128,6 +130,34 @@ async def async_setup_entry(
         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
     )
     cam_client = entry.runtime_data
+    serial_number: str | None = None
+    sw_version: str | None = None
+    model: str | None = None
+    try:
+        serial_number = await hass.async_add_executor_job(cam_client.get_serial)
+    except VivotekCameraError:
+        _LOGGER.debug("Failed to fetch serial number for %s", entry.title)
+    if not isinstance(serial_number, str):
+        serial_number = None
+
+    try:
+        sw_version = await hass.async_add_executor_job(
+            partial(cam_client.get_param, "system_info_firmwareversion")
+        )
+    except VivotekCameraError:
+        _LOGGER.debug("Failed to fetch firmware version for %s", entry.title)
+    if not isinstance(sw_version, str):
+        sw_version = None
+
+    try:
+        model = await hass.async_add_executor_job(
+            partial(cam_client.get_param, "system_info_modelname")
+        )
+    except VivotekCameraError:
+        _LOGGER.debug("Failed to fetch model for %s", entry.title)
+    if not isinstance(model, str):
+        model = None
+
     if TYPE_CHECKING:
         assert entry.unique_id is not None
     async_add_entities(
@@ -136,6 +166,9 @@ async def async_setup_entry(
                 cam_client,
                 stream_source,
                 entry.unique_id,
+                serial_number,
+                sw_version,
+                model,
                 entry.options[CONF_FRAMERATE],
                 entry.title,
             )
@@ -154,6 +187,9 @@ class VivotekCam(Camera):
         cam_client: VivotekCamera,
         stream_source: str,
         unique_id: str,
+        serial_number: str | None,
+        sw_version: str | None,
+        model: str | None,
         framerate: int,
         name: str,
     ) -> None:
@@ -163,7 +199,17 @@ class VivotekCam(Camera):
         self._attr_frame_interval = 1 / framerate
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._attr_available = True
         self._stream_source = stream_source
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, unique_id)},
+            manufacturer=DEFAULT_CAMERA_BRAND,
+            model=model,
+            name=name,
+            serial_number=serial_number,
+            sw_version=sw_version,
+        )
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -187,5 +233,4 @@ class VivotekCam(Camera):
 
     def update(self) -> None:
         """Update entity status."""
-        self._attr_model = self._cam.model_name
-        self._attr_available = self._attr_model is not None
+        self._attr_available = True
