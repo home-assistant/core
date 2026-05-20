@@ -8,8 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzconnection.lib.fritzwlan import FritzGuestWLAN
-from io import BytesIO
 import pytest
 
 from homeassistant.components.fritz.coordinator import FritzConnectionCached

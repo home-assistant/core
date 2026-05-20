@@ -1,5 +1,6 @@
 """Tests for FRITZ!Box Tools WireGuard VPN switches."""
 
+# pylint: disable=unused-argument,redefined-outer-name
 from unittest.mock import AsyncMock, patch
 
 import pytest

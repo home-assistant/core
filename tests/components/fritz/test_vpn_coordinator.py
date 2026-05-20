@@ -1,5 +1,6 @@
 """Tests for FRITZ!Box Tools WireGuard VPN coordinator."""
 
+# pylint: disable=unused-argument,redefined-outer-name
 from unittest.mock import AsyncMock, patch
 
 from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
@@ -34,7 +35,7 @@ async def vpn_coordinator(
         return FritzVpnCoordinator(hass, dict(MOCK_USER_DATA), entry_id="test-entry")
 
 
-async def test_vpn_coordinator_starts_with_fritz_entry(
+async def test_vpn_coordinator_starts_with_fritz_entry(  # pylint: disable=unused-argument
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
