@@ -61,7 +61,8 @@ class LightwaveTrv(ClimateEntity):
         self._lwlink = lwlink
         self._serial = serial
         self._attr_unique_id = f"{serial}-trv"
-        # inhibit is used to prevent race condition on update.  If non zero, skip next update cycle.
+        # inhibit is used to prevent race condition on update.
+        # If non zero, skip next update cycle.
         self._inhibit = 0
 
     def update(self) -> None:

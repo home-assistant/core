@@ -5,6 +5,9 @@
   "config_flow": true,
   "dhcp": [
     {
+      "registered_devices": true
+    },
+    {
       "hostname": "hub*",
       "macaddress": "7C8306*"
     }
@@ -12,5 +15,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nobo_hub",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["pynobo==1.8.1"]
+  "quality_scale": "bronze",
+  "requirements": ["pynobo==1.9.0"]
 }

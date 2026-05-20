@@ -9,7 +9,12 @@ from aiontfy import Account, AccountTokenResponse, Event, Notification, Version
 from aiontfy.update import LatestRelease
 import pytest
 
-from homeassistant.components.ntfy.const import CONF_TOPIC, DEFAULT_URL, DOMAIN
+from homeassistant.components.ntfy.const import (
+    CONF_TOPIC,
+    DEFAULT_URL,
+    DOMAIN,
+    SUBENTRY_TYPE_TOPIC,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 
@@ -140,7 +145,7 @@ def mock_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 data={CONF_TOPIC: "mytopic"},
                 subentry_id="ABCDEF",
-                subentry_type="topic",
+                subentry_type=SUBENTRY_TYPE_TOPIC,
                 title="mytopic",
                 unique_id="mytopic",
             )

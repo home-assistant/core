@@ -85,8 +85,10 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _notify_wanted(self):
         """Return if the notify feature should be active.
 
-        We only run it when TV is considered fully on. When powerstate is in standby, the TV
-        will go in low power states and seemingly break the http server in odd ways.
+        We only run it when TV is considered fully on.
+        When powerstate is in standby, the TV will go in low
+        power states and seemingly break the http server in
+        odd ways.
         """
         return (
             self.api.on

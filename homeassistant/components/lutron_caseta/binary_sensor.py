@@ -80,7 +80,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(
@@ -125,7 +125,7 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the unique ID of the battery sensor."""
         return f"{super().unique_id}_battery"
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Skip bridge subscriptions; the battery sensor is polled."""
 
