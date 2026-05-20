@@ -37,6 +37,14 @@
     }
   },
   "entity": {
+    "select": {
+      "room_priority": {
+        "name": "Room priority",
+        "state": {
+          "follow_me": "Follow me"
+        }
+      }
+    },
     "sensor": {
       "indoor_humidity": {
         "name": "Indoor humidity"
