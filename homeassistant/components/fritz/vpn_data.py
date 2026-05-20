@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .vpn_coordinator import FritzVpnCoordinator, vpn_auth_failed
+from .coordinator import FritzVpnCoordinator, vpn_auth_failed
 
 _LOGGER = logging.getLogger(__name__)
 
