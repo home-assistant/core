@@ -17,6 +17,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -148,10 +153,10 @@ async def test_set_value(
             "znrb_gpzittzfnzhduquz",
             "number.inverter_pool_heat_pump_temperature",
             "temp_set",
-            "",
+            "invalid_uom",
             (
-                "Device class temperature ignored for incompatible unit  in "
-                "number entity tuya.zuqudhznfzttizpgbrnztemp_set"
+                "Device class temperature ignored for incompatible unit invalid_uom "
+                "in number entity tuya.zuqudhznfzttizpgbrnztemp_set"
             ),
         ),
     ],
@@ -177,3 +182,69 @@ async def test_invalid_uom(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert expected_msg in caplog.text
+
+
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+@pytest.mark.parametrize(
+    ("temp_unit_convert", "ha_unit_system", "expected_value"),
+    [
+        pytest.param(
+            "c",
+            METRIC_SYSTEM,
+            "28.0",
+            id="device_c_ha_c",
+        ),
+        pytest.param(
+            "c",
+            US_CUSTOMARY_SYSTEM,
+            "82.4",
+            id="device_c_ha_f",
+        ),
+        pytest.param(
+            "f",
+            METRIC_SYSTEM,
+            "-2.2",
+            id="device_f_ha_c",
+        ),
+        pytest.param(
+            "f",
+            US_CUSTOMARY_SYSTEM,
+            "28.0",
+            id="device_f_ha_f",
+        ),
+    ],
+)
+async def test_temp_unit_convert_number(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    temp_unit_convert: str,
+    ha_unit_system: UnitSystem,
+    expected_value: str,
+) -> None:
+    """Test temperature number entities respect TEMP_UNIT_CONVERT and HA unit system."""
+    hass.config.units = ha_unit_system
+    mock_device.status["temp_unit_convert"] = temp_unit_convert
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("number.inverter_pool_heat_pump_temperature")
+    assert state is not None
+    assert state.state == expected_value
+
+
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+async def test_temp_unit_convert_number_invalid(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test that device class is removed when TEMP_UNIT_CONVERT is an invalid value."""
+    mock_device.status["temp_unit_convert"] = "k"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("number.inverter_pool_heat_pump_temperature")
+    assert state is not None
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") == ""
