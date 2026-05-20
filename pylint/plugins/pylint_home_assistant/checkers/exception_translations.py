@@ -99,11 +99,10 @@ class ExceptionTranslationsChecker(BaseChecker):
     priority = -1
     msgs = {
         "W7417": (
-            "%s should use translation_domain and translation_key "
-            "instead of a hardcoded message string",
+            "%s should use translation_domain and translation_key",
             "home-assistant-exception-not-translated",
-            "Used when a HomeAssistantError subclass is raised with a "
-            "hardcoded string instead of using the translation system.",
+            "Used when a HomeAssistantError subclass is raised without "
+            "using the translation system.",
         ),
         "E7406": (
             "Translation key '%s' not found in exceptions section of "
