@@ -216,6 +216,7 @@ FLOWS = {
         "essent",
         "eufylife_ble",
         "eurotronic_cometblue",
+        "eveonline",
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
