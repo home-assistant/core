@@ -69,12 +69,14 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             SmaConnectionException,
         ) as err:
             await self.async_close_sma_session()
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except SmaAuthenticationException as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
@@ -89,12 +91,14 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             SmaReadException,
             SmaConnectionException,
         ) as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except SmaAuthenticationException as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",

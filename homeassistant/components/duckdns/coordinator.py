@@ -60,6 +60,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.config_entry.data[CONF_ACCESS_TOKEN],
             ):
                 self.failed += 1
+                # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
@@ -70,6 +71,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                 )
         except ClientError as e:
             self.failed += 1
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",

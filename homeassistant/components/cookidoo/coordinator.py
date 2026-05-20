@@ -69,6 +69,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_key="setup_request_exception",
             ) from e
         except CookidooAuthException as e:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
@@ -89,6 +90,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             try:
                 await self.cookidoo.refresh_token()
             except CookidooAuthException as exc:
+                # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_authentication_exception",

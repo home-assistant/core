@@ -197,12 +197,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                     self.client.get_emergency_status(),
                 )
         except ApiAuthError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except ApiConnectionError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except TimeoutError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed("Timeout communicating with UniFi Access API") from err
 
         previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}

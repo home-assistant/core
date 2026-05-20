@@ -70,6 +70,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     station_id,
                     err,
                 )
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ConfigEntryAuthFailed(err) from err
             except TankerkoenigConnectionError as err:
                 _LOGGER.debug(
@@ -77,6 +78,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     station_id,
                     err,
                 )
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ConfigEntryNotReady(err) from err
             except TankerkoenigError as err:
                 _LOGGER.error("Error when adding station %s %s", station_id, err)

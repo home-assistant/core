@@ -207,6 +207,7 @@ async def async_service_setting(call: ServiceCall) -> None:
     try:
         await client.set_setting(ha_id, setting_key=key, value=value)
     except HomeConnectError as err:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_setting",
@@ -319,6 +320,7 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             options=list(options_dict.values()) if options_dict else None,
         )
     except HomeConnectError as err:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="start_program",

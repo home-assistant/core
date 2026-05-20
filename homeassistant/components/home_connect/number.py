@@ -180,6 +180,7 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 value=value,
             )
         except HomeConnectError as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_setting_entity",

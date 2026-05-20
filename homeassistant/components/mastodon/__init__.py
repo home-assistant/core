@@ -53,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             translation_key="auth_failed",
         ) from error
     except MastodonError as ex:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady("Failed to connect") from ex
 
     assert entry.unique_id

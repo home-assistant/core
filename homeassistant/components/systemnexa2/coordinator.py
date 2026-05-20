@@ -104,6 +104,7 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 " on and reachable on port 3000",
                 self.config_entry.data[CONF_HOST],
             )
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_initiate_connection",

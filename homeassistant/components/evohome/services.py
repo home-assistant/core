@@ -116,6 +116,7 @@ def _resolve_ctl_unique_id(
     entry = er.async_get(hass).async_get(entity_id)
 
     if entry is None:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entity_not_found",
@@ -161,6 +162,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     # via this service call
 
     if (mode_info := tcs_modes.get(mode)) is None:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
@@ -171,6 +173,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
     if not mode_info[SZ_CAN_BE_TEMPORARY]:
         if ATTR_DURATION in data or ATTR_PERIOD in data:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mode_cant_be_temporary",
@@ -181,6 +184,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     timing_mode = mode_info.get(SZ_TIMING_MODE)  # will not be None, as can_be_temporary
 
     if timing_mode == SZ_DURATION and ATTR_PERIOD in data:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_period",
@@ -188,6 +192,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
         )
 
     if timing_mode == SZ_PERIOD and ATTR_DURATION in data:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_cant_have_duration",

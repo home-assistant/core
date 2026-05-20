@@ -52,6 +52,7 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             return await self.api.update()
         except InvalidOAuthConfigurationException as err:
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise ConfigEntryError(
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err

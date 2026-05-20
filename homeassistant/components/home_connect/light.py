@@ -150,6 +150,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=True,
             )
         except HomeConnectError as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_light",
@@ -169,6 +170,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
+                    # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="select_light_custom_color",
@@ -187,6 +189,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
+                    # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="set_light_color",
@@ -219,6 +222,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
+                    # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="set_light_color",
@@ -242,6 +246,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     value=brightness,
                 )
             except HomeConnectError as err:
+                # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_light_brightness",
@@ -260,6 +265,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=False,
             )
         except HomeConnectError as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_light",

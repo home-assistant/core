@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RehlkoConfigEntry) -> bo
         )
         homes = await rehlko.get_homes()
     except AuthenticationError as ex:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",

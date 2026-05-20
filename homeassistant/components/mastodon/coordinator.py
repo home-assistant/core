@@ -62,6 +62,7 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
                 translation_key="auth_failed",
             ) from error
         except MastodonError as ex:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(ex) from ex
 
         return account

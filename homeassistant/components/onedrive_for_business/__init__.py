@@ -120,6 +120,7 @@ async def _handle_item_operation[T](func: Callable[[], Awaitable[T]], folder: st
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
     except (OneDriveException, TimeoutError) as err:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",

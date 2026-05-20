@@ -55,6 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             or not (entity := er.async_get(hass).async_get(call.data[ATTR_ENTITY_ID]))
             or not entity.config_entry_id
         ):
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
