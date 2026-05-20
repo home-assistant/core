@@ -165,6 +165,7 @@ class MieleFan(MieleEntity, FanEntity):
         try:
             await self.api.send_action(self._device_id, {POWER_ON: True})
         except ClientResponseError as ex:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -182,6 +183,7 @@ class MieleFan(MieleEntity, FanEntity):
         try:
             await self.api.send_action(self._device_id, {POWER_OFF: True})
         except ClientResponseError as ex:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
