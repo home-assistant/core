@@ -49,7 +49,6 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="connection_exception",
             ) from e
         except (LoginError, KeycloakError) as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
@@ -69,7 +68,6 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="connection_exception",
             ) from e
         except (LoginError, KeycloakError) as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",

@@ -66,7 +66,6 @@ async def update_domain_service(call: ServiceCall) -> None:
             entry.data[CONF_ACCESS_TOKEN],
             txt=call.data.get(ATTR_TXT),
         ):
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -75,7 +74,6 @@ async def update_domain_service(call: ServiceCall) -> None:
                 },
             )
     except ClientError as e:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="connection_error",

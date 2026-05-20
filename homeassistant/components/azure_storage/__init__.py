@@ -59,21 +59,18 @@ async def async_setup_entry(
         if not await container_client.exists():
             await container_client.create_container()
     except ResourceNotFoundError as err:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="account_not_found",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except ClientAuthenticationError as err:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except AzureError as err:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

@@ -99,7 +99,6 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
         return cast(str, domain_data["setpoint"])
     if domain_name == "scene":
         return f"{domain_data['register']}{domain_data['scene']}"
-    # pylint: disable-next=home-assistant-exception-placeholder-mismatch
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="invalid_domain",

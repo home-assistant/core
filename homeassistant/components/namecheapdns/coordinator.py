@@ -49,21 +49,18 @@ class NamecheapDnsUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             if not await update_namecheapdns(self.session, host, domain, password):
-                # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
                 )
         except AuthFailed as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
                 translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
             ) from e
         except ClientError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",

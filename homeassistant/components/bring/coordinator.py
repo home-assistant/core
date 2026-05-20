@@ -97,7 +97,6 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
                 translation_key="setup_parse_exception",
             ) from e
         except BringAuthException as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
@@ -154,7 +153,6 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
                 translation_key="setup_parse_exception",
             ) from e
         except BringAuthException as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
@@ -217,7 +215,6 @@ class BringActivityCoordinator(BringBaseCoordinator[dict[str, BringActivityData]
                 activity = await self.coordinator.bring.get_activity(lst.listUuid)
                 users = await self.coordinator.bring.get_list_users(lst.listUuid)
             except BringAuthException as e:
-                # pylint: disable-next=home-assistant-exception-placeholder-mismatch
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_authentication_exception",

@@ -739,7 +739,6 @@ def _build_targets(
         # get config entry from notify entity
         entity_entry = entity_registry.async_get(notify_entity_id)
         if not entity_entry:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_notify_entity",
