@@ -263,15 +263,17 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
             )
         ],
         vol.Optional("usb"): [
-            vol.Schema(
-                {
-                    vol.Optional("vid"): vol.All(str, verify_uppercase),
-                    vol.Optional("pid"): vol.All(str, verify_uppercase),
-                    vol.Optional("serial_number"): vol.All(str, verify_lowercase),
-                    vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
-                    vol.Optional("description"): vol.All(str, verify_lowercase),
-                    vol.Optional("known_devices"): [str],
-                }
+            vol.All(
+                vol.Schema(
+                    {
+                        vol.Required("vid"): vol.All(str, verify_uppercase),
+                        vol.Required("pid"): vol.All(str, verify_uppercase),
+                        vol.Required("manufacturer"): vol.All(str, verify_lowercase),
+                        vol.Required("description"): vol.All(str, verify_lowercase),
+                        vol.Optional("serial_number"): vol.All(str, verify_lowercase),
+                        vol.Optional("known_devices"): [str],
+                    }
+                ),
             )
         ],
         vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
@@ -310,11 +312,43 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
     }
 )
 
+# Integrations whose USB discovery entries predate the stricter
+# vid+pid+manufacturer+description requirement. They should be migrated.
+USB_LEGACY_DOMAINS = {
+    "homeassistant_connect_zbt2",
+    "homeassistant_sky_connect",
+    "insteon",
+    "modem_callerid",
+    "velbus",
+    "zha",
+    "zwave_js",
+}
+
+LEGACY_USB_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
+    {
+        vol.Optional("usb"): [
+            vol.Schema(
+                {
+                    vol.Required("vid"): vol.All(str, verify_uppercase),
+                    # Velbus does not list USB PIDs
+                    vol.Optional("pid"): vol.All(str, verify_uppercase),
+                    vol.Optional("serial_number"): vol.All(str, verify_lowercase),
+                    vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
+                    vol.Optional("description"): vol.All(str, verify_lowercase),
+                    vol.Optional("known_devices"): [str],
+                }
+            )
+        ],
+    }
+)
+
 
 def manifest_schema(value: dict[str, Any]) -> vol.Schema:
     """Validate integration manifest."""
     if value.get("integration_type") == IntegrationType.VIRTUAL:
         return VIRTUAL_INTEGRATION_MANIFEST_SCHEMA(value)
+    if value["domain"] in USB_LEGACY_DOMAINS:
+        return LEGACY_USB_MANIFEST_SCHEMA(value)
     return INTEGRATION_MANIFEST_SCHEMA(value)
 
 
