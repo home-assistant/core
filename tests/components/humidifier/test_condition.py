@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidifier.condition import CONF_MODE
 from homeassistant.components.humidifier.const import (
     ATTR_ACTION,
     ATTR_HUMIDITY,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
