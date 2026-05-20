@@ -6,18 +6,12 @@ import pytest
 
 from homeassistant.components.fritz.const import DOMAIN, VPN_UNIQUE_ID_SUFFIX_SWITCH
 from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
-from .conftest import MOCK_VPN_CONNECTION_HOME, MOCK_VPN_CONNECTIONS
 from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry

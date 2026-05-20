@@ -15,7 +15,6 @@ from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import MOCK_VPN_CONNECTIONS
 from .const import MOCK_USER_DATA
