@@ -148,30 +148,22 @@ async def test_multiple_intents(
         text="{{ slots.slot_name }}",
     )
 
-    class TestIntentHandler1(intent.IntentHandler):
-        """Test Intent Handler 1."""
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
 
-        intent_type = "TestIntent1"
-
-        async def async_handle(self, intent_obj: intent.Intent):
-            """Handle the intent."""
-            response = intent_obj.create_response()
-            response.async_set_speech_slots({"slot_name": "slot value 1"})
-            return response
-
-    class TestIntentHandler2(intent.IntentHandler):
-        """Test Intent Handler 2."""
-
-        intent_type = "TestIntent2"
+        def __init__(self, intent_type: str, slot_value: str) -> None:
+            """Initialize the handler."""
+            self.intent_type = intent_type
+            self._slot_value = slot_value
 
         async def async_handle(self, intent_obj: intent.Intent):
             """Handle the intent."""
             response = intent_obj.create_response()
-            response.async_set_speech_slots({"slot_name": "slot value 2"})
+            response.async_set_speech_slots({"slot_name": self._slot_value})
             return response
 
-    intent.async_register(hass, TestIntentHandler1())
-    intent.async_register(hass, TestIntentHandler2())
+    intent.async_register(hass, TestIntentHandler("TestIntent1", "slot value 1"))
+    intent.async_register(hass, TestIntentHandler("TestIntent2", "slot value 2"))
 
     # Send multiple intent events framed by intents-start and intents-stop.
     client = MockAsyncTcpClient(
