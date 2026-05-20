@@ -137,62 +137,35 @@ async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> Non
     assert subentries == ()
 
 
-# Updated test to match config flow behavior: user flow returns FORM, import flow returns CREATE_ENTRY
-@pytest.mark.parametrize(
-    ("source", "flow_data", "expected_type", "expected_reason"),
-    [
-        (
-            SOURCE_USER,
-            CONFIG_DATA,
-            data_entry_flow.FlowResultType.FORM,
-            None,
-        ),
-        (
-            SOURCE_IMPORT,
-            CONFIG_DATA,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            None,
-        ),
-    ],
-)
-async def test_abort_if_already_setup(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    source: str,
-    flow_data: dict,
-    expected_type: data_entry_flow.FlowResultType,
-    expected_reason: str | None,
+async def test_user_unique_id_already_configured(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
 ) -> None:
-    """Test abort if component is already setup for both user and import sources."""
-    hass.config.components.add(DOMAIN)
-    mock_config_entry.add_to_hass(hass)
+    """Test user flow aborts when unique ID is already configured."""
+    existing_unique_id = "unique_id_already_configured"
+    mock_opnsense_client.return_value.get_device_unique_id.return_value = (
+        existing_unique_id
+    )
 
-    flow_kwargs = {"context": {"source": source}}
-    if source == SOURCE_IMPORT:
-        flow_kwargs["data"] = flow_data
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=existing_unique_id,
+    )
+    existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        **flow_kwargs,
+        context={"source": SOURCE_USER},
     )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
-    if source == SOURCE_USER:
-        # For user, first step is form, then configure
-        assert result.get("type") == data_entry_flow.FlowResultType.FORM
-        assert result.get("step_id") == "user"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=flow_data,
-        )
-        # Should return FORM again (cannot abort, will show form)
-        assert result.get("type") == expected_type
-        if expected_reason is not None:
-            assert result.get("reason") == expected_reason
-    else:
-        # For import, should create entry
-        assert result.get("type") == expected_type
-        if expected_reason is not None:
-            assert result.get("reason") == expected_reason
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_DATA,
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 @pytest.mark.parametrize(
