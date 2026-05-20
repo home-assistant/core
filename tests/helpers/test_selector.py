@@ -160,6 +160,23 @@ def _test_selector(
             ("abc123",),
             (None,),
         ),
+        (
+            {
+                "include_devices": ["abc123", "def456", "ghi789"],
+                "exclude_devices": ["ghi789", "jkl123"],
+            },
+            ("abc123",),
+            ("ghi789", "jkl123"),
+        ),
+        (
+            {
+                "multiple": True,
+                "include_devices": ["abc123", "def456", "ghi789"],
+                "exclude_devices": ["ghi789", "jkl123"],
+            },
+            (["abc123", "def456"],),
+            (["abc123", "jkl123"], ["abc123", "ghi789"]),
+        ),
     ],
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
