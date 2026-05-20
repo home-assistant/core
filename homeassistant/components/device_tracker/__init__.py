@@ -84,7 +84,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Load a platform."""
         platform = await async_create_platform_type(hass, config, p_type, {})
 
-        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
+        if platform is None:
+            return
+
+        if platform.type != PLATFORM_TYPE_LEGACY:
             await component.async_setup_platform(p_type, {}, info)
             return
 
