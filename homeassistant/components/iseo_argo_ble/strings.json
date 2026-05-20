@@ -1,0 +1,45 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_iseo_device": "This device does not appear to be an ISEO lock."
+    },
+    "error": {
+      "auth_failed": "The lock rejected the request. Make sure the Argo app is closed, then try again — scan a valid Master Card on the lock (the LED will blink green on success).",
+      "cannot_connect": "Could not connect to the lock. Check it is powered on and within Bluetooth range.",
+      "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Found a new ISEO lock nearby: **{name}**.\n\nClick **Submit** to begin setup.",
+        "title": "ISEO lock discovered"
+      },
+      "gw_register": {
+        "description": "To register Home Assistant as a Gateway:\n\n**Warning:** Close the ARGO app before clicking Submit.\n\n1. Click **Submit** below.\n2. **Within 30 seconds**, scan your physical **Master Card** on the lock.\n\nThe lock will blink green once the card is read successfully.",
+        "title": "Register gateway"
+      },
+      "user": {
+        "data": {
+          "address": "Device"
+        },
+        "data_description": {
+          "address": "Select the ISEO lock to set up."
+        },
+        "description": "Select your lock from the list of nearby ISEO locks, sorted by signal strength. If your lock is not listed, make sure it is powered on and within Bluetooth range, then click Submit to scan again."
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the lock."
+    },
+    "lock_not_supported": {
+      "message": "Manual locking is not supported by this device. The lock will automatically re-latch after being opened."
+    },
+    "lock_rejected_identity": {
+      "message": "Lock rejected the identity. Ensure the UUID is registered in the Argo app."
+    }
+  }
+}
