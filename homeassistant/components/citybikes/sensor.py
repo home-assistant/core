@@ -45,7 +45,9 @@ HA_USER_AGENT = (
 )
 
 ATTR_UID = "uid"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LATITUDE = "latitude"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_FREE_EBIKES = "free_ebikes"
