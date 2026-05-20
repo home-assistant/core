@@ -1,6 +1,6 @@
 """Fixtures for PrusaLink."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from typing import Any
 from unittest.mock import patch
 
@@ -123,11 +123,17 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_job_api_idle() -> Generator[dict[str, Any]]:
-    """Mock PrusaLink job API having no job."""
-    resp = {}
-    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
-        yield resp
+def mock_job_api_idle() -> Iterator[None]:
+    """Mock PrusaLink job API having no job.
+
+    pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
+    no job is running, rather than an empty dict as in 2.x.
+
+    Iterator is intentional for this yield fixture: it matches pytest usage
+    while avoiding unnecessary Generator send/return type parameters.
+    """
+    with patch("pyprusalink.PrusaLink.get_job", return_value=None):
+        yield None
 
 
 @pytest.fixture
@@ -201,11 +207,33 @@ def mock_job_api_attention(
 
 
 @pytest.fixture
+def mock_job_api_printing_with_nullable_fields() -> Generator[dict[str, Any]]:
+    """Mock PrusaLink printing with missing/None nullable fields.
+
+    Tests that job helpers handle active jobs where file or time_remaining
+    are None (nullable fields), returning None without raising and allowing
+    sensors to show unknown state.
+    """
+    resp = {
+        "id": 129,
+        "state": "PRINTING",
+        "progress": 45.00,
+        "time_remaining": None,  # Missing finish time
+        "time_printing": 43987,
+        "file": None,  # No file info
+        "serial_print": False,
+        "inaccurate_estimates": True,
+    }
+    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
 def mock_api(
     mock_version_api: dict[str, str],
     mock_info_api: dict[str, Any],
     mock_get_legacy_printer: dict[str, Any],
     mock_get_status_idle: dict[str, Any],
-    mock_job_api_idle: dict[str, Any],
+    mock_job_api_idle: None,
 ) -> None:
     """Mock PrusaLink API."""
