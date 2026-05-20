@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -27,6 +28,24 @@ from .entity import (
 )
 
 PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
+
+
+def _safe_sensor_value(
+    value_fn: Callable[[Any], StateType | datetime],
+    source: Any,
+    unique_id: str,
+) -> StateType | datetime | None:
+    """Safely evaluate a sensor value against incomplete Proxmox payloads."""
+    try:
+        return value_fn(source)
+    except (KeyError, TypeError, ValueError, ZeroDivisionError) as err:
+        _LOGGER.debug(
+            "Skipping Proxmox sensor update for %s due to incomplete data: %s",
+            unique_id,
+            err,
+        )
+        return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -530,7 +549,11 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self.device_name])
+        return _safe_sensor_value(
+            self.entity_description.value_fn,
+            self.coordinator.data[self.device_name],
+            self.unique_id,
+        )
 
 
 class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
@@ -541,7 +564,11 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.vm_data)
+        return _safe_sensor_value(
+            self.entity_description.value_fn,
+            self.vm_data,
+            self.unique_id,
+        )
 
 
 class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
@@ -552,7 +579,11 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.container_data)
+        return _safe_sensor_value(
+            self.entity_description.value_fn,
+            self.container_data,
+            self.unique_id,
+        )
 
 
 class ProxmoxStorageSensor(ProxmoxStorageEntity, SensorEntity):
@@ -563,4 +594,8 @@ class ProxmoxStorageSensor(ProxmoxStorageEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.storage_data)
+        return _safe_sensor_value(
+            self.entity_description.value_fn,
+            self.storage_data,
+            self.unique_id,
+        )

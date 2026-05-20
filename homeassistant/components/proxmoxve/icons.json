@@ -1,4 +1,9 @@
 {
+  "services": {
+    "vm_command_wait": {
+      "service": "mdi:timer-sand"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "storage_active": {

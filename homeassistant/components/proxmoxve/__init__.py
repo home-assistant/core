@@ -41,6 +41,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -99,6 +100,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Import the Proxmox configuration from YAML."""
+    async_setup_services(hass)
+
     if DOMAIN not in config:
         return True
 
