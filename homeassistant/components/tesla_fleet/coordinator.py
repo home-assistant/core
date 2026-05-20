@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    InternalServerError,
     InvalidToken,
     LoginRequired,
+    NotFound,
     OAuthExpired,
     RateLimited,
     TeslaFleetError,
@@ -18,7 +20,7 @@ from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -35,6 +37,32 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
+
+
+def _retry_after_from_rate_limit(err: RateLimited) -> float | None:
+    """Return retry-after seconds from a rate limit error."""
+    if not isinstance(err.data, dict):
+        return None
+    retry_after = err.data.get("after")
+    if retry_after is None:
+        return None
+    try:
+        return float(retry_after)
+    except TypeError, ValueError:
+        return None
+
+
+def _is_stale_site_info_error(err: TeslaFleetError) -> bool:
+    """Return whether a site_info error indicates a stale energy site."""
+    if isinstance(err, NotFound):
+        return True
+    if not isinstance(err, InternalServerError) or not isinstance(err.data, dict):
+        return False
+    return (
+        err.data.get("response") is None
+        and err.data.get("error") == "upstream internal error"
+    )
+
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -335,6 +363,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
     """Class to manage fetching energy site info from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
+    site_id: int
     updated_once: bool
 
     def __init__(
@@ -343,6 +372,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         config_entry: TeslaFleetConfigEntry,
         api: EnergySite,
         product: dict,
+        setup_data: dict[str, Any] | None = None,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""
         super().__init__(
@@ -353,8 +383,40 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             update_interval=timedelta(seconds=15),
         )
         self.api = api
-        self.data = flatten(product)
-        self.updated_once = False
+        self.data = setup_data if setup_data is not None else flatten(product)
+        self.site_id = product["energy_site_id"]
+        self.updated_once = setup_data is not None
+        if setup_data is not None:
+            self.update_interval = ENERGY_INTERVAL
+
+    @staticmethod
+    async def async_setup_data_or_skip(
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySite,
+        site_id: int,
+    ) -> dict[str, Any] | None:
+        """Fetch site info during setup, skipping known stale-site failures."""
+        try:
+            return flatten((await api.site_info())["response"])
+        except RateLimited as err:
+            raise ConfigEntryNotReady(str(err)) from err
+        except (InvalidToken, OAuthExpired) as err:
+            _invalidate_access_token(hass, config_entry)
+            raise ConfigEntryNotReady from err
+        except LoginRequired as err:
+            raise ConfigEntryAuthFailed from err
+        except TeslaFleetError as err:
+            if _is_stale_site_info_error(err):
+                LOGGER.warning(
+                    "Skipping Tesla energy site %s because info setup failed: %s",
+                    site_id,
+                    err,
+                )
+                return None
+            raise ConfigEntryNotReady from err
+        except Exception as err:
+            raise ConfigEntryNotReady from err
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""
@@ -364,13 +426,13 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            if isinstance(e.data, dict) and "after" in e.data:
+            if (retry_after := _retry_after_from_rate_limit(e)) is not None:
                 LOGGER.warning(
                     "%s rate limited, will retry in %s seconds",
                     self.name,
-                    e.data["after"],
+                    retry_after,
                 )
-                self.update_interval = timedelta(seconds=int(e.data["after"]))
+                self.update_interval = timedelta(seconds=retry_after)
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
