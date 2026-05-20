@@ -226,7 +226,7 @@ async def test_get_image_http_aiohttp_failure_returns_500(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
-    fetch_exception: BaseException,
+    fetch_exception: Exception,
 ) -> None:
     """Test aiohttp errors during image fetch are caught and surfaced as 500.
 
