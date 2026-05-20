@@ -17,6 +17,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DYNAMIC_TYPES = {"fs", "diskio", "sensors", "raid", "gpu", "network"}
+
 type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
 
 
@@ -31,6 +33,11 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the Glances data."""
         self.host: str = entry.data[CONF_HOST]
         self.api = api
+        # Last NON-EMPTY observation of dynamic-device labels per sensor type.
+        # An empty/missing parent dict in a refresh is treated as a transient
+        # gap and does not update this mapping, so platforms can distinguish
+        # "device removed" from "API hiccup".
+        self.dynamic_devices: dict[str, set[str]] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -57,4 +64,8 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if uptime is None or self.data["computed"]["uptime_duration"] > up_duration:
                 uptime = utcnow() - up_duration
         data["computed"] = {"uptime_duration": up_duration, "uptime": uptime}
+        for sensor_type in DYNAMIC_TYPES:
+            parent = data.get(sensor_type)
+            if parent:
+                self.dynamic_devices[sensor_type] = set(parent.keys())
         return data or {}
