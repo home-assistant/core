@@ -2816,7 +2816,7 @@ voip-utils==0.3.5
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.6.7
+vsure==2.6.9
 
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
