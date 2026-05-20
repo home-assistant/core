@@ -21,6 +21,9 @@
     "config_validator_unknown_err": {
       "message": "Unknown error calling {domain} config validator - {error}."
     },
+    "core_config_reload_failed": {
+      "message": "Failed to reload the Home Assistant Core configuration - {error}"
+    },
     "max_length_exceeded": {
       "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
     },
@@ -47,6 +50,9 @@
     },
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
+    },
+    "scene_config_reload_failed": {
+      "message": "Failed to reload the Home Assistant scene platform configuration - {error}"
     },
     "service_config_entry_not_found": {
       "message": "Integration {domain} config entry with ID {entry_id} was not found."
