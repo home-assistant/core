@@ -25,7 +25,9 @@ from .const import (
 def _get_button_entity_ids(id_prefix: str = "living_room_balance") -> list[str]:
     """Return a list of button entity_ids that Mozart devices provide.
 
-    Beoconnect Core, Beosound A5, Beosound A9 and Beosound Premiere do not have (all of the) physical buttons and need filtering.
+    Beoconnect Core, Beosound A5, Beosound A9 and Beosound
+    Premiere do not have (all of the) physical buttons and
+    need filtering.
     """
     return [
         f"event.{id_prefix}_{underscore(button_type)}".replace("preset", "favorite_")

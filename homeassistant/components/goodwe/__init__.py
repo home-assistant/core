@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
             host=host,
             port=port,
             family=model_family,
-            retries=10,
+            retries=3,
         )
     except InverterError as err:
         try:

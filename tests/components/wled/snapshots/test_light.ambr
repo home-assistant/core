@@ -918,6 +918,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'group_entities': list([
+        'light.wled_rgb_light',
+        'light.wled_rgb_light_segment_1',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -958,6 +962,10 @@
       'brightness': 128,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED RGB Light Main',
+      'group_entities': list([
+        'light.wled_rgb_light',
+        'light.wled_rgb_light_segment_1',
+      ]),
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),

@@ -233,7 +233,8 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except SiteNotFound:
-                # Site removed or no longer visible to the account; treat as cannot connect
+                # Site removed or no longer visible to the
+                # account; treat as cannot connect
                 errors["base"] = "site_not_found"
             except Exception:  # pragma: no cover - unexpected
                 _LOGGER.exception("Unexpected exception during reauth")

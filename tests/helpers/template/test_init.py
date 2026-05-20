@@ -354,7 +354,8 @@ def test_async_render_to_info_with_complex_branching(hass: HomeAssistant) -> Non
 {%     elif     states.light.a == "on" %}
   {{ states[domain] | list }}
 {%         elif     states('light.b') == "on" %}
-  {{ states[otherdomain] | sort(attribute='entity_id') | map(attribute='entity_id') | list }}
+  {{ states[otherdomain] | sort(attribute='entity_id')
+     | map(attribute='entity_id') | list }}
 {% elif states.light.a == "on" %}
   {{ states["nonexist"] | list }}
 {% else %}
@@ -665,7 +666,9 @@ The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
 {% if is_state("sun.sun", "above_horizon") -%}
   The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
 {%- else -%}
-  The sun will rise at {{ as_timestamp(state_attr("sun.sun", "next_rising")) | timestamp_local }}.
+  The sun will rise at {{
+    as_timestamp(state_attr("sun.sun", "next_rising"))
+    | timestamp_local }}.
 {%- endif %}
 
 For loop example getting 3 entity values:
@@ -754,7 +757,10 @@ async def test_lights(hass: HomeAssistant) -> None:
     """Test we can sort lights."""
 
     tmpl = """
-          {% set lights_on = states.light|selectattr('state','eq','on')|sort(attribute='entity_id')|map(attribute='name')|list %}
+          {% set lights_on = states.light
+            |selectattr('state','eq','on')
+            |sort(attribute='entity_id')
+            |map(attribute='name')|list %}
           {% if lights_on|length == 0 %}
             No lights on. Sleep well..
           {% elif lights_on|length == 1 %}
@@ -882,8 +888,8 @@ async def test_undefined_symbol_warnings(
 
     assert render(hass, template_string) == ""
     assert (
-        f"Template variable warning: 'no_such_variable' is undefined when rendering '{template_string}'"
-        in caplog.text
+        f"Template variable warning: 'no_such_variable' is"
+        f" undefined when rendering '{template_string}'" in caplog.text
     )
 
 
