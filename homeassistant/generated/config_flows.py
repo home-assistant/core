@@ -348,6 +348,7 @@ FLOWS = {
         "improv_ble",
         "incomfort",
         "indevolt",
+        "inelnet",
         "inels",
         "influxdb",
         "inkbird",
