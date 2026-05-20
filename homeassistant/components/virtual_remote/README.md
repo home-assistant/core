@@ -2,7 +2,7 @@
 
 The Virtual Remote integration creates Home Assistant `remote` entities backed by existing Home Assistant `infrared` entities.
 
-It allows infrared command sets to be organized as reusable remote entities while keeping infrared transmission handled by the linked infrared integration.
+It allows infrared command sets to be organized as reusable remote entities while infrared transmission remains handled by the linked infrared integration.
 
 ---
 
@@ -10,8 +10,10 @@ It allows infrared command sets to be organized as reusable remote entities whil
 
 - Create one or more virtual remote entities
 - Associate each virtual remote with any Home Assistant `infrared` entity
+- Edit a virtual remote's name or linked infrared entity
 - Use standard Home Assistant `remote` services
 - Store named infrared commands
+- Add, edit, and remove commands through the options flow
 - Support multiple command formats
 - Reuse one infrared transmitter across multiple virtual remotes
 
@@ -32,19 +34,27 @@ Supported formats include:
 
 # Configuration
 
-## Adding a Virtual Remote
+## Adding Virtual Remote
 
-1. Go to:
-
-   Settings → Devices & Services → Add Integration
-
-2. Search for:
-
-   Virtual Remote
-
+1. Go to **Settings** → **Devices & services** → **Add integration**.
+2. Search for **Virtual Remote**.
 3. Select the infrared entity to use.
-
 4. Enter a name for the virtual remote.
+
+The initial setup flow creates the first virtual remote. Additional remotes are added from the integration options.
+
+---
+
+# Managing Virtual Remotes
+
+Open the Virtual Remote integration options to:
+
+- Add virtual remote
+- Edit virtual remote
+- Remove virtual remote
+- Manage commands
+
+If a virtual remote points to an infrared entity that no longer exists, the options flow still allows the remote to be edited and associated with a different infrared entity.
 
 ---
 
@@ -54,12 +64,11 @@ Commands are managed through the integration options flow.
 
 Available operations:
 
-- Add remote
-- Edit remote
-- Delete remote
 - Add command
 - Edit command
-- Delete command
+- Remove command
+
+Command names are normalized to uppercase with underscores.
 
 ---
 
