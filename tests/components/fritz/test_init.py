@@ -38,7 +38,7 @@ async def test_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzWireguard",
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -69,7 +69,7 @@ async def test_options_reload(
             return_value=None,
         ) as mock_reload,
         patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzWireguard",
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

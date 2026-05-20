@@ -931,11 +931,8 @@ freebox-api==1.3.1
 fressnapftracker==0.2.2
 
 # homeassistant.components.fritz
-fritzboxvpn==1.0.0
-
-# homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.15.1
+fritzconnection[qr]==1.16.0
 
 # homeassistant.components.fumis
 fumis==0.4.0

@@ -1,7 +1,7 @@
 """Tests for FRITZ!Box Tools WireGuard VPN switches."""
 
 # pylint: disable=unused-argument,redefined-outer-name
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -30,13 +30,13 @@ def _vpn_entity_id(
 
 
 @pytest.fixture
-def vpn_patch_session(mock_vpn_session: AsyncMock):
-    """Patch FritzBoxVPNSession for VPN tests."""
+def vpn_patch_wireguard(mock_vpn_wireguard: MagicMock):
+    """Patch FritzWireguard for VPN tests."""
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
-        return_value=mock_vpn_session,
+        "homeassistant.components.fritz.coordinator.FritzWireguard",
+        return_value=mock_vpn_wireguard,
     ):
-        yield mock_vpn_session
+        yield mock_vpn_wireguard
 
 
 async def test_vpn_switch_uses_fritz_serial_unique_id(
@@ -46,7 +46,7 @@ async def test_vpn_switch_uses_fritz_serial_unique_id(
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
-    vpn_patch_session: AsyncMock,
+    vpn_patch_wireguard: MagicMock,
 ) -> None:
     """VPN entities use AvmWrapper serial (same id space as other fritz entities)."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -79,7 +79,7 @@ async def test_vpn_switch_turn_on_off(
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
-    vpn_patch_session: AsyncMock,
+    vpn_patch_wireguard: MagicMock,
 ) -> None:
     """Turn VPN switch off and on via homeassistant services."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -102,7 +102,7 @@ async def test_vpn_switch_turn_on_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    vpn_patch_session.async_toggle_vpn.assert_called_with("uid-office", False)
+    vpn_patch_wireguard.toggle_vpn.assert_called_with("uid-office", False)
 
 
 async def test_vpn_switch_entities_created(
@@ -111,7 +111,7 @@ async def test_vpn_switch_entities_created(
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
-    vpn_patch_session: AsyncMock,
+    vpn_patch_wireguard: MagicMock,
 ) -> None:
     """VPN switch entities are created for configured connections."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -132,7 +132,7 @@ async def test_vpn_switch_prunes_known_uids_when_connection_removed(
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
-    vpn_patch_session: AsyncMock,
+    vpn_patch_wireguard: MagicMock,
 ) -> None:
     """Removed VPN UIDs are tracked in known_uids."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)

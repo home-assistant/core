@@ -87,7 +87,7 @@ async def test_image_entity(
             [Platform.IMAGE],
         ),
         patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzWireguard",
         ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -135,7 +135,7 @@ async def test_image_update(
             [Platform.IMAGE],
         ),
         patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzWireguard",
         ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -178,7 +178,7 @@ async def test_image_update_unavailable(
             [Platform.IMAGE],
         ),
         patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzWireguard",
         ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -256,7 +256,7 @@ async def test_migrate_to_new_unique_id(
     with (
         patch("homeassistant.components.fritz.PLATFORMS", [Platform.IMAGE]),
         patch(
-            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzWireguard",
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

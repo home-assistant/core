@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     if entry.options.get(
         CONF_FEATURE_WIREGUARD_VPN, DEFAULT_CONF_FEATURE_WIREGUARD_VPN
     ):
-        await async_setup_vpn(hass, entry)
+        await async_setup_vpn(hass, entry.entry_id)
 
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

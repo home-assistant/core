@@ -4,7 +4,7 @@ from collections.abc import Generator
 from copy import deepcopy
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -41,13 +41,12 @@ MOCK_VPN_CONNECTION_HOME: dict[str, dict[str, Any]] = {
 
 
 @pytest.fixture
-def mock_vpn_session() -> AsyncMock:
-    """Mock fritzboxvpn session."""
-    session = AsyncMock()
-    session.async_get_vpn_connections.return_value = MOCK_VPN_CONNECTIONS
-    session.async_toggle_vpn.return_value = True
-    session.async_close.return_value = None
-    return session
+def mock_vpn_wireguard() -> MagicMock:
+    """Mock fritzconnection FritzWireguard."""
+    wireguard = MagicMock()
+    wireguard.get_vpn_connections.return_value = MOCK_VPN_CONNECTIONS
+    wireguard.toggle_vpn.return_value = True
+    return wireguard
 
 
 class FritzServiceMock:
@@ -202,10 +201,10 @@ def fs_class_mock() -> Generator[type[FritzStatus]]:
 
 
 @pytest.fixture(autouse=True)
-def mock_vpn_session_autouse() -> Generator[AsyncMock]:
-    """Automatically mock FritzBoxVPNSession for all fritz tests."""
+def mock_vpn_wireguard_autouse() -> Generator[MagicMock]:
+    """Automatically mock FritzWireguard for all fritz tests."""
     with patch(
-        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzWireguard",
     ) as mock:
         yield mock
 
