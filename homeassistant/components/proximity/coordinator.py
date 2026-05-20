@@ -422,9 +422,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             if seg_dist is None:
                 continue
-            if seg_dist < tolerance:
-                # Ignore minor movements within the configured tolerance.
-                seg_dist = 0.0
 
             weighted_speed_sum += weight * (seg_dist / dt)
             total_weight += weight

@@ -267,32 +267,35 @@ async def test_device_tracker_test1_awayfurther_a_bit(hass: HomeAssistant) -> No
         hass, "zone.home", ["device_tracker.test1"], ["zone.work"], 1000
     )
 
-    hass.states.async_set(
-        "device_tracker.test1",
-        "not_home",
-        {"friendly_name": "test1", "latitude": 20.1000001, "longitude": 10.1000001},
-    )
-    await hass.async_block_till_done()
+    now = dt_util.utcnow()
+    with freeze_time(now) as freeze_now:
+        hass.states.async_set(
+            "device_tracker.test1",
+            "not_home",
+            {"friendly_name": "test1", "latitude": 20.1000001, "longitude": 10.1000001},
+        )
+        await hass.async_block_till_done()
 
-    # sensor entities
-    state = hass.states.get("sensor.home_nearest_device")
-    assert state.state == "test1"
+        # sensor entities
+        state = hass.states.get("sensor.home_nearest_device")
+        assert state.state == "test1"
 
-    entity_base_name = "sensor.home_test1"
-    state = hass.states.get(f"{entity_base_name}_distance")
-    assert state.state == "2218742"
-    state = hass.states.get(f"{entity_base_name}_direction_of_travel")
-    assert state.state == STATE_UNKNOWN
+        entity_base_name = "sensor.home_test1"
+        state = hass.states.get(f"{entity_base_name}_distance")
+        assert state.state == "2218742"
+        state = hass.states.get(f"{entity_base_name}_direction_of_travel")
+        assert state.state == STATE_UNKNOWN
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
+        now = freeze_now.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    hass.states.async_set(
-        "device_tracker.test1",
-        "not_home",
-        {"friendly_name": "test1", "latitude": 20.1000002, "longitude": 10.1000002},
-    )
-    await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.test1",
+            "not_home",
+            {"friendly_name": "test1", "latitude": 20.1000002, "longitude": 10.1000002},
+        )
+        await hass.async_block_till_done()
 
     # sensor entities
     state = hass.states.get("sensor.home_nearest_device")
