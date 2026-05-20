@@ -64,7 +64,7 @@ def _parse_metadata(raw_content: str) -> dict[str, Any]:
     except json.JSONDecodeError as err:
         raise ValueError(f"Invalid JSON format: {err}") from err
     if not isinstance(data, dict):
-        raise TypeError("JSON content is not a dictionary")
+        raise ValueError("JSON content is not a dictionary")
     missing = REQUIRED_METADATA_KEYS - data.keys()
     if missing:
         raise ValueError(f"Missing required metadata keys: {sorted(missing)}")
