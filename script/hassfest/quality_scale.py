@@ -1005,7 +1005,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "watttime",
     "waze_travel_time",
     "weatherflow",
-    "weatherflow_cloud",
     "weatherkit",
     "webmin",
     "wemo",
