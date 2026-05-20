@@ -1,12 +1,9 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 
 from collections.abc import Mapping
-import ipaddress
 import logging
 import socket
 from typing import Any, Self
-from urllib.parse import urlparse
-from uuid import UUID
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -32,7 +29,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
@@ -53,114 +49,16 @@ from .const import (
     FRITZ_AUTH_EXCEPTIONS,
 )
 from .coordinator import FritzConfigEntry
+from .ssdp_discovery import (
+    host_from_ssdp,
+    is_link_local_host,
+    is_placeholder_unique_id,
+    resolve_host_ips,
+    unique_id_for_discovery,
+    uuid_from_discovery,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-_FRITZ_BOX_HOST = "fritz.box"
-
-
-def _parse_device_uuid(value: str) -> str | None:
-    """Return a normalized UUID string, or None if the value is not a UUID."""
-    value = value.strip()
-    if not value:
-        return None
-    try:
-        return str(UUID(value))
-    except ValueError:
-        return None
-
-
-def _uuid_from_upnp_udn(raw_udn: str) -> str | None:
-    """Parse a UPnP UDN (`uuid:<uuid>`) into a normalized device UUID."""
-    return _parse_device_uuid(raw_udn.removeprefix("uuid:"))
-
-
-def _uuid_from_ssdp_usn(usn: str) -> str | None:
-    """Parse the device UUID from an SSDP USN (`uuid:<uuid>::...`)."""
-    if not usn.startswith("uuid:"):
-        return None
-    return _uuid_from_upnp_udn(usn.split("::", 1)[0])
-
-
-def _hostname_from_url(url: str) -> str | None:
-    """Return the hostname from a URL, or None if parsing fails."""
-    try:
-        return urlparse(url).hostname
-    except ValueError:
-        return None
-
-
-def _uuid_from_discovery(discovery_info: SsdpServiceInfo) -> str | None:
-    """Device UUID from UPnP UDN or SSDP USN."""
-    if raw_udn := discovery_info.upnp.get(ATTR_UPNP_UDN):
-        if device_uuid := _uuid_from_upnp_udn(raw_udn):
-            return device_uuid
-    if discovery_info.ssdp_usn:
-        if device_uuid := _uuid_from_ssdp_usn(discovery_info.ssdp_usn):
-            return device_uuid
-    return None
-
-
-def _is_link_local_host(host: str) -> bool:
-    """Return True if host is a link-local IP address."""
-    try:
-        return ipaddress.ip_address(host).is_link_local
-    except ValueError:
-        return False
-
-
-def _host_from_ssdp_usn(usn: str) -> str | None:
-    """Return fritz.box when the USN embeds that host in a non-standard URL segment.
-
-    Standard SSDP USNs do not contain URLs. Some FRITZ! devices append a vendor
-    segment such as ``uuid:…::upnp:rootdevice://fritz.box`` when no LOCATION is sent.
-    """
-    search_start = 0
-    while (scheme_pos := usn.find("://", search_start)) != -1:
-        fragment_start = scheme_pos + 1
-        fragment_end = fragment_start
-        while fragment_end < len(usn) and usn[fragment_end] not in " \t\r\n":
-            if (
-                fragment_end > fragment_start
-                and usn[fragment_end : fragment_end + 2] == "::"
-            ):
-                break
-            fragment_end += 1
-        fragment = usn[fragment_start:fragment_end]
-        if hostname := _hostname_from_url(f"http:{fragment}"):
-            if hostname.lower() == _FRITZ_BOX_HOST:
-                return _FRITZ_BOX_HOST
-        search_start = scheme_pos + 3
-    return None
-
-
-def _host_from_ssdp(discovery_info: SsdpServiceInfo) -> str | None:
-    """Host from SSDP location, headers, or USN."""
-    if discovery_info.ssdp_location:
-        if hostname := _hostname_from_url(discovery_info.ssdp_location):
-            return hostname
-    if discovery_info.ssdp_headers:
-        location_header = discovery_info.ssdp_headers.get("location")
-        if isinstance(location_header, str):
-            if hostname := _hostname_from_url(location_header):
-                return hostname
-    if discovery_info.ssdp_usn:
-        return _host_from_ssdp_usn(discovery_info.ssdp_usn)
-    return None
-
-
-def _is_placeholder_unique_id(
-    unique_id: str | None,
-    discovered_host: str,
-    config_host: str | None,
-) -> bool:
-    """Return True if unique_id is unset or a host placeholder eligible for UUID migration."""
-    if unique_id is None:
-        return True
-    placeholders = {discovered_host}
-    if config_host is not None:
-        placeholders.add(config_host)
-    return unique_id in placeholders
 
 
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -266,36 +164,41 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        host = _host_from_ssdp(discovery_info)
+        host = host_from_ssdp(discovery_info)
         if not host:
             return self.async_abort(reason="no_host")
-        if _is_link_local_host(host):
+        if is_link_local_host(host):
             return self.async_abort(reason="ignore_ip6_link_local")
+
         self._host = host
         self._name = (
             discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
         )
 
-        device_uuid = _uuid_from_discovery(discovery_info)
+        device_uuid = uuid_from_discovery(discovery_info)
 
         if entry := await self.async_check_configured_entry():
-            if (
-                device_uuid
-                and entry.unique_id != device_uuid
-                and _is_placeholder_unique_id(
-                    entry.unique_id, host, entry.data.get(CONF_HOST)
+            config_host = entry.data.get(CONF_HOST)
+            if device_uuid and entry.unique_id != device_uuid:
+                resolved_hosts = await self.hass.async_add_executor_job(
+                    resolve_host_ips, host, config_host
                 )
-            ):
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=device_uuid
-                )
+                if is_placeholder_unique_id(
+                    entry.unique_id,
+                    host,
+                    config_host,
+                    resolved_hosts=resolved_hosts,
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=device_uuid
+                    )
             return self.async_abort(reason="already_configured")
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
 
-        unique_id_for_flow = device_uuid or host
+        unique_id_for_flow = unique_id_for_discovery(discovery_info, host)
         await self.async_set_unique_id(unique_id_for_flow)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
