@@ -373,7 +373,7 @@ async def test_get_image_http(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID)) is not None
     assert "entity_picture_local" not in state.attributes
 
     client = await hass_client_no_auth()
@@ -398,7 +398,7 @@ async def test_entity_picture_absent_base64_data_invalid(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID)) is not None
     assert "entity_picture" not in state.attributes
 
     client = await hass_client()
@@ -428,7 +428,7 @@ async def test_entity_picture_absent_thumb_string_invalid(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID)) is not None
     assert "entity_picture" not in state.attributes
 
     client = await hass_client()
@@ -450,7 +450,7 @@ async def test_entity_picture_absent_mime_type_not_allowed(
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    assert (state := hass.states.get(ENTITY_ID)) is not None
     assert "entity_picture" not in state.attributes
 
     client = await hass_client()
