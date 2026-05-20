@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError, HeatingCircuitStatus, StaticState
+from bsblan import BSBLANError, Device, HeatingCircuitStatus, StaticState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,6 +13,7 @@ from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
@@ -21,6 +22,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -31,7 +33,12 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 
 ENTITY_ID = "climate.heating_circuit_1"
 
@@ -196,6 +203,27 @@ async def test_climate_entity_properties(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["hvac_action"] == HVACAction.COOLING
+
+
+async def test_pps_climate_entity_without_sensor_data(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test PPS climate support without generic sensor data."""
+    mock_bsblan.device.return_value = Device.model_validate_json(
+        await async_load_fixture(hass, "device_pps.json", DOMAIN)
+    )
+    mock_bsblan.sensor.side_effect = BSBLANError("No sensor data")
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert ATTR_PRESET_MODE not in state.attributes
+    assert ATTR_PRESET_MODES not in state.attributes
+    assert not state.attributes["supported_features"] & ClimateEntityFeature.PRESET_MODE
+    assert state.attributes["current_temperature"] is not None
 
 
 async def _async_set_hvac_action(

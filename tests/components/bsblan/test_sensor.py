@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from bsblan import BSBLANError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -48,6 +49,30 @@ async def test_sensors_not_created_when_data_unavailable(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
     # Should not create any sensor entities
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    sensor_entities = [entry for entry in entity_entries if entry.domain == "sensor"]
+    assert len(sensor_entities) == 0
+
+
+async def test_sensors_not_created_when_sensor_request_fails(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensors are not created when generic sensor data is unsupported."""
+    mock_bsblan.sensor.side_effect = BSBLANError("No sensor data")
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert mock_config_entry.runtime_data.fast_coordinator.data.sensor.model_dump() == {
+        "current_temperature": None,
+        "outside_temperature": None,
+        "total_energy": None,
+    }
+
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
