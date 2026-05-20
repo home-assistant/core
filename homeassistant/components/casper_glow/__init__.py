@@ -7,6 +7,7 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import CasperGlowConfigEntry, CasperGlowCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -24,7 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find Casper Glow device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"address": address},
         )
 
     glow = CasperGlow(ble_device)
