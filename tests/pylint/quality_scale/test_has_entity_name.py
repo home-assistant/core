@@ -110,6 +110,28 @@ class MyEntity(Entity):
 """,
             id="self_annassign_true_in_init",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def __init__(self, coordinator):
+        super().__init__(coordinator)
+        self._attr_has_entity_name = True
+""",
+            id="self_assign_true_after_super_call",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def __init__(self, name):
+        self._attr_name = name
+        self._attr_has_entity_name = True
+""",
+            id="self_assign_true_after_other_assign",
+        ),
     ],
 )
 def test_handled(
@@ -265,6 +287,32 @@ class MyEntity(Entity):
 """,
             "MyEntity",
             id="self_assign_true_inside_try",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def __init__(self, valid):
+        if not valid:
+            raise ValueError
+        self._attr_has_entity_name = True
+""",
+            "MyEntity",
+            id="self_assign_true_after_guard_raise",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def __init__(self, skip):
+        if skip:
+            return
+        self._attr_has_entity_name = True
+""",
+            "MyEntity",
+            id="self_assign_true_after_guard_return",
         ),
     ],
 )

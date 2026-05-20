@@ -148,13 +148,21 @@ def _class_body_sets_attr_true(class_node: nodes.ClassDef, attr_name: str) -> bo
 
 
 def _method_unconditionally_sets_attr_true(class_node: nodes.ClassDef) -> bool:
-    """Return True if a method has a top-level ``self._attr_has_entity_name = True``.
+    """Return True if a method unconditionally sets self._attr_has_entity_name=True.
 
     Accepts both ``self._attr_has_entity_name = True`` (``Assign``) and
     ``self._attr_has_entity_name: bool = True`` (``AnnAssign``). The
-    assignment must be the literal ``True`` and a direct statement of
-    the method body — not nested in an ``if``/``for``/``try``/etc. —
-    so that it executes for every instance constructed.
+    assignment must:
+
+    - have the literal value ``True``,
+    - be a direct statement of the method body (not nested in
+      ``if``/``for``/``try``/etc.), and
+    - be preceded only by flow-safe statements (other assignments,
+      ``super()`` and other expression calls, ``pass``). Any statement
+      that could divert control flow (``return``, ``raise``, ``if``,
+      loops, ``try``, ``assert``, etc.) before the assignment ends the
+      scan, since after that point the assignment is no longer
+      guaranteed to run.
     """
     for method in class_node.body:
         if not isinstance(method, nodes.FunctionDef | nodes.AsyncFunctionDef):
@@ -162,11 +170,19 @@ def _method_unconditionally_sets_attr_true(class_node: nodes.ClassDef) -> bool:
         for stmt in method.body:
             if isinstance(stmt, nodes.Assign):
                 targets = stmt.targets
+                value = stmt.value
             elif isinstance(stmt, nodes.AnnAssign):
                 targets = [stmt.target]
-            else:
+                value = stmt.value
+            elif isinstance(stmt, nodes.Expr | nodes.AugAssign | nodes.Pass):
+                # Flow-safe; keep scanning past it.
                 continue
-            if not (isinstance(stmt.value, nodes.Const) and stmt.value.value is True):
+            else:
+                # Control-flow statement (Return/Raise/If/For/While/Try/
+                # Assert/etc.); the target assignment after this point
+                # is no longer guaranteed to run.
+                break
+            if not (isinstance(value, nodes.Const) and value.value is True):
                 continue
             for target in targets:
                 if (
