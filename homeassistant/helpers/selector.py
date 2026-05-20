@@ -168,6 +168,12 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         ],
         # Unit of measurement of the entity
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.ensure_list, [str]),
+        # Manufacturer of device
+        vol.Optional("manufacturer"): str,
+        # Model of device
+        vol.Optional("model"): str,
+        # Model ID of device
+        vol.Optional("model_id"): str,
     }
 )
 
@@ -205,6 +211,9 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     device_class: str | list[str]
     supported_features: list[str]
     unit_of_measurement: str | list[str]
+    manufacturer: str
+    model: str
+    model_id: str
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
