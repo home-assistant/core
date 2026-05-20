@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to device",
+      "unknown": "An unknown error occurred"
+    },
+    "step": {
+      "confirm": {
+        "title": "Confirm Renson WAVES Setup"
+      },
+      "user": {
+        "data": {
+          "host": "IP Address",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "The IP address of your Renson WAVES device",
+          "port": "The HTTP port exposed by your Renson WAVES device"
+        },
+        "description": "Enter the IP address and port of your Renson WAVES device",
+        "title": "Configure Renson WAVES"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "breeze_mode_enabled": {
+        "name": "Breeze Mode Enabled"
+      },
+      "room_boost_enabled": {
+        "name": "Room Boost Enabled"
+      },
+      "silent_mode_enabled": {
+        "name": "Silent Mode Enabled"
+      },
+      "wifi_connected": {
+        "name": "WiFi Connected"
+      }
+    },
+    "sensor": {
+      "breeze_mode": {
+        "name": "Breeze Mode Decision"
+      },
+      "breeze_temperature": {
+        "name": "Breeze Temperature"
+      },
+      "room_boost_level": {
+        "name": "Room Boost Level"
+      },
+      "room_boost_mode": {
+        "name": "Room Boost Decision"
+      },
+      "silent_mode": {
+        "name": "Silent Mode Decision"
+      },
+      "silent_reduction": {
+        "name": "Silent Reduction"
+      },
+      "uptime_seconds": {
+        "name": "Uptime"
+      },
+      "wifi_ssid": {
+        "name": "WiFi SSID"
+      }
+    }
+  }
+}

@@ -621,6 +621,7 @@ FLOWS = {
         "remote_calendar",
         "renault",
         "renson",
+        "renson_waves",
         "reolink",
         "rfxtrx",
         "rhasspy",

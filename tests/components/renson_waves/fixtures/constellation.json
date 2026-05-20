@@ -1,0 +1,75 @@
+{
+  "global": {
+    "device_name": {
+      "value": "WAVES Living Room"
+    },
+    "serial": {
+      "value": "WAVES-ABC123"
+    }
+  },
+  "sensor": {
+    "sensor_1": {
+      "type": "temp",
+      "parameter": {
+        "current": {
+          "unit": "°C",
+          "value": 21.5
+        },
+        "min": {
+          "unit": "°C",
+          "value": 15.0
+        },
+        "max": {
+          "unit": "°C",
+          "value": 30.0
+        }
+      }
+    },
+    "sensor_2": {
+      "type": "rh",
+      "parameter": {
+        "current": {
+          "unit": "%",
+          "value": 55
+        }
+      }
+    },
+    "sensor_3": {
+      "type": "ah",
+      "parameter": {
+        "current": {
+          "unit": "g/m³",
+          "value": 10.2
+        }
+      }
+    },
+    "sensor_4": {
+      "type": "avoc",
+      "parameter": {
+        "current": {
+          "unit": "ppb",
+          "value": 250
+        }
+      }
+    },
+    "sensor_5": {
+      "type": "press",
+      "parameter": {
+        "current": {
+          "unit": "hPa",
+          "value": 1013.25
+        }
+      }
+    },
+    "sensor_6": {
+      "type": "rssi",
+      "parameter": {
+        "current": {
+          "unit": "dBm",
+          "value": -65
+        }
+      }
+    }
+  },
+  "actuator": {}
+}
