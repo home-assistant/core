@@ -382,7 +382,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     # -- Movement calculations --------------------------------------------------
 
     @staticmethod
-    def _calc_speed(samples: deque[PositionSample], tolerance: float) -> float | None:
+    def _calc_speed(samples: deque[PositionSample]) -> float | None:
         """Weighted average speed (m/s) over consecutive sample pairs.
 
         Each segment speed is weighted by the recency of its endpoint:
@@ -591,10 +591,10 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             elif dist_to_zone == 0:
                 # -- Arrived ---------------------------------------------------
                 mov.direction = "arrived"
-                mov.speed = 0
+                mov.speed = 0.0
             else:
                 # -- Speed -----------------------------------------------------
-                mov.speed = self._calc_speed(mov.samples, self.tolerance)
+                mov.speed = self._calc_speed(mov.samples)
 
                 # -- Direction -------------------------------------------------
                 direction: str | None
@@ -602,7 +602,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     direction = None
                 elif mov.speed < self.speed_threshold:
                     direction = "stationary"
-                    mov.speed = 0
+                    mov.speed = 0.0
                 else:
                     direction = self._calc_direction(
                         mov.samples,
