@@ -11,7 +11,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TUR
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .const import MOCK_SERIAL_NUMBER, MOCK_USER_DATA
 
@@ -24,7 +23,7 @@ def _vpn_entity_id(
     entity_registry: er.EntityRegistry, entry_id: str, unique_id: str
 ) -> str:
     """Return entity_id for a VPN switch unique_id."""
-    for entity_entry in async_entries_for_config_entry(entity_registry, entry_id):
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entity_entry.unique_id == unique_id:
             return entity_entry.entity_id
     raise AssertionError(f"No entity with unique_id {unique_id!r}")
