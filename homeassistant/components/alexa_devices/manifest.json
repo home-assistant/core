@@ -15,5 +15,5 @@
     }
   },
   "quality_scale": "platinum",
-  "requirements": ["aioamazondevices==13.6.0"]
+  "requirements": ["aioamazondevices==13.7.0"]
 }

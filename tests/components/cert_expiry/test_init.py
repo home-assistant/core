@@ -72,7 +72,7 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
-    assert state.attributes.get("error") == "None"
+    assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid")
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -115,5 +115,5 @@ async def test_delay_load_during_startup(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.example_com_cert_expiry")
     assert state.state == timestamp.isoformat()
-    assert state.attributes.get("error") == "None"
+    assert state.attributes.get("error") is None
     assert state.attributes.get("is_valid")

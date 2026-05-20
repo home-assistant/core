@@ -17,6 +17,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
@@ -32,7 +39,12 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -333,7 +345,9 @@ async def test_volume_level(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.attributes.get("volume_level") == pytest.approx(expected_level)
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == pytest.approx(
+        expected_level
+    )
 
 
 @pytest.mark.parametrize(
@@ -361,7 +375,7 @@ async def test_is_volume_muted(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.attributes.get("is_volume_muted") == expected_muted
+    assert state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) == expected_muted
 
 
 # ---------------------------------------------------------------------------
@@ -391,15 +405,16 @@ async def test_media_metadata_attributes(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.attributes.get("media_title") == "Bohemian Rhapsody"
-    assert state.attributes.get("media_artist") == "Queen"
-    assert state.attributes.get("media_album_name") == "A Night at the Opera"
-    assert state.attributes.get("entity_picture")
-    assert state.attributes["entity_picture"].startswith(
+    assert state.attributes.get(ATTR_MEDIA_TITLE) == "Bohemian Rhapsody"
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) == "Queen"
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) == "A Night at the Opera"
+    assert state.attributes.get(ATTR_ENTITY_PICTURE)
+    assert state.attributes[ATTR_ENTITY_PICTURE].startswith(
         f"/api/media_player_proxy/{ENTITY_ID}"
     )
-    assert state.attributes.get("media_duration") == 354
-    assert state.attributes.get("media_position") == 120
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.MUSIC
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 354
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 120
 
 
 async def test_media_metadata_none_when_no_state(
@@ -411,7 +426,12 @@ async def test_media_metadata_none_when_no_state(
     await _setup_media_player_platform(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID))
-    for attr in ("media_title", "media_artist", "media_album_name", "media_duration"):
+    for attr in (
+        ATTR_MEDIA_TITLE,
+        ATTR_MEDIA_ARTIST,
+        ATTR_MEDIA_ALBUM_NAME,
+        ATTR_MEDIA_DURATION,
+    ):
         assert state.attributes.get(attr) is None
 
 
@@ -567,8 +587,8 @@ async def test_service_play_media(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            "media_content_id": "Abbey Road",
-            "media_content_type": MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "Abbey Road",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
         },
         blocking=True,
     )

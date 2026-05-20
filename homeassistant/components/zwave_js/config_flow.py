@@ -268,7 +268,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
-            # If we have updates to the add-on config, set them before starting the add-on.
+            # If we have updates to the add-on config,
+            # set them before starting the add-on.
             self._addon_config_updates = {}
             await self._async_set_addon_config(config_updates)
 
@@ -1409,7 +1410,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="restore_failed",
             description_placeholders={
                 "file_path": str(self.backup_filepath),
-                "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
+                "file_url": (
+                    "data:application/octet-stream;base64,"
+                    f"{base64.b64encode(self.backup_data).decode('ascii')}"
+                ),
                 "file_name": self.backup_filepath.name,
             },
         )
@@ -1556,8 +1560,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
-            # We are not aborting if home ID configured here, we just want to make sure that it's set
-            # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+            # We are not aborting if home ID configured
+            # here, we just want to make sure that it's set
+            # We will update a USB based config entry
+            # automatically in
+            # `async_step_finish_addon_setup_user`
             await self.async_set_unique_id(
                 str(discovery_info.zwave_home_id), raise_on_progress=False
             )
