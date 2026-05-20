@@ -4,7 +4,6 @@ from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import ATTR_LOCATION
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
