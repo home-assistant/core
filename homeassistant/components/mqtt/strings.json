@@ -197,9 +197,11 @@
             },
             "mqtt_settings": {
               "data": {
+                "message_expiry_interval": "Message Expiry Interval",
                 "qos": "QoS"
               },
               "data_description": {
+                "message_expiry_interval": "Retention time interval for published message.",
                 "qos": "The Quality of Service value the device's entities should use."
               },
               "name": "MQTT settings"
