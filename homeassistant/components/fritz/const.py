@@ -45,6 +45,9 @@ DEFAULT_CONF_OLD_DISCOVERY = False
 CONF_FEATURE_DEVICE_TRACKING = "feature_device_tracking"
 DEFAULT_CONF_FEATURE_DEVICE_TRACKING = True
 
+CONF_FEATURE_WIREGUARD_VPN = "feature_wireguard_vpn"
+DEFAULT_CONF_FEATURE_WIREGUARD_VPN = True
+
 VPN_UNIQUE_ID_SUFFIX_SWITCH = "wireguard_vpn"
 VPN_MODEL_WIREGUARD = "WireGuard VPN"
 VPN_RETRY_AFTER_SECONDS = 300
@@ -61,6 +64,14 @@ VPN_AUTH_INDICATORS = (
     "invalid credentials",
     "unauthorized",
     "access denied",
+)
+
+LOG_MSG_VPN_CONNECTIONS_REMOVED = (
+    "WireGuard VPN connection(s) no longer available on the FRITZ!Box: %s"
+)
+LOG_MSG_VPN_CONNECTIONS_REMOVED_HINT = (
+    "VPN switches will show as unavailable until the connection is restored "
+    "or the integration is reloaded."
 )
 
 DSL_CONNECTION: Literal["dsl"] = "dsl"

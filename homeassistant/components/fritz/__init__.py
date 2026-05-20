@@ -16,7 +16,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FEATURE_DEVICE_TRACKING,
+    CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+    DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
@@ -74,7 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
 
     entry.runtime_data = avm_wrapper
 
-    await async_setup_vpn(hass, entry)
+    if entry.options.get(
+        CONF_FEATURE_WIREGUARD_VPN, DEFAULT_CONF_FEATURE_WIREGUARD_VPN
+    ):
+        await async_setup_vpn(hass, entry)
 
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

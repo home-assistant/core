@@ -22,6 +22,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     DOMAIN,
+    LOG_MSG_VPN_CONNECTIONS_REMOVED,
+    LOG_MSG_VPN_CONNECTIONS_REMOVED_HINT,
     SCAN_INTERVAL,
     VPN_AUTH_INDICATORS,
     VPN_RETRY_AFTER_SECONDS,
@@ -79,7 +81,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _schedule_reauth(self) -> None:
         """Start re-authentication once per auth failure cycle."""
-        if self._reauth_scheduled:
+        if self._reauth_scheduled or not self.entry_id:
             return
         entry = self.hass.config_entries.async_get_entry(self.entry_id)
         if entry is None or entry.state != ConfigEntryState.LOADED:
@@ -99,12 +101,18 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch WireGuard VPN connection state from the FRITZ!Box."""
+        previous_uids = set(self.data.keys()) if self.data else set()
         try:
             connections = await self.fritz_session.async_get_vpn_connections()
-        except (ConnectionError, ValueError, TimeoutError) as err:
+        except (ConnectionError, ValueError) as err:
             if self._is_auth_error(err):
                 self._schedule_reauth()
                 raise UpdateFailed(f"Error fetching WireGuard VPN data: {err}") from err
+            raise UpdateFailed(
+                f"Error fetching WireGuard VPN data: {err}",
+                retry_after=VPN_RETRY_AFTER_SECONDS,
+            ) from err
+        except TimeoutError as err:
             raise UpdateFailed(
                 f"Error fetching WireGuard VPN data: {err}",
                 retry_after=VPN_RETRY_AFTER_SECONDS,
@@ -121,6 +129,18 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 retry_after=VPN_RETRY_AFTER_SECONDS,
             ) from err
         else:
+            if previous_uids:
+                removed_uids = previous_uids - set(connections.keys())
+                if removed_uids:
+                    names = [
+                        self.data.get(uid, {}).get(API_KEY_NAME, uid)
+                        for uid in removed_uids
+                    ]
+                    _LOGGER.warning(
+                        LOG_MSG_VPN_CONNECTIONS_REMOVED,
+                        names or list(removed_uids),
+                    )
+                    _LOGGER.info(LOG_MSG_VPN_CONNECTIONS_REMOVED_HINT)
             self._reauth_scheduled = False
             return connections
 

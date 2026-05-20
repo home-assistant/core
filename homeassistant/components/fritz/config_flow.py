@@ -37,8 +37,10 @@ from homeassistant.helpers.service_info.ssdp import (
 
 from .const import (
     CONF_FEATURE_DEVICE_TRACKING,
+    CONF_FEATURE_WIREGUARD_VPN,
     CONF_OLD_DISCOVERY,
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+    DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
     DEFAULT_CONF_OLD_DISCOVERY,
     DEFAULT_HOST,
     DEFAULT_HTTP_PORT,
@@ -146,6 +148,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
                 CONF_FEATURE_DEVICE_TRACKING: self._feature_device_discovery,
+                CONF_FEATURE_WIREGUARD_VPN: DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
             },
         )
 
@@ -441,6 +444,13 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithReload):
                     default=options.get(
                         CONF_FEATURE_DEVICE_TRACKING,
                         DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_FEATURE_WIREGUARD_VPN,
+                    default=options.get(
+                        CONF_FEATURE_WIREGUARD_VPN,
+                        DEFAULT_CONF_FEATURE_WIREGUARD_VPN,
                     ),
                 ): bool,
             }

@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import CONF_FEATURE_WIREGUARD_VPN, DOMAIN
 from homeassistant.components.fritz.vpn_coordinator import FritzVpnCoordinator
 from homeassistant.components.fritz.vpn_data import FRITZ_VPN_DATA_KEY
 from homeassistant.config_entries import ConfigEntryState
@@ -53,6 +53,33 @@ async def test_vpn_coordinator_starts_with_fritz_entry(
     await hass.async_block_till_done()
     mock_vpn_session.async_close.assert_called_once()
     assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
+
+
+async def test_vpn_disabled_via_options_skips_coordinator(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    mock_vpn_session: AsyncMock,
+) -> None:
+    """WireGuard VPN can be disabled in integration options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        options={CONF_FEATURE_WIREGUARD_VPN: False},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        return_value=mock_vpn_session,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.entry_id not in hass.data.get(FRITZ_VPN_DATA_KEY, {})
+    mock_vpn_session.async_get_vpn_connections.assert_not_called()
 
 
 async def test_vpn_setup_failure_closes_session(
