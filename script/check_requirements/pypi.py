@@ -128,7 +128,7 @@ def fetch_package_info(name: str, version: str) -> PypiPackageInfo:
     versioned = _get_json(f"https://pypi.org/pypi/{name}/{version}/json")
     if versioned is None:
         latest = _get_json(f"https://pypi.org/pypi/{name}/json") or {}
-        info = latest.get("info", {}) or {}
+        info = latest.get("info") or {}
         project_urls = info.get("project_urls") or {}
         return PypiPackageInfo(
             project_urls=project_urls,
@@ -137,13 +137,21 @@ def fetch_package_info(name: str, version: str) -> PypiPackageInfo:
             found=False,
         )
 
-    info = versioned.get("info", {}) or {}
+    info = versioned.get("info") or {}
     project_urls = info.get("project_urls") or {}
+    # PyPI's `urls[].provenance` field is unreliable — it can be null even when
+    # an attestation bundle exists at /integrity/.../provenance. Construct the
+    # integrity URL ourselves from the filename; check_provenance probes it.
+    # All files in a release share a publisher, so the first file is enough.
     provenance_urls: list[str] = []
-    for entry in versioned.get("urls", []) or []:
-        prov = entry.get("provenance")
-        if prov:
-            provenance_urls.append(prov)
+    files = versioned.get("urls") or []
+    for entry in files:
+        filename = entry.get("filename")
+        if filename:
+            provenance_urls.append(
+                f"https://pypi.org/integrity/{name}/{version}/{filename}/provenance"
+            )
+            break
     return PypiPackageInfo(
         project_urls=project_urls,
         repo_url=_pick_repo_url(project_urls),
@@ -161,21 +169,13 @@ def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
             recognized_publisher=False,
             detail="Version not found on PyPI; cannot verify provenance.",
         )
-    if not pkg.file_provenance_urls:
-        return ProvenanceResult(
-            has_attestation=False,
-            publisher_kind=None,
-            recognized_publisher=False,
-            detail=(
-                "No PEP 740 provenance attestation present on PyPI. Upload method "
-                "cannot be verified from PyPI alone."
-            ),
-        )
     # Inspect any one file's attestation; all files of a release share a publisher.
+    any_bundle_fetched = False
     for url in pkg.file_provenance_urls:
         bundle = _get_json(url)
         if not bundle:
             continue
+        any_bundle_fetched = True
         for entry in bundle.get("attestation_bundles", []) or []:
             publisher = entry.get("publisher") or {}
             kind = publisher.get("kind")
@@ -199,9 +199,19 @@ def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
                     )
                 ),
             )
+    if any_bundle_fetched:
+        return ProvenanceResult(
+            has_attestation=False,
+            publisher_kind=None,
+            recognized_publisher=False,
+            detail="Provenance URL was present but the attestation could not be parsed.",
+        )
     return ProvenanceResult(
         has_attestation=False,
         publisher_kind=None,
         recognized_publisher=False,
-        detail="Provenance URL was present but the attestation could not be parsed.",
+        detail=(
+            "No PEP 740 provenance attestation present on PyPI. Upload method "
+            "cannot be verified from PyPI alone."
+        ),
     )

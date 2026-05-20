@@ -9,7 +9,7 @@ below. The agent prompt must also gain a matching instruction section, or the
 agent will refuse to resolve the new kind.
 """
 
-from .models import CheckKind, CheckResult, CheckRunResult, CheckStatus, PackageChange
+from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
 
 MARKER = "<!-- requirements-check -->"
 HEADER = "## Check requirements"
@@ -30,20 +30,9 @@ _ICONS: dict[CheckStatus, str] = {
 SKIPPED = "—"
 
 
-def _cell_placeholder(pkg: PackageChange, kind: CheckKind) -> str:
-    """Placeholder marker for a NEEDS_AGENT table cell."""
-    return f"{{{{CHECK_CELL:{pkg.name}:{kind.value}}}}}"
-
-
-def _detail_placeholder(pkg: PackageChange, kind: CheckKind) -> str:
-    """Placeholder marker for a NEEDS_AGENT bullet body."""
-    return f"{{{{CHECK_DETAIL:{pkg.name}:{kind.value}}}}}"
-
-
-def _icon(result: CheckResult | None) -> str:
-    if result is None:
-        return SKIPPED
-    return _ICONS.get(result.status, SKIPPED)
+def _placeholder(slot: str, pkg: PackageChange, kind: CheckKind) -> str:
+    """Placeholder marker the agent replaces before posting."""
+    return f"{{{{{slot}:{pkg.name}:{kind.value}}}}}"
 
 
 def _old_cell(pkg: PackageChange) -> str:
@@ -73,8 +62,8 @@ def _cell(pkg: PackageChange, kind: CheckKind) -> str:
     if result is None:
         return SKIPPED
     if result.status == CheckStatus.NEEDS_AGENT:
-        return _cell_placeholder(pkg, kind)
-    return _icon(result)
+        return _placeholder("CHECK_CELL", pkg, kind)
+    return _ICONS.get(result.status, SKIPPED)
 
 
 def _table(packages: list[PackageChange]) -> str:
@@ -98,7 +87,7 @@ def _bullet(pkg: PackageChange, kind: CheckKind, label: str) -> str:
     if result is None:
         return f"- **{label}**: {SKIPPED} skipped."
     if result.status == CheckStatus.NEEDS_AGENT:
-        return f"- **{label}**: {_detail_placeholder(pkg, kind)}"
+        return f"- **{label}**: {_placeholder('CHECK_DETAIL', pkg, kind)}"
     return f"- **{label}**: {_ICONS[result.status]} {result.details}"
 
 

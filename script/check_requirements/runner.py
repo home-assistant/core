@@ -57,11 +57,6 @@ def _resolve_ci_upload_and_release_pipeline(
     )
 
 
-def _defer_to_agent(pkg: PackageChange, kind: CheckKind, reason: str) -> None:
-    """Mark a check as NEEDS_AGENT with a one-line reason."""
-    pkg.checks[kind] = CheckResult(CheckStatus.NEEDS_AGENT, reason)
-
-
 def run_checks(
     pr_number: int,
     diff_text: str,
@@ -80,14 +75,12 @@ def run_checks(
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
         elif pkg.repo_url:
-            _defer_to_agent(
-                pkg,
-                CheckKind.REPO_PUBLIC,
+            pkg.checks[CheckKind.REPO_PUBLIC] = CheckResult(
+                CheckStatus.NEEDS_AGENT,
                 "Reachability of the source repository must be verified by the agent.",
             )
-            _defer_to_agent(
-                pkg,
-                CheckKind.PR_LINK,
+            pkg.checks[CheckKind.PR_LINK] = CheckResult(
+                CheckStatus.NEEDS_AGENT,
                 "Presence of the required link in the PR description must be verified by the agent.",
             )
         else:

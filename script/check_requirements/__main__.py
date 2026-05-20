@@ -8,13 +8,6 @@ import sys
 from .runner import run_checks
 
 
-def _read_text(path: Path) -> str:
-    if not path.exists():
-        print(f"error: input file {path} does not exist", file=sys.stderr)
-        sys.exit(2)
-    return path.read_text(encoding="utf-8")
-
-
 def main(argv: list[str] | None = None) -> int:
     """Run the deterministic check_requirements stage and write its artifact."""
     parser = argparse.ArgumentParser(prog="python -m script.check_requirements")
@@ -33,7 +26,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    diff_text = _read_text(args.diff)
+    try:
+        diff_text = args.diff.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        parser.error(f"input file {args.diff} not found")
     result = run_checks(
         pr_number=args.pr_number,
         diff_text=diff_text,
