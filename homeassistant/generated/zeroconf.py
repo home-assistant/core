@@ -732,6 +732,11 @@ ZEROCONF = {
             "domain": "wiim",
         },
     ],
+    "_locknalert._tcp.local.": [
+        {
+            "domain": "locknalert_mqtt",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",

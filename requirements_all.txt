@@ -320,6 +320,9 @@ aiolifx-themes==1.0.2
 # homeassistant.components.lifx
 aiolifx==1.2.1
 
+# homeassistant.components.locknalert_mqtt
+aiolocknalert==0.1.1
+
 # homeassistant.components.lookin
 aiolookin==1.0.0
 
@@ -1792,6 +1795,7 @@ ovoenergy==3.0.2
 # homeassistant.components.p1_monitor
 p1monitor==3.2.0
 
+# homeassistant.components.locknalert_mqtt
 # homeassistant.components.mqtt
 paho-mqtt==2.1.0
 
@@ -3425,6 +3429,7 @@ zamg==0.3.6
 # homeassistant.components.zimi
 zcc-helper==3.8
 
+# homeassistant.components.locknalert_mqtt
 # homeassistant.components.zeroconf
 zeroconf==0.149.7
 
