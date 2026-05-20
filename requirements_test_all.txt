@@ -2460,6 +2460,8 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.19.1
 
+# homeassistant.components.honeywell_string_lights
+# homeassistant.components.novy_cooker_hood
 # homeassistant.components.radio_frequency
 rf-protocols==3.2.0
 

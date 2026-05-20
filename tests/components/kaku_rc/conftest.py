@@ -1,0 +1,91 @@
+"""Common fixtures for Kaku RC tests."""
+
+import pytest
+
+from homeassistant.components.kaku_rc.const import (
+    CONF_CHANNEL,
+    CONF_DEVICE_ID,
+    CONF_DIM,
+    CONF_GROUP,
+    CONF_TRANSMITTER,
+    DOMAIN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
+from tests.components.radio_frequency.common import MockRadioFrequencyEntity
+
+TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+) -> MockConfigEntry:
+    """Return a mock config entry for Kaku RC switch/button setup."""
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert entity_entry is not None
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Kaku ID 123456 CH 1",
+        data={
+            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
+            CONF_DEVICE_ID: 123456,
+            CONF_CHANNEL: 1,
+            CONF_GROUP: False,
+            CONF_DIM: False,
+        },
+        unique_id=f"{entity_entry.id}_123456_1_0",
+    )
+
+
+@pytest.fixture
+def mock_dim_config_entry(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+) -> MockConfigEntry:
+    """Return a mock config entry with dimming enabled."""
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
+    assert entity_entry is not None
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Kaku ID 123456 CH 1",
+        data={
+            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
+            CONF_DEVICE_ID: 123456,
+            CONF_CHANNEL: 1,
+            CONF_GROUP: False,
+            CONF_DIM: True,
+        },
+        unique_id=f"{entity_entry.id}_123456_1_0",
+    )
+
+
+@pytest.fixture
+async def init_kaku_rc(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up Kaku RC integration."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_kaku_rc_dim(
+    hass: HomeAssistant,
+    mock_dim_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up Kaku RC integration with dimming enabled."""
+    mock_dim_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_dim_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_dim_config_entry

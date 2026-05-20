@@ -921,6 +921,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/jvc_projector/ @SteveEasley
 /tests/components/jvc_projector/ @SteveEasley
+/homeassistant/components/kaku_rc/ @Phunkafizer
+/tests/components/kaku_rc/ @Phunkafizer
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley

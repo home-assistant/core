@@ -3457,6 +3457,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "kaku_rc": {
+      "name": "KlikAanKlikUit RC",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
       "integration_type": "virtual",
