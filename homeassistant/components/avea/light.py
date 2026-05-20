@@ -25,7 +25,12 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+)
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
@@ -35,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 BREAKS_IN_HA_VERSION = "2026.12.0"
 AVEA_MAX_BRIGHTNESS = 4095
+DEVICE_INFO_READ_ATTEMPTS = 3
+DEVICE_INFO_FIELDS = ("manufacturer", "hw_version", "sw_version", "serial_number")
 
 
 def _normalize_name(name: str | None) -> str | None:
@@ -198,6 +205,8 @@ class AveaLight(LightEntity):
         self._attr_brightness = light.brightness
         self._last_brightness = 255
         self._device_info_updated = False
+        self._device_info_read_attempts = dict.fromkeys(DEVICE_INFO_FIELDS, 0)
+        self._device_info_values: dict[str, str] = {}
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             identifiers={(DOMAIN, entry.unique_id)},
@@ -205,44 +214,55 @@ class AveaLight(LightEntity):
             model=MODEL,
         )
 
-    def _update_device_info(self) -> None:
-        """Fetch device information from the Avea bulb."""
+    @callback
+    def _device_info_fields_to_read(self) -> set[str]:
+        """Return missing device information fields to read."""
+        fields_to_read: set[str] = set()
+
+        for field in DEVICE_INFO_FIELDS:
+            if (
+                field not in self._device_info_values
+                and self._device_info_read_attempts[field] < DEVICE_INFO_READ_ATTEMPTS
+            ):
+                self._device_info_read_attempts[field] += 1
+                fields_to_read.add(field)
+
+        return fields_to_read
+
+    @callback
+    def _async_apply_device_info_updates(self, updates: dict[str, str]) -> None:
+        """Apply device information updates."""
         device_info = self._attr_device_info
         assert device_info is not None
-        manufacturer = _read_device_info_value(self._light.get_manufacturer_name)
-        hardware_revision = _read_device_info_value(self._light.get_hardware_revision)
-        firmware_version = _read_device_info_value(self._light.get_fw_version)
-        serial_number = _read_device_info_value(self._light.get_serial_number)
 
-        if manufacturer:
+        self._device_info_values.update(updates)
+
+        if manufacturer := updates.get("manufacturer"):
             device_info["manufacturer"] = manufacturer
-        if hardware_revision:
+        if hardware_revision := updates.get("hw_version"):
             device_info["hw_version"] = hardware_revision
-        if firmware_version:
+        if firmware_version := updates.get("sw_version"):
             device_info["sw_version"] = firmware_version
-        if serial_number:
+        if serial_number := updates.get("serial_number"):
             device_info["serial_number"] = serial_number
-        if not (
-            manufacturer and hardware_revision and firmware_version and serial_number
-        ):
+
+        if not self.device_entry:
             return
-        self._device_info_updated = True
-        if self.device_entry:
-            self.hass.add_job(
-                self._async_update_device_registry,
-                manufacturer,
-                hardware_revision,
-                firmware_version,
-                serial_number,
-            )
+
+        self._async_update_device_registry(
+            manufacturer or UNDEFINED,
+            hardware_revision or UNDEFINED,
+            firmware_version or UNDEFINED,
+            serial_number or UNDEFINED,
+        )
 
     @callback
     def _async_update_device_registry(
         self,
-        manufacturer: str,
-        hardware_revision: str,
-        firmware_version: str,
-        serial_number: str,
+        manufacturer: str | UndefinedType,
+        hardware_revision: str | UndefinedType,
+        firmware_version: str | UndefinedType,
+        serial_number: str | UndefinedType,
     ) -> None:
         """Update device registry values after entity setup."""
         if not self.device_entry:
@@ -254,6 +274,84 @@ class AveaLight(LightEntity):
             sw_version=firmware_version,
             serial_number=serial_number,
         )
+
+    @callback
+    def _async_device_info_read_complete(self) -> bool:
+        """Return whether all device information reads are complete."""
+        return all(
+            field in self._device_info_values
+            or self._device_info_read_attempts[field] >= DEVICE_INFO_READ_ATTEMPTS
+            for field in DEVICE_INFO_FIELDS
+        )
+
+    def _read_device_info_values(self, fields: set[str]) -> dict[str, str]:
+        """Read device information values from an Avea bulb."""
+        updates: dict[str, str] = {}
+
+        if (
+            "manufacturer" in fields
+            and (manufacturer := _read_device_info_value(self._light.get_manufacturer_name))
+        ):
+            updates["manufacturer"] = manufacturer
+        if (
+            "hw_version" in fields
+            and (
+                hardware_revision := _read_device_info_value(
+                    self._light.get_hardware_revision
+                )
+            )
+        ):
+            updates["hw_version"] = hardware_revision
+        if (
+            "sw_version" in fields
+            and (firmware_version := _read_device_info_value(self._light.get_fw_version))
+        ):
+            updates["sw_version"] = firmware_version
+        if (
+            "serial_number" in fields
+            and (serial_number := _read_device_info_value(self._light.get_serial_number))
+        ):
+            updates["serial_number"] = serial_number
+
+        return updates
+
+    def _update(
+        self, device_info_fields: set[str]
+    ) -> tuple[dict[str, str], int | None, tuple[int, int, int]]:
+        """Fetch new state data for this light."""
+        connected = self._light.connect()
+
+        try:
+            device_info_updates = self._read_device_info_values(device_info_fields)
+            brightness = self._light.get_brightness()
+            rgb_color = self._light.get_rgb()
+        finally:
+            if connected:
+                self._light.disconnect()
+
+        return device_info_updates, brightness, rgb_color
+
+    async def async_update(self) -> None:
+        """Fetch new state data for this light."""
+        device_info_fields = (
+            self._device_info_fields_to_read()
+            if not self._device_info_updated
+            else set()
+        )
+        device_info_updates, brightness, rgb_color = await self.hass.async_add_executor_job(
+            self._update, device_info_fields
+        )
+
+        if device_info_updates:
+            self._async_apply_device_info_updates(device_info_updates)
+        self._device_info_updated = self._async_device_info_read_complete()
+
+        if brightness is not None:
+            self._attr_is_on = brightness != 0
+            self._attr_brightness = _avea_brightness_to_ha(brightness)
+            if self._attr_brightness:
+                self._last_brightness = self._attr_brightness
+        self._attr_hs_color = color_util.color_RGB_to_hs(*rgb_color)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -274,23 +372,3 @@ class AveaLight(LightEntity):
         self._light.set_brightness(0)
         self._attr_is_on = False
         self._attr_brightness = 0
-
-    def update(self) -> None:
-        """Fetch new state data for this light."""
-        connected = self._light.connect()
-
-        try:
-            if not self._device_info_updated:
-                self._update_device_info()
-            brightness = self._light.get_brightness()
-            rgb_color = self._light.get_rgb()
-        finally:
-            if connected:
-                self._light.disconnect()
-
-        if brightness is not None:
-            self._attr_is_on = brightness != 0
-            self._attr_brightness = _avea_brightness_to_ha(brightness)
-            if self._attr_brightness:
-                self._last_brightness = self._attr_brightness
-        self._attr_hs_color = color_util.color_RGB_to_hs(*rgb_color)

@@ -129,11 +129,56 @@ async def test_device_info_retries_incomplete_read(
     )
 
     assert device is not None
+    assert device.hw_version == "Elgato Avea"
+    assert device.sw_version == AVEA_FIRMWARE_VERSION
+    assert device.serial_number == AVEA_SERIAL_NUMBER
+
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
     assert device.manufacturer == "Elgato Systems GmbH"
     assert mock_bulb.get_manufacturer_name.call_count == 2
-    assert mock_bulb.get_hardware_revision.call_count == 2
-    assert mock_bulb.get_fw_version.call_count == 2
-    assert mock_bulb.get_serial_number.call_count == 2
+    assert mock_bulb.get_hardware_revision.call_count == 1
+    assert mock_bulb.get_fw_version.call_count == 1
+    assert mock_bulb.get_serial_number.call_count == 1
+
+
+async def test_device_info_stops_retrying_absent_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bulb: MagicMock,
+) -> None:
+    """Test device info does not retry absent values forever."""
+    mock_bulb.get_serial_number.return_value = None
+
+    with (
+        patch(
+            "homeassistant.components.avea.async_ble_device_from_address",
+            return_value=AVEA_DISCOVERY_INFO.device,
+        ),
+        patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+
+    assert mock_bulb.get_manufacturer_name.call_count == 1
+    assert mock_bulb.get_hardware_revision.call_count == 1
+    assert mock_bulb.get_fw_version.call_count == 1
+    assert mock_bulb.get_serial_number.call_count == 3
 
 
 async def test_device_info_populates_when_connect_fails(
