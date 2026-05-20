@@ -218,7 +218,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
-                tone=tone_compression,
+                tone_compression=tone_compression,
                 fit=fit_mode,
                 rotate=rotation,
             )
