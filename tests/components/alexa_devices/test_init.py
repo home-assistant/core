@@ -183,4 +183,4 @@ async def test_http2_stop_processing_called_on_unload(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_amazon_devices_client.stop_http2_processing.assert_called_once()
+    mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
