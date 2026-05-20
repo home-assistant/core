@@ -12,19 +12,22 @@ ATTR_NEAREST: Final = "nearest"
 ATTR_NEAREST_DIR_OF_TRAVEL: Final = "nearest_dir_of_travel"
 ATTR_NEAREST_DIST_TO: Final = "nearest_dist_to_zone"
 ATTR_PROXIMITY_DATA: Final = "proximity_data"
+ATTR_SPEED: Final = "speed"
 
-CONF_IGNORED_ZONES = "ignored_zones"
-CONF_TOLERANCE = "tolerance"
-CONF_TRACKED_ENTITIES = "tracked_entities"
+CONF_IGNORED_ZONES: Final = "ignored_zones"
+CONF_SPEED_THRESHOLD: Final = "speed_threshold"
+CONF_TOLERANCE: Final = "tolerance"
+CONF_TRACKED_ENTITIES: Final = "tracked_entities"
 
-DEFAULT_DIR_OF_TRAVEL = "not set"
-DEFAULT_DIST_TO_ZONE = "not set"
-DEFAULT_NEAREST = "not set"
-DEFAULT_PROXIMITY_ZONE = "home"
-DEFAULT_TOLERANCE = 1
-DOMAIN = "proximity"
+DEFAULT_DIR_OF_TRAVEL: Final = "not set"
+DEFAULT_DIST_TO_ZONE: Final = "not set"
+DEFAULT_NEAREST: Final = "not set"
+DEFAULT_PROXIMITY_ZONE: Final = "home"
+DEFAULT_SPEED_THRESHOLD: Final = 0.5
+DEFAULT_TOLERANCE: Final = 1
+DOMAIN: Final = "proximity"
 
-UNITS = [
+UNITS: Final = [
     UnitOfLength.METERS,
     UnitOfLength.KILOMETERS,
     UnitOfLength.FEET,

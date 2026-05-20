@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
+    CONF_SPEED_THRESHOLD,
     CONF_TOLERANCE,
     CONF_TRACKED_ENTITIES,
     DOMAIN,
@@ -30,6 +31,7 @@ from tests.common import MockConfigEntry
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
                 CONF_IGNORED_ZONES: [],
+                CONF_SPEED_THRESHOLD: 0.5,
                 CONF_TOLERANCE: 1,
             },
         ),
@@ -38,12 +40,14 @@ from tests.common import MockConfigEntry
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
                 CONF_IGNORED_ZONES: ["zone.work"],
+                CONF_SPEED_THRESHOLD: 1,
                 CONF_TOLERANCE: 10,
             },
             {
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
                 CONF_IGNORED_ZONES: ["zone.work"],
+                CONF_SPEED_THRESHOLD: 1,
                 CONF_TOLERANCE: 10,
             },
         ),
@@ -87,6 +91,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_SPEED_THRESHOLD: 1,
             CONF_TOLERANCE: 10,
         },
         unique_id=f"{DOMAIN}_home",
@@ -108,6 +113,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={
             CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
             CONF_IGNORED_ZONES: [],
+            CONF_SPEED_THRESHOLD: 1,
             CONF_TOLERANCE: 1,
         },
     )
@@ -116,6 +122,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_ZONE: "zone.home",
         CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
         CONF_IGNORED_ZONES: [],
+        CONF_SPEED_THRESHOLD: 1,
         CONF_TOLERANCE: 1,
     }
 
@@ -126,6 +133,7 @@ async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
         CONF_ZONE: "zone.home",
         CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
         CONF_IGNORED_ZONES: ["zone.work"],
+        CONF_SPEED_THRESHOLD: 1,
         CONF_TOLERANCE: 10,
     }
     mock_config = MockConfigEntry(
@@ -161,6 +169,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_SPEED_THRESHOLD: 1,
             CONF_TOLERANCE: 10,
         },
         unique_id=f"{DOMAIN}_home",
@@ -173,6 +182,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
             CONF_IGNORED_ZONES: ["zone.work"],
+            CONF_SPEED_THRESHOLD: 1,
             CONF_TOLERANCE: 10,
         },
         unique_id=f"{DOMAIN}_home_3",
@@ -190,6 +200,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test3"],
                 CONF_IGNORED_ZONES: [],
+                CONF_SPEED_THRESHOLD: 1,
                 CONF_TOLERANCE: 10,
             },
         )
@@ -207,6 +218,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
                 CONF_ZONE: "zone.home",
                 CONF_TRACKED_ENTITIES: ["device_tracker.test4"],
                 CONF_IGNORED_ZONES: [],
+                CONF_SPEED_THRESHOLD: 1,
                 CONF_TOLERANCE: 10,
             },
         )

@@ -5,6 +5,7 @@ from syrupy.filters import props
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
+    CONF_SPEED_THRESHOLD,
     CONF_TOLERANCE,
     CONF_TRACKED_ENTITIES,
     DOMAIN,
@@ -57,6 +58,7 @@ async def test_entry_diagnostics(
                 "device_tracker.test4",
             ],
             CONF_IGNORED_ZONES: [],
+            CONF_SPEED_THRESHOLD: 0.5,
             CONF_TOLERANCE: 1,
         },
         unique_id=f"{DOMAIN}_home",

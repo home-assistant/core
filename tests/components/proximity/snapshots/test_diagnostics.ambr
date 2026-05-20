@@ -8,42 +8,50 @@
           'dist_to_zone': 2218742,
           'is_in_ignored_zone': False,
           'name': 'test1',
+          'speed': None,
         }),
         'device_tracker.test2': dict({
           'dir_of_travel': None,
           'dist_to_zone': 4077299,
           'is_in_ignored_zone': False,
           'name': 'test2',
+          'speed': None,
         }),
         'device_tracker.test3': dict({
           'dir_of_travel': None,
           'dist_to_zone': 4077299,
           'is_in_ignored_zone': False,
           'name': 'test3',
+          'speed': None,
         }),
       }),
       'entity_mapping': dict({
         'device_tracker.test1': list([
           'sensor.home_test1_distance',
           'sensor.home_test1_direction_of_travel',
+          'sensor.home_test1_speed',
         ]),
         'device_tracker.test2': list([
           'sensor.home_test2_distance',
           'sensor.home_test2_direction_of_travel',
+          'sensor.home_test2_speed',
         ]),
         'device_tracker.test3': list([
           'sensor.home_test3_distance',
           'sensor.home_test3_direction_of_travel',
+          'sensor.home_test3_speed',
         ]),
         'device_tracker.test4': list([
           'sensor.home_test4_distance',
           'sensor.home_test4_direction_of_travel',
+          'sensor.home_test4_speed',
         ]),
       }),
       'proximity': dict({
         'dir_of_travel': None,
         'dist_to_zone': 2218742,
         'nearest': 'test1',
+        'speed': None,
       }),
       'tracked_states': dict({
         'device_tracker.test1': dict({
@@ -83,6 +91,7 @@
       'data': dict({
         'ignored_zones': list([
         ]),
+        'speed_threshold': 0.5,
         'tolerance': 1,
         'tracked_entities': list([
           'device_tracker.test1',
