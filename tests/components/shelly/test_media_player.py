@@ -406,16 +406,24 @@ async def test_entity_picture_absent_base64_data_invalid(
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
+@pytest.mark.parametrize(
+    "invalid_thumb",
+    [
+        "data invalid",
+        "lorem ipsum",
+    ],
+)
 async def test_entity_picture_absent_thumb_string_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     hass_client: ClientSessionGenerator,
+    invalid_thumb: str,
 ) -> None:
     """Test that entity_picture is absent when thumb string has invalid format."""
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_AUDIO_FILE
-    status["media"]["playback"]["media_meta"]["thumb"] = "data invalid"
+    status["media"]["playback"]["media_meta"]["thumb"] = invalid_thumb
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
