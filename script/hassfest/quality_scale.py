@@ -1004,7 +1004,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "watson_tts",
     "watttime",
     "waze_travel_time",
-    "weatherflow",
     "weatherflow_cloud",
     "weatherkit",
     "webmin",
