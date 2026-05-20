@@ -1575,7 +1575,12 @@
           "name": "Topic"
         }
       },
-      "name": "Publish"
+      "name": "Publish",
+      "sections": {
+        "publish_options": {
+          "name": "Publish options"
+        }
+      }
     },
     "reload": {
       "description": "Reloads MQTT entities from the YAML-configuration.",
