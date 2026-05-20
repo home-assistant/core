@@ -120,6 +120,32 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_initialize_called_once_in_config_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+) -> None:
+    """Test that initialize is called exactly once during the config flow.
+
+    Regression test for the double-initialize bug: the mcp_client context
+    manager calls initialize() before yielding the session, and validate_input
+    previously called it a second time. MCP servers reject the second call with
+    -32600 "Invalid Request: Server already initialized".
+    """
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_mcp_client.return_value.initialize.assert_called_once()
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
