@@ -245,7 +245,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.0.2
+aioesphomeapi==45.0.4
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -558,7 +558,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.avea
-avea==1.6.1
+avea==1.8.0
 
 # homeassistant.components.axis
 axis==71
@@ -621,7 +621,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.4
+bluetooth-data-tools==1.29.11
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1059,7 +1059,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.6.0
+guntamatic==1.8.0
 
 # homeassistant.components.profiler
 guppy3==3.1.6
@@ -1202,7 +1202,7 @@ imgw_pib==2.2.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.0
+indevolt-api==1.8.1
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1681,7 +1681,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==7.0.0
+py-opendisplay==5.9.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
@@ -1929,7 +1929,7 @@ pyiskra==0.1.27
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.5.1
+pyisy==3.6.1
 
 # homeassistant.components.ituran
 pyituran==0.1.5
@@ -2313,7 +2313,7 @@ python-qube-heatpump==1.10.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==5.5.1
+python-roborock==5.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2859,7 +2859,7 @@ wiffi==1.1.2
 wiim==0.1.2
 
 # homeassistant.components.wled
-wled==0.22.0
+wled==0.23.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.48

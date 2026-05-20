@@ -304,6 +304,23 @@ async def test_multiple_config_subentries(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_async_get_before_setup_raises(hass: HomeAssistant) -> None:
+    """Test async_get raises when the registry has not been set up."""
+    with pytest.raises(RuntimeError, match="Device registry not set up"):
+        dr.async_get(hass)
+
+    dr.async_setup(hass)
+    assert isinstance(dr.async_get(hass), dr.DeviceRegistry)
+
+
+async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
+    """Test loading the device registry twice raises."""
+    registry = dr.async_get(hass)
+    with pytest.raises(RuntimeError, match="Device registry is already loaded"):
+        await registry.async_load()
+
+
+@pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.usefixtures("freezer")
 async def test_loading_from_storage(
     hass: HomeAssistant,
@@ -2637,7 +2654,6 @@ async def test_loading_saving_data(
     # Now load written data in new registry
     registry2 = dr.DeviceRegistry(hass)
     await flush_store(device_registry._store)
-    registry2.async_setup()
     await registry2.async_load()
 
     # Ensure same order
