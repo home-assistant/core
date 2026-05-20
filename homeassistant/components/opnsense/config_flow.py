@@ -147,7 +147,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
             errors["base"] = "ssl_error"
-        except (OPNsenseConnectionError, OPNsenseTimeoutError):
+        except OPNsenseConnectionError, OPNsenseTimeoutError:
             errors["base"] = "cannot_connect"
         except OPNsenseUnknownFirmware:
             errors["base"] = "unknown_version"
@@ -208,7 +208,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except OPNsenseSSLError:
             return self._abort_import(reason="ssl_error", url=import_data[CONF_URL])
-        except (OPNsenseConnectionError, OPNsenseTimeoutError):
+        except OPNsenseConnectionError, OPNsenseTimeoutError:
             return self._abort_import(
                 reason="cannot_connect", url=import_data[CONF_URL]
             )
@@ -252,7 +252,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     async_create_issue(
                         self.hass,
                         DOMAIN,
-                        f"import_failed_missing_interfaces",
+                        "import_failed_missing_interfaces",
                         is_fixable=False,
                         severity=IssueSeverity.CRITICAL,
                         translation_key="import_failed_missing_interfaces",
@@ -277,7 +277,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         async_delete_issue(
             self.hass,
             DOMAIN,
-            f"import_failed_missing_interfaces",
+            "import_failed_missing_interfaces",
         )
 
         async_create_issue(
