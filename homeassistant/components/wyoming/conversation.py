@@ -228,7 +228,7 @@ class WyomingConversationEntity(
         intent_responses: list[intent.IntentResponse] = []
         try:
             async with asyncio.TaskGroup() as task_group:
-                intent_tasks: list[tuple[str | None, dict, asyncio.Task]] = []
+                intent_tasks: list[tuple[str, dict, str | None, asyncio.Task]] = []
                 for recognized_intent in intents:
                     _LOGGER.debug("Handling intent: %s", recognized_intent)
 
@@ -237,7 +237,7 @@ class WyomingConversationEntity(
                         e.name: {"value": e.value} for e in recognized_intent.entities
                     }
 
-                    # Add to trace and chat log
+                    # Add to trace
                     conversation.async_conversation_trace_append(
                         conversation.ConversationTraceEventType.TOOL_CALL,
                         {
@@ -245,22 +245,11 @@ class WyomingConversationEntity(
                             "slots": intent_slots,
                         },
                     )
-                    tool_input = llm.ToolInput(
-                        tool_name=intent_type,
-                        tool_args=intent_slots,
-                        external=True,
-                    )
-                    chat_log.async_add_assistant_content_without_tools(
-                        conversation.AssistantContent(
-                            agent_id=user_input.agent_id,
-                            content=None,
-                            tool_calls=[tool_input],
-                        )
-                    )
                     intent_tasks.append(
                         (
-                            recognized_intent.text,
+                            intent_type,
                             intent_slots,
+                            recognized_intent.text,
                             task_group.create_task(
                                 intent.async_handle(
                                     self.hass,
@@ -277,10 +266,21 @@ class WyomingConversationEntity(
                     )
 
                 # Gather intent handling results
-                for intent_text, intent_slots, intent_task in intent_tasks:
+                tool_calls: list[llm.ToolInput] = []
+                for intent_type, intent_slots, intent_text, intent_task in intent_tasks:
                     intent_task_response = await intent_task
                     intent_responses.append(intent_task_response)
 
+                    # For the chat log
+                    tool_calls.append(
+                        llm.ToolInput(
+                            tool_name=intent_type,
+                            tool_args=intent_slots,
+                            external=True,
+                        )
+                    )
+
+                    # Process speech
                     if (not intent_task_response.speech) and intent_text:
                         if template.is_template_string(intent_text):
                             # Render text as a template
@@ -289,6 +289,15 @@ class WyomingConversationEntity(
                             )
 
                         intent_task_response.async_set_speech(intent_text)
+
+                # Add all tool calls to the chat log
+                chat_log.async_add_assistant_content_without_tools(
+                    conversation.AssistantContent(
+                        agent_id=user_input.agent_id,
+                        content=None,
+                        tool_calls=tool_calls,
+                    )
+                )
         except* intent.IntentError as err_group:
             # Bubble up first exception only.
             # There's nothing the caller can do with multiple intent errors.
