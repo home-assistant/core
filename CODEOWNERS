@@ -1516,6 +1516,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/roomba/ @pschmitt @cyr-ius @shenxn
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
+/homeassistant/components/rotarex/ @Rotarex
+/tests/components/rotarex/ @Rotarex
 /homeassistant/components/route_b_smart_meter/ @SeraphicRav
 /tests/components/route_b_smart_meter/ @SeraphicRav
 /homeassistant/components/rpi_power/ @shenxn @swetoast
