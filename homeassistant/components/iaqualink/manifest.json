@@ -9,6 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["iaqualink"],
   "quality_scale": "bronze",
-  "requirements": ["iaqualink==0.7.0", "h2==4.3.0"],
-  "single_config_entry": true
+  "requirements": ["iaqualink==0.7.0", "h2==4.3.0"]
 }

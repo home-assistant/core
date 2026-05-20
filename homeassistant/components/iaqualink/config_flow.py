@@ -30,15 +30,21 @@ CREDENTIALS_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _username_unique_id(username: str) -> str:
+    """Normalize a username for config entry deduplication."""
+    return username.casefold()
+
+
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
-    async def _async_test_credentials(
+    async def _async_validate_credentials(
         self, user_input: dict[str, Any]
-    ) -> dict[str, str]:
-        """Validate credentials against iAquaLink."""
+    ) -> tuple[dict[str, str], str | None]:
+        """Validate credentials and return the stable account ID."""
         try:
             async with AqualinkClient(
                 user_input[CONF_USERNAME],
@@ -46,24 +52,36 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 httpx_client=get_async_client(
                     self.hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
                 ),
-            ):
-                pass
+            ) as client:
+                return {}, client.user_id
         except AqualinkServiceUnauthorizedException:
-            return {"base": "invalid_auth"}
+            return {"base": "invalid_auth"}, None
         except AqualinkServiceException, httpx.HTTPError:
-            return {"base": "cannot_connect"}
+            return {"base": "cannot_connect"}, None
 
-        return {}
+    def _find_existing_entry_by_username(self, username: str) -> str | None:
+        """Find an existing entry using the legacy username-based identity."""
+        normalized_username = _username_unique_id(username)
+        for entry in self._async_current_entries():
+            if _username_unique_id(entry.data[CONF_USERNAME]) == normalized_username:
+                return entry.entry_id
+
+        return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors = await self._async_test_credentials(user_input)
-            if not errors:
+            errors, account_id = await self._async_validate_credentials(user_input)
+            if not errors and account_id is not None:
+                if self._find_existing_entry_by_username(user_input[CONF_USERNAME]):
+                    return self.async_abort(reason="already_configured")
+
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -84,7 +102,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle confirmation of reauthentication."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         config_entry = (
             self._get_reconfigure_entry()
@@ -92,8 +110,30 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             else self._get_reauth_entry()
         )
         if user_input is not None:
-            errors = await self._async_test_credentials(user_input)
-            if not errors:
+            errors, account_id = await self._async_validate_credentials(user_input)
+            if not errors and account_id is not None:
+                legacy_unique_id = _username_unique_id(config_entry.data[CONF_USERNAME])
+                if config_entry.unique_id in (None, legacy_unique_id):
+                    if (
+                        _username_unique_id(user_input[CONF_USERNAME])
+                        != legacy_unique_id
+                    ):
+                        return self.async_abort(reason="account_mismatch")
+                else:
+                    await self.async_set_unique_id(account_id)
+                    self._abort_if_unique_id_mismatch(reason="account_mismatch")
+
+                existing_entry = (
+                    self.hass.config_entries.async_entry_for_domain_unique_id(
+                        DOMAIN, account_id
+                    )
+                )
+                if existing_entry and existing_entry.entry_id != config_entry.entry_id:
+                    return self.async_abort(reason="already_configured")
+
+                self.hass.config_entries.async_update_entry(
+                    config_entry, unique_id=account_id
+                )
                 return self.async_update_reload_and_abort(
                     config_entry,
                     title=user_input[CONF_USERNAME],

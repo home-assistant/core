@@ -66,6 +66,23 @@ class AqualinkRuntimeData:
     thermostats: list[AqualinkThermostat]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version < 2:
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
@@ -88,6 +105,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         raise ConfigEntryNotReady(
             f"Error while attempting login: {aio_exception}"
         ) from aio_exception
+
+    account_id = aqualink.user_id
+    if entry.unique_id != account_id:
+        conflicting_entry = next(
+            (
+                existing_entry
+                for existing_entry in hass.config_entries.async_entries(DOMAIN)
+                if existing_entry.entry_id != entry.entry_id
+                and existing_entry.unique_id == account_id
+            ),
+            None,
+        )
+        if conflicting_entry is not None:
+            await aqualink.close()
+            raise ConfigEntryError(
+                "Another iAquaLink config entry already uses this account"
+            )
+        hass.config_entries.async_update_entry(entry, unique_id=account_id)
 
     try:
         systems = await aqualink.get_systems()
