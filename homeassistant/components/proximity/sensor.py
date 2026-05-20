@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
         key=ATTR_DIST_TO,
         translation_key=ATTR_DIST_TO,
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     SensorEntityDescription(
@@ -44,6 +46,7 @@ SENSORS_PER_ENTITY: list[SensorEntityDescription] = [
         key=ATTR_SPEED,
         translation_key=ATTR_SPEED,
         device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
     ),
 ]
@@ -57,6 +60,7 @@ SENSORS_PER_PROXIMITY: list[SensorEntityDescription] = [
         key=ATTR_DIST_TO,
         translation_key=ATTR_NEAREST_DIST_TO,
         device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     SensorEntityDescription(
