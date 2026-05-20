@@ -144,8 +144,8 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
     ("input_url", "expected_url"),
     [
         pytest.param(
-            "https://192.168.1.100/test",
-            "https://192.168.1.100:443/test",
+            "https://192.168.1.100/",
+            "https://192.168.1.100:443/",
             id="ip_without_port",
         ),
         pytest.param(
