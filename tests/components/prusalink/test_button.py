@@ -109,9 +109,10 @@ async def test_button_continue(
     press_button_and_verify,
 ) -> None:
     """Test continue button is enabled in ATTENTION state and calls continue_job."""
-    entity_id = "button.workshop_mock_title_continue_job"
     assert await async_setup_component(hass, "prusalink", {})
-    await press_button_and_verify("button.mock_title_continue_job", "continue_job")
+    await press_button_and_verify(
+        "button.workshop_mock_title_continue_job", "continue_job"
+    )
 
 
 async def test_button_continue_unavailable_when_printing(
