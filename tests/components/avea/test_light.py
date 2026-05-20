@@ -15,8 +15,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity_component import async_update_entity
 
-from . import AVEA_DISCOVERY_INFO
+from . import AVEA_DISCOVERY_INFO, AVEA_FIRMWARE_VERSION, AVEA_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -26,10 +28,18 @@ def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
     bulb.name = "Unknown"
+    bulb.fw_version = "Unknown"
+    bulb.hardware_revision = "Unknown"
+    bulb.manufacturer_name = "Unknown"
+    bulb.serial_number = "Unknown"
     bulb.brightness = 0
     bulb.connect.return_value = True
     bulb.get_brightness.return_value = 0
+    bulb.get_fw_version.return_value = AVEA_FIRMWARE_VERSION
+    bulb.get_hardware_revision.return_value = "Elgato Avea"
+    bulb.get_manufacturer_name.return_value = "Elgato Systems GmbH"
     bulb.get_rgb.return_value = (0, 0, 0)
+    bulb.get_serial_number.return_value = AVEA_SERIAL_NUMBER
     return bulb
 
 
@@ -63,6 +73,152 @@ async def test_init_state(
     assert state.state == STATE_OFF
     assert state.name == "Bedroom"
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+
+
+async def test_device_info(hass: HomeAssistant, setup_integration: MagicMock) -> None:
+    """Test the device info."""
+    bulb = setup_integration
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.name == "Bedroom"
+    assert device.manufacturer == "Elgato Systems GmbH"
+    assert device.model == "Avea"
+    assert device.hw_version == "Elgato Avea"
+    assert device.sw_version == AVEA_FIRMWARE_VERSION
+    assert device.serial_number == AVEA_SERIAL_NUMBER
+    bulb.get_manufacturer_name.assert_called_once()
+    bulb.get_hardware_revision.assert_called_once()
+    bulb.get_fw_version.assert_called_once()
+    bulb.get_serial_number.assert_called_once()
+
+
+async def test_device_info_retries_incomplete_read(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bulb: MagicMock,
+) -> None:
+    """Test device info retries when one value cannot be read."""
+    mock_bulb.get_manufacturer_name.side_effect = [
+        RuntimeError("boom"),
+        "Elgato Systems GmbH",
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.avea.async_ble_device_from_address",
+            return_value=AVEA_DISCOVERY_INFO.device,
+        ),
+        patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.hw_version == "Elgato Avea"
+    assert device.sw_version == AVEA_FIRMWARE_VERSION
+    assert device.serial_number == AVEA_SERIAL_NUMBER
+
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.manufacturer == "Elgato Systems GmbH"
+    assert mock_bulb.get_manufacturer_name.call_count == 2
+    assert mock_bulb.get_hardware_revision.call_count == 1
+    assert mock_bulb.get_fw_version.call_count == 1
+    assert mock_bulb.get_serial_number.call_count == 1
+
+
+async def test_device_info_stops_retrying_absent_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bulb: MagicMock,
+) -> None:
+    """Test device info does not retry absent values forever."""
+    mock_bulb.get_serial_number.return_value = None
+
+    with (
+        patch(
+            "homeassistant.components.avea.async_ble_device_from_address",
+            return_value=AVEA_DISCOVERY_INFO.device,
+        ),
+        patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+    await async_update_entity(hass, "light.bedroom")
+    await hass.async_block_till_done()
+
+    assert mock_bulb.get_manufacturer_name.call_count == 1
+    assert mock_bulb.get_hardware_revision.call_count == 1
+    assert mock_bulb.get_fw_version.call_count == 1
+    assert mock_bulb.get_serial_number.call_count == 3
+
+
+async def test_device_info_populates_when_connect_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bulb: MagicMock,
+) -> None:
+    """Test device info is populated when the shared connection fails."""
+    mock_bulb.connect.return_value = False
+
+    with (
+        patch(
+            "homeassistant.components.avea.async_ble_device_from_address",
+            return_value=AVEA_DISCOVERY_INFO.device,
+        ),
+        patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_bulb.connect.assert_called_once()
+    mock_bulb.get_manufacturer_name.assert_called_once()
+    mock_bulb.get_hardware_revision.assert_called_once()
+    mock_bulb.get_fw_version.assert_called_once()
+    mock_bulb.get_serial_number.assert_called_once()
+    mock_bulb.disconnect.assert_not_called()
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.manufacturer == "Elgato Systems GmbH"
+    assert device.model == "Avea"
+    assert device.hw_version == "Elgato Avea"
+    assert device.sw_version == AVEA_FIRMWARE_VERSION
+    assert device.serial_number == AVEA_SERIAL_NUMBER
 
 
 async def test_turn_on_and_off(
