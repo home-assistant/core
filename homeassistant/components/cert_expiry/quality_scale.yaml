@@ -10,7 +10,9 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: exempt
+    comment: Integration has no external library dependencies.
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
