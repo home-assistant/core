@@ -679,6 +679,12 @@
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
+    "entry_auth_failed": {
+      "message": "Authentication failed. Please reauthenticate."
+    },
+    "event_ongoing": {
+      "message": "Event is still ongoing"
+    },
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
@@ -717,6 +723,12 @@
     },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
+    },
+    "unknown_camera_id": {
+      "message": "Unknown Camera ID: {camera_id}"
     }
   },
   "issues": {
