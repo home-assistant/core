@@ -38,7 +38,7 @@ def tv_lift_box_fixture(caplog: pytest.LogCaptureFixture):
     type(product).model = PropertyMock(return_value="tvLiftBox")
     type(product)._query_string = PropertyMock(return_value="open_or_stop")
 
-    return (feature, "button.my_tvliftbox_tvliftbox_open_or_stop")
+    return (feature, "button.my_tvliftbox")
 
 
 async def test_tvliftbox_init(
@@ -53,7 +53,7 @@ async def test_tvliftbox_init(
 
     assert entry.unique_id == "BleBox-tvLiftBox-4a3fdaad90aa-open_or_stop"
 
-    assert state.name == "My tvLiftBox tvLiftBox-open_or_stop"
+    assert state.name == "My tvLiftBox"
 
 
 @pytest.mark.parametrize("input", query_icon_matching)

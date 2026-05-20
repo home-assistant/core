@@ -56,6 +56,8 @@ async def async_setup_entry(
 class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     """Representation of a BleBox cover feature."""
 
+    _attr_name = None
+
     def __init__(self, feature: blebox_uniapi.cover.Cover) -> None:
         """Initialize a BleBox cover feature."""
         super().__init__(feature)

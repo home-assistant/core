@@ -66,6 +66,11 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         super().__init__(feature)
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.index is not None:
+            self._attr_translation_key = "channel"
+            self._attr_translation_placeholders = {"index": str(feature.index + 1)}
+        else:
+            self._attr_name = None
 
     @property
     def is_on(self) -> bool:
@@ -211,7 +216,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             await self._feature.async_on(value)
         except ValueError as exc:
             raise ValueError(
-                f"Turning on '{self.name}' failed: Bad value {value}"
+                f"Turning on '{self._feature.full_name}' failed: Bad value {value}"
             ) from exc
 
         if effect is not None:
@@ -220,7 +225,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in"
+                    f"Turning on with effect '{self._feature.full_name}' failed: {effect} not in"
                     " effect list."
                 ) from exc
 

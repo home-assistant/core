@@ -45,6 +45,8 @@ class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEn
         """Initialize a BleBox binary sensor feature."""
         super().__init__(feature)
         self.entity_description = description
+        if feature.name:
+            self._attr_name = feature.name
 
     @property
     def is_on(self) -> bool:

@@ -26,6 +26,8 @@ async def async_setup_entry(
 class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity):
     """Representation of BleBox buttons."""
 
+    _attr_name = None
+
     def __init__(self, feature: blebox_uniapi.button.Button) -> None:
         """Initialize a BleBox button feature."""
         super().__init__(feature)

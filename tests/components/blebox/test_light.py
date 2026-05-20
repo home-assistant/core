@@ -46,11 +46,12 @@ def dimmer_fixture():
         supports_white=False,
         color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
         effect_list=None,
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
     type(product).model = PropertyMock(return_value="dimmerBox")
-    return (feature, "light.my_dimmer_dimmerbox_brightness")
+    return (feature, "light.my_dimmer")
 
 
 async def test_dimmer_init(
@@ -63,7 +64,7 @@ async def test_dimmer_init(
     assert entry.unique_id == "BleBox-dimmerBox-1afe34e750b8-brightness"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My dimmer dimmerBox-brightness"
+    assert state.name == "My dimmer"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.BRIGHTNESS]
@@ -220,11 +221,12 @@ def wlightboxs_fixture():
         supports_white=False,
         color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
         effect_list=["NONE", "PL", "RELAX"],
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
     type(product).model = PropertyMock(return_value="wLightBoxS")
-    return (feature, "light.my_wlightboxs_wlightboxs_color")
+    return (feature, "light.my_wlightboxs")
 
 
 async def test_wlightbox_s_init(
@@ -237,7 +239,7 @@ async def test_wlightbox_s_init(
     assert entry.unique_id == "BleBox-wLightBoxS-1afe34e750b8-color"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My wLightBoxS wLightBoxS-color"
+    assert state.name == "My wLightBoxS"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.BRIGHTNESS]
@@ -324,11 +326,12 @@ def wlightbox_fixture():
         color_mode=blebox_uniapi.light.BleboxColorMode.RGBW,
         effect="NONE",
         effect_list=["NONE", "PL", "POLICE"],
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
-    return (feature, "light.my_wlightbox_wlightbox_color")
+    return (feature, "light.my_wlightbox")
 
 
 @pytest.fixture(name="wlightbox_ct")
@@ -349,11 +352,12 @@ def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
         color_mode=blebox_uniapi.light.BleboxColorMode.CT,
         effect="NONE",
         effect_list=["NONE", "PL", "POLICE"],
+        index=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
-    return feature, "light.my_wlightbox_wlightbox_ct"
+    return feature, "light.my_wlightbox"
 
 
 @pytest.mark.parametrize("kelvin_requested", [1000, 2700, 3000, 4000, 5000, 6500, 8000])
@@ -408,7 +412,7 @@ async def test_wlightbox_init(
     assert entry.unique_id == "BleBox-wLightBox-1afe34e750b8-color"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My wLightBox wLightBox-color"
+    assert state.name == "My wLightBox"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
     assert color_modes == [ColorMode.RGBW]
@@ -690,3 +694,69 @@ async def test_wlightbox_on_effect(wlightbox, hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_EFFECT] == "POLICE"
+
+
+@pytest.mark.parametrize(
+    ("index", "color_mode", "entity_id", "expected_name"),
+    [
+        (
+            0,
+            blebox_uniapi.light.BleboxColorMode.MONO,
+            "light.my_wlightbox_channel_1",
+            "My wLightBox Channel 1",
+        ),
+        (
+            1,
+            blebox_uniapi.light.BleboxColorMode.MONO,
+            "light.my_wlightbox_channel_2",
+            "My wLightBox Channel 2",
+        ),
+        (
+            3,
+            blebox_uniapi.light.BleboxColorMode.MONO,
+            "light.my_wlightbox_channel_4",
+            "My wLightBox Channel 4",
+        ),
+        (
+            0,
+            blebox_uniapi.light.BleboxColorMode.CTx2,
+            "light.my_wlightbox_channel_1",
+            "My wLightBox Channel 1",
+        ),
+        (
+            1,
+            blebox_uniapi.light.BleboxColorMode.CTx2,
+            "light.my_wlightbox_channel_2",
+            "My wLightBox Channel 2",
+        ),
+    ],
+)
+async def test_multichannel_light_name(
+    hass: HomeAssistant,
+    index: int,
+    color_mode: blebox_uniapi.light.BleboxColorMode,
+    entity_id: str,
+    expected_name: str,
+) -> None:
+    """Test that multi-channel lights get the correct channel name."""
+    feature = mock_feature(
+        "lights",
+        blebox_uniapi.light.Light,
+        unique_id=f"BleBox-wLightBox-1afe34e750b8-brightness_{index}",
+        full_name=f"wLightBox-brightness_{index}",
+        device_class=None,
+        brightness=None,
+        is_on=None,
+        supports_color=False,
+        supports_white=False,
+        color_mode=color_mode,
+        effect_list=None,
+        index=index,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My wLightBox")
+    type(product).model = PropertyMock(return_value="wLightBox")
+
+    await async_setup_entity(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert state.name == expected_name

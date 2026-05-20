@@ -18,9 +18,35 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "host": "The IP address of your BleBox device.",
+          "password": "The password for your BleBox device.",
+          "port": "The port of your BleBox device.",
+          "username": "The username for your BleBox device."
+        },
         "description": "Set up your BleBox to integrate with Home Assistant.",
         "title": "Set up your BleBox device"
       }
+    }
+  },
+  "entity": {
+    "light": {
+      "channel": { "name": "Channel {index}" }
+    },
+    "sensor": {
+      "active_power": { "name": "Active power" },
+      "active_power_n": { "name": "Active power {index}" },
+      "apparent_power_n": { "name": "Apparent power {index}" },
+      "current_n": { "name": "Current {index}" },
+      "forward_active_energy": { "name": "Forward active energy" },
+      "forward_active_energy_n": { "name": "Forward active energy {index}" },
+      "frequency_n": { "name": "Frequency {index}" },
+      "power_consumption": { "name": "Energy (last 1 h)" },
+      "reactive_power_n": { "name": "Reactive power {index}" },
+      "reverse_active_energy": { "name": "Reverse active energy" },
+      "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
+      "temperature_n": { "name": "Temperature {index}" },
+      "voltage_n": { "name": "Voltage {index}" }
     }
   }
 }
