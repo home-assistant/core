@@ -58,6 +58,15 @@ async def test_setup_entry_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+    if (
+        method == "async_get_board_info"
+        and isinstance(exception, DucoError)
+        and expected_state is ConfigEntryState.SETUP_ERROR
+    ):
+        assert mock_config_entry.error_reason_translation_key == "api_error"
+        assert mock_config_entry.error_reason_translation_placeholders == {
+            "error": repr(exception)
+        }
 
 
 @pytest.mark.usefixtures("mock_duco_client")
