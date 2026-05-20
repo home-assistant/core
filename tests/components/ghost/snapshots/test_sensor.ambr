@@ -1059,7 +1059,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1000',
+    'state': '1025',
   })
 # ---
 # name: test_sensor_entities[sensor.test_ghost_weekly_subscribers-entry]
