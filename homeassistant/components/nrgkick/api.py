@@ -74,12 +74,10 @@ async def async_api_call[_T](awaitable: Awaitable[_T]) -> _T:
     except NRGkickInvalidResponseError as err:
         raise NRGkickApiClientInvalidResponseError from err
     except NRGkickConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise NRGkickApiClientCommunicationError(
             translation_placeholders={"error": str(err)}
         ) from err
     except (TimeoutError, aiohttp.ClientError, OSError) as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise NRGkickApiClientCommunicationError(
             translation_placeholders={"error": str(err)}
         ) from err
