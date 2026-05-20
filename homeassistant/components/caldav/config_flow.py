@@ -76,6 +76,9 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
             # AuthorizationError can be raised if the url is incorrect or
             # on some other unexpected server response.
             return "cannot_connect"
+        except requests.Timeout as err:
+            _LOGGER.warning("Timeout connecting to CalDAV server: %s", err)
+            return "cannot_connect"
         except requests.ConnectionError as err:
             _LOGGER.warning("Connection Error connecting to CalDAV server: %s", err)
             return "cannot_connect"
