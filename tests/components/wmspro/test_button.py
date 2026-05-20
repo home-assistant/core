@@ -64,3 +64,27 @@ async def test_button_press(
         assert entity is not None
         assert entity.state != before_state
         assert len(mock_hub_status_prod_awning.mock_calls) == before
+
+
+async def test_button_rotation_reset_press(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub_ping: AsyncMock,
+    mock_hub_configuration_prod_slat_rotate: AsyncMock,
+    mock_hub_status_prod_slat_rotate: AsyncMock,
+) -> None:
+    """Test that the rotation reset button can be pressed."""
+    assert await setup_config_entry(hass, mock_config_entry)
+    assert len(mock_hub_ping.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
+    assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
+
+    entity_id = "button.keuken_alle_reset_rotation"
+    assert entity_id in hass.states.async_entity_ids(BUTTON_DOMAIN)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )

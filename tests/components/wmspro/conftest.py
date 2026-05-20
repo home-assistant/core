@@ -105,6 +105,26 @@ def mock_hub_configuration_prod_roller_shutter() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_hub_configuration_prod_slat_drive() -> Generator[AsyncMock]:
+    """Override WebControlPro._getConfiguration."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getConfiguration",
+        return_value=load_json_object_fixture("config_prod_slat_drive.json", DOMAIN),
+    ) as mock_hub_configuration:
+        yield mock_hub_configuration
+
+
+@pytest.fixture
+def mock_hub_configuration_prod_slat_rotate() -> Generator[AsyncMock]:
+    """Override WebControlPro._getConfiguration."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getConfiguration",
+        return_value=load_json_object_fixture("config_prod_slat_rotate.json", DOMAIN),
+    ) as mock_hub_configuration:
+        yield mock_hub_configuration
+
+
+@pytest.fixture
 def mock_hub_status_prod_awning() -> Generator[AsyncMock]:
     """Override WebControlPro._getStatus."""
     with patch(
@@ -147,6 +167,26 @@ def mock_hub_status_prod_roller_shutter() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_hub_status_prod_slat_drive() -> Generator[AsyncMock]:
+    """Override WebControlPro._getStatus."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getStatus",
+        return_value=load_json_object_fixture("status_prod_slat_drive.json", DOMAIN),
+    ) as mock_hub_status:
+        yield mock_hub_status
+
+
+@pytest.fixture
+def mock_hub_status_prod_slat_rotate() -> Generator[AsyncMock]:
+    """Override WebControlPro._getStatus."""
+    with patch(
+        "wmspro.webcontrol.WebControlPro._getStatus",
+        return_value=load_json_object_fixture("status_prod_slat_rotate.json", DOMAIN),
+    ) as mock_hub_status:
+        yield mock_hub_status
+
+
+@pytest.fixture
 def mock_hub_status_prod_valance() -> Generator[AsyncMock]:
     """Override WebControlPro._getStatus."""
     with patch(
@@ -178,6 +218,23 @@ def mock_action_call() -> Generator[AsyncMock]:
         fake_call,
     ) as mock_action_call:
         yield mock_action_call
+
+
+@pytest.fixture
+def mock_action_list_call() -> Generator[AsyncMock]:
+    """Override ActionList.__call__."""
+
+    async def fake_list_call(self, **kwargs):
+        # fake action list call via individual action calls
+        for args in self:
+            dest = self._control.dests[args["destinationId"]]
+            await dest.actions[args["actionId"]](**args["parameters"])
+
+    with patch(
+        "wmspro.action.ActionList.__call__",
+        fake_list_call,
+    ) as mock_action_list_call:
+        yield mock_action_list_call
 
 
 @pytest.fixture
