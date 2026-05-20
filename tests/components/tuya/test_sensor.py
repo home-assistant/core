@@ -265,37 +265,6 @@ async def test_invalid_uom(
 )
 @pytest.mark.parametrize("mock_device_code", ["wk_fi6dne5tu4t1nm6j"])
 async def test_battery_percentage_scale(
-@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
-@pytest.mark.parametrize(
-    ("temp_unit_convert", "ha_unit_system", "expected_value"),
-    [
-        pytest.param(
-            "c",
-            METRIC_SYSTEM,
-            "14.0",
-            id="device_c_ha_c",
-        ),
-        pytest.param(
-            "c",
-            US_CUSTOMARY_SYSTEM,
-            "57.2",
-            id="device_c_ha_f",
-        ),
-        pytest.param(
-            "f",
-            METRIC_SYSTEM,
-            "-10.0",
-            id="device_f_ha_c",
-        ),
-        pytest.param(
-            "f",
-            US_CUSTOMARY_SYSTEM,
-            "14.0",
-            id="device_f_ha_f",
-        ),
-    ],
-)
-async def test_temp_unit_convert_sensor(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
@@ -311,12 +280,27 @@ async def test_temp_unit_convert_sensor(
     values["max"] = battery_max
     mock_device.status_range["battery_percentage"].values = json.json_dumps(values)
     mock_device.status["battery_percentage"] = battery_value
-
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
     state = hass.states.get("sensor.wifi_smart_gas_boiler_thermostat_battery")
     assert state is not None
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+@pytest.mark.parametrize(
+    ("temp_unit_convert", "ha_unit_system", "expected_value"),
+    [
+        pytest.param("c", METRIC_SYSTEM, "14.0", id="device_c_ha_c"),
+        pytest.param("c", US_CUSTOMARY_SYSTEM, "57.2", id="device_c_ha_f"),
+        pytest.param("f", METRIC_SYSTEM, "-10.0", id="device_f_ha_c"),
+        pytest.param("f", US_CUSTOMARY_SYSTEM, "14.0", id="device_f_ha_f"),
+    ],
+)
+async def test_temp_unit_convert_sensor(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
     temp_unit_convert: str,
     ha_unit_system: UnitSystem,
     expected_value: str,
@@ -325,7 +309,6 @@ async def test_temp_unit_convert_sensor(
     hass.config.units = ha_unit_system
     mock_device.status["temp_unit_convert"] = temp_unit_convert
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
     state = hass.states.get("sensor.inverter_pool_heat_pump_outside_temperature")
     assert state is not None
     assert state.state == expected_value
@@ -342,7 +325,6 @@ async def test_temp_unit_convert_sensor_invalid(
     """Test that device class is removed when TEMP_UNIT_CONVERT is an invalid value."""
     mock_device.status["temp_unit_convert"] = "k"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
     state = hass.states.get("sensor.inverter_pool_heat_pump_temperature")
     assert state is not None
     assert state.attributes.get("device_class") is None
