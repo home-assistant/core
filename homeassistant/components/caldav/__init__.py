@@ -45,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         # on some other unexpected server response.
         _LOGGER.warning("Unexpected CalDAV server response: %s", err)
         return False
+    except requests.Timeout as err:
+        raise ConfigEntryNotReady("Timeout connecting to CalDAV server") from err
     except requests.ConnectionError as err:
         raise ConfigEntryNotReady("Connection error from CalDAV server") from err
     except DAVError as err:
