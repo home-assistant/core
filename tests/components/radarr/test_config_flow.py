@@ -140,28 +140,25 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
     assert result["data"] == CONF_DATA
 
 
-async def test_url_rewrite(hass: HomeAssistant) -> None:
-    """Test auth flow url rewrite."""
-    with (
-        patch(
-            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
-            return_value=("v3", API_KEY, "/test"),
+@pytest.mark.parametrize(
+    ("input_url", "expected_url"),
+    [
+        pytest.param(
+            "https://192.168.1.100/test",
+            "https://192.168.1.100:443/test",
+            id="ip_without_port",
         ),
-        patch_async_setup_entry(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-            data={CONF_URL: "https://192.168.1.100/test", CONF_VERIFY_SSL: False},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_URL] == "https://192.168.1.100:443/test"
-
-
-async def test_url_rewrite_hyphenated_hostname(hass: HomeAssistant) -> None:
-    """Test auth flow url rewrite with hyphenated hostname."""
+        pytest.param(
+            "https://radarr-anime.example.com/",
+            "https://radarr-anime.example.com:443/",
+            id="hyphenated_hostname",
+        ),
+    ],
+)
+async def test_url_rewrite(
+    hass: HomeAssistant, input_url: str, expected_url: str
+) -> None:
+    """Test auth flow url rewrite."""
     with (
         patch(
             "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
@@ -172,14 +169,11 @@ async def test_url_rewrite_hyphenated_hostname(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
-            data={
-                CONF_URL: "https://radarr-anime.example.com/",
-                CONF_VERIFY_SSL: False,
-            },
+            data={CONF_URL: input_url, CONF_VERIFY_SSL: False},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_URL] == "https://radarr-anime.example.com:443/"
+    assert result["data"][CONF_URL] == expected_url
 
 
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
