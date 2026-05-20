@@ -140,7 +140,6 @@ async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> Non
 
 async def test_upnp_missing(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
