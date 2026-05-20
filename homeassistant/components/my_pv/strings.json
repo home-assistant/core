@@ -1,0 +1,62 @@
+{
+  "common": {
+    "discovery_description": "Do you want to set up {name}?",
+    "password_description": "The password of your my-PV device. If no custom password is set you have to use the **devicekey** which can be found under the ⓘ info menu of your my-PV device. For the HEA•THOR IoT you can find the **devicekey** on the device label."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_password": "Invalid password",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "title": "{name} password"
+      },
+      "discovery_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::my_pv::common::password_description%]"
+        },
+        "description": "[%key:component::my_pv::common::discovery_description%]",
+        "title": "{name}"
+      },
+      "discovery_confirm": {
+        "description": "[%key:component::my_pv::common::discovery_description%]",
+        "title": "{name}"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your my-PV device."
+        },
+        "title": "my-PV Device"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "device_unavailable": {
+      "message": "Device on {uri} is unavailable"
+    },
+    "unknown_error": {
+      "message": "Unknown error."
+    }
+  }
+}

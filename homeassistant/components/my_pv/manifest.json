@@ -1,0 +1,24 @@
+{
+  "domain": "my_pv",
+  "name": "my-PV",
+  "codeowners": ["@my-pv", "@rrooggiieerr"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "macaddress": "986D35C*"
+    },
+    {
+      "macaddress": "6869C4*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/my_pv",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["my_pv"],
+  "quality_scale": "bronze",
+  "requirements": ["my-pv==0.0.1.dev7"],
+  "zeroconf": ["_mypv._tcp.local."]
+}
