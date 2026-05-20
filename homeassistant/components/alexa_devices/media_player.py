@@ -248,17 +248,20 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             return
         if mute:
             self._prev_volume = self.volume_state.volume
-            target_volume = 0
-        else:
-            if self.volume_state.is_muted:
-                # is muted by Alexa which we can see but not control
-                # when muted this way, volume is still set
-                # changing volume will unmute
-                self._prev_volume = self.volume_state.volume
-            if self._prev_volume is None:
-                return
-            target_volume = self._prev_volume
+            await self.async_set_volume_level(0)
+            return
+
+        if self.volume_state.is_muted and self._prev_volume is None:
+            # is muted by Alexa which we can see but not control
+            # when muted this way, volume is still set
+            # changing volume will unmute
+            # if HA set volume to 0 then Alexa muted we just default to 30%
+            self._prev_volume = self.volume_state.volume or 30
+        if self._prev_volume is None:
+            return
+        target_volume = self._prev_volume
         await self.async_set_volume_level(target_volume / 100)
+        self._prev_volume = None
 
     @alexa_api_call
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
