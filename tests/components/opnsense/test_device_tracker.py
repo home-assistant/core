@@ -43,7 +43,7 @@ async def test_device_tracker_setup(
     # Should have 2 devices from ARP table
     assert len(device_tracker_entities) == 2
 
-    # Check the MAC addresses are correct
+    # Check the unique IDs are correct
     entity_unique_ids = {entity.unique_id for entity in device_tracker_entities}
     assert "ff:ff:ff:ff:ff:ff" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:fe" in entity_unique_ids
