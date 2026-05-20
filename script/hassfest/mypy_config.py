@@ -34,6 +34,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "plugins": ", ".join(  # noqa: FLY002
         [
             "pydantic.mypy",
+            "mypy_plugins.enum_identity_compare",
         ]
     ),
     "show_error_codes": "true",
