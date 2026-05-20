@@ -680,10 +680,10 @@
       "message": "No device found for device id: {device_id}"
     },
     "entry_auth_failed": {
-      "message": "Authentication failed. Please reauthenticate."
+      "message": "Authentication failed, please reauthenticate"
     },
     "event_ongoing": {
-      "message": "Event is still ongoing."
+      "message": "Event is still ongoing"
     },
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
