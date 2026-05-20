@@ -15,7 +15,7 @@ from incomfortclient import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -85,7 +85,7 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
             ) from exc
         except ClientResponseError as exc:
             if exc.status == 401:
-                raise ConfigEntryError(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN, translation_key="incorrect_credentials"
                 ) from exc
             raise UpdateFailed(
