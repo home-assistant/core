@@ -150,6 +150,62 @@ class OTBRData:
         """Set current channel."""
         await self.api.set_channel(channel, delay=int(delay * 1000))
 
+    async def delete_pending_dataset(self) -> None:
+        """Delete the pending operational dataset.
+
+        Tries DELETE first (spec-compliant). Falls back to creating a pending
+        dataset with the current active dataset and delay=0, which immediately
+        applies the current state and clears the pending migration.
+        """
+        # Try the spec-compliant DELETE first; if it succeeds, return early.
+        # If it fails with 405 on older firmware, fall through to the
+        # fallback which overwrites the pending dataset instead.
+        # Re-raise any other error (connectivity, server errors, etc.).
+        try:
+            await self.api.delete_pending_dataset()
+        except python_otbr_api.OTBRError as exc:
+            if "405" not in str(exc):
+                raise HomeAssistantError("Failed to call OTBR API") from exc
+            _LOGGER.debug(
+                "DELETE pending dataset not supported, using fallback: %s", exc
+            )
+        except (aiohttp.ClientError, TimeoutError) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
+        else:
+            return
+
+        # Fallback: set a pending dataset matching the current active dataset
+        # with delay=0, which immediately applies and clears the pending state.
+        try:
+            dataset = await self.api.get_active_dataset()
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
+
+        if dataset is None:
+            raise HomeAssistantError(
+                "Failed to cancel pending dataset: no active dataset"
+            )
+
+        if dataset.active_timestamp and dataset.active_timestamp.seconds is not None:
+            dataset.active_timestamp.seconds += 1
+        else:
+            dataset.active_timestamp = python_otbr_api.Timestamp(False, 1, 0)
+
+        try:
+            await self.api.create_pending_dataset(
+                python_otbr_api.PendingDataSet(active_dataset=dataset, delay=0)
+            )
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
+
     @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
