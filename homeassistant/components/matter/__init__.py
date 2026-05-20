@@ -124,9 +124,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
-        if ble_proxy is not None:
-            await ble_proxy.disconnect()
-        await matter_client.disconnect()
+        try:
+            if ble_proxy is not None:
+                await ble_proxy.disconnect()
+        finally:
+            await matter_client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
