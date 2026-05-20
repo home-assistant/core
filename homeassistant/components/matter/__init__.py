@@ -4,6 +4,7 @@ import asyncio
 from functools import cache
 from urllib.parse import urlsplit, urlunsplit
 
+from matter_ble_proxy import MatterBleProxy
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -119,8 +120,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
+    ble_proxy: MatterBleProxy | None = None
+
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
+        if ble_proxy is not None:
+            await ble_proxy.disconnect()
         await matter_client.disconnect()
 
     entry.async_on_unload(
@@ -156,12 +161,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
 
-    # Connect to the matter-server's BLE proxy endpoint if the server reports
-    # BLE is available. The proxy bridges HA's bluetooth stack (including
-    # ESPHome BLE proxies) to the matter-server for BLE commissioning.
-    ble_proxy = None
+    # Connect to the matter-server's BLE proxy endpoint when the server is
+    # running in BLE proxy mode (--ble-proxy). The proxy bridges HA's bluetooth
+    # stack (including ESPHome BLE proxies) to the matter-server for BLE
+    # commissioning. We must NOT connect when the server uses a local BLE
+    # adapter (`bluetooth_enabled` true, `ble_proxy_enabled` false) — no `/ble`
+    # endpoint is exposed in that case.
     server_info = matter_client.server_info
-    if server_info and getattr(server_info, "bluetooth_enabled", False):
+    if server_info and getattr(server_info, "ble_proxy_enabled", False):
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
         LOGGER.info("Matter server reports BLE available, connecting BLE proxy")
         ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
@@ -173,6 +180,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
                 exc_info=True,
             )
             ble_proxy = None
+        else:
+            entry.async_on_unload(ble_proxy.disconnect)
 
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
@@ -183,8 +192,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
         try:
-            if ble_proxy is not None:
-                await ble_proxy.disconnect()
             await matter_client.disconnect()
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
@@ -201,10 +208,10 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str:
     would produce).
     """
     parsed = urlsplit(matter_ws_url)
-    path = parsed.path
+    path = parsed.path.rstrip("/")
     if path.endswith("/ws"):
         path = f"{path[:-3]}/ble"
-    elif not path or path == "/":
+    elif not path:
         path = "/ble"
     return urlunsplit(parsed._replace(path=path))
 
@@ -241,8 +248,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
 
     if unload_ok:
         entry.runtime_data.listen_task.cancel()
-        if entry.runtime_data.ble_proxy is not None:
-            await entry.runtime_data.ble_proxy.disconnect()
         await entry.runtime_data.adapter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:

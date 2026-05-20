@@ -10,11 +10,11 @@ See `docs/ble-proxy-protocol.md` in the matter-server repository for the
 protocol specification.
 """
 
-from __future__ import annotations
-
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING
 
+from bleak.backends.device import BLEDevice
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from matter_ble_proxy import (
     AdvertisementData,
     BleDeviceResolver,
@@ -27,12 +27,6 @@ from homeassistant.components.bluetooth import (
     async_register_callback,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from bleak.backends.device import BLEDevice
-    from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +60,7 @@ class HaBluetoothScanSource(BleScanSource):
         ) -> None:
             try:
                 callback_fn(_to_advertisement_data(service_info))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("BLE proxy advertisement forward failed")
 
         self._cancel = async_register_callback(
@@ -95,7 +89,9 @@ class HaBluetoothDeviceResolver(BleDeviceResolver):
         return async_ble_device_from_address(self._hass, address, connectable=True)
 
 
-def _to_advertisement_data(service_info: BluetoothServiceInfoBleak) -> AdvertisementData:
+def _to_advertisement_data(
+    service_info: BluetoothServiceInfoBleak,
+) -> AdvertisementData:
     """Translate HA's `BluetoothServiceInfoBleak` to the library's wire type."""
     return AdvertisementData(
         address=service_info.address,
