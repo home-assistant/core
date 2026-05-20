@@ -57,6 +57,7 @@ STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
 
 # Content types
+# pylint: disable-next=home-assistant-duplicate-const
 CONTENT_TYPE_JSON = "application/json"
 
 # Legacy SSE endpoint

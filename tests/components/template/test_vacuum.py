@@ -191,19 +191,6 @@ async def setup_attributes_state_vacuum(
     )
 
 
-@pytest.mark.parametrize(
-    ("count", "state_template", "style"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY)],
-)
-@pytest.mark.usefixtures("setup_state_vacuum")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("vacuum")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
-
-
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("style", "state_template", "extra_config", "parm1", "parm2"),
@@ -1014,7 +1001,10 @@ async def test_not_optimistic(
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_SEGMENTS_ACTION,
-                "segments": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
+                "segments": (
+                    "{{ [{'id': '1', 'name': 'Livingroom'},"
+                    " {'id': '2', 'name': 'Kitchen'}] }}"
+                ),
             },
         )
     ],
@@ -1130,39 +1120,47 @@ async def test_get_segments(
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'id': '1'} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'name': 'kitchen'} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {} ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
-                "segments": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}"
+                ),
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {"unique_id": TEST_VACUUM.entity_id, "segments": "{{ [[]] }}"},
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
                 "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
             },
-            "expected dictionary with keys id, name and optional group and string values",
+            "expected dictionary with keys id, name and optional"
+            " group and string values",
         ),
     ],
 )
@@ -1197,7 +1195,11 @@ async def test_invalid_segments(
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_SEGMENTS_ACTION,
-                "segments": "{{ [ {'id': '1', 'name': 'Kitchen'}, {'id': '2', 'name': states('sensor.test_attribute')}] }}",
+                "segments": (
+                    "{{ [ {'id': '1', 'name': 'Kitchen'},"
+                    " {'id': '2', 'name':"
+                    " states('sensor.test_attribute')}] }}"
+                ),
             },
         )
     ],

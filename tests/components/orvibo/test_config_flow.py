@@ -39,10 +39,10 @@ async def test_user_menu_display(hass: HomeAssistant) -> None:
         ({CONF_HOST: "192.168.1.2"}, "aa:bb:cc:dd:ee:ff", b"\xaa\xbb\xcc\xdd\xee\xff"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_edit_flow_success(
     hass: HomeAssistant,
     mock_discover,
-    mock_setup_entry,
     mock_s20,
     user_input: dict[str, Any],
     expected_mac: str,
@@ -87,11 +87,11 @@ async def test_edit_flow_success(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_edit_flow_errors(
     hass: HomeAssistant,
     mock_s20,
     mock_discover,
-    mock_setup_entry,
     user_input: dict[str, Any],
     expected_error: str,
     mock_exception: Exception | None,
@@ -130,9 +130,8 @@ async def test_edit_flow_errors(
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
 
 
-async def test_discovery_success(
-    hass: HomeAssistant, mock_discover, mock_setup_entry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_success(hass: HomeAssistant, mock_discover) -> None:
     """Verify discovery finds devices and completes config entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -164,10 +163,11 @@ async def test_discovery_success(
     assert result["result"].unique_id == "ac:cf:23:12:34:56"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_no_devices(
-    hass: HomeAssistant, mock_discover, mock_s20, mock_setup_entry
+    hass: HomeAssistant, mock_discover, mock_s20
 ) -> None:
-    """Discovery with no found devices should go to discovery_failed and recover via edit."""
+    """Discovery with no devices goes to discovery_failed."""
     mock_discover.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
@@ -215,16 +215,16 @@ async def test_discovery_no_devices(
         ({CONF_HOST: "192.168.1.5"}, "11:22:33:44:55:66", b"\x11\x22\x33\x44\x55\x66"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_success(
     hass: HomeAssistant,
     mock_discover,
-    mock_setup_entry,
     mock_s20,
     import_data: dict[str, Any],
     expected_mac: str,
     mock_mac_bytes: bytes | None,
 ) -> None:
-    """Test importing configuration.yaml entry succeeds with provided or discovered MAC."""
+    """Test importing config entry with provided or discovered MAC."""
     mock_s20.return_value._mac = mock_mac_bytes
     mock_discover.return_value = {"192.168.1.5": {"mac": b"\x11\x22\x33\x44\x55\x66"}}
 

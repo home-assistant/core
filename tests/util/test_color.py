@@ -389,7 +389,8 @@ def test_color_rgb_to_rgbww() -> None:
         255,
         255,
     )
-    # Light with mid point at ~5500K (less warm white) -> output compensated by adding less blue
+    # Light with mid point at ~5500K (less warm white)
+    # -> output compensated by adding less blue
     assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 10000) == (
         255,
         255,
@@ -397,7 +398,8 @@ def test_color_rgb_to_rgbww() -> None:
         0,
         0,
     )
-    # Light with mid point at ~1MK (unrealistically cold white) -> output compensated by adding red
+    # Light with mid point at ~1MK (unrealistically cold white)
+    # -> output compensated by adding red
     assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 1000000) == (
         0,
         118,
