@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -28,7 +28,6 @@ from .pyitach import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = "device_id"
 CONF_IR_MODULE = "ir_module"
 CONF_IR_PORTS = "ir_ports"
 CONF_IR_ENABLED_PORTS = "ir_enabled_ports"
