@@ -48,6 +48,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         icon_path = data.get(ATTR_ICON) if data else None
 
         if not client.tv_state.is_on:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_device_off",

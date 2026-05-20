@@ -1183,7 +1183,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.6.0
+guntamatic==1.8.0
 
 # homeassistant.components.profiler
 guppy3==3.1.6
@@ -2240,7 +2240,7 @@ pyiskra==0.1.27
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.5.1
+pyisy==3.6.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2705,7 +2705,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.5.1
+python-roborock==5.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
