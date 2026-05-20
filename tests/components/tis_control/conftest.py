@@ -1,5 +1,6 @@
 """The TIS Control integration conftest."""
 
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -40,8 +41,8 @@ def mock_tis_api() -> Generator[MagicMock]:
 
         # Mock the infinite event generator for the background task
         async def _mock_consume_events():
-            for _ in ():
-                yield
+            await asyncio.Event().wait()
+            yield
 
         instance.consume_events = MagicMock(side_effect=_mock_consume_events)
 
