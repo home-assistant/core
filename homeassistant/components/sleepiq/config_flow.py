@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .helpers import is_invalid_auth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,8 +116,10 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     gateway = AsyncSleepIQ(client_session=client_session)
     try:
         await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-    except SleepIQLoginException:
-        return "invalid_auth"
+    except SleepIQLoginException as err:
+        if is_invalid_auth(err):
+            return "invalid_auth"
+        return "cannot_connect"
     except SleepIQTimeoutException:
         return "cannot_connect"
 
