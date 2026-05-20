@@ -6,6 +6,7 @@ from aiopnsense import OPNsenseConnectionError
 import pytest
 
 from homeassistant.components import device_tracker
+from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.components.opnsense.coordinator import (
     OPNsenseDeviceTrackerCoordinator,
@@ -60,18 +61,32 @@ async def test_device_tracker_states(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    device_tracker_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    device_tracker_entities = [
+        entity
+        for entity in device_tracker_entities
+        if entity.domain == device_tracker.DOMAIN
+    ]
+    entity_ids_by_unique_id = {
+        entity.unique_id: entity.entity_id for entity in device_tracker_entities
+    }
+
     # Enable entities (device trackers are disabled by default)
     entity_registry.async_update_entity(
-        "device_tracker.opnsense_device_ff_ff_ff_ff_ff_ff", disabled_by=None
+        entity_ids_by_unique_id["ff:ff:ff:ff:ff:ff"], disabled_by=None
     )
-    entity_registry.async_update_entity("device_tracker.desktop", disabled_by=None)
+    entity_registry.async_update_entity(
+        entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe"], disabled_by=None
+    )
 
     # Reload the config entry to activate the enabled entities
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Test first device (no hostname)
-    entity_id_1 = "device_tracker.opnsense_device_ff_ff_ff_ff_ff_ff"
+    entity_id_1 = entity_ids_by_unique_id["ff:ff:ff:ff:ff:ff"]
     state_1 = hass.states.get(entity_id_1)
     assert state_1 is not None
     assert state_1.state == "home"  # Should be connected since it's in ARP table
@@ -80,7 +95,7 @@ async def test_device_tracker_states(
     assert state_1.attributes.get("interface") == "LAN"
 
     # Test second device (with hostname and manufacturer)
-    entity_id_2 = "device_tracker.desktop"
+    entity_id_2 = entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe"]
     state_2 = hass.states.get(entity_id_2)
     assert state_2 is not None
     assert state_2.state == "home"  # Should be connected since it's in ARP table
@@ -106,10 +121,10 @@ async def test_device_tracker_with_interfaces_filter(
             "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
     )
-    mock_config_entry.runtime_data = {
-        "opnsense_client": mock_opnsense_client.return_value,
-        "tracker_interfaces": ["WAN"],
-    }
+    mock_config_entry.runtime_data = OPNsenseRuntimeData(
+        client=mock_opnsense_client.return_value,
+        tracker_interfaces=["WAN"],
+    )
     mock_config_entry.add_to_hass(hass)
 
     entity_registry = er.async_get(hass)
