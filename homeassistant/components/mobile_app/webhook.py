@@ -90,6 +90,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_CLEANUP,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_STORE,
@@ -98,6 +99,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
@@ -793,13 +795,20 @@ async def webhook_update_live_activity_token(
     """Store a Live Activity APNs token sent by the iOS app."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
+    stored_at = dt_util.utcnow().timestamp()
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         "token": data[ATTR_PUSH_TOKEN],
-        "stored_at": dt_util.utcnow().timestamp(),
+        "stored_at": stored_at,
     }
     await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+
+    if hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] is None:
+        # Local import to avoid a circular import with __init__.
+        from . import _schedule_token_cleanup  # noqa: PLC0415
+
+        _schedule_token_cleanup(hass, stored_at + LIVE_ACTIVITY_TOKEN_TTL_SECONDS)
 
     return empty_okay_response()
 

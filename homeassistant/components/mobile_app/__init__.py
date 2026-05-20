@@ -45,6 +45,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_CLEANUP,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
@@ -92,7 +93,9 @@ def _schedule_token_cleanup(hass: HomeAssistant, next_expiry: float) -> None:
     async def _run_cleanup(_now: datetime) -> None:
         await _async_cleanup_live_activity_tokens(hass)
 
-    async_call_later(hass, delay, _run_cleanup)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] = async_call_later(
+        hass, delay, _run_cleanup
+    )
 
 
 async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
@@ -116,11 +119,15 @@ async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
         if not device_tokens:
             del live_activity_tokens[wh_id]
 
-    if changed:
-        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
-
+    # Settle the next cleanup before the save: a webhook storing a token
+    # during the await checks this handle to decide whether to restart it.
     if next_expiry is not None:
         _schedule_token_cleanup(hass, next_expiry)
+    else:
+        hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] = None
+
+    if changed:
+        await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -135,6 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config[DATA_DELETED_IDS],
         DATA_DEVICES: {},
+        DATA_LIVE_ACTIVITY_CLEANUP: None,
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,

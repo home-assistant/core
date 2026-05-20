@@ -52,6 +52,7 @@ ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
 ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
+DATA_LIVE_ACTIVITY_CLEANUP = "live_activity_cleanup"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"

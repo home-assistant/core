@@ -2,12 +2,14 @@
 
 from binascii import unhexlify
 from collections.abc import Callable
+from datetime import timedelta
 from http import HTTPStatus
 import json
 from typing import Any
 from unittest.mock import ANY, patch
 
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 import pytest
@@ -16,8 +18,10 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mobile_app.const import (
     CONF_SECRET,
     DATA_DEVICES,
+    DATA_LIVE_ACTIVITY_CLEANUP,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
+    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
 )
 from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -34,7 +38,12 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.common import MockUser, async_capture_events, async_mock_service
+from tests.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from tests.components.conversation import MockAgent
 
 
@@ -1370,6 +1379,38 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
         "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
     )
     assert isinstance(stored["stored_at"], float)
+
+
+async def test_webhook_live_activity_token_schedules_cleanup(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that storing the first token schedules a cleanup that expires it."""
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "live_activity_tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert webhook_id in tokens
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] is not None
+
+    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert webhook_id not in tokens
 
 
 async def test_webhook_live_activity_dismissed(
