@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register any custom actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      Polls every 5 minutes to keep the access point list up to date.
+      Lock state (locked/unlocked) cannot be read from the API and is
+      simulated via assumed state (async_assumed_state = True).
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide any actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events in async_added_to_hass.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: >-
+      The config entry unique ID is set to the system ID returned by the API,
+      preventing duplicate entries for the same Glutz system regardless of
+      the host URL or credentials used.
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: done
+    comment: >-
+      PARALLEL_UPDATES = 0 explicitly disables throttling. Data updates are
+      handled centrally by the coordinator; service calls (lock/unlock/open)
+      are independent and do not need to be serialized.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: The Glutz eAccess system does not support any discovery protocol.
+  discovery-update-info:
+    status: exempt
+    comment: The Glutz eAccess system does not support any discovery protocol.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: All entities are primary lock entities.
+  entity-device-class:
+    status: exempt
+    comment: The lock platform does not use device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities represent physical doors and should be enabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: >-
+      The current API does not expose battery status. If a low-battery flag
+      becomes available in a future API version, a repair issue should be raised
+      to prompt the user to recharge the lock.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

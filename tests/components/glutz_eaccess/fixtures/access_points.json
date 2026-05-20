@@ -1,0 +1,10 @@
+[
+  {
+    "accessPointId": "ap-1",
+    "location": ["Building A", "Floor 1", "Main Door"]
+  },
+  {
+    "accessPointId": "ap-2",
+    "location": []
+  }
+]

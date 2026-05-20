@@ -1,0 +1,11 @@
+{
+  "domain": "glutz_eaccess",
+  "name": "Glutz eAccess",
+  "codeowners": ["@miitchpls"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/glutz_eaccess",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyglutz-eaccess==0.2.2"]
+}
