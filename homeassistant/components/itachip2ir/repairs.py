@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -81,14 +81,14 @@ class ReconfigureRepairFlow(RepairsFlow):
     async def async_step_init(
         self,
         user_input: dict[str, Any] | None = None,
-    ):
+    ) -> RepairsFlowResult:
         """Handle the initial repair step."""
         return await self.async_step_confirm(user_input)
 
     async def async_step_confirm(
         self,
         user_input: dict[str, Any] | None = None,
-    ):
+    ) -> RepairsFlowResult:
         """Confirm that the user has handled the repair issue."""
         if user_input is not None:
             async_delete_repair_issue(self.hass, self._issue_id)
