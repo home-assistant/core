@@ -668,6 +668,16 @@
     }
   },
   "services": {
+    "set_domestic_hot_water_circulation_schedule": {
+      "description": "Sets the domestic hot water circulation pump schedule.",
+      "fields": {
+        "schedule": {
+          "description": "The schedule for the domestic hot water circulation pump.",
+          "name": "Schedule"
+        }
+      },
+      "name": "Set domestic hot water circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {
