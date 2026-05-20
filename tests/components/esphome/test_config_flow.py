@@ -2391,6 +2391,105 @@ async def test_reconfig_success_with_new_ip_same_name(
 
 
 @pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+@pytest.mark.parametrize(
+    ("host", "port", "error", "placeholder_host"),
+    [
+        ("127.0.0.2", 6053, APIConnectionError(), "127.0.0.2"),
+        ("127.0.0.1", 6054, APIConnectionError(), "127.0.0.1"),
+        ("2001:db8::2", 6053, ResolveAPIError(), "[2001:db8::2]"),
+        (
+            "kitchen-sensor.local",
+            6053,
+            APIConnectionError(),
+            "kitchen-sensor.local",
+        ),
+    ],
+)
+async def test_reconfig_can_save_changed_unreachable_connection(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    host: str,
+    port: int,
+    error: Exception,
+    placeholder_host: str,
+) -> None:
+    """Test reconfig can save changed connection details when unreachable."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kitchen Sensor",
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: host, CONF_PORT: port}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm_unreachable"
+    assert result["description_placeholders"] == {
+        "host": placeholder_host,
+        "name": "Kitchen Sensor (test)",
+        "port": str(port),
+    }
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: host,
+        CONF_PORT: port,
+        CONF_PASSWORD: "",
+        CONF_DEVICE_NAME: "test",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+    }
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reconfig_same_unreachable_host_shows_error(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reconfig does not confirm unchanged unreachable connection details."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_client.device_info.side_effect = APIConnectionError()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "connection_error"}
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
 async def test_reconfig_success_noise_psk_changes(
     hass: HomeAssistant, mock_client: APIClient
 ) -> None:
