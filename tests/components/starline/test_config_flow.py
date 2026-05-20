@@ -40,7 +40,17 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         )
         mock.get(
             f"https://developer.starline.ru/json/v2/user/{TEST_APP_UID}/user_info",
-            text='{"code": 200, "devices": [{"device_id": "123", "imei": "123", "alias": "123", "battery": "123", "ctemp": "123", "etemp": "123", "fw_version": "123", "gsm_lvl": "123", "phone": "123", "status": "1", "ts_activity": "123", "typename": "123", "balance": {}, "car_state": {}, "car_alr_state": {}, "functions": [], "position": {}}], "shared_devices": []}',
+            text=(
+                '{"code": 200, "devices": [{"device_id": "123",'
+                ' "imei": "123", "alias": "123", "battery": "123",'
+                ' "ctemp": "123", "etemp": "123",'
+                ' "fw_version": "123", "gsm_lvl": "123",'
+                ' "phone": "123", "status": "1",'
+                ' "ts_activity": "123", "typename": "123",'
+                ' "balance": {}, "car_state": {},'
+                ' "car_alr_state": {}, "functions": [],'
+                ' "position": {}}], "shared_devices": []}'
+            ),
         )
 
         result = await hass.config_entries.flow.async_init(

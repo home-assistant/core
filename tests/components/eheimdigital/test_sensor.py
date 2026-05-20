@@ -50,21 +50,21 @@ async def test_setup(
             "classic_vario_mock",
             [
                 (
-                    "sensor.mock_classicvario_current_speed",
+                    "sensor.mock_aquarium_mock_classicvario_current_speed",
                     "classic_vario_data",
                     "rel_speed",
                     10,
                     10,
                 ),
                 (
-                    "sensor.mock_classicvario_error_code",
+                    "sensor.mock_aquarium_mock_classicvario_error_code",
                     "classic_vario_data",
                     "errorCode",
                     int(FilterErrorCode.ROTOR_STUCK),
                     "rotor_stuck",
                 ),
                 (
-                    "sensor.mock_classicvario_remaining_hours_until_service",
+                    "sensor.mock_aquarium_mock_classicvario_remaining_hours_until_service",
                     "classic_vario_data",
                     "serviceHour",
                     100,
@@ -76,14 +76,14 @@ async def test_setup(
             "filter_mock",
             [
                 (
-                    "sensor.mock_filter_current_speed",
+                    "sensor.mock_aquarium_mock_filter_current_speed",
                     "filter_data",
                     "freq",
                     7200,
                     str(round(72.0, 1)),
                 ),
                 (
-                    "sensor.mock_filter_remaining_hours_until_service",
+                    "sensor.mock_aquarium_mock_filter_remaining_hours_until_service",
                     "filter_data",
                     "serviceHour",
                     100,

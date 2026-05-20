@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from aiosolaredge import SolarEdge
@@ -224,9 +224,8 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            now = datetime.now()
-            today = date.today()  # noqa: DTZ011
-            midnight = datetime.combine(today, datetime.min.time())
+            now = dt_util.now()
+            midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
             data = await self.api.get_energy_details(
                 self.site_id,
                 midnight,
@@ -322,14 +321,16 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 export = key.lower() in power_to
                 if self.data[key]:
                     self.data[key] *= -1 if export else 1
-                self.attributes[key]["flow"] = "export" if export else "import"
+                self.data["grid_flow_direction"] = "export" if export else "import"
 
             if key == "STORAGE":
                 charge = key.lower() in power_to
                 if self.data[key]:
                     self.data[key] *= -1 if charge else 1
-                self.attributes[key]["flow"] = "charge" if charge else "discharge"
-                self.attributes[key]["soc"] = value["chargeLevel"]
+                self.data["storage_flow_direction"] = (
+                    "charge" if charge else "discharge"
+                )
+                self.data["storage_level"] = value["chargeLevel"]
 
         LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)
 
