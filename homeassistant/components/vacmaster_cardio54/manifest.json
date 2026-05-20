@@ -1,0 +1,11 @@
+{
+  "domain": "vacmaster_cardio54",
+  "name": "Vacmaster Cardio54",
+  "codeowners": ["@iluebbe"],
+  "config_flow": true,
+  "dependencies": ["radio_frequency"],
+  "documentation": "https://www.home-assistant.io/integrations/vacmaster_cardio54",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "quality_scale": "gold"
+}
