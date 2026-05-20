@@ -107,7 +107,9 @@ def cleanup_stale_remote_entities(
     }
     unique_id_prefix = f"{entry.entry_id}_remote_"
 
-    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
         if entity_entry.domain != "remote":
             continue
 
@@ -234,7 +236,7 @@ class InfraredRemoteEntity(RemoteEntity):
     """Virtual remote backed by a Home Assistant infrared entity."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -248,7 +250,7 @@ class InfraredRemoteEntity(RemoteEntity):
         translation_domain: str = DOMAIN,
     ) -> None:
         """Initialize the virtual remote."""
-        self._attr_name = name
+        self._attr_name = None
         self._attr_unique_id = _remote_unique_id(unique_id_prefix, remote_id)
         self._attr_device_info = device_info
         self._infrared_entity_id = infrared_entity_id
@@ -380,7 +382,11 @@ class InfraredRemoteEntity(RemoteEntity):
             raw_command = command
 
         try:
-            ir_command = _parse_remote_command(raw_command, kwargs or {})
+            ir_command = _parse_remote_command(
+                raw_command,
+                kwargs or {},
+                translation_domain=self._translation_domain,
+            )
         except HomeAssistantError as err:
             looks_like_named_command = (
                 not command_is_configured

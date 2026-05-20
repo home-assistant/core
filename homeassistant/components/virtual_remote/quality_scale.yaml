@@ -39,7 +39,7 @@ rules:
     comment: |
       The integration does not register event listeners in entity setup.
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name: done
   runtime-data:
     status: exempt
     comment: |
@@ -113,12 +113,12 @@ rules:
       The configured virtual remote is the primary entity created by this
       helper integration and should be enabled by default.
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |
       The integration does not define custom icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: todo
     comment: |

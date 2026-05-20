@@ -52,11 +52,14 @@ class RawInfraredCommand:
 def parse_remote_command(
     raw_command: str,
     kwargs: dict[str, Any] | None = None,
+    *,
+    translation_domain: str = DOMAIN,
 ) -> RawInfraredCommand:
     """Parse a remote command payload into an infrared command.
 
     Supported payloads:
-    - JSON timing array, or JSON object with ``timings`` plus optional ``modulation``/``carrier_frequency``
+    - JSON timing array, or JSON object with ``timings`` plus optional
+      ``modulation``/``carrier_frequency``
     - raw Pronto hex beginning with ``0000``
     - text timings: ``100,200,300,400`` or ``38000:100,200``
 
@@ -69,7 +72,7 @@ def parse_remote_command(
         return _parse_remote_command(raw_command, kwargs)
     except CommandParseError as err:
         raise HomeAssistantError(
-            translation_domain=DOMAIN,
+            translation_domain=translation_domain,
             translation_key="remote_invalid_command",
             translation_placeholders={"error": str(err)},
         ) from err
