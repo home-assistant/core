@@ -40,9 +40,13 @@ def _node_from_dict(data: dict[str, Any]) -> Node:
     return Node(
         node_id=data["node_id"],
         general=NodeGeneralInfo(**data["general"]),
-        ventilation=NodeVentilationInfo(**ventilation) if ventilation else None,
-        sensor=NodeSensorInfo(**sensor) if sensor else None,
-        motor_state=NodeMotorStateInfo(**motor_state) if motor_state else None,
+        ventilation=NodeVentilationInfo(**ventilation)
+        if ventilation is not None
+        else None,
+        sensor=NodeSensorInfo(**sensor) if sensor is not None else None,
+        motor_state=NodeMotorStateInfo(**motor_state)
+        if motor_state is not None
+        else None,
     )
 
 
