@@ -1,5 +1,7 @@
 """Provides device automations for ZHA devices that emit events."""
 
+from typing import Any
+
 import voluptuous as vol
 from zha.application.const import ZHA_EVENT
 
@@ -24,6 +26,29 @@ DEVICE_IEEE = "device_ieee"
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
+
+
+def _to_native(obj: Any) -> Any:
+    """Recursively convert zigpy named types to plain Python primitives.
+
+    ZHA trigger data may contain zigpy types such as ClusterId that are int
+    subclasses but are not accepted by voluptuous as schema values, causing
+    SchemaError when event_trigger tries to build the event-data filter schema.
+    LVList and other list subclasses are handled so nested zigpy types inside
+    list-valued params are also converted.
+    """
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_native(v) for v in obj]
+    if isinstance(obj, bool):
+        # bool is an int subclass; plain True/False fail as voluptuous schema values
+        return int(obj)
+    if isinstance(obj, int):
+        return int(obj)
+    if isinstance(obj, float):
+        return float(obj)
+    return obj
 
 
 def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, dict]:
@@ -77,13 +102,18 @@ async def async_attach_trigger(
     if trigger_key not in triggers:
         raise HomeAssistantError(f"Unable to find trigger {trigger_key}")
 
+    # Convert zigpy named types (e.g. ClusterId) to plain Python primitives so
+    # that voluptuous can use the values as schema literals without SchemaError.
+    trigger_data = _to_native(triggers[trigger_key])
+
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",
             event_trigger.CONF_EVENT_TYPE: ZHA_EVENT,
-            event_trigger.CONF_EVENT_DATA: {DEVICE_IEEE: ieee, **triggers[trigger_key]},
+            event_trigger.CONF_EVENT_DATA: {DEVICE_IEEE: ieee, **trigger_data},
         }
     )
+
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, trigger_info, platform_type="device"
     )
