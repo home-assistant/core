@@ -102,6 +102,9 @@
     "entry_not_loaded": {
       "message": "Entry not loaded: {entry}"
     },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "invalid_device_id": {
       "message": "Invalid device ID specified: {device_id}"
     },
@@ -110,6 +113,17 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "unknown": {
+      "message": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "preview_features": {
+    "alexa_media": {
+      "description": "This will enable functionality to view and control music playback and volume on your Alexa devices.\n\nThis is a preview feature and liable to change.\n\nPlease provide feedback or report issues using the buttons below or join us on [Discord](https://discord.gg/9P75ptv8WT).",
+      "disable_confirmation": "Disabling this feature will remove media players for your Alexa devices.  You can re-enable this at any time to set up media players again.",
+      "enable_confirmation": "This feature is to gather feedback on the media player platform for Alexa Devices.  Enabling this will set up media players for your Alexa devices.",
+      "name": "Media player platform"
     }
   },
   "selector": {
