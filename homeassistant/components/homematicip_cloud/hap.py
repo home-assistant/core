@@ -163,10 +163,11 @@ class HomematicipHAP:
             self._ws_connection_closed.set()
             self.set_all_to_unavailable()
         elif self._ws_connection_closed.is_set():
-            _LOGGER.info("HMIP access point has reconnected to the cloud")
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-            self._ws_connection_closed.clear()
+            _LOGGER.info(
+                "HMIP access point has reconnected to the cloud (%s)",
+                self._websocket_diagnostic_context(),
+            )
+            self._start_get_state_task()
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:
@@ -180,44 +181,100 @@ class HomematicipHAP:
             await asyncio.sleep(30)
         await self.hass.config_entries.async_reload(self.config_entry.entry_id)
 
+    def websocket_diagnostics(self) -> dict[str, Any]:
+        """Return websocket diagnostics dict (None values omitted)."""
+        diagnostics = {
+            "last_disconnect_reason": self.home.websocket_last_disconnect_reason(),
+            "reconnect_attempts": self.home.websocket_reconnect_attempt_count(),
+            "seconds_since_last_message": (
+                self.home.websocket_seconds_since_last_message()
+            ),
+            "message_count": self.home.websocket_message_count(),
+        }
+        return {k: v for k, v in diagnostics.items() if v is not None}
+
+    def _websocket_diagnostic_context(self) -> str:
+        """Return a single-line summary of websocket diagnostics for logs."""
+        diagnostics = self.websocket_diagnostics()
+        if not diagnostics:
+            return "no diagnostics available"
+        return ", ".join(f"{k}={v!r}" for k, v in diagnostics.items())
+
+    @callback
+    def _start_get_state_task(self) -> None:
+        """Cancel any in-flight reconnect refresh and start a new one."""
+        if self._get_state_task is not None and not self._get_state_task.done():
+            _LOGGER.debug(
+                "Cancelling previous HomematicIP reconnect state refresh task"
+            )
+            self._get_state_task.cancel()
+
+        self._get_state_task = self.hass.async_create_task(self._try_get_state())
+        self._get_state_task.add_done_callback(self.get_state_finished)
+        self._ws_connection_closed.clear()
+
     async def _try_get_state(self) -> None:
-        """Call get_state in a loop until no error occurs.
+        """Refresh state after a websocket reconnect.
 
-        Uses exponential backoff on error.
+        Delegates the bounded websocket wait + retry-with-exponential-backoff
+        to the homematicip library (``refresh_state_after_reconnect_async``),
+        and only handles HA-specific concerns here:
+        - on authentication failure, trigger reauth
+        - clear the per-device ``unreach`` flag and signal entity updates
+          (the workaround for core#160048)
         """
+        try:
+            await self.home.refresh_state_after_reconnect_async()
+        except HmipAuthenticationError:
+            _LOGGER.error(
+                "Authentication error from HomematicIP Cloud, triggering reauth"
+            )
+            self.config_entry.async_start_reauth(self.hass)
+            return
+        self._post_state_refresh()
 
-        # Wait until WebSocket connection is established.
-        while not self.home.websocket_is_connected():
-            await asyncio.sleep(2)
+    async def _on_websocket_stale(self, severity: str, seconds_since: float) -> None:
+        """Log a websocket-stale event surfaced by the library.
 
-        delay = 8
-        max_delay = 1500
-        while True:
-            try:
-                await self.get_state()
-                break
-            except HmipAuthenticationError:
-                _LOGGER.error(
-                    "Authentication error from HomematicIP Cloud, triggering reauth"
-                )
-                self.config_entry.async_start_reauth(self.hass)
-                break
-            except HmipConnectionError as err:
-                _LOGGER.warning(
-                    "Get_state failed, retrying in %s seconds: %s", delay, err
-                )
-                await asyncio.sleep(delay)
-                delay = min(delay * 2, max_delay)
+        The library polls staleness internally and fires this callback once
+        per severity per stuck period; it re-arms when fresh messages arrive.
+        We just translate severity to a log level.
+        """
+        log = _LOGGER.error if severity == "error" else _LOGGER.warning
+        log(
+            "HomematicIP websocket has not received a message for "
+            "%.0f seconds while reporting connected (%s)",
+            seconds_since,
+            self._websocket_diagnostic_context(),
+        )
 
     async def get_state(self) -> None:
         """Update HMIP state and tell Home Assistant."""
         await self.home.get_current_state_async()
+        self._post_state_refresh()
+
+    def _post_state_refresh(self) -> None:
+        """Apply HA-specific post-processing after a state refresh.
+
+        ``set_all_to_unavailable`` marked every device unreach=True on
+        disconnect; ``get_current_state_async`` only clears that flag for
+        devices whose state actually changed during the outage, so the rest
+        stay stuck unavailable after reconnect. Force-clear for all devices.
+        Trade-off: a device that is *genuinely* unreachable on the cloud
+        side will briefly appear available until its next state push
+        corrects it. That self-corrects, while the previous behaviour left
+        entities stuck unavailable indefinitely (core #160048).
+        """
+        for device in self.home.devices:
+            device.unreach = False
         self.update_all()
 
     def get_state_finished(self, future) -> None:
         """Execute when try_get_state coroutine has finished."""
         try:
             future.result()
+        except asyncio.CancelledError:
+            _LOGGER.debug("HomematicIP reconnect state refresh task was cancelled")
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error updating state after HMIP access point reconnect: %s", err
@@ -246,6 +303,7 @@ class HomematicipHAP:
         home.set_on_connected_handler(self.ws_connected_handler)
         home.set_on_disconnected_handler(self.ws_disconnected_handler)
         home.set_on_reconnect_handler(self.ws_reconnected_handler)
+        home.set_on_websocket_stale_handler(self._on_websocket_stale)
 
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
@@ -275,22 +333,23 @@ class HomematicipHAP:
         """Handle websocket connected."""
         _LOGGER.info("Websocket connection to HomematicIP Cloud established")
         if self._ws_connection_closed.is_set():
-            self._get_state_task = self.hass.async_create_task(self._try_get_state())
-            self._get_state_task.add_done_callback(self.get_state_finished)
-
-            self._ws_connection_closed.clear()
+            self._start_get_state_task()
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
-        _LOGGER.warning("Websocket connection to HomematicIP Cloud closed")
+        _LOGGER.warning(
+            "Websocket connection to HomematicIP Cloud closed (%s)",
+            self._websocket_diagnostic_context(),
+        )
         self._ws_connection_closed.set()
 
     async def ws_reconnected_handler(self, reason: str) -> None:
         """Handle websocket reconnection."""
         _LOGGER.info(
-            "Websocket connection to HomematicIP Cloud trying"
-            " to reconnect due to reason: %s",
+            "Websocket connection to HomematicIP Cloud trying to reconnect due to "
+            "reason: %s (%s)",
             reason,
+            self._websocket_diagnostic_context(),
         )
 
         self._ws_connection_closed.set()
