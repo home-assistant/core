@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_MODE, CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -17,9 +17,6 @@ from homeassistant.helpers.trigger import (
 )
 
 from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
-
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_MODE = "mode"
 
 MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
