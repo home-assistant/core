@@ -1,7 +1,5 @@
 """Infrared platform for Broadlink remotes."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from broadlink.exceptions import BroadlinkException
@@ -40,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Broadlink infrared entity."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkInfraredEntity(device)])
 

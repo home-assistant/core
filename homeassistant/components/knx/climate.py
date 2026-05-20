@@ -1,7 +1,5 @@
 """Support for KNX climate entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx import XKNX

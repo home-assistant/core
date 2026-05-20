@@ -1,7 +1,5 @@
 """Validate integration type is set for config flow integrations."""
 
-from __future__ import annotations
-
 from .model import Config, Integration
 
 # Integrations with config_flow that are missing integration_type.
@@ -84,7 +82,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             if integration.domain in MISSING_INTEGRATION_TYPE:
                 integration.add_error(
                     "integration_type",
-                    "Integration has an `integration_type` in the manifest but is still listed in MISSING_INTEGRATION_TYPE",
+                    "Integration has an `integration_type`"
+                    " in the manifest but is still listed"
+                    " in MISSING_INTEGRATION_TYPE",
                 )
             continue
 
@@ -93,5 +93,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
         integration.add_error(
             "integration_type",
-            "Integration has a config flow but is missing an `integration_type` in the manifest",
+            "Integration has a config flow but is missing"
+            " an `integration_type` in the manifest",
         )

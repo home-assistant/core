@@ -1,7 +1,5 @@
 """Helpers to execute scripts."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
@@ -460,7 +458,7 @@ class _ScriptRun:
 
         try:
             self._log("Running %s", self._script.running_description)
-            for self._step, self._action in enumerate(self._script.sequence):
+            for self._step, self._action in enumerate(self._script.sequence):  # noqa: B020
                 if self._stop.done():
                     script_execution_set("cancelled")
                     break
@@ -891,7 +889,8 @@ class _ScriptRun:
 
                         if iteration > REPEAT_TERMINATE_ITERATIONS:
                             self._log(
-                                "While condition %s terminated because it looped %s times",
+                                "While condition %s terminated because"
+                                " it looped %s times",
                                 repeat[CONF_WHILE],
                                 REPEAT_TERMINATE_ITERATIONS,
                                 level=logging.CRITICAL,
@@ -1017,7 +1016,8 @@ class _ScriptRun:
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
-                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}' which does not support response data."
+                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}'"
+                    " which does not support response data."
                 )
 
         running_script = (
@@ -1521,7 +1521,7 @@ class Script:
         if self._unloaded:
             return
         try:
-            self.async_unload()
+            self._async_unload()
         except Exception:
             _LOGGER.exception("Error while unloading script")
 
@@ -1789,22 +1789,22 @@ class Script:
         started_action: Callable[..., Any] | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
-        # Prevent running an unloaded script
         if self._unloaded:
             raise RuntimeError(
                 f"Cannot run script '{self.name}' after it has been unloaded"
             )
+        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
+            self._log("Home Assistant is shutting down, starting script blocked")
+            return None
+        # The fences above rely on there being no await between these checks
+        # and the _runs.append below, so that setting either flag is
+        # sufficient to block new runs from being added.
 
         if context is None:
             self._log(
                 "Running script requires passing in a context", level=logging.WARNING
             )
             context = Context()
-
-        # Prevent spawning new script runs when Home Assistant is shutting down
-        if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
-            self._log("Home Assistant is shutting down, starting script blocked")
-            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1839,7 +1839,8 @@ class Script:
             variables = ScriptRunVariables.create_top_level(run_variables)
             variables["context"] = context
         else:
-            # This is not the top level script, run_variables is an instance of ScriptRunVariables
+            # This is not the top level script, run_variables
+            # is an instance of ScriptRunVariables
             variables = cast(ScriptRunVariables, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
@@ -1915,7 +1916,20 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
-    def async_unload(self) -> None:
+    async def async_unload(self) -> None:
+        """Unload the script, stopping any in-flight runs first.
+
+        Blocks new runs immediately, stops any in-flight runs, then cleans
+        up all resources.
+        """
+        if self._unloaded:
+            return
+        # Set the flag before stopping so async_run rejects new runs.
+        self._unloaded = True
+        await self.async_stop()
+        self._async_unload()
+
+    def _async_unload(self) -> None:
         """Unload the script, cleaning up all resources.
 
         Unloads cached conditions, and recursively unloads sub-scripts.
@@ -1937,31 +1951,31 @@ class Script:
         self._condition_cache.clear()
 
         for sub_script in self._repeat_script.values():
-            sub_script.async_unload()
+            sub_script._async_unload()  # noqa: SLF001
         self._repeat_script.clear()
 
         # Conditions in _choose_data and _if_data are the same objects as in
         # _condition_cache, so they're already unloaded above. Only unload scripts.
         for choose_data in self._choose_data.values():
             for _conditions, sub_script in choose_data["choices"]:
-                sub_script.async_unload()
+                sub_script._async_unload()  # noqa: SLF001
             if choose_data["default"] is not None:
-                choose_data["default"].async_unload()
+                choose_data["default"]._async_unload()  # noqa: SLF001
         self._choose_data.clear()
 
         for if_data in self._if_data.values():
-            if_data["if_then"].async_unload()
+            if_data["if_then"]._async_unload()  # noqa: SLF001
             if if_data["if_else"] is not None:
-                if_data["if_else"].async_unload()
+                if_data["if_else"]._async_unload()  # noqa: SLF001
         self._if_data.clear()
 
         for scripts in self._parallel_scripts.values():
             for sub_script in scripts:
-                sub_script.async_unload()
+                sub_script._async_unload()  # noqa: SLF001
         self._parallel_scripts.clear()
 
         for sub_script in self._sequence_scripts.values():
-            sub_script.async_unload()
+            sub_script._async_unload()  # noqa: SLF001
         self._sequence_scripts.clear()
 
     async def _async_get_condition(self, config: ConfigType) -> ConditionChecker:

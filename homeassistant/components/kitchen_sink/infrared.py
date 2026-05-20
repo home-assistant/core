@@ -1,8 +1,6 @@
 """Demo platform that offers a fake infrared entity."""
 
-from __future__ import annotations
-
-import infrared_protocols
+from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.infrared import (
@@ -47,7 +45,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable=hass-enforce-class-module
+# pylint: disable=home-assistant-enforce-class-module
 class DemoInfraredEntityBase(Entity):
     """Representation of a demo infrared entity."""
 
@@ -67,7 +65,7 @@ class DemoInfraredEntityBase(Entity):
 class DemoInfraredEmitter(DemoInfraredEntityBase, InfraredEmitterEntity):
     """Representation of a demo infrared emitter entity."""
 
-    async def async_send_command(self, command: infrared_protocols.Command) -> None:
+    async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         raw_timings = command.get_raw_timings()
         persistent_notification.async_create(

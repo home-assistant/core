@@ -1,13 +1,14 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
-from __future__ import annotations
-
 import math
 from typing import Any
+
+from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -16,8 +17,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .commands import COMMAND_MINUS, COMMAND_PLUS, get_codes_for_code
-from .const import CONF_CODE, SPEED_COUNT
+from .commands import COMMAND_MINUS, COMMAND_PLUS
+from .const import SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1

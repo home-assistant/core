@@ -1,6 +1,5 @@
 """Read status of growatt inverters."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-missing-parallel-updates
 
 from datetime import date, datetime
 import logging

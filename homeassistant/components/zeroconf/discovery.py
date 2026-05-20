@@ -1,7 +1,5 @@
 """Zeroconf discovery for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from fnmatch import translate
@@ -43,7 +41,9 @@ HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL_LOWER = "md"
 HOMEKIT_MODEL_UPPER = "MD"
 
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_DOMAIN: Final = "domain"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
@@ -466,7 +466,8 @@ class ZeroconfDiscovery:
         # Conflict detected, create repair issue
         _joined_ips = ", ".join(str(ip_address) for ip_address in discovered_ips)
         _LOGGER.warning(
-            "Discovered another Home Assistant instance with the same instance ID (%s) at %s",
+            "Discovered another Home Assistant instance"
+            " with the same instance ID (%s) at %s",
             discovered_instance_id,
             _joined_ips,
         )

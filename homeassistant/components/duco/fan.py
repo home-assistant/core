@@ -1,11 +1,9 @@
 """Fan platform for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 
-from duco.exceptions import DucoError, DucoRateLimitError
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.exceptions import DucoError, DucoRateLimitError
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -64,7 +62,8 @@ async def async_setup_entry(
     """Set up Duco fan entities."""
     coordinator = entry.runtime_data
 
-    # BOX is always node 1 and is never dynamically added or removed, so no listener needed.
+    # BOX is always node 1 and is never dynamically added
+    # or removed, so no listener needed.
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
         for node in coordinator.data.nodes.values()

@@ -174,7 +174,7 @@
       'entity_picture': '/api/camera_proxy/camera.netatmo_doorbell?token=1caab5c3b3',
       'friendly_name': 'Netatmo-Doorbell',
       'id': '12:34:56:10:f1:66',
-      'is_local': None,
+      'is_local': False,
       'light_state': None,
       'local_url': None,
       'monitoring': True,

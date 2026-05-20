@@ -1,7 +1,5 @@
 """Support for SimpliSafe alarm systems."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any
@@ -376,6 +374,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     ):
         if hass.services.has_service(DOMAIN, service):
             continue
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     current_options = {**entry.options}

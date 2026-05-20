@@ -1,7 +1,5 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from openerz_api.main import OpenERZConnector
@@ -20,6 +18,7 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 CONF_ZIP = "zip"
 CONF_WASTE_TYPE = "waste_type"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_NAME = "name"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(

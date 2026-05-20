@@ -1,7 +1,5 @@
 """Config flow for ScreenLogic."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -207,7 +205,7 @@ class ScreenLogicOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=hass-config-flow-polling-field
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Required(
                         CONF_SCAN_INTERVAL,
                         default=current_interval,

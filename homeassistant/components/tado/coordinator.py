@@ -1,7 +1,5 @@
 """Coordinator for the Tado integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, time, timedelta
 import logging
 from typing import Any
@@ -171,7 +169,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._time_until_reset = (next_reset - reset_time).total_seconds()
 
         # When any zone is actively heating, we use a shorter minimum
-        # To prevent overshooting in temperature, check if there's heating/cooling activity
+        # To prevent overshooting in temperature,
+        # check if there's heating/cooling activity
         # Accept five minutes to "overshoot", else reset back to 30 minutes
         min_interval = 300 if self._is_any_zone_active else 1800
 
@@ -182,7 +181,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = SCAN_INTERVAL
             self._next_update = reset_time + timedelta(seconds=self._current_interval)
             _LOGGER.debug(
-                "Rate limit info unavailable; using default update interval: %s seconds",
+                "Rate limit info unavailable;"
+                " using default update interval: %s seconds",
                 self._current_interval,
             )
             return
@@ -284,9 +284,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_home(self) -> dict[str, dict]:
         """Update the home data from Tado."""
 
+        def _get_home_data() -> tuple[dict, dict]:
+            """Get the weather and geofence data for the home."""
+            return self._tado.get_weather(), self._tado.get_home_state()
+
         try:
-            weather = await self.hass.async_add_executor_job(self._tado.get_weather)
-            geofence = await self.hass.async_add_executor_job(self._tado.get_home_state)
+            weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
         except RequestException as err:
             _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
@@ -360,7 +363,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set a zone overlay."""
 
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
+            "Set overlay for zone %s: overlay_mode=%s,"
+            " temp=%s, duration=%s, type=%s, mode=%s,"
+            " fan_speed=%s, swing=%s, fan_level=%s,"
+            " vertical_swing=%s, horizontal_swing=%s",
             zone_id,
             overlay_mode,
             temperature,

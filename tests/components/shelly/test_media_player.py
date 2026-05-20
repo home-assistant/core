@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -139,7 +140,12 @@ STATUS_AUDIO_FILE = {
             "artist": "Artist",
             "duration": 132415,
             "position": 64644,
-            "thumb": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA",
+            "thumb": (
+                "data:image/webp;base64,"
+                "UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAA"
+                "QUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFA"
+                "JiWkAANwAP79NmgA"
+            ),
             "title": "Title",
         },
         "media_type": "AUDIO",
@@ -563,11 +569,13 @@ async def test_rpc_media_player_browse_media_unsupported_media_type(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for media_player.test_name of Test name",
+            "Device communication error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for media_player.test_name of Test name",
+            "RPC call error occurred while calling action"
+            " for media_player.test_name of Test name",
         ),
         (
             InvalidAuthError,
@@ -631,3 +639,27 @@ async def test_rpc_media_player_no_media_meta(
     assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
     assert state.attributes.get(ATTR_MEDIA_DURATION) is None
     assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+
+
+async def test_rpc_media_player_unavailable(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test media player entity handles device going offline without raising."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE

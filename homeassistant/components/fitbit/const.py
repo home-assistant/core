@@ -1,7 +1,5 @@
 """Constants for the Fitbit platform."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -15,6 +13,7 @@ ATTR_LAST_SAVED_AT: Final = "last_saved_at"
 
 ATTR_DURATION: Final = "duration"
 ATTR_DISTANCE: Final = "distance"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ELEVATION: Final = "elevation"
 ATTR_HEIGHT: Final = "height"
 ATTR_WEIGHT: Final = "weight"
@@ -52,7 +51,8 @@ class FitbitUnitSystem(StrEnum):
     This is used as a header to tell the Fitbit API which type of units to return.
     https://dev.fitbit.com/build/reference/web-api/developer-guide/application-design/#Units
 
-    Prefer to leave unset for newer configurations to use the Home Assistant default units.
+    Prefer to leave unset for newer configurations to use
+    the Home Assistant default units.
     """
 
     LEGACY_DEFAULT = "default"

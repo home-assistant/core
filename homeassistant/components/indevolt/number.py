@@ -1,8 +1,6 @@
 """Number platform for Indevolt integration."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Final
 
 from indevolt_api import IndevoltConfig
@@ -19,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -29,15 +28,15 @@ PARALLEL_UPDATES = 0
 class IndevoltNumberEntityDescription(NumberEntityDescription):
     """Custom entity description class for Indevolt number entities."""
 
-    generation: list[int] = field(default_factory=lambda: [1, 2])
     read_key: str
     write_key: str
+    generation: tuple[int, ...] = (1, 2)
 
 
 NUMBERS: Final = (
     IndevoltNumberEntityDescription(
         key="discharge_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="discharge_limit",
         read_key=IndevoltConfig.READ_DISCHARGE_LIMIT,
         write_key=IndevoltConfig.WRITE_DISCHARGE_LIMIT,
@@ -48,7 +47,7 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="max_ac_output_power",
-        generation=[2],
+        generation=(2,),
         translation_key="max_ac_output_power",
         read_key=IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
         write_key=IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
@@ -60,7 +59,7 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="inverter_input_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="inverter_input_limit",
         read_key=IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
         write_key=IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
@@ -72,7 +71,7 @@ NUMBERS: Final = (
     ),
     IndevoltNumberEntityDescription(
         key="feedin_power_limit",
-        generation=[2],
+        generation=(2,),
         translation_key="feedin_power_limit",
         read_key=IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
         write_key=IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
@@ -140,4 +139,8 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
             await self.coordinator.async_request_refresh()
 
         else:
-            raise HomeAssistantError(f"Failed to set value {int_value} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

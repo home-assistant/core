@@ -1,7 +1,5 @@
 """Actions for the Habitica integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from datetime import UTC, date, datetime, time
 import logging
@@ -742,7 +740,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             reminders.extend(
                 Reminders(
                     id=uuid4(),
-                    time=datetime.combine(date.today(), r, tzinfo=UTC),
+                    time=datetime.combine(date.today(), r, tzinfo=UTC),  # noqa: DTZ011
                 )
                 for r in add_reminders
                 if r not in existing_reminder_times

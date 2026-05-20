@@ -1,7 +1,5 @@
 """Constants used by Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 
@@ -9,6 +7,7 @@ from tesla_fleet_api.const import Scope
 
 DOMAIN = "tesla_fleet"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DOMAIN = "domain"
 CONF_REFRESH_TOKEN = "refresh_token"
 

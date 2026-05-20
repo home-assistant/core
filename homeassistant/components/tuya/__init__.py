@@ -1,7 +1,5 @@
 """Support for Tuya Smart devices."""
 
-from __future__ import annotations
-
 import logging
 
 from tuya_sharing import Manager
@@ -63,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         listener.async_register_device(device_registry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # If the device does not register any entities, the device does not need to subscribe
+    # If the device does not register any entities,
+    # the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
     return True

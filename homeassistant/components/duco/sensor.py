@@ -1,13 +1,11 @@
 """Sensor platform for the Duco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
 
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,7 +18,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -56,19 +53,17 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="ventilation_state",
         translation_key="ventilation_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[s.lower() for s in VentilationState],
+        options=[
+            state.lower()
+            for state in VentilationState
+            if state != VentilationState.UNKNOWN
+        ],
         value_fn=lambda node: (
-            node.ventilation.state.lower() if node.ventilation else None
+            node.ventilation.state.lower()
+            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            else None
         ),
         node_types=(NodeType.BOX,),
-    ),
-    DucoSensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
     ),
     DucoSensorEntityDescription(
         key="target_flow_level",
@@ -92,17 +87,6 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
             if node.ventilation and node.ventilation.time_state_end != 0
             else None
         ),
-        node_types=(NodeType.BOX,),
-    ),
-    DucoSensorEntityDescription(
-        key="box_temperature",
-        translation_key="box_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
@@ -169,6 +153,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
+        """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
@@ -192,14 +177,19 @@ async def async_setup_entry(
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
                 continue
-            known_nodes.add(node.node_id)
             if node.general.node_type == NodeType.UNKNOWN:
-                _LOGGER.warning(
-                    "Duco node %s (%s) has an unsupported device type and will be ignored",
+                # Do not add the node to known_nodes so that it is re-evaluated
+                # on every coordinator update. This allows entities to be
+                # created automatically once a firmware update or library
+                # update adds support for the device type.
+                _LOGGER.debug(
+                    "Duco node %s (%s) has an unsupported device type and will be "
+                    "retried on subsequent coordinator updates",
                     node.node_id,
                     node.general.name,
                 )
                 continue
+            known_nodes.add(node.node_id)
             new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
                 for description in SENSOR_DESCRIPTIONS

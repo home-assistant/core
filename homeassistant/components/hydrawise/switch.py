@@ -1,7 +1,5 @@
 """Support for Hydrawise cloud switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta

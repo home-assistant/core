@@ -1,7 +1,5 @@
 """Component providing number entities for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
@@ -174,7 +172,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field=None,
         ufp_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
         ufp_perm=PermRequired.WRITE,
@@ -187,7 +184,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
-        ufp_required_field=None,
         ufp_value_fn=_get_pir_duration,
         ufp_set_method_fn=_set_pir_duration,
         ufp_perm=PermRequired.WRITE,
@@ -203,7 +199,6 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field=None,
         ufp_value="motion_settings.sensitivity",
         ufp_set_method="set_motion_sensitivity",
         ufp_perm=PermRequired.WRITE,
@@ -219,7 +214,6 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=3600,
         ufp_step=15,
-        ufp_required_field=None,
         ufp_value_fn=_get_auto_close,
         ufp_set_method_fn=_set_auto_close,
         ufp_perm=PermRequired.WRITE,

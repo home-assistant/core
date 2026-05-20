@@ -1,7 +1,5 @@
 """Manager for esphome devices."""
 
-from __future__ import annotations
-
 import base64
 from functools import partial
 import logging
@@ -344,7 +342,7 @@ class ESPHomeManager:
         call_id: int,
         response_template: str | None = None,
     ) -> None:
-        """Handle service call that expects a response and send response back to ESPHome."""
+        """Handle service call with response and send it back to ESPHome."""
         try:
             # Call the service with response capture enabled
             action_response = await self.hass.services.async_call(

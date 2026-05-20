@@ -1,7 +1,5 @@
 """Details about the built-in battery."""
 
-from __future__ import annotations
-
 import logging
 import os
 from typing import Any
@@ -30,6 +28,7 @@ ATTR_CYCLE_COUNT = "cycle_count"
 ATTR_ENERGY_FULL = "energy_full"
 ATTR_ENERGY_FULL_DESIGN = "energy_full_design"
 ATTR_ENERGY_NOW = "energy_now"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL_NAME = "model_name"
 ATTR_POWER_NOW = "power_now"

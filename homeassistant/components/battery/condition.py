@@ -1,7 +1,5 @@
 """Provides conditions for batteries."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,

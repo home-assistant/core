@@ -3,6 +3,7 @@
   "name": "Viessmann ViCare",
   "codeowners": ["@CFenner", "@lackas"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "macaddress": "B87424*"
@@ -12,5 +13,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.60.1"]
+  "requirements": ["PyViCare==2.60.2"]
 }

@@ -1,7 +1,5 @@
 """Support for Tuya Alarm."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.alarm_control_panel import (
     AlarmControlPanelDefinition,
     get_default_definition,
@@ -43,7 +41,9 @@ _TUYA_TO_HA_STATE_MAPPINGS = {
     TuyaAlarmControlPanelState.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     TuyaAlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
     TuyaAlarmControlPanelState.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS
+    ),
     TuyaAlarmControlPanelState.PENDING: AlarmControlPanelState.PENDING,
     TuyaAlarmControlPanelState.ARMING: AlarmControlPanelState.ARMING,
     TuyaAlarmControlPanelState.DISARMING: AlarmControlPanelState.DISARMING,

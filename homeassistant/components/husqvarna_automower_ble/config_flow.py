@@ -1,7 +1,5 @@
 """Config flow for Husqvarna Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import random
 from typing import Any
@@ -157,6 +155,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         channel_id = random.randint(1, 0xFFFFFFFF)
 
         assert self.address
+
+        if device is None:
+            LOGGER.debug("Could not find device with address '%s'", self.address)
+            return None
 
         try:
             (manufacturer, device_type, _model) = await Mower(

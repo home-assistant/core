@@ -1,7 +1,5 @@
 """Support for LG webOS TV notification service."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiowebostv import WebOsClient

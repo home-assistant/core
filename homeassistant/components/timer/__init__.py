@@ -1,7 +1,5 @@
 """Support for Timers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -336,7 +334,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         """Change duration of a running timer."""
         if self._listener is None or self._end is None:
             raise HomeAssistantError(
-                f"Timer {self.entity_id} is not running, only active timers can be changed"
+                f"Timer {self.entity_id} is not running,"
+                " only active timers can be changed"
             )
         # Check against new remaining time before checking boundaries
         new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
@@ -346,7 +345,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             )
         if self._remaining and (self._remaining + duration) < timedelta():
             raise HomeAssistantError(
-                f"Not possible to change timer {self.entity_id} to negative time remaining"
+                f"Not possible to change timer"
+                f" {self.entity_id} to negative time remaining"
             )
 
         self._listener()

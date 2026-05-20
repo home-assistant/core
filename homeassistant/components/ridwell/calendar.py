@@ -1,7 +1,5 @@
 """Support for Ridwell calendars."""
 
-from __future__ import annotations
-
 import datetime
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent
@@ -51,7 +49,8 @@ def async_get_calendar_event_from_pickup_event(
         # Include only a basic title for the event.
         summary = summary_base
     else:
-        # Default to pickup status if no selection is made (e.g., scheduled, skipped, etc).
+        # Default to pickup status if no selection is made
+        # (e.g., scheduled, skipped, etc).
         summary = f"{summary_base} ({pickup_event_state})"
 
     return CalendarEvent(

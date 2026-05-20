@@ -1,11 +1,10 @@
 """Support for HDMI CEC devices as media players."""
 
-from __future__ import annotations
-
 import logging
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
+    CMD_STANDBY,
     KEY_BACKWARD,
     KEY_FORWARD,
     KEY_MUTE_TOGGLE,
@@ -95,7 +94,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        self._device.turn_off()
+        self._device.send_command(CecCommand(CMD_STANDBY, dst=self._logical_address))
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 

@@ -1,7 +1,5 @@
 """Config flow for elmax-cloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -139,12 +137,13 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._test_direct_and_create_entry()
 
     async def _test_direct_and_create_entry(self):
-        """Test the direct connection to the Elmax panel and create and entry if successful."""
+        """Test the direct connection to the Elmax panel and create entry."""
         ssl_context = None
         self._panel_direct_ssl_cert = None
         if self._panel_direct_use_ssl:
             # Fetch the remote certificate.
-            # Local API is exposed via a self-signed SSL that we must add to our trust store.
+            # Local API is exposed via a self-signed SSL that
+            # we must add to our trust store.
             self._panel_direct_ssl_cert = (
                 await GenericElmax.retrieve_server_certificate(
                     hostname=self._panel_direct_hostname,
@@ -155,7 +154,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 build_direct_ssl_context, self._panel_direct_ssl_cert
             )
 
-        # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
+        # Attempt the connection to make sure the pin works.
+        # Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
             host=self._panel_direct_hostname,
             port=self._panel_direct_port,
@@ -289,7 +289,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Otherwise, it means we are handling now the "submission" of the user form.
-        # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
+        # In this case, let's try to log in to the Elmax cloud
+        # and retrieve the available panels.
         username = user_input[CONF_ELMAX_USERNAME]
         password = user_input[CONF_ELMAX_PASSWORD]
         try:
@@ -309,7 +310,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "network_error"},
             )
 
-        # If the login succeeded, retrieve the list of available panels and filter the online ones
+        # If the login succeeded, retrieve the list of available
+        # panels and filter the online ones
         online_panels = [x for x in await client.list_control_panels() if x.online]
 
         # If no online panel was found, we display an error in the next UI.
@@ -321,8 +323,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Show the panel selection.
-        # We want the user to choose the panel using the associated name, we set up a mapping
-        # dictionary to handle that case.
+        # We want the user to choose the panel using the
+        # associated name, we set up a mapping dictionary to
+        # handle that case.
         panel_names: dict[str, str] = {}
         username = client.get_authenticated_username()
         for panel in online_panels:
@@ -411,7 +414,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
             panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
             await self.async_set_unique_id(self._reauth_cloud_panelid)
 
-            # Handle authentication, make sure the panel we are re-authenticating against is listed among results
+            # Handle authentication, make sure the panel we are
+            # re-authenticating against is listed among results
             # and verify its pin is correct.
             reauth_entry = self._get_reauth_entry()
             try:
@@ -465,15 +469,20 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         http_port: int,
     ) -> ConfigFlowResult | None:
         # Look for another entry with the same PANEL_ID (local or remote).
-        # If there already is a matching panel, take the change to notify the Coordinator
-        # so that it uses the newly discovered IP address. This mitigates the issues
+        # If there already is a matching panel, take the chance
+        # to notify the Coordinator so that it uses the newly
+        # discovered IP address. This mitigates the issues
         # arising with DHCP and IP changes of the panels.
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_ELMAX_PANEL_ID] in (local_id, remote_id):
-                # If the discovery finds another entry with the same ID, skip the notification.
-                # However, if the discovery finds a new host for a panel that was already registered
-                # for a given host (leave PORT comparison aside as we don't want to get notified twice
-                # for HTTP and HTTPS), update the entry so that the integration "follows" the DHCP IP.
+                # If the discovery finds another entry with the
+                # same ID, skip the notification. However, if the
+                # discovery finds a new host for a panel that was
+                # already registered for a given host (leave PORT
+                # comparison aside as we don't want to get
+                # notified twice for HTTP and HTTPS), update the
+                # entry so that the integration "follows" the
+                # DHCP IP.
                 if (
                     entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
                     == CONF_ELMAX_MODE_DIRECT
@@ -490,7 +499,8 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(
                         entry, unique_id=entry.unique_id, data=new_data
                     )
-                # Abort the configuration, as there already is an entry for this PANEL-ID.
+                # Abort the configuration, as there already
+                # is an entry for this PANEL-ID.
                 return self.async_abort(reason="already_configured")
         return None
 

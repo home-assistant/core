@@ -1,7 +1,5 @@
 """Handle intents with scripts."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, TypedDict
 
@@ -31,6 +29,7 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
@@ -79,10 +78,9 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
     existing_intents = hass.data[DOMAIN]
 
     for intent_type, conf in existing_intents.items():
-        if isinstance(conf.get(CONF_ACTION), script.Script):
-            await conf[CONF_ACTION].async_stop()
-            conf[CONF_ACTION].async_unload()
         intent.async_remove(hass, intent_type)
+        if isinstance(conf.get(CONF_ACTION), script.Script):
+            await conf[CONF_ACTION].async_unload()
 
     if not new_config or DOMAIN not in new_config:
         hass.data[DOMAIN] = {}
@@ -257,7 +255,8 @@ class ScriptIntentHandler(intent.IntentHandler):
             else:
                 action_res = await action.async_run(slots, intent_obj.context)
 
-                # if the action returns a response, make it available to the speech/reprompt templates below
+                # if the action returns a response, make it
+                # available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
                     slots["action_response"] = action_res.service_response
 

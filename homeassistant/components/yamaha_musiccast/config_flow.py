@@ -1,7 +1,5 @@
 """Config flow for MusicCast."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -97,7 +95,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
 
-        # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
+        # ssdp_location and hostname have been checked in
+        # check_yamaha_ssdp so it is safe to ignore type
         self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)
