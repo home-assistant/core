@@ -1605,6 +1605,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "easywave": {
+      "name": "Easywave",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ebox": {
       "name": "EBox",
       "integration_type": "hub",

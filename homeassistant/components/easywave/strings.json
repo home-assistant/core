@@ -1,0 +1,178 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
+      "code_send_failed": "Could not send the learning command to the receiver. Please try again.",
+      "device_added": "The device was successfully added to the gateway.",
+      "device_not_connected": "The RX11 transceiver is not connected. Please ensure it is plugged in.",
+      "learning_cancelled": "Learning mode was cancelled.",
+      "no_available_receivers": "All 99 receiver slots on the RX11 are already in use.",
+      "no_device_learned": "No transmitter was detected.",
+      "no_devices_found": "No serial ports found. Make sure the RX11 USB Transceiver is plugged in and recognized by the system."
+    },
+    "error": {
+      "cannot_get_gateway_serial": "Could not retrieve gateway serial from the RX11. Please try again.",
+      "device_no_longer_available": "The selected device is no longer available. Please try again."
+    },
+    "progress": {
+      "waiting_for_sensor": "Waiting for a sensor learn telegram...",
+      "waiting_for_transmitter": "Waiting for a transmitter telegram..."
+    },
+    "step": {
+      "add_receiver": {
+        "description": "Which operating mode would you like to use?",
+        "menu_option_descriptions": {
+          "mode_universal": "Switching impulses can be triggered for all 4 usable transmit codes."
+        },
+        "menu_options": {
+          "mode_universal": "UNIVERSAL (4-Button)"
+        },
+        "title": "Operating Mode"
+      },
+      "button_count_select": {
+        "description": "Please specify the number of available buttons.",
+        "menu_option_descriptions": {
+          "buttons_1": "The transmitter/channel has only 1 button with any button code.",
+          "buttons_2": "The transmitter/channel has 2 buttons with button codes A and B.",
+          "buttons_3": "The transmitter/channel has 3 buttons with button codes A, B and C.",
+          "buttons_4": "The transmitter/channel has 4 buttons with button codes A, B, C and D."
+        },
+        "menu_options": {
+          "buttons_1": "1 button",
+          "buttons_2": "2 buttons",
+          "buttons_3": "3 buttons",
+          "buttons_4": "4 buttons"
+        },
+        "title": "Button Count"
+      },
+      "confirm": {
+        "description": "Detected device:\n**{name} ({serial_number})**\n\nPort: {device}",
+        "title": "Set up RX11 USB Transceiver"
+      },
+      "init": {
+        "description": "Which device would you like to add?",
+        "menu_options": {
+          "add_receiver": "Easywave receiver",
+          "add_transmitter": "Easywave transmitter"
+        },
+        "title": "Device Selection"
+      },
+      "learn": {
+        "description": "Press a button on the Easywave transmitter now. The RX11 is listening for signals...",
+        "title": "Learning transmitter"
+      },
+      "learn_timeout": {
+        "description": "No transmitter signal was received within the timeout period.",
+        "menu_options": {
+          "abort_learn": "Cancel",
+          "learn": "Try again"
+        },
+        "title": "No Signal Received"
+      },
+      "ports": {
+        "data": {
+          "device_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "data_description": {
+          "device_path": "The serial port your RX11 USB Transceiver is connected to."
+        },
+        "description": "Select the serial port of the RX11 USB Transceiver.",
+        "title": "Select Easywave device"
+      },
+      "receiver_confirm_learning": {
+        "description": "Did the LED on the receiver light up steadily for ~4 seconds, or otherwise acknowledge the learning process (refer to the receiver manual)? If not, you can repeat sending the learning telegram.",
+        "menu_options": {
+          "receiver_learn_start": "No, repeat sending the learning command",
+          "receiver_name": "Yes, the receiver acknowledged learning"
+        },
+        "title": "Confirm learning"
+      },
+      "receiver_name": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name for the receiver device."
+        },
+        "description": "The receiver was successfully programmed. Make sure the receiver has left programming mode (the LED must no longer blink). Enter a name for the new device.",
+        "title": "Name receiver"
+      },
+      "receiver_prepare": {
+        "description": "Put your Easywave receiver into programming mode now by pressing the program button on the receiver. Refer to the receiver's manual for the correct programming mode for this operating mode.\n\nClick OK once the receiver is in programming mode and the LED is blinking. The integration will then send a learning telegram so the receiver can pair with this gateway.",
+        "title": "Prepare receiver"
+      },
+      "transmitter_confirm": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name for this transmitter device."
+        },
+        "description": "An Easywave transmitter was detected. Give it a name.",
+        "title": "Transmitter Detected"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "battery_low": "Battery low",
+      "battery_normal": "Battery OK",
+      "gateway_connected": "Gateway connected",
+      "gateway_disconnected": "Gateway disconnected",
+      "state_a": "Changed to state 'Button A'",
+      "state_b": "Changed to state 'Button B'",
+      "state_c": "Changed to state 'Button C'",
+      "state_d": "Changed to state 'Button D'",
+      "state_released": "Changed to state 'Not pressed'"
+    }
+  },
+  "entity": {
+    "button": {
+      "universal_a": {
+        "name": "Button A"
+      },
+      "universal_b": {
+        "name": "Button B"
+      },
+      "universal_c": {
+        "name": "Button C"
+      },
+      "universal_d": {
+        "name": "Button D"
+      }
+    },
+    "sensor": {
+      "battery_warning": {
+        "name": "Battery",
+        "state": {
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
+      "gateway_status": {
+        "name": "Connection Status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Not Connected"
+        }
+      },
+      "transmitter_last_button": {
+        "name": "State",
+        "state": {
+          "a": "Button A",
+          "b": "Button B",
+          "c": "Button C",
+          "d": "Button D",
+          "released": "Not pressed"
+        }
+      }
+    }
+  },
+  "issues": {
+    "frequency_not_permitted": {
+      "description": "This Easywave hardware operates on **{frequency}**, which is **not permitted** in your configured Home Assistant region (**{country}**).\n\nThe integration has been disabled for regulatory compliance.\n\nIf you believe this is incorrect, verify your country setting under **Settings → System → General → Country**. The 868 MHz band is permitted in EU/EEA countries, the UK, Switzerland, Norway, Iceland, and Liechtenstein.",
+      "title": "Easywave: {frequency} not permitted in {country}"
+    }
+  }
+}
