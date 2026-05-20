@@ -125,8 +125,11 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

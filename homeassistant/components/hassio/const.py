@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -19,6 +19,8 @@ if TYPE_CHECKING:
         StoreInfo,
         SupervisorInfo,
     )
+
+    from homeassistant.auth.models import User
 
     from .config import HassioConfig
     from .coordinator import (
@@ -129,9 +131,11 @@ ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
@@ -145,6 +149,9 @@ DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issues")
 DATA_KEY_MOUNTS = "mounts"
+DATA_HASSIO_HTTP_CONFIG: HassKey[dict[str, Any]] = HassKey("hassio_http_config")
+DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
+DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"

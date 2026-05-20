@@ -87,7 +87,7 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                             else self._get_reconfigure_entry().data[CONF_ID]
                         ),
                         # Name field is no longer allowed in config flow schemas
-                        # pylint: disable-next=hass-config-flow-name-field
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,

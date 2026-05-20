@@ -262,11 +262,13 @@ class ProtectMediaSource(MediaSource):
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}
             Root Camera(s) Event Type(s) browse source
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
-            Listing of all events in last {day_count}, sorted in reverse chronological order
+            Listing of all events in last {day_count},
+            sorted in reverse chronological order
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}
             List of folders for each day in month + all events for month
         * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
-            Listing of all events for give {day} + {month} + {year} combination in chronological order
+            All events for given day/month/year
+            in chronological order
         """
 
         if not item.identifier:
