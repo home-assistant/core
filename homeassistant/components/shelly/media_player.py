@@ -247,12 +247,16 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         thumb = self._media_meta["thumb"]
         try:
             prefix, image_data = thumb.split(",", 1)
-            image = base64.b64decode(image_data, validate=True)
             mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except binascii.Error, ValueError:
+        except ValueError:
             return await super().async_get_media_image()
 
         if mime not in ALLOWED_IMAGE_MIME_TYPES:
+            return await super().async_get_media_image()
+
+        try:
+            image = base64.b64decode(image_data, validate=True)
+        except binascii.Error:
             return await super().async_get_media_image()
 
         return image, mime
