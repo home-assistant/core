@@ -71,6 +71,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    component.config = {}
+    component.register_shutdown()
 
     # The tracker is loaded in the async_setup_legacy_integration task so
     # we create a future to avoid waiting on it here so that only
