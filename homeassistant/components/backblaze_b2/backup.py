@@ -67,7 +67,9 @@ def _parse_metadata(raw_content: str) -> dict[str, Any]:
         raise TypeError("JSON content is not a dictionary")
     missing = REQUIRED_METADATA_KEYS - data.keys()
     if missing:
-        raise ValueError(f"Missing required metadata keys: {sorted(missing)}")
+        raise ValueError(
+            f"Missing required metadata keys: {', '.join(sorted(missing))}"
+        )
     return data
 
 
