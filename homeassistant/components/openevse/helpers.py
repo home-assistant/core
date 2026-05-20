@@ -1,6 +1,6 @@
 """Helpers for OpenEVSE."""
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from contextlib import contextmanager
 
 from aiohttp import ContentTypeError
@@ -20,7 +20,7 @@ from .const import DOMAIN
 
 
 @contextmanager
-def openevse_exception_handler(value: float | None = None) -> Generator[None]:
+def openevse_exception_handler(value: float) -> Iterator[None]:
     """Context manager to handle and translate OpenEVSE exceptions."""
     try:
         yield
