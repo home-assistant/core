@@ -1,7 +1,5 @@
 """Generic entity for the HomematicIP Cloud component."""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 from typing import Any
@@ -86,6 +84,8 @@ class HomematicipGenericEntity(Entity):
         channel: int | None = None,
         is_multi_channel: bool | None = False,
         channel_real_index: int | None = None,
+        *,
+        feature_id: str,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
@@ -95,12 +95,15 @@ class HomematicipGenericEntity(Entity):
         self._channel = channel
 
         # channel_real_index represents the actual index of the devices channel.
-        # Accessing a functionalChannel by the channel parameter or array index is unreliable,
-        # because the functionalChannels array is sorted as strings, not numbers.
+        # Accessing a functionalChannel by the channel parameter
+        # or array index is unreliable, because the
+        # functionalChannels array is sorted as strings, not
+        # numbers.
         # For example, channels are ordered as: 1, 10, 11, 12, 2, 3, ...
         # Using channel_real_index ensures you reference the correct channel.
         self._channel_real_index: int | None = channel_real_index
 
+        self._feature_id = feature_id
         self._is_multi_channel = is_multi_channel
         self.functional_channel = None
         with contextlib.suppress(ValueError):
@@ -237,11 +240,10 @@ class HomematicipGenericEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        unique_id = f"{self.__class__.__name__}_{self._device.id}"
-        if self._is_multi_channel:
-            unique_id = f"{self.__class__.__name__}_Channel{self.get_channel_index()}_{self._device.id}"
-
-        return unique_id
+        if not isinstance(self._device, Device):
+            return f"{self._device.id}_{self._feature_id}"
+        channel_index = self.get_channel_index()
+        return f"{self._device.id}_{channel_index}_{self._feature_id}"
 
     @property
     def icon(self) -> str | None:
@@ -277,28 +279,35 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel for the device.
 
         Resolution priority:
-        1. For multi-channel entities with a real index, find channel by index match.
-        2. For multi-channel entities without a real index, use the provided channel position.
-        3. For non multi-channel entities with >1 channels, use channel at position 1
-           (index 0 is often a meta/service channel in HmIP).
+        1. For multi-channel entities with a real index, find
+           channel by index match.
+        2. For multi-channel entities without a real index, use
+           the provided channel position.
+        3. For non multi-channel entities with >1 channels, use
+           channel at position 1 (index 0 is often a meta/service
+           channel in HmIP).
         Raises ValueError if no suitable channel can be resolved.
         """
         functional_channels = getattr(self._device, "functionalChannels", None)
         if not functional_channels:
             raise ValueError(
-                f"Device {getattr(self._device, 'id', 'unknown')} has no functionalChannels"
+                f"Device {getattr(self._device, 'id', 'unknown')}"
+                " has no functionalChannels"
             )
 
         # Multi-channel handling
         if self._is_multi_channel:
-            # Prefer real index mapping when provided to avoid ordering issues.
+            # Prefer real index mapping when provided to avoid
+            # ordering issues.
             if self._channel_real_index is not None:
                 for channel in functional_channels:
                     if channel.index == self._channel_real_index:
                         return channel
                 raise ValueError(
-                    f"Real channel index {self._channel_real_index} not found for device "
-                    f"{getattr(self._device, 'id', 'unknown')}"
+                    f"Real channel index"
+                    f" {self._channel_real_index}"
+                    " not found for device"
+                    f" {getattr(self._device, 'id', 'unknown')}"
                 )
             # Fallback: positional channel (already sorted as strings upstream).
             if self._channel is not None and 0 <= self._channel < len(
@@ -306,8 +315,9 @@ class HomematicipGenericEntity(Entity):
             ):
                 return functional_channels[self._channel]
             raise ValueError(
-                f"Channel position {self._channel} invalid for device "
-                f"{getattr(self._device, 'id', 'unknown')} (len={len(functional_channels)})"
+                f"Channel position {self._channel} invalid for"
+                f" device {getattr(self._device, 'id', 'unknown')}"
+                f" (len={len(functional_channels)})"
             )
 
         # Single-channel / non multi-channel entity: choose second element if available
@@ -319,7 +329,8 @@ class HomematicipGenericEntity(Entity):
         """Return the correct channel index for this entity.
 
         Prefers channel_real_index if set, otherwise returns channel.
-        This ensures the correct channel is used even if the functionalChannels list is not numerically ordered.
+        This ensures the correct channel is used even if the
+        functionalChannels list is not numerically ordered.
         """
         if self._channel_real_index is not None:
             return self._channel_real_index
@@ -333,6 +344,7 @@ class HomematicipGenericEntity(Entity):
         """Return the FunctionalChannel or raise an error if not found."""
         if not self.functional_channel:
             raise ValueError(
-                f"No functional channel found for device {getattr(self._device, 'id', 'unknown')}"
+                f"No functional channel found for device"
+                f" {getattr(self._device, 'id', 'unknown')}"
             )
         return self.functional_channel

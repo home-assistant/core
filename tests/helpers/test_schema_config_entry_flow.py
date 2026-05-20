@@ -1,7 +1,5 @@
 """Tests for the schema based data entry flows."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -76,7 +74,7 @@ def manager_fixture():
 
 
 async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
-    """Test the config flow name is copied from registry entry, with fallback to state."""
+    """Test config flow name is copied from registry, with state fallback."""
     entity_id = "switch.ceiling"
 
     # No entry or state, use Object ID

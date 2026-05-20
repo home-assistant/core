@@ -1,7 +1,5 @@
 """STT constante."""
 
-from __future__ import annotations
-
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING
 

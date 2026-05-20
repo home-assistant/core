@@ -177,7 +177,7 @@ async def test_option_flow(
 ) -> None:
     """Test config flow options."""
     basic_parameters = ["known_hosts"]
-    advanced_parameters = ["ignore_cec", "uuid"]
+    extra_parameters = ["ignore_cec", "uuid"]
 
     data = {
         "ignore_cec": [],
@@ -190,85 +190,67 @@ async def test_option_flow(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Test ignore_cec and uuid options are hidden if advanced options are disabled
+    # Check the data schema
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "basic_options"
+    assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"known_hosts"}
+    assert set(data_schema) == {"known_hosts", "more_options"}
+    more_options_schema = data_schema["more_options"].schema.schema
+    assert set(more_options_schema) == {"ignore_cec", "uuid"}
+
     orig_data = dict(config_entry.data)
 
-    # Reconfigure known_hosts
-    context = {"source": config_entries.SOURCE_USER, "show_advanced_options": True}
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context=context
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "basic_options"
-    data_schema = result["data_schema"].schema
+    # Check suggested values
     for other_param in basic_parameters:
         if other_param == parameter:
             continue
         assert get_schema_suggested_value(data_schema, other_param) == []
     if parameter in basic_parameters:
         assert get_schema_suggested_value(data_schema, parameter) == suggested
+    for other_param in extra_parameters:
+        if other_param == parameter:
+            continue
+        assert get_schema_suggested_value(more_options_schema, other_param) == ""
+    if parameter in extra_parameters:
+        assert get_schema_suggested_value(more_options_schema, parameter) == suggested
 
-    user_input_dict = {}
+    # Reconfigure
+    user_input_dict = {"more_options": {}}
     if parameter in basic_parameters:
         user_input_dict[parameter] = user_input
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input=user_input_dict,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "advanced_options"
-    for other_param in basic_parameters:
-        if other_param == parameter:
-            continue
-        assert config_entry.data[other_param] == []
-    # No update yet
-    assert config_entry.data[parameter] == initial
-
-    # Reconfigure ignore_cec, uuid
-    data_schema = result["data_schema"].schema
-    for other_param in advanced_parameters:
-        if other_param == parameter:
-            continue
-        assert get_schema_suggested_value(data_schema, other_param) == ""
-    if parameter in advanced_parameters:
-        assert get_schema_suggested_value(data_schema, parameter) == suggested
-
-    user_input_dict = {}
-    if parameter in advanced_parameters:
-        user_input_dict[parameter] = user_input
+    if parameter in extra_parameters:
+        user_input_dict["more_options"][parameter] = user_input
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input=user_input_dict,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
-    for other_param in advanced_parameters:
+    for other_param in basic_parameters:
+        if other_param == parameter:
+            continue
+        assert config_entry.data[other_param] == []
+    for other_param in extra_parameters:
         if other_param == parameter:
             continue
         assert config_entry.data[other_param] == []
     assert config_entry.data[parameter] == updated
 
-    # Clear known_hosts
+    # Clear lists
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={"more_options": {}},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
-    expected_data = {**orig_data, "known_hosts": []}
-    if parameter in advanced_parameters:
-        expected_data[parameter] = updated
+    expected_data = {**orig_data, "ignore_cec": [], "known_hosts": [], "uuid": []}
     assert dict(config_entry.data) == expected_data
 
 
 async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
-    """Test known hosts is passed to pychromecasts."""
+    """Test known hosts is passed to pychromecast."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
     )
@@ -286,7 +268,10 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"known_hosts": ["192.168.0.11", "192.168.0.12"]},
+        user_input={
+            "known_hosts": ["192.168.0.11", "192.168.0.12"],
+            "more_options": {},
+        },
     )
 
     await hass.async_block_till_done(wait_background_tasks=True)

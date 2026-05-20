@@ -1,7 +1,5 @@
 """Define a base coordinator for Bluesound entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib

@@ -11,6 +11,7 @@ from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -42,6 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
 
     if entry.version == 1 and entry.minor_version < 3:
         if CONF_SITE in entry.data:

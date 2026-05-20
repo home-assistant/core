@@ -1,7 +1,5 @@
 """Notifications for Android TV notification service."""
 
-from __future__ import annotations
-
 from io import BufferedReader
 import logging
 from typing import Any
@@ -17,7 +15,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ATTR_ICON, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -27,7 +25,6 @@ from .const import (
     ATTR_COLOR,
     ATTR_DURATION,
     ATTR_FONTSIZE,
-    ATTR_ICON,
     ATTR_ICON_AUTH,
     ATTR_ICON_AUTH_DIGEST,
     ATTR_ICON_PASSWORD,
@@ -105,6 +102,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     duration = int(
                         data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
                     )
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", data.get(ATTR_DURATION)

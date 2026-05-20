@@ -1,7 +1,5 @@
 """Support for Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -76,7 +74,10 @@ TEMPERATURE_SENSOR_DEVICE_INDEX = 2
 class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     OverkizEntity, ClimateEntity
 ):
-    """Representation of Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
+    """Representation of Atlantic Electrical Heater.
+
+    With Adjustable Temperature Setpoint.
+    """
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]

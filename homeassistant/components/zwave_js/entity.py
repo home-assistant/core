@@ -1,13 +1,12 @@
 """Generic Z-Wave Entity Class."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     SetValueResult,
     Value as ZwaveValue,
@@ -30,7 +29,12 @@ from .const import (
     LOGGER,
 )
 from .discovery_data_template import BaseDiscoverySchemaDataTemplate
-from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
+from .helpers import (
+    get_device_id,
+    get_device_info,
+    get_unique_id,
+    get_valueless_base_unique_id,
+)
 from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 
@@ -428,3 +432,65 @@ class ZWaveBaseEntity(Entity):
             raise HomeAssistantError(
                 f"Unable to set value {value.value_id}: {err}"
             ) from err
+
+
+class ZWaveNodeBaseEntity(Entity):
+    """Base entity class for Z-Wave node-level (non-value) entities.
+
+    Used for entities that exist for the whole node rather than a specific
+    Z-Wave Value (e.g. firmware update, ping button, node status sensor).
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    # Subclasses can opt in to also being removed when a node starts a
+    # reinterview. Useful for entities whose existence depends on CCs that
+    # may disappear during reinterview.
+    _remove_on_reinterview = False
+
+    def __init__(self, driver: Driver, node: ZwaveNode) -> None:
+        """Initialize a Z-Wave node-level entity."""
+        self.driver = driver
+        self.node = node
+
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
+
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value (no-op for entities not backed by a Z-Wave Value)."""
+        # We log an error instead of raising an exception because this service
+        # call occurs in a separate task since it is called via the dispatcher
+        # and we don't want to raise the exception in that separate task because
+        # it is confusing to the user.
+        LOGGER.error(
+            "There is no value to refresh for %s so the zwave_js.refresh_value"
+            " service won't work for it",
+            self.entity_id,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
+            )
+        )
+        if self._remove_on_reinterview:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_interview_started",
+                    self.async_remove,
+                )
+            )

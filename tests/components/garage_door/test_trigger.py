@@ -15,6 +15,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -45,6 +46,31 @@ async def test_garage_door_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the garage door triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("garage_door.closed", {}, True, True),
+        ("garage_door.opened", {}, True, True),
+    ],
+)
+async def test_garage_door_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that garage_door triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -85,7 +111,10 @@ async def test_garage_door_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test garage door trigger fires for binary_sensor entities with device_class garage_door."""
+    """Test garage door trigger fires for binary_sensor entities.
+
+    Specifically for entities with device_class garage_door.
+    """
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,

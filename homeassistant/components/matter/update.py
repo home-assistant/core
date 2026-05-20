@@ -1,7 +1,5 @@
 """Matter update."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -17,7 +15,6 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +23,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -59,11 +56,11 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
 
 
@@ -179,15 +176,22 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
-                f"Update provided by {self._software_update.update_source.value}. "
-                "Installing this update is at your own risk and you may run into unexpected "
-                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+                "Update provided by "
+                f"{self._software_update.update_source.value}. "
+                "Installing this update is at your own risk "
+                "and you may run into unexpected "
+                "problems such as the need to re-add and "
+                "factory reset your device.</ha-alert>\n\n"
             )
         return release_notes + (
-            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
-            "especially for battery powered devices. Please be patient and wait until the update "
-            "process is fully completed. Do not remove power from the device while it's updating. "
-            "The device may restart during the update process and be unavailable for several minutes."
+            "\n\n<ha-alert alert-type='info'>"
+            "The update process can take a while, "
+            "especially for battery powered devices. "
+            "Please be patient and wait until the update "
+            "process is fully completed. Do not remove power "
+            "from the device while it's updating. "
+            "The device may restart during the update process "
+            "and be unavailable for several minutes."
             "</ha-alert>\n\n"
         )
 
