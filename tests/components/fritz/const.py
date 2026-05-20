@@ -1039,14 +1039,26 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
+
+MOCK_FRITZ_SSDP_DEVICE_UUID = "2f402f80-da79-4e15-8e7b-4b6b6b6b6b6b"
+MOCK_FRITZ_SSDP_UDN = f"uuid:{MOCK_FRITZ_SSDP_DEVICE_UUID}"
+MOCK_FRITZ_SSDP_USN = f"uuid:{MOCK_FRITZ_SSDP_DEVICE_UUID}::upnp:rootdevice"
+MOCK_FRITZ_OTHER_DEVICE_UUID = "550e8400-e29b-41d4-a716-446655440001"
+
 MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",
     upnp={
         ATTR_UPNP_FRIENDLY_NAME: "fake_name",
-        ATTR_UPNP_UDN: "uuid:only-a-test",
+        ATTR_UPNP_UDN: MOCK_FRITZ_SSDP_UDN,
     },
+)
+MOCK_SSDP_DATA_NO_UDN = SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",
+    upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
 )
 
 MOCK_REQUEST = (

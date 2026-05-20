@@ -1,11 +1,9 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 
 from collections.abc import Mapping
-import ipaddress
 import logging
 import socket
 from typing import Any, Self
-from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -31,7 +29,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
@@ -52,6 +49,14 @@ from .const import (
     FRITZ_AUTH_EXCEPTIONS,
 )
 from .coordinator import FritzConfigEntry
+from .ssdp_discovery import (
+    host_from_ssdp,
+    is_link_local_host,
+    is_placeholder_unique_id,
+    resolve_host_ips,
+    unique_id_for_discovery,
+    uuid_from_discovery,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,9 +164,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
-        host = ssdp_location.hostname
-        if not host or ipaddress.ip_address(host).is_link_local:
+        host = host_from_ssdp(discovery_info)
+        if not host:
+            return self.async_abort(reason="no_host")
+        if is_link_local_host(host):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         self._host = host
@@ -170,19 +176,31 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             or discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
         )
 
-        uuid: str | None
-        if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
-            uuid = uuid.removeprefix("uuid:")
-            await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._host})
+        device_uuid = uuid_from_discovery(discovery_info)
+
+        if entry := await self.async_check_configured_entry():
+            config_host = entry.data.get(CONF_HOST)
+            if device_uuid and entry.unique_id != device_uuid:
+                resolved_hosts = await self.hass.async_add_executor_job(
+                    resolve_host_ips, host, config_host
+                )
+                if is_placeholder_unique_id(
+                    entry.unique_id,
+                    host,
+                    config_host,
+                    resolved_hosts=resolved_hosts,
+                ):
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=device_uuid
+                    )
+            return self.async_abort(reason="already_configured")
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
 
-        if entry := await self.async_check_configured_entry():
-            if uuid and not entry.unique_id:
-                self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
-            return self.async_abort(reason="already_configured")
+        unique_id_for_flow = unique_id_for_discovery(discovery_info, host)
+        await self.async_set_unique_id(unique_id_for_flow)
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
         self.context.update(
             {

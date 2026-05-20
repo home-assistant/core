@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import dataclasses
+from typing import Any
 from unittest.mock import patch
 
 from fritzconnection.core.exceptions import (
@@ -25,6 +26,18 @@ from homeassistant.components.fritz.const import (
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
+from homeassistant.components.fritz.ssdp_discovery import (
+    host_from_ssdp,
+    host_from_ssdp_usn,
+    hostname_from_url,
+    is_link_local_host,
+    is_placeholder_unique_id,
+    parse_device_uuid,
+    resolve_host_ips,
+    uuid_from_discovery,
+    uuid_from_ssdp_usn,
+    uuid_from_upnp_udn,
+)
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -37,6 +50,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
@@ -45,14 +59,290 @@ from .conftest import FritzConnectionMock
 from .const import (
     MOCK_FB_SERVICES,
     MOCK_FIRMWARE_INFO,
+    MOCK_FRITZ_OTHER_DEVICE_UUID,
+    MOCK_FRITZ_SSDP_DEVICE_UUID,
+    MOCK_FRITZ_SSDP_UDN,
+    MOCK_FRITZ_SSDP_USN,
     MOCK_IPS,
     MOCK_REQUEST,
     MOCK_SSDP_DATA,
+    MOCK_SSDP_DATA_NO_UDN,
     MOCK_USER_DATA,
     MOCK_USER_INPUT_SIMPLE,
 )
 
 from tests.common import MockConfigEntry
+
+
+def _flow_context(hass: HomeAssistant, flow_id: str) -> dict[str, Any]:
+    """Return context from an in-progress config flow (public API)."""
+    for progress in hass.config_entries.flow.async_progress():
+        if progress["flow_id"] == flow_id:
+            return progress["context"]
+    pytest.fail(f"Flow {flow_id} not in progress")
+
+
+def _flow_unique_id(hass: HomeAssistant, flow_id: str) -> str | None:
+    """Return unique_id from an in-progress config flow (public API)."""
+    return _flow_context(hass, flow_id).get("unique_id")
+
+
+def test_parse_device_uuid() -> None:
+    """Test UUID parsing and normalization."""
+    assert parse_device_uuid(f"  {MOCK_FRITZ_SSDP_DEVICE_UUID}  ") == (
+        MOCK_FRITZ_SSDP_DEVICE_UUID
+    )
+    assert parse_device_uuid("") is None
+    assert parse_device_uuid("not-a-uuid") is None
+
+
+def test_uuid_from_upnp_udn() -> None:
+    """Test UUID extraction from UPnP UDN."""
+    assert uuid_from_upnp_udn(MOCK_FRITZ_SSDP_UDN) == MOCK_FRITZ_SSDP_DEVICE_UUID
+    assert uuid_from_upnp_udn("uuid:not-a-uuid") is None
+
+
+def test_uuid_from_ssdp_usn() -> None:
+    """Test UUID extraction from SSDP USN."""
+    assert uuid_from_ssdp_usn(MOCK_FRITZ_SSDP_USN) == MOCK_FRITZ_SSDP_DEVICE_UUID
+    assert uuid_from_ssdp_usn("mock_usn") is None
+
+
+def test_host_from_ssdp_location() -> None:
+    """Test host extraction from SSDP location."""
+    assert host_from_ssdp(MOCK_SSDP_DATA) == MOCK_IPS["fritz.box"]
+
+
+def test_host_from_ssdp_returns_none() -> None:
+    """Test host extraction when location and headers are missing."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert host_from_ssdp(discovery) is None
+
+
+def test_host_from_ssdp_returns_none_without_usn() -> None:
+    """Test host extraction when SSDP provides no USN."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert host_from_ssdp(discovery) is None
+
+
+def test_host_from_ssdp_skips_non_string_header_location() -> None:
+    """Test host extraction ignores non-string header location values."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_headers={"location": 12345},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert host_from_ssdp(discovery) is None
+
+
+def test_host_from_ssdp_empty_location_hostname_uses_headers() -> None:
+    """Test host uses headers when location has no hostname."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http:///no-hostname",
+        ssdp_headers={"location": f"https://{MOCK_IPS['fritz.box']}:12345/test"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert host_from_ssdp(discovery) == MOCK_IPS["fritz.box"]
+
+
+def test_host_from_ssdp_usn() -> None:
+    """Test USN host extraction requires an exact fritz.box URL hostname."""
+    assert (
+        host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box") == "fritz.box"
+    )
+    assert (
+        host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://FRITZ.box") == "fritz.box"
+    )
+    assert host_from_ssdp_usn("uuid:device-1::upnp:rootdevice") is None
+    assert host_from_ssdp_usn("uuid:device-1::vendor:my-fritz.box-repeater") is None
+    assert host_from_ssdp_usn("uuid:device-1::upnp://fritz.box.local") is None
+    assert host_from_ssdp_usn("uuid:device-1::vendor://fritz.box.example/path") is None
+    assert (
+        host_from_ssdp_usn("uuid:device-1::upnp:rootdevice://fritz.box::suffix")
+        == "fritz.box"
+    )
+
+
+def test_hostname_from_url_value_error() -> None:
+    """Test malformed locations return None instead of raising."""
+    with patch(
+        "homeassistant.components.fritz.ssdp_discovery.urlparse",
+        side_effect=ValueError(),
+    ):
+        assert hostname_from_url("https://[invalid") is None
+
+
+def test_host_from_ssdp_uses_usn_when_location_missing() -> None:
+    """Test host falls back to USN when SSDP location is absent."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    assert host_from_ssdp(discovery) == "fritz.box"
+
+
+def test_is_link_local_host() -> None:
+    """Test link-local host detection."""
+    assert is_link_local_host("fritz.box") is False
+    assert is_link_local_host(MOCK_IPS["fritz.box"]) is False
+    assert is_link_local_host("fe80::1") is True
+    assert is_link_local_host("not-an-ip") is False
+
+
+def test_is_placeholder_unique_id() -> None:
+    """Test placeholder unique_id detection for SSDP migration."""
+    assert is_placeholder_unique_id(None, "192.168.1.1", "fritz.box") is True
+    assert is_placeholder_unique_id("192.168.1.1", "192.168.1.1", "fritz.box") is True
+    assert is_placeholder_unique_id("fritz.box", "192.168.1.1", "fritz.box") is True
+    assert (
+        is_placeholder_unique_id(
+            MOCK_FRITZ_OTHER_DEVICE_UUID, "192.168.1.1", "fritz.box"
+        )
+        is False
+    )
+    resolved = frozenset({MOCK_IPS["fritz.box"]})
+    assert is_placeholder_unique_id(
+        MOCK_IPS["fritz.box"],
+        "fritz.box",
+        "fritz.box",
+        resolved_hosts=resolved,
+    )
+
+
+def test_resolve_host_ips() -> None:
+    """Test resolve_host_ips returns resolved IPv4 for a hostname."""
+    with patch(
+        "homeassistant.components.fritz.ssdp_discovery.socket.gethostbyname",
+        return_value=MOCK_IPS["fritz.box"],
+    ) as mock_gethost:
+        assert resolve_host_ips("fritz.box") == frozenset({MOCK_IPS["fritz.box"]})
+        mock_gethost.assert_called_once_with("fritz.box")
+
+
+def test_uuid_from_discovery_prefers_udn() -> None:
+    """Test UUID from discovery prefers UPnP UDN over USN."""
+    discovery = dataclasses.replace(
+        MOCK_SSDP_DATA,
+        ssdp_usn=MOCK_FRITZ_SSDP_USN,
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_UDN: MOCK_FRITZ_SSDP_UDN,
+        },
+    )
+    assert uuid_from_discovery(discovery) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+def test_uuid_from_discovery_falls_back_to_usn() -> None:
+    """Test UUID from discovery uses USN when UDN is missing."""
+    assert uuid_from_discovery(MOCK_SSDP_DATA_NO_UDN) is None
+    discovery = dataclasses.replace(
+        MOCK_SSDP_DATA_NO_UDN,
+        ssdp_usn=MOCK_FRITZ_SSDP_USN,
+    )
+    assert uuid_from_discovery(discovery) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_hostname_from_usn_only(hass: HomeAssistant, fc_class_mock) -> None:
+    """Test SSDP flow uses fritz.box from USN and the device UUID from UDN."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_UDN: MOCK_FRITZ_SSDP_UDN,
+        },
+    )
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert (
+        _flow_context(hass, result["flow_id"])["configuration_url"]
+        == "http://fritz.box"
+    )
+    assert _flow_unique_id(hass, result["flow_id"]) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_fritz_box_from_usn_without_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP uses fritz.box host and host unique_id when no UUID is advertised."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert (
+        _flow_context(hass, result["flow_id"])["configuration_url"]
+        == "http://fritz.box"
+    )
+    assert _flow_unique_id(hass, result["flow_id"]) == "fritz.box"
+
+
+async def test_ssdp_already_configured_skips_migration_without_uuid(
+    hass: HomeAssistant,
+) -> None:
+    """Test SSDP without UUID does not migrate a host placeholder unique_id."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_DATA, CONF_HOST: "fritz.box"},
+        unique_id="fritz.box",
+    )
+    mock_config.add_to_hass(hass)
+
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+    with patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IPS["fritz.box"],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.unique_id == "fritz.box"
 
 
 @pytest.mark.parametrize(
@@ -580,7 +870,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock) -> No
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_DATA,
-        unique_id="only-a-test",
+        unique_id=MOCK_FRITZ_SSDP_DEVICE_UUID,
     )
     mock_config.add_to_hass(hass)
 
@@ -601,13 +891,15 @@ async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock) -> No
         assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock) -> None:
-    """Test starting a flow from discovery with an already configured host."""
+async def test_ssdp_already_configured_keeps_unrelated_unique_id(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP keeps unrelated unique_id for the same host."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_DATA,
-        unique_id="different-test",
+        unique_id=MOCK_FRITZ_OTHER_DEVICE_UUID,
     )
     mock_config.add_to_hass(hass)
 
@@ -626,12 +918,13 @@ async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock) 
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_OTHER_DEVICE_UUID
 
 
-async def test_ssdp_already_configured_host_uuid(
+async def test_ssdp_already_configured_migrates_missing_unique_id(
     hass: HomeAssistant, fc_class_mock
 ) -> None:
-    """Test starting a flow from discovery with an already configured uuid."""
+    """Test SSDP sets unique_id when the entry has none."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -655,6 +948,276 @@ async def test_ssdp_already_configured_host_uuid(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_uuid_from_usn_when_udn_missing(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP reads UUID from USN if UPnP UDN is absent."""
+    mock_ssdp = dataclasses.replace(
+        MOCK_SSDP_DATA,
+        ssdp_usn=MOCK_FRITZ_SSDP_USN,
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=mock_ssdp
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+        assert _flow_unique_id(hass, result["flow_id"]) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_invalid_udn_uses_usn_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test invalid UPnP UDN falls back to SSDP USN UUID."""
+    mock_ssdp = dataclasses.replace(
+        MOCK_SSDP_DATA,
+        ssdp_usn=MOCK_FRITZ_SSDP_USN,
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_UDN: "uuid:not-a-uuid",
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=mock_ssdp
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert _flow_unique_id(hass, result["flow_id"]) == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_host_unique_id_when_uuid_missing(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP uses host as unique_id without UDN or USN UUID."""
+    mock_ssdp = dataclasses.replace(
+        MOCK_SSDP_DATA,
+        ssdp_usn="mock_usn",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "fake_name"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=mock_ssdp
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+        assert _flow_unique_id(hass, result["flow_id"]) == MOCK_IPS["fritz.box"]
+
+
+async def test_ssdp_host_unique_id_when_uuid_invalid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP falls back to host when UDN and USN are not valid UUIDs."""
+    mock_ssdp = dataclasses.replace(
+        MOCK_SSDP_DATA,
+        ssdp_usn="uuid:not-a-uuid::upnp:rootdevice",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_UDN: "uuid:not-a-uuid",
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=mock_ssdp
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+        assert _flow_unique_id(hass, result["flow_id"]) == MOCK_IPS["fritz.box"]
+
+
+async def test_ssdp_migrate_discovered_host_unique_id_to_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP migrates unique_id from discovered host IP to device UUID."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id=MOCK_IPS["fritz.box"],
+    )
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_without_uuid_keeps_host_unique_id(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP does not migrate when discovery provides no device UUID."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id=MOCK_IPS["fritz.box"],
+    )
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA_NO_UDN
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_IPS["fritz.box"]
+
+
+async def test_ssdp_migrate_hostname_unique_id_when_ip_discovered(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP migrates hostname unique_id when discovery reports the IP."""
+    host_data = {**MOCK_USER_DATA, CONF_HOST: "fritz.box"}
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=host_data,
+        unique_id="fritz.box",
+    )
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_migrate_resolved_ip_unique_id_when_usn_reports_hostname(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP migrates IP unique_id when discovery host is hostname-only."""
+    host_data = {**MOCK_USER_DATA, CONF_HOST: "fritz.box"}
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=host_data,
+        unique_id=MOCK_IPS["fritz.box"],
+    )
+    mock_config.add_to_hass(hass)
+    discovery = SsdpServiceInfo(
+        ssdp_usn="uuid:device-1::upnp:rootdevice://fritz.box",
+        ssdp_st="mock_st",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_UDN: MOCK_FRITZ_SSDP_UDN,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch("socket.gethostbyname", return_value=MOCK_IPS["fritz.box"]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
+
+
+async def test_ssdp_migrate_config_host_unique_id_to_uuid(
+    hass: HomeAssistant, fc_class_mock
+) -> None:
+    """Test SSDP migrates unique_id from CONF_HOST to device UUID."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_DATA,
+        unique_id=MOCK_USER_DATA[CONF_HOST],
+    )
+    mock_config.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config.unique_id == MOCK_FRITZ_SSDP_DEVICE_UUID
 
 
 async def test_ssdp_already_in_progress_host(
@@ -677,11 +1240,8 @@ async def test_ssdp_already_in_progress_host(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm"
 
-        MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA)
-        MOCK_NO_UNIQUE_ID.upnp = MOCK_NO_UNIQUE_ID.upnp.copy()
-        del MOCK_NO_UNIQUE_ID.upnp[ATTR_UPNP_UDN]
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_UNIQUE_ID
+            DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA_NO_UDN
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_in_progress"
@@ -785,6 +1345,23 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock) -> None:
     }
 
 
+async def test_ssdp_aborts_when_host_missing(hass: HomeAssistant) -> None:
+    """Test SSDP aborts when no host can be resolved."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+            ATTR_UPNP_MODEL_NAME: "fake_model",
+        },
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_host"
+
+
 async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
     """Test ignoring ipv6-link-local while ssdp discovery."""
 
@@ -797,7 +1374,7 @@ async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
             ssdp_location="https://[fe80::1ff:fe23:4567:890a]:12345/test",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "fake_name",
-                ATTR_UPNP_UDN: "uuid:only-a-test",
+                ATTR_UPNP_UDN: MOCK_FRITZ_SSDP_UDN,
             },
         ),
     )
