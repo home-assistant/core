@@ -1,0 +1,18 @@
+{
+  "domain": "ryse",
+  "name": "RYSE",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "manufacturer_id": 1033
+    }
+  ],
+  "codeowners": ["@mohamedkalel82"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/ryse",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["ryseble==1.9.0"]
+}

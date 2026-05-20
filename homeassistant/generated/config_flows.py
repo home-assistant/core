@@ -641,6 +641,7 @@ FLOWS = {
         "ruuvi_gateway",
         "ruuvitag_ble",
         "rympro",
+        "ryse",
         "sabnzbd",
         "samsung_infrared",
         "samsungtv",
