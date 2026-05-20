@@ -1274,6 +1274,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/onvif/ @jterrace
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
+/homeassistant/components/open_responses/ @Komzpa
+/tests/components/open_responses/ @Komzpa
 /homeassistant/components/open_router/ @joostlek @ab3lson
 /tests/components/open_router/ @joostlek @ab3lson
 /homeassistant/components/openai_conversation/ @Shulyaka
