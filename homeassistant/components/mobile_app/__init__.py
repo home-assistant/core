@@ -85,7 +85,7 @@ class _MobileAppStore(Store[dict[str, Any]]):
 @callback
 def _schedule_token_cleanup(hass: HomeAssistant, next_expiry: float) -> None:
     """Schedule a cleanup task to run when the next live activity token expires."""
-    delay = max(1.0, next_expiry - dt_util.utcnow().timestamp())
+    delay = next_expiry - dt_util.utcnow().timestamp()
     hass.loop.call_later(
         delay,
         lambda: hass.async_create_task(_async_cleanup_live_activity_tokens(hass)),
