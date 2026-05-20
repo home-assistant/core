@@ -14,6 +14,7 @@ from pyvlx import (
     Scene,
     Window,
 )
+from pyvlx.const import Velocity
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
@@ -75,6 +76,8 @@ def mock_window() -> AsyncMock:
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False, known=True)
+    window.use_default_velocity = False
+    window.default_velocity = Velocity.DEFAULT
     window.wink = AsyncMock()
     window.pyvlx = MagicMock()
     return window
@@ -96,6 +99,8 @@ def mock_dual_roller_shutter() -> AsyncMock:
         position_percent=30, closed=False, known=True
     )
     cover.position = MagicMock(position_percent=30, closed=False, known=True)
+    cover.use_default_velocity = False
+    cover.default_velocity = Velocity.DEFAULT
     cover.pyvlx = MagicMock()
     return cover
 
@@ -117,6 +122,8 @@ def mock_blind() -> AsyncMock:
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()
     blind.set_orientation = AsyncMock()
+    blind.use_default_velocity = False
+    blind.default_velocity = Velocity.DEFAULT
     blind.pyvlx = MagicMock()
     return blind
 
@@ -186,6 +193,8 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.position_lower_curtain = MagicMock(
         position_percent=30, closed=False, known=True
     )
+    cover.use_default_velocity = False
+    cover.default_velocity = Velocity.DEFAULT
     cover.pyvlx = MagicMock()
     return cover
 
