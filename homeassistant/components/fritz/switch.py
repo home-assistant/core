@@ -25,10 +25,10 @@ from .const import (
     Platform,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
-from .vpn_switch import async_setup_vpn_switches
 from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
+from .vpn_switch import async_setup_vpn_switches
 
 _LOGGER = logging.getLogger(__name__)
 
