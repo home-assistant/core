@@ -72,7 +72,14 @@ def run_checks(
         pypi_info = fetch_package_info(pkg.name, pkg.new_version)
         pkg.repo_url = pypi_info.repo_url
         _resolve_ci_upload_and_release_pipeline(pkg, pypi_info)
-        if pkg.repo_url:
+        if not pypi_info.found:
+            fail = CheckResult(
+                CheckStatus.FAIL,
+                f"Version {pkg.new_version} not found on PyPI.",
+            )
+            pkg.checks[CheckKind.REPO_PUBLIC] = fail
+            pkg.checks[CheckKind.PR_LINK] = fail
+        elif pkg.repo_url:
             _defer_to_agent(
                 pkg,
                 CheckKind.REPO_PUBLIC,
