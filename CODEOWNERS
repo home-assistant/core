@@ -599,6 +599,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
 /tests/components/frontier_silicon/ @wlcrs
+/homeassistant/components/fuelprices_dk/ @MTrab
+/tests/components/fuelprices_dk/ @MTrab
 /homeassistant/components/fujitsu_fglair/ @crevetor
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
