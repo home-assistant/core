@@ -19,6 +19,40 @@
       }
     }
   },
+  "device_automation": {
+    "trigger_subtype": {
+      "bottom": "Bottom button",
+      "button_1": "First button",
+      "button_10": "Tenth button",
+      "button_11": "Eleventh button",
+      "button_12": "Twelfth button",
+      "button_13": "Thirteenth button",
+      "button_14": "Fourteenth button",
+      "button_15": "Fifteenth button",
+      "button_16": "Sixteenth button",
+      "button_17": "Seventeenth button",
+      "button_18": "Eighteenth button",
+      "button_19": "Nineteenth button",
+      "button_2": "Second button",
+      "button_20": "Twentieth button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
+      "button_5": "Fifth button",
+      "button_6": "Sixth button",
+      "button_7": "Seventh button",
+      "button_8": "Eighth button",
+      "button_9": "Ninth button",
+      "favorite": "Favorite button",
+      "lower": "Lower button",
+      "raise": "Raise button",
+      "top": "Top button"
+    },
+    "trigger_type": {
+      "press": "\"{subtype}\" pressed",
+      "release": "\"{subtype}\" released",
+      "single_press": "\"{subtype}\" pressed"
+    }
+  },
   "entity": {
     "event": {
       "button": {
