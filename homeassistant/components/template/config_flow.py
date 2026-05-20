@@ -847,7 +847,12 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "listeners": listeners, "state": state},
+                {
+                    "attributes": attributes,
+                    "domain": template_type,
+                    "listeners": listeners,
+                    "state": state,
+                },
             )
         )
 
