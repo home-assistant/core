@@ -123,16 +123,14 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
-                    ): int,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    }
+                ),
+                user_input or reconfigure_entry.data,
             ),
             errors=self._errors,
         )
