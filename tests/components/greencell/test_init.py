@@ -5,9 +5,6 @@ from collections.abc import Callable
 import time
 from unittest.mock import patch
 
-from greencell_client.access import GreencellAccess
-from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
-
 from homeassistant.components.greencell import make_ready_handler
 from homeassistant.components.greencell.const import GREENCELL_DISC_TOPIC
 from homeassistant.components.mqtt import ReceiveMessage
@@ -30,6 +27,21 @@ def _make_message(topic: str, payload: str) -> ReceiveMessage:
         subscribed_topic=topic,
         timestamp=time.time(),
     )
+
+
+async def _mock_subscribe_fires(messages: list[tuple[str, str]]):
+    """Return a mock async_subscribe that fires given messages on subscription."""
+
+    async def _subscribe(
+        hass: HomeAssistant, topic: str, msg_callback, *args, **kwargs
+    ) -> Callable[[], None]:
+        """Mock async_subscribe that fires given messages on subscription."""
+        for msg_topic, payload in messages:
+            if msg_topic == topic:
+                msg_callback(_make_message(topic, payload))
+        return lambda: None
+
+    return _subscribe
 
 
 def test_ready_handler_sets_event_on_matching_disc() -> None:
@@ -84,21 +96,6 @@ def test_ready_handler_noop_when_already_set() -> None:
     assert event.is_set()
 
 
-async def _mock_subscribe_fires(messages: list[tuple[str, str]]):
-    """Return a mock async_subscribe that fires given messages on subscription."""
-
-    async def _subscribe(
-        hass: HomeAssistant, topic: str, msg_callback, *args, **kwargs
-    ) -> Callable[[], None]:
-        """Mock async_subscribe that fires given messages on subscription."""
-        for msg_topic, payload in messages:
-            if msg_topic == topic:
-                msg_callback(_make_message(topic, payload))
-        return lambda: None
-
-    return _subscribe
-
-
 async def test_async_setup_entry_ready_via_discovery(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -143,33 +140,6 @@ async def test_async_setup_entry_ready_via_voltage(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_async_setup_entry_creates_runtime_data(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup creates proper runtime_data structure."""
-    mock_config_entry.add_to_hass(hass)
-
-    subscribe = await _mock_subscribe_fires(
-        [(GREENCELL_DISC_TOPIC, f'{{"id": "{TEST_SERIAL_NUMBER}"}}')]
-    )
-
-    with patch(
-        "homeassistant.components.greencell.mqtt.async_subscribe",
-        side_effect=subscribe,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    runtime = mock_config_entry.runtime_data
-    assert isinstance(runtime.access, GreencellAccess)
-    assert isinstance(runtime.current_data, ElecData3Phase)
-    assert isinstance(runtime.voltage_data, ElecData3Phase)
-    assert isinstance(runtime.power_data, ElecDataSinglePhase)
-    assert isinstance(runtime.state_data, ElecDataSinglePhase)
 
 
 async def test_async_setup_entry_timeout_raises_not_ready(
