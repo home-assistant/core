@@ -41,7 +41,7 @@ async def test_all_entities(
     ]
     assert disabled_entries
     assert all(
-        entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
         for entity_entry in disabled_entries
     )
     for entity_entry in disabled_entries:
