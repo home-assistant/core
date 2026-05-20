@@ -17,7 +17,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
-from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -216,7 +220,7 @@ async def test_temp_unit_convert_number(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     temp_unit_convert: str,
-    ha_unit_system: str,
+    ha_unit_system: UnitSystem,
     expected_value: str,
 ) -> None:
     """Test temperature number entities respect TEMP_UNIT_CONVERT and HA unit system."""
