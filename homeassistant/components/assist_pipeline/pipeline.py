@@ -560,6 +560,7 @@ class PipelineRun:
     id: str = field(default_factory=ulid_util.ulid_now)
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
     tts_stream: tts.ResultStream | None = field(init=False, default=None)
+    tts_stream_started: bool = field(init=False, default=False)
     wake_word_entity_id: str | None = field(init=False, default=None, repr=False)
     wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
 
@@ -681,6 +682,13 @@ class PipelineRun:
         # Stop the recording thread before emitting run-end.
         # This ensures that files are properly closed if the event handler reads them.
         await self._stop_debug_recording_thread()
+
+        # If the TTS stream was never used, we need to drop our reference to it.
+        # Otherwise, runs that abort before the TTS stream is used will leak forever.
+        if self.tts_stream is not None and not self.tts_stream_started:
+            self.hass.data[tts.DATA_TTS_MANAGER].token_to_stream.pop(
+                self.tts_stream.token, None
+            )
 
         self.process_event(
             PipelineEvent(
@@ -1450,6 +1458,7 @@ class PipelineRun:
     ) -> None:
         """Run text-to-speech portion of pipeline."""
         assert self.tts_stream is not None
+        self.tts_stream_started = True
 
         self.process_event(
             PipelineEvent(
