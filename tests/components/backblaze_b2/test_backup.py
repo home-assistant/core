@@ -262,26 +262,26 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
         pytest.param(
             '{"backup_id": "abc", "backup_metadata": {}}',
             ValueError,
-            "Missing required metadata keys: \\['metadata_version'\\]",
+            "Missing required metadata keys: metadata_version",
             id="missing_metadata_version",
         ),
         pytest.param(
             '{"metadata_version": "1", "backup_metadata": {}}',
             ValueError,
-            "Missing required metadata keys: \\['backup_id'\\]",
+            "Missing required metadata keys: backup_id",
             id="missing_backup_id",
         ),
         pytest.param(
             '{"metadata_version": "1", "backup_id": "abc"}',
             ValueError,
-            "Missing required metadata keys: \\['backup_metadata'\\]",
+            "Missing required metadata keys: backup_metadata",
             id="missing_backup_metadata",
         ),
         pytest.param(
             "{}",
             ValueError,
             "Missing required metadata keys: "
-            "\\['backup_id', 'backup_metadata', 'metadata_version'\\]",
+            "backup_id, backup_metadata, metadata_version",
             id="empty_dict",
         ),
     ],
