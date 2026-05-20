@@ -55,6 +55,9 @@
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_pending": {
+      "message": "Supervisor update in progress, will retry when complete"
     }
   },
   "issues": {
