@@ -38,7 +38,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_84',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_sensor[sensor.energie-state]
@@ -47,7 +47,7 @@
       'device_class': 'energy',
       'friendly_name': 'Energie',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energie',
@@ -96,7 +96,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_85',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    'unit_of_measurement': 'm³/h',
   })
 # ---
 # name: test_sensor[sensor.gas-state]
@@ -105,7 +105,7 @@
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Gas',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      'unit_of_measurement': 'm³/h',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas',
@@ -154,7 +154,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_86',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    'unit_of_measurement': 'm³/h',
   })
 # ---
 # name: test_sensor[sensor.gas_flow-state]
@@ -163,7 +163,7 @@
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Gas Flow',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      'unit_of_measurement': 'm³/h',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_flow',
@@ -328,7 +328,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_81',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    'unit_of_measurement': 'mbar',
   })
 # ---
 # name: test_sensor[sensor.luchtdruk-state]
@@ -337,7 +337,7 @@
       'device_class': 'pressure',
       'friendly_name': 'Luchtdruk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+      'unit_of_measurement': 'mbar',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.luchtdruk',
@@ -502,7 +502,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_40',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    'unit_of_measurement': 'm',
   })
 # ---
 # name: test_sensor[sensor.regenput-state]
@@ -511,7 +511,7 @@
       'device_class': 'distance',
       'friendly_name': 'Regenput',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+      'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.regenput',
@@ -560,7 +560,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_83',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'kWh',
   })
 # ---
 # name: test_sensor[sensor.stroom-state]
@@ -569,7 +569,7 @@
       'device_class': 'current',
       'friendly_name': 'Stroom',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.stroom',
