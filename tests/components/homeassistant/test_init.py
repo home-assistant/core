@@ -133,7 +133,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 @patch("homeassistant.components.homeassistant._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
 @pytest.mark.parametrize(
-    ("files_patch", "expcted_error"),
+    ("files_patch", "expected_error"),
     [
         (
             {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])},
@@ -146,8 +146,8 @@ async def test_reload_core_with_wrong_conf(
     mock_process,
     mock_error,
     hass: HomeAssistant,
-    files_patch: dict,
-    expcted_error: str,
+    files_patch: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test reload core conf service."""
     await async_setup_component(hass, ha.DOMAIN, {})
@@ -156,8 +156,8 @@ async def test_reload_core_with_wrong_conf(
         pytest.raises(
             HomeAssistantError,
             match=(
-                "Failed to reload the configuration for integration homeassistant - "
-                f"{expcted_error}"
+                "Failed to reload the Home Assistant Core configuration - "
+                f"{expected_error}"
             ),
         ),
     ):

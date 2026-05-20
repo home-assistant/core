@@ -292,8 +292,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         except (HomeAssistantError, FileNotFoundError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="config_reload_failed",
-                translation_placeholders={"domain": DOMAIN, "error": str(err)},
+                translation_key="core_config_reload_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         # auth only processed during startup

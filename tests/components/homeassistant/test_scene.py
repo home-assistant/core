@@ -49,7 +49,7 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("files_patch", "expcted_error"),
+    ("files_patch", "expected_error"),
     [
         (
             {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])},
@@ -59,7 +59,7 @@ async def test_reload_config_service(hass: HomeAssistant) -> None:
     ],
 )
 async def test_reload_config_service_failed(
-    hass: HomeAssistant, files_patch: dict, expcted_error: str
+    hass: HomeAssistant, files_patch: dict[str, str], expected_error: str
 ) -> None:
     """Test the reload config service."""
     assert await async_setup_component(hass, "scene", {})
@@ -70,8 +70,8 @@ async def test_reload_config_service_failed(
         pytest.raises(
             HomeAssistantError,
             match=(
-                "Failed to reload the configuration for integration scene - "
-                f"{expcted_error}"
+                "Failed to reload the Home Assistant scene platform configuration - "
+                f"{expected_error}"
             ),
         ),
     ):
