@@ -688,7 +688,7 @@ async def test_profile_switch_verify_fallback_on_error(
 
     entity_id = "switch.printer_internet_access"
 
-    # Toggle OFF — _async_get_wan_access returns None (error), fallback to requested value
+    # Toggle OFF — _async_get_wan_access returns None (error), fallback to requested off value
     with (
         patch(
             "homeassistant.components.fritz.coordinator.AvmWrapper.async_set_allow_wan_access",
@@ -767,3 +767,74 @@ async def test_profile_switch_skip_stale_poll(
 
     # The stale wan_access=True should be ignored during the skip window
     assert device.wan_access is False
+
+
+async def test_profile_switch_skip_window_allows_none(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test that a None wan_access value propagates and ends the skip window."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    mock_conn = FritzConnectionMock(MOCK_FB_SERVICES | MOCK_CALL_DEFLECTION_DATA)
+    fc_class_mock.return_value = mock_conn
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "switch.printer_internet_access"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    with (
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper.async_set_allow_wan_access",
+        ),
+        patch(
+            "homeassistant.components.fritz.coordinator.AvmWrapper._async_get_wan_access",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    coordinator = entry.runtime_data
+    device = coordinator.devices["AA:BB:CC:00:11:22"]
+
+    # A poll with wan_access=None (device gone offline / attr missing) must
+    # propagate through the skip window so unavailability is not suppressed.
+    none_info = Device(
+        name=device.hostname,
+        connected=True,
+        connected_to="",
+        connection_type="",
+        ip_address=device.ip_address,
+        ssid=None,
+        wan_access=None,
+    )
+    device.update(none_info, 0)
+    assert device.wan_access is None
+
+    # The skip window must be cleared so a subsequent bool poll propagates
+    # immediately instead of being gated.
+    stale_info = Device(
+        name=device.hostname,
+        connected=True,
+        connected_to="",
+        connection_type="",
+        ip_address=device.ip_address,
+        ssid=None,
+        wan_access=True,
+    )
+    device.update(stale_info, 0)
+    assert device.wan_access is True

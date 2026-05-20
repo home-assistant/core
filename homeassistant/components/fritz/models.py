@@ -120,11 +120,14 @@ class FritzDevice:
         if (
             self._wan_access_skip_until is not None
             and utc_point_in_time < self._wan_access_skip_until
+            and isinstance(dev_info.wan_access, bool)
             and dev_info.wan_access != self._wan_access
         ):
-            # After a manual wan_access toggle, skip polled updates that
+            # After a manual wan_access toggle, skip polled bool updates that
             # differ from the verified state. get_hosts_attributes can
             # return stale X_AVM-DE_WANAccess for ~10s after a change.
+            # Non-bool values (None for unknown/unavailable) always propagate
+            # and end the skip window so device removal isn't suppressed.
             pass
         else:
             self._wan_access_skip_until = None
