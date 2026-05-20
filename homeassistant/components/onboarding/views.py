@@ -198,7 +198,11 @@ class UserOnboardingView(_BaseOnboardingStepView):
             if await async_wait_component(hass, "person"):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
-            # Create default areas using the users supplied language.
+            # Create default areas using the users supplied language,
+            # falling back to English for any missing keys.
+            english_translations = await async_get_translations(
+                hass, "en", "area", {DOMAIN}
+            )
             translations = await async_get_translations(
                 hass, data["language"], "area", {DOMAIN}
             )
@@ -206,7 +210,11 @@ class UserOnboardingView(_BaseOnboardingStepView):
             area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                name = translations[f"component.onboarding.area.{area.key}"]
+                translation_key = f"component.onboarding.area.{area.key}"
+                name = translations.get(
+                    translation_key,
+                    english_translations.get(translation_key, area.key),
+                )
                 # Guard because area might have been created by an automatically
                 # set up integration.
                 if not area_registry.async_get_area_by_name(name):
