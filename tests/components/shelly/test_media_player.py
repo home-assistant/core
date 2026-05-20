@@ -383,7 +383,7 @@ async def test_get_image_http(
     assert isinstance(content, bytes)
 
 
-async def test_get_image_http_base64_decode_error(
+async def test_entity_picture_absent_base64_data_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -400,7 +400,7 @@ async def test_get_image_http_base64_decode_error(
     assert "entity_picture" not in state.attributes
 
 
-async def test_get_image_url_invalid_thumb_string(
+async def test_entity_picture_absent_thumb_string_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -417,7 +417,7 @@ async def test_get_image_url_invalid_thumb_string(
     assert "entity_picture" not in state.attributes
 
 
-async def test_get_image_url_invalid_mime_type(
+async def test_entity_picture_absent_mime_type_not_allowed(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
