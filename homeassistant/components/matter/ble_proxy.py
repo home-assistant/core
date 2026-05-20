@@ -34,10 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 class HaBluetoothScanSource(BleScanSource):
     """`BleScanSource` backed by Home Assistant's bluetooth component.
 
-    HA's bluetooth integration is the long-running, multi-tenant scanner;
-    we register a callback for the duration of a `start_scan` and unregister
-    on `stop_scan`. No native scanner is started or stopped here, so the
-    BLE adapter remains under HA's control.
+    HA owns the BLE adapter; we only register an advertisement callback so the
+    adapter is never started/stopped from here.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -50,7 +48,6 @@ class HaBluetoothScanSource(BleScanSource):
         from habluetooth import BluetoothScanningMode  # noqa: PLC0415
 
         if self._cancel is not None:
-            # `BleScanSource.start` is documented as idempotent.
             return
 
         @callback
@@ -66,7 +63,7 @@ class HaBluetoothScanSource(BleScanSource):
         self._cancel = async_register_callback(
             self._hass,
             _on_advertisement,
-            {},
+            None,
             BluetoothScanningMode.ACTIVE,
         )
 

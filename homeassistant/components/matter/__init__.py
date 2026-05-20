@@ -161,12 +161,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
 
-    # Connect to the matter-server's BLE proxy endpoint when the server is
-    # running in BLE proxy mode (--ble-proxy). The proxy bridges HA's bluetooth
-    # stack (including ESPHome BLE proxies) to the matter-server for BLE
-    # commissioning. We must NOT connect when the server uses a local BLE
-    # adapter (`bluetooth_enabled` true, `ble_proxy_enabled` false) — no `/ble`
-    # endpoint is exposed in that case.
+    # Gate on `ble_proxy_enabled`, not `bluetooth_enabled`: the latter is also true
+    # when the server uses a local BLE adapter, where no `/ble` endpoint exists.
     server_info = matter_client.server_info
     if server_info and getattr(server_info, "ble_proxy_enabled", False):
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
@@ -200,12 +196,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
 
 def _derive_ble_proxy_url(matter_ws_url: str) -> str:
-    """Derive the `/ble` endpoint URL from the configured matter-server WS URL.
+    """Derive the `/ble` endpoint URL by swapping the trailing `/ws` path segment.
 
-    Replaces the trailing `/ws` path segment with `/ble`. Uses real URL parsing
-    so `wss://my-ws-host.example/ws` resolves to `wss://my-ws-host.example/ble`
-    instead of `wss://my-ble-host.example/ble` (which a blind string replace
-    would produce).
+    Uses real URL parsing so hostnames containing `ws` aren't corrupted.
     """
     parsed = urlsplit(matter_ws_url)
     path = parsed.path.rstrip("/")
