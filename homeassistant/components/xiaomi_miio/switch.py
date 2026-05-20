@@ -149,6 +149,7 @@ ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MODEL = "model"
 ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
@@ -517,6 +518,7 @@ async def async_setup_other_entry(
 
         for plug_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

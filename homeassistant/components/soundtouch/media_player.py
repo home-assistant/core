@@ -393,7 +393,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return None
 
     def _get_instance_by_id(self, instance_id):
-        """Search and return a SoundTouchDevice instance by it's ID (aka MAC address)."""
+        """Search and return a SoundTouchDevice by its ID."""
         for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             data = entry.runtime_data
             if data.device.config.device_id == instance_id:

@@ -341,7 +341,8 @@ async def test_routing_secure_manual_setup(
     result_invalid_key1 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",  # invalid hex string
+            # invalid hex string
+            CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
@@ -1099,7 +1100,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
-    """Test flow reaches secure_tunnellinn menu step from manual tunneling configuration."""
+    """Test flow reaches secure_tunnelling menu from manual config."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1511,7 +1512,7 @@ async def test_reconfigure_flow_routing(hass: HomeAssistant, knx_setup) -> None:
 
 
 async def test_reconfigure_update_keyfile(hass: HomeAssistant, knx_setup) -> None:
-    """Test reconfigure flow updating keyfile when tunnel endpoint is already configured."""
+    """Test reconfigure flow updating keyfile when tunnel is configured."""
     start_data = {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,

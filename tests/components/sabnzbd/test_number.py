@@ -81,7 +81,8 @@ async def test_number_exception(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Unable to send command to SABnzbd due to a connection error, try again later",
+        match="Unable to send command to SABnzbd due to a connection"
+        " error, try again later",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

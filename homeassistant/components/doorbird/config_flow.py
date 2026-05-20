@@ -116,7 +116,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This method performs the following verification steps:
         1. Ensures that the stored credentials work before updating the entry.
-        2. Verifies that the device at the discovered IP address has the expected MAC address.
+        2. Verifies that the device at the discovered IP
+           address has the expected MAC address.
         """
         info, errors = await self._async_validate_or_error(
             {

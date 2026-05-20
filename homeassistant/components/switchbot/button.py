@@ -92,7 +92,7 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
 
 
 class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
-    """Button to sync date and time on Meter Pro CO2 to the current HA instance datetime."""
+    """Button to sync date and time on Meter Pro CO2."""
 
     _device: switchbot.SwitchbotMeterProCO2
     _attr_entity_category = EntityCategory.CONFIG
@@ -119,7 +119,8 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
         timestamp = int(now.timestamp())
 
         _LOGGER.debug(
-            "Syncing time for %s: timestamp=%s, utc_offset_hours=%s, utc_offset_minutes=%s",
+            "Syncing time for %s: timestamp=%s,"
+            " utc_offset_hours=%s, utc_offset_minutes=%s",
             self._address,
             timestamp,
             utc_offset_hours,

@@ -1636,8 +1636,8 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
     await bootstrap._async_setup_multi_components(hass, {"test_package"}, {})
     await hass.async_block_till_done()
     assert (
-        "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"
-        in caplog.text
+        "Error setting up entry Mock Title"
+        " for test_package_raises_cancelled_error_config_entry" in caplog.text
     )
 
     assert "test_package" in hass.config.components
@@ -1788,7 +1788,8 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         if domain_with_base_platforms_deps:
             problems[domain] = domain_with_base_platforms_deps
     assert not problems, (
-        f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
+        "Integrations that are setup before recorder have"
+        f" base platforms in their dependencies: {problems}"
     )
 
     base_platform_py_files = {f"{base_platform}.py" for base_platform in base_platforms}
@@ -1802,7 +1803,8 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         if integration_base_platforms_files:
             problems[domain] = integration_base_platforms_files
     assert not problems, (
-        f"Integrations that are setup before recorder implement base platforms: {problems}"
+        "Integrations that are setup before recorder"
+        f" implement base platforms: {problems}"
     )
 
 

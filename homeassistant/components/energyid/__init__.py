@@ -196,7 +196,8 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
         if not hass.states.get(ha_entity_id):
             # Entity exists in registry but is not present in the state machine
             _LOGGER.debug(
-                "Entity %s does not exist in state machine yet, will track when available (mapping to %s)",
+                "Entity %s does not exist in state machine yet,"
+                " will track when available (mapping to %s)",
                 ha_entity_id,
                 energyid_key,
             )
@@ -328,7 +329,8 @@ def _async_handle_state_change(
             "Updating EnergyID sensor %s with value %s", energyid_key, new_state.state
         )
     else:
-        # Entity not mapped yet - check if it should be (handles late-appearing entities)
+        # Entity not mapped yet - check if it should be
+        # (handles late-appearing entities)
         ent_reg = er.async_get(hass)
         for subentry in entry.subentries.values():
             entity_uuid = subentry.data.get(CONF_HA_ENTITY_UUID)
@@ -344,7 +346,8 @@ def _async_handle_state_change(
                 runtime_data.mappings[entity_id] = energyid_key
                 client.get_or_create_sensor(energyid_key)
                 _LOGGER.debug(
-                    "Entity %s now available in state machine, adding to mappings (key: %s)",
+                    "Entity %s now available in state machine,"
+                    " adding to mappings (key: %s)",
                     entity_id,
                     energyid_key,
                 )

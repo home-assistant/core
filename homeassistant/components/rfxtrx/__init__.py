@@ -288,6 +288,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 

@@ -1172,8 +1172,9 @@ class Integration:
                             load_executor_platforms,
                             exc_info=ex,
                         )
-                        # If importing in the executor deadlocks because there is a circular
-                        # dependency, we fall back to the event loop.
+                        # If importing in the executor deadlocks
+                        # because there is a circular dependency,
+                        # we fall back to the event loop.
                         load_event_loop_platforms.extend(load_executor_platforms)
 
                 if load_event_loop_platforms:
@@ -1514,8 +1515,9 @@ async def _resolve_integrations_dependencies(
     possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
-    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+    """Resolve all dependencies for integrations.
 
+    Possibly includes after_dependencies.
     Detects circular dependencies and missing integrations.
     """
 

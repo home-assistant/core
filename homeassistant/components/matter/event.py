@@ -79,7 +79,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
             # momentary switch without multi press support
             event_types.append("initial_press")
             if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                # momentary switch without multi press support can optionally support release
+                # momentary switch without multi press support
+                # can optionally support release
                 event_types.append("short_release")
 
         # a momentary switch can optionally support long press

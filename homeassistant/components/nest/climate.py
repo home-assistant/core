@@ -353,13 +353,15 @@ class ThermostatEntity(ClimateEntity):
 
         if self.hvac_mode == HVACMode.OFF:
             raise HomeAssistantError(
-                f"Cannot turn on fan for {self.entity_id}, please set an HVAC mode (e.g. heat/cool) first"
+                f"Cannot turn on fan for {self.entity_id},"
+                " please set an HVAC mode (e.g. heat/cool) first"
             )
 
         seconds = int(duration.total_seconds())
         if seconds <= 0 or seconds > MAX_FAN_DURATION:
             raise ValueError(
-                f"Duration {seconds} for {self.entity_id} must be between 1 and {MAX_FAN_DURATION} seconds"
+                f"Duration {seconds} for {self.entity_id} must be"
+                f" between 1 and {MAX_FAN_DURATION} seconds"
             )
 
         trait = self._device.traits[FanTrait.NAME]

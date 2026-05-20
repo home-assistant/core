@@ -30,7 +30,8 @@ def get_position_data(
     longitude = entity.attributes.get(ATTR_LONGITUDE)
     if not longitude:
         raise AttributeError(
-            f"Failed to find attribute '{ATTR_LONGITUDE}' in {registry_entry.entity_id}",
+            f"Failed to find attribute '{ATTR_LONGITUDE}'"
+            f" in {registry_entry.entity_id}",
             ATTR_LONGITUDE,
         )
 
