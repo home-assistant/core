@@ -168,6 +168,9 @@ aio-georss-gdacs==0.10
 # homeassistant.components.onewire
 aio-ownet==0.0.5
 
+# homeassistant.components.wattwaechter
+aio-wattwaechter==1.0.0
+
 # homeassistant.components.acaia
 aioacaia==0.1.17
 
