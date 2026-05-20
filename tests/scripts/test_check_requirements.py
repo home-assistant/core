@@ -103,6 +103,42 @@ from script.check_requirements.runner import run_checks
             [("pkg", "1.0.0", "2.0.0")],
             id="wildcard-matched-requirements-file",
         ),
+        pytest.param(
+            (
+                "diff --git a/pyproject.toml b/pyproject.toml\n"
+                "--- a/pyproject.toml\n"
+                "+++ b/pyproject.toml\n"
+                "@@ -1 +1 @@\n"
+                '-    "requests==1.0.0",\n'
+                '+    "requests==2.0.0",\n'
+            ),
+            [],
+            id="pyproject-toml-not-tracked",
+        ),
+        pytest.param(
+            (
+                "diff --git a/requirements_all.txt b/requirements_all.txt\n"
+                "--- a/requirements_all.txt\n"
+                "+++ b/requirements_all.txt\n"
+                "@@ -1 +1 @@\n"
+                "-# pkg==1.0.0 was bumped\n"
+                "+# pkg==2.0.0 was bumped\n"
+            ),
+            [],
+            id="comment-lines-skipped",
+        ),
+        pytest.param(
+            (
+                "diff --git a/requirements_all.txt b/requirements_all.txt\n"
+                "--- a/requirements_all.txt\n"
+                "+++ b/requirements_all.txt\n"
+                "@@ -1 +1 @@\n"
+                "-pkg==1.0.0  # old\n"
+                "+pkg==2.0.0  # new\n"
+            ),
+            [("pkg", "1.0.0", "2.0.0")],
+            id="inline-comment-stripped",
+        ),
     ],
 )
 def test_parse_diff(

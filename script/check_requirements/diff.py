@@ -11,10 +11,13 @@ from .models import PackageChange
 # Glob patterns; kept in sync with the `paths:`
 # filter of the deterministic workflow in
 # `.github/workflows/check-requirements-deterministic.yml`.
+# `pyproject.toml` is intentionally NOT tracked: hassfest enforces that
+# every dependency declared there is mirrored into the generated
+# requirements files, so the requirements files are the single source
+# of truth for pinned package changes.
 TRACKED_PATTERNS = (
     "requirements*.txt",
     "homeassistant/package_constraints.txt",
-    "pyproject.toml",
 )
 
 

@@ -17,7 +17,6 @@ on:
   #   paths:
   #     - "**/requirements*.txt"
   #     - "homeassistant/package_constraints.txt"
-  #     - "pyproject.toml"
   workflow_dispatch:
     inputs:
       pull_request_number:
