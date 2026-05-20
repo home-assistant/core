@@ -21,6 +21,7 @@ from homeassistant.components.mobile_app.const import (
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     STORAGE_KEY,
     STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
@@ -679,12 +680,12 @@ async def test_remove_entry_cleans_live_activity_tokens(
     assert webhook_id not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
 
 
-async def test_storage_migration_v1_to_v2(
+async def test_storage_migration_adds_live_activity_tokens(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_admin_user: MockUser,
 ) -> None:
-    """Test that v1 storage without live_activity_tokens is migrated to v2."""
+    """Test that older storage is migrated to include live_activity_tokens."""
     hass_storage[STORAGE_KEY] = {
         "key": STORAGE_KEY,
         "version": 1,
@@ -719,7 +720,7 @@ async def test_live_activity_expired_tokens_cleaned_at_startup(
     hass_storage[STORAGE_KEY] = {
         "key": STORAGE_KEY,
         "version": STORAGE_VERSION,
-        "minor_version": 1,
+        "minor_version": STORAGE_VERSION_MINOR,
         "data": {
             DATA_DELETED_IDS: [],
             DATA_LIVE_ACTIVITY_TOKENS: {

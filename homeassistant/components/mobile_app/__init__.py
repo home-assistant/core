@@ -55,6 +55,7 @@ from .const import (
     SENSOR_TYPES,
     STORAGE_KEY,
     STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
 )
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
@@ -80,7 +81,7 @@ class _MobileAppStore(Store[dict[str, Any]]):
         old_data: dict[str, Any],
     ) -> dict[str, Any]:
         """Migrate mobile_app storage to the current version."""
-        if old_major_version == 1:
+        if old_major_version == 1 and old_minor_version < 2:
             old_data.setdefault(DATA_LIVE_ACTIVITY_TOKENS, {})
         return old_data
 
@@ -132,7 +133,9 @@ async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = _MobileAppStore(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = _MobileAppStore(
+        hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+    )
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
