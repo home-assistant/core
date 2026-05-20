@@ -51,6 +51,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "screensaver": {
+        "name": "Screensaver"
+      }
+    },
     "media_player": {
       "media_player": {
         "state_attributes": {
