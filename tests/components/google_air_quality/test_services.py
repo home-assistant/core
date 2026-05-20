@@ -21,9 +21,9 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry, async_load_fixture
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_get_forecast_service(
     hass: HomeAssistant,
-    setup_integration: None,
     mock_config_entry: MockConfigEntry,
     mock_api: AsyncMock,
     snapshot: SnapshotAssertion,
@@ -56,9 +56,9 @@ async def test_get_forecast_service(
     assert response == snapshot
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_get_forecast_service_unknown_subentry(
     hass: HomeAssistant,
-    setup_integration: None,
 ) -> None:
     """Test fetching a forecast for an unknown subentry."""
     with pytest.raises(ServiceValidationError) as exc_info:
