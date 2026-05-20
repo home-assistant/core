@@ -13,13 +13,13 @@
       "user": {
         "data": {
           "password": "Password",
-          "username": "Hayward Username"
+          "username": "Vistapool Username"
         },
         "data_description": {
-          "password": "The password for your Hayward account",
-          "username": "The email used for your Hayward account"
+          "password": "The password for your Vistapool account",
+          "username": "The email used for your Vistapool account"
         },
-        "description": "Enter your Hayward credentials. All pools on the account will be added automatically.",
+        "description": "Enter your Vistapool credentials. All pools on the account will be added automatically.",
         "title": "Authentication"
       }
     }
@@ -54,13 +54,13 @@
   },
   "exceptions": {
     "invalid_credentials": {
-      "message": "Invalid AquaRite credentials."
+      "message": "Invalid Vistapool credentials."
     },
     "no_pools": {
       "message": "No pools were found on this account."
     },
     "update_failed": {
-      "message": "Error fetching data from AquaRite."
+      "message": "Error fetching data from Vistapool."
     }
   }
 }

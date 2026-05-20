@@ -1,8 +1,8 @@
-"""Shared constants for the AquaRite integration."""
+"""Shared constants for the Vistapool integration."""
 
-DOMAIN = "aquarite"
-BRAND = "Hayward"
-MODEL = "AquaRite"
+DOMAIN = "vistapool"
+BRAND = "Sugar Valley"
+MODEL = "Vistapool"
 
 PATH_PREFIX = "main."
 PATH_HASCD = f"{PATH_PREFIX}hasCD"

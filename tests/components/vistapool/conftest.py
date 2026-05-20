@@ -1,4 +1,4 @@
-"""Shared fixtures for Aquarite tests."""
+"""Shared fixtures for Vistapool tests."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.aquarite.const import DOMAIN
+from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -29,7 +29,7 @@ def mock_pool_data() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a `MockConfigEntry` for an Aquarite account."""
+    """Return a `MockConfigEntry` for a Vistapool account."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_USERNAME,
@@ -42,7 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_aquarite_auth() -> Generator[MagicMock]:
+def mock_vistapool_auth() -> Generator[MagicMock]:
     """Mock `AquariteAuth` across the config flow and the integration setup."""
     auth = MagicMock()
     auth.authenticate = AsyncMock()
@@ -50,9 +50,9 @@ def mock_aquarite_auth() -> Generator[MagicMock]:
     auth.is_token_expiring = MagicMock(return_value=False)
     auth.calculate_sleep_duration = MagicMock(return_value=3600)
     with (
-        patch("homeassistant.components.aquarite.AquariteAuth", return_value=auth),
+        patch("homeassistant.components.vistapool.AquariteAuth", return_value=auth),
         patch(
-            "homeassistant.components.aquarite.config_flow.AquariteAuth",
+            "homeassistant.components.vistapool.config_flow.AquariteAuth",
             return_value=auth,
         ),
     ):
@@ -60,8 +60,8 @@ def mock_aquarite_auth() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_aquarite_client(
-    mock_aquarite_auth: MagicMock,
+def mock_vistapool_client(
+    mock_vistapool_auth: MagicMock,
 ) -> Generator[AsyncMock]:
     """Mock `AquariteClient` across the config flow and the integration setup."""
     client = AsyncMock()
@@ -72,11 +72,11 @@ def mock_aquarite_client(
     client.fetch_pool_data = AsyncMock(return_value={})
     # The token-refresh loop awaits `auth.get_client()` and expects
     # `(client, refreshed)`.
-    mock_aquarite_auth.get_client = AsyncMock(return_value=(client, False))
+    mock_vistapool_auth.get_client = AsyncMock(return_value=(client, False))
     with (
-        patch("homeassistant.components.aquarite.AquariteClient", return_value=client),
+        patch("homeassistant.components.vistapool.AquariteClient", return_value=client),
         patch(
-            "homeassistant.components.aquarite.config_flow.AquariteClient",
+            "homeassistant.components.vistapool.config_flow.AquariteClient",
             return_value=client,
         ),
     ):

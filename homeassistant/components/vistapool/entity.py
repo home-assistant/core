@@ -1,18 +1,18 @@
-"""Shared base entity helpers for AquaRite."""
+"""Shared base entity helpers for Vistapool."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BRAND, DOMAIN, MODEL
-from .coordinator import AquariteDataUpdateCoordinator
+from .coordinator import VistapoolDataUpdateCoordinator
 
 
-class AquariteEntity(CoordinatorEntity[AquariteDataUpdateCoordinator]):
-    """Base entity class for AquaRite platforms (one device per pool)."""
+class VistapoolEntity(CoordinatorEntity[VistapoolDataUpdateCoordinator]):
+    """Base entity class for Vistapool platforms (one device per pool)."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: AquariteDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: VistapoolDataUpdateCoordinator) -> None:
         """Initialize the base entity."""
         super().__init__(coordinator)
         sw_version = coordinator.get_value("main.version")

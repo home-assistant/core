@@ -1,4 +1,4 @@
-"""Tests for the Aquarite integration setup and unload."""
+"""Tests for the Vistapool integration setup and unload."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_client: AsyncMock,
+    mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the integration sets up an entry end to end."""
     mock_config_entry.add_to_hass(hass)
@@ -29,10 +29,10 @@ async def test_setup_entry(
 async def test_setup_entry_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_auth: MagicMock,
+    mock_vistapool_auth: MagicMock,
 ) -> None:
     """Test setup ends in SETUP_ERROR on AuthenticationError."""
-    mock_aquarite_auth.authenticate.side_effect = AuthenticationError
+    mock_vistapool_auth.authenticate.side_effect = AuthenticationError
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -44,10 +44,10 @@ async def test_setup_entry_invalid_auth(
 async def test_setup_entry_cannot_connect_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_auth: MagicMock,
+    mock_vistapool_auth: MagicMock,
 ) -> None:
     """Test setup retries on a transient AquariteError during auth."""
-    mock_aquarite_auth.authenticate.side_effect = AquariteError("network")
+    mock_vistapool_auth.authenticate.side_effect = AquariteError("network")
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -59,10 +59,10 @@ async def test_setup_entry_cannot_connect_auth(
 async def test_setup_entry_cannot_connect_pools(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_client: AsyncMock,
+    mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test setup retries on a transient AquariteError during get_pools."""
-    mock_aquarite_client.get_pools.side_effect = AquariteError("fetch failed")
+    mock_vistapool_client.get_pools.side_effect = AquariteError("fetch failed")
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -74,10 +74,10 @@ async def test_setup_entry_cannot_connect_pools(
 async def test_setup_entry_no_pools(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_client: AsyncMock,
+    mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test setup ends in SETUP_ERROR when the account has no pools."""
-    mock_aquarite_client.get_pools.return_value = {}
+    mock_vistapool_client.get_pools.return_value = {}
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -89,10 +89,10 @@ async def test_setup_entry_no_pools(
 async def test_setup_entry_subscribe_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_client: AsyncMock,
+    mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test setup retries when the Firestore subscription fails."""
-    mock_aquarite_client.subscribe_pool_resilient.side_effect = AquariteError(
+    mock_vistapool_client.subscribe_pool_resilient.side_effect = AquariteError(
         "subscribe fail"
     )
     mock_config_entry.add_to_hass(hass)
@@ -106,7 +106,7 @@ async def test_setup_entry_subscribe_failure(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_aquarite_client: AsyncMock,
+    mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the integration unloads cleanly."""
     mock_config_entry.add_to_hass(hass)

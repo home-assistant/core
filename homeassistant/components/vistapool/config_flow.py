@@ -1,4 +1,4 @@
-"""Config Flow for the AquaRite integration."""
+"""Config Flow for the Vistapool integration."""
 
 import logging
 from typing import Any
@@ -23,8 +23,8 @@ AUTH_SCHEMA = vol.Schema(
 )
 
 
-class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
-    """AquaRite config flow (one entry per Hayward account)."""
+class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Vistapool config flow (one entry per Hayward account)."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
