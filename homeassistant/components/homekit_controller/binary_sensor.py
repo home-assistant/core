@@ -1,20 +1,32 @@
-"""Support for Homekit motion sensors."""
+"""Support for HomeKit binary sensors."""
 
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from dataclasses import dataclass
+
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
-from .entity import HomeKitEntity
+from .entity import CharacteristicEntity, HomeKitEntity
+from .utils import service_feature_scope, service_feature_translation
+
+
+@dataclass(frozen=True)
+class HomeKitBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a HomeKit binary sensor."""
+
+    on_value: int | bool = 1
 
 
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
@@ -150,13 +162,65 @@ REJECT_CHAR_BY_TYPE = {
     ServicesTypes.BATTERY_SERVICE: CharacteristicsTypes.BATTERY_LEVEL,
 }
 
+CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] = {
+    CharacteristicsTypes.STATUS_LO_BATT: HomeKitBinarySensorEntityDescription(
+        key=CharacteristicsTypes.STATUS_LO_BATT,
+        name="Low Battery",
+        translation_key="low_battery",
+        has_entity_name=True,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CharacteristicsTypes.STATUS_FAULT: HomeKitBinarySensorEntityDescription(
+        key=CharacteristicsTypes.STATUS_FAULT,
+        name="Fault",
+        translation_key="fault",
+        has_entity_name=True,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+}
+
+
+class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
+    """Representation of a HomeKit binary sensor backed by a single characteristic."""
+
+    entity_description: HomeKitBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        conn: HKDevice,
+        info: ConfigType,
+        char: Characteristic,
+        description: HomeKitBinarySensorEntityDescription,
+    ) -> None:
+        """Initialise a HomeKit characteristic binary sensor."""
+        self.entity_description = description
+        super().__init__(conn, info, char)
+        if description.translation_key is None:
+            return
+        self._attr_translation_key, translation_placeholders = (
+            service_feature_translation(char.service, description.translation_key)
+        )
+        if translation_placeholders is not None:
+            self._attr_translation_placeholders = translation_placeholders
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity is tracking."""
+        return [self._char.type]
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self._char.value == self.entity_description.on_value
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Homekit lighting."""
+    """Set up HomeKit binary sensors."""
     hkid: str = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
@@ -181,3 +245,49 @@ async def async_setup_entry(
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_characteristic(char: Characteristic) -> bool:
+        if char.service.type == ServicesTypes.BATTERY_SERVICE:
+            return False
+        if not (description := CHARACTERISTIC_BINARY_SENSORS.get(char.type)):
+            return False
+        if char.type == CharacteristicsTypes.STATUS_LO_BATT and (
+            _should_skip_low_battery_characteristic(char)
+        ):
+            return False
+
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        entity = CharacteristicBinarySensor(conn, info, char, description)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.BINARY_SENSOR
+        )
+        async_add_entities([entity])
+        return True
+
+    conn.add_char_factory(async_add_characteristic)
+
+
+def _should_skip_low_battery_characteristic(char: Characteristic) -> bool:
+    """Check if the low battery characteristic should not create an entity."""
+    return char.service.accessory.services.first(
+        service_type=ServicesTypes.BATTERY_SERVICE
+    ) is not None or _has_earlier_low_battery_characteristic(char)
+
+
+def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
+    """Check if the accessory already exposed the same low battery source."""
+    source_key = _low_battery_source_key(char.service)
+    return any(
+        service.iid < char.service.iid
+        and service.has(char.type)
+        and _low_battery_source_key(service) == source_key
+        for service in char.service.accessory.services
+    )
+
+
+def _low_battery_source_key(service: Service) -> str | None:
+    """Return the low battery source key for the service."""
+    if scope := service_feature_scope(service):
+        return scope.key
+    return None

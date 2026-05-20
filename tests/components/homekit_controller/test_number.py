@@ -6,6 +6,8 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -29,6 +31,55 @@ def create_switch_with_spray_level(accessory: Accessory) -> Service:
 
     cur_state = service.add_char(CharacteristicsTypes.ON)
     cur_state.value = True
+
+    return service
+
+
+def create_valve_with_set_duration(accessory: Accessory) -> Service:
+    """Define valve characteristics with a set duration."""
+    service = accessory.add_service(ServicesTypes.VALVE)
+
+    active = service.add_char(CharacteristicsTypes.ACTIVE)
+    active.value = False
+
+    set_duration = service.add_char(CharacteristicsTypes.SET_DURATION)
+    set_duration.value = 1200
+    set_duration.minValue = 0
+    set_duration.maxValue = 5400
+    set_duration.minStep = 60
+
+    return service
+
+
+def create_multi_valve_with_set_duration(accessory: Accessory) -> None:
+    """Define multi-valve characteristics with set durations."""
+    accessory.add_service(ServicesTypes.IRRIGATION_SYSTEM, name="Irrigation System")
+
+    for name in ("Front Lawn", "Back Yard", "Greenhouse"):
+        service = accessory.add_service(ServicesTypes.VALVE, name=name)
+
+        active = service.add_char(CharacteristicsTypes.ACTIVE)
+        active.value = False
+
+        set_duration = service.add_char(CharacteristicsTypes.SET_DURATION)
+        set_duration.value = 1200
+        set_duration.minValue = 0
+        set_duration.maxValue = 5400
+        set_duration.minStep = 60
+
+
+def create_labeled_valve_with_set_duration(accessory: Accessory) -> Service:
+    """Define an unnamed labeled valve service with a set duration."""
+    service = accessory.add_service(ServicesTypes.VALVE)
+
+    active = service.add_char(CharacteristicsTypes.ACTIVE)
+    active.value = False
+
+    service_label_index = service.add_char(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+    service_label_index.value = 1.0
+
+    set_duration = service.add_char(CharacteristicsTypes.SET_DURATION)
+    set_duration.value = 1200
 
     return service
 
@@ -124,3 +175,78 @@ async def test_write_number(
         ServicesTypes.OUTLET,
         {CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: 3},
     )
+
+
+async def test_valve_set_duration_number(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test a valve service set duration characteristic is correctly handled."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_valve_with_set_duration
+    )
+
+    set_duration = Helper(
+        hass,
+        "number.testdevice_duration",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    state = await set_duration.poll_and_get_state()
+    assert state.state == "1200"
+    assert state.attributes["device_class"] == NumberDeviceClass.DURATION
+    assert state.attributes["unit_of_measurement"] == UnitOfTime.SECONDS
+    assert state.attributes["step"] == 60
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 5400
+
+    state = await set_duration.async_update(
+        ServicesTypes.VALVE,
+        {CharacteristicsTypes.SET_DURATION: 1800},
+    )
+    assert state.state == "1800"
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_duration", "value": 600},
+        blocking=True,
+    )
+    set_duration.async_assert_service_values(
+        ServicesTypes.VALVE,
+        {CharacteristicsTypes.SET_DURATION: 600},
+    )
+
+
+async def test_multi_valve_set_duration_names(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test set duration numbers use valve service names."""
+    await setup_test_component(
+        hass, get_next_aid(), create_multi_valve_with_set_duration
+    )
+
+    front_lawn = hass.states.get("number.testdevice_front_lawn_duration")
+    assert front_lawn
+
+    back_yard = hass.states.get("number.testdevice_back_yard_duration")
+    assert back_yard
+
+    greenhouse = hass.states.get("number.testdevice_greenhouse_duration")
+    assert greenhouse
+
+
+async def test_labeled_valve_set_duration_name(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+) -> None:
+    """Test set duration numbers normalize service label indexes in names."""
+    await setup_test_component(
+        hass, get_next_aid(), create_labeled_valve_with_set_duration
+    )
+
+    labeled_valve = hass.states.get("number.testdevice_valve_1_duration")
+    assert labeled_valve
