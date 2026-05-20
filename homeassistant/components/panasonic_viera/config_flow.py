@@ -8,8 +8,15 @@ from urllib.error import URLError
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -31,6 +38,14 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return PanasonicVieraOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize the Panasonic Viera config flow."""
@@ -174,3 +189,31 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()
+
+
+class PanasonicVieraOptionsFlow(OptionsFlow):
+    """Handle Panasonic Viera options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current_action = self.config_entry.options.get(
+            CONF_ON_ACTION,
+            self.config_entry.data.get(CONF_ON_ACTION) or [],
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ON_ACTION,
+                        default=current_action,
+                    ): selector.ActionSelector(),
+                }
+            ),
+        )

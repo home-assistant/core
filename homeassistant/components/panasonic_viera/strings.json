@@ -26,5 +26,17 @@
         "title": "Set up your TV"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "turn_on_action": "Turn on action"
+        },
+        "data_description": {
+          "turn_on_action": "Action sequence to run when turning the TV on (e.g. a Wake-on-LAN magic packet for models that don't respond to the power key when off)."
+        }
+      }
+    }
   }
 }
