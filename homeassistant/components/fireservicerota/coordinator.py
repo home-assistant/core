@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyfireservicerota import (
     ExpiredTokenError,
@@ -178,7 +179,7 @@ class FireServiceRotaClient:
             if await self.oauth.async_refresh_tokens():
                 self.token_refresh_failure = False
 
-                def _restart_and_call() -> object:
+                def _restart_and_call() -> Any:
                     self.websocket.start_listener()
                     return func(*args)
 
