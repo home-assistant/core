@@ -225,21 +225,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         thumb = self._media_meta.get("thumb")
-        if not thumb or not thumb.startswith("data"):
-            return super().media_image_hash
-
-        try:
-            prefix, image_data = thumb.split(",", 1)
-            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except IndexError, ValueError:
-            return super().media_image_hash
-
-        if mime not in ALLOWED_IMAGE_MIME_TYPES:
-            return super().media_image_hash
-
-        try:
-            base64.b64decode(image_data, validate=True)
-        except binascii.Error:
+        if not thumb or self._decode_image_data(thumb) is None:
             return super().media_image_hash
 
         return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
@@ -261,24 +247,10 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         thumb = self._media_meta.get("thumb")
-        if not thumb or not thumb.startswith("data"):
+        if not thumb or (result := self._decode_image_data(thumb)) is None:
             return await super().async_get_media_image()
 
-        try:
-            prefix, image_data = thumb.split(",", 1)
-            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except IndexError, ValueError:
-            return await super().async_get_media_image()
-
-        if mime not in ALLOWED_IMAGE_MIME_TYPES:
-            return await super().async_get_media_image()
-
-        try:
-            image = base64.b64decode(image_data, validate=True)
-        except binascii.Error:
-            return await super().async_get_media_image()
-
-        return image, mime
+        return result
 
     @rpc_call
     async def async_media_play(self) -> None:
@@ -469,3 +441,22 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             translation_key="unsupported_media_type",
             translation_placeholders={"media_type": str(media_type)},
         )
+
+    def _decode_image_data(self, thumb: str) -> tuple[bytes, str] | None:
+        """Return image_bytes and mime_type for a valid image data or None."""
+        if not thumb.startswith("data"):
+            return None
+
+        try:
+            prefix, image_data = thumb.split(",", 1)
+            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+        except IndexError, ValueError:
+            return None
+
+        if mime not in ALLOWED_IMAGE_MIME_TYPES:
+            return None
+
+        try:
+            return base64.b64decode(image_data, validate=True), mime
+        except binascii.Error:
+            return None
