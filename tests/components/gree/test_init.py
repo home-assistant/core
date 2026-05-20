@@ -1,11 +1,16 @@
 """Tests for the Gree Integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from greeclimate.exceptions import DeviceTimeoutError
 
 from homeassistant.components.gree.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from .common import build_device_mock
 
 from tests.common import MockConfigEntry
 
@@ -49,3 +54,58 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_static_ip(hass: HomeAssistant) -> None:
+    """Test gree integration sets up with static IP entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_device = build_device_mock(ipAddress="192.168.1.100")
+
+    with (
+        patch(
+            "homeassistant.components.gree.Device",
+            return_value=mock_device,
+        ),
+        patch(
+            "homeassistant.components.gree.climate.async_setup_entry",
+            return_value=True,
+        ) as climate_setup,
+        patch(
+            "homeassistant.components.gree.switch.async_setup_entry",
+            return_value=True,
+        ) as switch_setup,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert len(climate_setup.mock_calls) == 1
+        assert len(switch_setup.mock_calls) == 1
+        assert entry.state is ConfigEntryState.LOADED
+        mock_device.bind.assert_awaited_once()
+
+
+async def test_setup_static_ip_bind_failure(hass: HomeAssistant) -> None:
+    """Test static IP entry goes to retry state when bind fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_device = build_device_mock(ipAddress="192.168.1.100")
+    mock_device.bind = AsyncMock(side_effect=DeviceTimeoutError())
+
+    with patch(
+        "homeassistant.components.gree.Device",
+        return_value=mock_device,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+        mock_device.bind.assert_awaited_once()
