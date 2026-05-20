@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "battery": {
+        "default": "mdi:battery",
+        "state": {
+          "0-10": "mdi:battery-alert-variant-outline",
+          "11-20": "mdi:battery-10",
+          "21-30": "mdi:battery-20",
+          "31-40": "mdi:battery-30",
+          "41-50": "mdi:battery-40",
+          "51-60": "mdi:battery-50",
+          "61-70": "mdi:battery-60",
+          "71-80": "mdi:battery-70",
+          "81-90": "mdi:battery-80",
+          "91-100": "mdi:battery-charging"
+        }
+      },
+      "co_concentration": {
+        "default": "mdi:molecule-co"
+      },
+      "energy": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "power": {
+        "default": "mdi:flash"
+      },
+      "signal_strength": {
+        "default": "mdi:signal"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "voltage": {
+        "default": "mdi:sine-wave"
+      }
+    }
+  }
+}

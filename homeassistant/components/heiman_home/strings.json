@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "account_info_failed": "Failed to fetch account information from Heiman Home.",
+      "already_configured": "Account is already configured.",
+      "invalid_home_data": "Invalid home data received from Heiman Home API. Please contact support.",
+      "missing_credentials": "OAuth2 credentials are not configured. Please set up application credentials first.",
+      "no_homes": "No homes found in your Heiman Home account.",
+      "reauth_account_mismatch": "Re-authentication failed: Account mismatch.",
+      "reauth_entry_not_found": "Re-authentication failed: Configuration entry not found.",
+      "reauth_successful": "Re-authentication successful",
+      "reauth_user_mismatch": "Re-authentication failed: User mismatch.",
+      "token_expired": "Your authentication token has expired. Please re-authenticate to continue using the integration.",
+      "token_invalid": "Failed to authenticate with Heiman Home API. The token may be invalid."
+    },
+    "error": {
+      "authorize_url_timeout": "Authorization URL timed out. Please try again.",
+      "network_error": "Network error occurred. Please check your connection and try again.",
+      "no_home_selected": "Please select a home",
+      "unknown": "An unknown error occurred. Please try again."
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "Authentication method"
+        },
+        "data_description": {
+          "implementation": "Select the authentication method to use"
+        },
+        "title": "Select Authentication Method"
+      },
+      "reauth_confirm": {
+        "description": "Your Heiman Home authentication has expired. Please re-authenticate to continue using the integration.",
+        "title": "Re-authentication Required"
+      },
+      "select_home": {
+        "data": {
+          "home_id": "Home"
+        },
+        "data_description": {
+          "home_id": "Select home to import devices from"
+        },
+        "description": "Logged in as {user_email}",
+        "title": "Select Home"
+      },
+      "user": {
+        "description": "Connect your Heiman Home devices to Home Assistant.",
+        "title": "Configure Heiman Home"
+      }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation is not available. Please check your configuration."
+    },
+    "token_expired": {
+      "message": "Your authentication token has expired. Please re-authenticate to continue using the integration."
+    }
+  },
+  "issues": {
+    "config_entry_reauth": {
+      "description": "Your Heiman Home authentication has expired. Please re-authenticate to continue using the integration.",
+      "title": "Re-authentication Required"
+    }
+  }
+}
