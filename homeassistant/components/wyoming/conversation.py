@@ -1,5 +1,6 @@
 """Support for Wyoming intent recognition services."""
 
+import asyncio
 import logging
 from typing import Any, Literal
 
@@ -7,7 +8,7 @@ from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import HandleProgram, IntentProgram
-from wyoming.intent import Intent, NotRecognized
+from wyoming.intent import Intent, IntentsStart, IntentsStop, NotRecognized
 
 from homeassistant.components import conversation
 from homeassistant.const import MATCH_ALL
@@ -169,62 +170,27 @@ class WyomingConversationEntity(
         intent_response: intent.IntentResponse,
     ) -> intent.IntentResponse:
         """Process a sentence into an intent response."""
+        has_intents_list = False
+        intents: list[Intent] = []
+
         while True:
             event = await client.read_event()
             if event is None:
                 raise WyomingError("Connection lost")
 
+            if IntentsStart.is_type(event.type):
+                # Multiple intents may be present
+                has_intents_list = True
+                continue
+
             if Intent.is_type(event.type):
-                # Success
-                recognized_intent = Intent.from_event(event)
-                _LOGGER.debug("Recognized intent: %s", recognized_intent)
+                intents.append(Intent.from_event(event))
+                if not has_intents_list:
+                    # Only one intent, no need to wait
+                    break
 
-                intent_type = recognized_intent.name
-                intent_slots = {
-                    e.name: {"value": e.value} for e in recognized_intent.entities
-                }
-
-                # Add to trace and chat log
-                conversation.async_conversation_trace_append(
-                    conversation.ConversationTraceEventType.TOOL_CALL,
-                    {
-                        "intent_name": intent_type,
-                        "slots": intent_slots,
-                    },
-                )
-                tool_input = llm.ToolInput(
-                    tool_name=intent_type,
-                    tool_args=intent_slots,
-                    external=True,
-                )
-                chat_log.async_add_assistant_content_without_tools(
-                    conversation.AssistantContent(
-                        agent_id=user_input.agent_id,
-                        content=None,
-                        tool_calls=[tool_input],
-                    )
-                )
-                intent_response = await intent.async_handle(
-                    self.hass,
-                    DOMAIN,
-                    intent_type,
-                    intent_slots,
-                    text_input=user_input.text,
-                    language=user_input.language,
-                    satellite_id=user_input.satellite_id,
-                    device_id=user_input.device_id,
-                )
-
-                if (not intent_response.speech) and recognized_intent.text:
-                    response_text = recognized_intent.text
-                    if template.is_template_string(response_text):
-                        # Render text as a template
-                        response_text = self._render_speech_template(
-                            response_text, intent_response, intent_slots
-                        )
-
-                    intent_response.async_set_speech(response_text)
-
+            if IntentsStop.is_type(event.type):
+                # End of intents list
                 break
 
             if NotRecognized.is_type(event.type):
@@ -234,6 +200,9 @@ class WyomingConversationEntity(
                     intent.IntentResponseErrorCode.NO_INTENT_MATCH,
                     not_recognized.text or "",
                 )
+
+                # Don't process any intents if one was not recognized
+                intents.clear()
                 break
 
             if Handled.is_type(event.type):
@@ -250,6 +219,97 @@ class WyomingConversationEntity(
                     not_handled.text or "",
                 )
                 break
+
+        if not intents:
+            return intent_response
+
+        # Process recognized intents with a task group.
+        # If any intent fails to be handled, the rest are cancelled.
+        intent_responses: list[intent.IntentResponse] = []
+        try:
+            async with asyncio.TaskGroup() as task_group:
+                intent_tasks: list[tuple[str | None, dict, asyncio.Task]] = []
+                for recognized_intent in intents:
+                    _LOGGER.debug("Handling intent: %s", recognized_intent)
+
+                    intent_type = recognized_intent.name
+                    intent_slots = {
+                        e.name: {"value": e.value} for e in recognized_intent.entities
+                    }
+
+                    # Add to trace and chat log
+                    conversation.async_conversation_trace_append(
+                        conversation.ConversationTraceEventType.TOOL_CALL,
+                        {
+                            "intent_name": intent_type,
+                            "slots": intent_slots,
+                        },
+                    )
+                    tool_input = llm.ToolInput(
+                        tool_name=intent_type,
+                        tool_args=intent_slots,
+                        external=True,
+                    )
+                    chat_log.async_add_assistant_content_without_tools(
+                        conversation.AssistantContent(
+                            agent_id=user_input.agent_id,
+                            content=None,
+                            tool_calls=[tool_input],
+                        )
+                    )
+                    intent_tasks.append(
+                        (
+                            recognized_intent.text,
+                            intent_slots,
+                            task_group.create_task(
+                                intent.async_handle(
+                                    self.hass,
+                                    DOMAIN,
+                                    intent_type,
+                                    intent_slots,
+                                    text_input=user_input.text,
+                                    language=user_input.language,
+                                    satellite_id=user_input.satellite_id,
+                                    device_id=user_input.device_id,
+                                )
+                            ),
+                        )
+                    )
+
+                # Gather intent handling results
+                for intent_text, intent_slots, intent_task in intent_tasks:
+                    intent_task_response = await intent_task
+                    intent_responses.append(intent_task_response)
+
+                    if (not intent_task_response.speech) and intent_text:
+                        if template.is_template_string(intent_text):
+                            # Render text as a template
+                            intent_text = self._render_speech_template(
+                                intent_text, intent_task_response, intent_slots
+                            )
+
+                        intent_task_response.async_set_speech(intent_text)
+        except* intent.IntentError as err_group:
+            # Bubble up first exception only.
+            # There's nothing the caller can do with multiple intent errors.
+            raise err_group.exceptions[0] from err_group
+
+        # Must be the case because an exception would have been thrown otherwise
+        assert intent_responses
+
+        # Use the properties of the first intent (response_type, etc.) and
+        # combine the speech results.
+        intent_response = intent_responses[0]
+        speech_texts: list[str] = [
+            speech
+            for current_response in intent_responses
+            if (speech := current_response.speech.get("plain", {}).get("speech"))
+        ]
+
+        if speech_texts:
+            # Combine response with newlines because punctuation would be
+            # language-dependent.
+            intent_response.async_set_speech("\n".join(speech_texts))
 
         return intent_response
 
