@@ -28,13 +28,13 @@
   "entity": {
     "sensor": {
       "auxiliary_pump_0": {
-        "name": "Axiliary pump 0"
+        "name": "Auxiliary pump 0"
       },
       "auxiliary_pump_1": {
-        "name": "Axiliary pump 1"
+        "name": "Auxiliary pump 1"
       },
       "auxiliary_pump_2": {
-        "name": "Axiliary pump 2"
+        "name": "Auxiliary pump 2"
       },
       "boiler_shunt_pump": {
         "name": "Boiler shunt pump"
@@ -97,9 +97,9 @@
         "name": "Heating circuit 8 temperature"
       },
       "co2_content": {
-        "name": "Flute co2 content"
+        "name": "Flue CO2 content"
       },
-      "cuircuit_0_temp": {
+      "circuit_0_temp": {
         "name": "Heating circuit 0 temperature"
       },
       "dhw_pump_0": {
