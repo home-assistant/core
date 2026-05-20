@@ -238,3 +238,36 @@ async def test_invalid_uom(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert expected_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("battery_max", "battery_value", "expected_state"),
+    [
+        pytest.param(5, 5, "100", id="nonstandard_max5_value5_scales_to_100"),
+        pytest.param(5, 3, "60", id="nonstandard_max5_value3_scales_to_60"),
+        pytest.param(100, 87, "87", id="standard_max100_value87_no_scaling"),
+    ],
+)
+@pytest.mark.parametrize("mock_device_code", ["wk_fi6dne5tu4t1nm6j"])
+async def test_battery_percentage_scale(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    battery_max: int,
+    battery_value: int,
+    expected_state: str,
+) -> None:
+    """Test that battery_percentage is scaled to 0-100 when device uses non-standard range."""
+    values = json_util.json_loads_object(
+        mock_device.status_range["battery_percentage"].values
+    )
+    values["max"] = battery_max
+    mock_device.status_range["battery_percentage"].values = json.json_dumps(values)
+    mock_device.status["battery_percentage"] = battery_value
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("sensor.wifi_smart_gas_boiler_thermostat_battery")
+    assert state is not None
+    assert state.state == expected_state
