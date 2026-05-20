@@ -15,20 +15,16 @@ from aiopnsense import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import load_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_INTERFACE_CLIENT,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-    OPNSENSE_DATA,
-)
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,25 +45,44 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [Platform.DEVICE_TRACKER]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the opnsense component."""
+    """Set up the OPNsense component."""
+    if DOMAIN not in config:
+        return True
 
-    conf = config[DOMAIN]
-    url = conf[CONF_URL]
-    api_key = conf[CONF_API_KEY]
-    api_secret = conf[CONF_API_SECRET]
-    verify_ssl = conf[CONF_VERIFY_SSL]
-    tracker_interfaces = conf[CONF_TRACKER_INTERFACES]
+    hass.async_create_task(_async_setup(hass, config))
 
-    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
+    return True
+
+
+async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+    """Set up the OPNsense component from YAML."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config[DOMAIN],
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: OPNsenseConfigEntry
+) -> bool:
+    """Set up the OPNsense component from a config entry."""
+    url = config_entry.data[CONF_URL]
+    session = async_get_clientsession(
+        hass, verify_ssl=config_entry.data[CONF_VERIFY_SSL]
+    )
     client = OPNsenseClient(
         url,
-        api_key,
-        api_secret,
+        config_entry.data[CONF_API_KEY],
+        config_entry.data[CONF_API_SECRET],
         session,
-        opts={"verify_ssl": verify_ssl},
+        opts={"verify_ssl": config_entry.data[CONF_VERIFY_SSL]},
     )
+    tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES, [])
     try:
         await client.validate()
         if tracker_interfaces:
@@ -85,32 +100,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Invalid URL while connecting to OPNsense API endpoint at %s", url
         )
         return False
-    except OPNsenseTimeoutError:
+    except OPNsenseTimeoutError as err:
         _LOGGER.error("Timeout while connecting to OPNsense API endpoint at %s", url)
-        return False
+        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
+        raise ConfigEntryNotReady from err
     except OPNsenseSSLError:
         _LOGGER.error(
             "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
         )
         return False
-    except OPNsenseInvalidAuth:
+    except OPNsenseInvalidAuth as err:
         _LOGGER.error(
             "Authentication failure while connecting to OPNsense API endpoint at %s",
             url,
         )
-        return False
-    except OPNsensePrivilegeMissing:
+        raise ConfigEntryAuthFailed from err
+    except OPNsensePrivilegeMissing as err:
         _LOGGER.error(
             "Invalid Permissions while connecting to OPNsense API endpoint at %s",
             url,
         )
-        return False
-    except OPNsenseConnectionError:
+        raise ConfigEntryAuthFailed from err
+    except OPNsenseConnectionError as err:
         _LOGGER.error(
             "Connection failure while connecting to OPNsense API endpoint at %s",
             url,
         )
-        return False
+        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
+        raise ConfigEntryNotReady from err
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
@@ -125,10 +142,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 return False
 
-    hass.data[OPNSENSE_DATA] = {
-        CONF_INTERFACE_CLIENT: client,
-        CONF_TRACKER_INTERFACES: tracker_interfaces,
-    }
+    config_entry.runtime_data = OPNsenseRuntimeData(
+        client=client,
+        tracker_interfaces=tracker_interfaces,
+    )
 
-    load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, tracker_interfaces, config)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: OPNsenseConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
