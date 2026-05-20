@@ -102,6 +102,9 @@
       },
       "half_lock_calibration": {
         "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
       }
     },
     "button": {

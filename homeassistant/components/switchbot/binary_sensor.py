@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from switchbot import SwitchbotModel
+import switchbot
+from switchbot import LockStatus, SwitchbotModel
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,7 +22,7 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-LOCK_ULTRA_BINARY_SENSORS = {"half_lock_calibration"}
+LOCK_ULTRA_BINARY_SENSORS = {"half_lock_calibration", "half_locked"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -29,6 +30,9 @@ class SwitchbotBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Switchbot binary sensor entity."""
 
     device_class_fn: Callable[[SwitchbotModel], BinarySensorDeviceClass] | None = None
+    value_fn: Callable[[switchbot.SwitchbotDevice, str], bool | None] = (
+        lambda device, key: device.parsed_data.get(key)
+    )
 
 
 BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
@@ -41,6 +45,15 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         key="half_lock_calibration",
         translation_key="half_lock_calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "half_locked": SwitchbotBinarySensorEntityDescription(
+        key="half_locked",
+        translation_key="half_locked",
+        value_fn=lambda device, _: (
+            None
+            if (status := device.get_lock_status()) is None
+            else status is LockStatus.HALF_LOCKED
+        ),
     ),
     "motion_detected": SwitchbotBinarySensorEntityDescription(
         key="pir_state",
@@ -143,4 +156,4 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.parsed_data.get(self._sensor)
+        return self.entity_description.value_fn(self._device, self._sensor)
