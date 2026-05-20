@@ -106,6 +106,7 @@ def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
 @callback
 def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
     exc = BrowseError(
+        f"Unexpected identifier: {identifier}",
         translation_domain=DOMAIN,
         translation_key="unexpected_identifier",
         translation_placeholders={"identifier": identifier},
@@ -382,6 +383,7 @@ class ProtectMediaSource(MediaSource):
 
         if event.start is None or event.end is None:
             raise BrowseError(
+                "Event is still ongoing",
                 translation_domain=DOMAIN,
                 translation_key="event_ongoing",
             )
@@ -795,6 +797,7 @@ class ProtectMediaSource(MediaSource):
             camera = data.api.bootstrap.cameras.get(camera_id)
             if camera is None:
                 raise BrowseError(
+                    f"Unknown Camera ID: {camera_id}",
                     translation_domain=DOMAIN,
                     translation_key="unknown_camera_id",
                     translation_placeholders={"camera_id": camera_id},
