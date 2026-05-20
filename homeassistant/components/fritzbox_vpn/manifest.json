@@ -1,0 +1,18 @@
+{
+  "domain": "fritzbox_vpn",
+  "name": "Fritz!Box VPN",
+  "codeowners": ["@rosch100"],
+  "config_flow": true,
+  "dependencies": ["ssdp"],
+  "documentation": "https://www.home-assistant.io/integrations/fritzbox_vpn",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["fritzboxvpn"],
+  "quality_scale": "gold",
+  "requirements": ["fritzboxvpn==1.0.0"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:fritzbox:1"
+    }
+  ]
+}

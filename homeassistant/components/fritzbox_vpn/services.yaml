@@ -1,0 +1,15 @@
+# Fritz!Box VPN services
+
+remove_unavailable_entities:
+  fields:
+    config_entry_id:
+      required: false
+      selector:
+        text:
+
+repair_entity_id_suffixes:
+  fields:
+    config_entry_id:
+      required: false
+      selector:
+        text:

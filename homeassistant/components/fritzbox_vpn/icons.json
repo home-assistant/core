@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "switch": {
+      "vpn": {
+        "default": "mdi:vpn"
+      }
+    }
+  },
+  "services": {
+    "remove_unavailable_entities": {
+      "service": "mdi:delete-outline"
+    },
+    "repair_entity_id_suffixes": {
+      "service": "mdi:wrench"
+    }
+  }
+}

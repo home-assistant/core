@@ -130,6 +130,11 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:fritzbox:1",
         },
     ],
+    "fritzbox_vpn": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1",
+        },
+    ],
     "frontier_silicon": [
         {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",

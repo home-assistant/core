@@ -930,6 +930,9 @@ freebox-api==1.3.1
 # homeassistant.components.fressnapf_tracker
 fressnapftracker==0.2.2
 
+# homeassistant.components.fritzbox_vpn
+fritzboxvpn==1.0.0
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.1
