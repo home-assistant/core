@@ -105,7 +105,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 url = yarl.URL(user_input[CONF_URL])
                 if url.explicit_port is None:
                     url = url.with_port(url.port)
-                user_input[CONF_URL] = str(url)
+                user_input[CONF_URL] = url.human_repr()
 
             if self.source == SOURCE_REAUTH:
                 user_input = {**self._get_reauth_entry().data, **user_input}
