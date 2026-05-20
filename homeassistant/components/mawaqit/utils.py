@@ -182,6 +182,14 @@ def time_with_timezone(timezone, date, time) -> datetime | None:
     return dt_util.as_local(naive_time.replace(tzinfo=tz))
 
 
+def _to_utc(timezone: str, day, time_str: str) -> datetime | None:
+    """Localize a HH:MM time string on a given date and return it in UTC."""
+    localized = time_with_timezone(timezone, day, time_str)
+    if localized:
+        return localized.astimezone(dt_util.UTC)
+    return None
+
+
 def add_minutes_to_time(time_str, minutes_str):
     """Add minutes to a time string (HH:MM) based on a string input like "+xx".
 
@@ -399,13 +407,7 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
     day = get_islamic_date(prayer_data, timezone)
     prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
 
-    if not prayer_time:
-        return None
-
-    localized_prayer_time = time_with_timezone(timezone, day, prayer_time)
-    if localized_prayer_time:
-        return localized_prayer_time.astimezone(dt_util.UTC)
-    return None
+    return _to_utc(timezone, day, prayer_time) if prayer_time else None
 
 
 def get_shuruq_time(prayer_data: dict) -> datetime | None:
@@ -417,14 +419,8 @@ def get_shuruq_time(prayer_data: dict) -> datetime | None:
         _LOGGER.warning("Missing timezone data")
         return None
 
-    if not shuruq_time:
-        return None
-
     day = get_islamic_date(prayer_data, timezone)
-    localized_prayer_time = time_with_timezone(timezone, day, shuruq_time)
-    if localized_prayer_time:
-        return localized_prayer_time.astimezone(dt_util.UTC)
-    return None
+    return _to_utc(timezone, day, shuruq_time) if shuruq_time else None
 
 
 def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
@@ -436,14 +432,7 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
         _LOGGER.warning("Missing timezone data")
         return None
 
-    if not jumua_time:
-        return None
-
-    day = get_next_friday()
-    localized_prayer_time = time_with_timezone(timezone, day, jumua_time)
-    if localized_prayer_time:
-        return localized_prayer_time.astimezone(dt_util.UTC)
-    return None
+    return _to_utc(timezone, get_next_friday(), jumua_time) if jumua_time else None
 
 
 def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
@@ -472,10 +461,5 @@ def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
 
     # Add offset to base prayer time
     iqama_time = add_minutes_to_time(prayer_time, iqama_offset)
-    if not iqama_time:
-        return None
 
-    localized_prayer_time = time_with_timezone(timezone, day, iqama_time)
-    if localized_prayer_time:
-        return localized_prayer_time.astimezone(dt_util.UTC)
-    return None
+    return _to_utc(timezone, day, iqama_time)
