@@ -125,7 +125,6 @@ set_config_parameter:
       selector:
         text:
     bitmask:
-      advanced: true
       selector:
         text:
     value:
