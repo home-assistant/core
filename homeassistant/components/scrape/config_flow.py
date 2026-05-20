@@ -158,7 +158,7 @@ SENSOR_SETTINGS = vol.Schema(
                             options=[
                                 cls.value
                                 for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
+                                if cls is not SensorDeviceClass.ENUM
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="device_class",

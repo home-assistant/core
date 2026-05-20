@@ -152,7 +152,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
             setpoint_cool = _get_float(self._coil_setpoint_cool)
         else:
             setpoint_cool = None
-        if mode == HVACMode.HEAT_COOL:
+        if mode is HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
             self._attr_target_temperature_low = setpoint_heat
             self._attr_target_temperature_high = setpoint_cool
@@ -238,7 +238,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         """Set new target hvac mode."""
         coordinator = self.coordinator
 
-        if hvac_mode == HVACMode.HEAT_COOL:
+        if hvac_mode is HVACMode.HEAT_COOL:
             await coordinator.async_write_coil(
                 self._coil_cooling_with_room_sensor, "ON"
             )

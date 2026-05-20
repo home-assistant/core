@@ -81,11 +81,11 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
             await self.executor.async_execute_command(
                 OverkizCommand.SET_HEATING_COOLING_AUTO_SWITCH,
                 OverkizCommandParam.ON
-                if hvac_mode == HVACMode.AUTO
+                if hvac_mode is HVACMode.AUTO
                 else OverkizCommandParam.OFF,
             )
 
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode is HVACMode.AUTO:
             return
 
         await self.executor.async_execute_command(

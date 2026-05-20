@@ -122,7 +122,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != MediaPlayerState.PLAYING:
+        if self.state is not MediaPlayerState.PLAYING:
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.media_toggle_playback())
             self._attr_state = MediaPlayerState.PLAYING
@@ -130,7 +130,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.media_toggle_playback())
             self._attr_state = MediaPlayerState.PAUSED

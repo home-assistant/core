@@ -298,7 +298,7 @@ class StateVacuumEntity(
     @property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.activity == VacuumActivity.DOCKED)
+        charging = bool(self.activity is VacuumActivity.DOCKED)
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging

@@ -218,7 +218,7 @@ class StatisticsMetaManager:
             )
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
-            old_metadata["mean_type"] != new_metadata["mean_type"]
+            old_metadata["mean_type"] is not new_metadata["mean_type"]
             or old_metadata["has_sum"] != new_metadata["has_sum"]
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_class"] != new_metadata["unit_class"]

@@ -166,7 +166,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             list_id=list_item.list_id,
             note=list_item.note,
             display=list_item.display,
-            checked=item.status == TodoItemStatus.COMPLETED,
+            checked=item.status is TodoItemStatus.COMPLETED,
             position=position,
             is_food=list_item.is_food,
             disable_amount=list_item.disable_amount,
@@ -185,7 +185,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 update_shopping_item.is_food = False
             update_shopping_item.food_id = None
             update_shopping_item.quantity = 0.0
-            update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+            update_shopping_item.checked = item.status is TodoItemStatus.COMPLETED
 
         try:
             await self.coordinator.client.update_shopping_item(

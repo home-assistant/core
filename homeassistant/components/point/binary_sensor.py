@@ -88,7 +88,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor."""
-        if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
+        if self.device_class is BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
             self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:

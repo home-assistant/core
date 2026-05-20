@@ -286,7 +286,7 @@ class DatasetStore:
                 dataset_without_wakeup = {
                     k: v
                     for k, v in dataset.items()
-                    if k != MeshcopTLVType.WAKEUP_CHANNEL
+                    if k is not MeshcopTLVType.WAKEUP_CHANNEL
                 }
                 if old_ts > new_ts or dataset_without_wakeup != entry.dataset:
                     _LOGGER.warning(

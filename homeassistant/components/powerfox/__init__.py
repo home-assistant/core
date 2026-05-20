@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         PowerfoxDataUpdateCoordinator | PowerfoxReportDataUpdateCoordinator
     ] = []
     for device in devices:
-        if device.type == DeviceType.GAS_METER:
+        if device.type is DeviceType.GAS_METER:
             coordinators.append(
                 PowerfoxReportDataUpdateCoordinator(hass, entry, client, device)
             )

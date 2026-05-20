@@ -150,7 +150,7 @@ class ThermostatEntity(ClimateEntity):
         """Return the temperature currently set to be reached."""
         if not (trait := self._target_temperature_trait):
             return None
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode is HVACMode.HEAT:
             return trait.heat_celsius
         if self.hvac_mode == HVACMode.COOL:
             return trait.cool_celsius
@@ -159,7 +159,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
-        if self.hvac_mode != HVACMode.HEAT_COOL:
+        if self.hvac_mode is not HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
             return None
@@ -168,7 +168,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
-        if self.hvac_mode != HVACMode.HEAT_COOL:
+        if self.hvac_mode is not HVACMode.HEAT_COOL:
             return None
         if not (trait := self._target_temperature_trait):
             return None
@@ -207,7 +207,7 @@ class ThermostatEntity(ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action (heating, cooling)."""
         trait = self._device.traits[ThermostatHvacTrait.NAME]
-        if trait.status == "OFF" and self.hvac_mode != HVACMode.OFF:
+        if trait.status == "OFF" and self.hvac_mode is not HVACMode.OFF:
             return HVACAction.IDLE
         return THERMOSTAT_HVAC_STATUS_MAP.get(trait.status)
 
@@ -294,7 +294,7 @@ class ThermostatEntity(ClimateEntity):
             )
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         try:
-            if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
+            if self.preset_mode == PRESET_ECO or hvac_mode is HVACMode.HEAT_COOL:
                 if low_temp and high_temp:
                     if high_temp - low_temp < MIN_TEMP_RANGE:
                         # Ensure there is a minimum gap from the new temp. Pick
@@ -331,7 +331,7 @@ class ThermostatEntity(ClimateEntity):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
-        if fan_mode == FAN_ON and self.hvac_mode == HVACMode.OFF:
+        if fan_mode == FAN_ON and self.hvac_mode is HVACMode.OFF:
             raise ValueError(
                 "Cannot turn on fan, please set an HVAC mode (e.g. heat/cool) first"
             )
@@ -351,7 +351,7 @@ class ThermostatEntity(ClimateEntity):
         if not self.supported_features & ClimateEntityFeature.FAN_MODE:
             raise HomeAssistantError(f"Entity {self.entity_id} does not support fan")
 
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             raise HomeAssistantError(
                 f"Cannot turn on fan for {self.entity_id},"
                 " please set an HVAC mode (e.g. heat/cool) first"

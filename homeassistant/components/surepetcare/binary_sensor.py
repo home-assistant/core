@@ -38,7 +38,7 @@ async def async_setup_entry(
             EntityType.FELAQUA,
         ]:
             entities.append(DeviceConnectivity(surepy_entity.id, coordinator))
-        elif surepy_entity.type == EntityType.PET:
+        elif surepy_entity.type is EntityType.PET:
             entities.append(Pet(surepy_entity.id, coordinator))
         elif surepy_entity.type == EntityType.HUB:
             entities.append(Hub(surepy_entity.id, coordinator))
@@ -99,7 +99,7 @@ class Pet(SurePetcareBinarySensor):
         surepy_entity = cast(SurepyPet, surepy_entity)
         state = surepy_entity.location
         try:
-            self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
+            self._attr_is_on = bool(Location(state.where) is Location.INSIDE)
         except KeyError, TypeError:
             self._attr_is_on = False
         if state:

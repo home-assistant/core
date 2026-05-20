@@ -134,7 +134,7 @@ def get_ip_address(
     addresses = entity.coordinator.data.addresses
     if entity.argument in addresses:
         for addr in addresses[entity.argument]:
-            if addr.family == IF_ADDRS_FAMILY[entity.entity_description.key]:
+            if addr.family is IF_ADDRS_FAMILY[entity.entity_description.key]:
                 address = ipaddress.ip_address(addr.address)
                 if address.version == 6 and (
                     address.is_link_local or address.is_loopback

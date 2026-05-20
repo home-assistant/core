@@ -573,7 +573,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_uri(media_id, force_radio=is_radio)
-        elif media_type == MediaType.PLAYLIST:
+        elif media_type is MediaType.PLAYLIST:
             if media_id.startswith("S:"):
                 playlist = media_browser.get_media(
                     self.media.library, media_id, media_type
@@ -622,7 +622,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             item.title,
             enqueue,
         )
-        if enqueue == MediaPlayerEnqueue.REPLACE:
+        if enqueue is MediaPlayerEnqueue.REPLACE:
             soco.clear_queue()
 
         if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
@@ -634,7 +634,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             new_pos = soco.add_to_queue(
                 item, position=pos, timeout=LONG_SERVICE_TIMEOUT
             )
-            if enqueue == MediaPlayerEnqueue.PLAY:
+            if enqueue is MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
 
     def _play_media_directory(
@@ -669,7 +669,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         kwargs = {}
         if title:
             kwargs["dc_title"] = title
-        if enqueue == MediaPlayerEnqueue.ADD:
+        if enqueue is MediaPlayerEnqueue.ADD:
             share_link.add_share_link_to_queue(
                 media_id, timeout=LONG_SERVICE_TIMEOUT, **kwargs
             )

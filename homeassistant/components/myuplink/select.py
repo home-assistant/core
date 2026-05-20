@@ -31,7 +31,7 @@ async def async_setup_entry(
         for point_id, device_point in point_data.items():
             if skip_entity(device_point.category, device_point):
                 continue
-            if find_matching_platform(device_point, None) == Platform.SELECT:
+            if find_matching_platform(device_point, None) is Platform.SELECT:
                 entities.append(
                     MyUplinkSelect(
                         coordinator=coordinator,

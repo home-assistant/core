@@ -50,7 +50,9 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_options = [t.value for t in DoorLockRuleType if t != DoorLockRuleType.NONE]
+    _attr_options = [
+        t.value for t in DoorLockRuleType if t is not DoorLockRuleType.NONE
+    ]
     _attr_translation_key = "door_lock_rule"
 
     def __init__(

@@ -115,7 +115,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a To-do item."""
-        if item.status != TodoItemStatus.NEEDS_ACTION:
+        if item.status is not TodoItemStatus.NEEDS_ACTION:
             raise ValueError("Only active tasks may be created.")
         await self.coordinator.api.add_task(
             **_task_api_data(item),
@@ -136,7 +136,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                     continue
 
                 if item.status != existing_item.status:
-                    if item.status == TodoItemStatus.COMPLETED:
+                    if item.status is TodoItemStatus.COMPLETED:
                         await self.coordinator.api.complete_task(task_id=uid)
                     else:
                         await self.coordinator.api.uncomplete_task(task_id=uid)

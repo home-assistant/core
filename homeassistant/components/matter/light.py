@@ -428,12 +428,12 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_color_mode = color_mode = self._get_color_mode()
             if (
                 ColorMode.HS in self._attr_supported_color_modes
-                and color_mode == ColorMode.HS
+                and color_mode is ColorMode.HS
             ):
                 self._attr_hs_color = self._get_hs_color()
             elif (
                 ColorMode.XY in self._attr_supported_color_modes
-                and color_mode == ColorMode.XY
+                and color_mode is ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
         elif self._supports_color_temperature:

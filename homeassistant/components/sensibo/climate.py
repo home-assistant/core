@@ -276,7 +276,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_send_api_call(
                 key=AC_STATE_TO_DATA["on"],
                 value=False,

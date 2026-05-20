@@ -122,7 +122,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             await self.async_turn_on()

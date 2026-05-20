@@ -104,9 +104,9 @@ class ThermostatDevice(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode is HVACMode.AUTO:
             self.thermostat.mode = 1
-        elif hvac_mode == HVACMode.HEAT:
+        elif hvac_mode is HVACMode.HEAT:
             self.thermostat.mode = 2
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0

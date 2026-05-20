@@ -67,7 +67,7 @@ async def async_setup_entry(
     async def async_add_climate(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add climate from Switcher device."""
         data = cast(SwitcherThermostat, coordinator.data)
-        if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+        if coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
             remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
                 get_breeze_remote_manager(hass).get_remote, data.remote_id
             )
@@ -130,7 +130,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         self._attr_target_temperature = float(data.target_temperature)
 
         self._attr_hvac_mode = HVACMode.OFF
-        if data.device_state == DeviceState.ON:
+        if data.device_state is DeviceState.ON:
             self._attr_hvac_mode = DEVICE_MODE_TO_HA[data.mode]
 
         self._attr_fan_mode = None
@@ -144,7 +144,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         if features["swing"]:
             self._attr_swing_mode = SWING_OFF
             self._attr_swing_modes = [SWING_VERTICAL, SWING_OFF]
-            if data.swing == ThermostatSwing.ON:
+            if data.swing is ThermostatSwing.ON:
                 self._attr_swing_mode = SWING_VERTICAL
 
     async def _async_control_breeze_device(self, **kwargs: Any) -> None:
@@ -169,7 +169,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == hvac_mode.OFF:
+        if hvac_mode is hvac_mode.OFF:
             await self._async_control_breeze_device(state=DeviceState.OFF)
         else:
             await self._async_control_breeze_device(

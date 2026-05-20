@@ -135,7 +135,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self._global_control(main_operation=OverkizCommandParam.OFF)
         else:
             await self._global_control(
@@ -244,14 +244,14 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             return TEMP_AUTO_MIN
         return TEMP_MIN
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if self.hvac_mode == HVACMode.AUTO:
+        if self.hvac_mode is HVACMode.AUTO:
             return TEMP_AUTO_MAX
         return TEMP_MAX
 

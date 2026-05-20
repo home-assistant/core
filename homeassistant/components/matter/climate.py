@@ -241,7 +241,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if target_temperature is not None:
             # single setpoint control
             if self.target_temperature != target_temperature:
-                if current_mode == HVACMode.COOL:
+                if current_mode is HVACMode.COOL:
                     matter_attribute = (
                         clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                     )
@@ -475,7 +475,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_supported_features
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
-        if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
+        if supports_range and self._attr_hvac_mode is HVACMode.HEAT_COOL:
             self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
@@ -487,7 +487,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_target_temperature_high = None
             self._attr_target_temperature_low = None
             # update target_temperature
-            if self._attr_hvac_mode == HVACMode.COOL:
+            if self._attr_hvac_mode is HVACMode.COOL:
                 self._attr_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
@@ -500,7 +500,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_temperature_limits(self) -> None:
         """Update min and max temperature limits."""
         # update min_temp
-        if self._attr_hvac_mode == HVACMode.COOL:
+        if self._attr_hvac_mode is HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
         else:
             attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
@@ -557,7 +557,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self._attr_supported_features |= (
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 )
-        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
+        if any(mode for mode in self.hvac_modes if mode is not HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
     @callback

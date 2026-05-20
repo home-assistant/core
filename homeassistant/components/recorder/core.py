@@ -624,7 +624,7 @@ class Recorder(threading.Thread):
 
         # If the db is using a socket connection, we need to keep alive
         # to prevent errors from unexpected disconnects
-        if self.dialect_name != SupportedDialect.SQLITE:
+        if self.dialect_name is not SupportedDialect.SQLITE:
             self._keep_alive_listener = async_track_time_interval(
                 self.hass,
                 self._async_keep_alive,
@@ -1329,7 +1329,7 @@ class Recorder(threading.Thread):
 
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
-        if self.dialect_name != SupportedDialect.SQLITE:
+        if self.dialect_name is not SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, locking not necessary"
             )
@@ -1359,7 +1359,7 @@ class Recorder(threading.Thread):
 
         Returns true if database lock has been held throughout the process.
         """
-        if self.dialect_name != SupportedDialect.SQLITE:
+        if self.dialect_name is not SupportedDialect.SQLITE:
             _LOGGER.debug(
                 "Not a SQLite database or not connected, unlocking not necessary"
             )

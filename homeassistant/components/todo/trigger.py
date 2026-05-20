@@ -286,7 +286,7 @@ class ItemCompletedTrigger(ItemChangeTriggerBase):
     @override
     def _is_matching_item(self, item: TodoItem) -> bool:
         """Return true if the item matches the trigger condition."""
-        return item.status == TodoItemStatus.COMPLETED
+        return item.status is TodoItemStatus.COMPLETED
 
     @override
     def _get_items_diff(

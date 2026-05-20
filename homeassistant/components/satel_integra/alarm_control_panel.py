@@ -119,7 +119,7 @@ class SatelIntegraAlarmPanel(
             return
 
         clear_alarm_necessary = (
-            self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
+            self._attr_alarm_state is AlarmControlPanelState.TRIGGERED
         )
 
         await self._controller.disarm(code, [self._device_number])

@@ -94,7 +94,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
     @catch_musicassistant_error
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        _value = round(value) if self.mass_type == PlayerOptionType.INTEGER else value
+        _value = round(value) if self.mass_type is PlayerOptionType.INTEGER else value
         await self.mass.players.set_option(
             self.player_id,
             self.mass_option_key,

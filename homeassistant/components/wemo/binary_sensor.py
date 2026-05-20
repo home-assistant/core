@@ -56,4 +56,4 @@ class InsightBinarySensor(WemoBinarySensor):
     @property
     def is_on(self) -> bool:
         """Return true device connected to the Insight Switch is on."""
-        return super().is_on and self.wemo.standby_state == StandbyState.ON
+        return super().is_on and self.wemo.standby_state is StandbyState.ON

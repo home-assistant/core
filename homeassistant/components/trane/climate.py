@@ -86,7 +86,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
                 continue
             modes.append(ha_mode)
             # AUTO in steamloop maps to both AUTO (schedule) and HEAT_COOL (manual hold)
-            if zone_mode == ZoneMode.AUTO:
+            if zone_mode is ZoneMode.AUTO:
                 modes.append(HVACMode.HEAT_COOL)
         self._attr_hvac_modes = modes
 
@@ -112,7 +112,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         zone = self._zone
-        if zone.mode == ZoneMode.AUTO and zone.hold_type == HoldType.MANUAL:
+        if zone.mode is ZoneMode.AUTO and zone.hold_type is HoldType.MANUAL:
             return HVACMode.HEAT_COOL
         return ZONE_MODE_TO_HA.get(zone.mode, HVACMode.OFF)
 
@@ -123,7 +123,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         # protocol ("0"=off, "1"=idle, "2"=running); filter by zone mode so
         # a zone in COOL never reports HEATING and vice versa
         zone_mode = self._zone.mode
-        if zone_mode == ZoneMode.OFF:
+        if zone_mode is ZoneMode.OFF:
             return HVACAction.OFF
         state = self._conn.state
         if zone_mode != ZoneMode.HEAT and state.cooling_active == "2":
@@ -137,7 +137,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         """Return target temperature for single-setpoint modes."""
         # Setpoints are strings from the protocol or empty string if not yet received
         zone = self._zone
-        if zone.mode == ZoneMode.COOL:
+        if zone.mode is ZoneMode.COOL:
             return float(zone.cool_setpoint) if zone.cool_setpoint else None
         if zone.mode == ZoneMode.HEAT:
             return float(zone.heat_setpoint) if zone.heat_setpoint else None
@@ -166,7 +166,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             self._conn.set_zone_mode(self._zone_id, ZoneMode.OFF)
             return
 
@@ -182,7 +182,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         set_temp = kwargs.get(ATTR_TEMPERATURE)
 
         if set_temp is not None:
-            if self._zone.mode == ZoneMode.COOL:
+            if self._zone.mode is ZoneMode.COOL:
                 cool_temp = set_temp
             elif self._zone.mode == ZoneMode.HEAT:
                 heat_temp = set_temp

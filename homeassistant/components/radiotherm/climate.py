@@ -156,11 +156,11 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             ATTR_FAN_ACTION: CODE_TO_FAN_STATE[data["fstate"]]
         }
         self._attr_hvac_mode = CODE_TO_TEMP_MODE[data["tmode"]]
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             self._attr_hvac_action = None
         else:
             self._attr_hvac_action = CODE_TO_TEMP_STATE[data["tstate"]]
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             self._attr_target_temperature = data["t_cool"]
         elif self.hvac_mode == HVACMode.HEAT:
             self._attr_target_temperature = data["t_heat"]
@@ -168,7 +168,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             # This doesn't really work - tstate is only set if the HVAC is
             # active. If it's idle, we don't know what to do with the target
             # temperature.
-            if self.hvac_action == HVACAction.COOLING:
+            if self.hvac_action is HVACAction.COOLING:
                 self._attr_target_temperature = data["t_cool"]
             elif self.hvac_action == HVACAction.HEATING:
                 self._attr_target_temperature = data["t_heat"]
@@ -185,12 +185,12 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     def _set_temperature(self, temperature: int) -> None:
         """Set new target temperature."""
         temperature = round_temp(temperature)
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             self.device.t_cool = temperature
         elif self.hvac_mode == HVACMode.HEAT:
             self.device.t_heat = temperature
         elif self.hvac_mode == HVACMode.AUTO:
-            if self.hvac_action == HVACAction.COOLING:
+            if self.hvac_action is HVACAction.COOLING:
                 self.device.t_cool = temperature
             elif self.hvac_action == HVACAction.HEATING:
                 self.device.t_heat = temperature
@@ -207,7 +207,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         if hvac_mode in (HVACMode.OFF, HVACMode.AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[hvac_mode]
         # Setting t_cool or t_heat automatically changes tmode.
-        elif hvac_mode == HVACMode.COOL:
+        elif hvac_mode is HVACMode.COOL:
             self.device.t_cool = self.target_temperature
         elif hvac_mode == HVACMode.HEAT:
             self.device.t_heat = self.target_temperature

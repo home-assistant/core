@@ -98,14 +98,14 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature based on current mode."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return COOLING_MIN
         return HEATING_MIN
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature based on current mode."""
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode is HVACMode.HEAT:
             return HEATING_MAX
         return COOLING_MAX
 
@@ -132,7 +132,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature (single setpoint modes)."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self.coordinator.data.tstatcoolingsetpoint
         if self.hvac_mode == HVACMode.HEAT:
             return self.coordinator.data.tstatheatingsetpoint
@@ -141,14 +141,14 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature (Heat/Cool mode)."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatcoolingsetpoint
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature (Heat/Cool mode)."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatheatingsetpoint
         return None
 
@@ -195,7 +195,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             client.set_heating_setpoint(low)
             client.set_cooling_setpoint(high)
         elif temp is not None:
-            if current_mode == HVACMode.COOL:
+            if current_mode is HVACMode.COOL:
                 client.set_cooling_setpoint(temp)
             else:
                 client.set_heating_setpoint(temp)

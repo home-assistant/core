@@ -67,7 +67,7 @@ async def async_setup_entry(
     # Setup device point bound sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
-            if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
+            if find_matching_platform(device_point) is Platform.BINARY_SENSOR:
                 description = get_description(device_point)
 
                 entities.append(
@@ -144,7 +144,7 @@ class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
         """Return device data availability."""
         return super().available and (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 
@@ -172,7 +172,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         """Binary sensor state value."""
         return (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 

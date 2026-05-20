@@ -237,7 +237,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         # Heat/cool setpoint
         heating_setpoint = None
         cooling_setpoint = None
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
         elif hvac_mode == HVACMode.COOL:
             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
@@ -332,7 +332,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode is HVACMode.COOL:
             return self.get_attribute_value(
                 Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
             )
@@ -345,7 +345,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.get_attribute_value(
                 Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
             )
@@ -354,7 +354,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        if self.hvac_mode is HVACMode.HEAT_COOL:
             return self.get_attribute_value(
                 Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
             )
@@ -425,7 +425,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
             return
         tasks = []
@@ -708,7 +708,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
             return
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":

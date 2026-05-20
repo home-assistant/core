@@ -136,7 +136,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     # Unhide the wrapped entity
-    if switch_entity_entry.hidden_by == er.RegistryEntryHider.INTEGRATION:
+    if switch_entity_entry.hidden_by is er.RegistryEntryHider.INTEGRATION:
         registry.async_update_entity(switch_entity_id, hidden_by=None)
 
     switch_as_x_entries = er.async_entries_for_config_entry(registry, entry.entry_id)

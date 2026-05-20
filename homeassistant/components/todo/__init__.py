@@ -246,7 +246,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         items = self.todo_items
         if items is None:
             return None
-        return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
+        return sum([item.status is TodoItemStatus.NEEDS_ACTION for item in items])
 
     @cached_property
     def todo_items(self) -> list[TodoItem] | None:
@@ -532,7 +532,7 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
     uids = [
         item.uid
         for item in entity.todo_items or ()
-        if item.status == TodoItemStatus.COMPLETED and item.uid
+        if item.status is TodoItemStatus.COMPLETED and item.uid
     ]
     if uids:
         await entity.async_delete_todo_items(uids=uids)

@@ -106,7 +106,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
-        preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
+        preset = PRESET_COMFORT if hvac_mode is HVACMode.HEAT else PRESET_NONE
         await self._apply_preset(preset, "set_hvac_mode_failed")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

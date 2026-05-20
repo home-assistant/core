@@ -127,7 +127,7 @@ class VlcDevice(MediaPlayerEntity):
             )
             media_id = sourced_media.url
 
-        elif media_type != MediaType.MUSIC:
+        elif media_type is not MediaType.MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,

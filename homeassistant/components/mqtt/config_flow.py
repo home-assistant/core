@@ -4154,7 +4154,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"addon": self._addon_manager.addon_name},
             ) from err
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             # Finish setup using discovery info
             return await self.async_step_setup_entry_from_discovery()
 
@@ -5116,7 +5116,7 @@ def async_convert_to_pem(
                 .decode(DEFAULT_ENCODING)
             )
         # Convert from DER encoding to PEM
-        if pem_type == PEMType.CERTIFICATE:
+        if pem_type is PEMType.CERTIFICATE:
             return (
                 load_der_x509_certificate(data)
                 .public_bytes(

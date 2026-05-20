@@ -170,7 +170,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     def _metadata_device(self) -> WiimDevice:
         """Return the device whose metadata should back this entity."""
         group_snapshot = self._get_group_snapshot()
-        if group_snapshot.role != WiimGroupRole.FOLLOWER:
+        if group_snapshot.role is not WiimGroupRole.FOLLOWER:
             return self._device
 
         return self._wiim_data.controller.get_device(group_snapshot.leader_udn)
@@ -192,7 +192,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     def _get_command_target_device(self, action_name: str) -> WiimDevice:
         """Return the device that should receive a grouped playback command."""
         group_snapshot = self._get_group_snapshot()
-        if group_snapshot.role != WiimGroupRole.FOLLOWER:
+        if group_snapshot.role is not WiimGroupRole.FOLLOWER:
             return self._device
 
         target_device = self._wiim_data.controller.get_device(
@@ -244,7 +244,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         group_snapshot = self._get_group_snapshot()
 
         metadata_device = self._metadata_device
-        if group_snapshot.role == WiimGroupRole.FOLLOWER:
+        if group_snapshot.role is WiimGroupRole.FOLLOWER:
             LOGGER.debug(
                 "Follower %s: Actively pulling metadata from leader %s",
                 self.entity_id,
@@ -350,7 +350,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
             else:
                 self._device.playing_status = sdk_status
-                if sdk_status == SDKPlayingStatus.STOPPED:
+                if sdk_status is SDKPlayingStatus.STOPPED:
                     LOGGER.debug(
                         "Device %s: TransportState is STOPPED."
                         " Resetting media position and metadata",
@@ -591,7 +591,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_id = f"wiim_preset_{preset_number}"
             self._attr_media_content_type = MediaType.PLAYLIST
             self._attr_state = MediaPlayerState.PLAYING
-        elif media_type == MediaType.MUSIC:
+        elif media_type is MediaType.MUSIC:
             if media_id.isdigit():
                 preset_number = int(media_id)
                 await target_device.play_preset(preset_number)

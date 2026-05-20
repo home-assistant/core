@@ -26,7 +26,7 @@ def prevent_dnspython_blocking_operations() -> None:
 
     # Blocking import: https://github.com/rthalley/dnspython/issues/1083
     for rdtype in dns.rdatatype.RdataType:
-        if not dns.rdatatype.is_metatype(rdtype) or rdtype == dns.rdatatype.OPT:
+        if not dns.rdatatype.is_metatype(rdtype) or rdtype is dns.rdatatype.OPT:
             dns.rdata.get_rdata_class(dns.rdataclass.IN, rdtype)  # type: ignore[no-untyped-call]
 
     # Blocking open: https://github.com/rthalley/dnspython/issues/1200

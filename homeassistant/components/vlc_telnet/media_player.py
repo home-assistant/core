@@ -171,7 +171,7 @@ class VlcDevice(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.IDLE
 
-        if self._attr_state != MediaPlayerState.IDLE:
+        if self._attr_state is not MediaPlayerState.IDLE:
             self._attr_media_duration = (await self._vlc.get_length()).length
             time_output = await self._vlc.get_time()
             vlc_position = time_output.time

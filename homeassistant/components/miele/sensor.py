@@ -843,7 +843,7 @@ async def async_setup_entry(
     ) -> bool:
         """Check if the sensor is enabled."""
         if (
-            definition.description.device_class == SensorDeviceClass.TEMPERATURE
+            definition.description.device_class is SensorDeviceClass.TEMPERATURE
             and definition.description.value_fn(device) is None
             and definition.description.zone != 1
         ):

@@ -58,4 +58,4 @@ class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity)
     @property
     def is_on(self) -> bool:
         """Return whether the door is open."""
-        return self._door.door_position_status == DoorPositionStatus.OPEN
+        return self._door.door_position_status is DoorPositionStatus.OPEN

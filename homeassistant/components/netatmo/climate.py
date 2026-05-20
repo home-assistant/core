@@ -319,7 +319,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
                 and self.device.entity_id == room["id"]
             ):
-                if self._attr_hvac_mode == HVACMode.OFF:
+                if self._attr_hvac_mode is HVACMode.OFF:
                     self._attr_hvac_mode = HVACMode.AUTO
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
 
@@ -330,7 +330,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported."""
-        if self.device_type != NA_VALVE and self._boilerstatus is not None:
+        if self.device_type is not NA_VALVE and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
         # Maybe it is a valve
         if (
@@ -341,7 +341,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         elif hvac_mode == HVACMode.AUTO:
             await self.async_set_preset_mode(PRESET_SCHEDULE)
@@ -352,15 +352,15 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         """Set new preset mode."""
         if (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self.device_type == NA_VALVE
-            and self._attr_hvac_mode == HVACMode.HEAT
+            and self.device_type is NA_VALVE
+            and self._attr_hvac_mode is HVACMode.HEAT
         ):
             await self.device.async_therm_set(
                 STATE_NETATMO_HOME,
             )
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self.device_type == NA_VALVE
+            and self.device_type is NA_VALVE
         ):
             await self.device.async_therm_set(
                 STATE_NETATMO_MANUAL,
@@ -368,7 +368,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             )
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self._attr_hvac_mode == HVACMode.HEAT
+            and self._attr_hvac_mode is HVACMode.HEAT
         ):
             await self.device.async_therm_set(STATE_NETATMO_HOME)
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
@@ -389,12 +389,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if self.device_type == NA_VALVE:
+        if self.device_type is NA_VALVE:
             await self.device.async_therm_set(
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
             )
-        elif self._attr_hvac_mode != HVACMode.OFF:
+        elif self._attr_hvac_mode is not HVACMode.OFF:
             await self.device.async_therm_set(STATE_NETATMO_OFF)
         self.async_write_ha_state()
 
@@ -426,7 +426,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             getattr(self.device, "therm_setpoint_mode", STATE_NETATMO_SCHEDULE)
         ]
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
-        self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
+        self._away = self._attr_hvac_mode is HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
         selected_schedule = self.home.get_selected_schedule()
         self._selected_schedule = getattr(selected_schedule, "name", None)
@@ -437,7 +437,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             selected_schedule, "entity_id", None
         )
 
-        if self.device_type == NA_VALVE:
+        if self.device_type is NA_VALVE:
             self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
                 self.device.heating_power_request
             )

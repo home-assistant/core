@@ -229,7 +229,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             status = process_status(await client.get_device_status(device.device_id))
             online = await client.get_device_health(device.device_id)
             device_status[device.device_id] = FullDevice(
-                device=device, status=status, online=online.state == HealthStatus.ONLINE
+                device=device, status=status, online=online.state is HealthStatus.ONLINE
             )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err

@@ -519,7 +519,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
-        if enqueue == MediaPlayerEnqueue.ADD:
+        if enqueue is MediaPlayerEnqueue.ADD:
             cmd = "add"
         elif enqueue == MediaPlayerEnqueue.NEXT:
             cmd = "insert"
@@ -688,7 +688,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
-        if repeat == RepeatMode.ALL:
+        if repeat is RepeatMode.ALL:
             repeat_mode = "playlist"
         elif repeat == RepeatMode.ONE:
             repeat_mode = "song"

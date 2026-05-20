@@ -105,7 +105,7 @@ def async_generate_proxy_event_video_url(
 @callback
 def _client_error(message: Any, code: HTTPStatus) -> web.Response:
     _LOGGER.warning("Client error (%s): %s", code.value, message)
-    if code == HTTPStatus.BAD_REQUEST:
+    if code is HTTPStatus.BAD_REQUEST:
         return web.Response(body=message, status=code)
     return web.Response(status=code)
 

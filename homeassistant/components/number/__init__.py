@@ -392,7 +392,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             native_unit_of_measurement
             in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
-            and self.device_class == NumberDeviceClass.TEMPERATURE
+            and self.device_class is NumberDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 

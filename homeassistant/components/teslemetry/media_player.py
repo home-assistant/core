@@ -74,7 +74,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != MediaPlayerState.PLAYING:
+        if self.state is not MediaPlayerState.PLAYING:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
@@ -84,7 +84,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
-        if self.state == MediaPlayerState.PLAYING:
+        if self.state is MediaPlayerState.PLAYING:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())

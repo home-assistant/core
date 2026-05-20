@@ -298,7 +298,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
-        if self.entity_category == EntityCategory.CONFIG:
+        if self.entity_category is EntityCategory.CONFIG:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} cannot be added as"
                 " the entity category is set to config"
@@ -459,7 +459,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         if last_reset := self.last_reset:
             state_class = self.state_class
-            if state_class != SensorStateClass.TOTAL:
+            if state_class is not SensorStateClass.TOTAL:
                 raise ValueError(
                     f"Entity {self.entity_id} ({type(self)})"
                     f" with state_class {state_class}"

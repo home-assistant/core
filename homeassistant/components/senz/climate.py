@@ -98,7 +98,7 @@ class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
-            if hvac_mode == HVACMode.AUTO:
+            if hvac_mode is HVACMode.AUTO:
                 await self._thermostat.auto()
             else:
                 await self._thermostat.manual()

@@ -60,7 +60,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
                             options=[
                                 cls.value
                                 for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
+                                if cls is not SensorDeviceClass.ENUM
                             ],
                             mode=selector.SelectSelectorMode.DROPDOWN,
                             translation_key="device_class",

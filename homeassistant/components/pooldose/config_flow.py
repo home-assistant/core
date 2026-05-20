@@ -43,7 +43,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
-        if client_status == RequestStatus.HOST_UNREACHABLE:
+        if client_status is RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
         if client_status == RequestStatus.PARAMS_FETCH_FAILED:
             return None, None, {"base": "params_fetch_failed"}
@@ -51,7 +51,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, None, {"base": "cannot_connect"}
 
         api_status, api_versions = client.check_apiversion_supported()
-        if api_status == RequestStatus.NO_DATA:
+        if api_status is RequestStatus.NO_DATA:
             return None, None, {"base": "api_not_set"}
         if api_status == RequestStatus.API_VERSION_UNSUPPORTED:
             return None, api_versions, {"base": "api_not_supported"}

@@ -45,7 +45,7 @@ async def async_setup_entry(
             if (
                 not player_option.read_only
                 and player_option.type
-                != PlayerOptionType.BOOLEAN  # these always go to switch
+                is not PlayerOptionType.BOOLEAN  # these always go to switch
                 and player_option.options
             ):
                 # We ignore entities with unknown

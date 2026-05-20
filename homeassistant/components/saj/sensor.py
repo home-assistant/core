@@ -205,9 +205,9 @@ class SAJsensor(SensorEntity):
             self._attr_name = f"saj_{self._inverter_name}_{pysaj_sensor.name}"
         else:
             self._attr_name = f"saj_{pysaj_sensor.name}"
-        if native_uom == UnitOfPower.WATT:
+        if native_uom is UnitOfPower.WATT:
             self._attr_device_class = SensorDeviceClass.POWER
-        if native_uom == UnitOfEnergy.KILO_WATT_HOUR:
+        if native_uom is UnitOfEnergy.KILO_WATT_HOUR:
             self._attr_device_class = SensorDeviceClass.ENERGY
         if native_uom in (
             UnitOfTemperature.CELSIUS,

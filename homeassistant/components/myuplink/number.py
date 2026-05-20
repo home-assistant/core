@@ -75,7 +75,7 @@ async def async_setup_entry(
             if skip_entity(device_point.category, device_point):
                 continue
             description = get_description(device_point)
-            if find_matching_platform(device_point, description) == Platform.NUMBER:
+            if find_matching_platform(device_point, description) is Platform.NUMBER:
                 entities.append(
                     MyUplinkNumber(
                         coordinator=coordinator,

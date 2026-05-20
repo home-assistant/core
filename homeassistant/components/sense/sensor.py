@@ -221,7 +221,7 @@ class SenseTrendsSensor(SenseEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if self._attr_state_class == SensorStateClass.TOTAL:
+        if self._attr_state_class is SensorStateClass.TOTAL:
             return self._gateway.trend_start(self._scale)
         return None
 

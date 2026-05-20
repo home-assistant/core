@@ -64,7 +64,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
 
         self._attr_min_color_temp_kelvin: int = LIGHT_DEFAULT_MIN_KELVIN
         self._attr_max_color_temp_kelvin: int = LIGHT_DEFAULT_MAX_KELVIN
-        if self._attr_color_mode == ColorMode.COLOR_TEMP:
+        if self._attr_color_mode is ColorMode.COLOR_TEMP:
             self._attr_min_color_temp_kelvin = config.get(
                 CONF_MIN_TEMP, LIGHT_DEFAULT_MIN_KELVIN
             )

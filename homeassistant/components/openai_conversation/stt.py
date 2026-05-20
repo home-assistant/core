@@ -156,7 +156,7 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
         async for chunk in stream:
             audio_bytes.extend(chunk)
         audio_data = bytes(audio_bytes)
-        if metadata.format == stt.AudioFormats.WAV:
+        if metadata.format is stt.AudioFormats.WAV:
             # Add missing wav header
             wav_buffer = io.BytesIO()
 

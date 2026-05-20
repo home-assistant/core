@@ -187,7 +187,7 @@ class AtaDeviceClimate(MelCloudClimate):
         self, hvac_mode: HVACMode, set_dict: dict[str, Any]
     ) -> None:
         """Apply hvac mode changes to a dict used to call _device.set."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             set_dict["power"] = False
             return
 
@@ -196,7 +196,7 @@ class AtaDeviceClimate(MelCloudClimate):
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
 
         set_dict["operation_mode"] = operation_mode
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             set_dict["power"] = True
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -366,7 +366,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.coordinator.async_set({"power": False})
             return
 
@@ -378,7 +378,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
             props = {PROPERTY_ZONE_1_OPERATION_MODE: operation_mode}
         else:
             props = {PROPERTY_ZONE_2_OPERATION_MODE: operation_mode}
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             props["power"] = True
         await self.coordinator.async_set(props)
 

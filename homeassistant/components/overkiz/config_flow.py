@@ -51,7 +51,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate user credentials."""
         user_input[CONF_API_TYPE] = self._api_type
 
-        if self._api_type == APIType.LOCAL:
+        if self._api_type is APIType.LOCAL:
             user_input[CONF_VERIFY_SSL] = self._verify_ssl
             session = async_create_clientsession(
                 self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
@@ -116,7 +116,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self._api_type = user_input[CONF_API_TYPE]
 
-            if self._api_type == APIType.LOCAL:
+            if self._api_type is APIType.LOCAL:
                 return await self.async_step_local()
 
             return await self.async_step_cloud()
@@ -344,7 +344,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
-        if self._api_type == APIType.LOCAL:
+        if self._api_type is APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
         else:

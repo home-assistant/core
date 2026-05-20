@@ -37,7 +37,7 @@ async def async_setup_entry(
         for player_option in player.options:
             if (
                 not player_option.read_only
-                and player_option.type == PlayerOptionType.STRING
+                and player_option.type is PlayerOptionType.STRING
                 and not player_option.options  # these we map to select
             ):
                 # we ignore entities with unknown translation keys.

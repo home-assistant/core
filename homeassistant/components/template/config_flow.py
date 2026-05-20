@@ -340,7 +340,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     options=[
                         cls.value
                         for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
+                        if cls is not SensorDeviceClass.ENUM
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_device_class",

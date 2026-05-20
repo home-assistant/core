@@ -62,7 +62,7 @@ async def async_setup_entry(
     await controller.async_register_device_entities(
         lambda device: (
             device.type == "gateway"
-            and device.status_category == DeviceStatusCategory.CONNECTED
+            and device.status_category is DeviceStatusCategory.CONNECTED
         ),
         _create_gateway_port_entities,
     )
@@ -81,29 +81,29 @@ GATEWAY_PORT_SENSORS: list[GatewayPortBinarySensorEntityDescription] = [
         key="wan_link",
         translation_key="wan_link",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
+        exists_func=lambda p: p.port_status.mode is GatewayPortMode.WAN,
         update_func=lambda p: p.wan_connected,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="online_detection",
         translation_key="online_detection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        exists_func=lambda p: p.port_status.mode == GatewayPortMode.WAN,
+        exists_func=lambda p: p.port_status.mode is GatewayPortMode.WAN,
         update_func=lambda p: p.online_detection,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="lan_status",
         translation_key="lan_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        exists_func=lambda p: p.port_status.mode == GatewayPortMode.LAN,
-        update_func=lambda p: p.link_status == LinkStatus.LINK_UP,
+        exists_func=lambda p: p.port_status.mode is GatewayPortMode.LAN,
+        update_func=lambda p: p.link_status is LinkStatus.LINK_UP,
     ),
     GatewayPortBinarySensorEntityDescription(
         key="poe_delivery",
         translation_key="poe_delivery",
         device_class=BinarySensorDeviceClass.POWER,
         exists_func=lambda p: (
-            p.port_status.mode == GatewayPortMode.LAN and p.poe_mode == PoEMode.ENABLED
+            p.port_status.mode is GatewayPortMode.LAN and p.poe_mode is PoEMode.ENABLED
         ),
         update_func=lambda p: p.poe_active,
     ),

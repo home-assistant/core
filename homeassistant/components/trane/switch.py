@@ -39,7 +39,7 @@ class TraneHoldSwitch(TraneZoneEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the zone is in permanent hold."""
-        return self._zone.hold_type == HoldType.MANUAL
+        return self._zone.hold_type is HoldType.MANUAL
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""

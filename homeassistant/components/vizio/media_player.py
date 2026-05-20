@@ -207,7 +207,7 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
 
         # App state (TV only) - check if device supports apps
         if (
-            self._attr_device_class == MediaPlayerDeviceClass.TV
+            self._attr_device_class is MediaPlayerDeviceClass.TV
             and self._available_inputs
             and any(app in self._available_inputs for app in INPUT_APPS)
         ):

@@ -133,7 +133,7 @@ class MelissaClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_send({self._api.STATE: self._api.STATE_OFF})
             return
 

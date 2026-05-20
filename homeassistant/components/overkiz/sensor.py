@@ -529,7 +529,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     for device in data.coordinator.data.values():
-        if device.widget == UIWidget.HOMEKIT_STACK:
+        if device.widget is UIWidget.HOMEKIT_STACK:
             entities.append(
                 OverkizHomeKitSetupCodeSensor(
                     device.device_url,
@@ -573,7 +573,9 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             # This is probably incorrect and should be fixed in a follow up PR.
             # To ensure measurement sensors do not get an `unknown` state on
             # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
+            or (
+                self.state_class is not SensorStateClass.MEASUREMENT and not state.value
+            )
         ):
             return None
 

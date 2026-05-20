@@ -251,7 +251,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
     def _regulation_mode_for_hvac(self, hvac_mode: HVACMode) -> str | None:
         """Return the API regulation value for a manual HVAC mode, or None."""
-        if hvac_mode == HVACMode.HEAT:
+        if hvac_mode is HVACMode.HEAT:
             return HVACAction.HEATING.value
         if hvac_mode == HVACMode.COOL:
             return HVACAction.COOLING.value
@@ -260,14 +260,14 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode (off, heat, cool, heat_cool, or auto/schedule)."""
-        if hvac_mode == self.hvac_mode:
+        if hvac_mode is self.hvac_mode:
             return
 
         api = self.coordinator.api
         current_schedule = self.device.get("select_schedule")
 
         # OFF: single API call
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await api.set_regulation_mode(hvac_mode.value)
             return
 
@@ -294,8 +294,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 await api.set_regulation_mode(regulation)
 
             if (
-                self.hvac_mode == HVACMode.OFF and current_schedule not in (None, "off")
-            ) or (self.hvac_mode == HVACMode.AUTO and current_schedule is not None):
+                self.hvac_mode is HVACMode.OFF and current_schedule not in (None, "off")
+            ) or (self.hvac_mode is HVACMode.AUTO and current_schedule is not None):
                 await api.set_schedule_state(
                     self._location, STATE_OFF, current_schedule
                 )
@@ -315,7 +315,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             )
 
         if self._previous_action_mode:
-            if self.hvac_mode == HVACMode.OFF:
+            if self.hvac_mode is HVACMode.OFF:
                 await api.set_regulation_mode(self._previous_action_mode)
             await api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 

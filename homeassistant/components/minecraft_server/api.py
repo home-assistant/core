@@ -79,7 +79,7 @@ class MinecraftServer:
     async def async_initialize(self) -> None:
         """Perform async initialization of server instance."""
         try:
-            if self._server_type == MinecraftServerType.JAVA_EDITION:
+            if self._server_type is MinecraftServerType.JAVA_EDITION:
                 self._server = await JavaServer.async_lookup(self._address)
             elif self._server_type == MinecraftServerType.BEDROCK_EDITION:
                 self._server = await self._hass.async_add_executor_job(

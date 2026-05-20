@@ -113,7 +113,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the system mode."""
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode is HVACMode.AUTO:
             self._set_schedule_mode(SCHEDULE_RUN)
         elif hvac_mode == HVACMode.HEAT:
             self._set_schedule_mode(SCHEDULE_HOLD)

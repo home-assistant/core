@@ -191,7 +191,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+        if self.hass.config.units.temperature_unit is UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 

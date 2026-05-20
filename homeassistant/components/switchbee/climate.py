@@ -132,7 +132,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self._operate(power=ApiStateCommand.OFF)
         else:
             await self._operate(
@@ -158,7 +158,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
 
         if power is None:
             power = ApiStateCommand.ON
-            if self.hvac_mode == HVACMode.OFF:
+            if self.hvac_mode is HVACMode.OFF:
                 power = ApiStateCommand.OFF
         if mode is None:
             mode = HVAC_MODE_HASS_TO_SB[self.hvac_mode]

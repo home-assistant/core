@@ -124,7 +124,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             self.vera_device.turn_off()
         elif hvac_mode == HVACMode.HEAT_COOL:
             self.vera_device.turn_auto_on()

@@ -52,7 +52,7 @@ async def async_connect_scanner(
     ]
     await async_start_scanner(
         device=device,
-        active=scanner_mode == BLEScannerMode.ACTIVE,
+        active=scanner_mode is BLEScannerMode.ACTIVE,
         event_type=BLE_SCAN_RESULT_EVENT,
         data_version=BLE_SCAN_RESULT_VERSION,
     )

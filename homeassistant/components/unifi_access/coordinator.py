@@ -152,7 +152,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return
         new_status = DoorLockRuleStatus(
             type=DoorLockRuleType.NONE
-            if lock_rule_type == DoorLockRuleType.RESET
+            if lock_rule_type is DoorLockRuleType.RESET
             else lock_rule_type
         )
         updated_data = replace(

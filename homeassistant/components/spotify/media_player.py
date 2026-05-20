@@ -137,7 +137,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self.coordinator.current_user.product != ProductType.PREMIUM:
+        if self.coordinator.current_user.product is not ProductType.PREMIUM:
             return MediaPlayerEntityFeature(0)
         if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
@@ -169,7 +169,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @ensure_item
     def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media type."""
-        return MediaType.PODCAST if item.type == ItemType.EPISODE else MediaType.MUSIC
+        return MediaType.PODCAST if item.type is ItemType.EPISODE else MediaType.MUSIC
 
     @property
     @ensure_item
@@ -195,7 +195,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @ensure_item
     def media_image_url(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media image URL."""
-        if item.type == ItemType.EPISODE:
+        if item.type is ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
             if item.images:
@@ -219,7 +219,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @ensure_item
     def media_artist(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media artist."""
-        if item.type == ItemType.EPISODE:
+        if item.type is ItemType.EPISODE:
             if TYPE_CHECKING:
                 assert isinstance(item, Episode)
             return item.show.name
@@ -232,7 +232,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @ensure_item
     def media_album_name(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media album."""
-        if item.type == ItemType.EPISODE:
+        if item.type is ItemType.EPISODE:
             return None
 
         if TYPE_CHECKING:
@@ -243,7 +243,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @ensure_item
     def media_track(self, item: Item) -> int | None:  # noqa: PLR0206
         """Track number of current playing media, music track only."""
-        if item.type == ItemType.EPISODE:
+        if item.type is ItemType.EPISODE:
             return None
         if TYPE_CHECKING:
             assert isinstance(item, Track)
@@ -348,7 +348,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         if not self.currently_playing and self.devices.data:
             kwargs["device_id"] = self.devices.data[0].device_id
 
-        if enqueue == MediaPlayerEnqueue.ADD:
+        if enqueue is MediaPlayerEnqueue.ADD:
             if media_type not in {
                 MediaType.TRACK,
                 MediaType.EPISODE,

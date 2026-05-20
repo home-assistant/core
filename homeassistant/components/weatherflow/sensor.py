@@ -362,7 +362,7 @@ class WeatherFlowSensorEntity(SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        if self.entity_description.state_class == SensorStateClass.TOTAL:
+        if self.entity_description.state_class is SensorStateClass.TOTAL:
             return self.device.last_report
         return None
 

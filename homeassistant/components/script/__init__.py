@@ -346,7 +346,7 @@ async def _create_script_entities(
     entities: list[BaseScriptEntity] = []
 
     for script_config in script_configs:
-        if script_config.validation_status != ValidationStatus.OK:
+        if script_config.validation_status is not ValidationStatus.OK:
             entities.append(
                 UnavailableScriptEntity(
                     script_config.key,

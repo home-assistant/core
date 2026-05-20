@@ -124,7 +124,7 @@ class MaxCubeClimate(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             self._set_target(MAX_DEVICE_MODE_MANUAL, OFF_TEMPERATURE)
         elif hvac_mode == HVACMode.HEAT:
             temp = max(self._device.target_temperature, self.min_temp)
@@ -171,7 +171,7 @@ class MaxCubeClimate(ClimateEntity):
         if valve:
             return HVACAction.HEATING
 
-        return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
+        return HVACAction.OFF if self.hvac_mode is HVACMode.OFF else HVACAction.IDLE
 
     @property
     def target_temperature(self) -> float | None:

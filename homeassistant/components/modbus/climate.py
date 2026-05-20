@@ -327,7 +327,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     self._hvac_onoff_register,
                     [
                         self._hvac_off_value
-                        if hvac_mode == HVACMode.OFF
+                        if hvac_mode is HVACMode.OFF
                         else self._hvac_on_value
                     ],
                     CALL_TYPE_WRITE_REGISTERS,
@@ -337,7 +337,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     self._device_address,
                     self._hvac_onoff_register,
                     self._hvac_off_value
-                    if hvac_mode == HVACMode.OFF
+                    if hvac_mode is HVACMode.OFF
                     else self._hvac_on_value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
@@ -347,14 +347,14 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
             await self._hub.async_pb_call(
                 self._device_address,
                 self._hvac_onoff_coil,
-                0 if hvac_mode == HVACMode.OFF else 1,
+                0 if hvac_mode is HVACMode.OFF else 1,
                 CALL_TYPE_WRITE_COIL,
             )
 
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
-                if mode == hvac_mode:
+                if mode is hvac_mode:
                     if self._hvac_mode_write_registers:
                         await self._hub.async_pb_call(
                             self._device_address,

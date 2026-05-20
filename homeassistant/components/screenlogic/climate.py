@@ -129,14 +129,14 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         """Return the current action of the heater."""
         if self.entity_data[VALUE.HEAT_STATE][ATTR.VALUE] > 0:
             return HVACAction.HEATING
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode is HVACMode.HEAT:
             return HVACAction.IDLE
         return HVACAction.OFF
 
     @property
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             return HEAT_MODE(self._last_preset).name.lower()
         return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).name.lower()
 
@@ -159,7 +159,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             mode = HEAT_MODE.OFF
         else:
             mode = HEAT_MODE.parse(self.preset_mode)
@@ -179,7 +179,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         mode = HEAT_MODE.parse(preset_mode)
         _LOGGER.debug("Setting last_preset to %s", mode.name)
         self._last_preset = mode.value
-        if self.hvac_mode == HVACMode.OFF:
+        if self.hvac_mode is HVACMode.OFF:
             return
 
         try:

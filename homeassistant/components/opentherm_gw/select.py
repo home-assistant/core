@@ -152,7 +152,7 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         options=[
             mode
             for mode in OpenThermSelectGPIOMode
-            if mode != OpenThermSelectGPIOMode.DS1820
+            if mode is not OpenThermSelectGPIOMode.DS1820
         ],
         select_action=partial(set_gpio_mode, "A"),
         convert_pyotgw_state_to_ha_state=(

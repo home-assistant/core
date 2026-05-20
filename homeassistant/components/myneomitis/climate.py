@@ -174,7 +174,7 @@ class MyNeoClimate(ClimateEntity):
                 self._last_preset_mode = self._attr_preset_mode
             if self._attr_preset_mode == "standby":
                 self._attr_hvac_mode = HVACMode.OFF
-            elif self._attr_hvac_mode == HVACMode.OFF:
+            elif self._attr_hvac_mode is HVACMode.OFF:
                 self._attr_hvac_mode = next(
                     (
                         mode
@@ -188,7 +188,7 @@ class MyNeoClimate(ClimateEntity):
                 self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
 
                 if (
-                    self._attr_hvac_mode != HVACMode.OFF
+                    self._attr_hvac_mode is not HVACMode.OFF
                     and self._attr_preset_mode != "standby"
                 ):
                     self._attr_hvac_mode = HVACMode.COOL
@@ -196,7 +196,7 @@ class MyNeoClimate(ClimateEntity):
                 self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
 
                 if (
-                    self._attr_hvac_mode != HVACMode.OFF
+                    self._attr_hvac_mode is not HVACMode.OFF
                     and self._attr_preset_mode != "standby"
                 ):
                     self._attr_hvac_mode = HVACMode.HEAT
@@ -215,7 +215,7 @@ class MyNeoClimate(ClimateEntity):
                     f"Failed to set preset mode 'setpoint' for {self.entity_id}"
                 )
             self._attr_preset_mode = "setpoint"
-            if self._attr_hvac_mode == HVACMode.OFF:
+            if self._attr_hvac_mode is HVACMode.OFF:
                 self._attr_hvac_mode = next(
                     (
                         mode
@@ -243,7 +243,7 @@ class MyNeoClimate(ClimateEntity):
         new_hvac_mode = self._attr_hvac_mode
         if preset_mode == "standby":
             new_hvac_mode = HVACMode.OFF
-        elif self._attr_hvac_mode == HVACMode.OFF:
+        elif self._attr_hvac_mode is HVACMode.OFF:
             new_hvac_mode = next(
                 (
                     mode
@@ -267,7 +267,7 @@ class MyNeoClimate(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             if self._attr_preset_mode and self._attr_preset_mode != "standby":
                 self._last_preset_mode = self._attr_preset_mode
 

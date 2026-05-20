@@ -49,7 +49,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
         # Workaround: local API may incorrectly report
         # available=False (Somfy-TaHoma-Developer-Mode#217)
-        if self.coordinator.client.api_type != APIType.LOCAL:
+        if self.coordinator.client.api_type is not APIType.LOCAL:
             return False
 
         if status_state := self.device.states.get(OverkizState.CORE_STATUS):

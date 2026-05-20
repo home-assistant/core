@@ -162,7 +162,7 @@ class SnoozFan(FanEntity, RestoreEntity):
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
 
-        if result.status == SnoozCommandResultStatus.SUCCESSFUL:
+        if result.status is SnoozCommandResultStatus.SUCCESSFUL:
             self._async_write_state_changed()
         elif result.status != SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(

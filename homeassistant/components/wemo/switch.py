@@ -100,7 +100,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             return self.wemo.mode_string
         if isinstance(self.wemo, Insight):
             standby_state = self.wemo.standby_state
-            if standby_state == StandbyState.ON:
+            if standby_state is StandbyState.ON:
                 return STATE_ON
             if standby_state == StandbyState.OFF:
                 return STATE_OFF

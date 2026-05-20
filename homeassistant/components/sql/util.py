@@ -88,7 +88,7 @@ async def async_create_sessionmaker(
     sessmaker: scoped_session | None
     sql_data = _async_get_or_init_domain_data(hass)
     use_database_executor = False
-    if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
+    if uses_recorder_db and instance.dialect_name is SupportedDialect.SQLITE:
         use_database_executor = True
         assert instance.engine is not None
         sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))

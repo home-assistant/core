@@ -78,7 +78,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
         """Get pets."""
         pets = {}
         for surepy_entity in self.data.values():
-            if surepy_entity.type == EntityType.PET and surepy_entity.name:
+            if surepy_entity.type is EntityType.PET and surepy_entity.name:
                 pets[surepy_entity.name] = surepy_entity.id
         return pets
 

@@ -96,7 +96,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         play_status = self._source.play_status
         if not status:
             return MediaPlayerState.OFF
-        if play_status == PlayStatus.PLAYING:
+        if play_status is PlayStatus.PLAYING:
             return MediaPlayerState.PLAYING
         if play_status == PlayStatus.PAUSED:
             return MediaPlayerState.PAUSED

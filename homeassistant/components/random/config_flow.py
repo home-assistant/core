@@ -44,7 +44,7 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    if flow_type == _FlowType.CONFIG:
+    if flow_type is _FlowType.CONFIG:
         schema[vol.Required(CONF_NAME)] = TextSelector()
 
         if domain == Platform.BINARY_SENSOR:
@@ -67,7 +67,7 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
                         options=[
                             cls.value
                             for cls in SensorDeviceClass
-                            if cls != SensorDeviceClass.ENUM
+                            if cls is not SensorDeviceClass.ENUM
                         ],
                         sort=True,
                         mode=SelectSelectorMode.DROPDOWN,

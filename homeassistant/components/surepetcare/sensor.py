@@ -37,9 +37,9 @@ async def async_setup_entry(
         ]:
             entities.append(SureBattery(surepy_entity.id, coordinator))
 
-        if surepy_entity.type == EntityType.FELAQUA:
+        if surepy_entity.type is EntityType.FELAQUA:
             entities.append(Felaqua(surepy_entity.id, coordinator))
-        if surepy_entity.type == EntityType.PET:
+        if surepy_entity.type is EntityType.PET:
             entities.append(PetLastSeenFlapDevice(surepy_entity.id, coordinator))
             entities.append(PetLastSeenUser(surepy_entity.id, coordinator))
 

@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
             f"Failed to connect to PoolDose device: {err}"
         ) from err
 
-    if client_status != RequestStatus.SUCCESS:
+    if client_status is not RequestStatus.SUCCESS:
         raise ConfigEntryNotReady(
             f"Failed to create PoolDose client while initialization: {client_status}"
         )

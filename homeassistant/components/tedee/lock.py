@@ -59,27 +59,27 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
             TedeeLockState.UNKNOWN,
         ):
             return None
-        return self._lock.state == TedeeLockState.LOCKED
+        return self._lock.state is TedeeLockState.LOCKED
 
     @property
     def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
-        return self._lock.state == TedeeLockState.UNLOCKING
+        return self._lock.state is TedeeLockState.UNLOCKING
 
     @property
     def is_open(self) -> bool:
         """Return true if lock is open."""
-        return self._lock.state == TedeeLockState.PULLED
+        return self._lock.state is TedeeLockState.PULLED
 
     @property
     def is_opening(self) -> bool:
         """Return true if lock is opening."""
-        return self._lock.state == TedeeLockState.PULLING
+        return self._lock.state is TedeeLockState.PULLING
 
     @property
     def is_locking(self) -> bool:
         """Return true if lock is locking."""
-        return self._lock.state == TedeeLockState.LOCKING
+        return self._lock.state is TedeeLockState.LOCKING
 
     @property
     def is_jammed(self) -> bool:
@@ -92,7 +92,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         return (
             super().available
             and self._lock.is_connected
-            and self._lock.state != TedeeLockState.UNCALIBRATED
+            and self._lock.state is not TedeeLockState.UNCALIBRATED
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
