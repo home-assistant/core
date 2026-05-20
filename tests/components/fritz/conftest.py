@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritzwlan import FritzGuestWLAN
+from io import BytesIO
 import pytest
 
 from homeassistant.components.fritz.coordinator import FritzConnectionCached
@@ -208,3 +210,13 @@ def mock_vpn_session_autouse() -> Generator[AsyncMock]:
         "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
     ) as mock:
         yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_avm_wrapper_qr() -> Generator[None]:
+    """Automatically mock get_wifi_qr_code for all fritz tests."""
+    with patch(
+        "homeassistant.components.fritz.image.FritzGuestWifiQRImage._fetch_image",
+        return_value=b"mock_qr_image_data",
+    ):
+        yield
