@@ -17,7 +17,7 @@ from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
 import voluptuous as vol
@@ -1214,7 +1214,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         (content, content_type) = await self._async_fetch_image(url)
 
         async with cache_images[url][CACHE_LOCK]:
-            cache_images[url][CACHE_CONTENT] = content, content_type
+            if content is not None:
+                cache_images[url][CACHE_CONTENT] = content, content_type
             while len(cache_images) > cache_maxsize:
                 cache_images.popitem(last=False)
 
@@ -1447,7 +1448,30 @@ async def websocket_search_media(
     connection.send_result(msg["id"], result)
 
 
-_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=30)
+
+
+def _image_response_appears_complete(
+    response: aiohttp.ClientResponse, body: bytes
+) -> bool:
+    """Return False when Content-Length disagrees with the body received."""
+    content_length = response.headers.get(CONTENT_LENGTH)
+    if content_length is None:
+        return True
+    try:
+        return int(content_length) == len(body)
+    except ValueError:
+        return True
+
+
+def _redact_credentials(url: str) -> str:
+    """Return url with any user/password replaced by placeholders."""
+    parts = URL(url)
+    if parts.user is not None:
+        parts = parts.with_user("xxxx")
+    if parts.password is not None:
+        parts = parts.with_password("xxxxxxxx")
+    return str(parts)
 
 
 async def async_fetch_image(
@@ -1456,20 +1480,27 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(TimeoutError):
-        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+    with suppress(TimeoutError, aiohttp.ClientError):
+        async with websession.get(url, timeout=_FETCH_TIMEOUT) as response:
+            if response.status == HTTPStatus.OK:
+                body = await response.read()
+                ct_header = response.headers.get(CONTENT_TYPE)
+                ct = ct_header.split(";")[0] if ct_header else None
+                if _image_response_appears_complete(response, body):
+                    content = body
+                    content_type = ct
+                else:
+                    logger.warning(
+                        "Discarding truncated image response from %s "
+                        "(%d bytes, content-type %s)",
+                        _redact_credentials(url),
+                        len(body),
+                        ct,
+                    )
 
     if content is None:
-        url_parts = URL(url)
-        if url_parts.user is not None:
-            url_parts = url_parts.with_user("xxxx")
-        if url_parts.password is not None:
-            url_parts = url_parts.with_password("xxxxxxxx")
-        url = str(url_parts)
-        logger.warning("Error retrieving proxied image from %s", url)
+        logger.warning(
+            "Error retrieving proxied image from %s", _redact_credentials(url)
+        )
 
     return content, content_type

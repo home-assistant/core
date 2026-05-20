@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 import voluptuous as vol
 
@@ -175,6 +176,172 @@ async def test_get_image_http_log_credentials_redacted(
         "Error retrieving proxied image from "
         f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
     ) in caplog.text
+
+
+async def test_get_image_http_truncated_log_credentials_redacted(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test credentials are redacted in the truncated-response warning."""
+    url = "http://vi:pass@example.com/truncated.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Discarding truncated image response from {url}" not in caplog.text
+    redacted = url.replace("pass", "xxxxxxxx").replace("vi", "xxxx")
+    assert f"Discarding truncated image response from {redacted}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "fetch_exception",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(
+            aiohttp.ClientPayloadError("incomplete chunked read"),
+            id="client_payload_error",
+        ),
+        pytest.param(
+            aiohttp.ClientConnectionError("connection reset"),
+            id="client_connection_error",
+        ),
+    ],
+)
+async def test_get_image_http_aiohttp_failure_returns_500(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    fetch_exception: Exception,
+) -> None:
+    """Test aiohttp errors during image fetch are caught and surfaced as 500.
+
+    Both TimeoutError and aiohttp.ClientError subclasses are suppressed in
+    async_fetch_image so the failure falls into the existing "Error
+    retrieving proxied image" path rather than propagating. The ClientError
+    case is forward-compat for once aiohttp raises ClientPayloadError on a
+    truncated chunked stream rather than swallowing it as clean EOF.
+    """
+    url = "http://example.com/image.jpg"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, exc=fetch_exception)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Error retrieving proxied image from {url}" in caplog.text
+
+
+async def test_get_image_http_truncated_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test responses with Content-Length larger than the body are discarded."""
+    url = "http://example.com/truncated.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert "Discarding truncated image response" in caplog.text
+
+
+async def test_get_image_http_complete_response(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test responses whose body matches Content-Length are served."""
+    url = "http://example.com/complete.jpg"
+    body = b"hello-world"
+    headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        aioclient_mock.get(url, content=body, headers=headers)
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.OK
+    assert "Discarding truncated image response" not in caplog.text
+    assert await resp.read() == body
+
+
+async def test_get_image_http_truncated_fetch_is_not_cached(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a truncated fetch is not cached so a later retry can succeed."""
+    url = "http://example.com/recoverable.jpg"
+    body = b"hello-world"
+    truncated_headers = {"Content-Type": "image/jpeg", "Content-Length": "9999"}
+    complete_headers = {"Content-Type": "image/jpeg", "Content-Length": str(len(body))}
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        aioclient_mock.get(url, content=body, headers=truncated_headers)
+        resp1 = await client.get(state.attributes["entity_picture"])
+        assert resp1.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.get(url, content=body, headers=complete_headers)
+        resp2 = await client.get(state.attributes["entity_picture"])
+        assert resp2.status == HTTPStatus.OK
+        assert await resp2.read() == body
 
 
 async def test_get_async_get_browse_image(
