@@ -5755,7 +5755,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'INTELAR IR288',
+    'model': 'INTELAR IR288 (unsupported)',
     'model_id': '5vlawhjm',
     'name': 'INTELAR IR288',
     'name_by_user': None,
