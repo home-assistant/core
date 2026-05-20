@@ -60,8 +60,11 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ConfigEntryError(f"Duco API error: {err}") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
