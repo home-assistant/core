@@ -575,7 +575,7 @@ async def test_service_play_media(
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "Abbey Road",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_TYPE: "SPOTIFY",
         },
         blocking=True,
     )
@@ -583,7 +583,7 @@ async def test_service_play_media(
     mock_amazon_devices_client.call_alexa_music.assert_awaited_once_with(
         mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_1_SN],
         "Abbey Road",
-        MediaType.MUSIC,
+        "SPOTIFY",
     )
 
 
