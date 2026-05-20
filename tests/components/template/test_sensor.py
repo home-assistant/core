@@ -53,7 +53,6 @@ TEST_AVAILABILITY_SENSOR = "sensor.availability_sensor"
 
 TEST_SENSOR = TemplatePlatformSetup(
     sensor.DOMAIN,
-    "sensors",
     "test_template_sensor",
     make_test_trigger(TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR),
 )

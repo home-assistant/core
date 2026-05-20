@@ -53,7 +53,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_COVER = TemplatePlatformSetup(
     cover.DOMAIN,
-    "covers",
     "test_template_cover",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,

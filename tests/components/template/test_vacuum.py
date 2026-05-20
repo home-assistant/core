@@ -51,7 +51,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_VACUUM = TemplatePlatformSetup(
     vacuum.DOMAIN,
-    "vacuums",
     "test_vacuum",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -274,7 +273,7 @@ async def setup_attributes_state_vacuum(
     ],
 )
 @pytest.mark.usefixtures("setup_base_vacuum")
-async def test_valid_legacy_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
+async def test_valid_configs(hass: HomeAssistant, count, parm1, parm2) -> None:
     """Test: configs."""
 
     # Ensure trigger entity templates are rendered

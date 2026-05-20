@@ -40,7 +40,7 @@ from tests.common import MockConfigEntry
 
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
-TEST_BUTTON = TemplatePlatformSetup(BUTTON_DOMAIN, None, "template_button", {})
+TEST_BUTTON = TemplatePlatformSetup(BUTTON_DOMAIN, "template_button", {})
 PRESS_ACTION = make_test_action("press")
 
 

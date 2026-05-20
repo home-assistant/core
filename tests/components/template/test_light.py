@@ -52,7 +52,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_LIGHT = TemplatePlatformSetup(
     light.DOMAIN,
-    "lights",
     "test_light",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,

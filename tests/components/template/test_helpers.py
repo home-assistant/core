@@ -96,7 +96,7 @@ async def _setup_mock_devices(
     await hass.async_block_till_done()
 
     platform_setup = TemplatePlatformSetup(
-        domain, None, "test_entity", make_test_trigger("sensor.trigger")
+        domain, "test_entity", make_test_trigger("sensor.trigger")
     )
     return (platform_setup, device_entry, entity_entry)
 

@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import discovery, issue_registry as ir
+from homeassistant.helpers import discovery
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
 )
@@ -39,19 +39,10 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import DATA_DEPRECATION, async_get_blueprints
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
-
-
-def _clean_up_legacy_template_deprecations(hass: HomeAssistant) -> None:
-    if (found_issues := hass.data.pop(DATA_DEPRECATION, None)) is not None:
-        issue_registry = ir.async_get(hass)
-        for domain, issue_id in set(issue_registry.issues):
-            if domain != DOMAIN or issue_id in found_issues:
-                continue
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -72,7 +63,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
-        hass.data.pop(DATA_DEPRECATION, None)
 
         await async_get_blueprints(hass).async_reset_cache()
         try:
@@ -97,7 +87,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if DOMAIN in conf:
             await _process_config(hass, conf)
 
-        _clean_up_legacy_template_deprecations(hass)
         hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)

@@ -36,7 +36,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_PANEL = TemplatePlatformSetup(
     ALARM_DOMAIN,
-    "panels",
     "test_template_panel",
     make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY),
 )

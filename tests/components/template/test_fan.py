@@ -45,7 +45,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_FAN = TemplatePlatformSetup(
     fan.DOMAIN,
-    "fans",
     "test_fan",
     make_test_trigger(
         TEST_INPUT_BOOLEAN, TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY
