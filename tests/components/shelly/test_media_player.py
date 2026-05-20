@@ -1,6 +1,7 @@
 """Tests for Shelly media player platform."""
 
 from copy import deepcopy
+from http import HTTPStatus
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_WALL_DISPLAY
@@ -387,6 +388,7 @@ async def test_entity_picture_absent_base64_data_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that entity_picture is absent when base64 data is invalid."""
     status = deepcopy(mock_rpc_device.status)
@@ -399,11 +401,16 @@ async def test_entity_picture_absent_base64_data_invalid(
     state = hass.states.get(ENTITY_ID)
     assert "entity_picture" not in state.attributes
 
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
 
 async def test_entity_picture_absent_thumb_string_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that entity_picture is absent when thumb string has invalid format."""
     status = deepcopy(mock_rpc_device.status)
@@ -416,11 +423,16 @@ async def test_entity_picture_absent_thumb_string_invalid(
     state = hass.states.get(ENTITY_ID)
     assert "entity_picture" not in state.attributes
 
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
 
 async def test_entity_picture_absent_mime_type_not_allowed(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that entity_picture is absent when MIME type is not allowed."""
     status = deepcopy(mock_rpc_device.status)
@@ -432,6 +444,10 @@ async def test_entity_picture_absent_mime_type_not_allowed(
 
     state = hass.states.get(ENTITY_ID)
     assert "entity_picture" not in state.attributes
+
+    client = await hass_client()
+    resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 async def test_rpc_media_player_browse_media_root(
