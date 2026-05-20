@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 import logging
+from typing import override
 
 from infrared_protocols.commands import Command as InfraredCommand
 import voluptuous as vol
@@ -104,54 +105,49 @@ def async_subscribe_receiver(
     return entity.async_subscribe_received_signal(signal_callback)
 
 
-class InfraredEntityStateTracker:
-    """Tracks the availability of an infrared entity via state changes."""
-
-    def __init__(
-        self,
-        entity: Entity,
-        infrared_entity_id: str,
-        availability_changed: Callable[[bool], None],
-    ) -> None:
-        """Initialize the state tracker."""
-        self._hass = entity.hass
-        self._entity = entity
-        self._infrared_entity_id = infrared_entity_id
-        self._availability_changed = availability_changed
+class InfraredConsumerEntity(Entity):
+    """Base class for entities that track the availability of an infrared entity."""
 
     @callback
-    def async_setup(self) -> None:
-        """Subscribe to infrared entity state changes and set initial availability."""
+    def _async_track_availability(self, infrared_entity_id: str) -> CALLBACK_TYPE:
+        """Track the availability of an infrared entity.
 
-        self._entity.async_on_remove(
-            async_track_state_change_event(
-                self._hass, [self._infrared_entity_id], self._async_ir_state_changed
+        Sets initial availability and subscribes to state changes.
+        Returns an unsubscribe callback.
+        """
+
+        @callback
+        def state_changed(event: Event[EventStateChangedData]) -> None:
+            new_state = event.data["new_state"]
+            ir_available = (
+                new_state is not None and new_state.state != STATE_UNAVAILABLE
             )
+            if ir_available != self.available:
+                _LOGGER.info(
+                    "Infrared entity %s used by %s is %s",
+                    infrared_entity_id,
+                    self.entity_id,
+                    "available" if ir_available else "unavailable",
+                )
+                self._async_infrared_availability_changed(ir_available)
+
+        ir_state = self.hass.states.get(infrared_entity_id)
+        self._attr_available = (
+            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-        # Set initial availability based on current infrared entity state
-        ir_state = self._hass.states.get(self._infrared_entity_id)
-        ir_available = ir_state is not None and ir_state.state != STATE_UNAVAILABLE
-        if ir_available != self._entity.available:
-            self._availability_changed(ir_available)
+        return async_track_state_change_event(
+            self.hass, [infrared_entity_id], state_changed
+        )
 
     @callback
-    def _async_ir_state_changed(self, event: Event[EventStateChangedData]) -> None:
-        """Handle infrared entity state changes."""
-        new_state = event.data["new_state"]
-        ir_available = new_state is not None and new_state.state != STATE_UNAVAILABLE
-        if ir_available != self._entity.available:
-            _LOGGER.info(
-                "Infrared entity %s used by %s is %s",
-                self._infrared_entity_id,
-                self._entity.entity_id,
-                "available" if ir_available else "unavailable",
-            )
-
-            self._availability_changed(ir_available)
+    def _async_infrared_availability_changed(self, available: bool) -> None:
+        """Update availability. Override to react to changes."""
+        self._attr_available = available
+        self.async_write_ha_state()
 
 
-class InfraredEmitterConsumerEntity(Entity):
+class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
     """Base entity for integrations that send commands via an infrared emitter.
 
     Tracks the availability of the underlying infrared emitter entity.
@@ -159,23 +155,13 @@ class InfraredEmitterConsumerEntity(Entity):
 
     _attr_should_poll = False
     _infrared_emitter_entity_id: str
-    _ir_state_tracker: InfraredEntityStateTracker
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to infrared entity state changes."""
         await super().async_added_to_hass()
-        self._ir_state_tracker = InfraredEntityStateTracker(
-            self,
-            self._infrared_emitter_entity_id,
-            self._async_set_available,
+        self.async_on_remove(
+            self._async_track_availability(self._infrared_emitter_entity_id)
         )
-        self._ir_state_tracker.async_setup()
-
-    @callback
-    def _async_set_available(self, available: bool) -> None:
-        """Update availability."""
-        self._attr_available = available
-        self.async_write_ha_state()
 
     async def _send_command(self, command: InfraredCommand) -> None:
         """Send an IR command through the infrared emitter entity."""
@@ -184,7 +170,7 @@ class InfraredEmitterConsumerEntity(Entity):
         )
 
 
-class InfraredReceiverConsumerEntity(Entity):
+class InfraredReceiverConsumerEntity(InfraredConsumerEntity):
     """Base entity for integrations that consume signals from an infrared receiver.
 
     Tracks the availability of the underlying infrared receiver entity and
@@ -194,27 +180,23 @@ class InfraredReceiverConsumerEntity(Entity):
     _attr_should_poll = False
     _infrared_receiver_entity_id: str
     _remove_signal_subscription: CALLBACK_TYPE | None = None
-    _ir_state_tracker: InfraredEntityStateTracker
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to infrared entity state changes and receiver signals."""
         await super().async_added_to_hass()
-        self._ir_state_tracker = InfraredEntityStateTracker(
-            self,
-            self._infrared_receiver_entity_id,
-            self._async_set_available,
+        self.async_on_remove(
+            self._async_track_availability(self._infrared_receiver_entity_id)
         )
-        self._ir_state_tracker.async_setup()
 
         self._async_update_receiver_subscription()
         self.async_on_remove(self._async_unsubscribe_receiver)
 
+    @override
     @callback
-    def _async_set_available(self, available: bool) -> None:
+    def _async_infrared_availability_changed(self, available: bool) -> None:
         """Update availability and manage receiver subscription."""
-        self._attr_available = available
+        super()._async_infrared_availability_changed(available)
         self._async_update_receiver_subscription()
-        self.async_write_ha_state()
 
     @callback
     @abstractmethod
