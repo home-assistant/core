@@ -34,7 +34,9 @@ def _load_translations_from_dir(integration_dir: Path) -> dict | None:
         if candidate.exists():
             result: dict | None = None
             with contextlib.suppress(json.JSONDecodeError, OSError):
-                result = json.loads(candidate.read_text())
+                parsed = json.loads(candidate.read_text())
+                if isinstance(parsed, dict):
+                    result = parsed
             _translations_cache[cache_key] = result
             return result
 

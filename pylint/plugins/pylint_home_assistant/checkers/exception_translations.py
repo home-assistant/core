@@ -222,13 +222,13 @@ class ExceptionTranslationsChecker(BaseChecker):
         message = entry.get("message", "")
         expected = get_message_placeholders(message)
 
-        if not expected:
-            return
-
         placeholder_node = _get_keyword_value(node, "translation_placeholders")
 
         if placeholder_node is None:
-            # No translation_placeholders keyword at all
+            if not expected:
+                # No placeholders expected and none provided
+                return
+            # No translation_placeholders keyword but strings.json expects some
             code_placeholders: set[str] = set()
         else:
             code_placeholders_or_none = extract_placeholder_keys(placeholder_node)

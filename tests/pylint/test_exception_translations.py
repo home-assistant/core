@@ -312,6 +312,40 @@ raise HomeAssistantError(
         walker.walk(root_node)
 
 
+def test_extra_placeholders_flagged(
+    linter: UnittestLinter,
+    translations_checker: ExceptionTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that extra placeholders are flagged when strings.json expects none."""
+    integration_dir = _make_integration(
+        tmp_path,
+        exceptions={
+            "some_error": {"message": "Something failed"},
+        },
+    )
+    root_node = astroid.parse(
+        f"""
+{_HA_IMPORTS}
+raise HomeAssistantError(
+    translation_domain=DOMAIN,
+    translation_key="some_error",
+    translation_placeholders={{"extra": "value"}},
+)
+""",
+        "homeassistant.components.test_int.coordinator",
+    )
+    root_node.file = str(integration_dir / "coordinator.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-exception-placeholder-mismatch"
+
+
 def test_placeholder_mismatch_flagged(
     linter: UnittestLinter,
     translations_checker: ExceptionTranslationsChecker,
