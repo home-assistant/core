@@ -199,7 +199,7 @@ async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
         ({CONF_KEEP_MAIN_LIGHT: False}, {CONF_KEEP_MAIN_LIGHT: False}),
     ],
 )
-async def test_migrate_entry_v1_2_to_1_3_sets_keep_main_light_false(
+async def test_migrate_entry_v1_2_to_1_3_paramterized_test(
     hass: HomeAssistant,
     initial_options: dict[str, bool],
     expected_options: dict[str, bool],
