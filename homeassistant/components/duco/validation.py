@@ -1,17 +1,19 @@
 """Validation helpers for supported Duco systems."""
 
-from typing import cast
-
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionStrategy,
+    AwesomeVersionStrategyException,
+)
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import DucoResponseError
-from duco_connectivity.models import BoardInfo, DucoVersion
+from duco_connectivity.models import BoardInfo
 
 # Newer Connectivity boards expose /info with PublicApiVersion. We use that
 # endpoint to distinguish supported Connectivity hardware from older
 # Communication board V1 hardware.
-_MIN_PUBLIC_API_VERSION = DucoVersion("2.1")
-_MIN_PUBLIC_API_VERSION_COMPONENTS: tuple[int, ...] = cast(
-    tuple[int, ...], _MIN_PUBLIC_API_VERSION.components
+_MIN_PUBLIC_API_VERSION = AwesomeVersion(
+    "2.1", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
 )
 
 
@@ -24,11 +26,15 @@ def validate_board_support(board_info: BoardInfo) -> None:
     version = board_info.public_api_version
     if version is None:
         raise UnsupportedBoardError("Board did not report a public API version")
-    if version.components is None:
+    try:
+        parsed_version = AwesomeVersion(
+            version, ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+        )
+    except AwesomeVersionStrategyException as err:
         raise UnsupportedBoardError(
             f"Board reported malformed public API version: {version}"
-        )
-    if version.components < _MIN_PUBLIC_API_VERSION_COMPONENTS:
+        ) from err
+    if parsed_version < _MIN_PUBLIC_API_VERSION:
         raise UnsupportedBoardError(
             "Board public API version "
             f"{version} is below the supported minimum {_MIN_PUBLIC_API_VERSION}"
