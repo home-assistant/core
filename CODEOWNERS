@@ -989,6 +989,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
+/homeassistant/components/lg_tv_rs232/ @balloob
+/tests/components/lg_tv_rs232/ @balloob
 /homeassistant/components/libre_hardware_monitor/ @Sab44
 /tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lichess/ @aryanhasgithub
