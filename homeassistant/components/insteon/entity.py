@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import (
     DOMAIN,
@@ -28,22 +29,22 @@ from .utils import print_aldb_to_log
 _LOGGER = logging.getLogger(__name__)
 
 
-class InsteonEntity(Entity):
+class InsteonBaseEntity(Entity):
     """INSTEON abstract base entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, device, group):
-        """Initialize the INSTEON binary sensor."""
-        self._insteon_device_group = device.groups[group]
+    def __init__(self, device, group) -> None:
+        """Initialize the INSTEON entity."""
         self._insteon_device = device
+        self._insteon_device_group = device.groups[group]
 
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
 
     @property
-    def address(self):
+    def address(self) -> str:
         """Return the address of the node."""
         return str(self._insteon_device.address)
 
@@ -60,17 +61,6 @@ class InsteonEntity(Entity):
         else:
             uid = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
         return uid
-
-    @property
-    def name(self):
-        """Return the name of the node (used for Entity_ID)."""
-        # Set a base description
-        if (description := self._insteon_device.description) is None:
-            description = "Unknown Device"
-        # Get an extension label if there is one
-        if extension := self._get_label():
-            extension = f" {extension}"
-        return f"{description} {self._insteon_device.address}{extension}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -98,6 +88,21 @@ class InsteonEntity(Entity):
             via_device=(DOMAIN, str(devices.modem.address)),
             configuration_url=f"homeassistant://insteon/device/config/{self._insteon_device.id}",
         )
+
+
+class InsteonEntity(InsteonBaseEntity):
+    """INSTEON abstract device entity."""
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the node (used for Entity_ID)."""
+        # Set a base description
+        if (description := self._insteon_device.description) is None:
+            description = "Unknown Device"
+        # Get an extension label if there is one
+        if extension := self._get_label():
+            extension = f" {extension}"
+        return f"{description} {self._insteon_device.address}{extension}"
 
     @callback
     def async_entity_update(self, name, address, value, group):

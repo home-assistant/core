@@ -11,10 +11,12 @@ from pyinsteon.device_types.device_base import Device
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 
 from homeassistant.components import usb
+from homeassistant.components.event import EventEntity
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -27,9 +29,10 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
 )
 from .ipdb import get_device_platform_groups, get_device_platforms
+from .issue import deprecated_event_bus
 
 if TYPE_CHECKING:
-    from .entity import InsteonEntity
+    from .entity import InsteonBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +74,11 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
             event = EVENT_GROUP_OFF_FAST
         else:
             event = f"insteon.{name}"
+
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
+
+        deprecated_event_bus(hass, event)
 
     if str(device.address).startswith("X10"):
         return
@@ -139,16 +145,24 @@ def print_aldb_to_log(aldb):
 def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type[InsteonEntity],
+    entity_type: type[InsteonBaseEntity],
     async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
     address = discovery_info["address"]
     device = devices[address]
-    new_entities = [
-        entity_type(device=device, group=group) for group in discovery_info["groups"]
-    ]
+    new_entities: list[Entity] = []
+    for group in discovery_info["groups"]:
+        entity = entity_type(device=device, group=group)
+        if isinstance(entity, EventEntity):
+            # Only button event entities are supported currently,
+            # so event entities with no event types should not be added to HA
+            # but should be created to register for events and provide attributes.
+            if len(entity.event_types) > 0:
+                new_entities.append(entity)
+        else:
+            new_entities.append(entity)
     async_add_entities(new_entities)
 
 
@@ -156,7 +170,7 @@ def async_add_insteon_entities(
 def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type[InsteonEntity],
+    entity_type: type[InsteonBaseEntity],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
