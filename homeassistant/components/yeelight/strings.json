@@ -171,7 +171,7 @@
       "name": "Set music mode"
     },
     "start_flow": {
-      "description": "Starts a custom flow, using transitions from {flow_objects_urls}.",
+      "description": "Starts a custom flow using transitions; see {examples_url} for examples.",
       "fields": {
         "action": {
           "description": "[%key:component::yeelight::services::set_color_flow_scene::fields::action::description%]",
