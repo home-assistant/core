@@ -23,7 +23,12 @@ def _run_mypy(code: str, tmp_path: Path) -> list[str]:
     src = tmp_path / "case.py"
     src.write_text(textwrap.dedent(code))
     config = tmp_path / "mypy.ini"
-    config.write_text("[mypy]\nplugins = mypy_plugins.enum_identity_compare\n")
+    config.write_text(
+        "[mypy]\n"
+        "plugins = mypy_plugins.enum_identity_compare\n"
+        "show_error_codes = true\n"
+        "strict_equality = true\n"
+    )
 
     env_pythonpath = os.environ.get("PYTHONPATH", "")
     os.environ["PYTHONPATH"] = f"{_PLUGINS_ROOT}{os.pathsep}{env_pythonpath}"
@@ -184,7 +189,7 @@ def test_good_intflag_bitwise(tmp_path: Path) -> None:
     errors = _run_mypy(
         _PRELUDE
         + """
-def fn(features: int) -> bool:
+def fn(features: ClimateFeature) -> bool:
     return features & ClimateFeature.SWING_MODE == ClimateFeature.SWING_MODE
 """,
         tmp_path,
