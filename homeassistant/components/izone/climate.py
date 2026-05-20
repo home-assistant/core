@@ -22,7 +22,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     UnitOfTemperature,
@@ -33,10 +32,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    DATA_CONFIG,
     DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCONNECTED,
     DISPATCH_CONTROLLER_DISCOVERED,
@@ -44,6 +42,7 @@ from .const import (
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
     IZONE,
+    TIMEOUT_DISCOVERY,
 )
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
@@ -77,25 +76,29 @@ async def async_setup_entry(
 ) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
+    entry_unique_id = config.unique_id
+    initialized = False
 
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
-        conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-
-        # Filter out any entities excluded in the config file
-        if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.debug("Controller UID=%s ignored as excluded", ctrl.device_uid)
+        nonlocal initialized
+        if entry_unique_id and ctrl.device_uid != entry_unique_id:
             return
-        _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
+        if initialized:
+            return
 
+        initialized = True
         device = ControllerDevice(ctrl)
         async_add_entities([device])
         async_add_entities(device.zones.values())
+        _LOGGER.debug("Controller UID=%s initialized", ctrl.device_uid)
 
-    # create any components not yet created
-    for controller in disco.pi_disco.controllers.values():
-        init_controller(controller)
+    # Fetch the controller for this entry, waiting for discovery if it hasn't been found yet
+    if ctrl := await disco.pi_disco.fetch_controller(
+        entry_unique_id, timeout=TIMEOUT_DISCOVERY
+    ):
+        init_controller(ctrl)
 
     # connect to register any further components
     config.async_on_unload(
