@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -116,8 +115,7 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=str(self._device.switch.group_address),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 

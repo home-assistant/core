@@ -4,7 +4,7 @@ from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_PAYLOAD, Platform
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -43,8 +43,7 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
         super().__init__(
             knx_module=knx_module,
             unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
     async def async_press(self) -> None:

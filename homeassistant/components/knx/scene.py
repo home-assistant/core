@@ -6,7 +6,7 @@ from xknx.devices import Device as XknxDevice, Scene as XknxScene
 
 from homeassistant import config_entries
 from homeassistant.components.scene import BaseScene
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -92,8 +92,7 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
             unique_id=(
                 f"{self._device.scene_value.group_address}_{self._device.scene_number}"
             ),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            entity_config=config,
         )
 
 
