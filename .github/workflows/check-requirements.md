@@ -59,7 +59,7 @@ standards.
 
 - Home Assistant uses `requirements_all.txt` (all integration packages),
   `requirements.txt` (core packages), `requirements_test.txt` (test
-  dependencies), and `requirements_test_all.txt` (all test dependencies) to
+  dependencies) to
   declare Python dependencies.
 - Each integration lists its packages in `homeassistant/components/<name>/manifest.json`
   under the `requirements` field.
@@ -80,7 +80,6 @@ lines that were added (`+`) or removed (`-`) in **any** of these files:
 - `requirements.txt`
 - `requirements_all.txt`
 - `requirements_test.txt`
-- `requirements_test_all.txt`
 - `homeassistant/package_constraints.txt`
 - `pyproject.toml`
 
@@ -400,8 +399,7 @@ Collapsed example (all checks passed):
 - For packages that only appear in `homeassistant/package_constraints.txt` or
   `pyproject.toml` without being tied to a specific integration, the PR
   description link requirement still applies.
-- When checking test-only packages (from `requirements_test.txt` or
-  `requirements_test_all.txt`), apply the same license, repository, and PR
+- When checking test-only packages (from `requirements_test.txt`), apply the same license, repository, and PR
   description checks as for production dependencies.
 - A package that appears in both a production file and a test file should only
   be reported once; use the production file entry as the canonical one.
