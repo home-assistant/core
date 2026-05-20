@@ -15,8 +15,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from . import AVEA_DISCOVERY_INFO
+from . import AVEA_DISCOVERY_INFO, AVEA_FIRMWARE_VERSION, AVEA_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -26,10 +27,18 @@ def mock_bulb() -> MagicMock:
     """Return a mocked Avea bulb."""
     bulb = MagicMock()
     bulb.name = "Unknown"
+    bulb.fw_version = AVEA_FIRMWARE_VERSION
+    bulb.hardware_revision = "Elgato Avea"
+    bulb.manufacturer_name = "Elgato Systems GmbH"
+    bulb.serial_number = AVEA_SERIAL_NUMBER
     bulb.brightness = 0
     bulb.connect.return_value = True
     bulb.get_brightness.return_value = 0
+    bulb.get_fw_version.return_value = bulb.fw_version
+    bulb.get_hardware_revision.return_value = bulb.hardware_revision
+    bulb.get_manufacturer_name.return_value = bulb.manufacturer_name
     bulb.get_rgb.return_value = (0, 0, 0)
+    bulb.get_serial_number.return_value = bulb.serial_number
     return bulb
 
 
@@ -63,6 +72,23 @@ async def test_init_state(
     assert state.state == STATE_OFF
     assert state.name == "Bedroom"
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_device_info(hass: HomeAssistant) -> None:
+    """Test the device info."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.name == "Bedroom"
+    assert device.manufacturer == "Elgato Systems GmbH"
+    assert device.model == "Elgato Avea"
+    assert device.sw_version == AVEA_FIRMWARE_VERSION
+    assert device.serial_number == AVEA_SERIAL_NUMBER
 
 
 async def test_turn_on_and_off(

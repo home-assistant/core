@@ -19,6 +19,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -27,10 +28,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, INTEGRATION_TITLE, UNKNOWN_NAME
+from .const import DOMAIN, INTEGRATION_TITLE, MODEL, UNKNOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
+DEVICE_INFO_EXCEPTIONS = (*UPDATE_EXCEPTIONS, AttributeError)
 BREAKS_IN_HA_VERSION = "2026.12.0"
 AVEA_MAX_BRIGHTNESS = 4095
 
@@ -95,9 +97,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities(
-        [AveaLight(entry.runtime_data, entry.title)], update_before_add=True
-    )
+    await hass.async_add_executor_job(_update_bulb_device_info, entry.runtime_data)
+    async_add_entities([AveaLight(entry.runtime_data, entry)], update_before_add=True)
+
+
+def _update_bulb_device_info(light: avea.Bulb) -> None:
+    """Update device info details from an Avea bulb."""
+    with suppress(*DEVICE_INFO_EXCEPTIONS):
+        if not light.connect():
+            return
+        try:
+            for read in (
+                light.get_manufacturer_name,
+                light.get_hardware_revision,
+                light.get_fw_version,
+                light.get_serial_number,
+            ):
+                with suppress(*DEVICE_INFO_EXCEPTIONS):
+                    read()
+        finally:
+            light.disconnect()
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -182,12 +201,25 @@ class AveaLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb, entry_title: str) -> None:
+    def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
         """Initialize an AveaLight."""
         self._light = light
-        self._attr_name = entry_title
+        self._attr_unique_id = entry.unique_id
+        self._attr_name = entry.title
         self._attr_brightness = light.brightness
         self._last_brightness = 255
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=entry.title,
+            model=_normalize_name(light.hardware_revision) or MODEL,
+        )
+        if serial_number := _normalize_name(light.serial_number):
+            self._attr_device_info["serial_number"] = serial_number
+        if manufacturer := _normalize_name(light.manufacturer_name):
+            self._attr_device_info["manufacturer"] = manufacturer
+        if firmware_version := _normalize_name(light.fw_version):
+            self._attr_device_info["sw_version"] = firmware_version
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
