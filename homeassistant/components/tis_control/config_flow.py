@@ -1,5 +1,6 @@
 """Config flow for TIS Control integration."""
 
+import contextlib
 import logging
 
 from TISApi.api import TISApi
@@ -73,6 +74,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return "unknown"
         finally:
-            tis_api.disconnect()
+            with contextlib.suppress(Exception):
+                tis_api.disconnect()
 
         return None
