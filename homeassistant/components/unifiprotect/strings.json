@@ -683,7 +683,7 @@
       "message": "Authentication failed. Please reauthenticate."
     },
     "event_ongoing": {
-      "message": "Event is still ongoing"
+      "message": "Event is still ongoing."
     },
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
@@ -728,7 +728,7 @@
       "message": "Unexpected identifier: {identifier}"
     },
     "unknown_camera_id": {
-      "message": "Unknown Camera ID: {camera_id}"
+      "message": "Unknown camera ID: {camera_id}"
     }
   },
   "issues": {
