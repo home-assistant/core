@@ -40,6 +40,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AsekoConfigEntry
 ) -> bool:
     """Migrate old entry."""
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:

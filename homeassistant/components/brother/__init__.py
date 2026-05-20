@@ -71,6 +71,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
     """Migrate an old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.version == 1 and entry.minor_version < 2:
         new_data = entry.data.copy()
         new_data[SECTION_ADVANCED_SETTINGS] = {

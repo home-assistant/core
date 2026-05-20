@@ -101,6 +101,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = entry.version
 
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
     LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:

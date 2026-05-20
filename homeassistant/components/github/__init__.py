@@ -66,6 +66,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if entry.minor_version == 1:
         dev_reg = dr.async_get(hass)
         # In minor version 2 we migrated repositories from entry options to
@@ -87,4 +92,5 @@ async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> 
                     add_config_entry_id=entry.entry_id,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
     return True

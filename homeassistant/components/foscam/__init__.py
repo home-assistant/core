@@ -50,6 +50,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
