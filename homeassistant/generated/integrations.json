@@ -164,6 +164,12 @@
         }
       }
     },
+    "airtouch3": {
+      "name": "AirTouch 3 Air Conditioner",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airtouch4": {
       "name": "AirTouch 4",
       "integration_type": "device",
