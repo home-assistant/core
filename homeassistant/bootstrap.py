@@ -130,6 +130,7 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 ERROR_LOG_FILENAME = "home-assistant.log"
 ENV_DISABLE_LOG_FILE = "HA_DISABLE_LOG_FILE"
 ENV_DUPLICATE_LOG_FILE = "HA_DUPLICATE_LOG_FILE"
+ENV_SUPERVISOR = "SUPERVISOR"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
@@ -676,11 +677,20 @@ async def async_enable_logging(
 
 def _is_log_file_disabled() -> bool:
     """Return whether the managed log file is disabled."""
-    if "SUPERVISOR" in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
+    if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
         return True
 
     disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
-    return disable_log_file is not None and cv.boolean(disable_log_file)
+    if disable_log_file is None:
+        return False
+
+    try:
+        return cv.boolean(disable_log_file)
+    except vol.Invalid:
+        _LOGGER.warning(
+            "Ignoring invalid %s value: %s", ENV_DISABLE_LOG_FILE, disable_log_file
+        )
+        return False
 
 
 def _create_log_handler(
@@ -743,7 +753,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
     # Add domains depending on if the Supervisor is used or not
-    if "SUPERVISOR" in os.environ:
+    if ENV_SUPERVISOR in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
 
     return domains

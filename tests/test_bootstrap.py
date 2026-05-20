@@ -155,10 +155,18 @@ async def test_async_enable_logging(
             CONFIG_LOG_FILE,
             id="disable-log-file-false",
         ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "invalid"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            id="disable-log-file-invalid",
+        ),
     ],
 )
 async def test_async_enable_logging_supervisor(
     hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
     env: dict[str, str],
     log_file_count: int,
     old_log_file_count: int,
@@ -171,8 +179,12 @@ async def test_async_enable_logging_supervisor(
     assert len(glob.glob(CONFIG_LOG_FILE)) == 0
     assert len(glob.glob(ARG_LOG_FILE)) == 0
 
+    for env_var in ("SUPERVISOR", "HA_DUPLICATE_LOG_FILE", "HA_DISABLE_LOG_FILE"):
+        monkeypatch.delenv(env_var, raising=False)
+    for env_var, value in env.items():
+        monkeypatch.setenv(env_var, value)
+
     with (
-        patch.dict(os.environ, env, clear=True),
         patch(
             "homeassistant.bootstrap.async_activate_log_queue_handler"
         ) as mock_async_activate_log_queue_handler,
