@@ -123,6 +123,11 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            return group_proxy.device_info
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
         zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
