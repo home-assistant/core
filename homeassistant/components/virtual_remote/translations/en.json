@@ -8,6 +8,14 @@
           "name": "Remote name",
           "infrared_entity_id": "Infrared entity"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Virtual Remote",
+        "description": "Update the first configured virtual remote.",
+        "data": {
+          "name": "Remote name",
+          "infrared_entity_id": "Infrared entity"
+        }
       }
     },
     "error": {
@@ -16,7 +24,8 @@
     },
     "abort": {
       "already_configured": "Virtual Remote is already configured.",
-      "no_available_infrared_entities": "No infrared entities are available."
+      "no_available_infrared_entities": "No infrared entities are available.",
+      "no_virtual_remotes": "No virtual remotes are configured."
     }
   },
   "options": {
@@ -138,6 +147,9 @@
     },
     "remote_send_failed": {
       "message": "Failed to send infrared command: {error}"
+    },
+    "remote_invalid_command": {
+      "message": "Invalid infrared command: {error}"
     }
   }
 }
