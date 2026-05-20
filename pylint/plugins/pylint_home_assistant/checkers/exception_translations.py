@@ -265,7 +265,7 @@ class ExceptionTranslationsChecker(BaseChecker):
                 args=(
                     translation_key,
                     ", ".join(sorted(code_placeholders)) or "(none)",
-                    ", ".join(sorted(expected)),
+                    ", ".join(sorted(expected)) or "(none)",
                 ),
             )
 
