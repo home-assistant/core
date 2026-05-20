@@ -157,12 +157,9 @@ async def test_upnp_missing(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.state.recoverable is True
-    assert (
-        "Config entry 'Mock Title' for fritz integration"
-        " could not authenticate: Missing UPnP configuration" in caplog.text
-    )
+    assert entry.error_reason_translation_key == "error_upnp_disabled"
 
 
 async def test_execute_action_while_shutdown(
