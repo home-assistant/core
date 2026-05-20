@@ -2,6 +2,7 @@
   "common": {
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
+    "section_additional_fields_name": "Additional options",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -109,7 +110,12 @@
           "name": "Decrement"
         }
       },
-      "name": "Decrease fan speed"
+      "name": "Decrease fan speed",
+      "sections": {
+        "additional_fields": {
+          "name": "[%key:component::fan::common::section_additional_fields_name%]"
+        }
+      }
     },
     "increase_speed": {
       "description": "Increases the speed of a fan.",
@@ -119,7 +125,12 @@
           "name": "Increment"
         }
       },
-      "name": "Increase fan speed"
+      "name": "Increase fan speed",
+      "sections": {
+        "additional_fields": {
+          "name": "[%key:component::fan::common::section_additional_fields_name%]"
+        }
+      }
     },
     "oscillate": {
       "description": "Controls the oscillation of a fan.",
