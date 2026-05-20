@@ -1,4 +1,471 @@
 # serializer version: 1
+# name: test_binary_sensor[binary_sensor.ayran_fridge_connection_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ayran_fridge_connection_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Connection state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_state',
+    'unique_id': '999011403_00:20220412-443E07022463_connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_connection_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Ayran fridge Connection state',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ayran_fridge_connection_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ayran_fridge_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': 'mdi:door',
+    'original_name': 'Door',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fridge_door_state',
+    'unique_id': '999011403_00:20220412-443E07022463_fridge_door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Ayran fridge Door',
+      'icon': 'mdi:door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ayran_fridge_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_door_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ayran_fridge_door_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': 'mdi:door',
+    'original_name': 'Door',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_door_state',
+    'unique_id': '999011403_00:20220412-443E07022463_freezer_door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_door_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Ayran fridge Door',
+      'icon': 'mdi:door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ayran_fridge_door_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ayran_fridge_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': 'mdi:lock',
+    'original_name': 'Lock',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ui_lock_mode',
+    'unique_id': '999011403_00:20220412-443E07022463_ui_lock_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ayran_fridge_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'Ayran fridge Lock',
+      'icon': 'mdi:lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ayran_fridge_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ceiling_hood_auto_switch_off_event-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ceiling_hood_auto_switch_off_event',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto switch off event',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:power-sleep',
+    'original_name': 'Auto switch off event',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood_auto_switch_off_event',
+    'unique_id': '999008105_00:99010299-443E074B7A6E_hood_auto_switch_off_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ceiling_hood_auto_switch_off_event-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ceiling Hood Auto switch off event',
+      'icon': 'mdi:power-sleep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ceiling_hood_auto_switch_off_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ceiling_hood_connection_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.ceiling_hood_connection_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Connection state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_state',
+    'unique_id': '999008105_00:99010299-443E074B7A6E_connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.ceiling_hood_connection_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Ceiling Hood Connection state',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.ceiling_hood_connection_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_connection_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_connection_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Connection state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_state',
+    'unique_id': '999120000_00:74852244-443E0704101F_connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_connection_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Dryer Connection state',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_connection_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_door_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_door_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': 'mdi:door',
+    'original_name': 'Door state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_state',
+    'unique_id': '999120000_00:74852244-443E0704101F_door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_door_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Dryer Door state',
+      'icon': 'mdi:door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_door_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
+    'original_icon': 'mdi:lock',
+    'original_name': 'Lock',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ui_lock_mode',
+    'unique_id': '999120000_00:74852244-443E0704101F_ui_lock_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.dryer_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'lock',
+      'friendly_name': 'Dryer Lock',
+      'icon': 'mdi:lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensor[binary_sensor.fenix_connection_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -305,6 +772,110 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pux_pizza_oven_door_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.supex_oven_connection_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.supex_oven_connection_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Connection state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connection_state',
+    'unique_id': '944035064_00:27032025-443E073D97B2_connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.supex_oven_connection_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Supex oven Connection state',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.supex_oven_connection_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.supex_oven_upper_door_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.supex_oven_upper_door_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper door state',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': 'mdi:door',
+    'original_name': 'Upper door state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'upperoven_door_state',
+    'unique_id': '944035064_00:27032025-443E073D97B2_upperoven_door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.supex_oven_upper_door_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Supex oven Upper door state',
+      'icon': 'mdi:door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.supex_oven_upper_door_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

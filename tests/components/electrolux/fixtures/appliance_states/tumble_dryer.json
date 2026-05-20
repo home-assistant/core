@@ -1,0 +1,54 @@
+{
+  "applianceId": "999120000_00:74852244-443E0704101F",
+  "connectionState": "disconnected",
+  "status": "enabled",
+  "properties": {
+    "reported": {
+      "waterHardness": "MEDIUM",
+      "applianceInfo": {
+        "applianceType": "TD",
+        "capabilityHash": "e3f20b48d86da2cc3f492406af903a7597349e7d5777c09612efadfcac84ab9d"
+      },
+      "timeToEnd": 2040,
+      "doorState": "OPEN",
+      "miscellaneous": {},
+      "applianceUiSwVersion": "UDA1MC07",
+      "uiLockMode": false,
+      "applianceTotalWorkingTime": 0,
+      "remoteControl": "NOT_SAFETY_RELEVANT_ENABLED",
+      "cpv": "00",
+      "language": "ENGLISH",
+      "applianceState": "OFF",
+      "dryingNominalLoadWeight": 65535,
+      "applianceMode": "NORMAL",
+      "applianceMainBoardSwVersion": "TRB40034",
+      "totalCycleCounter": 0,
+      "measuredLoadWeight": 65535,
+      "alerts": [],
+      "cyclePhase": "UNAVAILABLE",
+      "networkInterface": {
+        "otaState": "IDLE",
+        "swVersion": "v5.4.0",
+        "linkQualityIndicator": "VERY_GOOD",
+        "niuSwUpdateCurrentDescription": "A07491702B-S00006963A",
+        "swAncAndRevision": "S00006963A"
+      },
+      "endOfCycleSound": "NO_SOUND",
+      "startTime": -1,
+      "userSelections": {
+        "reversePlus": false,
+        "tDEconomy_Eco": true,
+        "humidityTarget": "CUPBOARD",
+        "refresh": false,
+        "drynessValue": "MINIMUM",
+        "programUID": "SILK_DRY_PR_SILK",
+        "antiCreaseValue": 120,
+        "tDEconomy_Night": false,
+        "dryingTime": 0,
+        "tDEconomy_Quick": false,
+        "steamValue": "STEAM_OFF"
+      },
+      "connectivityState": "disconnected"
+    }
+  }
+}

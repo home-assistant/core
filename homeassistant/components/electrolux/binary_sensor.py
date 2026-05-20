@@ -187,6 +187,7 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
         value_fn=lambda appliance, cavity: appliance.get_current_cavity_door_state(
             cavity
         ),
+        mapping={"closed": False, "open": True},
     ),
 )
 
@@ -198,12 +199,13 @@ FREEZER_FRIDGE_ICE_MAKER_EXTRA_CAVITY_ELECTROLUX_SENSORS: tuple[
         translation_key="door_state",
         icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_fn=lambda appliance, cavity: appliance.get_current_cavity_door_state(
-            cavity
-        ),
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
             cavity, DOOR_STATE
         ),
+        value_fn=lambda appliance, cavity: appliance.get_current_cavity_door_state(
+            cavity
+        ),
+        mapping={"closed": False, "open": True},
     ),
 )
 

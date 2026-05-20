@@ -11,7 +11,15 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-APPLIANCE_FIXTURES = ["fenix_oven", "pux_oven", "peacock_hob"]
+APPLIANCE_FIXTURES = [
+    "fenix_oven",
+    "pux_oven",
+    "peacock_hob",
+    "tumble_dryer",
+    "supex_structured_oven",
+    "ayran_fridge",
+    "hood",
+]
 
 
 async def setup_integration(

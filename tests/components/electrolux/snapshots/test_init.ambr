@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_all_appliances[ayran_fridge]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999011403_00:20220412-443E07022463',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'RCB732E9MX',
+    'model_id': None,
+    'name': 'Ayran fridge',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '20220412',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_all_appliances[fenix_oven]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -26,6 +57,37 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '43319382',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[hood]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999008105_00:99010299-443E074B7A6E',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'DDC8271W',
+    'model_id': None,
+    'name': 'Ceiling Hood',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '99010299',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -88,6 +150,68 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '11112225',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[supex_structured_oven]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '944035064_00:27032025-443E073D97B2',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'AEG',
+    'model': 'NBP9S831AB',
+    'model_id': None,
+    'name': 'Supex oven',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '27032025',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_all_appliances[tumble_dryer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'electrolux',
+        '999120000_00:74852244-443E0704101F',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'ELECTROLUX',
+    'model': 'EW9H778P9',
+    'model_id': None,
+    'name': 'Dryer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '74852244',
     'sw_version': None,
     'via_device_id': None,
   })
