@@ -8,7 +8,9 @@ rules:
     comment: Certificates are checked every 12 hours via DataUpdateCoordinator.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: test_abort_on_socket_failed can be parametrized and should end in CREATE_ENTRY to test flow recovery.
   config-flow: done
   dependency-transparency:
     status: exempt
@@ -42,7 +44,9 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Config flow only collects host/port; the integration does not authenticate.
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: Consider creating a mock_config_entry fixture and use that throughout tests.
   # Gold
   devices: done
   diagnostics: todo
@@ -58,13 +62,15 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Integration supports a single device per config entry.
-  entity-category: todo
+  entity-category:
+    status: todo
+    comment: Extra state attributes (is_valid, error) should be moved to separate entities in the future.
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: exempt
