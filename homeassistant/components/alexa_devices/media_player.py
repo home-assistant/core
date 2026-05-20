@@ -202,7 +202,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
-        if self.state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if self.state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
             return MediaType.MUSIC
         return None
 
