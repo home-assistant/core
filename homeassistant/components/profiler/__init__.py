@@ -70,6 +70,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 DEFAULT_MAX_OBJECTS = 5
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ENABLED = "enabled"
 CONF_SECONDS = "seconds"
 CONF_MAX_OBJECTS = "max_objects"
@@ -86,7 +87,7 @@ async def async_setup_entry(  # noqa: C901
     """Set up Profiler from a config entry."""
     lock = asyncio.Lock()
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
@@ -285,6 +286,7 @@ async def async_setup_entry(  # noqa: C901
             base_logger.setLevel(logging.INFO)
         hass.loop.set_debug(enabled)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -295,6 +297,7 @@ async def async_setup_entry(  # noqa: C901
         ),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -305,6 +308,7 @@ async def async_setup_entry(  # noqa: C901
         ),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -319,6 +323,7 @@ async def async_setup_entry(  # noqa: C901
         ),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -326,6 +331,7 @@ async def async_setup_entry(  # noqa: C901
         _async_stop_log_objects,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -343,6 +349,7 @@ async def async_setup_entry(  # noqa: C901
         ),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -350,6 +357,7 @@ async def async_setup_entry(  # noqa: C901
         _async_stop_object_sources,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -358,6 +366,7 @@ async def async_setup_entry(  # noqa: C901
         schema=vol.Schema({vol.Required(CONF_TYPE): str}),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -365,6 +374,7 @@ async def async_setup_entry(  # noqa: C901
         _dump_sockets,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -372,6 +382,7 @@ async def async_setup_entry(  # noqa: C901
         _lru_stats,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -379,6 +390,7 @@ async def async_setup_entry(  # noqa: C901
         _async_dump_thread_frames,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -386,6 +398,7 @@ async def async_setup_entry(  # noqa: C901
         _async_dump_scheduled,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -394,6 +407,7 @@ async def async_setup_entry(  # noqa: C901
         schema=vol.Schema({vol.Optional(CONF_ENABLED, default=True): cv.boolean}),
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     async_register_admin_service(
         hass,
         DOMAIN,

@@ -44,7 +44,7 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
 
-NewMetricCallback = Callable[
+type NewMetricCallback = Callable[
     [VictronVenusDevice, VictronVenusMetric, DeviceInfo, str], None
 ]
 

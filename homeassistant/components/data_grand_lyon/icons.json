@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "default": "mdi:close-circle",
+        "state": {
+          "on": "mdi:check-circle"
+        }
+      }
+    },
     "sensor": {
       "available_bikes": {
         "default": "mdi:bike"

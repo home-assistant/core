@@ -83,7 +83,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Broadlink radio frequency transmitter."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkRadioFrequency(device)])
 
