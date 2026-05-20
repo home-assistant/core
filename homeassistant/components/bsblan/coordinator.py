@@ -132,8 +132,6 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                             "circuit": str(circuit),
                         },
                     ) from err
-            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
-
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -145,6 +143,26 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 translation_key="coordinator_connection_error",
                 translation_placeholders={"host": host},
             ) from err
+
+        # PPS devices do not expose generic sensor data. Preserve the previous
+        # value (or use an empty model at startup) so their heating circuits can
+        # still be refreshed.
+        try:
+            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+        except BSBLANAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
+            ) from err
+        except BSBLANConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
+            ) from err
+        except BSBLANError:
+            sensor = self.data.sensor if self.data else Sensor()
+            LOGGER.debug("Sensor data not available on device at %s", host)
 
         # Fetch DHW state separately - device may not support hot water
         dhw: HotWaterState | None = None

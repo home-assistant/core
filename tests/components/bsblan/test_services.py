@@ -10,6 +10,7 @@ from bsblan import (
     BSBLANMalformedResponseError,
     BSBLANUnsupportedFeatureError,
     DaySchedule,
+    Device,
     DeviceTime,
     TimeSlot,
 )
@@ -27,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
@@ -878,6 +879,39 @@ async def test_sync_time_service_entry_not_loaded(
             {"device_id": unloaded_device.id},
             blocking=True,
         )
+
+
+async def test_sync_time_service_unsupported_for_pps_bus(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the sync_time service is blocked for PPS bus devices."""
+    mock_bsblan.device.return_value = Device.model_validate_json(
+        await async_load_fixture(hass, "device_pps.json", DOMAIN)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:80:41:19:69:91"), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"device_id": device.id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "sync_time_unsupported"
+    assert not mock_bsblan.time.called
+    assert not mock_bsblan.set_time.called
 
 
 @pytest.mark.usefixtures("setup_integration")

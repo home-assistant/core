@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from bsblan import BSBLANError, DeviceTime
+from bsblan import BSBLANError, Device, DeviceTime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 ENTITY_SYNC_TIME = "button.bsb_lan_sync_time"
 
@@ -160,3 +160,24 @@ async def test_button_press_set_time_error(
         "device_name": "BSB-LAN",
         "error": "Write failed",
     }
+
+
+async def test_sync_time_button_not_created_for_pps_bus(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the sync time button is not created for PPS bus devices."""
+    mock_bsblan.device.return_value = Device.model_validate_json(
+        await async_load_fixture(hass, "device_pps.json", DOMAIN)
+    )
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.BUTTON])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            BUTTON_DOMAIN, DOMAIN, "00:80:41:19:69:91-sync_time"
+        )
+        is None
+    )
