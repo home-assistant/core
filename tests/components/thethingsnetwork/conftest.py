@@ -7,6 +7,8 @@ from ttn_client import TTNSensorValue
 
 from homeassistant.components.thethingsnetwork.const import (
     CONF_APP_ID,
+    CONF_FIRST_FETCH_H,
+    DEFAULT_FIRST_FETCH_H,
     DOMAIN,
     TTN_API_HOST,
 )
@@ -72,6 +74,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_APP_ID: APP_ID,
             CONF_HOST: TTN_API_HOST,
             CONF_API_KEY: API_KEY,
+            CONF_FIRST_FETCH_H: DEFAULT_FIRST_FETCH_H,
         },
     )
 
