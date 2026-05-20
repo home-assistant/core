@@ -1334,6 +1334,9 @@ lupupy==0.3.2
 # homeassistant.components.scrape
 lxml==6.0.1
 
+# homeassistant.components.lyngdorf
+lyngdorf==1.3.3
+
 # homeassistant.components.matrix
 matrix-nio==0.25.2
 

@@ -1,0 +1,120 @@
+"""Fixtures for the Lyngdorf integration tests."""
+
+from __future__ import annotations
+
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+from lyngdorf.const import LyngdorfModel
+from lyngdorf.device import Receiver
+import pytest
+
+from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def ssdp_scanner_mock() -> Generator[Mock]:
+    """Mock the SSDP Scanner."""
+    with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+        reg_callback = mock_scanner.return_value.async_register_callback
+        reg_callback.return_value = Mock(return_value=None)
+        yield mock_scanner.return_value
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="Mock Lyngdorf",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_MODEL: "MP-60",
+            CONF_SERIAL_NUMBER: "0050c27c76b2",
+        },
+        unique_id="0050c27c76b2",
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.lyngdorf.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_lyngdorf_model() -> LyngdorfModel:
+    """Return a mocked Lyngdorf model."""
+    return LyngdorfModel.MP_60
+
+
+@pytest.fixture
+def mock_receiver() -> Generator[MagicMock]:
+    """Return a mocked Lyngdorf receiver."""
+    with patch(
+        "homeassistant.components.lyngdorf.async_create_receiver"
+    ) as create_mock:
+        receiver = MagicMock(spec=Receiver)
+        receiver.name = "Mock Lyngdorf"
+        receiver.connected = True
+
+        receiver.power_on = False
+        receiver.volume = -40.0
+        receiver.mute_enabled = False
+        receiver.source = None
+        receiver.available_sources = []
+        receiver.sound_mode = None
+        receiver.available_sound_modes = []
+
+        receiver.zone_b_power_on = False
+        receiver.zone_b_volume = -40.0
+        receiver.zone_b_mute_enabled = False
+        receiver.zone_b_source = None
+        receiver.zone_b_available_sources = []
+
+        create_mock.return_value = receiver
+        yield receiver
+
+
+@pytest.fixture
+def mock_get_device_serial() -> Generator[AsyncMock]:
+    """Return a mocked async_get_device_serial function."""
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_get_device_serial",
+        new=AsyncMock(return_value="0050c27c76b2"),
+    ) as serial_mock:
+        yield serial_mock
+
+
+@pytest.fixture
+def mock_find_receiver_model() -> Generator[AsyncMock]:
+    """Return a mocked async_find_receiver_model function."""
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        new=AsyncMock(return_value=LyngdorfModel.MP_60),
+    ) as find_mock:
+        yield find_mock
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> MockConfigEntry:
+    """Set up the Lyngdorf integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup:
+        lookup.return_value = LyngdorfModel.MP_60
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
