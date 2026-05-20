@@ -254,7 +254,7 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
             "invalid json", ValueError, "Invalid JSON format", id="invalid_json"
         ),
         pytest.param(
-            ValueError,
+            '["not", "a", "dict"]',
             TypeError,
             "JSON content is not a dictionary",
             id="not_a_dict",
@@ -301,7 +301,7 @@ async def test_agents_list_skips_foreign_metadata_files(
     mock_backup_files: tuple[Mock, Mock],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Foreign .metadata.json files in the bucket are skipped, not crash listing."""
+    """Foreign .metadata.json files in the bucket are skipped, not crash the listing."""
     mock_main, mock_metadata = mock_backup_files
 
     # An unrelated `.metadata.json` from another tool: valid JSON object, but
