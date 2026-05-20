@@ -2,7 +2,9 @@
 
 import asyncio
 from functools import cache
+from urllib.parse import urlsplit, urlunsplit
 
+from matter_ble_proxy import MatterBleProxy
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -30,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
+from .ble_proxy import create_matter_ble_proxy
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
@@ -117,9 +120,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
+    ble_proxy: MatterBleProxy | None = None
+
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
-        await matter_client.disconnect()
+        try:
+            if ble_proxy is not None:
+                await ble_proxy.disconnect()
+        finally:
+            await matter_client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
@@ -153,7 +162,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # create an intermediate layer (adapter) which keeps track of the nodes
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    entry.runtime_data = MatterEntryData(matter, listen_task)
+
+    # Gate on `ble_proxy_enabled`, not `bluetooth_enabled`: the latter is also true
+    # when the server uses a local BLE adapter, where no `/ble` endpoint exists.
+    server_info = matter_client.server_info
+    if server_info and getattr(server_info, "ble_proxy_enabled", False):
+        ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
+        LOGGER.info("Matter server reports BLE available, connecting BLE proxy")
+        ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
+        try:
+            await ble_proxy.connect()
+        except ConnectionError:
+            LOGGER.warning(
+                "Failed to connect BLE proxy - BLE commissioning may not work",
+                exc_info=True,
+            )
+            ble_proxy = None
+        else:
+            entry.async_on_unload(ble_proxy.disconnect)
+
+    entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
     await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
     await matter.setup_nodes()
@@ -167,6 +195,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             raise ConfigEntryNotReady(listen_error) from listen_error
 
     return True
+
+
+def _derive_ble_proxy_url(matter_ws_url: str) -> str:
+    """Derive the `/ble` endpoint URL by swapping the trailing `/ws` path segment.
+
+    Uses real URL parsing so hostnames containing `ws` aren't corrupted.
+    """
+    parsed = urlsplit(matter_ws_url)
+    path = parsed.path.rstrip("/")
+    if path.endswith("/ws"):
+        path = f"{path[:-3]}/ble"
+    elif not path:
+        path = "/ble"
+    return urlunsplit(parsed._replace(path=path))
 
 
 async def _client_listen(
