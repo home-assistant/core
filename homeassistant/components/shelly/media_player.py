@@ -224,9 +224,25 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
-        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
-            return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
-        return super().media_image_hash
+        thumb = self._media_meta.get("thumb")
+        if not thumb or not thumb.startswith("data"):
+            return super().media_image_hash
+
+        try:
+            prefix, image_data = thumb.split(",", 1)
+            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+        except ValueError:
+            return super().media_image_hash
+
+        if mime not in ALLOWED_IMAGE_MIME_TYPES:
+            return super().media_image_hash
+
+        try:
+            base64.b64decode(image_data, validate=True)
+        except binascii.Error:
+            return super().media_image_hash
+
+        return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
 
     def _get_updated_media_position(self) -> int | None:
         """Return the current playback position and update its timestamp."""
@@ -245,21 +261,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         thumb = self._media_meta["thumb"]
-        try:
-            prefix, image_data = thumb.split(",", 1)
-            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except ValueError:
-            return await super().async_get_media_image()
-
-        if mime not in ALLOWED_IMAGE_MIME_TYPES:
-            return await super().async_get_media_image()
-
-        try:
-            image = base64.b64decode(image_data, validate=True)
-        except binascii.Error:
-            return await super().async_get_media_image()
-
-        return image, mime
+        prefix, image_data = thumb.split(",", 1)
+        mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+        return base64.b64decode(image_data), mime
 
     @rpc_call
     async def async_media_play(self) -> None:

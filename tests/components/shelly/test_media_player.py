@@ -387,9 +387,8 @@ async def test_get_image_http_base64_decode_error(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test get image via http command base64 decode error."""
+    """Test that entity_picture is absent when base64 data is invalid."""
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_AUDIO_FILE
     status["media"]["playback"]["media_meta"]["thumb"] = "data:image/webp;base64,0"
@@ -398,23 +397,15 @@ async def test_get_image_http_base64_decode_error(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
-    assert "entity_picture_local" not in state.attributes
-
-    client = await hass_client_no_auth()
-
-    resp = await client.get(state.attributes["entity_picture"])
-    content = await resp.read()
-
-    assert isinstance(content, bytes)
+    assert "entity_picture" not in state.attributes
 
 
 async def test_get_image_url_invalid_thumb_string(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test get image via http command with invalid thumb string."""
+    """Test that entity_picture is absent when thumb string has invalid format."""
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_AUDIO_FILE
     status["media"]["playback"]["media_meta"]["thumb"] = "data invalid"
@@ -423,23 +414,15 @@ async def test_get_image_url_invalid_thumb_string(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
-    assert "entity_picture_local" not in state.attributes
-
-    client = await hass_client_no_auth()
-
-    resp = await client.get(state.attributes["entity_picture"])
-    content = await resp.read()
-
-    assert isinstance(content, bytes)
+    assert "entity_picture" not in state.attributes
 
 
 async def test_get_image_url_invalid_mime_type(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test get image via http command with invalid MIME type."""
+    """Test that entity_picture is absent when MIME type is not allowed."""
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_AUDIO_FILE
     status["media"]["playback"]["media_meta"]["thumb"] = "data:video/mpg;base64,0"
@@ -448,14 +431,7 @@ async def test_get_image_url_invalid_mime_type(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     state = hass.states.get(ENTITY_ID)
-    assert "entity_picture_local" not in state.attributes
-
-    client = await hass_client_no_auth()
-
-    resp = await client.get(state.attributes["entity_picture"])
-    content = await resp.read()
-
-    assert isinstance(content, bytes)
+    assert "entity_picture" not in state.attributes
 
 
 async def test_rpc_media_player_browse_media_root(
