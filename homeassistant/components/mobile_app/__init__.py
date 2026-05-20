@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
+from datetime import datetime
 from functools import partial
 from typing import Any
 
@@ -19,6 +20,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     discovery,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -86,10 +88,11 @@ class _MobileAppStore(Store[dict[str, Any]]):
 def _schedule_token_cleanup(hass: HomeAssistant, next_expiry: float) -> None:
     """Schedule a cleanup task to run when the next live activity token expires."""
     delay = next_expiry - dt_util.utcnow().timestamp()
-    hass.loop.call_later(
-        delay,
-        lambda: hass.async_create_task(_async_cleanup_live_activity_tokens(hass)),
-    )
+
+    async def _run_cleanup(_now: datetime) -> None:
+        await _async_cleanup_live_activity_tokens(hass)
+
+    async_call_later(hass, delay, _run_cleanup)
 
 
 async def _async_cleanup_live_activity_tokens(hass: HomeAssistant) -> None:
