@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor_setup[binary_sensor.test_occupancy_occupancy-entry]
+# name: test_binary_sensor_setup[binary_sensor.test_area_test_occupancy_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_occupancy_occupancy',
+    'entity_id': 'binary_sensor.test_area_test_occupancy_occupancy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_setup[binary_sensor.test_occupancy_occupancy-state]
+# name: test_binary_sensor_setup[binary_sensor.test_area_test_occupancy_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -44,7 +44,7 @@
       'lutron_integration_id': 5,
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_occupancy_occupancy',
+    'entity_id': 'binary_sensor.test_area_test_occupancy_occupancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

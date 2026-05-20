@@ -80,6 +80,7 @@ def add_entities(
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:

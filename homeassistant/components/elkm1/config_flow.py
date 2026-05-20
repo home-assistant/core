@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PREFIX,
@@ -31,8 +32,6 @@ from .discovery import (
     async_discover_devices,
     async_update_entry_from_discovery,
 )
-
-CONF_DEVICE = "device"
 
 NON_SECURE_PORT = 2101
 SECURE_PORT = 2601
