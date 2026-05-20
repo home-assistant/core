@@ -78,11 +78,15 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
             for heater in self.incomfort_data.heaters:
                 await heater.update()
         except TimeoutError as exc:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed("Timeout error") from exc
         except ClientResponseError as exc:
             if exc.status == 401:
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ConfigEntryError("Incorrect credentials") from exc
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(exc.message) from exc
         except InvalidHeaterList as exc:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(exc.message) from exc
         return self.incomfort_data
