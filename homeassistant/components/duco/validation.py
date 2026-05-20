@@ -22,10 +22,17 @@ class UnsupportedBoardError(Exception):
 def validate_board_support(board_info: BoardInfo) -> None:
     """Raise UnsupportedBoardError if the board does not meet support requirements."""
     version = board_info.public_api_version
-    if version is None or version.components is None:
-        raise UnsupportedBoardError
+    if version is None:
+        raise UnsupportedBoardError("Board did not report a public API version")
+    if version.components is None:
+        raise UnsupportedBoardError(
+            f"Board reported malformed public API version: {version}"
+        )
     if version.components < _MIN_PUBLIC_API_VERSION_COMPONENTS:
-        raise UnsupportedBoardError
+        raise UnsupportedBoardError(
+            "Board public API version "
+            f"{version} is below the supported minimum {_MIN_PUBLIC_API_VERSION}"
+        )
 
 
 async def async_get_supported_board_info(client: DucoClient) -> BoardInfo:
@@ -36,7 +43,9 @@ async def async_get_supported_board_info(client: DucoClient) -> BoardInfo:
         if err.status == 404:
             # Duco indicated that Communication board V1 does not implement
             # /info, so a 404 is enough to treat the device as unsupported.
-            raise UnsupportedBoardError from err
+            raise UnsupportedBoardError(
+                "Board does not expose the /info endpoint"
+            ) from err
         raise
 
     validate_board_support(board_info)
