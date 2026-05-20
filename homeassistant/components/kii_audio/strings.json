@@ -1,0 +1,55 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Kii Audio system is already configured.",
+      "invalid_discovery_info": "The discovered Kii Audio device did not provide valid discovery information.",
+      "unsupported_backend": "This Kii Audio system uses a legacy backend that is not supported by this integration."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "system_id": "System ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Kii Audio system.",
+          "system_id": "The Kii Audio system ID advertised by the device."
+        },
+        "description": "Enter the host and system ID for the Kii Audio system.",
+        "title": "Kii Audio"
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "bass": {
+        "name": "Bass"
+      },
+      "treble": {
+        "name": "Treble"
+      }
+    },
+    "select": {
+      "analog_input_sensitivity": {
+        "name": "Analogue Input Sensitivity",
+        "state": {
+          "high": "High",
+          "low": "Low"
+        }
+      },
+      "latency": {
+        "name": "Latency",
+        "state": {
+          "match_kii_three": "Match Kii Three",
+          "minimum": "Minimum",
+          "optimum": "Optimum"
+        }
+      }
+    },
+    "switch": {
+      "tone_control": {
+        "name": "Tone Control"
+      }
+    }
+  }
+}

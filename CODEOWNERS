@@ -933,6 +933,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
+/homeassistant/components/kii_audio/ @KiiAudioGmbH
+/tests/components/kii_audio/ @KiiAudioGmbH
 /homeassistant/components/kiosker/ @Claeysson
 /tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core

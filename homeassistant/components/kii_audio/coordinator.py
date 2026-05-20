@@ -1,0 +1,135 @@
+"""Coordinator for the Kii Audio integration."""
+
+import asyncio
+import copy
+import logging
+from typing import Any
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .client import KiiAudioClient, KiiAudioClientError
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+type KiiAudioConfigEntry = ConfigEntry[KiiAudioCoordinator]
+
+
+class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinate Kii Audio system state."""
+
+    config_entry: KiiAudioConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: KiiAudioConfigEntry) -> None:
+        """Initialize the coordinator."""
+        self._ready = asyncio.Event()
+        self.client = KiiAudioClient(
+            async_get_clientsession(hass),
+            config_entry.data[CONF_HOST],
+        )
+        self.client.add_listener(self._handle_event)
+        self.client.add_connection_listener(self._handle_connection_state)
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+        )
+
+    async def async_start(self) -> None:
+        """Start listening for pushed updates."""
+        await self.client.start()
+
+    async def async_wait_ready(self) -> None:
+        """Wait for initial system information from the WebSocket."""
+        async with asyncio.timeout(10):
+            await self._ready.wait()
+
+    async def async_stop(self) -> None:
+        """Stop listening for pushed updates."""
+        await self.client.stop()
+
+    async def async_set_zone_setting(
+        self, zone_id: str, setting: str, value: Any
+    ) -> None:
+        """Request a zone setting change."""
+        await self.client.set_zone_setting(zone_id, setting, value)
+
+    async def async_set_zone_volume(self, zone_id: str, volume: float) -> None:
+        """Request a zone volume change."""
+        await self.async_set_zone_setting(zone_id, "audio.volume", volume)
+
+    async def async_set_zone_mute(self, zone_id: str, mute: bool) -> None:
+        """Request a zone mute change."""
+        await self.async_set_zone_setting(zone_id, "audio.mute", mute)
+
+    async def async_set_zone_power(self, zone_id: str, power: bool) -> None:
+        """Request a zone power change."""
+        await self.async_set_zone_setting(zone_id, "power", power)
+
+    async def async_set_zone_source(self, zone_id: str, source: str) -> None:
+        """Request a zone source change."""
+        await self.async_set_zone_setting(zone_id, "audio.source", source)
+
+    @callback
+    def _handle_connection_state(self, connected: bool) -> None:
+        """Handle WebSocket connection state changes."""
+        if connected or not self._ready.is_set():
+            return
+        self.async_set_update_error(KiiAudioClientError("WebSocket disconnected"))
+
+    @callback
+    def _handle_event(self, event: str, payload: dict[str, Any]) -> None:
+        """Handle a pushed WebSocket event."""
+        if event == "pushSystemInfo":
+            self.async_set_updated_data(payload)
+            self._ready.set()
+            return
+
+        if event == "pushZoneSetting":
+            self._handle_zone_setting(payload)
+
+    @callback
+    def _handle_zone_setting(self, payload: dict[str, Any]) -> None:
+        """Apply a pushed zone setting update to the cached system info."""
+        zone_id = payload.get("zoneId")
+        setting = payload.get("setting")
+        value = payload.get("value")
+
+        if not isinstance(zone_id, str) or not isinstance(setting, str):
+            return
+
+        data = copy.deepcopy(self.data or {})
+        zones = data.get("zones")
+        if not isinstance(zones, list):
+            return
+
+        for zone in zones:
+            if not isinstance(zone, dict) or zone.get("zoneId") != zone_id:
+                continue
+            settings = zone.setdefault("settings", {})
+            if not isinstance(settings, dict):
+                return
+            _set_path(settings, setting, value)
+            if isinstance(payload.get("updateCount"), int):
+                settings["updateCount"] = payload["updateCount"]
+            self.async_set_updated_data(data)
+            return
+
+
+def _set_path(target: dict[str, Any], path: str, value: Any) -> None:
+    """Set a dotted path in a nested dictionary."""
+    parts = path.split(".")
+    current = target
+    for part in parts[:-1]:
+        next_value = current.setdefault(part, {})
+        if not isinstance(next_value, dict):
+            next_value = {}
+            current[part] = next_value
+        current = next_value
+    current[parts[-1]] = value
