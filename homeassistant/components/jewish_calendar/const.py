@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING, Self
 DOMAIN = "jewish_calendar"
 
 ATTR_AFTER_SUNSET = "after_sunset"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_DATE = "date"
 ATTR_NUSACH = "nusach"
 
 CONF_ALTITUDE = "altitude"  # The name used by the hdate library for elevation
