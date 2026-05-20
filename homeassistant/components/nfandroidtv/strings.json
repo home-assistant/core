@@ -31,6 +31,9 @@
     }
   },
   "exceptions": {
+    "connection_failed": {
+      "message": "Failed to connect to host: {host}"
+    },
     "invalid_notification_icon": {
       "message": "Invalid icon data provided. Got {type}"
     },
