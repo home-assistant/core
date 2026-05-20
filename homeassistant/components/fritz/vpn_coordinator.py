@@ -12,7 +12,7 @@ from fritzboxvpn import (
 )
 from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,11 +46,6 @@ def vpn_web_ui_protocol(config: dict[str, Any]) -> str:
         str,
         PROTOCOL_HTTPS if config.get(CONF_SSL, DEFAULT_SSL) else PROTOCOL_HTTP,
     )
-
-
-async def async_start_entry_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Start a reauth flow for the config entry."""
-    entry.async_start_reauth(hass)
 
 
 class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -98,7 +93,7 @@ class FritzVpnCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if entry is None or entry.state != ConfigEntryState.LOADED:
             return
         self._reauth_scheduled = True
-        self.hass.async_create_task(async_start_entry_reauth(self.hass, entry))
+        entry.async_start_reauth(self.hass)
 
     def _update_failed(
         self, err: Exception, *, unexpected: bool = False

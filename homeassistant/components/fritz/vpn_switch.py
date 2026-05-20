@@ -41,12 +41,6 @@ def _vpn_device_info(
     )
 
 
-def _connection(
-    coordinator: FritzVpnCoordinator, connection_uid: str
-) -> dict[str, Any] | None:
-    if not coordinator.data:
-        return None
-    return coordinator.data.get(connection_uid)
 
 
 class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
@@ -75,18 +69,22 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
         """Return True when the VPN connection is present in coordinator data."""
         if not self.coordinator.last_update_success:
             return False
-        return _connection(self.coordinator, self._connection_uid) is not None
+        return self.coordinator.data and self._connection_uid in self.coordinator.data
 
     @property
     def is_on(self) -> bool:
         """Return True when the VPN connection is active."""
-        conn = _connection(self.coordinator, self._connection_uid)
+        if not self.coordinator.data:
+            return False
+        conn = self.coordinator.data.get(self._connection_uid)
         return bool(conn.get(API_KEY_ACTIVE, False)) if conn else False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return VPN connection state attributes."""
-        conn = _connection(self.coordinator, self._connection_uid)
+        if not self.coordinator.data:
+            return {}
+        conn = self.coordinator.data.get(self._connection_uid)
         if conn is None:
             return {}
         return {
