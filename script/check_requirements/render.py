@@ -19,6 +19,7 @@ _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
     (CheckKind.REPO_PUBLIC, "Repo Public"),
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
+    (CheckKind.SECURITY, "Security"),
     (CheckKind.PR_LINK, "PR Link"),
 )
 

@@ -10,6 +10,8 @@ What the runner defers to the LLM (NEEDS_AGENT):
 - `pr_link`: presence of the right link in the PR description.
 - `release_pipeline`: inspection of the publish workflow when the attestation
   was missing or did not identify a recognised CI publisher.
+- `security`: lightweight scan of the upstream source for supply-chain red
+  flags. Always deferred — the agent fetches the source and inspects it.
 """
 
 from .diff import parse_diff
@@ -74,6 +76,7 @@ def run_checks(
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
+            pkg.checks[CheckKind.SECURITY] = fail
         elif pkg.repo_url:
             pkg.checks[CheckKind.REPO_PUBLIC] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
@@ -83,6 +86,10 @@ def run_checks(
                 CheckStatus.NEEDS_AGENT,
                 "Presence of the required link in the PR description must be verified by the agent.",
             )
+            pkg.checks[CheckKind.SECURITY] = CheckResult(
+                CheckStatus.NEEDS_AGENT,
+                "Baseline supply-chain source scan must be performed by the agent.",
+            )
         else:
             fail = CheckResult(
                 CheckStatus.FAIL,
@@ -90,6 +97,10 @@ def run_checks(
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
+            pkg.checks[CheckKind.SECURITY] = CheckResult(
+                CheckStatus.FAIL,
+                "No source repository URL on PyPI — source cannot be inspected.",
+            )
     result = CheckRunResult(pr_number=pr_number, packages=packages)
     result.rendered_comment = render_comment(result)
     return result

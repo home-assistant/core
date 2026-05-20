@@ -25,6 +25,7 @@ class CheckKind(StrEnum):
     REPO_PUBLIC = "repo_public"
     CI_UPLOAD = "ci_upload"
     RELEASE_PIPELINE = "release_pipeline"
+    SECURITY = "security"
     PR_LINK = "pr_link"
 
 
