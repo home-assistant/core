@@ -866,7 +866,8 @@ async def test_translated_unit(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.number"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = common.MockNumberEntity(
@@ -898,7 +899,8 @@ async def test_translated_unit_with_native_unit_raises(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
-            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+            "component.test.entity.number"
+            ".test_translation_key.unit_of_measurement": "Tests"
         },
     ):
         entity0 = common.MockNumberEntity(
