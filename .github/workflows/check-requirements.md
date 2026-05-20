@@ -94,7 +94,10 @@ The JSON has this shape:
   every check whose status is `needs_agent` it contains two placeholders
   you must replace:
   - `{{CHECK_CELL:<pkg-name>:<check-kind>}}` — one cell of the summary
-    table. Replace with exactly one of `✅`, `⚠️`, `❌`.
+    table. Replace with exactly one of `✅`, `⚠️`, `❌`, or `—` (em
+    dash, for a check that the per-kind instructions say to skip). The
+    **`security`** check kind uses `☑️` instead of `✅` for the success
+    case — see its section below for why.
   - `{{CHECK_DETAIL:<pkg-name>:<check-kind>}}` — the body of one bullet
     in the package's `<details>` block. Replace with
     `<icon> <one-line explanation>` (the bullet's leading
@@ -129,7 +132,8 @@ For each `(check_kind, result)` in `package.checks` where
 
    Then stop. **Do not improvise** a verdict for an unknown check kind.
 3. Otherwise, follow the instructions in that section. They tell you
-   which icon (✅/⚠️/❌) and one-line explanation to produce.
+   which icon (✅/⚠️/❌, or ☑️/⚠️/❌ for `security`) and one-line
+   explanation to produce.
 
 ## Step 3 — Post the comment
 
@@ -239,6 +243,153 @@ host from `package.repo_url`, then apply the corresponding checklist.
 3. If no CI config can be retrieved: ⚠️ `Release pipeline could not be
    inspected; hosting provider is not GitHub or GitLab.`
 
+### Check kind: `security`
+
+Perform a **baseline** scan of the upstream package source for obvious
+supply-chain red flags. This is a cheap first pass, **not** a security
+review, malware audit, or substitute for human judgement. A clean result
+means "nothing obvious stood out in a quick scan", not "this package is
+safe". The success icon for this check is `☑️` — **never** `✅` — to
+make clear that a passing scan is not an endorsement.
+
+If `repo_public` resolves to ❌ for the same package, mark `security`'s
+cell and detail as `—` (em dash) and explain
+`Skipped because the source repository is not publicly accessible.` —
+the source cannot be fetched without a public repo.
+
+#### Step A — Fetch a representative slice of the source
+
+Use `package.repo_url` to locate the source.
+
+- For **GitHub** repos:
+  1. Resolve the default branch via `GET /repos/{owner}/{repo}`.
+  2. List the tree with
+     `GET /repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1`.
+  3. Identify the package's actual Python module directory
+     (`{package_name}/` or `src/{package_name}/`, normalising `-` ↔ `_`).
+- For **GitLab** repos use the equivalent REST API calls; for any other
+  host fall back to `web-fetch` of raw file URLs.
+
+Fetch the **raw contents** of:
+
+- `setup.py` if present — install-time code runs on every consumer
+  machine.
+- `pyproject.toml` — inspect `[build-system]` and any custom build
+  backend.
+- The package's `__init__.py`.
+- Up to **8** additional Python files inside the package directory,
+  prioritising files referenced from `entry_points`, plus any file whose
+  name suggests bootstrap, loader, or self-update behavior
+  (`update*.py`, `loader*.py`, `bootstrap*.py`, `_native.py`,
+  `_post_install*.py`, etc.).
+
+If the source tree is too large to inspect within the available API
+budget, inspect at least `setup.py`, `pyproject.toml`, and the package's
+`__init__.py`, then return ⚠️ with a note that only a partial scan was
+performed.
+
+#### Step B — Patterns to flag
+
+Reason from principles, not a fixed checklist. For each fetched file,
+ask: *would a well-behaved Python library that does what this package's
+PyPI description claims to do need to do this?* If the answer is "no" or
+"unclear", record a finding. The categories below describe the **shape**
+of concerning behavior; the specific APIs, filenames, and storage keys
+mentioned are illustrative examples — treat any equivalent construct
+(including ones that did not exist when this workflow was written) the
+same way.
+
+For every finding include the file path, line number, a snippet
+(≤ 120 chars), a permalink of the form
+`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` (or the
+GitLab equivalent), and one sentence explaining why the behavior is out
+of scope for the package's stated purpose.
+
+1. **Reaches outside the package's declared scope into Home Assistant
+   internals.** A third-party library should interact with Home
+   Assistant only through the public, documented Python API it imports
+   — never by touching the filesystem of `config_dir` or by reading
+   internal authentication / session state. Flag any code that opens,
+   reads, writes, or resolves paths to artifacts it does not own
+   (top-level YAML it did not create, anything under `.storage/`, files
+   owned by other integrations / domains), or that reads tokens, refresh
+   tokens, auth providers, or other internal session state. Examples
+   like `secrets.yaml`, `.storage/auth*`, `hass.auth`, or
+   `hass.config.path("secrets.yaml")` are illustrative — the principle
+   is *out-of-scope access*, not a static list of names.
+2. **Network input flows into an execution sink (download-and-execute).**
+   Bytes obtained from a remote source must never reach an interpreter.
+   Flag any data-flow path where the response body of a network call
+   (any HTTP / WebSocket / raw-socket client, sync or async) ends up at
+   *any* execution sink: `exec`, `eval`, `compile`, `marshal.loads`,
+   `pickle.loads`, `types.FunctionType`,
+   `importlib.util.spec_from_loader`, `subprocess.*`, `os.system`, shell
+   pipelines such as `curl … | sh`, or a file that is subsequently
+   imported or executed. The same applies to package-manager invocations
+   (`pip install`, `pip download`, …) whose arguments are resolved from
+   network responses at runtime.
+3. **Build-time or install-time code is non-deterministic or non-local.**
+   `setup.py`, `setup.cfg` `cmdclass`, custom PEP 517 backends, and any
+   other build hook must be self-contained: they may only compile and
+   copy files that ship in the source distribution. Flag any build-stage
+   code that opens a network socket, shells out to external binaries,
+   writes outside the build / install tree, or pulls in a build backend
+   whose source is not on PyPI (e.g. referenced via Git URL or local
+   path).
+4. **Reads user secrets and combines them with an egress path.** The
+   concerning shape is *secret-source → outbound-channel*, not any
+   single API. Flag code that reads credential / authentication material
+   from the host (environment variables that look like tokens or API
+   keys, files under the user's home that store credentials, OS keychain
+   APIs, browser-profile directories, Home Assistant token stores)
+   **and** in the same code path sends that data to a destination the
+   package does not need to talk to. Reading secrets alone is not
+   enough; sending data out alone is not enough; the *combination* is
+   the signal.
+5. **Hides what it does from a reader.** Source that a maintainer cannot
+   reasonably review is itself a smell. Flag any pattern where opaque
+   data flows into an execution sink: large encoded / compressed / hex
+   strings (decoded via `base64`, `codecs`, `zlib`, `lzma`,
+   `bytes.fromhex`, or any future equivalent) passed to `exec` / `eval`
+   / `compile` / `__import__`; identifiers assembled at runtime from
+   non-literal pieces and then imported; or any other construct whose
+   evident purpose is to make the real behavior unreadable.
+6. **Hard-coded network destination that does not match the package's
+   stated purpose.** Flag outbound URLs or hosts that do not appear in
+   the package's PyPI `project_urls` and have no obvious connection to
+   its function — especially short-link / paste services, ephemeral
+   tunnels, raw IP addresses, or non-default ports against unknown hosts
+   — and any network call originating from module top-level /
+   `__init__.py` (which executes on import for every consumer).
+
+If a behavior is clearly out of scope for the package's stated purpose
+but does not fit any of the categories above, flag it under whichever
+category fits best and explain in the finding. The list of categories is
+meant to guide reasoning, not bound it.
+
+#### Step C — Verdict
+
+Aggregate the findings for the package and produce one of:
+
+- `☑️ Baseline scan found nothing obvious in <list of inspected files>.
+  This is not a security review — only the cheap checks were run.`
+  Use `☑️` (**not** `✅`) so a passing scan is not read as an
+  endorsement.
+- `⚠️ <one-line summary>` when patterns were found that have plausible
+  legitimate uses (e.g. an integration helper that legitimately reads
+  `configuration.yaml`, or a self-update feature documented upstream).
+  Include the file path, line number, snippet, and permalink for each
+  match in the bullet's detail so a human reviewer can decide.
+- `❌ <one-line summary>` for patterns with no legitimate explanation
+  for a Python dependency, for example: install-time network execution,
+  decode-and-exec of opaque blobs, reads of `secrets.yaml` or
+  `.storage/auth*`, or env-var / token exfiltration to an external host.
+  Include the same file path / line / snippet / permalink detail.
+
+Be precise. False positives are expected — when in doubt, prefer `⚠️`
+with context over `❌`. This check is informational and never blocks the
+workflow on its own; a human reviewer decides whether to merge.
+
 ## Notes
 
 - Be constructive and helpful. Reference the inspected workflow / CI
@@ -246,6 +397,11 @@ host from `package.repo_url`, then apply the corresponding checklist.
 - The dedup of the requirements-check comment is handled by gh-aw's
   `add_comment` safe-output via the `<!-- requirements-check -->`
   marker on the first line of `rendered_comment`.
+- The `security` check is a **baseline** scan, not a full security
+  review. It is informational only — it surfaces findings for a human
+  reviewer but never blocks the workflow on its own. The success icon
+  is intentionally `☑️` (and *never* `✅`) so a passing scan does not
+  read as an endorsement: it only means nothing obvious stood out.
 - If the deterministic workflow concluded with a non-success status,
   this workflow's `if:` guard on `Download deterministic-results
   artifact` skipped the download. If you find no file at

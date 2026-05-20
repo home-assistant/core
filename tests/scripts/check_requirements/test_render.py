@@ -25,6 +25,7 @@ def test_render_all_conclusive_collapses_details() -> None:
             CheckKind.REPO_PUBLIC: _pass("public"),
             CheckKind.CI_UPLOAD: _pass("attestation found"),
             CheckKind.RELEASE_PIPELINE: _pass("OIDC via attestation"),
+            CheckKind.SECURITY: _pass("baseline scan clean"),
             CheckKind.PR_LINK: _pass("link found"),
         },
     )
@@ -48,6 +49,7 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
             CheckKind.REPO_PUBLIC: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.CI_UPLOAD: CheckResult(CheckStatus.WARN, "no attestation"),
             CheckKind.RELEASE_PIPELINE: CheckResult(CheckStatus.NEEDS_AGENT, ""),
+            CheckKind.SECURITY: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.PR_LINK: CheckResult(CheckStatus.NEEDS_AGENT, ""),
         },
     )
@@ -56,6 +58,8 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
     assert "{{CHECK_DETAIL:pkg:repo_public}}" in rendered
     assert "{{CHECK_CELL:pkg:release_pipeline}}" in rendered
     assert "{{CHECK_DETAIL:pkg:release_pipeline}}" in rendered
+    assert "{{CHECK_CELL:pkg:security}}" in rendered
+    assert "{{CHECK_DETAIL:pkg:security}}" in rendered
     assert "{{CHECK_CELL:pkg:pr_link}}" in rendered
     assert "<details open>" in rendered
 
