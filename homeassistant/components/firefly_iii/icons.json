@@ -4,17 +4,32 @@
       "account_balance": {
         "default": "mdi:currency-usd"
       },
-      "account_role": {
-        "default": "mdi:account-circle"
-      },
-      "account_type": {
-        "default": "mdi:bank"
-      },
       "budget": {
         "default": "mdi:chart-pie"
       },
+      "budget_limit": {
+        "default": "mdi:cash-lock"
+      },
+      "budget_remaining": {
+        "default": "mdi:cash-check"
+      },
       "category": {
         "default": "mdi:label"
+      },
+      "subscription_already_paid": {
+        "default": "mdi:cash-check"
+      },
+      "subscription_amount": {
+        "default": "mdi:receipt-text"
+      },
+      "subscription_last_paid": {
+        "default": "mdi:calendar-check"
+      },
+      "subscription_next_expected": {
+        "default": "mdi:calendar-clock"
+      },
+      "subscription_total_expected": {
+        "default": "mdi:cash-multiple"
       }
     }
   }

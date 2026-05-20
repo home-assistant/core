@@ -12,7 +12,14 @@ from pyfirefly import (
     FireflyConnectionError,
     FireflyTimeoutError,
 )
-from pyfirefly.models import Account, Bill, Budget, Category, Currency
+from pyfirefly.models import (
+    Account,
+    Bill,
+    Budget,
+    BudgetLimitAttributes,
+    Category,
+    Currency,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -38,7 +45,8 @@ class FireflyCoordinatorData:
     categories: list[Category]
     category_details: dict[str, Category]
     budgets: dict[str, Budget]
-    bills: list[Bill]
+    budget_limits: dict[str, list[BudgetLimitAttributes]]
+    bills: dict[str, Bill]
     primary_currency: Currency
 
 
@@ -94,6 +102,18 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         now = datetime.now()
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
+        # Extend bills range: one month before for last paid, one month ahead for next expected
+        bills_start_date = (start_date - timedelta(days=1)).replace(day=1)
+        if now.month == 12:
+            bills_end_date = now.replace(year=now.year + 1, month=1, day=31)
+        else:
+            next_month = now.month + 1
+            if next_month == 12:
+                bills_end_date = now.replace(month=12, day=31)
+            else:
+                bills_end_date = now.replace(month=next_month + 1, day=1) - timedelta(
+                    days=1
+                )
 
         try:
             (
@@ -107,18 +127,30 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),
-                self.firefly.get_bills(),
+                self.firefly.get_bills(start=bills_start_date, end=bills_end_date),
             )
 
-            category_details = await asyncio.gather(
-                *(
-                    self.firefly.get_category(
-                        category_id=int(category.id),
-                        start=start_date,
-                        end=end_date,
+            category_details_list, budget_limits_list = await asyncio.gather(
+                asyncio.gather(
+                    *(
+                        self.firefly.get_category(
+                            category_id=int(category.id),
+                            start=start_date,
+                            end=end_date,
+                        )
+                        for category in categories
                     )
-                    for category in categories
-                )
+                ),
+                asyncio.gather(
+                    *(
+                        self.firefly.get_budget_limits(
+                            budget_id=int(budget.id),
+                            start=start_date,
+                            end=end_date,
+                        )
+                        for budget in budgets
+                    )
+                ),
             )
         except FireflyAuthenticationError as err:
             raise ConfigEntryAuthFailed(
@@ -142,8 +174,14 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         return FireflyCoordinatorData(
             accounts={account.id: account for account in accounts},
             categories=categories,
-            category_details={category.id: category for category in category_details},
+            category_details={
+                category.id: category for category in category_details_list
+            },
             budgets={budget.id: budget for budget in budgets},
-            bills=bills,
+            budget_limits={
+                budget.id: limits
+                for budget, limits in zip(budgets, budget_limits_list, strict=True)
+            },
+            bills={bill.id: bill for bill in bills},
             primary_currency=primary_currency,
         )
