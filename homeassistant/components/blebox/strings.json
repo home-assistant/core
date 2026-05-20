@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "address_already_configured": "A BleBox device is already configured at {address}.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,7 +12,7 @@
     },
     "flow_title": "{name} ({host})",
     "step": {
-      "user": {
+      "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -19,7 +20,21 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Set up your BleBox to integrate with Home Assistant.",
-        "title": "Set up your BleBox device"
+        "title": "Set up your BleBox device manually"
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        },
+        "description": "Select a discovered BleBox device to add.",
+        "title": "Discovered BleBox devices"
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Enter IP address manually",
+          "scan": "Scan network for BleBox devices"
+        },
+        "title": "Add BleBox device"
       }
     }
   }

@@ -14,6 +14,7 @@ UNKNOWN = "unknown"
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80
 
+ZEROCONF_TYPE = "_bbxsrv._tcp.local."
 
 LIGHT_MAX_KELVINS = 6500  # 154 Mireds
 LIGHT_MIN_KELVINS = 2700  # 370 Mireds
