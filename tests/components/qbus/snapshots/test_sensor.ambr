@@ -38,7 +38,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_84',
-    'unit_of_measurement': 'A',
+    'unit_of_measurement': 'kWh',
   })
 # ---
 # name: test_sensor[sensor.garage_energie-state]
@@ -47,7 +47,7 @@
       'device_class': 'energy',
       'friendly_name': 'Energie',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'A',
+      'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_energie',
@@ -212,7 +212,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_83',
-    'unit_of_measurement': 'kWh',
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_sensor[sensor.garage_stroom-state]
@@ -221,7 +221,7 @@
       'device_class': 'current',
       'friendly_name': 'Stroom',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'kWh',
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_stroom',

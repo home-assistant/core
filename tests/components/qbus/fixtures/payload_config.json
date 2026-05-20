@@ -245,7 +245,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "kWh",
+              "unit": "A",
               "write": false
             }
           }
@@ -265,7 +265,7 @@
               "read": true,
               "step": 0.1,
               "type": "number",
-              "unit": "A",
+              "unit": "kWh",
               "write": false
             }
           }
