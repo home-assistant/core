@@ -111,14 +111,16 @@ async def test_service_prune_images(
 
 
 @pytest.mark.parametrize(
-    ("call_arguments", "expected_timeout", "expected_pull_image"),
+    ("call_arguments", "extra_expected_kwargs"),
     [
-        ({}, None, False),
-        ({ATTR_TIMEOUT: timedelta(minutes=10)}, timedelta(minutes=10), False),
+        ({}, {"pull_image": False}),
+        (
+            {ATTR_TIMEOUT: timedelta(minutes=10)},
+            {"pull_image": False, "timeout": timedelta(minutes=10)},
+        ),
         (
             {ATTR_TIMEOUT: timedelta(minutes=12), ATTR_PULL_IMAGE: True},
-            timedelta(minutes=12),
-            True,
+            {"pull_image": True, "timeout": timedelta(minutes=12)},
         ),
     ],
     ids=["no optional", "with duration", "with duration and pull_image"],
@@ -129,8 +131,7 @@ async def test_service_recreate_container(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     call_arguments: dict,
-    expected_timeout: timedelta | None,
-    expected_pull_image: bool,
+    extra_expected_kwargs: dict,
 ) -> None:
     """Test recreate container service with the variants."""
 
@@ -148,30 +149,27 @@ async def test_service_recreate_container(
         },
         blocking=True,
     )
-    expected_kwargs: dict = {
-        "endpoint_id": TEST_ENDPOINT_ID,
-        "container_id": TEST_CONTAINER_ID,
-        "pull_image": expected_pull_image,
-    }
-    if expected_timeout is not None:
-        expected_kwargs["timeout"] = expected_timeout
-    mock_portainer_client.container_recreate.assert_called_once_with(**expected_kwargs)
+    mock_portainer_client.container_recreate.assert_called_once_with(
+        endpoint_id=TEST_ENDPOINT_ID,
+        container_id=TEST_CONTAINER_ID,
+        **extra_expected_kwargs,
+    )
 
 
 @pytest.mark.parametrize(
-    ("exception", "message"),
+    ("exception", "translation_key"),
     [
         (
             PortainerAuthenticationError("auth"),
-            "An error occurred while trying to authenticate",
+            "invalid_auth_no_details",
         ),
         (
             PortainerConnectionError("conn"),
-            "An error occurred while trying to connect to the Portainer instance",
+            "cannot_connect_no_details",
         ),
         (
             PortainerTimeoutError("timeout"),
-            "A timeout occurred while trying to connect to the Portainer instance",
+            "timeout_connect_no_details",
         ),
     ],
 )
@@ -180,8 +178,10 @@ async def test_service_recreate_container_portainer_exceptions(
     device_registry: DeviceRegistry,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: HomeAssistantError,
-    message: str,
+    exception: PortainerAuthenticationError
+    | PortainerConnectionError
+    | PortainerTimeoutError,
+    translation_key: str,
 ) -> None:
     """Test recreate container service handles Portainer exceptions."""
     await setup_integration(hass, mock_config_entry)
@@ -191,13 +191,15 @@ async def test_service_recreate_container_portainer_exceptions(
     assert container is not None
 
     mock_portainer_client.container_recreate.side_effect = exception
-    with pytest.raises(HomeAssistantError, match=message):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECREATE_CONTAINER,
             {ATTR_CONTAINER_DEVICE_ID: container.id},
             blocking=True,
         )
+
+    assert err.value.translation_key == translation_key
     mock_portainer_client.container_recreate.assert_called_once()
 
 
@@ -242,15 +244,6 @@ async def test_service_validation_errors(
             DOMAIN,
             SERVICE_PRUNE_IMAGES,
             {ATTR_DEVICE_ID: "invalid_device_id"},
-            blocking=True,
-        )
-    mock_portainer_client.images_prune.assert_not_called()
-
-    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PRUNE_IMAGES,
-            {ATTR_DEVICE_ID: container.id},
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_not_called()

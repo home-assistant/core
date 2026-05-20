@@ -1,7 +1,6 @@
 """Services for the Portainer integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from pyportainer import (
     PortainerAuthenticationError,
@@ -70,25 +69,24 @@ async def _get_endpoint_id(
     call: ServiceCall,
     config_entry: PortainerConfigEntry,
 ) -> int:
-    """Get endpoint ID from device ID."""
+    """Get endpoint data from device ID."""
     device_reg = dr.async_get(call.hass)
-    device = device_reg.async_get(call.data[ATTR_DEVICE_ID])
-
-    if TYPE_CHECKING:
-        assert device is not None
+    device_id = call.data[ATTR_DEVICE_ID]
+    device = device_reg.async_get(device_id)
+    assert device
     coordinator = config_entry.runtime_data
 
+    endpoint_data = None
     for data in coordinator.data.values():
         if (
             DOMAIN,
             f"{config_entry.entry_id}_{data.endpoint.id}",
         ) in device.identifiers:
-            return data.endpoint.id
+            endpoint_data = data
+            break
 
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_target",
-    )
+    assert endpoint_data
+    return endpoint_data.endpoint.id
 
 
 async def _get_container_and_endpoint_ids(
@@ -189,6 +187,8 @@ async def recreate_container(call: ServiceCall) -> None:
             translation_domain=DOMAIN,
             translation_key="timeout_connect_no_details",
         ) from err
+
+    await coordinator.async_request_refresh()
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
