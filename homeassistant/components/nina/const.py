@@ -29,6 +29,7 @@ ATTR_SEVERITY: str = "severity"
 ATTR_RECOMMENDED_ACTIONS: str = "recommended_actions"
 ATTR_AFFECTED_AREAS: str = "affected_areas"
 ATTR_WEB: str = "web"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ID: str = "id"
 ATTR_SENT: str = "sent"
 ATTR_START: str = "start"

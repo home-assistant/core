@@ -1,11 +1,9 @@
 """Arcam media player."""
 
-from collections.abc import Callable, Coroutine
-import functools
 import logging
 from typing import Any
 
-from arcam.fmj import ConnectionFailed, SourceCodes
+from arcam.fmj import SourceCodes
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -18,14 +16,18 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, EVENT_TURN_ON
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
-from .entity import ArcamFmjEntity
+from .entity import ArcamFmjEntity, convert_exception
 
 _LOGGER = logging.getLogger(__name__)
+
+# arcam-fmj serializes commands on a single TCP writer at the library
+# layer; serialize at HA's layer to match the device's contract.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -39,23 +41,6 @@ async def async_setup_entry(
     async_add_entities(
         [ArcamFmj(coordinators[zone]) for zone in (1, 2)],
     )
-
-
-def convert_exception[**_P, _R](
-    func: Callable[_P, Coroutine[Any, Any, _R]],
-) -> Callable[_P, Coroutine[Any, Any, _R]]:
-    """Return decorator to convert a connection error into a home assistant error."""
-
-    @functools.wraps(func)
-    async def _convert_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        try:
-            return await func(*args, **kwargs)
-        except ConnectionFailed as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="connection_failed"
-            ) from exception
-
-    return _convert_exception
 
 
 class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
@@ -185,7 +170,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         ]
 
         return BrowseMedia(
-            title="Arcam FMJ Receiver",
+            title=self.coordinator.device_name,
             media_class=MediaClass.DIRECTORY,
             media_content_id="root",
             media_content_type="library",
