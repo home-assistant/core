@@ -61,13 +61,13 @@ async def test_snapshots(
             {"on": False},
         ),
         (
-            "switch.wled_rgb_light_freeze",
+            "switch.wled_rgb_light_segment_0_freeze",
             "segment",
             {"segment_id": 0, "freeze": True},
             {"segment_id": 0, "freeze": False},
         ),
         (
-            "switch.wled_rgb_light_reverse",
+            "switch.wled_rgb_light_segment_0_reverse",
             "segment",
             {"segment_id": 0, "reverse": True},
             {"segment_id": 0, "reverse": False},
@@ -158,9 +158,13 @@ async def test_switch_dynamically_handle_segments(
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
 
-    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert (
+        segment0_freeze := hass.states.get("switch.wled_rgb_light_segment_0_freeze")
+    )
     assert segment0_freeze.state == STATE_OFF
-    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert (
+        segment0_reverse := hass.states.get("switch.wled_rgb_light_segment_0_reverse")
+    )
     assert segment0_reverse.state == STATE_OFF
     assert not hass.states.get("switch.wled_rgb_light_segment_1_freeze")
     assert not hass.states.get("switch.wled_rgb_light_segment_1_reverse")
@@ -175,9 +179,13 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert (
+        segment0_freeze := hass.states.get("switch.wled_rgb_light_segment_0_freeze")
+    )
     assert segment0_freeze.state == STATE_OFF
-    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert (
+        segment0_reverse := hass.states.get("switch.wled_rgb_light_segment_0_reverse")
+    )
     assert segment0_reverse.state == STATE_OFF
     assert (
         segment1_freeze := hass.states.get("switch.wled_rgb_light_segment_1_freeze")
@@ -194,9 +202,13 @@ async def test_switch_dynamically_handle_segments(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (segment0_freeze := hass.states.get("switch.wled_rgb_light_freeze"))
+    assert (
+        segment0_freeze := hass.states.get("switch.wled_rgb_light_segment_0_freeze")
+    )
     assert segment0_freeze.state == STATE_OFF
-    assert (segment0_reverse := hass.states.get("switch.wled_rgb_light_reverse"))
+    assert (
+        segment0_reverse := hass.states.get("switch.wled_rgb_light_segment_0_reverse")
+    )
     assert segment0_reverse.state == STATE_OFF
 
     assert (
@@ -207,3 +219,70 @@ async def test_switch_dynamically_handle_segments(
         segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
     )
     assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "opt_keep_main_light", "expected_entities"),
+    [
+        (
+            "rgb_single_segment",
+            False,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_segment_0_freeze": "WLED RGB Light Freeze",
+                "switch.wled_rgb_light_segment_0_reverse": "WLED RGB Light Reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb_single_segment",
+            True,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_segment_0_freeze": "WLED RGB Light Segment 0 freeze",
+                "switch.wled_rgb_light_segment_0_reverse": "WLED RGB Light Segment 0 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb",
+            False,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_segment_0_freeze": "WLED RGB Light Freeze",
+                "switch.wled_rgb_light_segment_0_reverse": "WLED RGB Light Reverse",
+                "switch.wled_rgb_light_segment_1_freeze": "WLED RGB Light Segment 1 freeze",
+                "switch.wled_rgb_light_segment_1_reverse": "WLED RGB Light Segment 1 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+        (
+            "rgb",
+            True,
+            {
+                "switch.wled_rgb_light_nightlight": "WLED RGB Light Nightlight",
+                "switch.wled_rgb_light_segment_0_freeze": "WLED RGB Light Segment 0 freeze",
+                "switch.wled_rgb_light_segment_0_reverse": "WLED RGB Light Segment 0 reverse",
+                "switch.wled_rgb_light_segment_1_freeze": "WLED RGB Light Segment 1 freeze",
+                "switch.wled_rgb_light_segment_1_reverse": "WLED RGB Light Segment 1 reverse",
+                "switch.wled_rgb_light_sync_receive": "WLED RGB Light Sync receive",
+                "switch.wled_rgb_light_sync_send": "WLED RGB Light Sync send",
+            },
+        ),
+    ],
+)
+async def test_keep_main_light_entity_names(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    opt_keep_main_light: bool,
+    expected_entities: dict[str, str],
+) -> None:
+    """Test entity friendly names with and without the keep_main_light option."""
+    actual_entities = {
+        state.entity_id: state.attributes.get("friendly_name")
+        for state in hass.states.async_all("switch")
+    }
+    assert actual_entities == expected_entities

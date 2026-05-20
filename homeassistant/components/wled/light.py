@@ -71,6 +71,9 @@ class WLEDMainLight(WLEDEntity, LightEntity):
         self.group = IntegrationSpecificGroup(self, [])
         self._update_group_member()
 
+        if coordinator.keep_main_light:
+            self._attr_name = None
+
     def _update_group_member(self) -> None:
         """Update group members based on current segments."""
         segment_unique_ids = [
@@ -141,9 +144,9 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         super().__init__(coordinator=coordinator)
         self._segment = segment
 
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment == 0:
+        # With keep_main_light disabled, a single-segment setup uses segment 0
+        # as the primary entity — it drops the "Segment N" qualifier.
+        if segment == 0 and not coordinator.keep_main_light:
             self._attr_name = None
         else:
             self._attr_translation_placeholders = {"segment": str(segment)}

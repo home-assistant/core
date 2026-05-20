@@ -51,7 +51,7 @@
     'state': 'off',
   })
 # ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_reverse-entry]
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_0_freeze-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -65,7 +65,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wled_rgb_light_reverse',
+    'entity_id': 'switch.wled_rgb_light_segment_0_freeze',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,35 +73,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reverse',
+    'object_id_base': 'Segment 0 freeze',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reverse',
+    'original_name': 'Segment 0 freeze',
     'platform': 'wled',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'reverse',
-    'unique_id': 'aabbccddeeff_reverse_0',
+    'translation_key': 'segment_freeze',
+    'unique_id': 'aabbccddeeff_freeze_0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_reverse-state]
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_0_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Reverse',
+      'friendly_name': 'WLED RGB Light Segment 0 freeze',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.wled_rgb_light_reverse',
+    'entity_id': 'switch.wled_rgb_light_segment_0_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-entry]
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_0_reverse-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wled_rgb_light_segment_1_reverse',
+    'entity_id': 'switch.wled_rgb_light_segment_0_reverse',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,78 +123,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Segment 1 reverse',
+    'object_id_base': 'Segment 0 reverse',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Segment 1 reverse',
+    'original_name': 'Segment 0 reverse',
     'platform': 'wled',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_reverse',
-    'unique_id': 'aabbccddeeff_reverse_1',
+    'unique_id': 'aabbccddeeff_reverse_0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-state]
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_0_reverse-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 reverse',
+      'friendly_name': 'WLED RGB Light Segment 0 reverse',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.wled_rgb_light_segment_1_reverse',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_freeze-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wled_rgb_light_freeze',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Freeze',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Freeze',
-    'platform': 'wled',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'freeze',
-    'unique_id': 'aabbccddeeff_freeze_0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_snapshots[rgb][switch.wled_rgb_light_freeze-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Freeze',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.wled_rgb_light_freeze',
+    'entity_id': 'switch.wled_rgb_light_segment_0_reverse',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -245,6 +195,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_segment_1_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_segment_1_reverse',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Segment 1 reverse',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Segment 1 reverse',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'segment_reverse',
+    'unique_id': 'aabbccddeeff_reverse_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 reverse',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_segment_1_reverse',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -405,7 +405,7 @@
     'state': 'off',
   })
 # ---
-# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_reverse-entry]
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_segment_0_freeze-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -419,7 +419,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wled_rgb_light_reverse',
+    'entity_id': 'switch.wled_rgb_light_segment_0_freeze',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -427,35 +427,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reverse',
+    'object_id_base': 'Segment 0 freeze',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reverse',
+    'original_name': 'Segment 0 freeze',
     'platform': 'wled',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'reverse',
-    'unique_id': 'aabbccddeeff_reverse_0',
+    'translation_key': 'segment_freeze',
+    'unique_id': 'aabbccddeeff_freeze_0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_reverse-state]
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_segment_0_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Reverse',
+      'friendly_name': 'WLED RGB Light Segment 0 freeze',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.wled_rgb_light_reverse',
+    'entity_id': 'switch.wled_rgb_light_segment_0_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_freeze-entry]
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_segment_0_reverse-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -469,7 +469,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.wled_rgb_light_freeze',
+    'entity_id': 'switch.wled_rgb_light_segment_0_reverse',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -477,28 +477,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Freeze',
+    'object_id_base': 'Segment 0 reverse',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Freeze',
+    'original_name': 'Segment 0 reverse',
     'platform': 'wled',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'freeze',
-    'unique_id': 'aabbccddeeff_freeze_0',
+    'translation_key': 'segment_reverse',
+    'unique_id': 'aabbccddeeff_reverse_0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_freeze-state]
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_segment_0_reverse-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Freeze',
+      'friendly_name': 'WLED RGB Light Segment 0 reverse',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.wled_rgb_light_freeze',
+    'entity_id': 'switch.wled_rgb_light_segment_0_reverse',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
