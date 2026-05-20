@@ -17,6 +17,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
+    CONF_FEATURE_WIREGUARD_VPN,
     CONF_OLD_DISCOVERY,
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -71,6 +72,7 @@ from tests.common import MockConfigEntry
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: True,
+                CONF_FEATURE_WIREGUARD_VPN: True,
             },
         ),
         (
@@ -86,6 +88,7 @@ from tests.common import MockConfigEntry
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: True,
+                CONF_FEATURE_WIREGUARD_VPN: True,
             },
         ),
         (
@@ -105,6 +108,7 @@ from tests.common import MockConfigEntry
                 CONF_OLD_DISCOVERY: False,
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_FEATURE_DEVICE_TRACKING: False,
+                CONF_FEATURE_WIREGUARD_VPN: True,
             },
         ),
     ],
