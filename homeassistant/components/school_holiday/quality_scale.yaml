@@ -1,0 +1,125 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling:
+    status: done
+  brands:
+    status: done
+  common-modules:
+    status: done
+  config-flow-test-coverage:
+    status: done
+  config-flow:
+    status: done
+  dependency-transparency:
+    status: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup:
+    status: done
+  entity-unique-id:
+    status: done
+  has-entity-name:
+    status: exempt
+    comment: Entities use user-provided names from the config flow.
+  runtime-data:
+    status: done
+  test-before-configure:
+    status: done
+  test-before-setup:
+    status: done
+  unique-config-entry:
+    status: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading:
+    status: done
+  docs-configuration-parameters:
+    status: done
+  docs-installation-parameters:
+    status: done
+  entity-unavailable:
+    status: done
+  integration-owner:
+    status: done
+  log-when-unavailable:
+    status: exempt
+    comment: Handled by coordinator's last_update_success tracking.
+  parallel-updates:
+    status: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not require authentication.
+  test-coverage:
+    status: done
+
+  # Gold
+  devices:
+    status: done
+  diagnostics:
+    status: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: Integration does not support discovery.
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: Device count is static per config entry.
+  entity-category:
+    status: todo
+  entity-device-class:
+    status: todo
+  entity-disabled-by-default:
+    status: todo
+  entity-translations:
+    status: exempt
+    comment: Entity names are user-configured in the config flow.
+  exception-translations:
+    status: todo
+  icon-translations:
+    status: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: No user-configurable parameters after setup.
+  repair-issues:
+    status: exempt
+    comment: No user-actionable repair scenarios.
+  stale-devices:
+    status: exempt
+    comment: Devices tied to config entry lifecycle.
+
+  # Platinum
+  async-dependency:
+    status: todo
+  inject-websession:
+    status: todo
+  strict-typing:
+    status: todo

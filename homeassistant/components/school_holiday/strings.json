@@ -1,0 +1,68 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured."
+    },
+    "error": {
+      "invalid": "Invalid value selected.",
+      "required": "This field is required."
+    },
+    "step": {
+      "calendar": {
+        "data": {
+          "calendar_name": "Calendar name"
+        },
+        "data_description": {
+          "calendar_name": "The name for this calendar."
+        },
+        "description": "Choose a name for your new calendar."
+      },
+      "region": {
+        "data": {
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "The specific region within the selected country."
+        },
+        "description": "Select a region."
+      },
+      "user": {
+        "data": {
+          "country": "Country",
+          "sensor_name": "Sensor name"
+        },
+        "data_description": {
+          "country": "The country for which to show school holidays.",
+          "sensor_name": "The name for this binary sensor."
+        },
+        "description": "Choose a name for your new binary sensor and select a country."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "school_holiday_sensor": {
+        "name": "School Holiday Sensor"
+      }
+    },
+    "calendar": {
+      "school_holiday_calendar": {
+        "name": "School Holiday Calendar"
+      }
+    }
+  },
+  "selector": {
+    "country": {
+      "options": {
+        "nl": "The Netherlands"
+      }
+    },
+    "region_nl": {
+      "options": {
+        "midden": "Central",
+        "noord": "North",
+        "zuid": "South"
+      }
+    }
+  }
+}
