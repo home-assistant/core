@@ -384,6 +384,47 @@ async def test_get_image_http(
     assert isinstance(content, bytes)
 
 
+@pytest.mark.parametrize(
+    "invalid_thumb",
+    [
+        "data:image/webp;base64,0",
+        "data invalid",
+        "data:video/mpg;base64,AAAA",
+    ],
+)
+async def test_get_image_http_stale_url_after_thumb_invalidated(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client_no_auth: ClientSessionGenerator,
+    invalid_thumb: str,
+) -> None:
+    """Test image proxy with a stale URL after the thumb becomes invalid."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    entity_picture = state.attributes["entity_picture"]
+
+    monkeypatch.setitem(
+        mock_rpc_device.status["media"]["playback"]["media_meta"],
+        "thumb",
+        invalid_thumb,
+    )
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert "entity_picture" not in state.attributes
+
+    client = await hass_client_no_auth()
+    resp = await client.get(entity_picture)
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 async def test_entity_picture_absent_base64_data_invalid(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
