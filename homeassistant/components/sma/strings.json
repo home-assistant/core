@@ -69,10 +69,10 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Could not connect to SMA device"
+      "message": "Could not connect to SMA device - {error}"
     },
     "invalid_auth": {
-      "message": "Invalid authentication for SMA device"
+      "message": "Invalid authentication for SMA device - {error}"
     }
   },
   "selector": {
