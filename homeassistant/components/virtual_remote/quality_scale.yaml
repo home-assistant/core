@@ -125,9 +125,10 @@ rules:
       Consider repair issues for virtual remotes whose linked infrared entity is
       removed or no longer exists.
   stale-devices:
-    status: todo
+    status: done
     comment: |
-      Add device cleanup for removed virtual remote definitions if needed.
+      The remote platform removes entity and device registry entries for
+      virtual remotes which are no longer present in the config entry options.
 
   # Platinum
   async-dependency:
