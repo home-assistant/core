@@ -19,7 +19,30 @@ tools:
 safe-outputs:
   add-comment:
     max: 1
-    target: "${{ env.PR_NUMBER }}"
+    target: "${{ needs.extract_pr_number.outputs.pr_number }}"
+  needs:
+    - extract_pr_number
+jobs:
+  extract_pr_number:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      pr_number: ${{ steps.extract.outputs.pr_number }}
+    steps:
+      - name: Download deterministic-results artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: check-requirements-deterministic
+          path: /tmp/deterministic
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract PR number from artifact
+        id: extract
+        run: |
+          PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
+          echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
@@ -32,11 +55,6 @@ steps:
       path: /tmp/gh-aw/deterministic
       run-id: ${{ github.event.workflow_run.id }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
-  - name: Extract PR number from artifact
-    if: github.event.workflow_run.conclusion == 'success'
-    run: |
-      PR=$(python3 -c 'import json,sys;print(json.load(open("/tmp/gh-aw/deterministic/results.json"))["pr_number"])')
-      echo "PR_NUMBER=${PR}" >> "${GITHUB_ENV}"
 post-steps:
   - name: Verify agent produced an add_comment safe-output
     if: always() && github.event.workflow_run.conclusion == 'success'
@@ -80,10 +98,11 @@ The deterministic stage uploaded its results to the runner at
 The JSON has this shape:
 
 - `pr_number` — the PR being checked. The `add_comment` safe-output is
-  already targeted at this PR (the workflow extracted `pr_number` from
-  the artifact and wired it into the safe-output config), so **you do
-  not need to set `item_number` yourself** — just emit `add_comment`
-  with the rendered body.
+  already targeted at this PR (a pre-job extracts `pr_number` from the
+  artifact and the workflow wires it into the safe-output config via
+  `needs.extract_pr_number.outputs.pr_number`), so **you do not need to
+  set `item_number` yourself** — just emit `add_comment` with the
+  rendered body.
 - `needs_agent` — `true` iff any package's check needs resolution.
 - `packages[]` — one entry per changed package. Each entry has:
   - `name`, `old_version` (`null` for a newly added package; otherwise the
