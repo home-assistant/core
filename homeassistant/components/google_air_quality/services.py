@@ -86,7 +86,14 @@ async def _async_get_forecast(call: ServiceCall) -> ServiceResponse:
             translation_key="unable_to_fetch",
         ) from err
 
-    return cast(ServiceResponse, {ATTR_FORECAST: forecast.to_dict()})
+    return cast(
+        ServiceResponse,
+        {
+            "forecast_time": forecast.hourly_forecasts[0].date_time,
+            "indexes": forecast.hourly_forecasts[0].indexes,
+            "pollutants": forecast.hourly_forecasts[0].pollutants,
+        },
+    )
 
 
 @callback

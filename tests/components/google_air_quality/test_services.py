@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_air_quality.const import DOMAIN
 from homeassistant.components.google_air_quality.services import (
-    ATTR_FORECAST,
     ATTR_HOURS,
     SERVICE_GET_FORECAST,
 )
@@ -54,14 +53,7 @@ async def test_get_forecast_service(
     mock_api.async_get_forecast.assert_awaited_once_with(
         10.1, 20.1, timedelta(hours=12)
     )
-    assert {
-        "request": {
-            "latitude": mock_api.async_get_forecast.await_args.args[0],
-            "longitude": mock_api.async_get_forecast.await_args.args[1],
-            "forecast_timedelta": str(mock_api.async_get_forecast.await_args.args[2]),
-        },
-        "response": response[ATTR_FORECAST],
-    } == snapshot
+    assert response == snapshot
 
 
 async def test_get_forecast_service_unknown_subentry(
