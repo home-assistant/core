@@ -561,7 +561,7 @@ autoskope_client==1.4.1
 av==16.0.1
 
 # homeassistant.components.avea
-avea==1.6.1
+avea==1.8.0
 
 # homeassistant.components.axis
 axis==71
@@ -1684,7 +1684,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==7.0.0
+py-opendisplay==5.9.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
