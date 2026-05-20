@@ -211,10 +211,10 @@ def mock_vpn_session_autouse() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_avm_wrapper_qr() -> Generator[None]:
+def mock_avm_wrapper_qr() -> Generator[MagicMock]:
     """Automatically mock get_wifi_qr_code for all fritz tests."""
     with patch(
         "homeassistant.components.fritz.image.FritzGuestWifiQRImage._fetch_image",
         return_value=b"mock_qr_image_data",
-    ):
-        yield
+    ) as mock:
+        yield mock

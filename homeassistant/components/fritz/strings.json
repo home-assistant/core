@@ -230,14 +230,14 @@
       "init": {
         "data": {
           "consider_home": "Seconds to consider a device at 'home'",
-          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
-          "feature_wireguard_vpn": "[%key:component::fritz::common::data_feature_wireguard_vpn%]",
+          "feature_device_tracking": "Enable network device tracking",
+          "feature_wireguard_vpn": "Enable WireGuard VPN",
           "old_discovery": "Enable old discovery method"
         },
         "data_description": {
           "consider_home": "Time in seconds to consider a device at home. Default is 180 seconds.",
-          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
-          "feature_wireguard_vpn": "[%key:component::fritz::common::data_description_feature_wireguard_vpn%]",
+          "feature_device_tracking": "Enable or disable the network device tracking feature.",
+          "feature_wireguard_vpn": "Enable or disable WireGuard VPN switches for connections configured on the FRITZ!Box.",
           "old_discovery": "Enable old discovery method. This is needed for some scenarios."
         }
       }

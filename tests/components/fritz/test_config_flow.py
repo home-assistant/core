@@ -767,7 +767,9 @@ async def test_ssdp_exception(hass: HomeAssistant) -> None:
         assert result["step_id"] == "confirm"
 
 
-async def test_options_flow(hass: HomeAssistant, fc_class_mock) -> None:
+async def test_options_flow(
+    hass: HomeAssistant, fc_class_mock, fh_class_mock, fs_class_mock
+) -> None:
     """Test options flow."""
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
