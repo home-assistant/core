@@ -145,17 +145,15 @@ async def test_lan_info_duco_error_marks_unavailable(
 @pytest.mark.parametrize(
     ("node_id", "expected_entity_id", "expected_state"),
     [
-        pytest.param(
+        (
             200,
             "sensor.new_rh_sensor_humidity",
             "55.0",
-            id="humidity-node",
         ),
-        pytest.param(
+        (
             201,
             "sensor.new_valve_carbon_dioxide",
             "575",
-            id="vlv-co2-node",
         ),
     ],
 )
