@@ -19,6 +19,8 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 type InComfortConfigEntry = ConfigEntry[InComfortDataCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,11 +80,23 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
             for heater in self.incomfort_data.heaters:
                 await heater.update()
         except TimeoutError as exc:
-            raise UpdateFailed("Timeout error") from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from exc
         except ClientResponseError as exc:
             if exc.status == 401:
-                raise ConfigEntryError("Incorrect credentials") from exc
-            raise UpdateFailed(exc.message) from exc
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN, translation_key="incorrect_credentials"
+                ) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_with_error_message",
+                translation_placeholders={"error": exc.message},
+            ) from exc
         except InvalidHeaterList as exc:
-            raise UpdateFailed(exc.message) from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_with_error_message",
+                translation_placeholders={"error": exc.message},
+            ) from exc
         return self.incomfort_data
