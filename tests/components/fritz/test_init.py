@@ -115,6 +115,8 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state.recoverable is True
+    assert entry.error_reason_translation_key == "error_connecting"
 
 
 async def test_setup_fail_parse_error(hass: HomeAssistant, fc_class_mock) -> None:
