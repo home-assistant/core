@@ -19,7 +19,7 @@ publish:
           selector:
             boolean:
         qos:
-          default: 0
+          default: "0"
           selector:
             select:
               options:
