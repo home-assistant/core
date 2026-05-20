@@ -52,16 +52,23 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     return f"{base_name}.tar", f"{base_name}.metadata.json"
 
 
+# Other tools may write unrelated files ending in `.metadata.json` into the
+# bucket; such files must be skipped rather than crashing the backup listing.
+REQUIRED_METADATA_KEYS = {"metadata_version", "backup_id", "backup_metadata"}
+
+
 def _parse_metadata(raw_content: str) -> dict[str, Any]:
-    """Parse metadata content from JSON."""
+    """Parse metadata content from JSON and validate its schema."""
     try:
         data = json.loads(raw_content)
     except json.JSONDecodeError as err:
         raise ValueError(f"Invalid JSON format: {err}") from err
-    else:
-        if not isinstance(data, dict):
-            raise TypeError("JSON content is not a dictionary")
-        return data
+    if not isinstance(data, dict):
+        raise TypeError("JSON content is not a dictionary")
+    missing = REQUIRED_METADATA_KEYS - data.keys()
+    if missing:
+        raise ValueError(f"Missing required metadata keys: {sorted(missing)}")
+    return data
 
 
 def _find_backup_file_for_metadata(
@@ -543,7 +550,13 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_content = _parse_metadata(
                 download_response.content.decode("utf-8")
             )
-        except ValueError:
+        except (TypeError, ValueError) as err:
+            _LOGGER.warning(
+                "Skipping metadata file %s: not a valid Backblaze B2 backup "
+                "metadata file (%s)",
+                file_name,
+                err,
+            )
             return None, None
 
         if metadata_content["backup_id"] != target_backup_id:
@@ -617,7 +630,13 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_content = _parse_metadata(
                 download_response.content.decode("utf-8")
             )
-        except ValueError:
+        except (TypeError, ValueError) as err:
+            _LOGGER.warning(
+                "Skipping metadata file %s: not a valid Backblaze B2 backup "
+                "metadata file (%s)",
+                file_name,
+                err,
+            )
             return None
 
         found_backup_file = _find_backup_file_for_metadata(

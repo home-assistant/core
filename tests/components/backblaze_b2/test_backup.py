@@ -246,13 +246,93 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
 
 
-async def test_parse_metadata_invalid_json() -> None:
-    """Test metadata parsing."""
-    with pytest.raises(ValueError, match="Invalid JSON format"):
-        _parse_metadata("invalid json")
+@pytest.mark.parametrize(
+    ("raw_content", "exception", "match"),
+    [
+        pytest.param(
+            "invalid json", ValueError, "Invalid JSON format", id="invalid_json"
+        ),
+        pytest.param(
+            '["not", "a", "dict"]',
+            TypeError,
+            "JSON content is not a dictionary",
+            id="not_a_dict",
+        ),
+        pytest.param(
+            '{"backup_id": "abc", "backup_metadata": {}}',
+            ValueError,
+            "Missing required metadata keys: \\['metadata_version'\\]",
+            id="missing_metadata_version",
+        ),
+        pytest.param(
+            '{"metadata_version": "1", "backup_metadata": {}}',
+            ValueError,
+            "Missing required metadata keys: \\['backup_id'\\]",
+            id="missing_backup_id",
+        ),
+        pytest.param(
+            '{"metadata_version": "1", "backup_id": "abc"}',
+            ValueError,
+            "Missing required metadata keys: \\['backup_metadata'\\]",
+            id="missing_backup_metadata",
+        ),
+        pytest.param(
+            "{}",
+            ValueError,
+            "Missing required metadata keys: "
+            "\\['backup_id', 'backup_metadata', 'metadata_version'\\]",
+            id="empty_dict",
+        ),
+    ],
+)
+async def test_parse_metadata_invalid(
+    raw_content: str, exception: type[Exception], match: str
+) -> None:
+    """Test metadata parsing rejects malformed or foreign metadata files."""
+    with pytest.raises(exception, match=match):
+        _parse_metadata(raw_content)
 
-    with pytest.raises(TypeError, match="JSON content is not a dictionary"):
-        _parse_metadata('["not", "a", "dict"]')
+
+async def test_agents_list_skips_foreign_metadata_files(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_backup_files: tuple[Mock, Mock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Foreign .metadata.json files in the bucket are skipped, not crash listing."""
+    mock_main, mock_metadata = mock_backup_files
+
+    # An unrelated `.metadata.json` from another tool: valid JSON object, but
+    # missing the keys this integration expects. Previously this crashed
+    # async_list_backups with KeyError, hiding all backups from the user.
+    foreign_metadata = Mock()
+    foreign_metadata.file_name = "testprefix/foreign.metadata.json"
+    foreign_download = Mock()
+    foreign_response = Mock()
+    foreign_response.content = json.dumps({"unrelated": "payload"}).encode()
+    foreign_download.response = foreign_response
+    foreign_metadata.download = Mock(return_value=foreign_download)
+
+    def mock_ls(_self, _prefix=""):
+        return iter(
+            [(mock_main, None), (mock_metadata, None), (foreign_metadata, None)]
+        )
+
+    client = await hass_ws_client(hass)
+    with (
+        patch.object(BucketSimulator, "ls", mock_ls),
+        caplog.at_level(logging.WARNING),
+    ):
+        await client.send_json_auto_id({"type": "backup/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    backups = response["result"]["backups"]
+    assert len(backups) == 1
+    assert backups[0]["backup_id"] == TEST_BACKUP.backup_id
+    assert "Skipping metadata file testprefix/foreign.metadata.json" in caplog.text
 
 
 async def test_error_during_list_backups(
