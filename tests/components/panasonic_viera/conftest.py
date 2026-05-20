@@ -48,6 +48,13 @@ MOCK_DEVICE_INFO = {
     ATTR_UDN: "mock-unique-id",
 }
 
+MOCK_TURN_ON_ACTION = [
+    {
+        "action": "wake_on_lan.send_magic_packet",
+        "data": {"mac": "AA:BB:CC:DD:EE:FF"},
+    }
+]
+
 
 def get_mock_remote(
     request_error=None,
