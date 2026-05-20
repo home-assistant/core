@@ -41,8 +41,6 @@ def _vpn_device_info(
     )
 
 
-
-
 class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
     """Switch entity for a WireGuard VPN connection."""
 
@@ -69,7 +67,10 @@ class FritzVpnSwitch(CoordinatorEntity[FritzVpnCoordinator], SwitchEntity):
         """Return True when the VPN connection is present in coordinator data."""
         if not self.coordinator.last_update_success:
             return False
-        return self.coordinator.data and self._connection_uid in self.coordinator.data
+        return (
+            self.coordinator.data is not None
+            and self._connection_uid in self.coordinator.data
+        )
 
     @property
     def is_on(self) -> bool:
