@@ -4,10 +4,11 @@ from infrared_protocols.codes.marantz import models as marantz_models
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
+from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from . import MarantzIrConfigEntry
-from .const import CONF_MODEL, DOMAIN, MODELS
+from .const import DOMAIN, MODELS
 
 
 class MarantzIrEntity(InfraredEmitterConsumerEntity):

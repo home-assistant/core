@@ -128,7 +128,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"backoff"}},
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -234,7 +233,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
-    "wled": {"wled": {"backoff"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
@@ -309,8 +307,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
     "linode": {"homeassistant": {"linode-api"}},
-    # https://github.com/timmo001/aiolyric
-    "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {
         "homeassistant": {"microbeespy"},
