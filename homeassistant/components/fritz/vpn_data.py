@@ -63,6 +63,17 @@ async def async_setup_vpn(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if vpn_auth_failed(err):
             hass.async_create_task(_reauth_after_setup(hass, entry.entry_id))
         return
+    except AttributeError as err:
+        # Some underlying client/session issues can surface as AttributeError
+        # (for example from an unusable socket resolver).
+        # This must not block the core `fritz` integration from setting up.
+        _LOGGER.warning(
+            "WireGuard VPN setup failed for %s (integration continues): %s",
+            entry.data.get(CONF_HOST, entry.title),
+            err,
+        )
+        await coordinator.async_close()
+        return
 
     hass.data.setdefault(FRITZ_VPN_DATA_KEY, {})[entry.entry_id] = FritzVpnEntryData(
         coordinator=coordinator
