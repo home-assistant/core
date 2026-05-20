@@ -110,7 +110,7 @@ class ProximityData:
     """Data published by the coordinator to sensor entities."""
 
     proximity: dict[str, str | int | float | None]
-    entities: dict[str, dict[str, str | int | float | None]]
+    entities: dict[str, dict[str, str | int | float | bool | None]]
 
 
 DEFAULT_PROXIMITY_DATA: dict[str, str | int | float | None] = {
@@ -207,15 +207,18 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
 
         # Find the shortest decay interval in all tracked entities
+        now = dt_util.utcnow()
         stale_threshold_s: float = STALE_THRESHOLD_S_MAX
         for mov in self._movement.values():
             if len(mov.samples) > 1:
                 latest = mov.samples[-1].timestamp
+                offset = max((now - latest).total_seconds(), 0)
                 # Allow for some jitter beyond the threshold.
                 stale_threshold_s = min(
                     1.1
                     * (latest - mov.samples[0].timestamp).total_seconds()
-                    / (len(mov.samples) - 1),
+                    / (len(mov.samples) - 1)
+                    - offset,
                     stale_threshold_s,
                 )
         stale_threshold_s = max(stale_threshold_s, STALE_THRESHOLD_S_MIN)
@@ -529,7 +532,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         zone_radius: float = zone_state.attributes["radius"]
 
         # Build a fresh dict - never mutate self.data in place.
-        entities_data: dict[str, dict[str, str | int | float | None]] = {}
+        entities_data: dict[str, dict[str, str | int | float | bool | None]] = {}
 
         for entity_id in self.tracked_entities:
             if (tracked_entity_state := self.hass.states.get(entity_id)) is None:

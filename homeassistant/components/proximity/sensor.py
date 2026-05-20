@@ -198,7 +198,7 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
-    def data(self) -> dict[str, str | int | float | None]:
+    def data(self) -> dict[str, str | int | float | bool | None]:
         """Get data from coordinator."""
         return self.coordinator.data.entities[self.tracked_entity_id]
 
@@ -211,6 +211,6 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
-    def native_value(self) -> str | float | None:
+    def native_value(self) -> str | int | float | bool | None:
         """Return native sensor value."""
         return self.data.get(self.entity_description.key)
