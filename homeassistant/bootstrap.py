@@ -640,9 +640,7 @@ async def async_enable_logging(
 
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if _is_log_file_disabled() or (
-            "SUPERVISOR" in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ
-        ):
+        if _is_log_file_disabled():
             # Rename the default log file if it exists, since previous versions created
             # it before Supervisor disabled duplicate file logging or
             # HA_DISABLE_LOG_FILE disabled the managed log file.
@@ -670,6 +668,7 @@ async def async_enable_logging(
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
     else:
+        # Avoid exposing a stale API error-log path when this run has no managed log file.
         hass.data.pop(DATA_LOGGING, None)
 
     async_activate_log_queue_handler(hass)
@@ -677,6 +676,9 @@ async def async_enable_logging(
 
 def _is_log_file_disabled() -> bool:
     """Return whether the managed log file is disabled."""
+    if "SUPERVISOR" in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
+        return True
+
     disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
     return disable_log_file is not None and cv.boolean(disable_log_file)
 

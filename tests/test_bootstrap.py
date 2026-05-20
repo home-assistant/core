@@ -131,16 +131,40 @@ async def test_async_enable_logging(
 
 
 @pytest.mark.parametrize(
-    ("disable_value", "log_file_count", "old_log_file_count"),
-    [("1", 0, 1), ("0", 1, 0)],
+    ("env", "log_file_count", "old_log_file_count", "data_logging"),
+    [
+        pytest.param({"SUPERVISOR": "1"}, 0, 1, None, id="supervisor"),
+        pytest.param(
+            {"SUPERVISOR": "1", "HA_DUPLICATE_LOG_FILE": "1"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            id="supervisor-duplicate-log-file",
+        ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "1"},
+            0,
+            1,
+            None,
+            id="disable-log-file",
+        ),
+        pytest.param(
+            {"HA_DISABLE_LOG_FILE": "0"},
+            1,
+            0,
+            CONFIG_LOG_FILE,
+            id="disable-log-file-false",
+        ),
+    ],
 )
-async def test_async_enable_logging_disable_log_file(
+async def test_async_enable_logging_supervisor(
     hass: HomeAssistant,
-    disable_value: str,
+    env: dict[str, str],
     log_file_count: int,
     old_log_file_count: int,
+    data_logging: str | None,
 ) -> None:
-    """Test to ensure the managed log file can be disabled."""
+    """Test to ensure the default managed log file can be disabled."""
 
     # Ensure we start with a clean slate
     cleanup_log_files()
@@ -148,9 +172,7 @@ async def test_async_enable_logging_disable_log_file(
     assert len(glob.glob(ARG_LOG_FILE)) == 0
 
     with (
-        patch.dict(
-            os.environ, {bootstrap.ENV_DISABLE_LOG_FILE: disable_value}, clear=True
-        ),
+        patch.dict(os.environ, env, clear=True),
         patch(
             "homeassistant.bootstrap.async_activate_log_queue_handler"
         ) as mock_async_activate_log_queue_handler,
@@ -159,15 +181,12 @@ async def test_async_enable_logging_disable_log_file(
         hass.data[bootstrap.DATA_LOGGING] = "old.log"
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
-        if log_file_count:
-            assert hass.data[bootstrap.DATA_LOGGING] == CONFIG_LOG_FILE
-        else:
-            assert bootstrap.DATA_LOGGING not in hass.data
+        assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
         # Check that if the log file exists, it is renamed
-        def write_log_file():
+        def write_log_file() -> None:
             with open(
                 get_test_config_dir("home-assistant.log"), "w", encoding="utf8"
             ) as f:
@@ -180,6 +199,7 @@ async def test_async_enable_logging_disable_log_file(
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == old_log_file_count
+        assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -189,66 +209,7 @@ async def test_async_enable_logging_disable_log_file(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        # The log file should be created if it is explicitly specified
-        assert len(glob.glob(ARG_LOG_FILE)) > 0
-
-    cleanup_log_files()
-
-
-@pytest.mark.parametrize(
-    ("extra_env", "log_file_count", "old_log_file_count"),
-    [({}, 0, 1), ({bootstrap.ENV_DUPLICATE_LOG_FILE: "1"}, 1, 0)],
-)
-async def test_async_enable_logging_supervisor(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    extra_env: dict[str, str],
-    log_file_count: int,
-    old_log_file_count: int,
-) -> None:
-    """Test to ensure the default log file is not created on Supervisor installations."""
-
-    # Ensure we start with a clean slate
-    cleanup_log_files()
-    assert len(glob.glob(CONFIG_LOG_FILE)) == 0
-    assert len(glob.glob(ARG_LOG_FILE)) == 0
-
-    with (
-        patch.dict(os.environ, {"SUPERVISOR": "1", **extra_env}),
-        patch(
-            "homeassistant.bootstrap.async_activate_log_queue_handler"
-        ) as mock_async_activate_log_queue_handler,
-        patch("logging.getLogger"),
-    ):
-        await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
-        mock_async_activate_log_queue_handler.assert_called_once()
-        mock_async_activate_log_queue_handler.reset_mock()
-
-        # Check that if the log file exists, it is renamed
-        def write_log_file():
-            with open(
-                get_test_config_dir("home-assistant.log"), "w", encoding="utf8"
-            ) as f:
-                f.write("test")
-
-        await hass.async_add_executor_job(write_log_file)
-        assert len(glob.glob(CONFIG_LOG_FILE)) == 1
-        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 0
-
-        await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
-        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == old_log_file_count
-        mock_async_activate_log_queue_handler.assert_called_once()
-        mock_async_activate_log_queue_handler.reset_mock()
-
-        await bootstrap.async_enable_logging(
-            hass,
-            log_rotate_days=5,
-            log_file="test.log",
-        )
-        mock_async_activate_log_queue_handler.assert_called_once()
-        # Even on Supervisor, the log file should be created if it is explicitly specified
+        # The log file should be created if it is explicitly specified.
         assert len(glob.glob(ARG_LOG_FILE)) > 0
 
     cleanup_log_files()
