@@ -156,6 +156,7 @@ async def async_publish(
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
@@ -280,6 +281,7 @@ def async_subscribe_internal(
     try:
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
@@ -287,6 +289,7 @@ def async_subscribe_internal(
         ) from exc
     client = mqtt_data.client
     if not mqtt_config_entry_enabled(hass):
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_enabled_cannot_subscribe",
             translation_domain=DOMAIN,
