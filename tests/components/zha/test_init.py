@@ -21,6 +21,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_update_in_progress,
 )
 from homeassistant.components.usb import USBDevice
+from homeassistant.components.zha.config_flow import ZhaConfigFlowHandler
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -179,6 +180,39 @@ async def test_migration_v5_explicit_socket_port(
     assert config_entry.version == 5
     assert config_entry.minor_version == 2
     assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == new_path
+
+
+@pytest.mark.parametrize(
+    ("version_delta", "minor_delta", "expected_state"),
+    [
+        pytest.param(0, 1, ConfigEntryState.LOADED, id="minor_allowed"),
+        pytest.param(1, 0, ConfigEntryState.MIGRATION_ERROR, id="major_blocked"),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_version_downgrade_guard(
+    version_delta: int,
+    minor_delta: int,
+    expected_state: ConfigEntryState,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the config version downgrade guard."""
+    future_version = ZhaConfigFlowHandler.VERSION + version_delta
+    future_minor_version = ZhaConfigFlowHandler.MINOR_VERSION + minor_delta
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        version=future_version,
+        minor_version=future_minor_version,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert config_entry.version == future_version
+    assert config_entry.minor_version == future_minor_version
 
 
 @pytest.mark.parametrize(
