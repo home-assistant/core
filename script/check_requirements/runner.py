@@ -70,7 +70,7 @@ def _resolve_vulnerabilities(pkg: PackageChange, pypi_info: PypiPackageInfo) -> 
             entries.append(f"{label} (fixed in: {fixed})")
     pkg.checks[CheckKind.VULNERABILITIES] = CheckResult(
         CheckStatus.FAIL,
-        f"PyPI reports {len(vulns)} active advisory/-ies for version "
+        f"PyPI reports {len(vulns)} active advisories for version "
         f"{pkg.new_version}: " + "; ".join(entries) + ".",
     )
 

@@ -186,7 +186,8 @@ def _parse_vulnerabilities(raw: Any) -> list[Vulnerability]:
         if not isinstance(entry, dict):
             continue
         if entry.get("withdrawn"):
-            # Withdrawn means the advisory was removed by the maintainer and should not be treated as valid.
+            # Withdrawn means the advisory was removed by the maintainer
+            # and should not be treated as valid.
             continue
         vid = _safe(entry.get("id"))
         if not vid:
