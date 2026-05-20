@@ -128,6 +128,7 @@
         "standard-aifc",
         "standard-telnetlib",
         "ulid-transform",
+        "unidiff",
         "url-normalize",
         "xmltodict"
       ],
