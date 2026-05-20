@@ -494,7 +494,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         if abs(cos_theta) <= DOT_THRESHOLD_COS:
             # Movement is perpendicular to the zone vector (e.g. orbiting).
-            return last_valid_direction
+            return (
+                last_valid_direction
+                if last_valid_direction in ("towards", "away_from")
+                else None
+            )
 
         return "towards" if cos_theta > 0 else "away_from"
 
