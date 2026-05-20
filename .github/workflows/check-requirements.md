@@ -41,7 +41,7 @@ jobs:
       - name: Extract PR number from artifact
         id: extract
         run: |
-          PR=$(python3 -c 'import json;print(json.load(open("/tmp/deterministic/results.json"))["pr_number"])')
+          PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
           echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
