@@ -3,22 +3,18 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
-from iaqualink.systems.iaqua.device import (
-    IaquaAuxSwitch,
-    IaquaBinarySensor,
-    IaquaLightSwitch,
-    IaquaSensor,
-    IaquaThermostat,
-)
+from iaqualink.systems.iaqua.device import IaquaLightSwitch
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
 
+from homeassistant.components import iaqualink
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.iaqualink.const import UPDATE_INTERVAL_BY_SYSTEM_TYPE
@@ -36,10 +32,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import get_aqualink_device, get_aqualink_system
+from .conftest import get_aqualink_device, get_aqualink_system, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -55,37 +52,23 @@ async def _advance_coordinator_time(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
 async def test_system_refresh_failure_marks_entities_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     client: AqualinkClient,
     freezer: FrozenDateTimeFactory,
+    raised_exception: Exception | type[Exception],
 ) -> None:
     """Test a system refresh failure marks attached entities unavailable."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    system.update = AsyncMock()
-    systems = {system.serial: system}
-    light = get_aqualink_device(
-        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
-    )
-    devices = {light.name: light}
-    system.get_devices = AsyncMock(return_value=devices)
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    devices = await setup_integration(hass, config_entry, client)
 
     entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
     assert len(entity_ids) == 1
@@ -96,10 +79,10 @@ async def test_system_refresh_failure_marks_entities_unavailable(
     assert state.state == STATE_ON
 
     async def fail_update() -> None:
-        system.online = None
-        raise AqualinkServiceException
+        devices.system.online = None
+        raise raised_exception
 
-    system.update = AsyncMock(side_effect=fail_update)
+    devices.system.update = AsyncMock(side_effect=fail_update)
 
     await _advance_coordinator_time(hass, freezer)
 
@@ -165,39 +148,16 @@ async def test_light_service_calls_update_entity_state(
     client: AqualinkClient,
 ) -> None:
     """Test light service calls update entity state from device properties."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    system.update = AsyncMock()
-    systems = {system.serial: system}
-    light = get_aqualink_device(
-        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
-    )
-    devices = {light.name: light}
-    system.get_devices = AsyncMock(return_value=devices)
+    devices = await setup_integration(hass, config_entry, client)
 
     async def turn_off() -> None:
-        light.data["state"] = "0"
+        devices.light.data["state"] = "0"
 
     async def turn_on() -> None:
-        light.data["state"] = "1"
+        devices.light.data["state"] = "1"
 
-    light.turn_off = AsyncMock(side_effect=turn_off)
-    light.turn_on = AsyncMock(side_effect=turn_on)
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    devices.light.turn_off = AsyncMock(side_effect=turn_off)
+    devices.light.turn_on = AsyncMock(side_effect=turn_on)
 
     entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
     assert len(entity_ids) == 1
@@ -228,15 +188,25 @@ async def test_light_service_calls_update_entity_state(
     assert state.state == STATE_ON
 
 
-async def test_setup_login_exception(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
+async def test_setup_login_retry_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    raised_exception: Exception | type[Exception],
 ) -> None:
-    """Test setup encountering a login exception."""
+    """Test setup retries on connection-related login exceptions."""
     config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
+        side_effect=raised_exception,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -264,24 +234,18 @@ async def test_setup_login_unauthorized(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
-async def test_setup_login_timeout(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test setup encountering a timeout while logging in."""
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.iaqualink.AqualinkClient.login",
-        side_effect=TimeoutError,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
 async def test_setup_systems_exception(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    raised_exception: Exception | type[Exception],
 ) -> None:
     """Test setup encountering an exception while retrieving systems."""
     config_entry.add_to_hass(hass)
@@ -293,13 +257,35 @@ async def test_setup_systems_exception(
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            side_effect=AqualinkServiceException,
+            side_effect=raised_exception,
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_systems_exception_message_uses_fallback_detail(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retry message includes detail for empty exception strings."""
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            side_effect=TimeoutError(),
+        ),
+        pytest.raises(
+            ConfigEntryNotReady,
+            match="Error while attempting to retrieve systems list: TimeoutError",
+        ),
+    ):
+        await iaqualink.async_setup_entry(hass, config_entry)
 
 
 async def test_setup_systems_unauthorized(
@@ -385,15 +371,25 @@ async def test_setup_no_systems_recognized(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
 async def test_setup_devices_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     client: AqualinkClient,
+    raised_exception: Exception | type[Exception],
 ) -> None:
     """Test setup encountering an exception while retrieving devices."""
     config_entry.add_to_hass(hass)
 
     system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
     system.update = AsyncMock()
     systems = {system.serial: system}
 
@@ -411,11 +407,82 @@ async def test_setup_devices_exception(
             "get_devices",
         ) as mock_get_devices,
     ):
-        mock_get_devices.side_effect = AqualinkServiceException
+        mock_get_devices.side_effect = raised_exception
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_devices_exception_message_uses_fallback_detail(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test device setup retry message includes detail for empty exception strings."""
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkDataUpdateCoordinator.async_config_entry_first_refresh",
+            new_callable=AsyncMock,
+        ),
+        patch.object(system, "get_devices", side_effect=TimeoutError()),
+        pytest.raises(
+            ConfigEntryNotReady,
+            match="Error while attempting to retrieve devices list: TimeoutError",
+        ),
+    ):
+        await iaqualink.async_setup_entry(hass, config_entry)
+
+
+async def test_setup_devices_unauthorized(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup encountering an unauthorized exception while retrieving devices."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    systems = {system.serial: system}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value=systems,
+        ),
+        patch.object(
+            system,
+            "get_devices",
+            side_effect=AqualinkServiceUnauthorizedException,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def test_setup_all_good_no_recognized_devices(
@@ -473,56 +540,7 @@ async def test_setup_all_good_all_device_types(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup ending in one device of each type recognized."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    system.update = AsyncMock()
-    systems = {system.serial: system}
-
-    devices = [
-        get_aqualink_device(
-            system, name="aux_1", cls=IaquaAuxSwitch, data={"state": "0"}
-        ),
-        get_aqualink_device(
-            system, name="freeze_protection", cls=IaquaBinarySensor, data={"state": "0"}
-        ),
-        get_aqualink_device(
-            system, name="aux_2", cls=IaquaLightSwitch, data={"state": "0"}
-        ),
-        get_aqualink_device(system, name="ph", cls=IaquaSensor, data={"state": "7.2"}),
-        get_aqualink_device(
-            system, name="pool_set_point", cls=IaquaThermostat, data={"state": "0"}
-        ),
-    ]
-    devices = {d.name: d for d in devices}
-
-    pool_heater = get_aqualink_device(
-        system, name="pool_heater", cls=IaquaAuxSwitch, data={"state": "0"}
-    )
-    pool_temp = get_aqualink_device(
-        system, name="pool_temp", cls=IaquaSensor, data={"state": "72"}
-    )
-    system.devices = {
-        **{d.name: d for d in devices.values()},
-        pool_heater.name: pool_heater,
-        pool_temp.name: pool_temp,
-    }
-
-    system.get_devices = AsyncMock(return_value=devices)
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await setup_integration(hass, config_entry, client)
 
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -557,32 +575,8 @@ async def test_multiple_updates(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all possible results of online status transition after update."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    system.update = AsyncMock()
-    systems = {system.serial: system}
-
-    light = get_aqualink_device(
-        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
-    )
-    devices = {light.name: light}
-
-    system.get_devices = AsyncMock(return_value=devices)
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    devices = await setup_integration(hass, config_entry, client)
+    system = devices.system
 
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -683,31 +677,7 @@ async def test_entity_assumed_and_available(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test assumed_state and_available properties for all values of online."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    systems = {system.serial: system}
-
-    light = get_aqualink_device(
-        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
-    )
-    devices = {light.name: light}
-    system.get_devices = AsyncMock(return_value=devices)
-    system.update = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    devices = await setup_integration(hass, config_entry, client)
 
     entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
     assert len(entity_ids) == 1
@@ -715,19 +685,19 @@ async def test_entity_assumed_and_available(
     name = entity_ids[0]
 
     # None means maybe.
-    light.system.online = None
+    devices.light.system.online = None
     await _advance_coordinator_time(hass, freezer)
     state = hass.states.get(name)
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    light.system.online = False
+    devices.light.system.online = False
     await _advance_coordinator_time(hass, freezer)
     state = hass.states.get(name)
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    light.system.online = True
+    devices.light.system.online = True
     await _advance_coordinator_time(hass, freezer)
     state = hass.states.get(name)
     assert state.state == STATE_ON
@@ -741,34 +711,11 @@ async def test_system_refresh_unauthorized_triggers_reauth(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an unauthorized refresh starts reauthentication."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(client, cls=IaquaSystem)
-    system.online = True
-    system.update = AsyncMock()
-    systems = {system.serial: system}
-
-    light = get_aqualink_device(
-        system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
-    )
-    system.get_devices = AsyncMock(return_value={light.name: light})
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value=systems,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    devices = await setup_integration(hass, config_entry, client)
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    system.update = AsyncMock(side_effect=AqualinkServiceUnauthorizedException)
+    devices.system.update = AsyncMock(side_effect=AqualinkServiceUnauthorizedException)
 
     await _advance_coordinator_time(hass, freezer)
 

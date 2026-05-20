@@ -2,10 +2,12 @@
 
 from unittest.mock import patch
 
+import httpx
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
+import pytest
 
 from homeassistant.components.iaqualink import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -107,16 +109,26 @@ async def test_with_invalid_credentials(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_service_exception(
-    hass: HomeAssistant, config_data: dict[str, str]
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
+async def test_cannot_connect_exception(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    raised_exception: Exception | type[Exception],
 ) -> None:
-    """Test config flow encountering service exception."""
+    """Test config flow encountering a connection-related exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
+        side_effect=raised_exception,
     ):
         result = await flow.async_step_user(config_data)
 
@@ -271,8 +283,18 @@ async def test_reauth_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.parametrize(
+    "raised_exception",
+    [
+        pytest.param(AqualinkServiceException, id="service"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(httpx.HTTPError("boom"), id="http"),
+    ],
+)
 async def test_reauth_cannot_connect(
-    hass: HomeAssistant, config_data: dict[str, str]
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    raised_exception: Exception | type[Exception],
 ) -> None:
     """Test reauthentication when the service cannot be reached."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
@@ -282,7 +304,7 @@ async def test_reauth_cannot_connect(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
+        side_effect=raised_exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
