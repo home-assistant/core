@@ -4,7 +4,7 @@ from dataclasses import replace
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
-from duco_connectivity import ApiInfo, BoardInfo, DucoConnectionError
+from duco_connectivity import ApiInfo, DucoConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -66,7 +66,6 @@ async def test_diagnostics_without_optional_software_version(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    mock_board_info: BoardInfo,
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test that an optional software version is omitted from diagnostics."""
@@ -85,7 +84,7 @@ async def test_diagnostics_without_optional_software_version(
     )
 
     assert diagnostics["board_info"]["public_api_version"] == str(
-        mock_board_info.public_api_version
+        mock_duco_client.async_get_board_info.return_value.public_api_version
     )
     assert "software_version" not in diagnostics["board_info"]
 
@@ -95,12 +94,11 @@ async def test_diagnostics_without_optional_api_metadata(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    mock_api_info: ApiInfo,
     mock_duco_client: AsyncMock,
 ) -> None:
     """Test diagnostics when optional API metadata is absent."""
     mock_duco_client.async_get_api_info.return_value = ApiInfo(
-        api_version=mock_api_info.api_version
+        api_version=mock_duco_client.async_get_api_info.return_value.api_version
     )
 
     diagnostics = await get_diagnostics_for_config_entry(
@@ -108,5 +106,7 @@ async def test_diagnostics_without_optional_api_metadata(
     )
 
     assert diagnostics["api_info"] == {
-        "public_api_version": str(mock_api_info.api_version)
+        "public_api_version": str(
+            mock_duco_client.async_get_api_info.return_value.api_version
+        )
     }

@@ -20,7 +20,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import TEST_HOST, TEST_MAC, USER_INPUT
+from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -39,48 +39,6 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="duco_ddeeff",
     macaddress="aabbccddeeff",
 )
-
-_UNSUPPORTED_BOARD_INFOS = [
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.0",
-        ),
-        id="version-too-low",
-    ),
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version=None,
-        ),
-        id="missing-version",
-    ),
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.1.0-beta",
-        ),
-        id="malformed-version",
-    ),
-]
 
 _SUPPORTED_BOARD_INFOS = [
     pytest.param(
@@ -574,7 +532,7 @@ async def test_dhcp_discovery_exception_recovery(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_user_flow_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -626,7 +584,7 @@ async def test_user_flow_allows_api_compatible_board_info(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_reconfigure_flow_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -679,7 +637,7 @@ async def test_zeroconf_discovery_allows_api_compatible_board_info(
     }
 
 
-@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_zeroconf_discovery_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -720,7 +678,7 @@ async def test_dhcp_discovery_allows_api_compatible_board_info(
     }
 
 
-@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_dhcp_discovery_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,

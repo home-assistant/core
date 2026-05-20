@@ -19,51 +19,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_HOST, TEST_MAC
+from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS
 
 from tests.common import MockConfigEntry
-
-_UNSUPPORTED_BOARD_INFOS = [
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.0",
-        ),
-        id="version-too-low",
-    ),
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version=None,
-        ),
-        id="missing-version",
-    ),
-    pytest.param(
-        BoardInfo(
-            box_name="SILENT_CONNECT",
-            box_sub_type_name="Eu",
-            serial_board_box="ABC123",
-            serial_board_comm="DEF456",
-            serial_duco_box="GHI789",
-            serial_duco_comm="JKL012",
-            time=1700000000,
-            public_api_version="2.1.0-beta",
-        ),
-        id="malformed-version",
-    ),
-]
 
 
 @pytest.mark.parametrize(
@@ -140,7 +98,7 @@ async def test_setup_entry_success(
     assert init_integration.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("unsupported_board_info", _UNSUPPORTED_BOARD_INFOS)
+@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
 async def test_setup_entry_unsupported_board_info(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
