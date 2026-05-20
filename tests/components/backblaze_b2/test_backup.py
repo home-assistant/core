@@ -254,7 +254,7 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
             "invalid json", ValueError, "Invalid JSON format", id="invalid_json"
         ),
         pytest.param(
-            '["not", "a", "dict"]',
+            ValueError,
             TypeError,
             "JSON content is not a dictionary",
             id="not_a_dict",
