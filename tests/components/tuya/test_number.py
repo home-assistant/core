@@ -145,6 +145,16 @@ async def test_set_value(
                 "to override"
             ),
         ),
+        (
+            "znrb_gpzittzfnzhduquz",
+            "number.inverter_pool_heat_pump_temperature",
+            "temp_set",
+            "invalid_uom",
+            (
+                "Device class temperature ignored for incompatible unit invalid_uom "
+                "in number entity tuya.zuqudhznfzttizpgbrnztemp_set"
+            ),
+        ),
     ],
 )
 async def test_invalid_uom(
