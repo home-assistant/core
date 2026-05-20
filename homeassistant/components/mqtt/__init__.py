@@ -291,6 +291,7 @@ async def async_check_config_schema(
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         message,
                         translation_domain=DOMAIN,

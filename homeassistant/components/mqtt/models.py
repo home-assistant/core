@@ -73,6 +73,7 @@ class SubscriptionID:
 
         subscription_id = self._next_id
         if subscription_id > MAX_28BIT:
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise HomeAssistantError(
                 "MQTT Subscription ID limit reached. "
                 "Cannot generate more IDs to subscribe",

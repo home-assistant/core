@@ -84,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     except NotAuthorized as err:
         data_service.auth_retries += 1
         if data_service.auth_retries > AUTH_RETRIES:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed(err) from err
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
