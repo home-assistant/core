@@ -167,16 +167,24 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.sync_media_state()
         except CannotAuthenticate as e:
+            _LOGGER.exception("Authentication failed during media state sync: %s", e)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(e)},
             ) from e
-        except (CannotConnect, Exception) as e:
+        except CannotConnect as e:
+            _LOGGER.exception("Failed to connect during media state sync: %s", e)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_with_error",
-                translation_placeholders={"error": repr(e)},
+            ) from e
+        except Exception as e:
+            _LOGGER.exception(
+                "An unknown error occurred during media state sync: %s", e
+            )
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unknown",
             ) from e
 
     async def media_state_event_handler(

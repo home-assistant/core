@@ -169,7 +169,6 @@ async def test_sync_media_state_auth_failed(
     err = exc_info.value
     assert err.translation_domain == DOMAIN
     assert err.translation_key == "invalid_auth"
-    assert "Invalid credentials" in err.translation_placeholders["error"]
 
 
 async def test_sync_media_state_cannot_connect(
@@ -192,7 +191,6 @@ async def test_sync_media_state_cannot_connect(
     err = exc_info.value
     assert err.translation_domain == DOMAIN
     assert err.translation_key == "cannot_connect_with_error"
-    assert "Connection failed" in err.translation_placeholders["error"]
 
 
 async def test_sync_media_state_unexpected_exception(
@@ -214,5 +212,4 @@ async def test_sync_media_state_unexpected_exception(
 
     err = exc_info.value
     assert err.translation_domain == DOMAIN
-    assert err.translation_key == "cannot_connect_with_error"
-    assert "Unexpected failure" in err.translation_placeholders["error"]
+    assert err.translation_key == "unknown"
