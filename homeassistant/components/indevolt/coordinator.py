@@ -72,7 +72,11 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             config_data = await self.api.get_config()
         except (ClientError, OSError) as err:
-            raise ConfigEntryNotReady(f"Device config retrieval failed: {err}") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Cache device information
         device_data = config_data.get("device", {})
@@ -87,7 +91,11 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.fetch_data(sensor_keys)
         except (ClientError, OSError) as err:
-            raise UpdateFailed(f"Device update failed: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""
