@@ -156,6 +156,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.address
 
+        if device is None:
+            LOGGER.debug("Could not find device with address '%s'", self.address)
+            return None
+
         try:
             (manufacturer, device_type, _model) = await Mower(
                 channel_id, self.address
