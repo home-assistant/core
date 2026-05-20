@@ -1,0 +1,141 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide custom actions. It uses the existing
+      remote entity services such as remote.send_command.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Virtual remote entities do not poll external devices. Availability is
+      derived from the linked infrared entity state.
+  brands:
+    status: todo
+    comment: |
+      Add brand assets if this integration is accepted into Home Assistant Core.
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Add tests for the user flow, no-infrared-entities abort, invalid
+      infrared entity selection, duplicate single-instance handling, and
+      successful entry creation.
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: |
+      This integration has no external Python package requirements.
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide custom actions. It uses existing remote
+      entity services.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      The integration does not register event listeners in entity setup.
+  entity-unique-id: done
+  has-entity-name: todo
+  runtime-data:
+    status: exempt
+    comment: |
+      This helper integration does not create runtime client data.
+  test-before-configure: todo
+  test-before-setup: todo
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      The virtual remote does not maintain a connection. Availability follows
+      the linked infrared entity.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration has no authentication.
+  test-coverage: todo
+
+  # Gold
+  devices:
+    status: done
+    comment: |
+      Each configured virtual remote is represented as its own device.
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: |
+      This is a helper integration. There is no physical device or network
+      service to discover.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This helper integration has no discovery information to update.
+  docs-data-update:
+    status: exempt
+    comment: |
+      The integration does not fetch external data. It forwards commands to a
+      linked infrared entity.
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This integration is not tied to a specific physical device. It supports
+      Home Assistant infrared entities.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: |
+      Remote entities are primary user-facing entities and should not use an
+      entity category.
+  entity-device-class:
+    status: exempt
+    comment: |
+      The remote platform does not use a device class for these entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The configured virtual remote is the primary entity created by this
+      helper integration and should be enabled by default.
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      The integration does not define custom icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: todo
+    comment: |
+      Consider repair issues for virtual remotes whose linked infrared entity is
+      removed or no longer exists.
+  stale-devices:
+    status: todo
+    comment: |
+      Add device cleanup for removed virtual remote definitions if needed.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration has no external dependency.
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not create an HTTP client session.
+  strict-typing: todo
