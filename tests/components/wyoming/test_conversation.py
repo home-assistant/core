@@ -343,3 +343,60 @@ async def test_supported_languages_empty_means_all(
     agent = conversation.async_get_agent(hass, agent_id)
     assert agent is not None
     assert agent.supported_languages == MATCH_ALL
+
+
+async def test_intent_supports_home_control(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry
+) -> None:
+    """Test that the CONTROL supported feature is always set for intent services."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=Info(intent=INTENT_INFO.intent),
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, agent_id)
+    assert isinstance(agent, conversation.ConversationEntity)
+    assert agent.supported_features is not None
+    assert (
+        agent.supported_features & conversation.ConversationEntityFeature.CONTROL
+    ) == conversation.ConversationEntityFeature.CONTROL
+
+
+@pytest.mark.parametrize(
+    "supports_home_control",
+    [False, True],
+)
+async def test_handle_supports_home_control(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry, supports_home_control: bool
+) -> None:
+    """Test that the CONTROL supported feature matches the Wyoming info."""
+    agent_id = "conversation.test_handle"
+
+    with (
+        patch.object(
+            HANDLE_INFO.handle[0], "supports_home_control", supports_home_control
+        ),
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=Info(handle=HANDLE_INFO.handle),
+        ),
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, agent_id)
+    assert isinstance(agent, conversation.ConversationEntity)
+    supported_features = (
+        agent.supported_features or conversation.ConversationEntityFeature(0)
+    )
+
+    control_feature = (
+        supported_features & conversation.ConversationEntityFeature.CONTROL
+    )
+
+    if supports_home_control:
+        assert control_feature == conversation.ConversationEntityFeature.CONTROL
+    else:
+        assert control_feature == conversation.ConversationEntityFeature(0)

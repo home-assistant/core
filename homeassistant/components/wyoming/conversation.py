@@ -86,6 +86,10 @@ class WyomingConversationEntity(
                     model_languages.update(handle_model.languages)
 
             self._attr_name = self._handle_service.name
+            if self._handle_service.supports_home_control:
+                self._attr_supported_features = (
+                    conversation.ConversationEntityFeature.CONTROL
+                )
 
         self._supported_languages = list(model_languages)
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"
