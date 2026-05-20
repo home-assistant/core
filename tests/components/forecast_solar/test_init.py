@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from forecast_solar import ForecastSolarConnectionError, Plane
+from forecast_solar import ForecastSolarConfigError, ForecastSolarConnectionError, Plane
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -56,6 +56,24 @@ async def test_config_entry_not_ready(
 
     assert mock_request.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@patch(
+    "homeassistant.components.forecast_solar.coordinator.ForecastSolar.estimate",
+    side_effect=ForecastSolarConfigError("Invalid configuration", {}),
+)
+async def test_config_entry_setup_error_on_config_error(
+    mock_request: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Forecast.Solar configuration entry errors on config error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_request.call_count == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_migration_from_v1(
