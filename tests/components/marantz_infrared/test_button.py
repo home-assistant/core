@@ -9,9 +9,10 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import check_availability_follows_ir_entity
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 BUTTON_ENTITY_ID_SPEAKER_AB = "button.marantz_pm6006_integrated_amplifier_speaker_a_b"
@@ -101,4 +102,6 @@ async def test_button_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
-    await check_availability_follows_ir_entity(hass, BUTTON_ENTITY_ID_LOUDNESS)
+    await assert_availability_follows_source_entity(
+        hass, BUTTON_ENTITY_ID_LOUDNESS, MOCK_INFRARED_EMITTER_ENTITY_ID
+    )
