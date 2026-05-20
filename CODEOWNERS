@@ -607,6 +607,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/fumis/ @frenck
 /homeassistant/components/fyta/ @dontinelli
 /tests/components/fyta/ @dontinelli
+/homeassistant/components/gaposa/ @mwatson2
+/tests/components/gaposa/ @mwatson2
 /homeassistant/components/garage_door/ @home-assistant/core
 /tests/components/garage_door/ @home-assistant/core
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
