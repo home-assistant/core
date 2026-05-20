@@ -160,6 +160,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=imagedata.get(ATTR_IMAGE_AUTH),
                     )
                 else:
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         "Invalid image provided",
                         translation_domain=DOMAIN,
@@ -182,6 +183,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         auth=icondata.get(ATTR_ICON_AUTH),
                     )
                 else:
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         "Invalid Icon provided",
                         translation_domain=DOMAIN,
