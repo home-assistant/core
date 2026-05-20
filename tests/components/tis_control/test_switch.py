@@ -99,6 +99,65 @@ async def test_setup_and_properties(
     assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_tis_1_2_3_ch1"
 
 
+async def test_setup_empty_gateway(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
+) -> None:
+    """Test switch setup and device registry identifier when gateway is missing or empty."""
+    mock_tis_api.get_entities.return_value = [
+        {
+            "name": "Test Switch No Gateway",
+            "device_id": [1, 2, 3],
+            "channels": [{"Output": 1}],
+            "is_protected": False,
+            "gateway": "",
+        }
+    ]
+
+    with patch(
+        "homeassistant.components.tis_control.switch.TISAPISwitch"
+    ) as mock_api_switch_cls:
+        # Configure the Switch Device wrapper mock.
+        mock_switch_wrapper = mock_api_switch_cls.return_value
+        mock_switch_wrapper.name = "Test Switch No Gateway"
+        mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
+        mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.gateway = ""
+        mock_switch_wrapper.channel_number = 1
+        mock_switch_wrapper.is_on = None
+        mock_switch_wrapper.available = True
+        mock_switch_wrapper.request_update = AsyncMock()
+        mock_switch_wrapper.register_callback = MagicMock()
+
+        # Add and initialize the integration
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_api_switch_cls.assert_called_once_with(
+            mock_tis_api,
+            switch_name="Test Switch No Gateway",
+            channel_number=1,
+            device_id=[1, 2, 3],
+            is_protected=False,
+            gateway="",
+        )
+
+    # Verify device-registry scoping
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_2_3")}
+    )
+    assert device is not None
+    assert device.name == "TIS Device 1_2_3"
+
+    # Verify entity-registry scoping
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(
+        f"{SWITCH_DOMAIN}.tis_device_1_2_3_test_switch_no_gateway"
+    )
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_tis_1_2_3_ch1"
+
+
 async def test_setup_no_switches(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
