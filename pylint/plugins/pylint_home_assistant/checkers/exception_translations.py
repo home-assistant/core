@@ -12,11 +12,14 @@ the integration's ``strings.json`` and that placeholders match.
 - ``E7418``: Placeholder mismatch between code and ``strings.json``
 """
 
+from pathlib import Path
+
 import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.integration import get_integration_dir
 from pylint_home_assistant.helpers.module_info import parse_module
 from pylint_home_assistant.helpers.quality_scale import quality_scale_rule_is_done
 from pylint_home_assistant.helpers.translations import (
@@ -113,6 +116,7 @@ class ExceptionTranslationsChecker(BaseChecker):
     _in_integration: bool
     _module_node: nodes.Module | None
     _domain: str | None
+    _components_dir: Path | None
     _exception_translations_done: bool
 
     def visit_module(self, node: nodes.Module) -> None:
@@ -121,6 +125,8 @@ class ExceptionTranslationsChecker(BaseChecker):
         self._in_integration = parsed is not None
         self._module_node = node if parsed else None
         self._domain = parsed.domain if parsed else None
+        integration_dir = get_integration_dir(node) if parsed else None
+        self._components_dir = integration_dir.parent if integration_dir else None
         self._exception_translations_done = (
             parsed is not None
             and quality_scale_rule_is_done(node, "exception-translations")
@@ -211,7 +217,7 @@ class ExceptionTranslationsChecker(BaseChecker):
         # Case 4: Check placeholder mismatch
         entry = exception_translations[translation_key]
         message = entry.get("message", "")
-        expected = get_message_placeholders(message)
+        expected = get_message_placeholders(message, self._components_dir)
 
         placeholder_node = _get_keyword_value(node, "translation_placeholders")
 

@@ -121,18 +121,78 @@ def extract_placeholder_keys(node: nodes.NodeNG | None) -> set[str] | None:
     return None
 
 
+def _resolve_string_key(key: nodes.NodeNG) -> str | None:
+    """Resolve a dict key to a string value."""
+    if isinstance(key, nodes.Const) and isinstance(key.value, str):
+        return key.value
+    # Try inference for constant references (e.g., CONF_DOMAIN)
+    try:
+        for inferred in key.infer():
+            if isinstance(inferred, nodes.Const) and isinstance(inferred.value, str):
+                return str(inferred.value)
+    except _InferenceError:
+        pass
+    return None
+
+
 def _keys_from_dict(node: nodes.Dict) -> set[str]:
-    """Extract string keys from a Dict node."""
-    return {
-        key.value
-        for key, _ in node.items
-        if isinstance(key, nodes.Const) and isinstance(key.value, str)
-    }
+    """Extract string keys from a Dict node.
+
+    Handles both literal string keys and constant references
+    (e.g., ``CONF_DOMAIN``) via astroid inference.
+    """
+    keys: set[str] = set()
+    for key, _ in node.items:
+        resolved = _resolve_string_key(key)
+        if resolved is not None:
+            keys.add(resolved)
+    return keys
 
 
-def get_message_placeholders(message: str) -> set[str]:
+_KEY_REF_PATTERN = re.compile(r"^\[%key:(.+)%\]$")
+
+
+def resolve_translation_reference(message: str, components_dir: Path | None) -> str:
+    """Resolve ``[%key:component::domain::section::key::field%]`` references.
+
+    Returns the resolved message string, or the original if resolution fails.
+    """
+    match = _KEY_REF_PATTERN.match(message)
+    if not match or components_dir is None:
+        return message
+
+    parts = match.group(1).split("::")
+    # Expected: component::domain::section::key::field
+    # or: common::section::subsection::key
+    if len(parts) < 3:
+        return message
+
+    if parts[0] == "component" and len(parts) >= 4:
+        domain = parts[1]
+        target_dir = components_dir / domain
+        if not target_dir.is_dir():
+            return message
+        data = _load_translations_from_dir(target_dir)
+        if data is None:
+            return message
+        # Walk the remaining path: parts[2:]
+        current: dict | str = data
+        for part in parts[2:]:
+            if not isinstance(current, dict):
+                return message
+            current = current.get(part, message)
+        return str(current) if isinstance(current, str) else message
+
+    return message
+
+
+def get_message_placeholders(
+    message: str, components_dir: Path | None = None
+) -> set[str]:
     """Extract placeholder names from a translation message template.
 
+    Resolves ``[%key:...]`` references before extracting placeholders.
     Placeholders use Python ``str.format()`` syntax: ``{name}``.
     """
-    return set(re.findall(r"\{(\w+)\}", message))
+    resolved = resolve_translation_reference(message, components_dir)
+    return set(re.findall(r"\{(\w+)\}", resolved))
