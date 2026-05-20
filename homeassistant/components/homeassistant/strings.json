@@ -219,7 +219,7 @@
       "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
-      "description": "Reloads the specified config entry, or the config entries of any entities or devices in the target.",
+      "description": "Reloads the specified config entry and any config entries referenced by entities or devices in the target. If both are provided, all referenced config entries are reloaded.",
       "fields": {
         "entry_id": {
           "description": "The configuration entry ID of the entry to be reloaded.",
