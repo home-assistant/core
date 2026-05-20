@@ -21,7 +21,6 @@ from homeassistant.helpers import device_registry as dr, selector
 from .const import DOMAIN
 from .coordinator import GoogleAirQualityConfigEntry
 
-ATTR_FORECAST: Final = "forecast"
 ATTR_HOURS: Final = "hours"
 
 FORECAST_HOURS_MAX: Final = 96
