@@ -163,7 +163,7 @@ class HomeegramSwitch(SwitchEntity):
             model="Homeegram Switches",
             via_device=(DOMAIN, entry.runtime_data.settings.uid),
         )
-        self._attr_icon = "mdi:robot"
+        self._attr_translation_key = "homeegram"
         self._host_connected = entry.runtime_data.connected
         self._attr_name = homeegram.name
 
