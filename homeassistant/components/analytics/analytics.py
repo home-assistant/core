@@ -75,6 +75,7 @@ from .const import (
     ATTR_HEALTHY,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
+    ATTR_ISSUE_TRACKER,
     ATTR_OPERATING_SYSTEM,
     ATTR_PROTECTED,
     ATTR_RECORDER,
@@ -422,6 +423,7 @@ class Analytics:
                     custom_integrations.append(
                         {
                             ATTR_DOMAIN: integration.domain,
+                            ATTR_ISSUE_TRACKER: integration.issue_tracker,
                             ATTR_VERSION: integration.version,
                         }
                     )
