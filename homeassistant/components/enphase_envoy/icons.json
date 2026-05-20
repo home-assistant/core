@@ -73,5 +73,10 @@
         }
       }
     }
+  },
+  "services": {
+    "inspect": {
+      "service": "mdi:download-box-outline"
+    }
   }
 }
