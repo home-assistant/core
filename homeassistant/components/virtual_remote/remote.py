@@ -1,7 +1,9 @@
 """Remote entities for virtual remotes backed by infrared entities."""
 
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import logging
 from typing import Any
 
@@ -9,8 +11,9 @@ from homeassistant.components import infrared
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,6 +24,8 @@ from .const import (
     CONF_REMOTE_ID,
     CONF_REMOTE_NAME,
     CONF_VIRTUAL_REMOTES,
+    DEFAULT_DELAY_SECS,
+    DEFAULT_NUM_REPEATS,
     DOMAIN,
 )
 
@@ -32,6 +37,8 @@ COMMAND_POWER_ON = "POWER_ON"
 COMMAND_POWER_OFF = "POWER_OFF"
 COMMAND_TOGGLE = "TOGGLE"
 COMMAND_POWER_TOGGLE = "POWER_TOGGLE"
+
+type DeviceInfoFactory = Callable[[str, str, Mapping[str, Any]], DeviceInfo]
 
 
 def _as_str_mapping(value: Any) -> dict[str, str] | None:
@@ -48,29 +55,118 @@ def _as_str_mapping(value: Any) -> dict[str, str] | None:
     return result
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up configured virtual remote entities."""
+def _remote_unique_id(entry_id: str, remote_id: str) -> str:
+    """Return the unique id for a configured virtual remote."""
+    return f"{entry_id}_remote_{remote_id}"
+
+
+def _configured_remote_definitions(entry: ConfigEntry) -> list[Mapping[str, Any]]:
+    """Return configured virtual remote definitions."""
     entry_data = getattr(entry, "data", {})
     configured_remotes = entry.options.get(
         CONF_VIRTUAL_REMOTES,
         entry_data.get(CONF_VIRTUAL_REMOTES, []),
     )
 
-    entities: list[InfraredRemoteEntity] = []
-
     if not isinstance(configured_remotes, list):
         _LOGGER.warning("Ignoring malformed virtual remote configuration")
-        async_add_entities(entities)
-        return
+        return []
 
-    for remote_config in configured_remotes:
-        if not isinstance(remote_config, Mapping):
+    return [
+        remote_config
+        for remote_config in configured_remotes
+        if isinstance(remote_config, Mapping)
+    ]
+
+
+def _virtual_remote_device_info(
+    remote_id: str,
+    name: str,
+    remote_config: Mapping[str, Any],
+) -> DeviceInfo:
+    """Return device info for a standalone virtual remote."""
+    return DeviceInfo(identifiers={(DOMAIN, remote_id)}, name=name)
+
+
+@callback
+def cleanup_stale_remote_entities(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    configured_remote_ids: set[str],
+) -> None:
+    """Remove stale remote entity registry entries for removed remotes.
+
+    This cleanup is safe for both the standalone Virtual Remote integration and
+    integrations such as iTach IP2IR which reuse the shared virtual remote
+    entity implementation.
+    """
+    entity_registry = er.async_get(hass)
+    expected_unique_ids = {
+        _remote_unique_id(entry.entry_id, remote_id)
+        for remote_id in configured_remote_ids
+    }
+    unique_id_prefix = f"{entry.entry_id}_remote_"
+
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity_entry.domain != "remote":
             continue
 
+        unique_id = entity_entry.unique_id
+        if (
+            unique_id.startswith(unique_id_prefix)
+            and unique_id not in expected_unique_ids
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+
+
+@callback
+def cleanup_stale_virtual_remote_devices(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    configured_remote_ids: set[str],
+    *,
+    identifier_domain: str = DOMAIN,
+) -> None:
+    """Remove stale virtual-remote device registry entries.
+
+    This is intended for the standalone Virtual Remote integration where each
+    virtual remote is represented as its own device. Do not use this for
+    physical-device integrations which attach virtual remote entities to their
+    real hardware device.
+    """
+    device_registry = dr.async_get(hass)
+
+    for device_entry in list(device_registry.devices.values()):
+        if entry.entry_id not in device_entry.config_entries:
+            continue
+
+        remote_identifiers = {
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == identifier_domain
+        }
+        if remote_identifiers and remote_identifiers.isdisjoint(configured_remote_ids):
+            device_registry.async_remove_device(device_entry.id)
+
+
+async def async_setup_virtual_remote_entities(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    *,
+    device_info_factory: DeviceInfoFactory,
+    cleanup_devices: bool = False,
+    device_identifier_domain: str = DOMAIN,
+) -> None:
+    """Set up configured virtual remote entities.
+
+    Integrations which reuse this implementation should call this helper and
+    provide a device_info_factory appropriate for their device model.
+    """
+    entities: list[InfraredRemoteEntity] = []
+    configured_remote_ids: set[str] = set()
+
+    for remote_config in _configured_remote_definitions(entry):
         remote_id = remote_config.get(CONF_REMOTE_ID)
         name = remote_config.get(CONF_REMOTE_NAME)
         infrared_entity_id = remote_config.get(CONF_INFRARED_ENTITY_ID)
@@ -78,13 +174,21 @@ async def async_setup_entry(
 
         if (
             not isinstance(remote_id, str)
+            or not remote_id
             or not isinstance(name, str)
+            or not name
             or not isinstance(infrared_entity_id, str)
+            or not infrared_entity_id
             or commands is None
         ):
             _LOGGER.debug("Skipping malformed virtual remote entry")
             continue
 
+        if remote_id in configured_remote_ids:
+            _LOGGER.debug("Skipping duplicate virtual remote id: %s", remote_id)
+            continue
+
+        configured_remote_ids.add(remote_id)
         entities.append(
             InfraredRemoteEntity(
                 remote_id=remote_id,
@@ -92,14 +196,36 @@ async def async_setup_entry(
                 infrared_entity_id=infrared_entity_id,
                 commands=commands,
                 unique_id_prefix=entry.entry_id,
-                device_info=DeviceInfo(
-                    identifiers={(DOMAIN, remote_id)},
-                    name=name,
-                ),
+                device_info=device_info_factory(remote_id, name, remote_config),
             )
         )
 
+    cleanup_stale_remote_entities(hass, entry, configured_remote_ids)
+
+    if cleanup_devices:
+        cleanup_stale_virtual_remote_devices(
+            hass,
+            entry,
+            configured_remote_ids,
+            identifier_domain=device_identifier_domain,
+        )
+
     async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up configured virtual remote entities."""
+    await async_setup_virtual_remote_entities(
+        hass,
+        entry,
+        async_add_entities,
+        device_info_factory=_virtual_remote_device_info,
+        cleanup_devices=True,
+    )
 
 
 class InfraredRemoteEntity(RemoteEntity):
@@ -120,7 +246,7 @@ class InfraredRemoteEntity(RemoteEntity):
     ) -> None:
         """Initialize the virtual remote."""
         self._attr_name = name
-        self._attr_unique_id = f"{unique_id_prefix}_remote_{remote_id}"
+        self._attr_unique_id = _remote_unique_id(unique_id_prefix, remote_id)
         self._attr_device_info = device_info
         self._infrared_entity_id = infrared_entity_id
         self._commands = commands or {}
@@ -177,14 +303,10 @@ class InfraredRemoteEntity(RemoteEntity):
         self._is_on = not self._is_on
         self.async_write_ha_state()
 
-    async def async_send_command(
-        self,
-        command: Iterable[str],
-        **kwargs: Any,
-    ) -> None:
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send one or more commands through the backing infrared entity."""
-        num_repeats = kwargs.pop("num_repeats", 1)
-        delay_secs = kwargs.pop("delay_secs", 0)
+        num_repeats = kwargs.pop("num_repeats", DEFAULT_NUM_REPEATS)
+        delay_secs = kwargs.pop("delay_secs", DEFAULT_DELAY_SECS)
 
         if not isinstance(num_repeats, int) or num_repeats < 1:
             raise HomeAssistantError(
