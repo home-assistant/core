@@ -1,0 +1,206 @@
+"""PyPI metadata + PEP 740 provenance attestation lookups."""
+
+from dataclasses import dataclass
+import logging
+import re
+from typing import Any
+from urllib.parse import urlparse
+
+import requests
+
+_LOGGER = logging.getLogger(__name__)
+
+# Characters that could escape markdown / HTML in the rendered comment or the
+# prompt fence used to ship the artifact to the agent. PyPI maintainers are
+# upstream-untrusted, so we strip these from any value we lift from PyPI
+# metadata before it enters the artifact.
+_UNSAFE = re.compile(r"[`\n\r<>]")
+
+
+def _safe(text: str | None) -> str | None:
+    """Strip characters that could escape markdown / HTML / a prompt fence."""
+    if text is None:
+        return None
+    return _UNSAFE.sub("", text)
+
+
+# Order matters — first hit wins.
+_REPO_URL_KEYS = (
+    "source",
+    "source code",
+    "repository",
+    "code",
+    "github",
+    "homepage",
+)
+
+# Known CI publishers that appear in PEP 740 attestation bundles. Matched
+# case-insensitively. Anything else is treated as inconclusive (NEEDS_AGENT).
+_KNOWN_CI_PUBLISHERS = (
+    "github",  # "GitHub" / "GitHub Actions"
+    "gitlab",
+    "google cloud",
+    "activestate",
+)
+
+# Repository host suffixes we accept as a valid `repo_url` answer for Step 3.
+# Matched against the URL's netloc (not substring of the full URL) to avoid
+# accepting `https://evil.com/?x=github.com` as a code-host URL.
+_REPO_HOST_SUFFIXES = (
+    "github.com",
+    "gitlab.com",
+)
+
+
+def _is_code_host_url(url: str) -> bool:
+    """True if `url`'s host is (or ends with) a known code-host suffix."""
+    host = urlparse(url).netloc.lower().removeprefix("www.")
+    if not host:
+        return False
+    return any(
+        host == suffix or host.endswith(f".{suffix}") for suffix in _REPO_HOST_SUFFIXES
+    )
+
+
+_HEADERS = {
+    "User-Agent": "home-assistant-check-requirements/1.0",
+    "Accept": "application/json",
+}
+_TIMEOUT = 30.0
+
+
+@dataclass(slots=True)
+class PypiPackageInfo:
+    """The subset of PyPI metadata we care about for a specific version."""
+
+    project_urls: dict[str, str]
+    repo_url: str | None
+    file_provenance_urls: list[str]  # may be empty
+    found: bool  # False if the version doesn't exist on PyPI
+
+
+@dataclass(slots=True)
+class ProvenanceResult:
+    """Parsed PEP 740 attestation status."""
+
+    has_attestation: bool
+    publisher_kind: str | None
+    recognized_publisher: bool
+    detail: str
+
+
+def _get_json(url: str) -> dict[str, Any] | None:
+    """Fetch JSON or return None on 404/network error."""
+    try:
+        response = requests.get(url, headers=_HEADERS, timeout=_TIMEOUT)
+    except requests.RequestException as err:
+        _LOGGER.warning("Failed to fetch %s: %s", url, err)
+        return None
+    if response.status_code == 404:
+        return None
+    if not response.ok:
+        _LOGGER.warning("HTTP %s fetching %s", response.status_code, url)
+        return None
+    try:
+        return response.json()
+    except ValueError as err:
+        _LOGGER.warning("Invalid JSON at %s: %s", url, err)
+        return None
+
+
+def _pick_repo_url(project_urls: dict[str, str]) -> str | None:
+    """Pick the most likely source-repo URL from `info.project_urls`."""
+    if not project_urls:
+        return None
+    lower_map = {k.lower(): v for k, v in project_urls.items()}
+    for key in _REPO_URL_KEYS:
+        url = lower_map.get(key)
+        if url and _is_code_host_url(url):
+            return _safe(url)
+    for url in project_urls.values():
+        if _is_code_host_url(url):
+            return _safe(url)
+    return None
+
+
+def fetch_package_info(name: str, version: str) -> PypiPackageInfo:
+    """Fetch per-version PyPI metadata for one package."""
+    versioned = _get_json(f"https://pypi.org/pypi/{name}/{version}/json")
+    if versioned is None:
+        latest = _get_json(f"https://pypi.org/pypi/{name}/json") or {}
+        info = latest.get("info", {}) or {}
+        project_urls = info.get("project_urls") or {}
+        return PypiPackageInfo(
+            project_urls=project_urls,
+            repo_url=_pick_repo_url(project_urls),
+            file_provenance_urls=[],
+            found=False,
+        )
+
+    info = versioned.get("info", {}) or {}
+    project_urls = info.get("project_urls") or {}
+    provenance_urls: list[str] = []
+    for entry in versioned.get("urls", []) or []:
+        prov = entry.get("provenance")
+        if prov:
+            provenance_urls.append(prov)
+    return PypiPackageInfo(
+        project_urls=project_urls,
+        repo_url=_pick_repo_url(project_urls),
+        file_provenance_urls=provenance_urls,
+        found=True,
+    )
+
+
+def check_provenance(pkg: PypiPackageInfo) -> ProvenanceResult:
+    """Resolve the provenance attestation, if any, to a Step 2b verdict."""
+    if not pkg.found:
+        return ProvenanceResult(
+            has_attestation=False,
+            publisher_kind=None,
+            recognized_publisher=False,
+            detail="Version not found on PyPI; cannot verify provenance.",
+        )
+    if not pkg.file_provenance_urls:
+        return ProvenanceResult(
+            has_attestation=False,
+            publisher_kind=None,
+            recognized_publisher=False,
+            detail=(
+                "No PEP 740 provenance attestation present on PyPI. Upload method "
+                "cannot be verified from PyPI alone."
+            ),
+        )
+    # Inspect any one file's attestation; all files of a release share a publisher.
+    for url in pkg.file_provenance_urls:
+        bundle = _get_json(url)
+        if not bundle:
+            continue
+        for entry in bundle.get("attestation_bundles", []) or []:
+            publisher = entry.get("publisher") or {}
+            kind = publisher.get("kind")
+            if not kind:
+                continue
+            safe_kind = _safe(kind) or ""
+            recognized = any(
+                token in safe_kind.lower() for token in _KNOWN_CI_PUBLISHERS
+            )
+            return ProvenanceResult(
+                has_attestation=True,
+                publisher_kind=safe_kind,
+                recognized_publisher=recognized,
+                detail=(
+                    f"Trusted Publisher attestation found ({safe_kind})."
+                    if recognized
+                    else (
+                        f"Attestation present but publisher kind '{safe_kind}' is not in "
+                        "the recognized-CI allowlist."
+                    )
+                ),
+            )
+    return ProvenanceResult(
+        has_attestation=False,
+        publisher_kind=None,
+        recognized_publisher=False,
+        detail="Provenance URL was present but the attestation could not be parsed.",
+    )
