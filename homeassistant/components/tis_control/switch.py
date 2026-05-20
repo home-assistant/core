@@ -62,8 +62,11 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
         if not isinstance(first_channel, dict) or not first_channel:
             continue
 
-        # Safely get the first value from the channel dict.
-        channel_value = next(iter(first_channel.values()), None)
+        # Safely get the value from the channel dict, preferring 'Output'.
+        channel_value = first_channel.get("Output")
+        if channel_value is None:
+            channel_value = next(iter(first_channel.values()), None)
+
         if channel_value is None:
             continue
 
