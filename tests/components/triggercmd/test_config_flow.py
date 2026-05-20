@@ -5,8 +5,9 @@ from unittest.mock import patch
 import pytest
 from triggercmd import TRIGGERcmdConnectionError
 
-from homeassistant.components.triggercmd.const import CONF_TOKEN, DOMAIN
+from homeassistant.components.triggercmd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

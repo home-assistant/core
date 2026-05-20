@@ -3,12 +3,10 @@
 from triggercmd import client, ha
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import httpx_client
-
-from .const import CONF_TOKEN
 
 PLATFORMS = [
     Platform.SWITCH,
