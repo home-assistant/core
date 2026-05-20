@@ -1,7 +1,5 @@
 """Configure pytest for Litter-Robot tests."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,17 +10,14 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    ACCOUNT_USER_ID,
-    CONFIG,
-    DOMAIN,
-    FEEDER_ROBOT_DATA,
-    PET_DATA,
-    ROBOT_4_DATA,
-    ROBOT_DATA,
-)
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
+
+ROBOT_DATA = load_json_object_fixture("litter_robot_3_data.json", DOMAIN)
+ROBOT_4_DATA = load_json_object_fixture("litter_robot_4_data.json", DOMAIN)
+FEEDER_ROBOT_DATA = load_json_object_fixture("feeder_robot_data.json", DOMAIN)
+PET_DATA = load_json_object_fixture("pet_data.json", DOMAIN)
 
 
 def create_mock_robot(
@@ -79,7 +74,7 @@ def create_mock_account(
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
-    account.refresh_robots = AsyncMock()
+    account.load_robots = AsyncMock()
     account.user_id = ACCOUNT_USER_ID
     account.robots = (
         []

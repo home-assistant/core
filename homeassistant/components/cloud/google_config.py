@@ -1,7 +1,5 @@
 """Google config for Cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
@@ -12,7 +10,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.google_assistant import DOMAIN as GOOGLE_DOMAIN
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     AbstractConfig,
 )
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -173,7 +171,7 @@ class CloudGoogleConfig(AbstractConfig):
         return self.enabled and self._prefs.google_report_state
 
     def get_local_webhook_id(self, agent_user_id: Any) -> str:
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for actions for an agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
     def get_local_user_id(self, webhook_id: Any) -> str:
@@ -228,7 +226,8 @@ class CloudGoogleConfig(AbstractConfig):
                     GOOGLE_SETTINGS_VERSION,
                 )
                 if self._prefs.google_settings_version < 2 or (
-                    # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
+                    # Recover from a bug we had in 2023.5.0
+                    # where entities didn't get exposed
                     self._prefs.google_settings_version < 3
                     and not any(
                         settings.get("should_expose", False)

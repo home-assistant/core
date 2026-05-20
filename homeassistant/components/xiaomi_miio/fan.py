@@ -1,7 +1,5 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 import logging
@@ -290,6 +288,7 @@ async def async_setup_entry(
 
     for air_purifier_service, method in SERVICE_TO_METHOD.items():
         schema = method.schema or AIRPURIFIER_SERVICE_SCHEMA
+        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN, air_purifier_service, async_service_handler, schema=schema
         )

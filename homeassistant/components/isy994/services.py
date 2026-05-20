@@ -1,7 +1,5 @@
 """ISY Services and Commands."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME
@@ -40,6 +38,7 @@ SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
 CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
 CONF_USER_NUM = "user_num"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_CODE = "code"
 CONF_VALUE = "value"
 CONF_INIT = "init"

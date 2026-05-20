@@ -1,7 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import logging
@@ -96,7 +94,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Sensor(ZHAEntity, SensorEntity):
     """ZHA sensor."""
 

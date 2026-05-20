@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "[%key:component::homeassistant::issues::deprecated_yaml::description%]",
+      "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_no_bulbs": {
+      "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future release. While importing your YAML configuration, Home Assistant could not discover any Avea bulbs. Make sure the bulbs are powered on, nearby, and reachable over Bluetooth, then restart Home Assistant. If you no longer use the YAML configuration, remove the `{domain}` entry from your `configuration.yaml` file.",
+      "title": "Avea YAML configuration import failed"
+    }
+  }
+}

@@ -1,7 +1,5 @@
 """Support for esphome dates."""
 
-from __future__ import annotations
-
 from datetime import date
 from functools import partial
 

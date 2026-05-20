@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_setup[switch.mock_classicvario-entry]
+# name: test_setup[switch.mock_aquarium_mock_classicvario-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_classicvario',
+    'entity_id': 'switch.mock_aquarium_mock_classicvario',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,23 +36,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_classicvario-state]
+# name: test_setup[switch.mock_aquarium_mock_classicvario-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_classicvario',
+    'entity_id': 'switch.mock_aquarium_mock_classicvario',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup[switch.mock_filter-entry]
+# name: test_setup[switch.mock_aquarium_mock_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -61,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_filter',
+    'entity_id': 'switch.mock_aquarium_mock_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,23 +86,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_filter-state]
+# name: test_setup[switch.mock_aquarium_mock_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_filter',
+    'entity_id': 'switch.mock_aquarium_mock_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup[switch.mock_reeflex-entry]
+# name: test_setup[switch.mock_aquarium_mock_reeflex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -110,7 +113,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_reeflex',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,23 +136,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_reeflex-state]
+# name: test_setup[switch.mock_aquarium_mock_reeflex-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_reeflex',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[switch.mock_reeflex_booster-entry]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_booster-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -159,7 +163,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_reeflex_booster',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -182,23 +186,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_reeflex_booster-state]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex Booster',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_reeflex_booster',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[switch.mock_reeflex_expert_mode-entry]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_expert_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,7 +213,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_reeflex_expert_mode',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_expert_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -231,23 +236,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_reeflex_expert_mode-state]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_expert_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex Expert mode',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_reeflex_expert_mode',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_expert_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[switch.mock_reeflex_pause-entry]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_pause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -257,7 +263,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_reeflex_pause',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_pause',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -280,13 +286,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[switch.mock_reeflex_pause-state]
+# name: test_setup[switch.mock_aquarium_mock_reeflex_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex Pause',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_reeflex_pause',
+    'entity_id': 'switch.mock_aquarium_mock_reeflex_pause',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

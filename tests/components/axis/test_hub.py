@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from ipaddress import ip_address
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest import mock
@@ -74,6 +75,33 @@ async def test_device_support_mqtt(
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_support_mqtt_without_required_event_keys(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Ignore non-event MQTT payloads without raising callback exceptions."""
+    caplog.set_level(logging.ERROR, logger="homeassistant.components.mqtt.client")
+
+    mqtt_call = call(f"axis/{MAC}/#", mock.ANY, 0, "utf-8", ANY)
+    assert mqtt_call in mqtt_mock.async_subscribe.call_args_list
+
+    topic = f"axis/{MAC}/device"
+    message = (
+        b'{"timestamp": 1775115420, "time": "2026-04-02T09:37:00+0200", '
+        b'"zone": "CEST", "ip": "1.2.3.4", "host": "hostname", '
+        b'"temperature": {"temp_main": 23.5, "temp_cpu": 24.0}, '
+        b'"power": {"pwr": 4.76, "pwr-avg": 3.88, "pwr-max": 9.13}}'
+    )
+
+    async_fire_mqtt_message(hass, topic, message)
+    await hass.async_block_till_done()
+
+    assert "Exception in _mqtt_message" not in caplog.text
+
+
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
 @pytest.mark.parametrize("mqtt_status_code", [401])
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_device_support_mqtt_low_privilege(mqtt_mock: MqttMockHAClient) -> None:
@@ -121,7 +149,7 @@ async def test_device_unavailable(
     mock_rtsp_event(
         topic="tns1:AudioSource/tnsaxis:TriggerLevel",
         data_type="triggered",
-        data_value="10",
+        data_value="0",
         source_name="channel",
         source_idx="1",
     )

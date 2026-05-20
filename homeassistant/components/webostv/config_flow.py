@@ -1,7 +1,5 @@
 """Config flow for LG webOS TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, Self
 from urllib.parse import urlparse
@@ -136,7 +134,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return other_flow._host == self._host
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

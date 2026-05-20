@@ -1,7 +1,5 @@
 """Config flow for Improv via BLE integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager
@@ -366,7 +364,8 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     if err.error == Error.UNABLE_TO_CONNECT:
                         self._credentials = None
                         errors["base"] = "unable_to_connect"
-                        # Only for UNABLE_TO_CONNECT do we continue to show the form with an error
+                        # Only for UNABLE_TO_CONNECT do we continue
+                        # to show the form with an error
                     else:
                         self._provision_result = self.async_abort(reason="unknown")
                         return
@@ -374,9 +373,10 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     _LOGGER.debug(
                         "Provision successful, redirect URL: %s", redirect_url
                     )
-                    # Clear match history so device can be rediscovered if factory reset.
-                    # This ensures that if the device is factory reset in the future,
-                    # it will trigger a new discovery flow.
+                    # Clear match history so device can be
+                    # rediscovered if factory reset. This ensures
+                    # that if the device is factory reset in the
+                    # future, it will trigger a new discovery flow.
                     bluetooth.async_clear_address_from_match_history(
                         self.hass, self._discovery_info.address
                     )
@@ -389,7 +389,8 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                         ):
                             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-                    # Wait for another integration to discover and register flow chaining
+                    # Wait for another integration to discover
+                    # and register flow chaining
                     next_flow_id: str | None = None
 
                     try:
@@ -398,7 +399,8 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                         )
                     except TimeoutError:
                         _LOGGER.debug(
-                            "Timeout waiting for next flow, proceeding with URL redirect"
+                            "Timeout waiting for next flow,"
+                            " proceeding with URL redirect"
                         )
 
                     if next_flow_id:

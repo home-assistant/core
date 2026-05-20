@@ -1,7 +1,5 @@
 """Define a Ridwell coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from typing import cast
@@ -19,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 
+type RidwellConfigEntry = ConfigEntry[RidwellDataUpdateCoordinator]
+
 UPDATE_INTERVAL = timedelta(hours=1)
 
 
@@ -27,9 +27,9 @@ class RidwellDataUpdateCoordinator(
 ):
     """Class to manage fetching data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: RidwellConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: RidwellConfigEntry) -> None:
         """Initialize."""
         # These will be filled in by async_initialize; we give them these defaults to
         # avoid arduous typing checks down the line:

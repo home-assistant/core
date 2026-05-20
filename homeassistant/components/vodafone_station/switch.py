@@ -1,7 +1,5 @@
 """Support for switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from json.decoder import JSONDecodeError
 from typing import Any, Final
@@ -104,6 +102,7 @@ class VodafoneSwitchEntity(CoordinatorEntity[VodafoneStationRouter], SwitchEntit
             await self.coordinator.api.set_wifi_status(
                 status, self.entity_description.typology, self.entity_description.band
             )
+            await self.coordinator.async_request_refresh()
         except CannotAuthenticate as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(

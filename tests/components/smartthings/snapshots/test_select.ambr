@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -119,10 +121,11 @@
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
+# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -139,7 +142,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -162,7 +165,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-state]
+# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
@@ -174,17 +177,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-entry]
+# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -200,7 +204,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.microwave_lamp',
+    'entity_id': 'select.theater_microwave_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -223,7 +227,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-state]
+# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Lamp',
@@ -234,7 +238,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.microwave_lamp',
+    'entity_id': 'select.theater_microwave_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -243,8 +247,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][select.oven_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -301,8 +306,9 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -359,8 +365,9 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -417,8 +424,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][select.four_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -475,8 +483,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -537,8 +546,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -597,8 +607,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -655,8 +666,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -713,10 +725,72 @@
     'state': 'medium',
   })
 # ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'mute',
+        'tone',
+        'voice',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_sound_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_sound_mode',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerSystemSoundMode_soundMode_soundMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Sound mode',
+      'options': list([
+        'mute',
+        'tone',
+        'voice',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_sound_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'tone',
+  })
+# ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -777,10 +851,70 @@
     'state': 'medium',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
+# name: test_all_entities[da_vc_stick_01001][select.stick_vacuum_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+      ]),
     }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.stick_vacuum_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lamp',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_vc_stick_01001][select.stick_vacuum_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Stick vacuum Lamp',
+      'options': list([
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.stick_vacuum_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -796,7 +930,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.theater_dishwasher',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -819,7 +953,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher',
@@ -830,17 +964,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.theater_dishwasher',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-entry]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -856,7 +991,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.theater_dishwasher_selected_zone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -879,7 +1014,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_selected_zone-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Selected zone',
@@ -890,17 +1025,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.theater_dishwasher_selected_zone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'all',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-entry]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -915,7 +1051,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_zone_booster',
+    'entity_id': 'select.theater_dishwasher_zone_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -938,7 +1074,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.dishwasher_zone_booster-state]
+# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher Zone booster',
@@ -948,7 +1084,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_zone_booster',
+    'entity_id': 'select.theater_dishwasher_zone_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -957,8 +1093,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1017,8 +1154,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1075,8 +1213,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][select.airdresser-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1133,10 +1272,11 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.dryer-entry]
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1152,7 +1292,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dryer',
+    'entity_id': 'select.theater_dryer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1175,7 +1315,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.dryer-state]
+# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer',
@@ -1186,7 +1326,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dryer',
+    'entity_id': 'select.theater_dryer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1195,8 +1335,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1255,8 +1396,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][select.trockner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1313,10 +1455,11 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1332,7 +1475,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.theater_washer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1355,7 +1498,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer',
@@ -1366,17 +1509,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.theater_washer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1395,7 +1539,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_soil_level',
+    'entity_id': 'select.theater_washer_soil_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1418,7 +1562,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Soil level',
@@ -1432,17 +1576,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_soil_level',
+    'entity_id': 'select.theater_washer_soil_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1461,7 +1606,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_spin_level',
+    'entity_id': 'select.theater_washer_spin_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1484,7 +1629,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Spin level',
@@ -1498,17 +1643,18 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_spin_level',
+    'entity_id': 'select.theater_washer_spin_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-entry]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1527,7 +1673,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.washer_water_temperature',
+    'entity_id': 'select.theater_washer_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1550,7 +1696,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-state]
+# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Water temperature',
@@ -1564,7 +1710,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_water_temperature',
+    'entity_id': 'select.theater_washer_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1573,8 +1719,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1633,8 +1780,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1701,8 +1849,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1769,8 +1918,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1829,8 +1979,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_detergent_dispense_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1891,8 +2042,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_flexible_compartment_dispense_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1953,8 +2105,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2021,8 +2174,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2089,8 +2243,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100001][select.washer_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2149,8 +2304,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_100002][select.washer_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

@@ -1,7 +1,5 @@
 """The Miele integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError, ClientResponseError
 from pymiele import MieleAPI
 

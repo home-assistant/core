@@ -1,7 +1,5 @@
 """Coordinator for the NSW Fuel Station integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 import logging
@@ -24,7 +22,7 @@ class StationPriceData:
     prices: dict[tuple[int, str], float]
 
 
-class NSWFuelStationCoordinator(DataUpdateCoordinator[StationPriceData | None]):
+class NSWFuelStationCoordinator(DataUpdateCoordinator[StationPriceData]):
     """Class to manage fetching NSW fuel station data."""
 
     config_entry: None
@@ -40,14 +38,14 @@ class NSWFuelStationCoordinator(DataUpdateCoordinator[StationPriceData | None]):
         )
         self.client = client
 
-    async def _async_update_data(self) -> StationPriceData | None:
+    async def _async_update_data(self) -> StationPriceData:
         """Fetch data from API."""
         return await self.hass.async_add_executor_job(
             _fetch_station_price_data, self.client
         )
 
 
-def _fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None:
+def _fetch_station_price_data(client: FuelCheckClient) -> StationPriceData:
     """Fetch fuel price and station data."""
     try:
         raw_price_data = client.get_fuel_prices()

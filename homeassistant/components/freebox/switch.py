@@ -1,7 +1,5 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -20,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 SWITCH_DESCRIPTIONS = [
     SwitchEntityDescription(
         key="wifi",
-        name="Freebox WiFi",
+        translation_key="wifi",
         entity_category=EntityCategory.CONFIG,
     )
 ]
@@ -43,6 +41,8 @@ async def async_setup_entry(
 class FreeboxSwitch(SwitchEntity):
     """Representation of a freebox switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, router: FreeboxRouter, entity_description: SwitchEntityDescription
     ) -> None:
@@ -50,7 +50,7 @@ class FreeboxSwitch(SwitchEntity):
         self.entity_description = entity_description
         self._router = router
         self._attr_device_info = router.device_info
-        self._attr_unique_id = f"{router.mac} {entity_description.name}"
+        self._attr_unique_id = f"{router.mac} {entity_description.key}"
 
     async def _async_set_state(self, enabled: bool) -> None:
         """Turn the switch on or off."""

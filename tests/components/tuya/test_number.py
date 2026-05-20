@@ -1,7 +1,5 @@
 """Test Tuya number platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -17,14 +15,21 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, json
+from homeassistant.util import json as json_util
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.NUMBER])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.NUMBER]):
+        yield
+
+
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -59,14 +64,13 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.NUMBER])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
+    notification_helper: TuyaNotificationHelper,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -77,7 +81,7 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        notification_helper,
         freezer,
         entity_id="number.multifunction_alarm_arm_delay",
         dpcode="delay_set",
@@ -116,3 +120,60 @@ async def test_set_value(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "delay_set", "value": 18}]
     )
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_device_code",
+        "entity_id",
+        "dpcode",
+        "tuya_uom",
+        "expected_msg",
+    ),
+    [
+        (
+            "co2bj_yrr3eiyiacm31ski",
+            "number.aqi_alarm_duration",
+            "alarm_time",
+            "invalid_uom",
+            (
+                "Incompatible unit invalid_uom replaced by entity description "
+                "unit s for device class duration in number entity "
+                "tuya.iks13mcaiyie3rryjb2ocalarm_time; use a quirk "
+                "(https://github.com/home-assistant-libs/tuya-device-handlers) "
+                "to override"
+            ),
+        ),
+        (
+            "znrb_gpzittzfnzhduquz",
+            "number.inverter_pool_heat_pump_temperature",
+            "temp_set",
+            "",
+            (
+                "Device class temperature ignored for incompatible unit  in "
+                "number entity tuya.zuqudhznfzttizpgbrnztemp_set"
+            ),
+        ),
+    ],
+)
+async def test_invalid_uom(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    dpcode: str,
+    tuya_uom: str,
+    expected_msg: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid unit of measurement."""
+    values = json_util.json_loads_object(mock_device.status_range[dpcode].values)
+    values["unit"] = tuya_uom
+    mock_device.function[dpcode].values = json.json_dumps(values)
+    mock_device.status_range[dpcode].values = json.json_dumps(values)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert expected_msg in caplog.text

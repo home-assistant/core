@@ -19,8 +19,9 @@
 # ---
 # name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

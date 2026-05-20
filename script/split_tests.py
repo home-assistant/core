@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Helper script to split test into n buckets."""
 
-from __future__ import annotations
-
 import argparse
 from dataclasses import dataclass, field
 from math import ceil
@@ -67,7 +65,9 @@ class BucketHolder:
                         if other_test is tests or isinstance(other_test, TestFolder):
                             continue
                         print(
-                            f"{other_test.total_tests:>{digits}} tests in {other_test.path} (same bucket)"
+                            f"{other_test.total_tests:>{digits}}"
+                            f" tests in {other_test.path}"
+                            " (same bucket)"
                         )
                         smallest_bucket.add(other_test)
 

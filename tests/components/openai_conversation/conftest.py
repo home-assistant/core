@@ -58,7 +58,7 @@ def mock_config_entry(
             "api_key": "bla",
         },
         version=2,
-        minor_version=6,
+        minor_version=7,
         subentries_data=[
             ConfigSubentryData(
                 data=mock_conversation_subentry_data,
@@ -139,6 +139,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 
     async def mock_generator(events, **kwargs):
+        if isinstance(events, Exception):
+            raise events
         response = Response(
             id="resp_A",
             created_at=1700000000,

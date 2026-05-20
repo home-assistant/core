@@ -1,7 +1,5 @@
 """Support UPNP discovery method that mimics Hue hubs."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import logging
@@ -171,7 +169,7 @@ async def async_create_upnp_datagram_endpoint(
 
     ssdp_socket.bind(("" if upnp_bind_multicast else host_ip_addr, BROADCAST_PORT))
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     transport_protocol = await loop.create_datagram_endpoint(
         lambda: UPNPResponderProtocol(loop, ssdp_socket, advertise_ip, advertise_port),

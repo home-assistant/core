@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.testproject_ci_latest_build-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -62,8 +63,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_finish_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -112,8 +114,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_id-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,8 +164,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_queue_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -211,8 +215,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,8 +265,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_result-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -309,8 +315,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_source_branch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -358,8 +365,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_source_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -407,8 +415,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -457,8 +466,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,7 +1,5 @@
 """The Backblaze B2 integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -43,7 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     def _authorize_and_get_bucket_sync() -> Bucket:
         """Synchronously authorize the Backblaze B2 account and retrieve the bucket.
 
-        This function runs in the event loop's executor as b2sdk operations are blocking.
+        This function runs in the event loop's executor as
+        b2sdk operations are blocking.
         """
         b2_api.authorize_account(
             BACKBLAZE_REALM,
@@ -73,6 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
+        ) from err
+    except exception.BadRequest as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="bad_request",
+            translation_placeholders={"error_message": str(err)},
         ) from err
     except (
         exception.B2ConnectionError,

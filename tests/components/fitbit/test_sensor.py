@@ -28,7 +28,7 @@ from .conftest import (
     timeseries_response,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_RESPONSE_CHARGE_2 = {
@@ -69,191 +69,83 @@ def mock_token_refresh(requests_mock: Mocker) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    (
-        "monitored_resources",
-        "entity_id",
-        "api_resource",
-        "api_value",
+_MOCK_API_DATA = {
+    "activities/activityCalories": ("activities-activityCalories", "135"),
+    "activities/tracker/activityCalories": (
+        "activities-tracker-activityCalories",
+        "135",
     ),
-    [
-        (
-            ["activities/activityCalories"],
-            "sensor.first_l_activity_calories",
-            "activities/activityCalories",
-            "135",
-        ),
-        (
-            ["activities/tracker/activityCalories"],
-            "sensor.first_l_tracker_activity_calories",
-            "activities/tracker/activityCalories",
-            "135",
-        ),
-        (
-            ["activities/calories"],
-            "sensor.first_l_calories",
-            "activities/calories",
-            "139",
-        ),
-        (
-            ["activities/tracker/calories"],
-            "sensor.first_l_tracker_calories",
-            "activities/tracker/calories",
-            "139",
-        ),
-        (
-            ["activities/distance"],
-            "sensor.first_l_distance",
-            "activities/distance",
-            "12.7",
-        ),
-        (
-            ["activities/tracker/distance"],
-            "sensor.first_l_tracker_distance",
-            "activities/distance",
-            "12.7",
-        ),
-        (
-            ["activities/elevation"],
-            "sensor.first_l_elevation",
-            "activities/elevation",
-            "7600.24",
-        ),
-        (
-            ["activities/floors"],
-            "sensor.first_l_floors",
-            "activities/floors",
-            "8",
-        ),
-        (
-            ["activities/heart"],
-            "sensor.first_l_resting_heart_rate",
-            "activities/heart",
-            {"restingHeartRate": 76},
-        ),
-        (
-            ["activities/minutesFairlyActive"],
-            "sensor.first_l_minutes_fairly_active",
-            "activities/minutesFairlyActive",
-            35,
-        ),
-        (
-            ["activities/minutesLightlyActive"],
-            "sensor.first_l_minutes_lightly_active",
-            "activities/minutesLightlyActive",
-            95,
-        ),
-        (
-            ["activities/minutesSedentary"],
-            "sensor.first_l_minutes_sedentary",
-            "activities/minutesSedentary",
-            18,
-        ),
-        (
-            ["activities/minutesVeryActive"],
-            "sensor.first_l_minutes_very_active",
-            "activities/minutesVeryActive",
-            20,
-        ),
-        (
-            ["activities/steps"],
-            "sensor.first_l_steps",
-            "activities/steps",
-            "5600",
-        ),
-        (
-            ["body/weight"],
-            "sensor.first_l_weight",
-            "body/weight",
-            "175",
-        ),
-        (
-            ["body/fat"],
-            "sensor.first_l_body_fat",
-            "body/fat",
-            "18",
-        ),
-        (
-            ["body/bmi"],
-            "sensor.first_l_bmi",
-            "body/bmi",
-            "23.7",
-        ),
-        (
-            ["sleep/awakeningsCount"],
-            "sensor.first_l_awakenings_count",
-            "sleep/awakeningsCount",
-            "7",
-        ),
-        (
-            ["sleep/efficiency"],
-            "sensor.first_l_sleep_efficiency",
-            "sleep/efficiency",
-            "80",
-        ),
-        (
-            ["sleep/minutesAfterWakeup"],
-            "sensor.first_l_minutes_after_wakeup",
-            "sleep/minutesAfterWakeup",
-            "17",
-        ),
-        (
-            ["sleep/minutesAsleep"],
-            "sensor.first_l_sleep_minutes_asleep",
-            "sleep/minutesAsleep",
-            "360",
-        ),
-        (
-            ["sleep/minutesAwake"],
-            "sensor.first_l_sleep_minutes_awake",
-            "sleep/minutesAwake",
-            "35",
-        ),
-        (
-            ["sleep/minutesToFallAsleep"],
-            "sensor.first_l_sleep_minutes_to_fall_asleep",
-            "sleep/minutesToFallAsleep",
-            "35",
-        ),
-        (
-            ["sleep/startTime"],
-            "sensor.first_l_sleep_start_time",
-            "sleep/startTime",
-            "2020-01-27T00:17:30.000",
-        ),
-        (
-            ["sleep/timeInBed"],
-            "sensor.first_l_sleep_time_in_bed",
-            "sleep/timeInBed",
-            "462",
-        ),
-    ],
-)
+    "activities/calories": ("activities-calories", "139"),
+    "activities/tracker/calories": ("activities-tracker-calories", "139"),
+    "activities/caloriesBMR": ("activities-caloriesBMR", "1900"),
+    "activities/distance": ("activities-distance", "12.7"),
+    "activities/tracker/distance": ("activities-tracker-distance", "12.7"),
+    "activities/elevation": ("activities-elevation", "7600.24"),
+    "activities/tracker/elevation": ("activities-tracker-elevation", "7600.24"),
+    "activities/floors": ("activities-floors", "8"),
+    "activities/tracker/floors": ("activities-tracker-floors", "8"),
+    "activities/heart": ("activities-heart", {"restingHeartRate": 76}),
+    "activities/minutesFairlyActive": ("activities-minutesFairlyActive", 35),
+    "activities/tracker/minutesFairlyActive": (
+        "activities-tracker-minutesFairlyActive",
+        35,
+    ),
+    "activities/minutesLightlyActive": ("activities-minutesLightlyActive", 95),
+    "activities/tracker/minutesLightlyActive": (
+        "activities-tracker-minutesLightlyActive",
+        95,
+    ),
+    "activities/minutesSedentary": ("activities-minutesSedentary", 18),
+    "activities/tracker/minutesSedentary": ("activities-tracker-minutesSedentary", 18),
+    "activities/minutesVeryActive": ("activities-minutesVeryActive", 20),
+    "activities/tracker/minutesVeryActive": (
+        "activities-tracker-minutesVeryActive",
+        20,
+    ),
+    "activities/steps": ("activities-steps", "5600"),
+    "activities/tracker/steps": ("activities-tracker-steps", "5600"),
+    "body/weight": ("body-weight", "175"),
+    "body/fat": ("body-fat", "18"),
+    "body/bmi": ("body-bmi", "23.7"),
+    "sleep/awakeningsCount": ("sleep-awakeningsCount", "7"),
+    "sleep/efficiency": ("sleep-efficiency", "80"),
+    "sleep/minutesAfterWakeup": ("sleep-minutesAfterWakeup", "17"),
+    "sleep/minutesAsleep": ("sleep-minutesAsleep", "360"),
+    "sleep/minutesAwake": ("sleep-minutesAwake", "35"),
+    "sleep/minutesToFallAsleep": ("sleep-minutesToFallAsleep", "35"),
+    "sleep/startTime": ("sleep-startTime", "2020-01-27T00:17:30.000"),
+    "sleep/timeInBed": ("sleep-timeInBed", "462"),
+    "foods/log/water": ("foods-log-water", "99"),
+    "foods/log/caloriesIn": ("foods-log-caloriesIn", "1600"),
+}
+
+
+def _register_all_timeseries(
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+) -> None:
+    """Register all mock timeseries."""
+    for resource, (response_key, value) in _MOCK_API_DATA.items():
+        register_timeseries(resource, timeseries_response(response_key, value))
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     register_timeseries: Callable[[str, dict[str, Any]], None],
     entity_registry: er.EntityRegistry,
-    entity_id: str,
-    api_resource: str,
-    api_value: str,
     snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors."""
 
-    register_timeseries(
-        api_resource, timeseries_response(api_resource.replace("/", "-"), api_value)
-    )
-    await integration_setup()
+    _register_all_timeseries(register_timeseries)
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    state = hass.states.get(entity_id)
-    assert state
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert (state.state, state.attributes, entry.unique_id) == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -374,7 +266,7 @@ async def test_profile_local(
     """Test the fitbit profile locale impact on unit of measure."""
 
     register_timeseries("body/weight", timeseries_response("body-weight", "175"))
-    await integration_setup()
+    assert await integration_setup()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
@@ -740,7 +632,6 @@ async def test_device_battery_level_update_failed(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test API failure for a battery level sensor for devices."""
-    aioclient_mock.clear_requests()
     aioclient_mock.get(
         DEVICES_API_URL,
         json=[DEVICE_RESPONSE_CHARGE_2],
@@ -790,8 +681,6 @@ async def test_device_battery_level_reauth_required(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test API failure requires reauth."""
-
-    aioclient_mock.clear_requests()
     aioclient_mock.get(
         DEVICES_API_URL,
         json=[DEVICE_RESPONSE_CHARGE_2],

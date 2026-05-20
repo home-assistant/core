@@ -1,7 +1,5 @@
 """Support for Tado thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -783,11 +781,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
-            fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
-            swing=swing,  # api defaults to not sending swing if None specified
-            fan_level=fan_level,  # api defaults to not sending fanLevel if fanSpeend not None
-            vertical_swing=vertical_swing,  # api defaults to not sending verticalSwing if swing not None
-            horizontal_swing=horizontal_swing,  # api defaults to not sending horizontalSwing if swing not None
+            fan_speed=fan_speed,
+            swing=swing,
+            fan_level=fan_level,
+            vertical_swing=vertical_swing,
+            horizontal_swing=horizontal_swing,
         )
 
     def _is_valid_setting_for_hvac_mode(self, setting: str) -> bool:

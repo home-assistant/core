@@ -1,7 +1,5 @@
 """Constants for the AI Task integration."""
 
-from __future__ import annotations
-
 from enum import IntFlag
 from typing import TYPE_CHECKING, Final
 

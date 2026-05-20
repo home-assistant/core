@@ -1,11 +1,9 @@
 """Provides fan entities for Home Connect."""
 
-import contextlib
 import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey
-from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -13,22 +11,31 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+_FAN_SPEED_PERCENTAGE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+)
+_FAN_SPEED_MODE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+)
+
 FAN_SPEED_MODE_OPTIONS = {
-    "auto": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-    "manual": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    "auto": (
+        "HeatingVentilationAirConditioning"
+        ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+    ),
+    "manual": (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual"
+    ),
 }
 FAN_SPEED_MODE_OPTIONS_INVERTED = {v: k for k, v in FAN_SPEED_MODE_OPTIONS.items()}
 
@@ -89,7 +96,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             coordinator,
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
             context_override=(
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_PERCENTAGE
             ),
         )
         self.update_preset_mode()
@@ -109,15 +116,14 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_coordinator_update_preset_mode,
-                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_FAN_SPEED_MODE,
             )
         )
 
     def update_native_value(self) -> None:
         """Set the speed percentage and speed mode values."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_PERCENTAGE_KEY)):
             option_value = event.value
         self._attr_percentage = (
             cast(int, option_value) if option_value is not None else None
@@ -142,8 +148,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
     def update_preset_mode(self) -> None:
         """Set the preset mode value."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_MODE_KEY)):
             option_value = event.value
         self._attr_preset_mode = (
             FAN_SPEED_MODE_OPTIONS_INVERTED.get(cast(str, option_value))
@@ -176,7 +181,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        await self._async_set_option(
+        await super().async_set_option_with_key(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
             percentage,
         )
@@ -188,40 +193,13 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target fan mode."""
-        await self._async_set_option(
+        await super().async_set_option_with_key(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             FAN_SPEED_MODE_OPTIONS[preset_mode],
         )
         _LOGGER.debug(
-            "Updated %s's speed mode option, new state: %s",
-            self.entity_id,
-            self.state,
+            "Updated %s's speed mode option, new state: %s", self.entity_id, self.state
         )
-
-    async def _async_set_option(self, key: OptionKey, value: str | int) -> None:
-        """Set an option for the entity."""
-        try:
-            # We try to set the active program option first,
-            # if it fails we try to set the selected program option
-            with contextlib.suppress(ActiveProgramNotSetError):
-                await self.coordinator.client.set_active_program_option(
-                    self.appliance.info.ha_id,
-                    option_key=key,
-                    value=value,
-                )
-                return
-
-            await self.coordinator.client.set_selected_program_option(
-                self.appliance.info.ha_id,
-                option_key=key,
-                value=value,
-            )
-        except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_option",
-                translation_placeholders=get_dict_from_home_connect_error(err),
-            ) from err
 
     @property
     def available(self) -> bool:

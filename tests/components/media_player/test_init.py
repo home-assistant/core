@@ -475,6 +475,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: "media_player.group"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF
@@ -584,7 +585,7 @@ async def test_get_async_get_browse_image_quoting(
 
 
 async def test_play_media_via_selector(hass: HomeAssistant) -> None:
-    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
+    """Test play_media data under 'media' is remapped for backward compat."""
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )

@@ -1,7 +1,5 @@
 """Support for OneDrive backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
@@ -180,6 +178,9 @@ class OneDriveBackupAgent(BackupAgent):
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
                 smart_chunk_size=True,
+                progress_callback=lambda bytes_uploaded: on_progress(
+                    bytes_uploaded=bytes_uploaded
+                ),
             )
         except HashMismatchError as err:
             raise BackupAgentError(
@@ -188,7 +189,8 @@ class OneDriveBackupAgent(BackupAgent):
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
 
-        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        # Store metadata in separate metadata file
+        # (just backup.as_dict(), no extra fields)
         metadata_content = json_dumps(backup.as_dict())
         try:
             await self._client.upload_file(
