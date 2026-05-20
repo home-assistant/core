@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from aiohttp import ContentTypeError
+from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
@@ -42,6 +42,7 @@ def openevse_exception_handler(value: float) -> Iterator[None]:
         ) from err
     except (
         TimeoutError,
+        ServerTimeoutError,
         ContentTypeError,
         ParseJSONError,
     ) as err:
