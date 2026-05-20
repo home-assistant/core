@@ -485,14 +485,14 @@ def _create_handle_webhook(
             _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
         _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
-        deviceMac = data["context"]["deviceMac"]
+        device_mac = data["context"]["deviceMac"]
 
-        if deviceMac not in coordinators_by_id:
+        if device_mac not in coordinators_by_id:
             _LOGGER.error(
                 "Received data for unknown entity from switchbot webhook: %s", data
             )
             return
 
-        coordinators_by_id[deviceMac].async_set_updated_data(data["context"])
+        coordinators_by_id[device_mac].async_set_updated_data(data["context"])
 
     return _internal_handle_webhook
