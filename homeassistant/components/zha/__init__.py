@@ -310,11 +310,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    if (config_entry.version, config_entry.minor_version) > (
-        ZhaConfigFlowHandler.VERSION,
-        ZhaConfigFlowHandler.MINOR_VERSION,
-    ):
-        # This means the user has downgraded from a future version
+    if config_entry.version > ZhaConfigFlowHandler.VERSION:
+        # This means the user has downgraded from a future major version
         return False
 
     if config_entry.version == 1:
