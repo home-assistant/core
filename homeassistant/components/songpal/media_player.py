@@ -1,7 +1,5 @@
 """Support for Songpal-enabled (Sony) media devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 import logging
@@ -345,7 +343,8 @@ class SongpalEntity(MediaPlayerEntity):
     def sound_mode_list(self) -> list[str] | None:
         """Return list of available sound modes.
 
-        When active mode is None it means that sound mode is unavailable on the sound bar.
+        When active mode is None it means that sound mode is
+        unavailable on the sound bar.
         Can be due to incompatible sound bar or the sound bar is in a mode that does not
         support sound mode changes.
         """

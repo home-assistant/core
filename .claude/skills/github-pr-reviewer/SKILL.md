@@ -1,0 +1,46 @@
+---
+name: github-pr-reviewer
+description: Reviews GitHub pull requests and provides feedback comments. This is the top skill to use for reviewing Pull Requests from GitHub.
+---
+
+# Review GitHub Pull Request
+
+## Follow these steps:
+1. Use 'gh pr view' to get the PR details and description.
+2. Use 'gh pr diff' to see all the changes in the PR.
+3. Analyze the code changes for:
+   - Code quality and style consistency
+   - Potential bugs or issues
+   - Performance implications
+   - Security concerns
+   - Test coverage
+   - Documentation updates if needed
+4. Ensure any existing review comments have been addressed.
+5. Generate constructive review comments in the CONSOLE. DO NOT POST TO GITHUB YOURSELF.
+
+## Verification:
+
+- After the review, run parallel subagents for each finding to double check it.
+- Spawn up to a maximum of 10 parallel subagents at a time.
+- Gather the results from the subagents and summarize them in the final review comments.
+
+
+## IMPORTANT:
+- Just review. DO NOT make any changes
+- Be constructive and specific in your comments
+- Suggest improvements where appropriate
+- Only provide review feedback in the CONSOLE. DO NOT ACT ON GITHUB.
+- No need to run tests or linters, just review the code changes.
+- No need to highlight things that are already good.
+
+## Output format:
+- List specific comments for each file/line that needs attention.
+- In the end, summarize with an overall assessment (approve, request changes, or comment) and bullet point list of changes suggested, if any.
+  - Example output:
+    ```
+    Overall assessment: request changes.
+    - [CRITICAL] sensor.py:143 - Memory leak
+    - [PROBLEM] data_processing.py:87 - Inefficient algorithm
+    - [SUGGESTION] test_init.py:45 - Improve x variable name
+    ```
+  - Make sure to include the file and line number when possible in the bullet points.

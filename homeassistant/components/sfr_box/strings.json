@@ -47,6 +47,19 @@
       "ftth_status": {
         "name": "FTTH status"
       },
+      "voip_callhistory_active": {
+        "name": "VoIP call history active"
+      },
+      "voip_hook_status": {
+        "name": "VoIP phone hook status",
+        "state": {
+          "off": "On-hook",
+          "on": "Off-hook"
+        }
+      },
+      "voip_status": {
+        "name": "VoIP status"
+      },
       "wan_status": {
         "name": "WAN status"
       }
@@ -111,6 +124,14 @@
           "adsl": "ADSL",
           "ftth": "FTTH",
           "gprs": "GPRS"
+        }
+      },
+      "voip_infra": {
+        "name": "VoIP infrastructure",
+        "state": {
+          "adsl": "[%key:component::sfr_box::entity::sensor::net_infra::state::adsl%]",
+          "ftth": "[%key:component::sfr_box::entity::sensor::net_infra::state::ftth%]",
+          "gprs": "[%key:component::sfr_box::entity::sensor::net_infra::state::gprs%]"
         }
       },
       "wan_mode": {

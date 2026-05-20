@@ -1,7 +1,5 @@
 """Support for Ridwell buttons."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioridwell.errors import RidwellError

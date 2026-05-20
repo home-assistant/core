@@ -75,11 +75,14 @@ async def test_options_flow(
 
 async def test_reconfigure_flow_broadcast(
     hass: HomeAssistant,
-    mock_webhooks_config_entry: MockConfigEntry,
+    mock_register_webhook: None,
     mock_external_calls: None,
+    mock_webhooks_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow for broadcast bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await mock_webhooks_config_entry.start_reconfigure_flow(hass)
     assert result["step_id"] == "reconfigure"
@@ -740,7 +743,7 @@ async def test_subentry_flow_broadcast_update_error(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test subentry flow where broadcast bot encounter error while receiving messages."""
+    """Test subentry flow where broadcast bot errors receiving messages."""
 
     mock_broadcast_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)

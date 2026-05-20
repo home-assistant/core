@@ -12,6 +12,7 @@ AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_TOKEN = "token"
 
 ATTR_IS_GROUP = "is_group"
@@ -80,5 +81,3 @@ ATTR_FANART_IMAGE = "fanart_image"
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)
-
-PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX = "player_options."

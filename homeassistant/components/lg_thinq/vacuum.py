@@ -1,7 +1,5 @@
 """Support for vacuum entities."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 from typing import Any

@@ -15,7 +15,7 @@ test_service_1:
             - "off"
             - "auto"
             - "cool"
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         field_3:

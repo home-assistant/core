@@ -1,7 +1,5 @@
 """Config flow for Tado integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -86,7 +84,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if ratelimit.get("remaining") == "0":
                     _LOGGER.error(
-                        "Tado API rate limit reached while waiting for device activation: %s",
+                        "Tado API rate limit reached while"
+                        " waiting for device activation: %s",
                         ex,
                     )
                     raise TadoRateLimitExceeded from ex

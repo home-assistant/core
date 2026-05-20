@@ -1,6 +1,4 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The switch component creates a switch entity."""
-
-from __future__ import annotations
+"""Home Assistant component for accessing the Wallbox Portal API select."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -90,7 +88,10 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         """Initialize a Wallbox select entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def current_option(self) -> str | None:

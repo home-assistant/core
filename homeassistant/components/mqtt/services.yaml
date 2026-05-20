@@ -12,12 +12,10 @@ publish:
       selector:
         template:
     evaluate_payload:
-      advanced: true
       default: false
       selector:
         boolean:
     qos:
-      advanced: true
       default: 0
       selector:
         select:
@@ -30,6 +28,10 @@ publish:
       selector:
         boolean:
 
+    message_expiry_interval:
+      selector:
+        duration:
+          enable_day: true
 dump:
   fields:
     topic:

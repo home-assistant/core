@@ -9,8 +9,8 @@ from uuid import uuid4
 from aiohasupervisor.models import Job, JobsInfo
 import pytest
 
-from homeassistant.components.hassio.const import ADDONS_COORDINATOR
-from homeassistant.components.hassio.coordinator import HassioDataUpdateCoordinator
+from homeassistant.components.hassio.const import MAIN_COORDINATOR
+from homeassistant.components.hassio.coordinator import HassioMainDataUpdateCoordinator
 from homeassistant.components.hassio.jobs import JobSubscription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -65,7 +65,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert len(data_coordinator.jobs.current_jobs) == 2
     assert data_coordinator.jobs.current_jobs[0].name == "test_job"
     assert data_coordinator.jobs.current_jobs[1].name == "test_inner_job"
@@ -81,7 +81,7 @@ async def test_disconnect_on_config_entry_reload(
     jobs_info.assert_called_once()
 
     jobs_info.reset_mock()
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     await hass.config_entries.async_reload(data_coordinator.entry_id)
     await hass.async_block_till_done()
     jobs_info.assert_called_once()
@@ -89,7 +89,9 @@ async def test_disconnect_on_config_entry_reload(
 
 @pytest.mark.usefixtures("all_setup_requests")
 async def test_job_manager_ws_updates(
-    hass: HomeAssistant, jobs_info: AsyncMock, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    jobs_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test job updates sync from Supervisor WS messages."""
     result = await async_setup_component(hass, "hassio", {})
@@ -97,8 +99,8 @@ async def test_job_manager_ws_updates(
     jobs_info.assert_called_once()
 
     jobs_info.reset_mock()
-    client = await hass_ws_client(hass)
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    client = await hass_supervisor_ws_client()
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert not data_coordinator.jobs.current_jobs
 
     # Make an example listener
@@ -277,7 +279,9 @@ async def test_job_manager_ws_updates(
 
 @pytest.mark.usefixtures("all_setup_requests")
 async def test_job_manager_reload_on_supervisor_restart(
-    hass: HomeAssistant, jobs_info: AsyncMock, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    jobs_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test job manager reloads cache on supervisor restart."""
     jobs_info.return_value = JobsInfo(
@@ -302,13 +306,13 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert len(data_coordinator.jobs.current_jobs) == 1
     assert data_coordinator.jobs.current_jobs[0].name == "test_job"
 
     jobs_info.reset_mock()
     jobs_info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
 
     # Make an example listener
     job_data: Job | None = None

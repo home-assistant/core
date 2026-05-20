@@ -1,7 +1,5 @@
 """Config flow for the Fish Audio integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -132,6 +130,8 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(
                 CONF_NAME,
                 default=options.get(CONF_NAME) or vol.UNDEFINED,
