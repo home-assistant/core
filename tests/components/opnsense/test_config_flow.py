@@ -285,7 +285,7 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
         (OPNsensePrivilegeMissing, "privilege_missing"),
         (OPNsenseSSLError, "ssl_error"),
         ((OPNsenseConnectionError, OPNsenseTimeoutError), "cannot_connect"),
-        (OPNsenseUnknownFirmware, "invalid_version"),
+        (OPNsenseUnknownFirmware, "unknown_version"),
         (OPNsenseBelowMinFirmware, "invalid_version"),
         (Exception, "unknown"),
     ]

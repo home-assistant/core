@@ -74,6 +74,10 @@
     "import_failed_unknown": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "import_failed_unknown_version": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the OPNsense firmware version is unknown. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
     }
   }
 }

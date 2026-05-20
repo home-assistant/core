@@ -162,15 +162,15 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
             self._entry_data = user_input
-            return await self.async_step_interfaces(user_input)
+            return await self.async_step_interfaces()
 
         return await self._show_setup_form(user_input, errors)
 
     async def async_step_interfaces(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle tracker interface selection step."""
-        if CONF_TRACKER_INTERFACES not in user_input:
+        if user_input is None or CONF_TRACKER_INTERFACES not in user_input:
             return await self._show_interfaces_form({}, None)
 
         if user_input.get(CONF_TRACKER_INTERFACES):
@@ -214,7 +214,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except OPNsenseUnknownFirmware:
             return self._abort_import(
-                reason="invalid_version", url=import_data[CONF_URL]
+                reason="unknown_version", url=import_data[CONF_URL]
             )
         except OPNsenseBelowMinFirmware:
             return self._abort_import(
