@@ -6,7 +6,7 @@ from fritzboxvpn.const import PROTOCOL_HTTP, PROTOCOL_HTTPS
 import pytest
 
 from homeassistant.components.fritz.const import CONF_FEATURE_WIREGUARD_VPN, DOMAIN
-from homeassistant.components.fritz.vpn_coordinator import (
+from homeassistant.components.fritz.coordinator import (
     FritzVpnCoordinator,
     vpn_auth_failed,
     vpn_web_ui_protocol,
@@ -29,7 +29,7 @@ def vpn_coordinator(
 ) -> FritzVpnCoordinator:
     """FritzVpnCoordinator with mocked fritzboxvpn session."""
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         return FritzVpnCoordinator(hass, dict(MOCK_USER_DATA), entry_id="test-entry")
@@ -47,7 +47,7 @@ async def test_vpn_coordinator_starts_with_fritz_entry(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -80,7 +80,7 @@ async def test_vpn_disabled_via_options_skips_coordinator(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -106,7 +106,7 @@ async def test_vpn_setup_failure_closes_session(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -182,7 +182,7 @@ async def test_vpn_coordinator_update_auth_error_schedules_reauth(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -239,7 +239,7 @@ async def test_vpn_setup_auth_error_starts_reauth_when_loaded(
 
     with (
         patch(
-            "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+            "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
             return_value=mock_vpn_session,
         ),
         patch.object(entry, "async_start_reauth") as mock_reauth,

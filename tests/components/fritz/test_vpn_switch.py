@@ -38,7 +38,7 @@ def _vpn_entity_id(
 def vpn_patch_session(mock_vpn_session: AsyncMock):
     """Patch FritzBoxVPNSession for VPN tests."""
     with patch(
-        "homeassistant.components.fritz.vpn_coordinator.FritzBoxVPNSession",
+        "homeassistant.components.fritz.coordinator.FritzBoxVPNSession",
         return_value=mock_vpn_session,
     ):
         yield mock_vpn_session
