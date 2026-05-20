@@ -186,9 +186,9 @@ class ExceptionTranslationsChecker(BaseChecker):
             )
             return
 
-        # Case 2: Hardcoded string (has positional args, no translation_key keyword)
+        # Case 2: No translation_key at all (either hardcoded string or bare raise)
         # Only enforced when quality scale rule exception-translations is done
-        if node.args and not has_translation_key:
+        if not has_translation_key:
             if self._exception_translations_done:
                 self.add_message(
                     "home-assistant-exception-not-translated",

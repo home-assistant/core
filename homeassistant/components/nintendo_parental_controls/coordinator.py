@@ -71,4 +71,5 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN,
                     translation_key="update_required",
                 ) from err
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(retry_after=900) from err
