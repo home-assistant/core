@@ -55,7 +55,7 @@ class UptimeRobotDataUpdateCoordinator(
         except UptimeRobotException as exception:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="api_exception",
+                translation_key="api_generic_exception",
                 translation_placeholders={"error": "Generic UptimeRobot exception"},
             ) from exception
 
