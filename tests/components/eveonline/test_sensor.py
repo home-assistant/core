@@ -59,7 +59,7 @@ async def test_sensor_wallet_updated(
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
-    assert float(state.state) == 9999999.99
+    assert state.state == "9999999.99"
 
 
 async def test_sensor_location_shows_unknown_when_endpoint_fails(
