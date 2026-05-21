@@ -38,7 +38,7 @@
   },
   "exceptions": {
     "missing_device_info": {
-      "message": "Unable to read device informations. Please verify the device's network connection."
+      "message": "Unable to read device information. Please verify the device's network connection."
     }
   }
 }
