@@ -117,9 +117,9 @@ class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="unsupported_backend")
 
-        host = (
-            data.get("ip") if isinstance(data.get("ip"), str) else discovery_info.host
-        )
+        host = data.get("ip")
+        if not isinstance(host, str) or not host:
+            host = discovery_info.host
         await self.async_set_unique_id(system_id)
         self._abort_if_unique_id_configured(
             updates={

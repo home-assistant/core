@@ -97,7 +97,10 @@ class KiiAudioZoneMediaPlayer(
         """Initialize the zone media player."""
         super().__init__(coordinator)
         self._zone_id = zone["zoneId"]
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._zone_id}"
+        system_id = (
+            coordinator.config_entry.unique_id or coordinator.config_entry.entry_id
+        )
+        self._attr_unique_id = f"{system_id}_{self._zone_id}"
         self._attr_device_info = zone_device_info(coordinator, self._zone_id, zone)
 
     @property
@@ -116,7 +119,7 @@ class KiiAudioZoneMediaPlayer(
     def volume_level(self) -> float | None:
         """Return volume level, range 0..1."""
         volume = self._audio.get("volume")
-        if not isinstance(volume, int | float):
+        if isinstance(volume, bool) or not isinstance(volume, int | float):
             return None
         return max(
             0.0,
@@ -164,7 +167,7 @@ class KiiAudioZoneMediaPlayer(
     async def async_volume_up(self) -> None:
         """Request a zone volume increase."""
         volume = self._audio.get("volume")
-        if not isinstance(volume, int | float):
+        if isinstance(volume, bool) or not isinstance(volume, int | float):
             return
         await self.coordinator.async_set_zone_volume(
             self._zone_id, min(MAX_VOLUME, float(volume) + VOLUME_STEP)
@@ -173,7 +176,7 @@ class KiiAudioZoneMediaPlayer(
     async def async_volume_down(self) -> None:
         """Request a zone volume decrease."""
         volume = self._audio.get("volume")
-        if not isinstance(volume, int | float):
+        if isinstance(volume, bool) or not isinstance(volume, int | float):
             return
         await self.coordinator.async_set_zone_volume(
             self._zone_id, max(MIN_VOLUME, float(volume) - VOLUME_STEP)

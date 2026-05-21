@@ -281,3 +281,36 @@ def test_media_player_handles_invalid_kiilink_data() -> None:
         "Digital (KiiLink)",
         "Dante",
     ]
+
+
+def test_media_player_unique_id_falls_back_to_entry_id() -> None:
+    """Test media player unique ID falls back to the entry ID."""
+    zone = make_zone()
+    coordinator = FakeCoordinator(deepcopy(zone))
+    coordinator.config_entry.unique_id = None
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.unique_id == "entry-id_zone-id"
+
+
+def test_media_player_ignores_boolean_volume() -> None:
+    """Test boolean volume values are ignored."""
+    zone = make_zone()
+    zone["settings"]["audio"]["volume"] = True
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.volume_level is None
+
+
+async def test_media_player_ignores_boolean_volume_steps() -> None:
+    """Test volume step actions ignore boolean volume values."""
+    zone = make_zone()
+    zone["settings"]["audio"]["volume"] = False
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    await entity.async_volume_up()
+    await entity.async_volume_down()
+
+    assert coordinator.calls == []

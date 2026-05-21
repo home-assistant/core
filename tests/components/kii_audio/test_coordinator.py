@@ -138,6 +138,14 @@ def test_handle_zone_setting_event_updates_cached_data() -> None:
             ]
         }
     ]
+    assert coordinator.data == {
+        "zones": [
+            {
+                "zoneId": "zone-id",
+                "settings": {"audio": {"volume": -50.0}},
+            }
+        ]
+    }
 
 
 def test_handle_zone_setting_ignores_invalid_payloads() -> None:

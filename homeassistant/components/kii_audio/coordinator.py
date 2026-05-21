@@ -109,20 +109,29 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not isinstance(zone_id, str) or not isinstance(setting, str):
             return
 
-        data = copy.deepcopy(self.data or {})
-        zones = data.get("zones")
+        current_data = self.data or {}
+        zones = current_data.get("zones")
         if not isinstance(zones, list):
             return
 
-        for zone in zones:
+        for index, zone in enumerate(zones):
             if not isinstance(zone, dict) or zone.get("zoneId") != zone_id:
                 continue
-            settings = zone.setdefault("settings", {})
+            settings = zone.get("settings", {})
             if not isinstance(settings, dict):
                 return
-            _set_path(settings, setting, value)
+
+            data = dict(current_data)
+            zones_copy = list(zones)
+            zone_copy = dict(zone)
+            settings_copy = copy.deepcopy(settings)
+            zone_copy["settings"] = settings_copy
+            zones_copy[index] = zone_copy
+            data["zones"] = zones_copy
+
+            _set_path(settings_copy, setting, value)
             if isinstance(payload.get("updateCount"), int):
-                settings["updateCount"] = payload["updateCount"]
+                settings_copy["updateCount"] = payload["updateCount"]
             self.async_set_updated_data(data)
             return
 

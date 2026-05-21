@@ -189,3 +189,24 @@ async def test_zeroconf_flow_rejects_missing_ids(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_flow_uses_discovery_host_when_payload_ip_is_empty(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery falls back to discovery host for empty IP data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info(
+            {
+                "deviceId": DEVICE_ID,
+                "systemId": SYSTEM_ID,
+                "version": 2,
+                "ip": "",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == HOST
