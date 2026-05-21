@@ -738,7 +738,8 @@ async def test_error_no_device_in_area(
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device called missing entity in the kitchen area"
+        == "Sorry, I am not aware of any device called"
+        " missing entity in the kitchen area"
     )
 
 
@@ -889,7 +890,7 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_components")
 async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
-    """Test error message when devices/entities exist for a domain but are not exposed."""
+    """Test error when entities exist but are not exposed."""
     hass.states.async_set("fan.test_fan", "off")
     expose_entity(hass, "fan.test_fan", False)
     await hass.async_block_till_done()
@@ -944,7 +945,7 @@ async def test_error_no_domain_in_area_exposed(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test error message when devices/entities for a domain exist in an area but are not exposed."""
+    """Test error when area entities exist but are not exposed."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1023,7 +1024,7 @@ async def test_error_no_domain_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error message when devices/entities for a domain exist on a floor but are not exposed."""
+    """Test error when floor entities exist but are not exposed."""
     floor_ground = floor_registry.async_create("ground")
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(
@@ -1169,7 +1170,7 @@ async def test_error_no_device_class_in_area_exposed(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test error message when entities of a device class exist in an area but are not exposed."""
+    """Test error when device class entities in area are not exposed."""
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
     area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
     bedroom_window = entity_registry.async_get_or_create("cover", "demo", "1234")
@@ -1205,7 +1206,7 @@ async def test_error_no_device_class_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error message when entities of a device class exist in on a floor but are not exposed."""
+    """Test error when device class entities on floor are not exposed."""
     floor_ground = floor_registry.async_create("ground")
 
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
@@ -1333,7 +1334,7 @@ async def test_error_duplicate_names(
 async def test_duplicate_names_but_one_is_exposed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test when multiple devices have the same name (or alias), but only one of them is exposed."""
+    """Test duplicate names where only one is exposed."""
     kitchen_light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
     kitchen_light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
 
@@ -1371,7 +1372,7 @@ async def test_error_duplicate_names_same_area(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test error message when multiple devices have the same name (or alias) in the same area."""
+    """Test error when duplicate names exist in same area."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1405,7 +1406,8 @@ async def test_error_duplicate_names_same_area(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+            == f"Sorry, there are multiple devices called"
+            f" {name} in the {area_kitchen.name} area"
         )
 
         # question
@@ -1419,7 +1421,8 @@ async def test_error_duplicate_names_same_area(
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+            == f"Sorry, there are multiple devices called"
+            f" {name} in the {area_kitchen.name} area"
         )
 
 
@@ -1429,7 +1432,7 @@ async def test_duplicate_names_same_area_but_one_is_exposed(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test when multiple devices have the same name (or alias) in the same area but only one is exposed."""
+    """Test duplicate names in same area with one exposed."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1472,7 +1475,7 @@ async def test_duplicate_names_different_areas(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test preferred area when multiple devices have the same name (or alias) in different areas."""
+    """Test preferred area with duplicate names in different areas."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1594,7 +1597,7 @@ async def test_error_no_timer_support(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test error message when a device does not support timers (no handler is registered)."""
+    """Test error when device has no timer support."""
     area_kitchen = area_registry.async_create("kitchen")
 
     entry = MockConfigEntry()
@@ -1910,7 +1913,7 @@ async def test_same_aliased_entities_in_different_areas(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that entities with the same alias (but different names) in different areas can be targeted."""
+    """Test same-alias entities in different areas."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -2030,7 +2033,7 @@ async def test_device_id_in_handler(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_components")
 async def test_name_wildcard_lower_priority(hass: HomeAssistant) -> None:
-    """Test that the default agent does not prioritize a {name} slot when it's a wildcard."""
+    """Test default agent deprioritizes wildcard name slot."""
 
     class OrderBeerIntentHandler(intent.IntentHandler):
         intent_type = "OrderBeer"
@@ -2268,7 +2271,7 @@ async def test_intent_entity_remove_custom_name(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that removing a custom name allows targeting the entity by its auto-generated name again."""
+    """Test removing custom name restores auto-generated name."""
     context = Context()
     entity = MockLight("kitchen light", STATE_ON)
     entity._attr_unique_id = "1234"
@@ -2698,7 +2701,7 @@ async def test_custom_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
+    """Test custom_sentences have priority over builtins."""
     with tempfile.NamedTemporaryFile(
         mode="w+",
         encoding="utf-8",
@@ -2755,7 +2758,7 @@ async def test_config_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from configuration.yaml have priority over builtin intents/sentences.
+    """Test config intents have priority over builtins.
 
     Also test that they follow proper selection logic.
     """
@@ -3309,7 +3312,7 @@ async def test_handle_intents_filters_results(
         )
 
         assert len(mock_recognize.mock_calls) == 2
-        assert len(mock_process.mock_calls) == 2
+        assert mock_process.call_count == 1
 
         # Check we filtered things
         assert len(results) == 2

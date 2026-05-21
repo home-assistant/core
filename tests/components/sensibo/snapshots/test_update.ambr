@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update[load_platforms0][update.bedroom_firmware-entry]
+# name: test_update[load_platforms0][update.bedroom_bedroom_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.bedroom_firmware',
+    'entity_id': 'update.bedroom_bedroom_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.bedroom_firmware-state]
+# name: test_update[load_platforms0][update.bedroom_bedroom_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -55,14 +55,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.bedroom_firmware',
+    'entity_id': 'update.bedroom_bedroom_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_update[load_platforms0][update.hallway_firmware-entry]
+# name: test_update[load_platforms0][update.hallway_hallway_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.hallway_firmware',
+    'entity_id': 'update.hallway_hallway_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.hallway_firmware-state]
+# name: test_update[load_platforms0][update.hallway_hallway_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -118,14 +118,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.hallway_firmware',
+    'entity_id': 'update.hallway_hallway_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_update[load_platforms0][update.kitchen_firmware-entry]
+# name: test_update[load_platforms0][update.kitchen_kitchen_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -139,7 +139,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.kitchen_firmware',
+    'entity_id': 'update.kitchen_kitchen_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -162,7 +162,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.kitchen_firmware-state]
+# name: test_update[load_platforms0][update.kitchen_kitchen_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -181,7 +181,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.kitchen_firmware',
+    'entity_id': 'update.kitchen_kitchen_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

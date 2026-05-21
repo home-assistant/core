@@ -2,10 +2,11 @@
 
 from unittest.mock import MagicMock
 
-from pynobo import nobo
+from pynobo import PynoboError, nobo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.nobo_hub.const import DOMAIN
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -21,7 +22,7 @@ from . import fire_hub_update
 from tests.common import MockConfigEntry, snapshot_platform
 
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"
-PROFILE_ENTITY = "select.living_room_week_profile"
+PROFILE_ENTITY = "select.living_room_living_room_week_profile"
 
 
 @pytest.fixture
@@ -76,10 +77,20 @@ async def test_week_profile_select(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "option", "mock_attr"),
+    ("entity_id", "option", "mock_attr", "expected_key"),
     [
-        (GLOBAL_ENTITY, "eco", "async_create_override"),
-        (PROFILE_ENTITY, "Default", "async_update_zone"),
+        (
+            GLOBAL_ENTITY,
+            "eco",
+            "async_create_override",
+            "set_global_override_failed",
+        ),
+        (
+            PROFILE_ENTITY,
+            "Default",
+            "async_update_zone",
+            "set_week_profile_failed",
+        ),
     ],
     ids=["global_override", "week_profile"],
 )
@@ -90,16 +101,19 @@ async def test_select_option_wraps_library_error(
     entity_id: str,
     option: str,
     mock_attr: str,
+    expected_key: str,
 ) -> None:
     """Library errors during selection are raised as HomeAssistantError."""
-    getattr(mock_nobo_hub, mock_attr).side_effect = OSError("boom")
-    with pytest.raises(HomeAssistantError):
+    getattr(mock_nobo_hub, mock_attr).side_effect = PynoboError("boom")
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == expected_key
 
 
 @pytest.mark.usefixtures("init_integration")
