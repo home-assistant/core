@@ -352,7 +352,7 @@
       "message": "Value cannot be set because the device is not connected"
     },
     "client_init_failed": {
-      "message": "Failed to create PoolDose client during initialization: {status}"
+      "message": "Failed to initialize or connect to PoolDose client: {status}"
     },
     "connect_failed": {
       "message": "Failed to connect to PoolDose device: {error}"
