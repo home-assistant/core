@@ -1,0 +1,27 @@
+.trigger_zone: &trigger_zone
+  target:
+    entity:
+      domain:
+        - person
+        - device_tracker
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+    zone:
+      required: true
+      selector:
+        entity:
+          domain: zone
+          multiple: true
+
+entered: *trigger_zone
+left: *trigger_zone
