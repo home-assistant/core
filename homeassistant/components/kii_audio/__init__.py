@@ -47,10 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> bool:
     """Unload a Kii Audio config entry."""
-    if not hasattr(entry, "runtime_data"):
+    coordinator = getattr(entry, "runtime_data", None)
+    if coordinator is None:
         return True
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.async_stop()
+        await coordinator.async_stop()
     return unload_ok

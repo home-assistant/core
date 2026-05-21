@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from homeassistant.components.kii_audio.const import VOLUME_STEP
+from homeassistant.components.kii_audio.const import MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
 from homeassistant.components.kii_audio.media_player import KiiAudioZoneMediaPlayer
 
 from .conftest import ZONE_ID, FakeCoordinator, make_zone
@@ -79,15 +79,25 @@ def test_media_player_selectable_sources_with_kii_control() -> None:
     ]
 
 
-async def test_media_player_select_source_sends_raw_source_id() -> None:
+@pytest.mark.parametrize(
+    ("source", "expected_source_id"),
+    [
+        ("Digital (Auto)", "digital_auto"),
+        ("Digital (XLR)", "digital_xlr"),
+        ("digital_kiilink", "digital_kiilink"),
+    ],
+)
+async def test_media_player_select_source_sends_raw_source_id(
+    source: str, expected_source_id: str
+) -> None:
     """Test selecting a source sends the Kii source ID."""
     zone = make_zone()
     coordinator = FakeCoordinator(deepcopy(zone))
     entity = KiiAudioZoneMediaPlayer(coordinator, zone)
 
-    await entity.async_select_source("Digital (XLR)")
+    await entity.async_select_source(source)
 
-    assert coordinator.calls == [("source", (ZONE_ID, "digital_xlr"))]
+    assert coordinator.calls == [("source", (ZONE_ID, expected_source_id))]
 
 
 async def test_media_player_ignores_unselectable_streaming_source() -> None:
@@ -116,6 +126,26 @@ async def test_media_player_volume_controls() -> None:
         ("volume", (ZONE_ID, -50.0 + VOLUME_STEP)),
         ("volume", (ZONE_ID, -50.0 - VOLUME_STEP)),
     ]
+
+
+@pytest.mark.parametrize(
+    ("volume", "expected_kii_volume"),
+    [
+        (-1.0, MIN_VOLUME),
+        (2.0, MAX_VOLUME),
+    ],
+)
+async def test_media_player_set_volume_clamps_to_supported_range(
+    volume: float, expected_kii_volume: float
+) -> None:
+    """Test setting volume clamps to the Kii volume range."""
+    zone = make_zone()
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    await entity.async_set_volume_level(volume)
+
+    assert coordinator.calls == [("volume", (ZONE_ID, expected_kii_volume))]
 
 
 def test_zone_device_info_reports_mixed_models() -> None:

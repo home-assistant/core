@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.kii_audio import async_unload_entry
 from homeassistant.components.kii_audio.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -193,3 +194,11 @@ async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails
 
     assert entry.state is ConfigEntryState.FAILED_UNLOAD
     mock_stop.assert_not_awaited()
+
+
+async def test_unload_entry_without_runtime_data(hass: HomeAssistant) -> None:
+    """Test unloading before runtime data is available is a no-op."""
+    entry = _mock_config_entry()
+    entry.runtime_data = None  # type: ignore[assignment]
+
+    assert await async_unload_entry(hass, entry)

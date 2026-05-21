@@ -38,7 +38,6 @@ SOURCE_NAMES = {
     "control_bluetooth": "Bluetooth",
 }
 
-SOURCE_IDS_BY_NAME = {name: source_id for source_id, name in SOURCE_NAMES.items()}
 
 SPEAKER_SOURCES = [
     "analog",
@@ -132,6 +131,7 @@ class KiiAudioZoneMediaPlayer(
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Request a zone volume change."""
+        volume = max(0.0, min(1.0, volume))
         kii_volume = MIN_VOLUME + (volume * (MAX_VOLUME - MIN_VOLUME))
         await self.coordinator.async_set_zone_volume(
             self._zone_id, round(kii_volume, 1)
@@ -156,7 +156,7 @@ class KiiAudioZoneMediaPlayer(
 
     async def async_select_source(self, source: str) -> None:
         """Request a zone source change."""
-        source_id = SOURCE_IDS_BY_NAME.get(source, source)
+        source_id = self._selectable_source_ids_by_name.get(source, source)
         if source_id not in self._selectable_source_ids:
             return
         await self.coordinator.async_set_zone_source(self._zone_id, source_id)
@@ -214,6 +214,14 @@ class KiiAudioZoneMediaPlayer(
         if self._has_kii_control:
             return CONTROLLER_SOURCES + SPEAKER_SOURCES_WITH_CONTROLLER
         return SPEAKER_SOURCES
+
+    @property
+    def _selectable_source_ids_by_name(self) -> dict[str, str]:
+        """Return display labels mapped to selectable source ids."""
+        return {
+            SOURCE_NAMES[source_id]: source_id
+            for source_id in self._selectable_source_ids
+        }
 
     @property
     def _has_kii_control(self) -> bool:
