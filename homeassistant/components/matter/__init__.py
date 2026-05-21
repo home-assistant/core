@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         try:
             async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
                 await ble_proxy.connect()
-        except (TimeoutError, ConnectionError, OSError):
+        except TimeoutError, ConnectionError, OSError:
             LOGGER.warning(
                 "Failed to connect BLE proxy - BLE commissioning may not work",
                 exc_info=True,

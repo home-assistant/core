@@ -43,7 +43,9 @@ class HaBluetoothScanSource(BleScanSource):
         self._hass = hass
         self._cancel: CALLBACK_TYPE | None = None
 
-    async def start(self, callback_fn: Callable[[AdvertisementData], None]) -> None:
+    async def start(  # pylint: disable=arguments-renamed
+        self, callback_fn: Callable[[AdvertisementData], None]
+    ) -> None:
         """Register an advertisement callback with HA's bluetooth component."""
         from habluetooth import BluetoothScanningMode  # noqa: PLC0415
 
