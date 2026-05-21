@@ -569,7 +569,7 @@ def test_standalone_service_handler_flagged(
     linter: UnittestLinter,
     error_propagation_checker: SwallowedActionExceptionsChecker,
 ) -> None:
-    """Test that standalone service handlers registered via hass.services are checked."""
+    """Test standalone service handlers via hass.services are checked."""
     root_node = astroid.parse(
         """
 async def async_setup(hass, config):

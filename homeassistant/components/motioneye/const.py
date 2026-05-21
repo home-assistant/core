@@ -29,6 +29,7 @@ DOMAIN: Final = "motioneye"
 ATTR_EVENT_TYPE: Final = "event_type"
 ATTR_WEBHOOK_ID: Final = "webhook_id"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ACTION: Final = "action"
 CONF_ADMIN_PASSWORD: Final = "admin_password"
 CONF_ADMIN_USERNAME: Final = "admin_username"

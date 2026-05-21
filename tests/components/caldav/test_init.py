@@ -39,6 +39,7 @@ async def test_load_unload(
     [
         (Exception(), ConfigEntryState.SETUP_ERROR, []),
         (requests.ConnectionError(), ConfigEntryState.SETUP_RETRY, []),
+        (requests.Timeout(), ConfigEntryState.SETUP_RETRY, []),
         (DAVError(), ConfigEntryState.SETUP_RETRY, []),
         (
             AuthorizationError(reason="Unauthorized"),

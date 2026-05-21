@@ -941,7 +941,7 @@ async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
 async def test_last_transition_after_restarted_timer_expires(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test that last_transition changes from restarted to finished when timer expires."""
+    """Test last_transition changes from restarted to finished on expiry."""
     hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
@@ -1366,7 +1366,7 @@ async def test_restore_active_resume(
 async def test_restore_active_finished_outside_grace(
     hass: HomeAssistant, last_transition: str | None
 ) -> None:
-    """Test entity restore logic: timer is active, ended while Home Assistant was stopped."""
+    """Test entity restore: timer active, ended while HA was stopped."""
     events = async_capture_events(hass, EVENT_TIMER_FINISHED)
     assert not events
     utc_now = utcnow()
