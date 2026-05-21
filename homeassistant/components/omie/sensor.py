@@ -23,7 +23,6 @@ _ATTRIBUTION = "Data provided by OMIE.es"
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     key: SensorEntityDescription(
         key=key,
-        has_entity_name=True,
         translation_key=key,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -33,11 +32,10 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 }
 
 
-# has_entity_name=True is supplied by every SENSOR_DESCRIPTIONS entry
-# pylint: disable-next=home-assistant-missing-has-entity-name
 class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_attribution = _ATTRIBUTION
 
