@@ -30,7 +30,7 @@ from collections.abc import Callable
 from mypy.errorcodes import ErrorCode
 from mypy.nodes import TypeInfo
 from mypy.plugin import MethodContext, Plugin
-from mypy.types import Instance, Type, get_proper_type
+from mypy.types import Instance, LiteralType, Type, UnionType, get_proper_type
 
 ENUM_IDENTITY = ErrorCode(
     "ha-enum-identity-compare",
@@ -55,16 +55,40 @@ _FRAMEWORK_GUARANTEED_ENUMS = frozenset(
 
 
 def _enum_class(t: Type | None) -> TypeInfo | None:
-    """Return the enum TypeInfo if t is an Instance of a tracked enum.
+    """Return the enum TypeInfo if t resolves to a tracked enum class.
+
+    Handles three shapes:
+    - ``Instance``: the direct case, e.g. ``source: SourceCodes``.
+    - ``LiteralType``: a single literal enum member, e.g. ``Literal[E.A]``.
+      Peeled to its enum-class ``fallback``.
+    - ``UnionType``: e.g. mypy's negative narrowing of ``elif source ==
+      SourceCodes.FM`` after a preceding ``is SourceCodes.DAB`` check
+      produces a union of literal members. The whole union is treated as
+      the enum class only if every variant resolves to the same class.
+      ``None``/``Any``/non-enum variants disqualify the union, preserving
+      parity with ``Enum | None`` (which has always been skipped).
 
     Returns ``None`` for:
-    - non-Instance types (Union, Any, None, etc.)
     - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)
     - ``StrEnum``/``IntEnum``/``ReprEnum`` not in the framework allowlist
+    - Anything else (``Any``, ``None``, mixed unions, etc.)
     """
     if t is None:
         return None
     pt = get_proper_type(t)
+    if isinstance(pt, UnionType):
+        common: TypeInfo | None = None
+        for variant in pt.items:
+            v_info = _enum_class(variant)
+            if v_info is None:
+                return None
+            if common is None:
+                common = v_info
+            elif common.fullname != v_info.fullname:
+                return None
+        return common
+    if isinstance(pt, LiteralType):
+        pt = pt.fallback
     if not isinstance(pt, Instance):
         return None
     info = pt.type

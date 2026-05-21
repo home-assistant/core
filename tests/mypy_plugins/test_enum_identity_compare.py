@@ -80,6 +80,11 @@ class ConfigEntryState(Enum):
     LOADED = "loaded"
     NOT_LOADED = "not_loaded"
 
+class SourceCodes(Enum):
+    DAB = "dab"
+    FM = "fm"
+    AUX = "aux"
+
 class MediaType(StrEnum):
     CHANNEL = "channel"
     APP = "app"
@@ -134,6 +139,68 @@ def fn(s: ConfigEntryState) -> bool:
     )
     assert len(errors) == 1
     assert "ConfigEntryState" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
+
+
+def test_bad_narrowed_elif(tmp_path: Path) -> None:
+    """An ``elif`` after an ``is`` check narrows the LHS to a literal union.
+
+    Without union/literal handling, the plugin would silently skip the
+    ``==`` here even though both operands resolve to ``SourceCodes``.
+    """
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(source: SourceCodes) -> str:
+    if source is SourceCodes.DAB:
+        return "dab"
+    elif source == SourceCodes.FM:
+        return "fm"
+    return "other"
+""",
+        tmp_path,
+    )
+    assert len(errors) == 1
+    assert "SourceCodes" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
+
+
+def test_bad_literal_annotation(tmp_path: Path) -> None:
+    """A ``Literal[...]`` annotation of an enum member is also flagged."""
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+from typing import Literal
+
+def fn(s: Literal[ConfigEntryState.LOADED]) -> bool:
+    return s == ConfigEntryState.LOADED
+""",
+        tmp_path,
+    )
+    assert len(errors) == 1
+    assert "ConfigEntryState" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
+
+
+def test_bad_optional_enum_under_strict_equality(tmp_path: Path) -> None:
+    """``Enum | None == Enum`` is flagged under ``strict_equality``.
+
+    The plugin keeps a conservative rejection of any union containing
+    ``None`` (or a non-enum variant), but under ``strict_equality`` mypy
+    narrows the LHS to the enum class itself before invoking ``__eq__``,
+    so this call site never reaches the union path — and the comparison
+    is correctly flagged. HA's ``mypy.ini`` sets ``strict_equality``.
+    """
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(source: SourceCodes | None) -> bool:
+    return source == SourceCodes.DAB
+""",
+        tmp_path,
+    )
+    assert len(errors) == 1
+    assert "SourceCodes" in errors[0]
     assert "`is`" in errors[0] and "`==`" in errors[0]
 
 
