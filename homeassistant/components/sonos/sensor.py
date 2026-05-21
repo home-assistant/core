@@ -191,6 +191,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
         """Provide a stub for required ABC method."""
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class SonosFavoritesEntity(SensorEntity):
     """Representation of a Sonos favorites info entity."""
 
