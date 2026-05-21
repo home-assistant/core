@@ -6,7 +6,6 @@ on:
 permissions:
   contents: read
   actions: read
-  issues: read
   pull-requests: read
 network:
   allowed:
@@ -14,7 +13,7 @@ network:
 tools:
   web-fetch: {}
   github:
-    toolsets: [default, actions]
+    toolsets: [repos, pull_requests]
     min-integrity: unapproved
 safe-outputs:
   add-comment:
@@ -44,7 +43,7 @@ jobs:
           PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
           echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
 steps:
   - name: Download deterministic-results artifact
@@ -83,296 +82,183 @@ description: >
 
 # Check requirements (AW)
 
-You are a code review assistant for the Home Assistant project. The
-deterministic stage has already evaluated every check it can on its own
-and produced an artifact containing the PR number, per-package check
-results, and a pre-rendered comment with placeholders. **Your only job is
-to read that artifact, resolve any `needs_agent` checks, and post the
-final comment.**
+You are a code-review assistant for Home Assistant. The deterministic
+stage already evaluated every check it can and produced an artifact at
+`/tmp/gh-aw/deterministic/results.json`. Your only job is to resolve any
+`needs_agent` checks and post the rendered comment.
 
-## Step 1 — Read the deterministic-stage artifact
+## Step 1 — Read the artifact
 
-The deterministic stage uploaded its results to the runner at
-`/tmp/gh-aw/deterministic/results.json`.
+Read the JSON directly for the full schema. Key fields:
 
-The JSON has this shape:
+- `pr_number`, `needs_agent` (bool), `packages[]`, `rendered_comment`.
+- Each `package`: `name`, `old_version` (`null` if new), `new_version`,
+  `repo_url`, `publisher_kind`, `checks` (keyed by check-kind, each
+  with `status` of `pass`/`warn`/`fail`/`needs_agent` and `details`).
+- `rendered_comment` contains, for each `needs_agent` check, two
+  placeholders to replace:
+  - `{{CHECK_CELL:<pkg>:<kind>}}` → exactly one of `✅`, `⚠️`, `❌`.
+  - `{{CHECK_DETAIL:<pkg>:<kind>}}` → `<icon> <one-line explanation>`
+    (the bullet's `- **<label>**:` prefix is already rendered; replace
+    only the placeholder).
 
-- `pr_number` — the PR being checked. The `add_comment` safe-output is
-  already targeted at this PR (a pre-job extracts `pr_number` from the
-  artifact and the workflow wires it into the safe-output config via
-  `needs.extract_pr_number.outputs.pr_number`), so **you do not need to
-  set `item_number` yourself** — just emit `add_comment` with the
-  rendered body.
-- `needs_agent` — `true` iff any package's check needs resolution.
-- `packages[]` — one entry per changed package. Each entry has:
-  - `name`, `old_version` (`null` for a newly added package; otherwise the
-    previous pin), `new_version`, `repo_url`, `publisher_kind`.
-  - `checks` — a dict keyed by **check kind** (string). Each value has a
-    `status` (`pass`, `warn`, `fail`, or `needs_agent`) and `details`.
-- `rendered_comment` — the final PR comment body, already rendered. For
-  every check whose status is `needs_agent` it contains two placeholders
-  you must replace:
-  - `{{CHECK_CELL:<pkg-name>:<check-kind>}}` — one cell of the summary
-    table. Replace with exactly one of `✅`, `⚠️`, `❌`.
-  - `{{CHECK_DETAIL:<pkg-name>:<check-kind>}}` — the body of one bullet
-    in the package's `<details>` block. Replace with
-    `<icon> <one-line explanation>` (the bullet's leading
-    `- **<label>**:` is already rendered — replace only the placeholder).
-
-You **must not** modify any other content in `rendered_comment`. Do not
-re-evaluate checks that already have a deterministic status. Do not add
-or remove packages.
+Do not modify other content in `rendered_comment`, do not re-evaluate
+deterministic checks, do not add or remove packages. If `needs_agent`
+is `false`, emit `rendered_comment` unchanged.
 
 ## Step 2 — Resolve each `needs_agent` check
 
-For each `package` in `packages`:
+For each `(package, check_kind)` with `status == "needs_agent"`, find
+the matching `### Check kind: <check_kind>` section below and follow
+it. If no section matches, emit a single `add_comment` with:
 
-For each `(check_kind, result)` in `package.checks` where
-`result.status == "needs_agent"`:
+```
+<!-- requirements-check -->
+## Check requirements
 
-1. Look up `## Check kind: <check_kind>` in the **Check instructions**
-   section below.
-2. **If no matching section exists**: emit a single `add_comment` whose
-   body is:
+❌ Internal error: deterministic artifact contains an unknown check kind
+(`<check_kind>` on `<pkg>`). Update
+`.github/workflows/check-requirements.md` or remove the kind from the
+deterministic stage.
+```
 
-   ```
-   <!-- requirements-check -->
-   ## Check requirements
-
-   ❌ Internal error: the deterministic artifact contains a check kind
-   (`<check_kind>` on package `<pkg-name>`) that this workflow has no
-   instructions for. Update `.github/workflows/check-requirements.md`
-   to add a matching `## Check kind: <check_kind>` section, or remove
-   the kind from the deterministic stage.
-   ```
-
-   Then stop. **Do not improvise** a verdict for an unknown check kind.
-3. Otherwise, follow the instructions in that section. They tell you
-   which icon (✅/⚠️/❌) and one-line explanation to produce.
+Then stop. Do not improvise a verdict.
 
 ## Step 3 — Post the comment
 
-1. Replace every `{{CHECK_CELL:…}}` and `{{CHECK_DETAIL:…}}` placeholder
-   in `rendered_comment` with the resolved value.
-2. Emit the resulting markdown using `add_comment` — set `body` to the
-   merged `rendered_comment` verbatim (the leading
-   `<!-- requirements-check -->` marker must be preserved). The PR
-   target is already set by the workflow; do not pass `item_number`.
-
-If the artifact's top-level `needs_agent` is `false` (no checks need
-you), emit `rendered_comment` unchanged.
+Replace every placeholder with the resolved value and emit
+`rendered_comment` via `add_comment`. Preserve the leading
+`<!-- requirements-check -->` marker. The PR target is already wired;
+do not pass `item_number`.
 
 ## Check instructions
 
 ### Check kind: `repo_public`
 
-Verify that the package's source repository is publicly reachable.
+`web-fetch` GET `package.repo_url`.
+- 200 + public repo page → ✅ `<repo_url> is publicly accessible.`
+- 4xx/5xx or login redirect → ❌ `Source repository at <repo_url> is
+  not publicly accessible. Home Assistant requires dependencies to
+  have publicly available source code.`
+- Otherwise → ⚠️ with a one-line description.
 
-1. Read `package.repo_url`.
-2. Use the `web-fetch` tool to GET that URL.
-3. Decide the verdict:
-   - HTTP 200, returns a public repository page → ✅
-     `<repo_url> is publicly accessible.`
-   - HTTP 4xx/5xx, or the response redirects to a login / sign-in page →
-     ❌ `Source repository at <repo_url> is not publicly accessible.
-     Home Assistant requires all dependencies to have publicly available
-     source code.`
-   - Any other inconclusive result → ⚠️ with a one-line description.
-
-If `repo_public` resolves to ❌ for a package, **also** mark that
-package's `release_pipeline` and `async_blocking` cells/details as `—`
-(em dash) and explain `Skipped because the source repository is not
-publicly accessible.` — neither check can be performed without a public
-repo.
+If ❌, also mark this package's `release_pipeline` and `async_blocking`
+cells/details as `—` and explain `Skipped because the source
+repository is not publicly accessible.`.
 
 ### Check kind: `pr_link`
 
-Verify the PR description contains the right link for the change.
+Fetch the PR body via the `pull_requests` MCP using `pr_number`. Extract URLs.
 
-1. Fetch the PR body via the GitHub MCP tool, using the `pr_number`
-   field from the artifact.
-2. Extract all URLs from the body.
-3. For a **new package** (`package.old_version` is `null`):
-   - The PR body must contain a URL that points at `package.repo_url`
-     (any sub-path of the same `owner/repo` on the same host is
-     acceptable). A PyPI link is **not** sufficient.
-   - ✅ if such a URL is present.
-   - ❌ otherwise:
-     `PR description must link to the source repository at <repo_url>.
-     A PyPI page link is not sufficient.`
-4. For a **version bump** (`package.old_version` is not `null`):
-   - The PR body must contain a URL on the same host as
-     `package.repo_url` that references **both** `package.old_version`
-     and `package.new_version` (e.g. a GitHub compare URL
-     `compare/vX...vY`, a release / changelog URL containing both
-     versions, etc.).
-   - ✅ if such a URL is present and the versions match the actual bump.
-   - ❌ otherwise:
-     `PR description should link to a changelog or compare URL on
-     <repo_url> that mentions both <old_version> and <new_version>.`
+- **New package** (`old_version == null`): body must contain a URL
+  pointing at `repo_url`'s `owner/repo` on the same host (any
+  sub-path OK). PyPI is not sufficient.
+  - ✅ if present; otherwise ❌ `PR description must link to the
+    source repository at <repo_url>. A PyPI page link is not
+    sufficient.`
+- **Version bump**: body must contain a URL on the same host as
+  `repo_url` that mentions **both** `old_version` and `new_version`
+  (compare URL, changelog, release page).
+  - ✅ if present and versions match; otherwise ❌ `PR description
+    should link to a changelog or compare URL on <repo_url> that
+    mentions both <old_version> and <new_version>.`
 
 ### Check kind: `release_pipeline`
 
-Inspect the upstream project's release / publish CI pipeline.
+Inspect the upstream's publish-to-PyPI CI. Host-specific lookup, same
+rubric:
 
-For each package needing inspection, determine the source repository
-host from `package.repo_url`, then apply the corresponding checklist.
-
-#### GitHub repositories (`github.com`)
-
-1. List workflows: `GET /repos/{owner}/{repo}/actions/workflows`.
-2. Identify any workflow whose name or filename suggests publishing to
-   PyPI (`release`, `publish`, `pypi`, or `deploy`).
-3. Fetch the workflow file and check:
-   - **Trigger sanity**: triggered by `push` to tags,
-     `release: published`, or `workflow_run` on a release job —
-     **not** solely `workflow_dispatch` with no environment-protection
-     guard.
-   - **OIDC / Trusted Publisher**: look for `id-token: write` and one of
-     `pypa/gh-action-pypi-publish`, `actions/attest-build-provenance`,
-     or `TWINE_PASSWORD` from a static `secrets.PYPI_TOKEN`.
-   - **No manual upload bypass**: no ungated `twine upload` or
-     `pip upload`.
-4. Verdict:
-   - ✅ if OIDC + sane triggers + no bypass.
-   - ⚠️ if static token but version bump, or details unclear.
-   - ❌ if static token on a new package, or only-manual triggers with
-     no environment protection.
-
-#### GitLab repositories (`gitlab.com` or self-hosted GitLab)
-
-1. Resolve the project ID via
-   `GET https://gitlab.com/api/v4/projects/{url-encoded-namespace-and-name}`.
-2. Fetch `.gitlab-ci.yml` via
-   `GET https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`.
-3. Apply the same conceptual checks: tag-only / protected-branch
-   triggers, GitLab OIDC `id_tokens` or CI/CD protected `PYPI_TOKEN`, no
-   ungated `twine upload`. Same verdict rules as GitHub.
-
-#### Other code hosting providers (Bitbucket, Codeberg, Gitea, Sourcehut, …)
-
-1. Use `web-fetch` to retrieve any visible CI configuration
-   (`.circleci/config.yml`, `Jenkinsfile`, `azure-pipelines.yml`,
-   `bitbucket-pipelines.yml`, `.builds/*.yml`).
-2. Apply the conceptual checks: automated triggers, CI-injected
-   credentials, no manual `twine upload`.
-3. If no CI config can be retrieved: ⚠️ `Release pipeline could not be
-   inspected; hosting provider is not GitHub or GitLab.`
+1. Locate the publish workflow / job (name or filename contains
+   `release`, `publish`, `pypi`, or `deploy`).
+   - GitHub: list `.github/workflows/` via the `repos` MCP, pick the
+     promising file by name, fetch its contents.
+   - GitLab: fetch `.gitlab-ci.yml` from the default ref via
+     `https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`.
+   - Other hosts: `web-fetch` an obvious CI config
+     (`.circleci/config.yml`, `bitbucket-pipelines.yml`, etc.).
+2. Apply this rubric:
+   - **Trigger**: tag push / `release: published` / protected branch —
+     not solely manual dispatch without an environment guard.
+   - **Credentials**: OIDC (`id-token: write` +
+     `pypa/gh-action-pypi-publish` or equivalent) preferred; static
+     `PYPI_TOKEN` from a CI secret acceptable for a bump.
+   - **No bypass**: no ungated `twine upload` / `pip upload`.
+3. Verdict:
+   - ✅ — OIDC + sane triggers + no bypass.
+   - ⚠️ — static token on a bump, details unclear, or
+     non-GitHub/GitLab host with limited CI visibility.
+   - ❌ — static token on a new package, or manual-only triggers
+     without environment protection.
 
 ### Check kind: `async_blocking`
 
-Verify whether the dependency performs blocking I/O inside async code
-paths. Home Assistant runs on a single asyncio event loop, so a library
-that exposes an `async` surface must not call blocking APIs from inside
-its `async def` functions — that stalls the whole loop. A purely sync
-library is fine: Home Assistant integrations are expected to wrap such
-calls in an executor.
+Verify the dependency does not call blocking APIs inside `async def`
+bodies. Home Assistant runs on a single asyncio loop, so blocking
+calls from the async surface stall the whole loop. A purely sync
+library is fine — integrations wrap its calls in an executor.
 
-**Two modes — pick by inspecting `package.old_version`:**
+**Mode** (decided by `old_version`):
+- `null` → new package: review the entire current source tree.
+- string → version bump: review only the diff between the two tags.
+  Blocking calls already present in `old_version` are not regressions.
 
-- `old_version` is `null` → **new package**: review the *entire current
-  source tree*. Nothing about this dependency has been vetted before.
-- `old_version` is a string → **version bump**: review only the *diff
-  between `old_version` and `new_version`*. The previous version was
-  already accepted, so blocking calls that were present in
-  `old_version` are not regressions; report only what `new_version`
-  introduces.
+**Step 1 — async surface?**
 
-#### Step 1 — Decide whether the library exposes an async surface
+Fetch `pyproject.toml` / `setup.py` / `setup.cfg` / `README*` at the
+tag matching `new_version` (try `v{version}`, `{version}`,
+`release-{version}` — at most two attempts). Use the `repos` MCP for
+github.com, `web-fetch` otherwise.
 
-Use the `github` MCP tool (for `github.com` repos) or `web-fetch`
-(other hosts) on `package.repo_url`. Always inspect the tag /
-ref matching `new_version` (e.g. `v{new_version}` or `{new_version}`).
+If sync-only (no `async def` in public modules; no
+asyncio/aiohttp/httpx/anyio in deps; no `Framework :: AsyncIO`
+classifier) → ✅ `Sync-only library; Home Assistant integrations must
+wrap calls in an executor.` (Same verdict for both modes.)
 
-- Locate the top-level package directory (usually named after the
-  import name, often equal or close to `package.name`).
-- Check `pyproject.toml` / `setup.py` / `setup.cfg` / `README*` for
-  async indicators (`Framework :: AsyncIO` trove classifier, `asyncio`
-  / `aiohttp` / `httpx` / `anyio` in dependencies, an async usage
-  example in the README).
-- Grep the package source for `async def`. A handful of `async def`
-  entries in the public modules is enough to treat the library as
-  having an async surface.
+**Step 2 — review the surface**
 
-If the library is **sync-only** (no `async def` in its public modules
-and no async framework dependency) → ✅
-`Sync-only library; Home Assistant integrations must wrap calls in an
-executor.` *This verdict is the same in both modes.*
+- New package: grep public modules for `async def`, inspect each
+  async body and transitive helpers.
+- Bump: fetch the compare diff
+  (`/repos/{owner}/{repo}/compare/{old}...{new}` on GitHub, equivalent
+  on GitLab/other hosts). Only flag patterns on **added** lines that
+  are inside or reachable from `async def`. If no tag format resolves,
+  fall back to a full review and note that the diff was unavailable.
 
-#### Step 2a — Mode: new package (`old_version` is `null`)
+**Blocking patterns to flag inside `async def`:**
 
-Inspect **every `async def` in the public modules** for blocking
-patterns. Walk transitively into helpers the async functions call.
-
-#### Step 2b — Mode: version bump (`old_version` is a string)
-
-Fetch the diff between the two tags and review **only changed lines**:
-
-- GitHub: `GET /repos/{owner}/{repo}/compare/{old_tag}...{new_tag}` via
-  the `github` MCP tool, or
-  `https://github.com/{owner}/{repo}/compare/{old_tag}...{new_tag}.diff`
-  via `web-fetch`. Try the common tag formats in order until one
-  resolves: `v{version}`, `{version}`, `release-{version}`.
-- GitLab: `https://gitlab.com/{namespace}/{project}/-/compare/{old_tag}...{new_tag}.diff`.
-- Other hosts: use the project's equivalent compare URL via
-  `web-fetch`.
-
-If neither tag format resolves on the host, fall back to a full review
-(Step 2a) and mention in the detail that the diff was unavailable.
-
-When reviewing the diff, only flag blocking patterns that appear in
-**added lines** *inside or reachable from* an `async def`. A blocking
-call that existed in `old_version` and is unchanged is not a regression
-for this bump.
-
-#### Step 3 — Blocking patterns to look for
-
-In both modes, the patterns to flag inside `async def` bodies are:
-
-- Sync HTTP: `requests.`, `urllib.request`, `urllib3.` direct use,
-  `http.client.`, sync `httpx.Client(` / `httpx.get(` (NOT the
-  `AsyncClient`), `pycurl`.
-- `time.sleep(` (must be `await asyncio.sleep(`).
-- Sync sockets: bare `socket.socket` reads/writes, `ssl.wrap_socket`,
+- Sync HTTP: `requests.`, `urllib.request`, `urllib3.` direct,
+  `http.client.`, sync `httpx.Client(` / `httpx.get(`, `pycurl`.
+- `time.sleep(` (use `await asyncio.sleep(`).
+- Sync sockets/SSL: bare `socket.socket` I/O, `ssl.wrap_socket`,
   blocking `select.select`.
-- File I/O: `open(` / `pathlib.Path.read_*` / `.write_*` for
-  non-trivial sizes (small one-shot reads during import are
-  acceptable; reads/writes on the request path are not — prefer
-  `aiofiles` / executor).
-- Sync DB drivers used directly: `sqlite3`, `psycopg2`, `pymysql`,
-  `pymongo` (sync client), `redis.Redis` (sync client).
-- `subprocess.run` / `subprocess.call` / `os.system` (must be
-  `asyncio.create_subprocess_*`).
+- File I/O on the request path: `open(` /
+  `pathlib.Path.read_*` / `.write_*` for non-trivial sizes (small
+  one-shot reads during import are OK).
+- Sync DB drivers: `sqlite3`, `psycopg2`, `pymysql`, sync `pymongo` /
+  `redis.Redis`.
+- `subprocess.run` / `subprocess.call` / `os.system`.
 
-A call that is clearly dispatched to an executor
-(`run_in_executor`, `asyncio.to_thread`, `anyio.to_thread.run_sync`)
-does NOT count as blocking.
+Calls dispatched to an executor (`run_in_executor`,
+`asyncio.to_thread`, `anyio.to_thread.run_sync`) do **not** count as
+blocking.
 
-#### Step 4 — Verdict
+**Verdict:**
 
-- ✅ — no offending blocking pattern in the surface being reviewed
-  (whole tree for a new package, added lines for a bump). For a bump,
-  phrase the detail as `No new blocking calls introduced in
-  {old_version} → {new_version}.`.
-- ⚠️ — blocking calls exist only in sync helpers that the async API
-  does not call, or only on a clearly non-hot path (e.g. one-shot
-  setup before the event loop is running). Cite at least one
-  `<file>:<line>` and explain why it is not on the hot path.
-- ❌ — a blocking call is reachable from an `async def` that is part
-  of the public API on the request / polling path (for a bump: the
-  call was introduced or moved onto the hot path by this version).
-  Cite the offending `<file>:<line>` as a clickable link on the repo
-  host so the contributor can jump to it.
+- ✅ — no offending pattern. Bumps: phrase as `No new blocking calls
+  introduced in {old_version} → {new_version}.`.
+- ⚠️ — blocking only in sync helpers the async API never calls, or
+  clearly off the hot path (e.g. one-shot pre-loop setup). Cite at
+  least one `<file>:<line>` and say why it's not hot.
+- ❌ — blocking call reachable from a public `async def` on the
+  request/polling path (bump: introduced or moved onto the hot path
+  by this version). Cite the offending `<file>:<line>` as a clickable
+  link on the repo host.
 
 ## Notes
 
-- Be constructive and helpful. Reference the inspected workflow / CI
-  file by URL where useful so the contributor can fix the issue.
-- The dedup of the requirements-check comment is handled by gh-aw's
-  `add_comment` safe-output via the `<!-- requirements-check -->`
-  marker on the first line of `rendered_comment`.
-- If the deterministic workflow concluded with a non-success status,
-  this workflow's `if:` guard on `Download deterministic-results
-  artifact` skipped the download. If you find no file at
-  `/tmp/gh-aw/deterministic/results.json`, emit nothing — the post-step
-  verification is also gated and will not complain.
+- Be constructive; reference the inspected file by URL when useful.
+- Comment dedup is handled by gh-aw's `add_comment` safe-output via
+  the `<!-- requirements-check -->` marker.
+- If `/tmp/gh-aw/deterministic/results.json` is missing (upstream
+  cancelled/failed), emit nothing — the post-step verification is
+  gated and won't complain.
