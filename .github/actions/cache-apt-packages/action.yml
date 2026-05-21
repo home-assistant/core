@@ -2,7 +2,7 @@ name: Cache and install APT packages
 description: >-
   Wraps awalsh128/cache-apt-pkgs-action with the workarounds Home Assistant CI
   needs. Removes the conflicting Microsoft apt source before any apt run, and
-  points the dynamic linker at /usr/lib/x86_64-linux-gnu subdirectories so
+  points the dynamic linker at the host's multiarch lib subdirectories so
   shared libraries that rely on update-alternatives or postinst-managed paths
   (eg libblas, liblapack pulled in by ffmpeg) stay reachable since the upstream
   action does not execute postinst scripts on cache restore.
@@ -39,11 +39,13 @@ runs:
       run: |
         # awalsh128/cache-apt-pkgs-action does not run postinst scripts on
         # cache restore, so update-alternatives symlinks (eg the one libblas
-        # creates at /usr/lib/x86_64-linux-gnu/libblas.so.3) are never
-        # produced. Add every /usr/lib/x86_64-linux-gnu subdirectory that
-        # holds shared libraries to the ldconfig search path so the dynamic
-        # linker still finds them.
-        find /usr/lib/x86_64-linux-gnu -mindepth 2 -maxdepth 2 \
+        # creates at /usr/lib/<multiarch>/libblas.so.3) are never produced.
+        # Add every /usr/lib/<multiarch> subdirectory that holds shared
+        # libraries to the ldconfig search path so the dynamic linker still
+        # finds them.  Use dpkg-architecture to derive the host's multiarch
+        # tuple so this works on non-x86_64 runners too.
+        multiarch="$(dpkg-architecture -qDEB_HOST_MULTIARCH)"
+        find "/usr/lib/${multiarch}" -mindepth 2 -maxdepth 2 \
           -name '*.so.*' -printf '%h\n' \
           | sort -u \
           | sudo tee /etc/ld.so.conf.d/zzz-cache-apt-extras.conf > /dev/null
