@@ -25,7 +25,7 @@ async def test_setup_migrates_to_groups(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test setting up and removing a config entry."""
+    """Test migrating to group sensors."""
     assert await async_setup_component(hass, "repairs", {})
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("sensor.input_two", "20")
@@ -108,3 +108,52 @@ async def test_setup_migrates_to_groups(
     await hass.async_block_till_done()
     state = hass.states.get(min_max_entity_id)
     assert state.state == "30.0"
+
+
+async def test_issue_is_deleted_on_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test issue is removed on config entry removal."""
+    assert await async_setup_component(hass, "repairs", {})
+    hass.states.async_set("sensor.input_one", "10")
+    hass.states.async_set("sensor.input_two", "20")
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        entry_id="123",
+        options={
+            "entity_ids": input_sensors,
+            "name": "My min_max",
+            "round_digits": 2.0,
+            "type": "max",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is True
+    assert issue.breaks_in_ha_version == "2026.12.0"
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
+    assert issue is None
