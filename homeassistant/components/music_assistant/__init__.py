@@ -23,7 +23,7 @@ from music_assistant_models.errors import (
 from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -38,7 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, CONF_TOKEN, DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
 from .services import register_actions
 
