@@ -31,6 +31,8 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from tests.common import (
     ANY,
     MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
     RegistryEntryWithDefaults,
     async_capture_events,
     async_fire_time_changed,
@@ -3773,13 +3775,14 @@ def test_migrate_entity_to_new_platform(
         )
 
 
-def test_migrate_entity_to_new_platform_error_handling(
+async def test_migrate_entity_to_new_platform_error_handling(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrate_entity_to_new_platform."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="hue")
     orig_config_entry = MockConfigEntry(
-        domain="light",
+        domain="test",
         subentries_data=[
             config_entries.ConfigSubentryData(
                 data={},
@@ -3791,22 +3794,15 @@ def test_migrate_entity_to_new_platform_error_handling(
         ],
     )
     orig_config_entry.add_to_hass(hass)
-    orig_unique_id = "5678"
-
-    orig_entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
-        orig_unique_id,
-        suggested_object_id="light",
-        config_entry=orig_config_entry,
-        config_subentry_id="mock-subentry-id-1",
-        disabled_by=er.RegistryEntryDisabler.USER,
-        entity_category=EntityCategory.CONFIG,
-        original_device_class="mock-device-class",
-        original_icon="initial-original_icon",
-        original_name="initial-original_name",
+    platform.config_entry = orig_config_entry
+    entity_entry = MockEntity(
+        name="Light entity", entity_id="light.light", unique_id="5678"
     )
-    assert entity_registry.async_get("light.light") is orig_entry
+    await platform.async_add_entities(
+        [entity_entry], config_subentry_id="mock-subentry-id-1"
+    )
+
+    assert entity_registry.async_get("light.light") is not None
 
     new_config_entry = MockConfigEntry(
         domain="light",
@@ -3832,6 +3828,27 @@ def test_migrate_entity_to_new_platform_error_handling(
             new_config_entry_id=new_config_entry.entry_id,
         )
 
+    with pytest.raises(
+        ValueError,
+        match="Only entities that haven't been loaded can be migrated",
+    ):
+        entity_registry.async_update_entity_platform(
+            "light.light",
+            "hue3",
+        )
+
+    with pytest.raises(
+        ValueError, match="Only entities that haven't been loaded can be migrated"
+    ):
+        entity_registry.async_update_entity_platform(
+            "light.light",
+            "hue2",
+            new_unique_id=new_unique_id,
+            new_config_entry_id=new_config_entry.entry_id,
+        )
+
+    await platform.async_reset()
+
     # Test migrate entity without new config entry ID
     with pytest.raises(
         ValueError,
@@ -3854,18 +3871,6 @@ def test_migrate_entity_to_new_platform_error_handling(
         entity_registry.async_update_entity_platform(
             "light.light",
             "hue3",
-            new_config_entry_id=new_config_entry.entry_id,
-        )
-
-    # Test entity with a state
-    hass.states.async_set("light.light", "on")
-    with pytest.raises(
-        ValueError, match="Only entities that haven't been loaded can be migrated"
-    ):
-        entity_registry.async_update_entity_platform(
-            "light.light",
-            "hue2",
-            new_unique_id=new_unique_id,
             new_config_entry_id=new_config_entry.entry_id,
         )
 

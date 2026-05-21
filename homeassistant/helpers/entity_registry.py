@@ -31,7 +31,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
@@ -1951,9 +1950,12 @@ class EntityRegistry(BaseRegistry):
         This should only be used when an entity needs to be migrated between
         integrations.
         """
+        # import here to avoid circular import
+        from .entity import entity_sources  # noqa: PLC0415
+
         if (
-            state := self.hass.states.get(entity_id)
-        ) is not None and state.state != STATE_UNKNOWN:
+            loaded_entities := entity_sources(self.hass)
+        ) and entity_id in loaded_entities:
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
