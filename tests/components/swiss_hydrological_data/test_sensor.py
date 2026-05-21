@@ -35,7 +35,7 @@ async def test_entities_unavailable_on_update_failure(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities become unavailable on update failure."""
+    """Test entities become unavailable when data is None after update."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.aare_bern_temperature")

@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["swisshydrodata"],
-  "quality_scale": "bronze",
+  "quality_scale": "legacy",
   "requirements": ["swisshydrodata==0.1.0"]
 }

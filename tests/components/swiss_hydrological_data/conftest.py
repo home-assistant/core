@@ -61,7 +61,7 @@ def mock_swiss_hydro_data() -> Generator[MagicMock]:
     """Mock SwissHydroData."""
     with (
         patch(
-            "homeassistant.components.swiss_hydrological_data.coordinator.SwissHydroData",
+            "homeassistant.components.swiss_hydrological_data.sensor.SwissHydroData",
         ) as mock_class,
         patch(
             "homeassistant.components.swiss_hydrological_data.config_flow.SwissHydroData",
