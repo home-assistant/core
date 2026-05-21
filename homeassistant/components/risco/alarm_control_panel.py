@@ -215,6 +215,7 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
+        self._cloud_data.alarm = alarm
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 

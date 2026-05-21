@@ -68,6 +68,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
 
     async def _bypass(self, bypass: bool) -> None:
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)
+        self._cloud_data.alarm = alarm
         self._zone = alarm.zones[self._zone_id]
         self.async_write_ha_state()
 
