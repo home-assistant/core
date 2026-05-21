@@ -29,13 +29,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
-from .const import (
-    CONF_ADVANCED_OPTIONS,
-    CONF_DEFAULT_ENTITY_ID,
-    DOCUMENTATION_URL,
-    DOMAIN,
-)
+from .const import CONF_ADVANCED_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -166,6 +162,20 @@ async def validate_template_scripts(
                 )
 
 
+def async_create_platform_template_not_supported_issue(
+    hass: HomeAssistant, domain: str
+):
+    """Create a platform: template not supported issue."""
+    async_create_platform_config_not_supported_issue(
+        hass,
+        DOMAIN,
+        domain,
+        yaml_config_under_integration_supported=True,
+        learn_more_url=f"https://www.home-assistant.io/integrations/template/#{slugify(domain, separator='-')}",
+        logger=_LOGGER,
+    )
+
+
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
@@ -179,14 +189,7 @@ async def async_setup_template_platform(
     """Set up the Template platform."""
     if discovery_info is None:
         # Legacy Configuration
-        async_create_platform_config_not_supported_issue(
-            hass,
-            DOMAIN,
-            domain,
-            yaml_config_under_integration_supported=True,
-            learn_more_url=DOCUMENTATION_URL,
-            logger=_LOGGER,
-        )
+        async_create_platform_template_not_supported_issue(hass, domain)
         return
 
     # Trigger Configuration
