@@ -44,3 +44,22 @@ def async_delete_linked_infrared_entity_missing_issue(
         DOMAIN,
         _linked_infrared_entity_issue_id(remote_id),
     )
+
+
+def async_delete_stale_linked_infrared_entity_missing_issues(
+    hass: HomeAssistant,
+    *,
+    configured_remote_ids: set[str],
+) -> None:
+    """Delete missing-infrared repair issues for removed virtual remotes."""
+    issue_registry = ir.async_get(hass)
+    issue_id_prefix = f"{ISSUE_LINKED_INFRARED_ENTITY_MISSING}_"
+
+    for issue in list(issue_registry.issues.values()):
+        if issue.domain != DOMAIN or not issue.issue_id.startswith(issue_id_prefix):
+            continue
+
+        remote_id = issue.issue_id.removeprefix(issue_id_prefix)
+        if remote_id not in configured_remote_ids:
+            ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
+

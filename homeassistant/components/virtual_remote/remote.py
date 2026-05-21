@@ -30,6 +30,7 @@ from .const import (
 from .repairs import (
     async_create_linked_infrared_entity_missing_issue,
     async_delete_linked_infrared_entity_missing_issue,
+    async_delete_stale_linked_infrared_entity_missing_issues,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,14 +198,14 @@ def cleanup_stale_missing_infrared_issues(
     configured_remote_ids: set[str],
     *,
     issue_cleanup_handler: RestoredInfraredEntityIssueHandler | None,
-    known_remote_ids: set[str],
 ) -> None:
     """Clear repair issues for remote ids that are no longer configured."""
-    if issue_cleanup_handler is None:
+    if issue_cleanup_handler is not _delete_missing_issue:
         return
 
-    for remote_id in known_remote_ids - configured_remote_ids:
-        issue_cleanup_handler(hass, remote_id)
+    async_delete_stale_linked_infrared_entity_missing_issues(
+        hass, configured_remote_ids=configured_remote_ids
+    )
 
 
 async def async_setup_virtual_remote_entities(
@@ -237,8 +238,6 @@ async def async_setup_virtual_remote_entities(
 
     entities: list[InfraredRemoteEntity] = []
     configured_remote_ids: set[str] = set()
-    known_remote_ids: set[str] = set()
-
     for remote_config in configured_remote_definitions(entry):
         remote_id = remote_config.get(CONF_REMOTE_ID)
         name = remote_config.get(CONF_REMOTE_NAME)
@@ -256,8 +255,6 @@ async def async_setup_virtual_remote_entities(
         ):
             _LOGGER.debug("Skipping malformed virtual remote entry")
             continue
-
-        known_remote_ids.add(remote_id)
 
         if remote_id in configured_remote_ids:
             _LOGGER.debug("Skipping duplicate virtual remote id: %s", remote_id)
@@ -285,7 +282,6 @@ async def async_setup_virtual_remote_entities(
         hass,
         configured_remote_ids,
         issue_cleanup_handler=restored_infrared_issue_handler,
-        known_remote_ids=known_remote_ids,
     )
 
     if cleanup_devices:
@@ -337,7 +333,8 @@ class InfraredRemoteEntity(RemoteEntity):
         has_entity_name: bool,
         translation_domain: str = DOMAIN,
         missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
-        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
+        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler
+        | None = None,
     ) -> None:
         """Initialize the virtual remote."""
         self._remote_id = remote_id
