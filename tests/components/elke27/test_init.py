@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, patch
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 
-from homeassistant.components.elke27 import _async_migrate_unique_ids
+from homeassistant.components.elke27 import (
+    _async_migrate_unique_ids,
+    async_unload_entry,
+)
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LEGACY_PIN,
@@ -129,6 +132,34 @@ async def test_setup_transient_error_returns_not_ready(
 
     coordinator_cls.assert_not_called()
     hub.async_disconnect.assert_awaited_once()
+
+
+async def test_unload_keeps_runtime_when_platform_unload_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test unload leaves runtime running when platform unload fails."""
+    hub = SimpleNamespace(
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_stop=AsyncMock(return_value=None),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.16"},
+    )
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        AsyncMock(return_value=False),
+    ):
+        assert not await async_unload_entry(hass, entry)
+
+    coordinator.async_stop.assert_not_awaited()
+    hub.async_disconnect.assert_not_awaited()
 
 
 async def test_setup_missing_link_keys_raises_auth_failed(
