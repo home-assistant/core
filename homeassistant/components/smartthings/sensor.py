@@ -38,6 +38,7 @@ from .const import MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
 
+
 THERMOSTAT_CAPABILITIES = {
     Capability.TEMPERATURE_MEASUREMENT,
     Capability.THERMOSTAT_HEATING_SETPOINT,
@@ -142,6 +143,55 @@ STICK_CLEANER_STATUS = {
 }
 
 WASHER_OPTIONS = ["pause", "run", "stop"]
+
+WASHER_CYCLES = [
+    "1c",
+    "2b",
+    "1b",
+    "1e",
+    "1d",
+    "96",
+    "8f",
+    "25",
+    "26",
+    "33",
+    "24",
+    "32",
+    "20",
+    "22",
+    "23",
+    "2f",
+    "21",
+    "66",
+    "2e",
+    "2d",
+    "30",
+    "29",
+    "27",
+    "28",
+]
+
+DRYER_CYCLES = [
+    "51",
+    "53",
+    "23",
+    "17",
+    "18",
+    "19",
+    "1d",
+    "1b",
+    "1c",
+    "21",
+    "1a",
+    "1e",
+    "20",
+    "27",
+    "25",
+    "24",
+    "4e",
+    "4c",
+]
+
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -1278,6 +1328,68 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    "samsungce.washerCycle": {
+        "washerCycle": [
+            SmartThingsSensorEntityDescription(
+                key="washerCycle",
+                translation_key="washer_cycle",
+                icon="mdi:washing-machine",
+                options=WASHER_CYCLES,
+                device_class=SensorDeviceClass.ENUM,
+            )
+        ]
+    },
+    "samsungce.dryerCycle": {
+        "dryerCycle": [
+            SmartThingsSensorEntityDescription(
+                key="dryerCycle",
+                translation_key="dryer_cycle",
+                icon="mdi:tumble-dryer",
+                options=DRYER_CYCLES,
+                device_class=SensorDeviceClass.ENUM,
+            )
+        ]
+    },
+    "samsungce.washerOperatingState": {
+        "progress": [
+            SmartThingsSensorEntityDescription(
+                key="progress",
+                translation_key="washer_progress",
+                icon="mdi:washing-machine",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=PERCENTAGE,
+            )
+        ],
+        "remainingTime": [
+            SmartThingsSensorEntityDescription(
+                key="remainingTime",
+                translation_key="washer_remaining_time",
+                icon="mdi:timer-sand",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement="min",
+            )
+        ]
+    },
+    "samsungce.dryerOperatingState": {
+        "progress": [
+            SmartThingsSensorEntityDescription(
+                key="progress",
+                translation_key="dryer_progress",
+                icon="mdi:tumble-dryer",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=PERCENTAGE,
+            )
+        ],
+        "remainingTime": [
+            SmartThingsSensorEntityDescription(
+                key="remainingTime",
+                translation_key="dryer_remaining_time",
+                icon="mdi:timer-sand",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement="min",
+            )
+        ]
+    },
 }
 
 
@@ -1424,6 +1536,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def native_value(self) -> str | float | datetime | int | None:
         """Return the state of the sensor."""
         res = self.get_attribute_value(self.capability, self._attribute)
+        if self.capability in ("samsungce.washerCycle", "samsungce.dryerCycle"):
+            if not res:
+                return None
+            return res.split("_")[-1].lower() if "_" in res else res.lower()
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
         value = self.entity_description.value_fn(res)
