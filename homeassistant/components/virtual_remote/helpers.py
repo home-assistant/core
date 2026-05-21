@@ -1,5 +1,7 @@
 """Helper functions for the Virtual Remote integration."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import re
 from typing import Any
@@ -224,9 +226,8 @@ def _normalize_command_mapping(value: Any) -> dict[str, str]:
     if not isinstance(value, Mapping):
         return {}
 
-    commands: dict[str, str] = {}
-    for key, item in value.items():
-        if isinstance(key, str) and key and isinstance(item, str):
-            commands[key] = item
-
-    return commands
+    return {
+        key: item
+        for key, item in value.items()
+        if isinstance(key, str) and key and isinstance(item, str)
+    }

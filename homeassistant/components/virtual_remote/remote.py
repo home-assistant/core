@@ -1,5 +1,7 @@
 """Remote entities for virtual remotes backed by infrared entities."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Callable, Iterable, Mapping
 import logging
@@ -43,9 +45,7 @@ COMMAND_POWER_TOGGLE = "POWER_TOGGLE"
 
 type DeviceInfoFactory = Callable[[str, str, Mapping[str, Any]], DeviceInfo]
 type EntityNameFactory = Callable[[str, str, Mapping[str, Any]], str | None]
-type MissingInfraredEntityIssueHandler = Callable[
-    [HomeAssistant, str, str, str], None
-]
+type MissingInfraredEntityIssueHandler = Callable[[HomeAssistant, str, str, str], None]
 type RestoredInfraredEntityIssueHandler = Callable[[HomeAssistant, str], None]
 
 
@@ -323,6 +323,7 @@ async def async_setup_entry(
 class InfraredRemoteEntity(RemoteEntity):
     """Virtual remote backed by a Home Assistant infrared entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -338,7 +339,8 @@ class InfraredRemoteEntity(RemoteEntity):
         has_entity_name: bool,
         translation_domain: str = DOMAIN,
         missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
-        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
+        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler
+        | None = None,
     ) -> None:
         """Initialize the virtual remote."""
         self._remote_id = remote_id

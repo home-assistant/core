@@ -1,5 +1,7 @@
 """Repairs support for the Virtual Remote integration."""
 
+from __future__ import annotations
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
