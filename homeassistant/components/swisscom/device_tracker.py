@@ -1,6 +1,7 @@
 """Support for Swisscom routers (Internet-Box)."""
 
 from contextlib import suppress
+import json
 import logging
 
 import requests
@@ -11,7 +12,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -19,9 +20,14 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.1.1"
+DEFAULT_USERNAME = "admin"
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+    }
 )
 
 
@@ -40,7 +46,10 @@ class SwisscomDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
+        self.username = config[CONF_USERNAME]
+        self.password = config.get(CONF_PASSWORD)
         self.last_results = {}
+        self._context_id: str | None = None
 
         # Test the router is accessible.
         data = self.get_swisscom_data()
@@ -76,10 +85,57 @@ class SwisscomDeviceScanner(DeviceScanner):
         self.last_results = active_clients
         return True
 
+    def _login(self) -> str | None:
+        """Authenticate against the router and return a context ID."""
+        try:
+            response = requests.post(
+                f"http://{self.host}/ws",
+                headers={
+                    "Content-Type": "application/x-sah-ws-4-call+json",
+                    "Authorization": "X-Sah-Login",
+                },
+                data=json.dumps(
+                    {
+                        "service": "sah.Device.Information",
+                        "method": "createContext",
+                        "parameters": {
+                            "applicationName": "webui",
+                            "username": self.username,
+                            "password": self.password,
+                        },
+                    }
+                ),
+                timeout=10,
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectTimeout,
+        ):
+            _LOGGER.debug("Login request to Swisscom Internet Box failed")
+            return None
+
+        if response.status_code != 200:
+            _LOGGER.warning(
+                "Authentication to Swisscom Internet Box failed (status %s)",
+                response.status_code,
+            )
+            return None
+
+        with suppress(ValueError, KeyError):
+            return response.json()["data"]["contextID"]
+        return None
+
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
+        if self.password and self._context_id is None:
+            self._context_id = self._login()
+
         url = f"http://{self.host}/ws"
         headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
+        if self._context_id is not None:
+            headers["Authorization"] = f"X-Sah {self._context_id}"
+            headers["X-Context"] = self._context_id
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
@@ -95,6 +151,23 @@ class SwisscomDeviceScanner(DeviceScanner):
         ):
             _LOGGER.debug("No response from Swisscom Internet Box")
             return devices
+
+        # Context may have expired; refresh it once and retry.
+        if request.status_code == 401 and self.password:
+            self._context_id = self._login()
+            if self._context_id is None:
+                return devices
+            headers["Authorization"] = f"X-Sah {self._context_id}"
+            headers["X-Context"] = self._context_id
+            try:
+                request = requests.post(url, headers=headers, data=data, timeout=10)
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectTimeout,
+            ):
+                _LOGGER.debug("No response from Swisscom Internet Box")
+                return devices
 
         if "status" not in request.json():
             _LOGGER.debug("No status in response from Swisscom Internet Box")
