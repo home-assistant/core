@@ -34,6 +34,7 @@ pytest-unordered==0.7.0
 pytest-picked==0.5.1
 pytest-xdist==3.8.0
 pytest==9.0.3
+requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
 syrupy==5.2.0
@@ -54,3 +55,4 @@ types-pytz==2026.1.1.20260408
 types-PyYAML==6.0.12.20260408
 types-requests==2.33.0.20260408
 types-xmltodict==1.0.1.20260408
+unidiff==0.7.5
