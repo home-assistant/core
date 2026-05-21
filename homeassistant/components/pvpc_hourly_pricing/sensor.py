@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from aiopvpc.const import KEY_INJECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
+from esios_api.const import KEY_INJECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
 
 from homeassistant.components.sensor import (
     SensorEntity,
