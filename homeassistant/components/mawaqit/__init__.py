@@ -1,23 +1,10 @@
 """The mawaqit_prayer_times component."""
 
-from dataclasses import dataclass
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
-
-
-@dataclass
-class MawaqitData:
-    """Runtime data for the Mawaqit integration."""
-
-    mosque_coordinator: MosqueCoordinator
-    prayer_time_coordinator: PrayerTimeCoordinator
-
-
-type MawaqitConfigEntry = ConfigEntry[MawaqitData]
+from .types import MawaqitConfigEntry, MawaqitData
 
 PLATFORMS = [Platform.SENSOR]
 
