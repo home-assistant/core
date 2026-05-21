@@ -1,4 +1,5 @@
 """Configuration for Abode tests."""
+# DNM: cache empirical test — touch this conftest to provoke a full cache bust.
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
