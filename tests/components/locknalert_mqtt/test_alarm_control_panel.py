@@ -82,62 +82,16 @@ DEFAULT_FEATURES = (
     | AlarmControlPanelEntityFeature.TRIGGER
 )
 
-DEFAULT_CONFIG = {
-    locknalert_mqtt.DOMAIN: {
-        alarm_control_panel.DOMAIN: {
-            "name": "test",
-            "state_topic": "alarm/state",
-            "command_topic": "alarm/command",
-        }
-    }
-}
+def _alarm_config(**extra) -> dict:
+    base = {"name": "test", "state_topic": "alarm/state", "command_topic": "alarm/command"}
+    return {locknalert_mqtt.DOMAIN: {alarm_control_panel.DOMAIN: base | extra}}
 
-DEFAULT_CONFIG_CODE_NOT_REQUIRED = {
-    locknalert_mqtt.DOMAIN: {
-        alarm_control_panel.DOMAIN: {
-            "name": "test",
-            "state_topic": "alarm/state",
-            "command_topic": "alarm/command",
-            "code_arm_required": False,
-        }
-    }
-}
 
-DEFAULT_CONFIG_CODE = {
-    locknalert_mqtt.DOMAIN: {
-        alarm_control_panel.DOMAIN: {
-            "name": "test",
-            "state_topic": "alarm/state",
-            "command_topic": "alarm/command",
-            "code": "0123",
-            "code_arm_required": True,
-        }
-    }
-}
-
-DEFAULT_CONFIG_REMOTE_CODE = {
-    locknalert_mqtt.DOMAIN: {
-        alarm_control_panel.DOMAIN: {
-            "name": "test",
-            "state_topic": "alarm/state",
-            "command_topic": "alarm/command",
-            "code": "REMOTE_CODE",
-            "code_arm_required": True,
-        }
-    }
-}
-
-DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
-    locknalert_mqtt.DOMAIN: {
-        alarm_control_panel.DOMAIN: {
-            "name": "test",
-            "state_topic": "alarm/state",
-            "command_topic": "alarm/command",
-            "code": "REMOTE_CODE_TEXT",
-            "code_arm_required": True,
-        }
-    }
-}
+DEFAULT_CONFIG = _alarm_config()
+DEFAULT_CONFIG_CODE_NOT_REQUIRED = _alarm_config(code_arm_required=False)
+DEFAULT_CONFIG_CODE = _alarm_config(code="0123", code_arm_required=True)
+DEFAULT_CONFIG_REMOTE_CODE = _alarm_config(code="REMOTE_CODE", code_arm_required=True)
+DEFAULT_CONFIG_REMOTE_CODE_TEXT = _alarm_config(code="REMOTE_CODE_TEXT", code_arm_required=True)
 
 
 @contextmanager

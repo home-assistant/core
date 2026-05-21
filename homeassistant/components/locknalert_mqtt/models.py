@@ -26,9 +26,9 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessage
 
-    from .client import MQTT, Subscription
+    from aiolocknalert.client import Subscription
 
-
+    from .client import MQTTAdapter
     from .discovery import MQTTDiscoveryPayload
 from .const import DOMAIN, TEMPLATE_ERRORS
 
@@ -54,23 +54,13 @@ def convert_outgoing_mqtt_payload(
     if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
-        except ValueError, TypeError, SyntaxError, MemoryError:
+        except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
         else:
             if isinstance(native_object, bytes):
                 return native_object
 
     return payload
-
-
-@dataclass
-class PublishMessage:
-    """MQTT Message for publishing."""
-
-    topic: str
-    payload: PublishPayloadType
-    qos: int
-    retain: bool
 
 
 # eq=False so we use the id() of the object for comparison
@@ -366,7 +356,7 @@ class EntityTopicState:
 class MqttData:
     """Keep the MQTT entry data."""
 
-    client: MQTT
+    client: MQTTAdapter
     config: list[ConfigType]
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to

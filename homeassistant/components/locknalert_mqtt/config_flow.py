@@ -92,7 +92,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
-from .client import MqttClientSetup
+from aiolocknalert.client import MqttClientSetup
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     ATTR_PAYLOAD,

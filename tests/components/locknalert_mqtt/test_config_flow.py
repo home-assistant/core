@@ -218,47 +218,23 @@ async def test_zeroconf_shows_form_when_bridge_unreachable(
     assert result["step_id"] == "zeroconf_confirm"
 
 
-async def test_zeroconf_confirm_aborts_on_cannot_connect(hass: HomeAssistant) -> None:
-    """Confirm step aborts when bridge is not reachable on submit."""
-    with patch(
-        "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
-    ) as mock_cls:
-        instance = MagicMock()
-        instance.async_get_info = AsyncMock(side_effect=LocknAlertCannotConnect)
-        instance.async_bootstrap = AsyncMock(side_effect=LocknAlertCannotConnect)
-        mock_cls.return_value = instance
-        with patch(
-            "homeassistant.components.locknalert_mqtt.config_flow.ClientSession"
-        ) as cs:
-            session = AsyncMock()
-            cs.return_value.__aenter__ = AsyncMock(return_value=session)
-            cs.return_value.__aexit__ = AsyncMock(return_value=False)
-
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "zeroconf"},
-                data=_make_zeroconf_info(),
-            )
-            assert result["type"] == FlowResultType.FORM
-
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={CONF_BRIDGE_SERIAL: MOCK_BRIDGE_SERIAL}
-            )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_confirm_aborts_on_invalid_response(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("exc", "reason"),
+    [
+        (LocknAlertCannotConnect, "cannot_connect"),
+        (LocknAlertInvalidResponse, "invalid_response"),
+    ],
+)
+async def test_zeroconf_confirm_aborts_on_bridge_error(
+    hass: HomeAssistant, exc: type[Exception], reason: str
 ) -> None:
-    """Confirm step aborts when bridge returns an unexpected response on submit."""
+    """Confirm step aborts when the bridge raises on submit."""
     with patch(
         "homeassistant.components.locknalert_mqtt.config_flow.LocknAlertBridgeApi"
     ) as mock_cls:
         instance = MagicMock()
-        instance.async_get_info = AsyncMock(side_effect=LocknAlertInvalidResponse)
-        instance.async_bootstrap = AsyncMock(side_effect=LocknAlertInvalidResponse)
+        instance.async_get_info = AsyncMock(side_effect=exc)
+        instance.async_bootstrap = AsyncMock(side_effect=exc)
         mock_cls.return_value = instance
         with patch(
             "homeassistant.components.locknalert_mqtt.config_flow.ClientSession"
@@ -279,7 +255,7 @@ async def test_zeroconf_confirm_aborts_on_invalid_response(
             )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "invalid_response"
+    assert result["reason"] == reason
 
 
 async def test_zeroconf_aborts_on_duplicate(hass: HomeAssistant) -> None:

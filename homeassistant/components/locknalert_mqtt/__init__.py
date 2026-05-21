@@ -37,7 +37,7 @@ from homeassistant.util.async_ import create_eager_task
 # Loading the config flow file will register the flow
 from . import discovery
 from .client import (
-    MQTT,
+    MQTTAdapter,
     async_on_subscribe_done,
     async_publish,
     async_subscribe,
@@ -143,7 +143,7 @@ __all__ = [
     "DOMAIN",
     "ENTITY_PLATFORMS",
     "ENTRY_OPTION_FIELDS",
-    "MQTT",
+    "MQTTAdapter",
     "MQTT_BASE_SCHEMA",
     "MQTT_CONNECTION_STATE",
     "MQTT_RO_SCHEMA",
@@ -212,7 +212,7 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 #
 # Legacy supported style:
 #
-# mqtt:
+# locknalert_mqtt:
 #   {domain}:
 #     - name: ""
 #       ...
@@ -429,7 +429,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
-        client = MQTT(hass, entry, conf)
+        client = MQTTAdapter(hass, entry, conf)
         if DATA_MQTT in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
@@ -561,7 +561,7 @@ async def websocket_subscribe(
             payload = cast(bytes, mqttmsg.payload).decode(
                 DEFAULT_ENCODING
             )  # not str because encoding is set to None
-        except AttributeError, UnicodeDecodeError:
+        except (AttributeError, UnicodeDecodeError):
             # Convert non UTF-8 payload to a string presentation
             payload = str(mqttmsg.payload)
 
