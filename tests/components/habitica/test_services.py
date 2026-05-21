@@ -1768,6 +1768,12 @@ async def test_create_todo(
         ),
         (
             {
+                ATTR_INTERVAL: 0,
+            },
+            Task(everyX=0),
+        ),
+        (
+            {
                 ATTR_FREQUENCY: "weekly",
                 ATTR_REPEAT: ["m", "t", "w", "th"],
             },
