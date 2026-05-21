@@ -177,10 +177,15 @@ class Elke27AreaAlarmControlPanel(
         code = _normalize_code(code)
         for zone_id, _ in _faulted_zones(self.coordinator.data):
             try:
-                await self._hub.async_set_zone_bypass(zone_id, bypassed=True, pin=code)
+                bypassed = await self._hub.async_set_zone_bypass(
+                    zone_id, bypassed=True, pin=code
+                )
             except Elke27PinRequiredError as err:
                 msg = "PIN required to perform this action."
                 raise HomeAssistantError(msg) from err
+            if not bypassed:
+                msg = f"Zone {zone_id} bypass was not acknowledged."
+                raise HomeAssistantError(msg)
         await self._async_arm(_custom_bypass_mode(), code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

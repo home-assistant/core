@@ -176,6 +176,14 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         await area_1.async_alarm_disarm()
 
     hub.async_set_zone_bypass.reset_mock()
+    hub.async_arm_area.reset_mock()
+    hub.async_set_zone_bypass.return_value = False
+    with pytest.raises(HomeAssistantError, match="Zone 1 bypass was not acknowledged."):
+        await area_1.async_alarm_arm_custom_bypass(code="1234")
+    hub.async_arm_area.assert_not_awaited()
+
+    hub.async_set_zone_bypass.reset_mock()
+    hub.async_set_zone_bypass.return_value = None
     hub.async_set_zone_bypass.side_effect = alarm_module.Elke27PinRequiredError
     with pytest.raises(
         HomeAssistantError, match="PIN required to perform this action."

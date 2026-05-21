@@ -78,11 +78,18 @@ def test_snapshot_to_dict() -> None:
     assert config_flow._snapshot_to_dict({"a": 1}) == {"a": 1}
     assert config_flow._snapshot_to_dict(None) == {}
 
+    class SlottedObj:
+        __slots__ = ("value",)
+
+        def __init__(self) -> None:
+            self.value = 1
+
     class Obj:
         def __init__(self) -> None:
             self.value = 1
             self._hidden = 2
 
+    assert config_flow._snapshot_to_dict(SlottedObj()) == {}
     assert config_flow._snapshot_to_dict(Obj()) == {"value": 1}
 
 
@@ -147,6 +154,44 @@ async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> No
             data_schema=STEP_USER_DATA_SCHEMA,
         )
         assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_link_and_create_entry_suppresses_disconnect_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test disconnect cleanup errors do not mask flow errors."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=False)
+    client.async_disconnect = AsyncMock(side_effect=RuntimeError("boom"))
+
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    flow._context = {}
+    flow._selected_host = "1.2.3.4"
+    flow._selected_port = DEFAULT_PORT
+
+    with (
+        patch(
+            "homeassistant.components.elke27.config_flow._create_client",
+            side_effect=_client_factory([client]),
+        ),
+        patch(
+            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+            AsyncMock(return_value="112233"),
+        ),
+    ):
+        result = await flow._async_link_and_create_entry(
+            access_code="1",
+            passphrase="2",
+            errors={},
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+        )
+
+    assert result["errors"]["base"] == "cannot_connect"
+    client.async_disconnect.assert_awaited_once()
 
 
 async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None:

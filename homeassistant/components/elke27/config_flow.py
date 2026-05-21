@@ -1,5 +1,6 @@
 """Config flow for the Elke27 integration."""
 
+import contextlib
 from dataclasses import asdict, is_dataclass
 from typing import Any
 
@@ -145,7 +146,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         except Elke27Error:
             errors["base"] = "unknown"
         finally:
-            await client.async_disconnect()
+            with contextlib.suppress(Exception):
+                await client.async_disconnect()
 
         if errors or link_keys is None:
             return self.async_show_form(
@@ -209,8 +211,7 @@ def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
         return asdict(snapshot)
     if isinstance(snapshot, dict):
         return dict(snapshot)
-    return {
-        key: value
-        for key, value in snapshot.__dict__.items()
-        if not key.startswith("_")
-    }
+    attributes = getattr(snapshot, "__dict__", None)
+    if attributes is None:
+        return {}
+    return {key: value for key, value in attributes.items() if not key.startswith("_")}
