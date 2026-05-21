@@ -251,7 +251,7 @@ async def test_intent_handle_error(
         )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
 
 
 async def test_multiple_intents_handle_error(
@@ -307,7 +307,7 @@ async def test_multiple_intents_handle_error(
         )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
 
     # Ensure that no tool calls were recorded
     assert not any(
@@ -398,7 +398,7 @@ async def test_not_handled(
         )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
 
