@@ -46,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         try:
             await client.connect()
         except WebOsTvPairError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed(err) from err
 
     # If pairing request accepted there will be no error

@@ -17,7 +17,7 @@ from .helpers import async_deliver_events, build_event
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
-    "climate.garden_radiator",
+    "climate.maple_residence_garden_radiator",
 )
 
 

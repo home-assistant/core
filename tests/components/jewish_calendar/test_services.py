@@ -6,11 +6,10 @@ import pytest
 
 from homeassistant.components.jewish_calendar.const import (
     ATTR_AFTER_SUNSET,
-    ATTR_DATE,
     ATTR_NUSACH,
     DOMAIN,
 )
-from homeassistant.const import CONF_LANGUAGE
+from homeassistant.const import ATTR_DATE, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 
 
