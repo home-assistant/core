@@ -94,6 +94,40 @@ async def test_connect_wait_ready_false_disconnects(
     client.async_disconnect.assert_awaited_once()
 
 
+async def test_connect_replaces_client_without_unavailable_log(
+    hass: HomeAssistant,
+) -> None:
+    """Test intentional reconnect replacement does not log unavailable."""
+    old_client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+    new_client = AsyncMock()
+    new_client.async_connect = AsyncMock(return_value=None)
+    new_client.set_client_identity = Mock()
+    new_client.wait_ready = AsyncMock(return_value=True)
+    new_client.subscribe = Mock(return_value=Mock())
+
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.71",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = old_client
+
+    with (
+        patch(
+            "homeassistant.components.elke27.hub.Elke27Client",
+            side_effect=_client_factory(new_client),
+        ),
+        patch.object(hub, "_log_unavailable") as log_unavailable,
+    ):
+        await hub.async_connect()
+
+    old_client.async_disconnect.assert_awaited_once()
+    log_unavailable.assert_not_called()
+
+
 async def test_refresh_and_subscribe_errors(hass: HomeAssistant) -> None:
     """Verify refresh methods and subscribe error when disconnected."""
     hub = Elke27Hub(

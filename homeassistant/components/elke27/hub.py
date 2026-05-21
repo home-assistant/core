@@ -94,7 +94,7 @@ class Elke27Hub:
     async def _async_connect(self) -> None:
         """Connect the client, then await readiness."""
         async with self._connect_lock:
-            await self._async_disconnect()
+            await self._async_disconnect(log_unavailable=False)
             link_keys = LinkKeys.from_json(self._link_keys_json)
             client = Elke27Client(ClientConfig())
             client_identity = build_client_identity(self._integration_serial)
@@ -133,7 +133,7 @@ class Elke27Hub:
             self._reconnect_task = None
         await self._async_disconnect()
 
-    async def _async_disconnect(self) -> None:
+    async def _async_disconnect(self, *, log_unavailable: bool = True) -> None:
         """Disconnect the client and unregister event handlers."""
         was_connected = self._client is not None
         if self._connection_unsubscribe is not None:
@@ -143,7 +143,7 @@ class Elke27Hub:
             await self._client.async_disconnect()
         self._client = None
         self._clear_typed_subscriptions()
-        if was_connected and not self._stopping:
+        if was_connected and not self._stopping and log_unavailable:
             self._log_unavailable()
 
     def get_snapshot(self) -> Any | None:
@@ -452,8 +452,10 @@ class Elke27Hub:
             _LOGGER.debug("Reconnect attempt %s starting", self._reconnect_attempts + 1)
             try:
                 await self._async_connect()
-            except Elke27LinkRequiredError:
-                _LOGGER.exception("Reconnect aborted because panel linking is required")
+            except Elke27LinkRequiredError as err:
+                _LOGGER.warning(
+                    "Reconnect aborted because panel linking is required: %s", err
+                )
                 return
             except (
                 ConfigEntryNotReady,
