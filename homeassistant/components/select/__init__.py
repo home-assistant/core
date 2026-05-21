@@ -8,6 +8,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -18,13 +19,11 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_CYCLE,
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_FIRST,
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
-    SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
 )
 
