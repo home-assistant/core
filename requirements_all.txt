@@ -267,7 +267,7 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.ghost
-aioghost==0.4.0
+aioghost==0.4.16
 
 # homeassistant.components.github
 aiogithubapi==26.0.0
@@ -2680,7 +2680,7 @@ python-open-router==0.3.3
 python-opendata-transport==0.5.0
 
 # homeassistant.components.openevse
-python-openevse-http==0.2.5
+python-openevse-http==0.3.4
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
@@ -3429,7 +3429,7 @@ zamg==0.3.6
 zcc-helper==3.8
 
 # homeassistant.components.zeroconf
-zeroconf==0.149.7
+zeroconf==0.149.16
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
