@@ -207,7 +207,7 @@ async def test_latitude(
     expected_state: str,
 ) -> None:
     """Test template latitude."""
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, expected_value)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.state == expected_state
@@ -283,7 +283,7 @@ async def test_location_accuracy(
     state_attribute: str,
 ) -> None:
     """Test template location_accuracy."""
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, expected_value)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.state == STATE_NOT_HOME
@@ -317,12 +317,12 @@ async def test_entity_picture_and_icon_templates(
     hass: HomeAssistant, key: str, expected: str
 ) -> None:
     """Test picture and icon template."""
-    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, "off")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "off")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.attributes.get(key) == ""
 
-    state = await async_trigger(hass, TEST_STATE_ENTITY_ID, "on")
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "on")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
 
