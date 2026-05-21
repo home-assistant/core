@@ -81,7 +81,7 @@ async def test_entry_diagnostics_exceptions(
 
         def __init__(self, original_charger: MagicMock) -> None:
             self._original_charger = original_charger
-            # Copy other properties so that inspect.getattr_static finds them in __dict__
+            # Copy other properties from the original mock for realism
             excluded = {
                 "status",
                 "charging_voltage",

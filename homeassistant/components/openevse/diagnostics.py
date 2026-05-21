@@ -2,9 +2,7 @@
 
 from datetime import date, datetime
 from enum import Enum
-import inspect
 from typing import Any
-from unittest.mock import Mock, NonCallableMock
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -82,7 +80,7 @@ def _to_json_safe(val: Any) -> Any:
     if isinstance(val, (list, tuple)):
         return [_to_json_safe(v) for v in val]
     if isinstance(val, dict):
-        return {str(k): _to_json_safe(v) for k, v in val.items()}
+        return {str(k): _to_json_safe(val[k]) for k in sorted(val, key=str)}
     if callable(val):
         return None
     return f"<{type(val).__name__} object>"
@@ -98,15 +96,6 @@ async def async_get_config_entry_diagnostics(
     charger_data: dict[str, Any] = {}
 
     for prop in CHARGER_PROPERTIES:
-        # To prevent auto-creating mock attributes during tests when using MagicMock,
-        # we statically check for the attribute's existence on mock objects.
-        # This is restricted to mock objects to support dynamic runtime attributes in production.
-        if isinstance(charger, (Mock, NonCallableMock)):
-            try:
-                inspect.getattr_static(charger, prop)
-            except AttributeError:
-                continue
-
         try:
             val = getattr(charger, prop)
         except AttributeError:
