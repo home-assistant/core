@@ -18,6 +18,7 @@ from tesla_fleet_api.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -26,7 +27,7 @@ from homeassistant.helpers.selector import (
     QrErrorCorrectionLevel,
 )
 
-from .const import CONF_DOMAIN, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .oauth import TeslaUserImplementation
 
 
