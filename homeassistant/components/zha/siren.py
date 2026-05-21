@@ -3,15 +3,10 @@
 import functools
 from typing import Any
 
-from zha.application.const import (
-    WARNING_DEVICE_MODE_BURGLAR,
-    WARNING_DEVICE_MODE_EMERGENCY,
-    WARNING_DEVICE_MODE_EMERGENCY_PANIC,
-    WARNING_DEVICE_MODE_FIRE,
-    WARNING_DEVICE_MODE_FIRE_PANIC,
-    WARNING_DEVICE_MODE_POLICE_PANIC,
+from zha.application.platforms.siren import (
+    SirenEntityFeature as ZHASirenEntityFeature,
+    WarningMode,
 )
-from zha.application.platforms.siren import SirenEntityFeature as ZHASirenEntityFeature
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -59,12 +54,12 @@ class ZHASiren(ZHAEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
     _attr_available_tones: list[int | str] | dict[int, str] | None = {
-        WARNING_DEVICE_MODE_BURGLAR: "Burglar",
-        WARNING_DEVICE_MODE_FIRE: "Fire",
-        WARNING_DEVICE_MODE_EMERGENCY: "Emergency",
-        WARNING_DEVICE_MODE_POLICE_PANIC: "Police Panic",
-        WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
-        WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
+        WarningMode.Burglar: "Burglar",
+        WarningMode.Fire: "Fire",
+        WarningMode.Emergency: "Emergency",
+        WarningMode.Police_Panic: "Police Panic",
+        WarningMode.Fire_Panic: "Fire Panic",
+        WarningMode.Emergency_Panic: "Emergency Panic",
     }
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
