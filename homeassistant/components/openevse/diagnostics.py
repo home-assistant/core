@@ -4,6 +4,7 @@ from datetime import date, datetime
 from enum import Enum
 import inspect
 from typing import Any
+from unittest.mock import Mock, NonCallableMock
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -63,7 +64,13 @@ CHARGER_PROPERTIES = (
 
 
 def _to_json_safe(val: Any) -> Any:
-    """Coerce value to be JSON-serializable."""
+    """Coerce value to be JSON-serializable.
+
+    Top-level callables on the charger object are skipped entirely in the main
+    diagnostics loop. For nested structures (lists, dicts, tuples, sets), any
+    encountered callable elements are coerced to None here to preserve the
+    structure while remaining JSON-safe.
+    """
     if isinstance(val, (str, int, float, bool)) or val is None:
         return val
     if isinstance(val, (datetime, date)):
@@ -93,7 +100,8 @@ async def async_get_config_entry_diagnostics(
     for prop in CHARGER_PROPERTIES:
         # To prevent auto-creating mock attributes during tests when using MagicMock,
         # we statically check for the attribute's existence on mock objects.
-        if hasattr(charger, "mock_add_spec"):
+        # This is restricted to mock objects to support dynamic runtime attributes in production.
+        if isinstance(charger, (Mock, NonCallableMock)):
             try:
                 inspect.getattr_static(charger, prop)
             except AttributeError:
@@ -107,6 +115,8 @@ async def async_get_config_entry_diagnostics(
             charger_data[prop] = f"Error: {type(err).__name__}"
             continue
 
+        # Top-level callables on the charger object are omitted from diagnostics.
+        # Any nested callables within collections are coerced to None by _to_json_safe.
         if callable(val):
             continue
 

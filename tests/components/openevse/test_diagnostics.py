@@ -20,7 +20,7 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test OpenEVSE diagnostics."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(
@@ -53,7 +53,7 @@ async def test_entry_diagnostics_redact(
         unique_id="deadbeeffeed",
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
@@ -140,7 +140,7 @@ async def test_entry_diagnostics_exceptions(
             return lambda: "callable_value"
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Inject the FakeCharger into the coordinator to isolate side effects
