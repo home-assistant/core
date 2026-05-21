@@ -1,7 +1,5 @@
 """The Eve Online integration."""
 
-from __future__ import annotations
-
 from eveonline import EveOnlineClient
 
 from homeassistant.const import Platform

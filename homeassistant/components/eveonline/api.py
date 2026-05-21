@@ -1,7 +1,5 @@
 """API helpers for the Eve Online integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from aiohttp import ClientError, ClientSession

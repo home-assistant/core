@@ -1,7 +1,5 @@
 """Sensor platform for the Eve Online integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
