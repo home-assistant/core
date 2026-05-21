@@ -14,9 +14,14 @@ from homeassistant.components.hassio import (
     AddonState,
 )
 from homeassistant.components.onboarding import async_is_onboarded
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
@@ -28,6 +33,7 @@ from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_SYNC_NAMES,
     CONF_USE_ADDON,
     DOMAIN,
     LOGGER,
@@ -61,6 +67,14 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Matter."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> MatterOptionsFlowHandler:
+        """Return the options flow."""
+        return MatterOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Set up flow instance."""
@@ -343,6 +357,29 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
+        )
+
+
+class MatterOptionsFlowHandler(OptionsFlow):
+    """Handle Matter integration options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SYNC_NAMES,
+                        default=self.config_entry.options.get(CONF_SYNC_NAMES, False),
+                    ): bool,
+                }
+            ),
         )
 
 
