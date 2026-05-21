@@ -748,6 +748,25 @@ async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     assert test.async_check()
 
 
+async def test_shorthand_template_condition_in_or(hass: HomeAssistant) -> None:
+    """Test shorthand template condition inside or block doesn't crash."""
+    config = {
+        "condition": "or",
+        "conditions": [
+            '{{ states("sensor.test") == "on" }}',
+            {"condition": "state", "entity_id": "sensor.other", "state": "on"},
+        ],
+    }
+    config = await condition.async_validate_condition_config(hass, config)
+    assert config["conditions"][0]["condition"] == "template"
+
+    # Verify the condition can actually be evaluated at runtime
+    test = await condition.async_from_config(hass, config)
+    hass.states.async_set("sensor.test", "on")
+    hass.states.async_set("sensor.other", "off")
+    assert test.async_check()
+
+
 async def test_not_condition(hass: HomeAssistant) -> None:
     """Test the 'not' condition."""
     config = {
@@ -2390,7 +2409,7 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
 async def test_get_condition_platform_registers_conditions(
     hass: HomeAssistant,
 ) -> None:
-    """Test _async_get_condition_platform registers conditions and notifies subscribers."""
+    """Test _async_get_condition_platform registers and notifies."""
 
     class MockCondition(Condition):
         """Mock condition."""
@@ -2834,7 +2853,8 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No light conditions added, they are gated by the automation.new_triggers_conditions
+    # No light conditions added, they are gated by the
+    # automation.new_triggers_conditions
     # labs flag
     assert new_descriptions == expected_descriptions
 
@@ -3098,7 +3118,7 @@ async def test_subscribe_conditions_experimental_conditions(
     new_triggers_conditions_enabled: bool,
     expected_events: list[set[str]],
 ) -> None:
-    """Test condition.async_subscribe_platform_events doesn't send events for disabled conditions."""
+    """Test async_subscribe_platform_events skips disabled conditions."""
     # Return empty conditions.yaml for light integration, the actual condition
     # descriptions are irrelevant for this test
     light_condition_descriptions = ""
@@ -3155,7 +3175,7 @@ async def test_subscribe_conditions_no_conditions(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test condition.async_subscribe_platform_events doesn't send events for platforms without conditions."""
+    """Test async_subscribe_platform_events skips platforms without conditions."""
     # Return empty conditions.yaml for light integration, the actual condition
     # descriptions are irrelevant for this test
     light_condition_descriptions = ""
@@ -3734,7 +3754,7 @@ async def test_numerical_condition_with_unit_entity_reference(
 async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     hass: HomeAssistant,
 ) -> None:
-    """Test numerical condition returns false when entity reference has incompatible unit."""
+    """Test numerical condition returns false with incompatible unit."""
     test = await _setup_numerical_condition_with_unit(
         hass,
         condition_options={
@@ -4455,6 +4475,7 @@ async def test_condition_checker_call_calls_async_check(
             return True
 
     checker = MockChecker(hass)
+    await checker.async_setup()
     check_mock = Mock(wraps=checker.async_check)
     checker.async_check = check_mock
 
@@ -5014,7 +5035,7 @@ async def test_state_condition_attr_duration_entity_added_to_target(
 async def test_state_condition_attr_duration_entity_removed_from_target(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test that _valid_since is evicted when an entity is removed from the tracked set."""
+    """Test _valid_since is evicted when entity is removed from tracked set."""
     label_reg = lr.async_get(hass)
     label = label_reg.async_create("Test Duration Remove")
 
@@ -5258,8 +5279,9 @@ async def test_state_condition_primary_entities_only(
     hass.states.async_set(primary_id, STATE_ON)
     hass.states.async_set(diagnostic_id, STATE_OFF)
     await hass.async_block_till_done()
-    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
-    # the diagnostic entity is off. If excluded, only the primary is checked and it's on.
+    # If diagnostic is included (primary_entities_only=False),
+    # behavior=all fails because the diagnostic entity is off.
+    # If excluded, only the primary is checked and it's on.
     assert test.async_check() is primary_entities_only
 
     # Both on - true regardless of flag
@@ -5294,8 +5316,9 @@ async def test_numerical_condition_primary_entities_only(
     hass.states.async_set(primary_id, "75")
     hass.states.async_set(diagnostic_id, "25")
     await hass.async_block_till_done()
-    # If diagnostic is included (primary_entities_only=False), behavior=all fails because
-    # the diagnostic value is below the threshold. If excluded, only the primary is
+    # If diagnostic is included (primary_entities_only=False),
+    # behavior=all fails because the diagnostic value is below
+    # the threshold. If excluded, only the primary is
     # checked and it's above.
     assert test.async_check() is primary_entities_only
 
@@ -5357,17 +5380,10 @@ async def test_state_condition_primary_entities_only_with_duration(
 async def test_async_from_config_calls_async_setup_on_checker(
     hass: HomeAssistant,
 ) -> None:
-    """Test that async_from_config calls async_setup on ConditionChecker from factory path."""
+    """Test async_from_config calls async_setup on ConditionChecker."""
 
     class StubChecker(condition.ConditionChecker):
         """Stub checker to track async_setup calls."""
-
-        def __init__(self, hass: HomeAssistant) -> None:
-            super().__init__(hass)
-            self.setup_called = False
-
-        async def async_setup(self) -> None:
-            self.setup_called = True
 
         def _async_check(self, **kwargs: Any) -> bool:
             return True
@@ -5390,4 +5406,77 @@ async def test_async_from_config_calls_async_setup_on_checker(
         result = await condition.async_from_config(hass, config)
 
     assert result is stub
-    assert stub.setup_called
+    assert stub._set_up is True
+
+
+async def test_async_setup_invokes_async_setup_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_setup awaits _async_setup and sets _set_up."""
+
+    setup_hook = AsyncMock()
+
+    class MockChecker(ConditionChecker):
+        async def _async_setup(self) -> None:
+            await setup_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._set_up is False
+    setup_hook.assert_not_called()
+
+    await checker.async_setup()
+
+    setup_hook.assert_awaited_once()
+    assert checker._set_up is True
+
+
+async def test_async_check_raises_before_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_check raises HomeAssistantError before async_setup is called."""
+
+    class MockChecker(ConditionChecker):
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker.async_check()
+
+    with pytest.raises(HomeAssistantError, match="not set up"):
+        checker(hass)
+
+    await checker.async_setup()
+
+    assert checker.async_check() is True
+    assert checker(hass) is True
+
+
+async def test_async_unload_invokes_async_unload_hook(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_unload calls _async_unload and sets _unloaded."""
+
+    unload_hook = Mock()
+
+    class MockChecker(ConditionChecker):
+        def _async_unload(self) -> None:
+            unload_hook()
+
+        def _async_check(self, **kwargs: Any) -> bool:
+            return True
+
+    checker = MockChecker(hass)
+
+    assert checker._unloaded is False
+    unload_hook.assert_not_called()
+
+    checker.async_unload()
+
+    unload_hook.assert_called_once()
+    assert checker._unloaded is True

@@ -347,7 +347,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires on the first sensor state change."""
+    """Test trigger fires on the first sensor state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -385,7 +385,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test battery level_crossed_threshold trigger fires when the last sensor changes state."""
+    """Test trigger fires when the last sensor changes."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_sensors,

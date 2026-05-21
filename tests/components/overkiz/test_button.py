@@ -22,12 +22,12 @@ from tests.common import snapshot_platform
 MY_POSITION = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/12184029",
-    "button.garden_house_shutter_my_position",
+    "button.office_garden_house_shutter_my_position",
 )
 IDENTIFY = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "io://1234-1234-6233/12184029",
-    "button.garden_house_shutter_identify",
+    "button.office_garden_house_shutter_identify",
 )
 GO_TO_ALIAS = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_2.json",
@@ -37,7 +37,7 @@ GO_TO_ALIAS = FixtureDevice(
 CHECK_EVENT_TRIGGER = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/8907539",
-    "button.living_room_smoke_detector_test",
+    "button.maple_residence_living_room_smoke_detector_test",
 )
 
 SNAPSHOT_FIXTURES = [

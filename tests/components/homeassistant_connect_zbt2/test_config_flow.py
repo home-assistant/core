@@ -305,7 +305,8 @@ async def test_options_flow(
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=usb_data.device,
                     firmware_type=ApplicationType.SPINEL,
@@ -425,13 +426,8 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=1,
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        minor_version=2,
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -448,7 +444,7 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
-    """Test that firmware notification triggers import flow that auto-creates config entry."""
+    """Test firmware notification triggers import flow creating entry."""
     await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
     await async_setup_component(hass, USB_DOMAIN, {})
 
@@ -522,12 +518,7 @@ async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> 
             "manufacturer": USB_DATA_ZBT2.manufacturer,
             "product": USB_DATA_ZBT2.description,
         },
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 

@@ -3,6 +3,7 @@
 import asyncio
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -982,7 +983,7 @@ async def test_init_unknown_flow(manager: MockFlowManager) -> None:
 
 
 async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
-    """Test that UnknownFlow is raised when async_get is called with a flow_id that does not exist."""
+    """Test UnknownFlow raised when async_get gets unknown flow_id."""
 
     with pytest.raises(data_entry_flow.UnknownFlow):
         await manager.async_get("does_not_exist")
@@ -991,7 +992,7 @@ async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
 async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
     manager: MockFlowManager,
 ) -> None:
-    """Test that moving to an unknown step raises and removes the flow from in progress."""
+    """Test unknown step raises and removes flow from in progress."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -1017,7 +1018,7 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
 async def test_next_step_unknown_step_raises_and_removes_from_in_progress(
     manager: MockFlowManager, result_type: str, params: dict[str, str]
 ) -> None:
-    """Test that moving to an unknown step raises and removes the flow from in progress."""
+    """Test unknown step raises and removes flow from in progress."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -1272,3 +1273,33 @@ def test_nested_section_in_serializer() -> None:
                 {"collapsed": False},
             )
         )
+
+
+@pytest.mark.parametrize(
+    ("context", "expected_show_advanced"),
+    [
+        ({}, False),
+        ({"show_advanced_options": False}, False),
+        ({"show_advanced_options": True}, True),
+    ],
+)
+async def test_show_advanced_options(
+    manager: MockFlowManager, context: dict[str, Any], expected_show_advanced: bool
+) -> None:
+    """Test FlowHandler show_advanced_options property."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_init(self, info):
+            assert self.show_advanced_options == expected_show_advanced
+            return self.async_create_entry(title="hello", data={})
+
+    await manager.async_init("test", context=context, data={})
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 1
+
+    entry = manager.mock_created_entries[0]
+    assert entry["handler"] == "test"
+    assert entry["title"] == "hello"

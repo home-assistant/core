@@ -291,12 +291,13 @@ async def async_check_config_schema(
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
+                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
-                        message,
                         translation_domain=DOMAIN,
-                        translation_key="invalid_platform_config",
+                        translation_key="invalid_platform_config_message",
                         translation_placeholders={
                             "domain": domain,
+                            "message": message,
                         },
                     ) from exc
 
@@ -405,6 +406,56 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
         ),
     )
+
+    async def _reload_config(call: ServiceCall) -> None:
+        """Reload the platforms."""
+        entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
+        mqtt_data = hass.data[DATA_MQTT]
+
+        # Fetch updated manually configured items and validate
+        try:
+            config_yaml = await async_integration_yaml_config(
+                hass, DOMAIN, raise_on_failure=True
+            )
+        except ConfigValidationError as ex:
+            raise ServiceValidationError(
+                translation_domain=ex.translation_domain,
+                translation_key=ex.translation_key,
+                translation_placeholders=ex.translation_placeholders,
+            ) from ex
+
+        new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
+        platforms_used = platforms_from_config(new_config)
+        new_platforms = platforms_used - mqtt_data.platforms_loaded
+        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
+        # Check the schema before continuing reload
+        await async_check_config_schema(hass, config_yaml)
+
+        # Remove repair issues
+        _async_remove_mqtt_issues(hass, mqtt_data)
+
+        mqtt_data.config = new_config
+
+        # Reload the modern yaml platforms
+        mqtt_platforms = async_get_platforms(hass, DOMAIN)
+        tasks = [
+            create_eager_task(entity.async_remove())
+            for mqtt_platform in mqtt_platforms
+            for entity in list(mqtt_platform.entities.values())
+            if getattr(entity, "_discovery_data", None) is None
+            and mqtt_platform.config_entry
+            and mqtt_platform.domain in ENTITY_PLATFORMS
+        ]
+        await asyncio.gather(*tasks)
+
+        for component in mqtt_data.reload_handlers.values():
+            component()
+
+        # Fire event
+        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     return True
 
 
@@ -519,54 +570,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await mqtt_data.client.async_connect(client_available)
 
     # setup platforms and discovery
-    async def _reload_config(call: ServiceCall) -> None:
-        """Reload the platforms."""
-        # Fetch updated manually configured items and validate
-        try:
-            config_yaml = await async_integration_yaml_config(
-                hass, DOMAIN, raise_on_failure=True
-            )
-        except ConfigValidationError as ex:
-            raise ServiceValidationError(
-                translation_domain=ex.translation_domain,
-                translation_key=ex.translation_key,
-                translation_placeholders=ex.translation_placeholders,
-            ) from ex
-
-        new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
-        platforms_used = platforms_from_config(new_config)
-        new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
-        # Check the schema before continuing reload
-        await async_check_config_schema(hass, config_yaml)
-
-        # Remove repair issues
-        _async_remove_mqtt_issues(hass, mqtt_data)
-
-        mqtt_data.config = new_config
-
-        # Reload the modern yaml platforms
-        mqtt_platforms = async_get_platforms(hass, DOMAIN)
-        tasks = [
-            create_eager_task(entity.async_remove())
-            for mqtt_platform in mqtt_platforms
-            for entity in list(mqtt_platform.entities.values())
-            if getattr(entity, "_discovery_data", None) is None
-            and mqtt_platform.config_entry
-            and mqtt_platform.domain in ENTITY_PLATFORMS
-        ]
-        await asyncio.gather(*tasks)
-
-        for component in mqtt_data.reload_handlers.values():
-            component()
-
-        # Fire event
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
     await async_forward_entry_setup_and_setup_discovery(hass, entry, platforms_used)
-    # Setup reload service after all platforms have loaded
-    if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
-        async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     # Setup discovery
     if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(

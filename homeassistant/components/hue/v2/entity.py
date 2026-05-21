@@ -32,7 +32,7 @@ RESOURCE_TYPE_NAMES = {
 }
 
 
-class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Generic Entity Class for a Hue resource."""
 
     _attr_should_poll = False
@@ -124,7 +124,8 @@ class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
     def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_DELETED:
-            # cleanup entities that are not strictly device-bound and have the bridge as parent
+            # cleanup entities that are not strictly device-bound
+            # and have the bridge as parent
             if self.device is None and resource.id == self.resource.id:
                 ent_reg = er.async_get(self.hass)
                 ent_reg.async_remove(self.entity_id)
@@ -141,7 +142,8 @@ class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
         # return if we already processed this entity
         if self._ignore_availability is not None:
             return
-        # only do the availability check for entities connected to a device (with `on` feature)
+        # only do the availability check for entities connected to
+        # a device (with `on` feature)
         if self.device is None or not hasattr(self.resource, "on"):
             self._ignore_availability = False
             return
@@ -192,7 +194,8 @@ class HueBaseEntity(Entity):  # pylint: disable=hass-enforce-class-module
                     self.device.product_data.model_id,
                     self.device.product_data.software_version,
                 )
-                # set attribute to false because we only want to log once per light/device.
-                # a user must opt-in to ignore availability through integration options
+                # set attribute to false because we only want to log
+                # once per light/device. a user must opt-in to
+                # ignore availability through integration options
                 self._ignore_availability = False
         self._last_state = cur_state

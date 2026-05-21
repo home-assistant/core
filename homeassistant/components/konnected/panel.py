@@ -1,5 +1,5 @@
 """Support for Konnected devices."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 import logging
@@ -82,7 +82,7 @@ class AlarmPanel:
 
     @property
     def device_id(self):
-        """Device id is the chipId (pro) or MAC address as string with punctuation removed."""
+        """Device id is the chipId (pro) or MAC address as string."""
         return self.config.get(CONF_ID)
 
     @property
