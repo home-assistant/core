@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from enum import Enum
+import inspect
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -88,11 +89,14 @@ async def async_get_config_entry_diagnostics(
     charger_data: dict[str, Any] = {}
     for prop in CHARGER_PROPERTIES:
         try:
-            val = getattr(charger, prop)
+            inspect.getattr_static(charger, prop)
         except AttributeError:
             continue
+
+        try:
+            val = getattr(charger, prop)
         except Exception as err:  # noqa: BLE001
-            charger_data[prop] = f"Error: {type(err).__name__}: {err}"
+            charger_data[prop] = f"Error: {type(err).__name__}"
             continue
 
         if callable(val):

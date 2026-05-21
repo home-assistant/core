@@ -81,11 +81,23 @@ async def test_entry_diagnostics_exceptions(
 
         def __init__(self, original_charger: MagicMock) -> None:
             self._original_charger = original_charger
-
-        def __getattr__(self, name: str) -> Any:
-            if name == "status":
-                raise AttributeError
-            return getattr(self._original_charger, name)
+            # Copy other properties so that inspect.getattr_static finds them in __dict__
+            excluded = {
+                "status",
+                "charging_voltage",
+                "vehicle_eta",
+                "mode",
+                "divertmode",
+                "manual_override",
+                "ota_update",
+                "service_level",
+                "uptime",
+                "wifi_firmware",
+            }
+            # Copy all mock attributes except the overridden ones
+            for key, val in original_charger.__dict__.items():
+                if key not in excluded:
+                    self.__dict__[key] = val
 
         @property
         def charging_voltage(self) -> int:
@@ -98,6 +110,34 @@ async def test_entry_diagnostics_exceptions(
         @property
         def mode(self) -> MockEnum:
             return MockEnum.TEST
+
+        @property
+        def divertmode(self) -> set[str]:
+            return {"solar", "eco"}
+
+        @property
+        def manual_override(self) -> frozenset[str]:
+            return frozenset({"override"})
+
+        @property
+        def ota_update(self) -> tuple[str, ...]:
+            return ("v1.0", "v2.0")
+
+        @property
+        def service_level(self) -> dict[MockEnum, str]:
+            return {MockEnum.TEST: "level_2"}
+
+        @property
+        def uptime(self) -> object:
+            class CustomObj:
+                def __str__(self) -> str:
+                    return "custom_str"
+
+            return CustomObj()
+
+        @property
+        def wifi_firmware(self) -> Any:
+            return lambda: "callable_value"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -114,13 +154,29 @@ async def test_entry_diagnostics_exceptions(
     # status should be omitted due to AttributeError
     assert "status" not in diagnostics["charger"]
 
-    # charging_voltage should show the recorded error
-    voltage_diagnostic = diagnostics["charger"]["charging_voltage"]
-    assert voltage_diagnostic.startswith("Error: ValueError")
-    assert "Connection error" in voltage_diagnostic
+    # charging_voltage should show the recorded error type only
+    assert diagnostics["charger"]["charging_voltage"] == "Error: ValueError"
 
     # vehicle_eta should be coerced to ISO format string
     assert diagnostics["charger"]["vehicle_eta"] == "2000-01-01T12:00:00"
 
     # mode should be coerced to Enum raw value
     assert diagnostics["charger"]["mode"] == "test_value"
+
+    # divertmode should be sorted and coerced to list
+    assert diagnostics["charger"]["divertmode"] == ["eco", "solar"]
+
+    # manual_override should be sorted and coerced to list
+    assert diagnostics["charger"]["manual_override"] == ["override"]
+
+    # ota_update should be coerced to list
+    assert diagnostics["charger"]["ota_update"] == ["v1.0", "v2.0"]
+
+    # service_level should have keys coerced to str
+    assert diagnostics["charger"]["service_level"] == {"MockEnum.TEST": "level_2"}
+
+    # uptime should fallback to string representation
+    assert diagnostics["charger"]["uptime"] == "custom_str"
+
+    # wifi_firmware should be omitted because it is callable
+    assert "wifi_firmware" not in diagnostics["charger"]
