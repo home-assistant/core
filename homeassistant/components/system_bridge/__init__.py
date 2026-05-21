@@ -45,20 +45,6 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-CONF_BRIDGE = "bridge"
-CONF_KEY = "key"
-CONF_TEXT = "text"
-
-
-POWER_COMMAND_MAP = {
-    "hibernate": "power_hibernate",
-    "lock": "power_lock",
-    "logout": "power_logout",
-    "restart": "power_restart",
-    "shutdown": "power_shutdown",
-    "sleep": "power_sleep",
-}
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Bridge services."""
