@@ -207,6 +207,7 @@ class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
+    "in_zones",
     "latitude",
     "location_accuracy",
     "location_name",
@@ -220,6 +221,7 @@ class TrackerEntity(
     """Base class for a tracked device."""
 
     entity_description: TrackerEntityDescription
+    _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
     _attr_location_name: str | None = None
@@ -238,6 +240,14 @@ class TrackerEntity(
     def force_update(self) -> bool:
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
+
+    @cached_property
+    def in_zones(self) -> list[str] | None:
+        """Return the entity_id of zones the device is currently in.
+
+        Ignored if latitude and longitude are both set.
+        """
+        return self._attr_in_zones
 
     @cached_property
     def location_accuracy(self) -> float:
@@ -270,8 +280,9 @@ class TrackerEntity(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )
         else:
-            self.__active_zone = None
-            self.__in_zones = None
+            zones = self.in_zones
+            self.__active_zone = None if not zones else self.hass.states.get(zones[0])
+            self.__in_zones = zones
         super()._async_write_ha_state()
 
     @property
@@ -280,7 +291,9 @@ class TrackerEntity(
         if self.location_name is not None:
             return self.location_name
 
-        if self.latitude is not None and self.longitude is not None:
+        if (
+            self.latitude is not None and self.longitude is not None
+        ) or self.__in_zones is not None:
             zone_state = self.__active_zone
             if zone_state is None:
                 state = STATE_NOT_HOME
@@ -296,11 +309,10 @@ class TrackerEntity(
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr: dict[str, Any] = {ATTR_IN_ZONES: self.__in_zones or []}
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[ATTR_IN_ZONES] = self.__in_zones or []
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
