@@ -6,14 +6,14 @@ from homeassistant.components.zeversolar.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from . import MOCK_SERIAL_NUMBER
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
 )
 from tests.typing import ClientSessionGenerator
-
-from . import MOCK_SERIAL_NUMBER
 
 
 async def test_entry_diagnostics(
@@ -23,7 +23,10 @@ async def test_entry_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    assert await get_diagnostics_for_config_entry(hass, hass_client, init_integration) == snapshot
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )
 
 
 async def test_device_diagnostics(
@@ -39,5 +42,6 @@ async def test_device_diagnostics(
     )
 
     assert (
-        await get_diagnostics_for_device(hass, hass_client, init_integration, device) == snapshot
+        await get_diagnostics_for_device(hass, hass_client, init_integration, device)
+        == snapshot
     )

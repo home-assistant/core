@@ -22,4 +22,6 @@ async def test_sensors(
         "homeassistant.components.zeversolar.PLATFORMS",
         [Platform.SENSOR],
     ):
-        await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, init_integration.entry_id
+        )

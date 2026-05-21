@@ -10,9 +10,9 @@ from homeassistant.components.zeversolar.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 from . import MOCK_HOST_ZEVERSOLAR, MOCK_SERIAL_NUMBER
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
