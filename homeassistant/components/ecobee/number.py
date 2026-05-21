@@ -90,7 +90,6 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
     _attr_native_max_value = 60
     _attr_native_step = 5
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -134,7 +133,6 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
     """
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
-    _attr_has_entity_name = True
     _attr_icon = "mdi:thermometer-off"
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = -25
@@ -174,7 +172,6 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
 class EcobeeFanMinOnTime(EcobeeBaseEntity, NumberEntity):
     """Minimum minutes per hour that the fan must run on an ecobee thermostat."""
 
-    _attr_has_entity_name = True
     _attr_native_min_value = 0
     _attr_native_max_value = 60
     _attr_native_step = 5
@@ -204,7 +201,5 @@ class EcobeeFanMinOnTime(EcobeeBaseEntity, NumberEntity):
         """Set new fan minimum on time value."""
         step = self._attr_native_step
         aligned_value = int(round(value / step) * step)
-        self.data.ecobee.set_fan_min_on_time(
-            self.thermostat_index, aligned_value
-        )
+        self.data.ecobee.set_fan_min_on_time(self.thermostat_index, aligned_value)
         self.update_without_throttle = True
