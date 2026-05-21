@@ -2,6 +2,11 @@
 
 Each test snippet is run through mypy's API with the plugin enabled. We
 assert which line numbers emit the ``ha-enum-identity-compare`` error.
+
+The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
+subclasses (where ``__eq__`` is identity-based) plus a small allowlist
+of HA-framework-controlled ``StrEnum`` classes. Generic StrEnum/IntEnum
+are deliberately skipped — see the plugin module docstring.
 """
 
 import os
@@ -23,7 +28,12 @@ def _run_mypy(code: str, tmp_path: Path) -> list[str]:
     src = tmp_path / "case.py"
     src.write_text(textwrap.dedent(code))
     config = tmp_path / "mypy.ini"
-    config.write_text("[mypy]\nplugins = mypy_plugins.enum_identity_compare\n")
+    config.write_text(
+        "[mypy]\n"
+        "plugins = mypy_plugins.enum_identity_compare\n"
+        "show_error_codes = true\n"
+        "strict_equality = true\n"
+    )
 
     env_pythonpath = os.environ.get("PYTHONPATH", "")
     os.environ["PYTHONPATH"] = f"{_PLUGINS_ROOT}{os.pathsep}{env_pythonpath}"
@@ -61,57 +71,29 @@ def _run_mypy(code: str, tmp_path: Path) -> list[str]:
 # ============================================================
 _PRELUDE = """
 from enum import Enum, IntEnum, IntFlag, StrEnum
-from typing import TypedDict
-
-class FlowResultType(StrEnum):
-    FORM = "form"
-    ABORT = "abort"
 
 class ConfigEntryState(Enum):
     LOADED = "loaded"
     NOT_LOADED = "not_loaded"
+
+class MediaType(StrEnum):
+    CHANNEL = "channel"
+    APP = "app"
 
 class HTTPStatus(IntEnum):
     OK = 200
 
 class ClimateFeature(IntFlag):
     SWING_MODE = 32
-
-class FlowResult(TypedDict, total=False):
-    type: FlowResultType
 """
 
 
-def test_bad_strenum_eq(tmp_path: Path) -> None:
-    """`==` on two operands of the same ``StrEnum`` must flag."""
-    errors = _run_mypy(
-        _PRELUDE
-        + """
-def fn(t: FlowResultType) -> bool:
-    return t == FlowResultType.FORM
-""",
-        tmp_path,
-    )
-    assert len(errors) == 1
-    assert "FlowResultType" in errors[0]
-    assert "`is`" in errors[0] and "`==`" in errors[0]
+# ============================================================
+# BAD: plain Enum — should be flagged
+# ============================================================
 
 
-def test_bad_strenum_ne(tmp_path: Path) -> None:
-    """`!=` on two operands of the same ``StrEnum`` must flag."""
-    errors = _run_mypy(
-        _PRELUDE
-        + """
-def fn(t: FlowResultType) -> bool:
-    return t != FlowResultType.ABORT
-""",
-        tmp_path,
-    )
-    assert len(errors) == 1
-    assert "`is not`" in errors[0] and "`!=`" in errors[0]
-
-
-def test_bad_plain_enum(tmp_path: Path) -> None:
+def test_bad_plain_enum_eq(tmp_path: Path) -> None:
     """`==` on two operands of the same plain ``Enum`` must flag."""
     errors = _run_mypy(
         _PRELUDE
@@ -123,43 +105,85 @@ def fn(s: ConfigEntryState) -> bool:
     )
     assert len(errors) == 1
     assert "ConfigEntryState" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
 
 
-def test_bad_intenum(tmp_path: Path) -> None:
-    """`==` on two operands of the same ``IntEnum`` must flag."""
+def test_bad_plain_enum_ne(tmp_path: Path) -> None:
+    """`!=` on two operands of the same plain ``Enum`` must flag."""
     errors = _run_mypy(
         _PRELUDE
         + """
-def fn(s: HTTPStatus) -> bool:
-    return s == HTTPStatus.OK
+def fn(s: ConfigEntryState) -> bool:
+    return s != ConfigEntryState.NOT_LOADED
 """,
         tmp_path,
     )
     assert len(errors) == 1
-    assert "HTTPStatus" in errors[0]
+    assert "`is not`" in errors[0] and "`!=`" in errors[0]
 
 
-def test_bad_typeddict_subscript(tmp_path: Path) -> None:
-    """Mypy's killer feature: tracking through a TypedDict subscript."""
+def test_bad_plain_enum_lhs(tmp_path: Path) -> None:
+    """Plain enum on the LHS is also flagged."""
     errors = _run_mypy(
         _PRELUDE
         + """
-def fn(result: FlowResult) -> bool:
-    return result["type"] == FlowResultType.FORM
+def fn(s: ConfigEntryState) -> bool:
+    return ConfigEntryState.LOADED == s
 """,
         tmp_path,
     )
     assert len(errors) == 1
-    assert "FlowResultType" in errors[0]
+
+
+# ============================================================
+# GOOD: StrEnum/IntEnum not in allowlist — silently allowed
+# ============================================================
+
+
+def test_good_strenum_not_allowlisted(tmp_path: Path) -> None:
+    """A StrEnum defined in user code is NOT flagged.
+
+    The plugin can't tell whether callers will pass the enum instance or
+    the underlying string (StrEnum's whole point is making both work).
+    Allowlisting is required for individual classes.
+    """
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(m: MediaType) -> bool:
+    return m == MediaType.CHANNEL
+""",
+        tmp_path,
+    )
+    assert errors == []
+
+
+def test_good_intenum_not_allowlisted(tmp_path: Path) -> None:
+    """An IntEnum defined in user code is NOT flagged for the same reason."""
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(code: HTTPStatus) -> bool:
+    return code == HTTPStatus.OK
+""",
+        tmp_path,
+    )
+    assert errors == []
+
+
+# ============================================================
+# GOOD: type mismatches — silently allowed (these are pre-existing
+# semantic patterns, especially for StrEnum/IntEnum runtime ducktyping)
+# ============================================================
 
 
 def test_good_str_vs_strenum(tmp_path: Path) -> None:
-    """Comparing a `str` against a `StrEnum` member is legitimate."""
+    """Comparing a raw `str` against a `StrEnum` member is legitimate."""
     errors = _run_mypy(
         _PRELUDE
         + """
 def fn(raw: str) -> bool:
-    return raw == FlowResultType.FORM
+    return raw == MediaType.CHANNEL
 """,
         tmp_path,
     )
@@ -167,7 +191,7 @@ def fn(raw: str) -> bool:
 
 
 def test_good_int_vs_intenum(tmp_path: Path) -> None:
-    """Comparing an `int` against an `IntEnum` member is legitimate."""
+    """Comparing a raw `int` against an `IntEnum` member is legitimate."""
     errors = _run_mypy(
         _PRELUDE
         + """
@@ -179,12 +203,34 @@ def fn(code: int) -> bool:
     assert errors == []
 
 
-def test_good_intflag_bitwise(tmp_path: Path) -> None:
-    """IntFlag bitwise == is the standard pattern."""
+def test_good_union_with_str(tmp_path: Path) -> None:
+    """A union LHS (e.g. ``MediaType | str``) is NOT flagged.
+
+    Even if MediaType were allowlisted, the union means runtime callers
+    can pass either form; switching to ``is`` would break the str arm.
+    """
     errors = _run_mypy(
         _PRELUDE
         + """
-def fn(features: int) -> bool:
+def fn(m: MediaType | str) -> bool:
+    return m == MediaType.CHANNEL
+""",
+        tmp_path,
+    )
+    assert errors == []
+
+
+# ============================================================
+# GOOD: IntFlag bitwise — idiomatic, must not flag
+# ============================================================
+
+
+def test_good_intflag_bitwise(tmp_path: Path) -> None:
+    """``IntFlag`` bitwise ``==`` is the standard pattern."""
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(features: ClimateFeature) -> bool:
     return features & ClimateFeature.SWING_MODE == ClimateFeature.SWING_MODE
 """,
         tmp_path,
@@ -192,13 +238,18 @@ def fn(features: int) -> bool:
     assert errors == []
 
 
+# ============================================================
+# GOOD: misc
+# ============================================================
+
+
 def test_good_is_already(tmp_path: Path) -> None:
-    """`is` is the recommended form — must not fire on itself."""
+    """``is`` is the recommended form — must not fire on itself."""
     errors = _run_mypy(
         _PRELUDE
         + """
-def fn(t: FlowResultType) -> bool:
-    return t is FlowResultType.FORM
+def fn(s: ConfigEntryState) -> bool:
+    return s is ConfigEntryState.LOADED
 """,
         tmp_path,
     )
@@ -209,6 +260,19 @@ def test_good_unrelated_compare(tmp_path: Path) -> None:
     """Plain ``int`` ``==`` ``int`` (no enum involved) must not flag."""
     errors = _run_mypy(
         _PRELUDE + "\nif 1 == 2:\n    pass\n",
+        tmp_path,
+    )
+    assert errors == []
+
+
+def test_good_ordering_op(tmp_path: Path) -> None:
+    """Ordering comparison (``>``) on an enum must not flag."""
+    errors = _run_mypy(
+        _PRELUDE
+        + """
+def fn(s: HTTPStatus) -> bool:
+    return s > HTTPStatus.OK
+""",
         tmp_path,
     )
     assert errors == []

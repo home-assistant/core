@@ -1,13 +1,23 @@
 """Mypy plugin: flag ``==``/``!=`` between two operands of the same enum class.
 
-Mypy already resolves the full type of expressions like ``result["type"]``
-when the surrounding code is typed (``ConfigFlowResult`` TypedDict, etc.),
-so we can reliably tell whether *both* sides of a comparison are the same
-enum class — something astroid struggles with.
+Scope is intentionally narrow: only **plain ``enum.Enum`` subclasses** are
+flagged by default, because Python's ``Enum.__eq__`` is identity-based —
+``a == b`` and ``a is b`` produce the same result there.
 
-When both sides resolve to the same ``enum.Enum`` subclass (excluding
-``enum.Flag``/``enum.IntFlag`` where bitwise ``==`` is idiomatic), the
-plugin emits an error suggesting ``is``/``is not``.
+``StrEnum``/``IntEnum``/``ReprEnum`` are **skipped** because their
+``__eq__`` delegates to the underlying ``str``/``int`` and accepts raw
+primitive values: callers routinely pass ``"on"`` where a ``HVACMode``
+parameter is annotated, and ``==`` silently makes that work while ``is``
+silently breaks it. Switching those sites to ``is`` is a runtime-behavior
+change, not a refactor.
+
+A small allowlist (``_FRAMEWORK_GUARANTEED_ENUMS``) carves back in
+``StrEnum``/``IntEnum`` classes where the HA framework itself controls
+every callsite and guarantees the value is the enum instance — currently
+just ``homeassistant.data_entry_flow.FlowResultType``.
+
+``enum.Flag``/``enum.IntFlag`` are always exempt — bitwise ``==`` is
+idiomatic there.
 
 Usage: add to ``mypy.ini``::
 
@@ -28,14 +38,29 @@ ENUM_IDENTITY = ErrorCode(
     "Home Assistant",
 )
 
-_ENUM_BASES = frozenset({"enum.Enum", "enum.IntEnum", "enum.ReprEnum", "enum.StrEnum"})
+_PLAIN_ENUM_BASE = "enum.Enum"
+_VALUE_BASED_ENUM_BASES = frozenset(
+    {"enum.IntEnum", "enum.ReprEnum", "enum.StrEnum"}
+)
 _FLAG_BASES = frozenset({"enum.Flag", "enum.IntFlag"})
+
+# StrEnum/IntEnum classes where every callsite assigning the value is
+# framework-controlled, so the runtime value is guaranteed to be the
+# enum instance (never a raw string/int). Audited additions only.
+_FRAMEWORK_GUARANTEED_ENUMS = frozenset(
+    {
+        "homeassistant.data_entry_flow.FlowResultType",
+    }
+)
 
 
 def _enum_class(t: Type | None) -> TypeInfo | None:
-    """Return the enum TypeInfo if t is an Instance of an enum subclass.
+    """Return the enum TypeInfo if t is an Instance of a tracked enum.
 
-    Returns ``None`` for ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic).
+    Returns ``None`` for:
+    - non-Instance types (Union, Any, None, etc.)
+    - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)
+    - ``StrEnum``/``IntEnum``/``ReprEnum`` not in the framework allowlist
     """
     if t is None:
         return None
@@ -43,13 +68,23 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
     if not isinstance(pt, Instance):
         return None
     info = pt.type
-    found = False
+    has_enum_base = False
+    has_value_based_base = False
     for base in info.mro:
-        if base.fullname in _FLAG_BASES:
+        fn = base.fullname
+        if fn in _FLAG_BASES:
             return None
-        if base.fullname in _ENUM_BASES:
-            found = True
-    return info if found else None
+        if fn in _VALUE_BASED_ENUM_BASES:
+            has_value_based_base = True
+        if fn == _PLAIN_ENUM_BASE:
+            has_enum_base = True
+    if not has_enum_base:
+        return None
+    if has_value_based_base and info.fullname not in _FRAMEWORK_GUARANTEED_ENUMS:
+        # StrEnum/IntEnum without explicit trust — `is` may diverge from
+        # `==` when callers pass the underlying string/int.
+        return None
+    return info
 
 
 def _emit(ctx: MethodContext, op: str, enum_cls: TypeInfo) -> Type:
