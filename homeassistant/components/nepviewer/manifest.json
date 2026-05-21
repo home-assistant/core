@@ -1,0 +1,15 @@
+{
+  "domain": "nepviewer",
+  "name": "NEPViewer",
+  "codeowners": ["@felipecrs"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/nepviewer",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
