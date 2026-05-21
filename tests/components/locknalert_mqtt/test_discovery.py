@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import locknalert_mqtt as mqtt
-from homeassistant.components.locknalert_mqtt.abbreviations import (
+from aiolocknalert.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
