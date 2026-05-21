@@ -6,6 +6,10 @@
       "connectable": true,
       "manufacturer_id": 1062,
       "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
+    },
+    {
+      "connectable": true,
+      "manufacturer_id": 1062
     }
   ],
   "codeowners": ["@elupus"],
@@ -15,5 +19,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["bleak", "bleak_esphome", "gardena_bluetooth"],
-  "requirements": ["gardena-bluetooth==2.8.1"]
+  "requirements": ["gardena-bluetooth==2.9.0"]
 }
