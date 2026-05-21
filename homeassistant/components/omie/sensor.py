@@ -33,6 +33,8 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 }
 
 
+# has_entity_name=True is supplied by every SENSOR_DESCRIPTIONS entry
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 

@@ -1540,8 +1540,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsung_infrared/ @lmaertin
 /tests/components/samsung_infrared/ @lmaertin
-/homeassistant/components/samsungtv/ @chemelli74 @epenet
-/tests/components/samsungtv/ @chemelli74 @epenet
+/homeassistant/components/samsungtv/ @chemelli74
+/tests/components/samsungtv/ @chemelli74
 /homeassistant/components/sanix/ @tomaszsluszniak
 /tests/components/sanix/ @tomaszsluszniak
 /homeassistant/components/satel_integra/ @Tommatheussen

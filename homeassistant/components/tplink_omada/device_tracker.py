@@ -38,6 +38,7 @@ async def async_setup_entry(
     )
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class OmadaClientScannerEntity(
     CoordinatorEntity[OmadaClientsCoordinator], ScannerEntity
 ):
