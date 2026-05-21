@@ -26,6 +26,7 @@ async def async_setup_entry(
     async_add_entities(EkeyEvent(data) for data in entry.data["webhooks"])
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class EkeyEvent(EventEntity):
     """Ekey Event."""
 

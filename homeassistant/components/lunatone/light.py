@@ -207,6 +207,7 @@ class LunatoneLight(
         await self.coordinator.async_refresh()
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class LunatoneLineBroadcastLight(
     CoordinatorEntity[LunatoneInfoDataUpdateCoordinator], LightEntity
 ):

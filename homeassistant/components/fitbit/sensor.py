@@ -649,6 +649,8 @@ class FitbitSensor(SensorEntity):
         self.async_schedule_update_ha_state(force_refresh=True)
 
 
+# has_entity_name=True is supplied by the FITBIT_RESOURCE_BATTERY description
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity):
     """Implementation of a Fitbit battery sensor."""
 
@@ -707,6 +709,8 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
         self.async_write_ha_state()
 
 
+# has_entity_name=True is supplied by the FITBIT_RESOURCE_BATTERY_LEVEL description
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class FitbitBatteryLevelSensor(
     CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity
 ):
