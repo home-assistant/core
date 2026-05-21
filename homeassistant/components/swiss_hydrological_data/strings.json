@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_station": "The station ID is invalid or does not exist.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station": "Station ID"
+        },
+        "data_description": {
+          "station": "The numeric ID of the hydrological measuring station."
+        },
+        "description": "Enter the ID of a station from the Federal Office for the Environment (FOEN)."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "discharge": {
+        "name": "Discharge"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "temperature": {
+        "name": "Temperature"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to the Swiss Hydrological Data API: {error}"
+    },
+    "station_not_found": {
+      "message": "Station {station} was not found."
+    }
+  }
+}

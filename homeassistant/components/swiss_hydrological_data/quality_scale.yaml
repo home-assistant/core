@@ -1,0 +1,44 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not provide service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to entity events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration options beyond the station ID.
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not require authentication.
+  test-coverage: done
