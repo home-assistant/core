@@ -377,13 +377,10 @@ jobs:
           path: ${{ env.UV_CACHE_DIR }}
           key: ${{ steps.generate-uv-key.outputs.full_key }}
           restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
-      - name: Remove conflicting Microsoft apt source
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -400,9 +397,6 @@ jobs:
             libudev-dev
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Refresh dynamic linker cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: sudo ldconfig
       - name: Read uv version from requirements.txt
         if: steps.cache-venv.outputs.cache-hit != 'true'
         id: read-uv-version
@@ -475,20 +469,16 @@ jobs:
       && github.event.inputs.mypy-only != 'true'
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
-      - name: Install additional OS dependencies
-        timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
-        with:
-          packages: libturbojpeg
-          version: ${{ env.APT_CACHE_VERSION }}
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - name: Install additional OS dependencies
+        timeout-minutes: 10
+        uses: ./.github/actions/cache-apt-packages
+        with:
+          packages: libturbojpeg
+          version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -835,11 +825,13 @@ jobs:
       - info
       - base
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -847,12 +839,6 @@ jobs:
             libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
-      - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Set up Python
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -903,11 +889,13 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -916,12 +904,6 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
-      - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -1048,11 +1030,13 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1062,12 +1046,6 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
-      - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -1201,11 +1179,13 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1218,16 +1198,10 @@ jobs:
         run: sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
       - name: Cache PostgreSQL development headers
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: postgresql-server-dev-14
           version: ${{ env.APT_CACHE_VERSION }}
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
-      - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -1381,11 +1355,13 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
-      - name: Remove conflicting Microsoft apt source
-        run: sudo rm -f /etc/apt/sources.list.d/microsoft-prod.list
+      - name: Check out code from GitHub
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install additional OS dependencies
         timeout-minutes: 10
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # v1.5.3
+        uses: ./.github/actions/cache-apt-packages
         with:
           packages: >-
             bluez
@@ -1394,12 +1370,6 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Refresh dynamic linker cache
-        run: sudo ldconfig
-      - name: Check out code from GitHub
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
