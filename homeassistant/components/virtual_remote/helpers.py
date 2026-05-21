@@ -1,7 +1,5 @@
 """Helper functions for the Virtual Remote integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import re
 from typing import Any

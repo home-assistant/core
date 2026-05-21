@@ -12,5 +12,5 @@
   "loggers": [
     "homeassistant.components.virtual_remote"
   ],
-  "quality_scale": "internal"
+  "quality_scale": "gold"
 }

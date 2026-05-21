@@ -16,11 +16,11 @@ rules:
       Add brand assets if this integration is accepted into Home Assistant Core.
   common-modules: done
   config-flow-test-coverage:
-    status: todo
+    status: done
     comment: |
-      Add tests for the user flow, no-infrared-entities abort, invalid
-      infrared entity selection, duplicate single-instance handling, and
-      successful entry creation.
+      Config flow tests cover the user flow, no-infrared-entities abort,
+      invalid infrared entity selection, duplicate single-instance handling,
+      reconfigure, and successful entry creation.
   config-flow: done
   dependency-transparency:
     status: exempt
@@ -140,7 +140,8 @@ rules:
     status: exempt
     comment: |
       This integration does not create an HTTP client session.
-  strict-typing: todo
+  strict-typing:
+    status: todo
     comment: |
       Strict typing should be finalized after the shared remote boundary is
       stable and the test suite is ported.

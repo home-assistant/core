@@ -1,7 +1,5 @@
 """Remote entities for virtual remotes backed by infrared entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable, Mapping
 import logging
@@ -16,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .command import parse_remote_command as _parse_remote_command
 from .const import (
@@ -101,7 +100,7 @@ def _standalone_virtual_remote_entity_name(
     remote_id: str,
     name: str,
     remote_config: Mapping[str, Any],
-) -> None:
+) -> str | None:
     """Return entity name for a standalone virtual remote.
 
     The standalone Virtual Remote integration creates one device per remote, so
@@ -374,6 +373,20 @@ class InfraredRemoteEntity(RemoteEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         self._update_missing_infrared_repair_issue()
+
+        @callback
+        def _handle_infrared_state_change(event: Any) -> None:
+            """Handle linked infrared entity state changes."""
+            self._update_missing_infrared_repair_issue()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass,
+                [self._infrared_entity_id],
+                _handle_infrared_state_change,
+            )
+        )
 
     async def async_update(self) -> None:
         """Update repair state for the linked infrared entity."""
