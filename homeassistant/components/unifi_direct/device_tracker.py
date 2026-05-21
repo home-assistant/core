@@ -1,12 +1,75 @@
-"""Support for UniFi AP direct access as device tracker using Coordinator."""
+"""Support for UniFi AP Direct access as device tracker using Coordinator."""
 
-from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+import voluptuous as vol
+
+from homeassistant import data_entry_flow
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
+    ScannerEntity,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DEFAULT_SSH_PORT, DOMAIN
 from .coordinator import UniFiDirectDataUpdateCoordinator
+
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): int,
+    }
+)
+
+
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy UniFi AP Direct device tracker."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_PORT: config.get(CONF_PORT, DEFAULT_SSH_PORT),
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
+    )
+
+    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+        return True
+
+    if (
+        result["type"] == data_entry_flow.FlowResultType.ABORT
+        and result.get("reason") == "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "UniFi AP",
+            },
+        )
+
+    return True
 
 
 async def async_setup_entry(
@@ -14,7 +77,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up device tracker for UniFi AP direct."""
+    """Set up device tracker for UniFi AP Direct."""
     coordinator: UniFiDirectDataUpdateCoordinator = config_entry.runtime_data
     tracked: set[str] = set()
 
@@ -36,7 +99,7 @@ async def async_setup_entry(
 class UnifiScannerEntity(
     CoordinatorEntity[UniFiDirectDataUpdateCoordinator], ScannerEntity
 ):
-    """Representation of a device connected to a UniFi AP."""
+    """Representation of a device connected to a UniFi AP Direct."""
 
     def __init__(self, coordinator: UniFiDirectDataUpdateCoordinator, mac: str) -> None:
         """Initialize the tracked device."""

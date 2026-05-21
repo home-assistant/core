@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for UniFi Direct."""
+"""DataUpdateCoordinator for UniFi AP Direct."""
 
 from datetime import timedelta
 import logging
@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_SSH_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.host = config_entry.data.get("host")
         self.username = config_entry.data.get("username")
         self.password = config_entry.data.get("password")
-        self.port = config_entry.data.get("port", 22)
+        self.port = config_entry.data.get("port", DEFAULT_SSH_PORT)
 
         self.ap = UniFiAP(
             target=self.host,
@@ -72,4 +72,6 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         try:
             return await self.hass.async_add_executor_job(self.ap.get_clients)
         except (UniFiAPConnectionException, UniFiAPDataException) as err:
-            raise UpdateFailed("Failed to fetch data from UniFi AP") from err
+            raise UpdateFailed(
+                f"Failed to fetch data from UniFi AP {self.host}"
+            ) from err
