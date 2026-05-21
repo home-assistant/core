@@ -181,6 +181,22 @@ def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
     return result.stdout, result.stderr, result.returncode
 
 
+def _iter_eligible_children(path: Path) -> list[Path]:
+    """Return immediate children of ``path`` that pytest should collect.
+
+    Filters out hidden/dunder entries, non-``test_*.py`` files (so helper
+    modules like ``conftest.py`` and ``common.py`` are not passed as
+    explicit collection targets), and pycache-style directories.
+    """
+    children: list[Path] = []
+    for entry in sorted(path.iterdir()):
+        if entry.name.startswith((".", "_")):
+            continue
+        if entry.is_dir() or (entry.suffix == ".py" and entry.name.startswith("test_")):
+            children.append(entry)
+    return children
+
+
 def _enumerate_batch_paths(path: Path) -> list[Path]:
     """Return the child paths to run pytest --collect-only over.
 
@@ -192,19 +208,10 @@ def _enumerate_batch_paths(path: Path) -> list[Path]:
         return [path]
 
     paths: list[Path] = []
-    for entry in sorted(path.iterdir()):
-        if entry.name.startswith((".", "_")):
-            continue
-        if entry.is_dir():
-            if entry.name in _FAN_OUT_DIRS:
-                paths.extend(
-                    sub
-                    for sub in sorted(entry.iterdir())
-                    if not sub.name.startswith((".", "_"))
-                )
-            else:
-                paths.append(entry)
-        elif entry.suffix == ".py" and entry.name.startswith("test_"):
+    for entry in _iter_eligible_children(path):
+        if entry.is_dir() and entry.name in _FAN_OUT_DIRS:
+            paths.extend(_iter_eligible_children(entry))
+        else:
             paths.append(entry)
     return paths
 
@@ -212,6 +219,9 @@ def _enumerate_batch_paths(path: Path) -> list[Path]:
 def collect_tests(path: Path) -> TestFolder:
     """Collect all tests."""
     batch_paths = _enumerate_batch_paths(path)
+    if not batch_paths:
+        print(f"No eligible test paths found under {path}")
+        sys.exit(1)
     workers = min(len(batch_paths), os.cpu_count() or 1) or 1
     # Round-robin chunking keeps batches roughly balanced when path
     # ordering correlates with test size.
