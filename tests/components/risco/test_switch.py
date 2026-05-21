@@ -6,12 +6,16 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.risco import CannotConnectError, UnauthorizedError
+from homeassistant.components.risco import (
+    CannotConnectError,
+    UnauthorizedError,
+    cloud_update_signal,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 FIRST_ENTITY_ID = "switch.zone_0_bypassed"
 SECOND_ENTITY_ID = "switch.zone_1_bypassed"
@@ -44,6 +48,7 @@ async def test_cloud_setup(
 
 async def _check_cloud_state(
     hass: HomeAssistant,
+    setup_risco_cloud: Any,
     zones: dict[int, Any],
     bypassed: bool,
     entity_id: str,
@@ -54,7 +59,7 @@ async def _check_cloud_state(
         "bypassed",
         new_callable=PropertyMock(return_value=bypassed),
     ):
-        await async_update_entity(hass, entity_id)
+        async_dispatcher_send(hass, cloud_update_signal(setup_risco_cloud.entry_id))
         await hass.async_block_till_done()
 
         expected_bypassed = STATE_ON if bypassed else STATE_OFF
@@ -66,10 +71,18 @@ async def test_cloud_states(
     hass: HomeAssistant, two_zone_cloud, setup_risco_cloud
 ) -> None:
     """Test the various alarm states."""
-    await _check_cloud_state(hass, two_zone_cloud, True, FIRST_ENTITY_ID, 0)
-    await _check_cloud_state(hass, two_zone_cloud, False, FIRST_ENTITY_ID, 0)
-    await _check_cloud_state(hass, two_zone_cloud, True, SECOND_ENTITY_ID, 1)
-    await _check_cloud_state(hass, two_zone_cloud, False, SECOND_ENTITY_ID, 1)
+    await _check_cloud_state(
+        hass, setup_risco_cloud, two_zone_cloud, True, FIRST_ENTITY_ID, 0
+    )
+    await _check_cloud_state(
+        hass, setup_risco_cloud, two_zone_cloud, False, FIRST_ENTITY_ID, 0
+    )
+    await _check_cloud_state(
+        hass, setup_risco_cloud, two_zone_cloud, True, SECOND_ENTITY_ID, 1
+    )
+    await _check_cloud_state(
+        hass, setup_risco_cloud, two_zone_cloud, False, SECOND_ENTITY_ID, 1
+    )
 
 
 async def test_cloud_bypass(

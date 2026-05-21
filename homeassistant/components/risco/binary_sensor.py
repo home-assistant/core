@@ -19,9 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, SYSTEM_UPDATE_SIGNAL
-from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
-from .models import RiscoConfigEntry
+from .models import CloudData, RiscoConfigEntry
 
 SYSTEM_ENTITY_DESCRIPTIONS = [
     BinarySensorEntityDescription(
@@ -94,10 +93,9 @@ async def async_setup_entry(
 
         async_add_entities(chain(system_entities, zone_entities))
     elif cloud_data := risco_data.cloud_data:
-        coordinator = cloud_data.coordinator
         async_add_entities(
-            RiscoCloudBinarySensor(coordinator, zone_id, zone)
-            for zone_id, zone in coordinator.data.zones.items()
+            RiscoCloudBinarySensor(cloud_data, config_entry.entry_id, zone_id, zone)
+            for zone_id, zone in cloud_data.alarm.zones.items()
         )
 
 
@@ -108,10 +106,16 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     _attr_name = None
 
     def __init__(
-        self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: CloudZone
+        self, cloud_data: CloudData, entry_id: str, zone_id: int, zone: CloudZone
     ) -> None:
         """Init the zone."""
-        super().__init__(coordinator=coordinator, suffix="", zone_id=zone_id, zone=zone)
+        super().__init__(
+            cloud_data=cloud_data,
+            entry_id=entry_id,
+            suffix="",
+            zone_id=zone_id,
+            zone=zone,
+        )
 
     @property
     @override

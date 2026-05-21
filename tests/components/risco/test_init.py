@@ -137,3 +137,33 @@ async def test_clock_operation_error_is_downgraded(
         f"{setup_risco_local.data.get(CONF_HOST, 'unknown')})"
     )
     assert expected_warning in caplog.text
+
+
+@pytest.fixture
+def mock_cloud_error_handler() -> MagicMock:
+    """Create a mock for add_error_handler on the cloud variant."""
+    with patch("homeassistant.components.risco.RiscoCloud.add_error_handler") as mock:
+        yield mock
+
+
+async def test_cloud_sse_error_triggers_reload(
+    hass: HomeAssistant,
+    two_zone_cloud: dict[int, Any],
+    mock_cloud_error_handler: MagicMock,
+    setup_risco_cloud: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an SSE error from the cloud triggers an integration reload."""
+    callback = mock_cloud_error_handler.call_args.args[0]
+    assert callback is not None
+
+    cloud_data = setup_risco_cloud.runtime_data.cloud_data
+    login_mock = cast(AsyncMock, cloud_data.system.login)
+    assert login_mock.call_count == 1
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.risco")
+    await callback(Exception("SSE connection lost"))
+    await hass.async_block_till_done()
+
+    assert "SSE error from Risco cloud. Reloading integration" in caplog.text
+    assert login_mock.call_count == 2

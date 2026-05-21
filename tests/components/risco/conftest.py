@@ -176,6 +176,9 @@ async def setup_risco_cloud(
             "homeassistant.components.risco.RiscoCloud.close",
         ),
         patch(
+            "homeassistant.components.risco.RiscoCloud.subscribe_states",
+        ),
+        patch(
             "homeassistant.components.risco.RiscoCloud.get_events",
             return_value=events,
         ),

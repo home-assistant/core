@@ -11,7 +11,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.risco import CannotConnectError, UnauthorizedError
+from homeassistant.components.risco import (
+    CannotConnectError,
+    UnauthorizedError,
+    cloud_update_signal,
+)
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
@@ -24,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .util import TEST_SITE_UUID
 
@@ -178,6 +182,7 @@ async def test_cloud_setup(
 
 async def _check_cloud_state(
     hass: HomeAssistant,
+    setup_risco_cloud: Any,
     partitions: dict[int, Any],
     property: str,
     state: str,
@@ -185,7 +190,7 @@ async def _check_cloud_state(
     partition_id: int,
 ) -> None:
     with patch.object(partitions[partition_id], property, return_value=True):
-        await async_update_entity(hass, entity_id)
+        async_dispatcher_send(hass, cloud_update_signal(setup_risco_cloud.entry_id))
         await hass.async_block_till_done()
 
         assert hass.states.get(entity_id).state == state
@@ -203,6 +208,7 @@ async def test_cloud_states(
     }.items():
         await _check_cloud_state(
             hass,
+            setup_risco_cloud,
             two_part_cloud_alarm,
             "triggered",
             AlarmControlPanelState.TRIGGERED,
@@ -211,6 +217,7 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
+            setup_risco_cloud,
             two_part_cloud_alarm,
             "arming",
             AlarmControlPanelState.ARMING,
@@ -219,6 +226,7 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
+            setup_risco_cloud,
             two_part_cloud_alarm,
             "armed",
             AlarmControlPanelState.ARMED_AWAY,
@@ -227,6 +235,7 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
+            setup_risco_cloud,
             two_part_cloud_alarm,
             "partially_armed",
             AlarmControlPanelState.ARMED_HOME,
@@ -235,6 +244,7 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
+            setup_risco_cloud,
             two_part_cloud_alarm,
             "disarmed",
             AlarmControlPanelState.DISARMED,
@@ -250,6 +260,7 @@ async def test_cloud_states(
         ):
             await _check_cloud_state(
                 hass,
+                setup_risco_cloud,
                 two_part_cloud_alarm,
                 "partially_armed",
                 AlarmControlPanelState.ARMED_NIGHT,

@@ -4,15 +4,13 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from pyrisco import RiscoLocal
+from pyrisco import RiscoCloud, RiscoLocal
+from pyrisco.cloud.alarm import Alarm
 
 from homeassistant.config_entries import ConfigEntry
 
 if TYPE_CHECKING:
-    from .coordinator import (
-        RiscoDataUpdateCoordinator,
-        RiscoEventsDataUpdateCoordinator,
-    )
+    from .coordinator import RiscoEventsDataUpdateCoordinator
 
 type RiscoConfigEntry = ConfigEntry[RiscoData]
 
@@ -29,7 +27,8 @@ class RiscoData:
 class CloudData:
     """A data class for cloud data passed to the platforms."""
 
-    coordinator: RiscoDataUpdateCoordinator
+    system: RiscoCloud
+    alarm: Alarm
     events_coordinator: RiscoEventsDataUpdateCoordinator
 
 
