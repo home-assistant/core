@@ -50,6 +50,7 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_CUSTOM,
     REGION_OPTIONS,
 )
 
@@ -78,7 +79,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
-            if region == "custom":
+            if region == REGION_CUSTOM:
                 return await self.async_step_custom_url()
             base_url = None
             if region != "auto":

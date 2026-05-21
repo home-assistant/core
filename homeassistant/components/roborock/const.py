@@ -15,7 +15,8 @@ CONF_SHOW_WALLS = "show_walls"
 CONF_SHOW_ROOMS = "show_rooms"
 CONF_REGION = "region"
 CONF_CUSTOM_URL = "custom_url"
-REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn", "custom"]
+REGION_CUSTOM = "custom"
+REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn", REGION_CUSTOM]
 
 # Option Flow steps
 DRAWABLES = "drawables"

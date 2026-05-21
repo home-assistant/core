@@ -1,6 +1,5 @@
 """Test Roborock config flow."""
 
-import asyncio
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
@@ -437,8 +436,7 @@ async def test_config_flow_with_region(
             mock_client.request_code_v4 = AsyncMock(return_value=None)
             mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
 
-            # base_url is awaited in config_flow, so it needs to be an awaitable
-            future_base_url = asyncio.Future()
+            future_base_url = hass.loop.create_future()
             future_base_url.set_result("https://usiot.roborock.com")
             mock_client.base_url = future_base_url
 
@@ -496,7 +494,7 @@ async def test_config_flow_with_custom_url(
             mock_client.request_code_v4 = AsyncMock(return_value=None)
             mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
 
-            future_base_url = asyncio.Future()
+            future_base_url = hass.loop.create_future()
             future_base_url.set_result(custom_url)
             mock_client.base_url = future_base_url
 
@@ -556,9 +554,11 @@ async def test_config_flow_custom_url_failures(
         assert result["step_id"] == "custom_url"
 
         with patch(
-            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code_v4",
-            side_effect=request_code_side_effect,
-        ):
+            "homeassistant.components.roborock.config_flow.RoborockApiClient"
+        ) as mock_client_cls:
+            mock_client_cls.return_value.request_code_v4 = AsyncMock(
+                side_effect=request_code_side_effect
+            )
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_CUSTOM_URL: custom_url}
             )
@@ -572,7 +572,7 @@ async def test_config_flow_custom_url_failures(
             mock_client = mock_client_cls.return_value
             mock_client.request_code_v4 = AsyncMock(return_value=None)
             mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
-            future_base_url = asyncio.Future()
+            future_base_url = hass.loop.create_future()
             future_base_url.set_result(custom_url)
             mock_client.base_url = future_base_url
 
