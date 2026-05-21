@@ -12,6 +12,8 @@ from .coordinator import OpenEVSEConfigEntry
 
 REDACT_CONFIG_DATA = {CONF_PASSWORD, CONF_USERNAME}
 
+MAX_JSON_DEPTH = 20
+
 CHARGER_PROPERTIES = (
     "status",
     "vehicle",
@@ -72,7 +74,7 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
     if isinstance(val, (str, int, float, bool)) or val is None:
         return val
 
-    if depth > 20:
+    if depth > MAX_JSON_DEPTH:
         return f"<Depth limit exceeded: {type(val).__name__}>"
 
     if seen is None:
@@ -85,7 +87,7 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
     if isinstance(val, (datetime, date)):
         return val.isoformat()
     if isinstance(val, Enum):
-        return val.value
+        return _to_json_safe(val.value, seen, depth + 1)
     if isinstance(val, (set, frozenset)):
         seen.add(val_id)
         try:
@@ -108,7 +110,7 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
                 elif isinstance(k, Enum):
                     key_str = f"{type(k).__name__}.{k.name}"
                 else:
-                    key_str = f"<{type(k).__name__}: {k}>"
+                    key_str = f"<{type(k).__name__}>"
                 res[key_str] = _to_json_safe(val[k], seen, depth + 1)
             return res
         finally:

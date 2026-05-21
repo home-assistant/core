@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any
 from unittest.mock import MagicMock
 
+from homeassistant.components.openevse.diagnostics import MAX_JSON_DEPTH
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -152,7 +153,7 @@ async def test_entry_diagnostics_exceptions(
         def wifi_signal(self) -> list[Any]:
             nested: list[Any] = []
             curr = nested
-            for _ in range(22):
+            for _ in range(MAX_JSON_DEPTH + 2):
                 new_list: list[Any] = []
                 curr.append(new_list)
                 curr = new_list
@@ -211,7 +212,7 @@ async def test_entry_diagnostics_exceptions(
     # wifi_signal has a deeply nested list exceeding the limit
     expected_wifi_signal: list[Any] = []
     curr = expected_wifi_signal
-    for _ in range(20):
+    for _ in range(MAX_JSON_DEPTH):
         new_list = []
         curr.append(new_list)
         curr = new_list
@@ -220,7 +221,7 @@ async def test_entry_diagnostics_exceptions(
 
     # freeram key types and deterministic serialization
     assert diagnostics["charger"]["freeram"] == {
-        "<int: 123>": "int_key",
+        "<int>": "int_key",
         "MockEnum.TEST": "enum_key",
         "simple": "val",
     }
