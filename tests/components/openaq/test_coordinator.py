@@ -1,0 +1,289 @@
+"""Test OpenAQ data coordinator helpers."""
+
+from types import MappingProxyType
+from typing import cast
+from unittest.mock import AsyncMock, patch
+
+import httpx
+from openaq import NotAuthorizedError, ServerError
+import pytest
+
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
+from homeassistant.components.openaq.coordinator import (
+    HomeAssistantOpenAQTransport,
+    OpenAQDataUpdateCoordinator,
+    OpenAQMeasurement,
+    async_create_openaq_client,
+    create_openaq_client,
+    normalize_latest_measurements,
+)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONF_API_KEY,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .conftest import (
+    API_KEY,
+    LOCATION_ID,
+    make_latest,
+    make_location,
+    make_response,
+    make_sensor,
+)
+
+from tests.common import MockConfigEntry
+
+
+async def test_transport_sends_request_with_shared_httpx_client() -> None:
+    """Test the transport sends requests with the shared httpx client."""
+    response = httpx.Response(
+        200,
+        json={"results": []},
+        request=httpx.Request("GET", "https://api.openaq.org/v3/locations"),
+    )
+    httpx_client = AsyncMock(spec=httpx.AsyncClient)
+    httpx_client.request.return_value = response
+
+    transport = HomeAssistantOpenAQTransport(httpx_client)
+
+    assert (
+        await transport.send_request(
+            "GET",
+            "https://api.openaq.org/v3/locations",
+            params={"limit": 1},
+            headers={"X-API-Key": "api-key"},
+        )
+        is response
+    )
+    httpx_client.request.assert_awaited_once_with(
+        method="GET",
+        url="https://api.openaq.org/v3/locations",
+        params={"limit": 1},
+        headers={"X-API-Key": "api-key"},
+    )
+
+
+async def test_create_openaq_client_keeps_shared_httpx_client_open() -> None:
+    """Test closing the OpenAQ client does not close the shared httpx client."""
+    httpx_client = httpx.AsyncClient()
+    client = create_openaq_client("api-key", httpx_client)
+
+    try:
+        assert client.transport.client is httpx_client
+        await client.close()
+        assert not httpx_client.is_closed
+    finally:
+        await httpx_client.aclose()
+
+
+async def test_async_create_openaq_client_uses_shared_httpx_client(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating an OpenAQ client from Home Assistant."""
+    httpx_client = httpx.AsyncClient()
+
+    try:
+        with patch(
+            "homeassistant.components.openaq.coordinator.get_async_client",
+            return_value=httpx_client,
+        ):
+            client = await async_create_openaq_client(hass, "api-key")
+
+        assert client.transport.client is httpx_client
+        await client.close()
+    finally:
+        await httpx_client.aclose()
+
+
+@pytest.mark.parametrize(
+    ("first_exception", "expected_cause_type", "expected_translation_key"),
+    [
+        (
+            NotAuthorizedError("Invalid API key"),
+            NotAuthorizedError,
+            "authentication_failed",
+        ),
+        (
+            ServerError("API error"),
+            ServerError,
+            "unable_to_fetch",
+        ),
+        (
+            RuntimeError("Unexpected error"),
+            RuntimeError,
+            "unable_to_fetch",
+        ),
+    ],
+)
+async def test_initial_refresh_exception_group_maps_first_exception(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    first_exception: Exception,
+    expected_cause_type: type[Exception],
+    expected_translation_key: str,
+) -> None:
+    """Test initial refresh TaskGroup errors raise UpdateFailed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            )
+        ],
+    )
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        config_entry,
+        next(iter(config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    mock_openaq_client.locations.get.side_effect = first_exception
+    mock_openaq_client.locations.latest.side_effect = RuntimeError("Unexpected error")
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert isinstance(err.value.__cause__, expected_cause_type)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == expected_translation_key
+
+
+def test_normalize_latest_measurements() -> None:
+    """Test normalizing latest measurements by sensor metadata."""
+    measurements = normalize_latest_measurements(
+        [
+            make_latest(1, 8.5),
+            make_latest(999, 44.1),
+            make_latest(2, None),
+        ],
+        [
+            make_sensor(1, "pm2.5", "µg/m3"),
+            make_sensor(2, "pm10"),
+        ],
+    )
+
+    assert measurements == MappingProxyType(
+        {
+            "pm25": OpenAQMeasurement(
+                parameter="pm25",
+                value=8.5,
+                unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            ),
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected_unit"),
+    [
+        ("μg/m³", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+        ("mg/m³", CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        ("mg/m3", CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+    ],
+)
+def test_normalize_latest_measurements_normalizes_unit_aliases(
+    unit: str, expected_unit: str
+) -> None:
+    """Test normalizing measurement unit aliases."""
+    measurements = normalize_latest_measurements(
+        [make_latest(1, 12.1)],
+        [make_sensor(1, "pm10", unit)],
+    )
+
+    assert measurements == MappingProxyType(
+        {
+            "pm10": OpenAQMeasurement(
+                parameter="pm10",
+                value=12.1,
+                unit=expected_unit,
+            )
+        }
+    )
+
+
+def test_normalize_latest_measurements_allows_missing_units() -> None:
+    """Test normalizing a measurement without a reported unit."""
+    measurements = normalize_latest_measurements(
+        [make_latest(1, 12.1)],
+        [make_sensor(1, "pm10", cast(str, None))],
+    )
+
+    assert measurements == MappingProxyType(
+        {
+            "pm10": OpenAQMeasurement(
+                parameter="pm10",
+                value=12.1,
+                unit=None,
+            )
+        }
+    )
+
+
+async def test_update_data_allows_missing_location_coordinates(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+) -> None:
+    """Test location data with missing coordinates has no home distance."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenAQ",
+        data={CONF_API_KEY: API_KEY},
+        unique_id=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_LOCATION_ID: LOCATION_ID},
+                subentry_id="ABCDEF",
+                subentry_type="location",
+                title="Del Norte",
+                unique_id=str(LOCATION_ID),
+            )
+        ],
+    )
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        config_entry,
+        next(iter(config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    mock_openaq_client.locations.get.return_value = make_response(
+        [make_location(coordinates=(cast(float, None), -106.6))]
+    )
+
+    data = await coordinator._async_update_data()
+
+    assert data.distance_to_home is None
+
+
+async def test_update_data_auth_error_is_translated(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test refresh auth errors raise a translated UpdateFailed."""
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    await coordinator._async_update_data()
+    mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
+        "Invalid API key"
+    )
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "authentication_failed"
