@@ -120,10 +120,11 @@ rules:
       The integration does not define custom icons.
   reconfiguration-flow: done
   repair-issues:
-    status: todo
+    status: done
     comment: |
-      Consider repair issues for virtual remotes whose linked infrared entity is
-      removed or no longer exists.
+      The integration creates a repair issue when a configured virtual remote
+      references a missing or unavailable infrared entity and clears it when the
+      entity becomes available again.
   stale-devices:
     status: done
     comment: |
@@ -140,3 +141,6 @@ rules:
     comment: |
       This integration does not create an HTTP client session.
   strict-typing: todo
+    comment: |
+      Strict typing should be finalized after the shared remote boundary is
+      stable and the test suite is ported.

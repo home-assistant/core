@@ -10,3 +10,5 @@ CONF_VIRTUAL_REMOTES = "virtual_remotes"
 
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_NUM_REPEATS = 1
+
+ISSUE_LINKED_INFRARED_ENTITY_MISSING = "linked_infrared_entity_missing"

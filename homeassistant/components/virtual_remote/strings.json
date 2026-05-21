@@ -151,5 +151,11 @@
     "remote_invalid_command": {
       "message": "Invalid infrared command: {error}"
     }
+  },
+  "issues": {
+    "linked_infrared_entity_missing": {
+      "title": "Linked infrared entity is missing",
+      "description": "Virtual remote {remote_name} is linked to infrared entity {infrared_entity_id}, but that entity is unavailable or no longer exists. Open the Virtual Remote integration options and select a valid infrared entity."
+    }
   }
 }

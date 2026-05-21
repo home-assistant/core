@@ -28,6 +28,10 @@ from .const import (
     DEFAULT_NUM_REPEATS,
     DOMAIN,
 )
+from .repairs import (
+    async_create_linked_infrared_entity_missing_issue,
+    async_delete_linked_infrared_entity_missing_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +43,11 @@ COMMAND_TOGGLE = "TOGGLE"
 COMMAND_POWER_TOGGLE = "POWER_TOGGLE"
 
 type DeviceInfoFactory = Callable[[str, str, Mapping[str, Any]], DeviceInfo]
+type EntityNameFactory = Callable[[str, str, Mapping[str, Any]], str | None]
+type MissingInfraredEntityIssueHandler = Callable[
+    [HomeAssistant, str, str, str], None
+]
+type RestoredInfraredEntityIssueHandler = Callable[[HomeAssistant, str], None]
 
 
 def _as_str_mapping(value: Any) -> dict[str, str] | None:
@@ -55,12 +64,12 @@ def _as_str_mapping(value: Any) -> dict[str, str] | None:
     return result
 
 
-def _remote_unique_id(entry_id: str, remote_id: str) -> str:
+def remote_unique_id(entry_id: str, remote_id: str) -> str:
     """Return the unique id for a configured virtual remote."""
     return f"{entry_id}_remote_{remote_id}"
 
 
-def _configured_remote_definitions(entry: ConfigEntry) -> list[Mapping[str, Any]]:
+def configured_remote_definitions(entry: ConfigEntry) -> list[Mapping[str, Any]]:
     """Return configured virtual remote definitions."""
     entry_data = getattr(entry, "data", {})
     configured_remotes = entry.options.get(
@@ -88,6 +97,40 @@ def _virtual_remote_device_info(
     return DeviceInfo(identifiers={(DOMAIN, remote_id)}, name=name)
 
 
+def _standalone_virtual_remote_entity_name(
+    remote_id: str,
+    name: str,
+    remote_config: Mapping[str, Any],
+) -> None:
+    """Return entity name for a standalone virtual remote.
+
+    The standalone Virtual Remote integration creates one device per remote, so
+    the remote entity is the primary feature of the device and should inherit
+    the device name.
+    """
+    return None
+
+
+def _create_missing_issue(
+    hass: HomeAssistant,
+    remote_id: str,
+    remote_name: str,
+    infrared_entity_id: str,
+) -> None:
+    """Create a standalone Virtual Remote missing infrared repair issue."""
+    async_create_linked_infrared_entity_missing_issue(
+        hass,
+        remote_id=remote_id,
+        remote_name=remote_name,
+        infrared_entity_id=infrared_entity_id,
+    )
+
+
+def _delete_missing_issue(hass: HomeAssistant, remote_id: str) -> None:
+    """Delete a standalone Virtual Remote missing infrared repair issue."""
+    async_delete_linked_infrared_entity_missing_issue(hass, remote_id=remote_id)
+
+
 @callback
 def cleanup_stale_remote_entities(
     hass: HomeAssistant,
@@ -102,7 +145,7 @@ def cleanup_stale_remote_entities(
     """
     entity_registry = er.async_get(hass)
     expected_unique_ids = {
-        _remote_unique_id(entry.entry_id, remote_id)
+        remote_unique_id(entry.entry_id, remote_id)
         for remote_id in configured_remote_ids
     }
     unique_id_prefix = f"{entry.entry_id}_remote_"
@@ -151,25 +194,55 @@ def cleanup_stale_virtual_remote_devices(
             device_registry.async_remove_device(device_entry.id)
 
 
+@callback
+def cleanup_stale_missing_infrared_issues(
+    hass: HomeAssistant,
+    configured_remote_ids: set[str],
+    *,
+    issue_cleanup_handler: RestoredInfraredEntityIssueHandler | None,
+    known_remote_ids: set[str],
+) -> None:
+    """Clear repair issues for remote ids that are no longer configured."""
+    if issue_cleanup_handler is None:
+        return
+
+    for remote_id in known_remote_ids - configured_remote_ids:
+        issue_cleanup_handler(hass, remote_id)
+
+
 async def async_setup_virtual_remote_entities(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     *,
     device_info_factory: DeviceInfoFactory,
+    entity_name_factory: EntityNameFactory | None = None,
+    has_entity_name: bool = True,
     cleanup_devices: bool = False,
     device_identifier_domain: str = DOMAIN,
     translation_domain: str = DOMAIN,
+    missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
+    restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
 ) -> None:
     """Set up configured virtual remote entities.
 
     Integrations which reuse this implementation should call this helper and
-    provide a device_info_factory appropriate for their device model.
+    provide factories appropriate for their device model.
+
+    For a standalone helper integration where each remote is its own device,
+    use ``has_entity_name=True`` and an entity name of ``None``. For physical
+    device integrations such as iTach IP2IR, use ``has_entity_name=False`` and
+    return the configured virtual remote name from ``entity_name_factory`` so
+    entities do not inherit the physical hardware device name.
     """
+    if entity_name_factory is None:
+        entity_name_factory = _standalone_virtual_remote_entity_name
+
     entities: list[InfraredRemoteEntity] = []
     configured_remote_ids: set[str] = set()
+    known_remote_ids: set[str] = set()
 
-    for remote_config in _configured_remote_definitions(entry):
+    for remote_config in configured_remote_definitions(entry):
         remote_id = remote_config.get(CONF_REMOTE_ID)
         name = remote_config.get(CONF_REMOTE_NAME)
         infrared_entity_id = remote_config.get(CONF_INFRARED_ENTITY_ID)
@@ -187,6 +260,8 @@ async def async_setup_virtual_remote_entities(
             _LOGGER.debug("Skipping malformed virtual remote entry")
             continue
 
+        known_remote_ids.add(remote_id)
+
         if remote_id in configured_remote_ids:
             _LOGGER.debug("Skipping duplicate virtual remote id: %s", remote_id)
             continue
@@ -200,11 +275,21 @@ async def async_setup_virtual_remote_entities(
                 commands=commands,
                 unique_id_prefix=entry.entry_id,
                 device_info=device_info_factory(remote_id, name, remote_config),
+                entity_name=entity_name_factory(remote_id, name, remote_config),
+                has_entity_name=has_entity_name,
                 translation_domain=translation_domain,
+                missing_infrared_issue_handler=missing_infrared_issue_handler,
+                restored_infrared_issue_handler=restored_infrared_issue_handler,
             )
         )
 
     cleanup_stale_remote_entities(hass, entry, configured_remote_ids)
+    cleanup_stale_missing_infrared_issues(
+        hass,
+        configured_remote_ids,
+        issue_cleanup_handler=restored_infrared_issue_handler,
+        known_remote_ids=known_remote_ids,
+    )
 
     if cleanup_devices:
         cleanup_stale_virtual_remote_devices(
@@ -228,7 +313,11 @@ async def async_setup_entry(
         entry,
         async_add_entities,
         device_info_factory=_virtual_remote_device_info,
+        entity_name_factory=_standalone_virtual_remote_entity_name,
+        has_entity_name=True,
         cleanup_devices=True,
+        missing_infrared_issue_handler=_create_missing_issue,
+        restored_infrared_issue_handler=_delete_missing_issue,
     )
 
 
@@ -236,7 +325,6 @@ class InfraredRemoteEntity(RemoteEntity):
     """Virtual remote backed by a Home Assistant infrared entity."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -247,15 +335,25 @@ class InfraredRemoteEntity(RemoteEntity):
         commands: dict[str, str] | None,
         unique_id_prefix: str,
         device_info: DeviceInfo,
+        entity_name: str | None,
+        has_entity_name: bool,
         translation_domain: str = DOMAIN,
+        missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
+        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
     ) -> None:
         """Initialize the virtual remote."""
-        self._attr_name = None
-        self._attr_unique_id = _remote_unique_id(unique_id_prefix, remote_id)
+        self._remote_id = remote_id
+        self._remote_name = name
+        self._attr_name = entity_name
+        self._attr_has_entity_name = has_entity_name
+        self._attr_unique_id = remote_unique_id(unique_id_prefix, remote_id)
         self._attr_device_info = device_info
         self._infrared_entity_id = infrared_entity_id
         self._commands = commands or {}
         self._translation_domain = translation_domain
+        self._missing_infrared_issue_handler = missing_infrared_issue_handler
+        self._restored_infrared_issue_handler = restored_infrared_issue_handler
+        self._last_available: bool | None = None
         self._is_on = True
 
     @property
@@ -271,10 +369,15 @@ class InfraredRemoteEntity(RemoteEntity):
             return True
 
         state = hass.states.get(self._infrared_entity_id)
-        if state is None:
-            return False
+        return state is not None and state.state != STATE_UNAVAILABLE
 
-        return state.state != STATE_UNAVAILABLE
+    async def async_added_to_hass(self) -> None:
+        """Handle entity added to Home Assistant."""
+        self._update_missing_infrared_repair_issue()
+
+    async def async_update(self) -> None:
+        """Update repair state for the linked infrared entity."""
+        self._update_missing_infrared_repair_issue()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the virtual remote."""
@@ -311,6 +414,8 @@ class InfraredRemoteEntity(RemoteEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send one or more commands through the backing infrared entity."""
+        self._update_missing_infrared_repair_issue()
+
         num_repeats = kwargs.pop("num_repeats", DEFAULT_NUM_REPEATS)
         delay_secs = kwargs.pop("delay_secs", DEFAULT_DELAY_SECS)
 
@@ -400,11 +505,7 @@ class InfraredRemoteEntity(RemoteEntity):
                     translation_key="remote_command_missing",
                     translation_placeholders={"command": command},
                 ) from err
-            raise HomeAssistantError(
-                translation_domain=self._translation_domain,
-                translation_key="remote_invalid_command",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            raise
 
         entity_id = self._resolve_infrared_entity_id()
 
@@ -435,10 +536,38 @@ class InfraredRemoteEntity(RemoteEntity):
 
         state = hass.states.get(self._infrared_entity_id)
         if state is None or state.state == STATE_UNAVAILABLE:
+            self._update_missing_infrared_repair_issue()
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_infrared_missing",
                 translation_placeholders={"entity_id": self._infrared_entity_id},
             )
 
+        self._update_missing_infrared_repair_issue()
         return self._infrared_entity_id
+
+    @callback
+    def _update_missing_infrared_repair_issue(self) -> None:
+        """Create or clear a repair issue for the linked infrared entity."""
+        hass = getattr(self, "hass", None)
+        if hass is None:
+            return
+
+        is_available = self.available
+        if self._last_available is is_available:
+            return
+
+        self._last_available = is_available
+
+        if is_available:
+            if self._restored_infrared_issue_handler is not None:
+                self._restored_infrared_issue_handler(hass, self._remote_id)
+            return
+
+        if self._missing_infrared_issue_handler is not None:
+            self._missing_infrared_issue_handler(
+                hass,
+                self._remote_id,
+                self._remote_name,
+                self._infrared_entity_id,
+            )
