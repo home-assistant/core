@@ -1,6 +1,8 @@
 """The tests the History component websocket_api."""
 
 import asyncio
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
@@ -9,7 +11,12 @@ import pytest
 
 from homeassistant.components import history
 from homeassistant.components.history import websocket_api
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -33,6 +40,27 @@ def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
         for key, value in listeners.items()
         if key != EVENT_HOMEASSISTANT_FINAL_WRITE
     }
+
+
+@contextmanager
+def assert_no_listener_leak(hass: HomeAssistant) -> Iterator[None]:
+    """Capture bus listeners on entry, assert no leak on exit.
+
+    EVENT_STATE_CHANGED is excluded because unrelated components can
+    asynchronously add or remove state_changed listeners during a test.
+    """
+    excluded = {EVENT_HOMEASSISTANT_FINAL_WRITE, EVENT_STATE_CHANGED}
+
+    def _snapshot() -> dict[str, int]:
+        return {
+            key: value
+            for key, value in hass.bus.async_listeners().items()
+            if key not in excluded
+        }
+
+    before = _snapshot()
+    yield
+    assert _snapshot() == before
 
 
 @pytest.mark.usefixtures("hass_history")
@@ -1595,61 +1623,61 @@ async def test_overflow_queue(
         await async_wait_recording_done(hass)
 
         client = await hass_ws_client()
-        init_listeners = hass.bus.async_listeners()
 
-        await client.send_json(
-            {
-                "id": 1,
-                "type": "history/stream",
-                "entity_ids": wanted_entities,
-                "start_time": now.isoformat(),
-                "include_start_time_state": True,
-                "significant_changes_only": False,
-                "no_attributes": True,
-                "minimal_response": True,
-            }
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["id"] == 1
-        assert response["type"] == "result"
+        with assert_no_listener_leak(hass):
+            await client.send_json(
+                {
+                    "id": 1,
+                    "type": "history/stream",
+                    "entity_ids": wanted_entities,
+                    "start_time": now.isoformat(),
+                    "include_start_time_state": True,
+                    "significant_changes_only": False,
+                    "no_attributes": True,
+                    "minimal_response": True,
+                }
+            )
+            response = await client.receive_json()
+            assert response["success"]
+            assert response["id"] == 1
+            assert response["type"] == "result"
 
-        response = await client.receive_json()
-        first_end_time = sensor_two_last_updated_timestamp
+            response = await client.receive_json()
+            first_end_time = sensor_two_last_updated_timestamp
 
-        assert response == {
-            "event": {
-                "end_time": pytest.approx(first_end_time),
-                "start_time": pytest.approx(now.timestamp()),
-                "states": {
-                    "sensor.one": [
-                        {
-                            "lu": pytest.approx(sensor_one_last_updated_timestamp),
-                            "s": "on",
-                        }
-                    ],
-                    "sensor.two": [
-                        {
-                            "lu": pytest.approx(sensor_two_last_updated_timestamp),
-                            "s": "off",
-                        }
-                    ],
+            assert response == {
+                "event": {
+                    "end_time": pytest.approx(first_end_time),
+                    "start_time": pytest.approx(now.timestamp()),
+                    "states": {
+                        "sensor.one": [
+                            {
+                                "lu": pytest.approx(sensor_one_last_updated_timestamp),
+                                "s": "on",
+                            }
+                        ],
+                        "sensor.two": [
+                            {
+                                "lu": pytest.approx(sensor_two_last_updated_timestamp),
+                                "s": "off",
+                            }
+                        ],
+                    },
                 },
-            },
-            "id": 1,
-            "type": "event",
-        }
+                "id": 1,
+                "type": "event",
+            }
 
-        await async_recorder_block_till_done(hass)
-        # Overflow the queue
-        for val in range(10):
-            hass.states.async_set("sensor.one", str(val), attributes={"any": "attr"})
-            hass.states.async_set("sensor.two", str(val), attributes={"any": "attr"})
-        await async_recorder_block_till_done(hass)
-
-    assert listeners_without_writes(
-        hass.bus.async_listeners()
-    ) == listeners_without_writes(init_listeners)
+            await async_recorder_block_till_done(hass)
+            # Overflow the queue
+            for val in range(10):
+                hass.states.async_set(
+                    "sensor.one", str(val), attributes={"any": "attr"}
+                )
+                hass.states.async_set(
+                    "sensor.two", str(val), attributes={"any": "attr"}
+                )
+            await async_recorder_block_till_done(hass)
 
 
 @pytest.mark.usefixtures("recorder_mock")
