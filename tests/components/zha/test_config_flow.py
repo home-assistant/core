@@ -200,7 +200,7 @@ async def consume_progress_flow(
         result = await flow_manager.async_configure(flow_id)
         flow_id = result["flow_id"]
 
-        if result["type"] != FlowResultType.SHOW_PROGRESS:
+        if result["type"] is not FlowResultType.SHOW_PROGRESS:
             break
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS

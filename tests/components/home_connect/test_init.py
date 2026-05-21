@@ -199,7 +199,7 @@ async def test_client_error(
     client_with_exception.get_home_appliances.return_value = None
     client_with_exception.get_home_appliances.side_effect = exception
     assert not await integration_setup(client_with_exception)
-    assert config_entry.state == expected_state
+    assert config_entry.state is expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
 
 
