@@ -202,3 +202,26 @@ async def test_unload_entry_without_runtime_data(hass: HomeAssistant) -> None:
     entry.runtime_data = None  # type: ignore[assignment]
 
     assert await async_unload_entry(hass, entry)
+
+
+async def test_setup_entry_removes_entry_with_mismatched_system_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup removes stale entries with mismatched unique IDs."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kii Audio",
+        data={CONF_HOST: "192.0.2.1", CONF_SYSTEM_ID: SYSTEM_ID},
+        unique_id="old-system-id",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_remove",
+        new=AsyncMock(),
+    ) as mock_remove:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_remove.assert_awaited_once_with(entry.entry_id)

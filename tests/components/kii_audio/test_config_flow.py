@@ -58,6 +58,19 @@ def _zeroconf_info_with_raw_data(data: bytes) -> ZeroconfServiceInfo:
     )
 
 
+def _zeroconf_info_without_data() -> ZeroconfServiceInfo:
+    """Return Kii Audio zeroconf discovery info without data."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(HOST),
+        ip_addresses=[ip_address(HOST)],
+        hostname="kii.local.",
+        name="Kii._kii._tcp.local.",
+        port=80,
+        properties={},
+        type="_kii._tcp.local.",
+    )
+
+
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the manual config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -77,6 +90,19 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Kii Audio"
     assert result["data"] == {CONF_HOST: HOST, CONF_SYSTEM_ID: SYSTEM_ID}
     assert result["result"].unique_id == SYSTEM_ID
+
+
+def _zeroconf_info_without_data() -> ZeroconfServiceInfo:
+    """Return Kii Audio zeroconf discovery info without data."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(HOST),
+        ip_addresses=[ip_address(HOST)],
+        hostname="kii.local.",
+        name="Kii._kii._tcp.local.",
+        port=80,
+        properties={},
+        type="_kii._tcp.local.",
+    )
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
@@ -148,6 +174,30 @@ async def test_zeroconf_flow_rejects_invalid_bytes(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=_zeroconf_info_with_raw_data(b"\xff\xfe"),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_flow_rejects_missing_data(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts without a data property."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info_without_data(),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_flow_rejects_missing_ids(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts without required IDs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info({"version": 2}),
     )
 
     assert result["type"] is FlowResultType.ABORT

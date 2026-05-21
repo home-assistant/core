@@ -5,7 +5,10 @@ from copy import deepcopy
 import pytest
 
 from homeassistant.components.kii_audio.const import MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
-from homeassistant.components.kii_audio.media_player import KiiAudioZoneMediaPlayer
+from homeassistant.components.kii_audio.media_player import (
+    KiiAudioZoneMediaPlayer,
+    async_setup_entry,
+)
 
 from .conftest import ZONE_ID, FakeCoordinator, make_zone
 
@@ -15,6 +18,7 @@ def test_media_player_reports_zone_state(coordinator: FakeCoordinator) -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, coordinator.data["zones"][0])
 
     assert entity.name is None
+    assert entity.state.value == "on"
     assert entity.volume_level == 0.5
     assert entity.is_volume_muted is False
     assert entity.source == "Analogue"
@@ -162,3 +166,118 @@ def test_zone_device_info_reports_mixed_models() -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, zone)
 
     assert entity.device_info["model"] == "Mixed (Kii Seven, Kii Three)"
+
+
+async def test_media_player_setup_entry_adds_zone_entities(
+    coordinator: FakeCoordinator,
+) -> None:
+    """Test media player setup adds one entity for valid zone data."""
+    added_entities: list[KiiAudioZoneMediaPlayer] = []
+    config_entry = type("ConfigEntry", (), {"runtime_data": coordinator})()
+
+    def add_entities(entities) -> None:
+        added_entities.extend(entities)
+
+    coordinator.data["zones"].append({"zoneId": 1})
+
+    await async_setup_entry(None, config_entry, add_entities)  # type: ignore[arg-type]
+
+    assert len(added_entities) == 1
+    assert added_entities[0].unique_id == "system-id_zone-id"
+
+
+def test_media_player_reports_off_state() -> None:
+    """Test media player reports off when zone power is off."""
+    zone = make_zone()
+    zone["settings"]["power"] = False
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.state.value == "off"
+
+
+def test_media_player_handles_missing_values() -> None:
+    """Test media player properties handle missing or invalid values."""
+    zone = make_zone()
+    zone["settings"]["audio"] = {"volume": "invalid", "source": 1, "mute": "no"}
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.volume_level is None
+    assert entity.source is None
+    assert entity.is_volume_muted is None
+
+
+async def test_media_player_ignores_volume_steps_without_current_volume() -> None:
+    """Test volume step actions are ignored without a numeric current volume."""
+    zone = make_zone()
+    zone["settings"]["audio"]["volume"] = "invalid"
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    await entity.async_volume_up()
+    await entity.async_volume_down()
+
+    assert coordinator.calls == []
+
+
+async def test_media_player_power_and_mute_controls() -> None:
+    """Test power and mute controls send coordinator requests."""
+    zone = make_zone()
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    await entity.async_mute_volume(True)
+    await entity.async_turn_on()
+    await entity.async_turn_off()
+
+    assert coordinator.calls == [
+        ("mute", (ZONE_ID, True)),
+        ("power", (ZONE_ID, True)),
+        ("power", (ZONE_ID, False)),
+    ]
+
+
+def test_media_player_handles_missing_zone() -> None:
+    """Test media player falls back when its zone is missing from coordinator data."""
+    zone = make_zone()
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+    coordinator.data["zones"] = []
+
+    assert entity.source_list == [
+        "Analogue",
+        "Digital (Auto)",
+        "Digital (XLR)",
+        "Digital (KiiLink)",
+        "Dante",
+    ]
+    assert entity.source is None
+
+
+def test_media_player_handles_invalid_kiilink_data() -> None:
+    """Test Kii Control detection ignores invalid kiilink data."""
+    zone = make_zone()
+    zone["kiilink"] = []
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.source_list == [
+        "Analogue",
+        "Digital (Auto)",
+        "Digital (XLR)",
+        "Digital (KiiLink)",
+        "Dante",
+    ]
+
+    zone["kiilink"] = {"devices": {}}
+    coordinator = FakeCoordinator(deepcopy(zone))
+    entity = KiiAudioZoneMediaPlayer(coordinator, zone)
+
+    assert entity.source_list == [
+        "Analogue",
+        "Digital (Auto)",
+        "Digital (XLR)",
+        "Digital (KiiLink)",
+        "Dante",
+    ]
