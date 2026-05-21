@@ -1,4 +1,4 @@
-"""Tests for the System Bridgy notify platform."""
+"""Tests for the System Bridge notify platform."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
