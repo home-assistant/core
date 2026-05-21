@@ -673,7 +673,7 @@
       "message": "An error occurred while reconnecting to {device}"
     },
     "update_error_sleeping_device": {
-      "message": "Sleeping device did not update within {period} seconds interval"
+      "message": "Sleeping device {device} did not update within {period} seconds interval"
     }
   },
   "issues": {
