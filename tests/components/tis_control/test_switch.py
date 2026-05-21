@@ -360,6 +360,11 @@ async def test_invalid_appliance_data(
             "device_id": ["not", "an", "int"],
             "channels": [{"Output": 1}],
         },
+        {
+            "name": "Device ID empty list",
+            "device_id": [],
+            "channels": [{"Output": 1}],
+        },
         # Valid channel and device_id to ensure the loop processes correctly.
         {
             "name": "Valid Switch",

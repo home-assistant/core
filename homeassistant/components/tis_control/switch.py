@@ -87,6 +87,10 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
         except TypeError, ValueError:
             continue
 
+        # Skip invalid switch payloads without a usable device identifier.
+        if not device_id:
+            continue
+
         # Create a new, clean dictionary with a standardized format.
         result.append(
             SwitchDescription(
