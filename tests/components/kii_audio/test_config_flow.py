@@ -92,19 +92,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == SYSTEM_ID
 
 
-def _zeroconf_info_without_data() -> ZeroconfServiceInfo:
-    """Return Kii Audio zeroconf discovery info without data."""
-    return ZeroconfServiceInfo(
-        ip_address=ip_address(HOST),
-        ip_addresses=[ip_address(HOST)],
-        hostname="kii.local.",
-        name="Kii._kii._tcp.local.",
-        port=80,
-        properties={},
-        type="_kii._tcp.local.",
-    )
-
-
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     """Test the manual flow aborts for an existing system."""
     MockConfigEntry(
