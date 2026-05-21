@@ -498,11 +498,12 @@ class ZHADeviceProxy(EventBase):
             self.gateway_proxy.hass,
             SIGNAL_DEVICE_RECONFIGURE_EVENT,
             {
-                "event_type": event.event_type,
-                "endpoint_id": event.endpoint_id,
-                "cluster_id": event.cluster_id,
-                "cluster_name": event.cluster_name,
-                "success": event.success,
+                "type": "zha_channel_bind",
+                "zha_channel_msg_data": {
+                    "cluster_name": event.cluster_name,
+                    "cluster_id": event.cluster_id,
+                    "success": event.success,
+                },
             },
         )
 
@@ -515,11 +516,12 @@ class ZHADeviceProxy(EventBase):
             self.gateway_proxy.hass,
             SIGNAL_DEVICE_RECONFIGURE_EVENT,
             {
-                "event_type": event.event_type,
-                "endpoint_id": event.endpoint_id,
-                "cluster_id": event.cluster_id,
-                "cluster_name": event.cluster_name,
-                "attributes": event.attributes,
+                "type": "zha_channel_configure_reporting",
+                "zha_channel_msg_data": {
+                    "cluster_name": event.cluster_name,
+                    "cluster_id": event.cluster_id,
+                    "attributes": event.attributes,
+                },
             },
         )
 
@@ -529,7 +531,7 @@ class ZHADeviceProxy(EventBase):
         async_dispatcher_send(
             self.gateway_proxy.hass,
             SIGNAL_DEVICE_RECONFIGURE_EVENT,
-            {"event_type": event.event_type},
+            {"type": "zha_channel_cfg_done"},
         )
 
     @callback
