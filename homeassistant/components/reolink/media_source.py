@@ -63,6 +63,7 @@ class ReolinkVODMediaSource(MediaSource):
         if item.identifier is not None:
             identifier = item.identifier.split("|", 6)
         if identifier[0] != "FILE":
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise Unresolvable(f"Unknown media item '{item.identifier}'.")
 
         _, config_entry_id, channel_str, stream_res, filename, start_time, end_time = (
@@ -83,7 +84,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
-        if vod_type == VodRequestType.NVR_DOWNLOAD:
+        if vod_type is VodRequestType.NVR_DOWNLOAD:
             filename = f"{start_time}_{end_time}"
 
         if vod_type in {
@@ -172,6 +173,7 @@ class ReolinkVODMediaSource(MediaSource):
                 event,
             )
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
 
     async def _async_generate_root(self) -> BrowseMediaSource:

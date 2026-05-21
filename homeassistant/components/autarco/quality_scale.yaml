@@ -82,7 +82,7 @@ rules:
     comment: |
       This integration does not have any entities that should disabled by default.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:

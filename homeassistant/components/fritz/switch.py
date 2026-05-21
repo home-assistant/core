@@ -438,6 +438,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._attr_is_on = turn_on
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class FritzBoxPortSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools PortForward switch."""
 
@@ -604,6 +605,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         self.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-missing-has-entity-name
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools Wifi switch."""
 
