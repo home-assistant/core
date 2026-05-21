@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from renault_api.kamereon.enums import AssetPictureSize
 import voluptuous as vol
 
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -22,7 +23,6 @@ LOGGER = logging.getLogger(__name__)
 
 ATTR_PICTURE_SIZE = "size"
 ATTR_SCHEDULES = "schedules"
-ATTR_TEMPERATURE = "temperature"
 ATTR_VEHICLE = "vehicle"
 ATTR_WHEN = "when"
 

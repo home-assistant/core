@@ -14,11 +14,11 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (
     ATTR_PICTURE_SIZE,
     ATTR_SCHEDULES,
-    ATTR_TEMPERATURE,
     ATTR_VEHICLE,
     ATTR_WHEN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
