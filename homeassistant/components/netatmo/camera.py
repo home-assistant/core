@@ -176,7 +176,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_available = False
                 self._attr_is_streaming = False
                 self._monitoring = None
-                self._attr_motion_detection_enabled = False
+                if self.device_type != "NDB":
+                    self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_OFF:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring off",
@@ -184,7 +185,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._monitoring = False
-                self._attr_motion_detection_enabled = False
+                if self.device_type != "NDB":
+                    self._attr_motion_detection_enabled = False
                 self._attr_is_streaming = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
@@ -195,7 +197,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_is_on = True
                 self._attr_available = True
                 self._monitoring = False
-                self._attr_motion_detection_enabled = False
+                if self.device_type != "NDB":
+                    self._attr_motion_detection_enabled = False
             elif event_type == EVENT_TYPE_ON:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning monitoring on",
@@ -203,7 +206,8 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                     event_type,
                 )
                 self._monitoring = True
-                self._attr_motion_detection_enabled = True
+                if self.device_type != "NDB":
+                    self._attr_motion_detection_enabled = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
@@ -226,6 +230,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+
+        # Return None if camera not capable to provide a live snapshot,
+        # to prevent unnecessary API calls and errors in the logs
         if not self.available or not self._monitoring:
             return None
         try:
@@ -287,6 +294,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         if self.device_type == "NDB":
             self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            self._attr_motion_detection_enabled = False
         elif self.device.monitoring is not None:
             self._monitoring = (
                 self.device.monitoring
