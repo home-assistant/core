@@ -13,13 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import (
-    TEST_DEVICE_1,
-    TEST_DEVICE_1_SN,
-    TEST_DEVICE_2,
-    TEST_DEVICE_2_SN,
-    TEST_VOCAL_RECORD_EVENT,
-)
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -120,18 +114,3 @@ async def test_sync_history_state_cannot_connect(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_history_state_event_handler(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test history_state_event_handler updates vocal records and listeners."""
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    vocal_records = {TEST_DEVICE_1_SN: TEST_VOCAL_RECORD_EVENT}
-    await coordinator.history_state_event_handler(vocal_records)
-
-    assert coordinator.vocal_records is vocal_records

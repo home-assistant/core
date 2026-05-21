@@ -80,7 +80,6 @@ TEST_DEVICE_1 = AmazonDevice(
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
-TEST_DEVICE_2_ID = "echo_test_2_device_id"
 TEST_DEVICE_2 = AmazonDevice(
     account_name="Echo Test 2",
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
@@ -88,7 +87,7 @@ TEST_DEVICE_2 = AmazonDevice(
     device_type="echo",
     household_device=True,
     device_owner_customer_id="amazon_ower_id",
-    device_cluster_members={TEST_DEVICE_2_SN: TEST_DEVICE_2_ID},
+    device_cluster_members={TEST_DEVICE_2_SN: "echo_test_2_device_id"},
     online=True,
     serial_number=TEST_DEVICE_2_SN,
     manufacturer="Test manufacturer 2",

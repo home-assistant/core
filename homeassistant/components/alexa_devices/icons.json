@@ -1,9 +1,11 @@
 {
   "entity": {
-    "sensor": {
-      "last_voice_input_command": {
+    "event": {
+      "voice_event": {
         "default": "mdi:chat-processing"
-      },
+      }
+    },
+    "sensor": {
       "voc_index": {
         "default": "mdi:molecule"
       }

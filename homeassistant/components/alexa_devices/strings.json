@@ -58,6 +58,12 @@
     }
   },
   "entity": {
+    "event": {
+      "voice_event": {
+        "name": "Voice event"
+      }
+    },
+
     "notify": {
       "announce": {
         "name": "Announce"
@@ -69,12 +75,6 @@
     "sensor": {
       "alarm": {
         "name": "Next alarm"
-      },
-      "last_voice_input_command": {
-        "name": "Last input command"
-      },
-      "last_voice_input_timestamp": {
-        "name": "Last input date"
       },
       "reminder": {
         "name": "Next reminder"

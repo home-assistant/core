@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Final
 
 from aioamazondevices.const.schedules import (
@@ -156,29 +156,6 @@ NOTIFICATIONS: Final = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
-VOICE: Final = (
-    AmazonVoiceEntityDescription(
-        key="timestamp",
-        translation_key="last_voice_input_timestamp",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device, _, coordinator: datetime.fromtimestamp(
-            coordinator.vocal_records[device.serial_number].timestamp / 1000, UTC
-        ),
-    ),
-    AmazonVoiceEntityDescription(
-        key="title",
-        translation_key="last_voice_input_command",
-        value_fn=lambda device, _, coordinator: (
-            coordinator.vocal_records[device.serial_number].title
-        ),
-    ),
-)
-
-AmazonEntityDescription = (
-    AmazonSensorEntityDescription
-    | AmazonNotificationEntityDescription
-    | AmazonVoiceEntityDescription
-)
 
 
 async def async_setup_entry(
@@ -212,13 +189,7 @@ async def async_setup_entry(
                 for serial_num in new_devices
                 if coordinator.data[serial_num].notifications_supported
             ]
-            voice_list = [
-                AmazonSensorEntity(coordinator, serial_num, voice_desc)
-                for voice_desc in VOICE
-                for serial_num in new_devices
-                if coordinator.vocal_records.get(serial_num) is not None
-            ]
-            async_add_entities(sensors_list + notifications_list + voice_list)
+            async_add_entities(sensors_list + notifications_list)
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
@@ -227,7 +198,9 @@ async def async_setup_entry(
 class AmazonSensorEntity(AmazonEntity, SensorEntity):
     """Sensor device."""
 
-    entity_description: AmazonEntityDescription
+    entity_description: (
+        AmazonSensorEntityDescription | AmazonNotificationEntityDescription
+    )
 
     @property
     def native_unit_of_measurement(self) -> str | None:

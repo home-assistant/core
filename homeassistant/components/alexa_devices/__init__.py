@@ -16,6 +16,7 @@ from .services import async_setup_services
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
