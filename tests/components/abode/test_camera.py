@@ -1,4 +1,5 @@
 """Tests for the Abode camera device."""
+# DNM: cache empirical test — touch this file to provoke a single-file cache miss.
 
 from unittest.mock import patch
 
