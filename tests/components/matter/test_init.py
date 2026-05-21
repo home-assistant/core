@@ -2,6 +2,8 @@
 
 import asyncio
 from collections.abc import Generator
+import sys
+import types
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
@@ -15,6 +17,7 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError
 import pytest
 
+from homeassistant.components.matter import _derive_ble_proxy_url
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -42,6 +45,39 @@ def connect_timeout_fixture() -> Generator[int]:
     """Mock the connect timeout."""
     with patch("homeassistant.components.matter.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
+
+
+@pytest.fixture(name="ble_proxy_connect_timeout")
+def ble_proxy_connect_timeout_fixture() -> Generator[int]:
+    """Shorten the BLE proxy connect timeout."""
+    with patch(
+        "homeassistant.components.matter.BLE_PROXY_CONNECT_TIMEOUT", new=0
+    ) as timeout:
+        yield timeout
+
+
+@pytest.fixture(name="mock_ble_proxy")
+def mock_ble_proxy_fixture() -> Generator[MagicMock]:
+    """Stub the lazily-imported ble_proxy submodule with a fake create function.
+
+    The real submodule pulls in `bluetooth` (and its dep tree); for unit tests
+    we replace it via sys.modules so the lazy `from .ble_proxy import ...` inside
+    async_setup_entry resolves to our stub.
+    """
+    proxy = MagicMock()
+    proxy.connect = AsyncMock()
+    proxy.disconnect = AsyncMock()
+    fake_module = types.ModuleType("homeassistant.components.matter.ble_proxy")
+    fake_module.create_matter_ble_proxy = MagicMock(return_value=proxy)
+    original = sys.modules.get("homeassistant.components.matter.ble_proxy")
+    sys.modules["homeassistant.components.matter.ble_proxy"] = fake_module
+    try:
+        yield proxy
+    finally:
+        if original is None:
+            sys.modules.pop("homeassistant.components.matter.ble_proxy", None)
+        else:
+            sys.modules["homeassistant.components.matter.ble_proxy"] = original
 
 
 @pytest.fixture(name="listen_ready_timeout")
@@ -731,3 +767,105 @@ async def test_remove_config_entry_device_no_node(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get(device_entry.id)
+
+
+@pytest.mark.parametrize(
+    ("matter_ws_url", "expected"),
+    [
+        ("ws://localhost:5580/ws", "ws://localhost:5580/ble"),
+        ("wss://example.com/ws", "wss://example.com/ble"),
+        ("ws://localhost:5580/", "ws://localhost:5580/ble"),
+        ("ws://localhost:5580", "ws://localhost:5580/ble"),
+        ("ws://ws.example.com:5580/ws", "ws://ws.example.com:5580/ble"),
+        ("ws://localhost:5580/custom/ws", "ws://localhost:5580/custom/ble"),
+    ],
+)
+def test_derive_ble_proxy_url(matter_ws_url: str, expected: str) -> None:
+    """Derived /ble URL preserves scheme/host/port and only swaps the trailing path."""
+    assert _derive_ble_proxy_url(matter_ws_url) == expected
+
+
+async def test_ble_proxy_setup_when_enabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: MagicMock,
+) -> None:
+    """BLE proxy is created and connected when the server reports it enabled."""
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_ble_proxy.connect.assert_awaited_once()
+    assert entry.runtime_data.ble_proxy is mock_ble_proxy
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    mock_ble_proxy.disconnect.assert_awaited()
+
+
+async def test_ble_proxy_skipped_when_disabled(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """BLE proxy is not constructed when ble_proxy_enabled is False/missing.
+
+    With ble_proxy_enabled False the lazy `from .ble_proxy import ...` is never
+    executed, so we only assert the runtime_data side-effect, not the import.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+
+
+@pytest.mark.parametrize(
+    "connect_error",
+    [ConnectionError("boom"), OSError("boom"), RuntimeError("boom")],
+)
+async def test_ble_proxy_connect_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: MagicMock,
+    connect_error: Exception,
+) -> None:
+    """Setup succeeds with ble_proxy=None when the proxy connect raises."""
+    matter_client.server_info.ble_proxy_enabled = True
+    mock_ble_proxy.connect.side_effect = connect_error
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
+    mock_ble_proxy.disconnect.assert_not_awaited()
+
+
+async def test_ble_proxy_connect_timeout_does_not_block_setup(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: MagicMock,
+    ble_proxy_connect_timeout: int,
+) -> None:
+    """Setup succeeds with ble_proxy=None when proxy connect times out."""
+    matter_client.server_info.ble_proxy_enabled = True
+
+    async def hang() -> None:
+        await asyncio.Event().wait()
+
+    mock_ble_proxy.connect.side_effect = hang
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.ble_proxy is None
