@@ -244,7 +244,7 @@ def async_get_client_for_service_call(
     if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
             if entry := hass.config_entries.async_get_entry(entry_id):
-                if entry.domain == DOMAIN and entry.state == ConfigEntryState.LOADED:
+                if entry.domain is DOMAIN and entry.state is ConfigEntryState.LOADED:
                     return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
 
     raise ServiceValidationError(

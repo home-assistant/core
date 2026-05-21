@@ -261,7 +261,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -718,7 +718,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         # If already playing, or don't want to autoplay, no need to call Play
         autoplay = extra.get("autoplay", True)
-        if self._device.transport_state == TransportState.PLAYING or not autoplay:
+        if self._device.transport_state is TransportState.PLAYING or not autoplay:
             return
 
         # Play it
@@ -748,7 +748,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
         return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
@@ -782,7 +782,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
         if play_mode == PlayMode.REPEAT_ONE:

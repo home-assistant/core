@@ -354,7 +354,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": self.atv.name,
             "type": (
                 dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
+                if dev_info.model is DeviceModel.Unknown and dev_info.raw_model
                 else model_str(dev_info.model)
             ),
         }
@@ -441,7 +441,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_password()
 
         # Figure out, depending on protocol, what kind of pairing is needed
-        if service.pairing == PairingRequirement.Unsupported:
+        if service.pairing is PairingRequirement.Unsupported:
             _LOGGER.debug("%s does not support pairing", self.protocol)
             return await self.async_pair_next_protocol()
         if service.pairing == PairingRequirement.Disabled:
@@ -457,7 +457,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         pair_args: dict[str, Any] = {}
         if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
-        if self.protocol == Protocol.DMAP:
+        if self.protocol is Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process

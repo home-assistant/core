@@ -109,7 +109,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             # encryption later, we can do a reauth
             return await self.async_step_confirm_slow()
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
         if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
             return await self.async_step_get_encryption_key_4_5_choose_method()
@@ -296,7 +296,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._discovered_device = discovery.device
 
-            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+            if discovery.device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
                 return await self.async_step_get_encryption_key_legacy()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
@@ -338,7 +338,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = device.last_service_info
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:

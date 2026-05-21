@@ -93,7 +93,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensors(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add sensors from Switcher device."""
-        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category is DeviceCategory.POWER_PLUG:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in POWER_PLUG_SENSORS
