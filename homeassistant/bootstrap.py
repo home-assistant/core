@@ -693,7 +693,10 @@ def _is_log_file_disabled() -> bool:
         return cv.boolean(disable_log_file)
     except vol.Invalid:
         _LOGGER.warning(
-            "Ignoring invalid %s value: %s", ENV_DISABLE_LOG_FILE, disable_log_file
+            "Ignoring invalid %s value: %s. Expected a boolean value: "
+            "1/0, true/false, yes/no, on/off, or enable/disable",
+            ENV_DISABLE_LOG_FILE,
+            disable_log_file,
         )
         return False
 
