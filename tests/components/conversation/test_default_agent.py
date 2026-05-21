@@ -3312,7 +3312,7 @@ async def test_handle_intents_filters_results(
         )
 
         assert len(mock_recognize.mock_calls) == 2
-        assert len(mock_process.mock_calls) == 2
+        assert len(mock_process.mock_calls) == 1
 
         # Check we filtered things
         assert len(results) == 2
