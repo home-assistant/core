@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.avea.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -79,7 +80,7 @@ async def test_device_info(hass: HomeAssistant, setup_integration: MagicMock) ->
     bulb = setup_integration
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        identifiers={(DOMAIN, AVEA_DISCOVERY_INFO.address)},
         connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
     )
 
@@ -124,7 +125,7 @@ async def test_device_info_populates_when_connect_fails(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={("avea", AVEA_DISCOVERY_INFO.address)},
+        identifiers={(DOMAIN, AVEA_DISCOVERY_INFO.address)},
         connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
     )
 
@@ -134,6 +135,28 @@ async def test_device_info_populates_when_connect_fails(
     assert device.hw_version == "Elgato Avea"
     assert device.sw_version == AVEA_FIRMWARE_VERSION
     assert device.serial_number == AVEA_SERIAL_NUMBER
+
+
+async def test_device_info_is_read_once(
+    hass: HomeAssistant,
+    setup_integration: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device info is read once."""
+    bulb = setup_integration
+    bulb.get_manufacturer_name.reset_mock()
+    bulb.get_hardware_revision.reset_mock()
+    bulb.get_fw_version.reset_mock()
+    bulb.get_serial_number.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    bulb.get_manufacturer_name.assert_not_called()
+    bulb.get_hardware_revision.assert_not_called()
+    bulb.get_fw_version.assert_not_called()
+    bulb.get_serial_number.assert_not_called()
 
 
 async def test_turn_on_and_off(

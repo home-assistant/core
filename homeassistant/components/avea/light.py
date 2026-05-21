@@ -191,7 +191,8 @@ class AveaLight(LightEntity):
 
     def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
         """Initialize an AveaLight."""
-        unique_id = entry.unique_id or entry.data[CONF_ADDRESS]
+        address = entry.data[CONF_ADDRESS]
+        unique_id = entry.unique_id or address
         self._light = light
         self._attr_unique_id = unique_id
         self._attr_name = entry.title
@@ -199,8 +200,8 @@ class AveaLight(LightEntity):
         self._last_brightness = 255
         self._device_info_updated = False
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            identifiers={(DOMAIN, unique_id)},
+            connections={(CONNECTION_BLUETOOTH, address)},
+            identifiers={(DOMAIN, address)},
             name=entry.title,
             model=MODEL,
         )
@@ -210,20 +211,21 @@ class AveaLight(LightEntity):
         device_info = self._attr_device_info
         assert device_info is not None
 
-        if manufacturer := _read_device_info_value(self._light.get_manufacturer_name):
+        manufacturer = _read_device_info_value(self._light.get_manufacturer_name)
+        hardware_revision = _read_device_info_value(self._light.get_hardware_revision)
+        firmware_version = _read_device_info_value(self._light.get_fw_version)
+        serial_number = _read_device_info_value(self._light.get_serial_number)
+
+        if manufacturer:
             device_info["manufacturer"] = manufacturer
-        if hardware_revision := _read_device_info_value(
-            self._light.get_hardware_revision
-        ):
+        if hardware_revision:
             device_info["hw_version"] = hardware_revision
-        if firmware_version := _read_device_info_value(self._light.get_fw_version):
+        if firmware_version:
             device_info["sw_version"] = firmware_version
-        if serial_number := _read_device_info_value(self._light.get_serial_number):
+        if serial_number:
             device_info["serial_number"] = serial_number
 
-        self._device_info_updated = bool(
-            manufacturer or hardware_revision or firmware_version or serial_number
-        )
+        self._device_info_updated = True
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
