@@ -18,17 +18,11 @@ from elke27_lib.errors import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import selector
 
-from .const import (
-    CONF_CLIENT_ID,
-    CONF_LINK_KEYS_JSON,
-    DEFAULT_PORT,
-    DOMAIN,
-    READY_TIMEOUT,
-)
+from .const import CONF_LINK_KEYS_JSON, DEFAULT_PORT, DOMAIN, READY_TIMEOUT
 from .identity import build_client_identity, derive_client_id
 
 CONF_ACCESS_CODE = "access_code"

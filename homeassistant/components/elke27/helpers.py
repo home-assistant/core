@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING, Any
 
 from elke27_lib import PanelSnapshot
 
+from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
     format_mac,
 )
 
-from .const import CONF_CLIENT_ID, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .coordinator import Elke27DataUpdateCoordinator

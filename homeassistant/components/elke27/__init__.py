@@ -11,10 +11,10 @@ from elke27_lib.errors import (
     Elke27TimeoutError,
 )
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT, Platform
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_CLIENT_ID, CONF_LINK_KEYS_JSON
+from .const import CONF_LINK_KEYS_JSON
 from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry, Elke27RuntimeData
