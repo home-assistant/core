@@ -1,6 +1,6 @@
 {
   "domain": "eveonline",
-  "name": "Eve Online",
+  "name": "EVE Online",
   "codeowners": ["@ronaldvdmeer"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

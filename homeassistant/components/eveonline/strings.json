@@ -17,7 +17,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The Eve Online integration needs to re-authenticate your account for character: {character}",
+        "description": "The EVE Online integration needs to re-authenticate your account for character: {character}",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
