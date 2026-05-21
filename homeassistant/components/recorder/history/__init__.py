@@ -417,7 +417,8 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
+    # sort must be descending time to get the most recent     
+    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts.desc())
     if not include_start_time_state or not run_start_ts:
         # If we do not need the start time state or the
         # oldest possible timestamp is newer than the start time
@@ -794,7 +795,7 @@ def _sorted_states_to_dict(
     entity_id_to_metadata_id: dict[str, int | None],
     minimal_response: bool = False,
     compressed_state_format: bool = False,
-    descending: bool = False,
+    descending: bool = True,    #assume input is descending -- reverse only if descending=False
     no_attributes: bool = False,
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
@@ -926,7 +927,11 @@ def _sorted_states_to_dict(
             ]
         )
 
-    if descending:
+    # the input list should be descending already -- we searched for most recent, i.e., descending,
+    # so reverse only if request is for ascending -- descending=False
+    # not at all clear why this is still needed - was required because selection statement order was ascending,
+    # so needed to be reversed
+    if not descending:
         for ent_results in result.values():
             ent_results.reverse()
 
