@@ -1278,13 +1278,17 @@ def test_nested_section_in_serializer() -> None:
 @pytest.mark.parametrize(
     ("context", "expected_show_advanced"),
     [
-        ({}, False),
-        ({"show_advanced_options": False}, False),
+        # The property is deprecated and now unconditionally returns True
+        ({}, True),
+        ({"show_advanced_options": False}, True),
         ({"show_advanced_options": True}, True),
     ],
 )
 async def test_show_advanced_options(
-    manager: MockFlowManager, context: dict[str, Any], expected_show_advanced: bool
+    manager: MockFlowManager,
+    context: dict[str, Any],
+    expected_show_advanced: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test FlowHandler show_advanced_options property."""
 
@@ -1303,3 +1307,9 @@ async def test_show_advanced_options(
     entry = manager.mock_created_entries[0]
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
+
+    assert (
+        "The deprecated function show_advanced_options was called. It will be "
+        "removed in HA Core 2027.6. Use a user friendly way to present additional "
+        "options in the UI, for example in a section instead"
+    ) in caplog.text
