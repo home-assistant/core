@@ -1,6 +1,6 @@
 """Test OpenEVSE diagnostics."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 from homeassistant.core import HomeAssistant
 
@@ -16,11 +16,6 @@ async def test_entry_diagnostics(
     mock_charger: MagicMock,
 ) -> None:
     """Test OpenEVSE diagnostics."""
-    # Mock firmware versions to prevent the dynamic property loop in diagnostics
-    # from triggering nested/infinite MagicMock calls and leaking memory.
-    mock_charger.wifi_firmware = "1.2.3"
-    mock_charger.openevse_firmware = "4.5.6"
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -54,11 +49,6 @@ async def test_entry_diagnostics_redact(
         entry_id="FAKE_AUTH",
         unique_id="deadbeeffeed",
     )
-    # Mock firmware versions to prevent the dynamic property loop in diagnostics
-    # from triggering nested/infinite MagicMock calls and leaking memory.
-    mock_charger.wifi_firmware = "1.2.3"
-    mock_charger.openevse_firmware = "4.5.6"
-
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -70,3 +60,36 @@ async def test_entry_diagnostics_redact(
         "username": "**REDACTED**",
         "password": "**REDACTED**",
     }
+
+
+async def test_entry_diagnostics_exceptions(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test OpenEVSE diagnostics handles exceptions correctly."""
+    # Set up one property to raise AttributeError (should be skipped)
+    type(mock_charger).status = PropertyMock(side_effect=AttributeError)
+
+    # Set up another property to raise a different Exception (should record the error)
+    type(mock_charger).charging_voltage = PropertyMock(
+        side_effect=ValueError("Connection error")
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    # status should be omitted due to AttributeError
+    assert "status" not in diagnostics["charger"]
+
+    # charging_voltage should show the recorded error
+    assert (
+        diagnostics["charger"]["charging_voltage"]
+        == "Error: ValueError: Connection error"
+    )
