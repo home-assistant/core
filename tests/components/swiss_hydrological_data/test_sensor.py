@@ -44,7 +44,7 @@ async def test_entities_unavailable_on_update_failure(
 
     mock_swiss_hydro_data.get_station.return_value = None
 
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

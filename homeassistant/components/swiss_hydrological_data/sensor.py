@@ -97,8 +97,9 @@ class SwissHydrologicalDataSensor(
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, str(coordinator.station_id))},
             manufacturer="Swiss Federal Office for the Environment FOEN",
+            name=entry.title,
         )
 
     def _get_condition_data(self) -> dict[str, Any]:
