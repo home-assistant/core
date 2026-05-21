@@ -373,7 +373,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             )
         }
-
         return self.async_show_form(step_id="tunnel", data_schema=vol.Schema(fields))
 
     async def async_step_tcp_tunnel_endpoint(
@@ -606,7 +605,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
         }
-
         return self.async_show_form(
             step_id="secure_tunnel_manual",
             data_schema=vol.Schema(fields),
@@ -662,7 +660,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Coerce(int),
             ),
         }
-
         return self.async_show_form(
             step_id="secure_routing_manual",
             data_schema=vol.Schema(fields),
@@ -843,6 +840,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 ip_v4_validator(_multicast_group, multicast=True)
             except vol.Invalid:
                 errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
+            _local_ip = None
             if _local := user_input.get(CONF_KNX_LOCAL_IP):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
@@ -861,7 +859,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
                     multicast_port=_multicast_port,
-                    local_ip=_local,
+                    local_ip=_local_ip,
                     device_authentication=None,
                     user_id=None,
                     user_password=None,
@@ -891,7 +889,6 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_KNX_MCAST_PORT, default=_multicast_port): _PORT_SELECTOR,
             vol.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
-
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
         )
