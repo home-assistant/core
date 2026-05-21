@@ -806,10 +806,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             data["daysOfMonth"] = [start_date.day]
             data["weeksOfMonth"] = []
 
-    if interval := call.data.get(ATTR_INTERVAL):
+    if (interval := call.data.get(ATTR_INTERVAL)) is not None:
         data["everyX"] = interval
 
-    if streak := call.data.get(ATTR_STREAK):
+    if (streak := call.data.get(ATTR_STREAK)) is not None:
         data["streak"] = streak
 
     try:
