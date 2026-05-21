@@ -346,7 +346,7 @@
   },
   "exceptions": {
     "api_status_error": {
-      "message": "API returned status: {status}"
+      "message": "API returned status code: {status}"
     },
     "cannot_connect": {
       "message": "Value cannot be set because the device is not connected"
