@@ -20,18 +20,14 @@ from homeassistant.components.openaq.config_flow import (
     LOCATION_FETCH_LIMIT,
     OpenAQLocationFlowData,
 )
-from homeassistant.components.openaq.const import (
-    CONF_LOCATION_ID,
-    CONF_RADIUS,
-    DOMAIN,
-    MAX_RADIUS,
-)
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN, MAX_RADIUS
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
     ATTR_LONGITUDE,
     CONF_API_KEY,
+    CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType

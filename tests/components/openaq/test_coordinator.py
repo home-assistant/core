@@ -100,19 +100,22 @@ async def test_async_create_openaq_client_uses_shared_httpx_client(
 
 
 @pytest.mark.parametrize(
-    ("first_exception", "expected_cause_type"),
+    ("first_exception", "expected_cause_type", "expected_translation_key"),
     [
         (
             NotAuthorizedError("Invalid API key"),
             NotAuthorizedError,
+            "authentication_failed",
         ),
         (
             ServerError("API error"),
             ServerError,
+            "unable_to_fetch",
         ),
         (
             RuntimeError("Unexpected error"),
             RuntimeError,
+            "unable_to_fetch",
         ),
     ],
 )
@@ -121,6 +124,7 @@ async def test_initial_refresh_exception_group_maps_first_exception(
     mock_openaq_client: AsyncMock,
     first_exception: Exception,
     expected_cause_type: type[Exception],
+    expected_translation_key: str,
 ) -> None:
     """Test initial refresh TaskGroup errors raise UpdateFailed."""
     config_entry = MockConfigEntry(
@@ -151,6 +155,8 @@ async def test_initial_refresh_exception_group_maps_first_exception(
         await coordinator._async_update_data()
 
     assert isinstance(err.value.__cause__, expected_cause_type)
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == expected_translation_key
 
 
 def test_normalize_latest_measurements() -> None:
@@ -178,11 +184,21 @@ def test_normalize_latest_measurements() -> None:
     )
 
 
-def test_normalize_latest_measurements_normalizes_unit_aliases() -> None:
+@pytest.mark.parametrize(
+    ("unit", "expected_unit"),
+    [
+        ("μg/m³", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+        ("mg/m³", CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        ("mg/m3", CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+    ],
+)
+def test_normalize_latest_measurements_normalizes_unit_aliases(
+    unit: str, expected_unit: str
+) -> None:
     """Test normalizing measurement unit aliases."""
     measurements = normalize_latest_measurements(
         [make_latest(1, 12.1)],
-        [make_sensor(1, "pm10", "mg/m3")],
+        [make_sensor(1, "pm10", unit)],
     )
 
     assert measurements == MappingProxyType(
@@ -190,7 +206,7 @@ def test_normalize_latest_measurements_normalizes_unit_aliases() -> None:
             "pm10": OpenAQMeasurement(
                 parameter="pm10",
                 value=12.1,
-                unit=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+                unit=expected_unit,
             )
         }
     )
@@ -247,3 +263,27 @@ async def test_update_data_allows_missing_location_coordinates(
     data = await coordinator._async_update_data()
 
     assert data.distance_to_home is None
+
+
+async def test_update_data_auth_error_is_translated(
+    hass: HomeAssistant,
+    mock_openaq_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test refresh auth errors raise a translated UpdateFailed."""
+    coordinator = OpenAQDataUpdateCoordinator(
+        hass,
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        mock_openaq_client,
+    )
+    await coordinator._async_update_data()
+    mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
+        "Invalid API key"
+    )
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "authentication_failed"
