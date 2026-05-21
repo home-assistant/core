@@ -8,7 +8,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -288,35 +288,55 @@ async def test_remote_send_command_direction_prefix_pair(
     ]
 
 
-async def test_remote_send_command_hold_secs_overrides_direction_prefix(
+async def test_remote_send_command_direction_prefix_with_hold_secs_raises(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test that hold_secs takes precedence over an explicit direction prefix.
-
-    Mixing both is non-sensical; hold_secs is treated as the dominant signal
-    and runs the legacy START_LONG / sleep / END_LONG sandwich. The prefix is
-    still stripped from the key code so the underlying lib receives a clean
-    keycode rather than the raw service input.
-    """
+    """Test that combining a direction prefix with hold_secs raises."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    await hass.services.async_call(
-        "remote",
-        "send_command",
-        {
-            "entity_id": REMOTE_ENTITY,
-            "command": "start_long:DPAD_RIGHT",
-            "delay_secs": 0.01,
-            "hold_secs": 0.01,
-        },
-        blocking=True,
-    )
-    assert mock_api.send_key_command.mock_calls == [
-        call("DPAD_RIGHT", "START_LONG"),
-        call("DPAD_RIGHT", "END_LONG"),
-    ]
+    with pytest.raises(
+        ServiceValidationError,
+        match='Command "start_long:DPAD_RIGHT" combines a direction prefix with hold_secs',
+    ):
+        await hass.services.async_call(
+            "remote",
+            "send_command",
+            {
+                "entity_id": REMOTE_ENTITY,
+                "command": "start_long:DPAD_RIGHT",
+                "delay_secs": 0.01,
+                "hold_secs": 0.01,
+            },
+            blocking=True,
+        )
+    assert mock_api.send_key_command.mock_calls == []
+
+
+async def test_remote_send_command_empty_key_code_raises(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test that a direction prefix without a key code raises."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(
+        ServiceValidationError,
+        match='Command "SHORT:" is missing a key code after the direction prefix',
+    ):
+        await hass.services.async_call(
+            "remote",
+            "send_command",
+            {
+                "entity_id": REMOTE_ENTITY,
+                "command": "SHORT:",
+                "delay_secs": 0.01,
+            },
+            blocking=True,
+        )
+    assert mock_api.send_key_command.mock_calls == []
 
 
 async def test_remote_connection_closed(

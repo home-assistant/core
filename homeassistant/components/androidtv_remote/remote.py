@@ -16,9 +16,10 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_APP_NAME
+from .const import CONF_APP_NAME, DOMAIN
 from .entity import AndroidTVRemoteBaseEntity
 from .helpers import AndroidTVRemoteConfigEntry
 
@@ -125,6 +126,18 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 key_code, direction = _parse_command(single_command)
+                if direction is not None and not key_code:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="empty_key_code",
+                        translation_placeholders={"command": single_command},
+                    )
+                if direction is not None and hold_secs:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="direction_prefix_with_hold_secs",
+                        translation_placeholders={"command": single_command},
+                    )
                 if hold_secs:
                     self._send_key_command(key_code, "START_LONG")
                     await asyncio.sleep(hold_secs)
