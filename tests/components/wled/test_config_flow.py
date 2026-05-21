@@ -7,10 +7,10 @@ import pytest
 from wled import (
     WLEDConnectionError,
     WLEDEmptyResponseError,
+    WLEDInvalidResponseError,
     WLEDUnsupportedVersionError,
 )
 
-from homeassistant.components.wled.config_flow import WLEDInvalidResponseError
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME

@@ -6,14 +6,18 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import (
+    Device as WLEDDevice,
+    WLEDConnectionError,
+    WLEDError,
+    WLEDInvalidResponseError,
+)
 
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.wled.config_flow import WLEDInvalidResponseError
 from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

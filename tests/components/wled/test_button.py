@@ -5,10 +5,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import WLEDConnectionError, WLEDError, WLEDInvalidResponseError
+from wled import (
+    WLEDConnectionError,
+    WLEDEmptyResponseError,
+    WLEDError,
+    WLEDInvalidResponseError,
+)
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.wled.config_flow import WLEDEmptyResponseError
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
