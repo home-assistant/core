@@ -1,12 +1,13 @@
 """Tests for System Bridge actions."""
 
+from typing import Any
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
 from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
-from voluptuous import Any
 
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.components.system_bridge.services import (

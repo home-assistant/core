@@ -141,7 +141,7 @@ def mock_websocket_client(
         websocket_client.power_shutdown.return_value = Response(
             id=FIXTURE_REQUEST_ID,
             type=EventType.POWER_SHUTDOWN,
-            message="Shuttdown",
+            message="Shutdown",
             data={},
         )
         websocket_client.keyboard_keypress.return_value = Response(
