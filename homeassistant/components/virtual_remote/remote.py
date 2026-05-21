@@ -1,7 +1,5 @@
 """Remote entities for virtual remotes backed by infrared entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable, Mapping
 import logging
