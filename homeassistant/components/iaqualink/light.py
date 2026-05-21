@@ -70,7 +70,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
             await await_or_reraise(self.dev.set_effect_by_name(effect_name))
         elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
-            pct = int(round(brightness * 4.0 / 255)) * 25
+            pct = round(brightness * 4.0 / 255) * 25
             await await_or_reraise(self.dev.set_brightness(pct))
         else:
             await await_or_reraise(self.dev.turn_on())
