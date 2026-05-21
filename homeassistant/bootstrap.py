@@ -129,6 +129,9 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 
 
 ERROR_LOG_FILENAME = "home-assistant.log"
+ENV_DISABLE_LOG_FILE = "HA_DISABLE_LOG_FILE"
+ENV_DUPLICATE_LOG_FILE = "HA_DUPLICATE_LOG_FILE"
+ENV_SUPERVISOR = "SUPERVISOR"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
@@ -643,9 +646,10 @@ async def async_enable_logging(
 
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
+        if _is_log_file_disabled():
             # Rename the default log file if it exists, since previous versions created
-            # it even on Supervisor
+            # it before Supervisor disabled duplicate file logging or
+            # HA_DISABLE_LOG_FILE disabled the managed log file.
             def rename_old_file() -> None:
                 """Rename old log file in executor."""
                 if os.path.isfile(default_log_path):
@@ -661,7 +665,7 @@ async def async_enable_logging(
 
     if err_log_path:
         err_handler = await hass.async_add_executor_job(
-            _create_log_file, err_log_path, log_rotate_days
+            _create_log_handler, err_log_path, log_rotate_days
         )
 
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
@@ -669,11 +673,35 @@ async def async_enable_logging(
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
+    else:
+        # Avoid exposing a stale API error-log path when this run has no managed log file.
+        hass.data.pop(DATA_LOGGING, None)
 
     async_activate_log_queue_handler(hass)
 
 
-def _create_log_file(
+def _is_log_file_disabled() -> bool:
+    """Return whether the managed log file is disabled."""
+    if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
+        return True
+
+    disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
+    if disable_log_file is None:
+        return False
+
+    try:
+        return cv.boolean(disable_log_file)
+    except vol.Invalid:
+        _LOGGER.warning(
+            "Ignoring invalid %s value: %s. Expected a boolean value: "
+            "1/0, true/false, yes/no, on/off, or enable/disable",
+            ENV_DISABLE_LOG_FILE,
+            disable_log_file,
+        )
+        return False
+
+
+def _create_log_handler(
     err_log_path: str, log_rotate_days: int | None
 ) -> RotatingFileHandler | TimedRotatingFileHandler:
     """Create log file and do roll over."""
@@ -733,7 +761,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
     # Add domains depending on if the Supervisor is used or not
-    if "SUPERVISOR" in os.environ:
+    if ENV_SUPERVISOR in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
 
     return domains
