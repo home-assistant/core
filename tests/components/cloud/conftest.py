@@ -1,4 +1,5 @@
 """Fixtures for cloud tests."""
+# DNM: empirical test of split_tests cache full-bust path.
 
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
