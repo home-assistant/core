@@ -259,7 +259,7 @@ class OllamaSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle model selection and configuration step."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is None:

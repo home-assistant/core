@@ -261,7 +261,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -281,7 +281,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -290,7 +290,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):
@@ -718,7 +718,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         # If already playing, or don't want to autoplay, no need to call Play
         autoplay = extra.get("autoplay", True)
-        if self._device.transport_state == TransportState.PLAYING or not autoplay:
+        if self._device.transport_state is TransportState.PLAYING or not autoplay:
             return
 
         # Play it
@@ -748,7 +748,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
         return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
@@ -782,10 +782,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode == PlayMode.VENDOR_DEFINED:
+        if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
-        if play_mode == PlayMode.REPEAT_ONE:
+        if play_mode is PlayMode.REPEAT_ONE:
             return RepeatMode.ONE
 
         if play_mode in (PlayMode.REPEAT_ALL, PlayMode.RANDOM):

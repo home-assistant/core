@@ -59,7 +59,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
                     meter_info = await raven_device.get_meter_info(meter=meter)
                     if meter_info and (
                         meter_info.meter_type is None
-                        or meter_info.meter_type == MeterType.ELECTRIC
+                        or meter_info.meter_type is MeterType.ELECTRIC
                     ):
                         self._meter_macs.add(meter.hex())
         self._dev_path = dev_path

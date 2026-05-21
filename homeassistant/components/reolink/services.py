@@ -43,7 +43,7 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
         if (
             config_entry is None
             or device is None
-            or config_entry.state != ConfigEntryState.LOADED
+            or config_entry.state is not ConfigEntryState.LOADED
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

@@ -284,7 +284,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         entry = self._get_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         self.client = entry.runtime_data

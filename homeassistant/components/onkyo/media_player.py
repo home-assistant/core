@@ -197,7 +197,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
         name = manager.info.model_name
         identifier = manager.info.identifier
-        self._attr_name = f"{name}{' ' + ZONES[zone] if zone != Zone.MAIN else ''}"
+        self._attr_name = f"{name}{' ' + ZONES[zone] if zone is not Zone.MAIN else ''}"
         self._attr_unique_id = f"{identifier}_{zone.value}"
 
         self._volume_resolution = volume_resolution
@@ -226,7 +226,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_sound_mode_list = list(self._rev_sound_mode_mapping)
 
         self._attr_supported_features = SUPPORTED_FEATURES_BASE
-        if zone == Zone.MAIN:
+        if zone is Zone.MAIN:
             self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
             self._supports_volume = True
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -259,7 +259,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         await self._manager.write(query.TunerPreset(self._zone))
         if self._supports_sound_mode is not None:
             await self._manager.write(query.ListeningMode(self._zone))
-        if self._zone == Zone.MAIN:
+        if self._zone is Zone.MAIN:
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
@@ -386,7 +386,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_volume_level = min(1, volume_level)
 
             case status.Muting(param=muting):
-                self._attr_is_volume_muted = bool(muting == status.Muting.Param.ON)
+                self._attr_is_volume_muted = bool(muting is status.Muting.Param.ON)
 
             case status.InputSource(param=source):
                 if source in self._source_mapping:

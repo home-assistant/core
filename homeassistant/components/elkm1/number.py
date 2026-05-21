@@ -56,7 +56,7 @@ class ElkNumberSetting(ElkAttachedEntity, NumberEntity):
     def __init__(self, element: Setting, elk: Any, elk_data: ELKM1Data) -> None:
         """Initialize the number setting."""
         super().__init__(element, elk, elk_data)
-        if element.value_format == SettingFormat.TIMER:
+        if element.value_format is SettingFormat.TIMER:
             self._attr_device_class = NumberDeviceClass.DURATION
             self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
 

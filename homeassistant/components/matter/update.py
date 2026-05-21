@@ -173,7 +173,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         release_notes = ""
 
         # insert extra heavy warning case the update is not from the main net
-        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
                 "Update provided by "

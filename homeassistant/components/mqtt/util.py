@@ -219,7 +219,7 @@ async def async_wait_for_mqtt_client(hass: HomeAssistant) -> bool:
         return False
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    if entry.state == ConfigEntryState.LOADED:
+    if entry.state is ConfigEntryState.LOADED:
         return True
 
     state_reached_future: asyncio.Future[bool]

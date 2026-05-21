@@ -124,7 +124,7 @@ class OwningAddon:
         except AddonError:
             return False
         else:
-            return addon_info.state == AddonState.RUNNING
+            return addon_info.state is AddonState.RUNNING
 
     @asynccontextmanager
     async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
@@ -137,7 +137,7 @@ class OwningAddon:
             yield
             return
 
-        if addon_info.state != AddonState.RUNNING:
+        if addon_info.state is not AddonState.RUNNING:
             yield
             return
 
@@ -173,7 +173,7 @@ class OwningIntegration:
             yield
             return
 
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             yield
             return
 
@@ -213,7 +213,7 @@ async def get_otbr_addon_firmware_info(
     except AddonError:
         return None
 
-    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+    if otbr_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     if (otbr_path := otbr_addon_info.options.get("device")) is None:
@@ -238,7 +238,7 @@ async def get_z2m_addon_firmware_info(
     except AddonError:
         return None
 
-    if z2m_addon_info.state == AddonState.NOT_INSTALLED:
+    if z2m_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     serial = z2m_addon_info.options.get("serial")
@@ -286,7 +286,7 @@ async def guess_hardware_owners(
     except AddonError:
         pass
     else:
-        if multipan_addon_info.state != AddonState.NOT_INSTALLED:
+        if multipan_addon_info.state is not AddonState.NOT_INSTALLED:
             multipan_path = multipan_addon_info.options.get("device")
 
             if multipan_path is not None:

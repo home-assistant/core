@@ -150,7 +150,7 @@ def _get_controller(hass: HomeAssistant) -> Heos:
         hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     )
 
-    if not entry or not entry.state == ConfigEntryState.LOADED:
+    if not entry or entry.state is not ConfigEntryState.LOADED:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="integration_not_loaded"
         )

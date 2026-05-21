@@ -233,13 +233,13 @@ async def async_setup_entry(
             )
             sensors: tuple[OpowerEntityDescription, ...] = COMMON_SENSORS
             if (
-                account.meter_type == MeterType.ELEC
+                account.meter_type is MeterType.ELEC
                 and forecast is not None
-                and forecast.unit_of_measure == UnitOfMeasure.KWH
+                and forecast.unit_of_measure is UnitOfMeasure.KWH
             ):
                 sensors += ELEC_SENSORS
             elif (
-                account.meter_type == MeterType.GAS
+                account.meter_type is MeterType.GAS
                 and forecast is not None
                 and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
             ):

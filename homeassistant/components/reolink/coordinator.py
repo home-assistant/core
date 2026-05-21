@@ -123,7 +123,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
 
         if (
             self._host.api.new_devices
-            and self.config_entry.state == ConfigEntryState.LOADED
+            and self.config_entry.state is ConfigEntryState.LOADED
         ):
             # There are new cameras/chimes connected, reload to add them.
             _LOGGER.debug(
