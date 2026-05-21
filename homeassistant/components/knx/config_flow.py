@@ -457,8 +457,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid, XKNXException:
                 errors[CONF_HOST] = "invalid_ip_address"
 
-            _local_ip = None
-            if _local := user_input.get(CONF_KNX_LOCAL_IP):
+            if _local := (user_input.get(CONF_KNX_LOCAL_IP) or None):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
@@ -471,7 +470,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._selected_tunnel = await request_description(
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
-                        local_ip=_local_ip,
+                        local_ip=_local,
                         route_back=user_input[CONF_KNX_ROUTE_BACK],
                     )
                 except CommunicationError:
@@ -840,8 +839,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 ip_v4_validator(_multicast_group, multicast=True)
             except vol.Invalid:
                 errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
-            _local_ip = None
-            if _local := user_input.get(CONF_KNX_LOCAL_IP):
+            if _local := (user_input.get(CONF_KNX_LOCAL_IP) or None):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
@@ -859,7 +857,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
                     multicast_port=_multicast_port,
-                    local_ip=_local_ip,
+                    local_ip=_local,
                     device_authentication=None,
                     user_id=None,
                     user_password=None,
