@@ -374,9 +374,6 @@ aiopurpleair==2025.08.1
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.3.0
 
-# homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.3.1
-
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
@@ -950,6 +947,9 @@ epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
+
+# homeassistant.components.pvpc_hourly_pricing
+esios_api==4.4.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
@@ -1890,7 +1890,7 @@ pushover_complete==1.2.0
 pvo==3.0.0
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.17
+py-aosmith==1.0.18
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -2413,7 +2413,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.20.3
+pyoverkiz==1.20.4
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2479,7 +2479,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.8
+pyrisco==0.7.0
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.7
@@ -2865,7 +2865,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.9
+renault-api==0.5.10
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
