@@ -73,7 +73,7 @@ urllib3>=2.0
 uv==0.11.14
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
-voluptuous==0.15.2
+voluptuous==0.16.0
 webrtc-models==0.3.0
 yarl==1.24.2
 zeroconf==0.149.7
