@@ -1,6 +1,10 @@
 """Test OpenEVSE diagnostics."""
 
+from datetime import datetime
+from enum import Enum
 from unittest.mock import MagicMock, PropertyMock
+
+import pytest
 
 from homeassistant.core import HomeAssistant
 
@@ -67,14 +71,43 @@ async def test_entry_diagnostics_exceptions(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test OpenEVSE diagnostics handles exceptions correctly."""
+    """Test OpenEVSE diagnostics handles exceptions and JSON coercion correctly."""
+
+    class MockEnum(Enum):
+        TEST = "test_value"
+
     # Set up one property to raise AttributeError (should be skipped)
-    type(mock_charger).status = PropertyMock(side_effect=AttributeError)
+    monkeypatch.setattr(
+        type(mock_charger),
+        "status",
+        PropertyMock(side_effect=AttributeError),
+        raising=False,
+    )
 
     # Set up another property to raise a different Exception (should record the error)
-    type(mock_charger).charging_voltage = PropertyMock(
-        side_effect=ValueError("Connection error")
+    monkeypatch.setattr(
+        type(mock_charger),
+        "charging_voltage",
+        PropertyMock(side_effect=ValueError("Connection error")),
+        raising=False,
+    )
+
+    # Set up datetime property to verify JSON coercion
+    monkeypatch.setattr(
+        type(mock_charger),
+        "vehicle_eta",
+        PropertyMock(return_value=datetime(2026, 5, 21, 12, 0, 0)),
+        raising=False,
+    )
+
+    # Set up Enum property to verify JSON coercion
+    monkeypatch.setattr(
+        type(mock_charger),
+        "mode",
+        PropertyMock(return_value=MockEnum.TEST),
+        raising=False,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -93,3 +126,9 @@ async def test_entry_diagnostics_exceptions(
         diagnostics["charger"]["charging_voltage"]
         == "Error: ValueError: Connection error"
     )
+
+    # vehicle_eta should be coerced to ISO format string
+    assert diagnostics["charger"]["vehicle_eta"] == "2026-05-21T12:00:00"
+
+    # mode should be coerced to Enum raw value
+    assert diagnostics["charger"]["mode"] == "test_value"

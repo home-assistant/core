@@ -1,5 +1,7 @@
 """Provide diagnostics for OpenEVSE."""
 
+from datetime import date, datetime
+from enum import Enum
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -59,6 +61,21 @@ CHARGER_PROPERTIES = [
 ]
 
 
+def _to_json_safe(val: Any) -> Any:
+    """Coerce value to be JSON-serializable."""
+    if isinstance(val, (str, int, float, bool)) or val is None:
+        return val
+    if isinstance(val, (datetime, date)):
+        return val.isoformat()
+    if isinstance(val, Enum):
+        return val.value
+    if isinstance(val, (list, tuple, set)):
+        return [_to_json_safe(v) for v in val]
+    if isinstance(val, dict):
+        return {k: _to_json_safe(v) for k, v in val.items()}
+    return str(val)
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: OpenEVSEConfigEntry
 ) -> dict[str, Any]:
@@ -72,14 +89,14 @@ async def async_get_config_entry_diagnostics(
             val = getattr(charger, prop)
         except AttributeError:
             continue
-        except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+        except Exception as err:  # noqa: BLE001
             charger_data[prop] = f"Error: {type(err).__name__}: {err}"
             continue
 
         if callable(val):
             continue
 
-        charger_data[prop] = val
+        charger_data[prop] = _to_json_safe(val)
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), REDACT_CONFIG_DATA),
