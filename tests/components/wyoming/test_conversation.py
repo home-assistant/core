@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import Info
-from wyoming.intent import Entity, Intent, NotRecognized
+from wyoming.intent import Entity, Intent, IntentsStart, IntentsStop, NotRecognized
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import chat_log
@@ -125,6 +125,99 @@ async def test_intent(
     }
 
 
+async def test_multiple_intents(
+    hass: HomeAssistant,
+    init_wyoming_intent: ConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test when more than one intent is recognized."""
+    agent_id = "conversation.test_intent"
+    conversation_id = mock_chat_log.conversation_id
+    satellite_id = "satellite-1234"
+    device_id = "device-1234"
+
+    test_intent1 = Intent(
+        name="TestIntent1",
+        entities=[Entity(name="entity1", value="value1")],
+        text="{{ slots.slot_name }}",
+    )
+
+    test_intent2 = Intent(
+        name="TestIntent2",
+        entities=[Entity(name="entity2", value="value2")],
+        text="{{ slots.slot_name }}",
+    )
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        def __init__(self, intent_type: str, slot_value: str) -> None:
+            """Initialize the handler."""
+            self.intent_type = intent_type
+            self._slot_value = slot_value
+
+        async def async_handle(self, intent_obj: intent.Intent):
+            """Handle the intent."""
+            response = intent_obj.create_response()
+            response.async_set_speech_slots({"slot_name": self._slot_value})
+            return response
+
+    intent.async_register(hass, TestIntentHandler("TestIntent1", "slot value 1"))
+    intent.async_register(hass, TestIntentHandler("TestIntent2", "slot value 2"))
+
+    # Send multiple intent events framed by intents-start and intents-stop.
+    client = MockAsyncTcpClient(
+        [
+            IntentsStart().event(),
+            test_intent1.event(),
+            test_intent2.event(),
+            IntentsStop().event(),
+        ]
+    )
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        client,
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+            satellite_id=satellite_id,
+            device_id=device_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech, "No speech"
+
+    # Speech results are joined with newlines because punctuation would be
+    # language-dependent.
+    assert (
+        result.response.speech.get("plain", {}).get("speech")
+        == "slot value 1\nslot value 2"
+    )
+
+    # Verify that chat log recorded all intents as tool calls
+    content: chat_log.AssistantContent | None = next(
+        filter(
+            lambda c: isinstance(c, chat_log.AssistantContent), mock_chat_log.content
+        ),
+        None,
+    )
+    assert content is not None, "Missing assistant content"
+    assert content.tool_calls and len(content.tool_calls) == 2
+
+    for tool_call, test_intent in zip(
+        content.tool_calls, (test_intent1, test_intent2), strict=True
+    ):
+        assert tool_call.tool_name == test_intent.name
+        assert tool_call.tool_args == {
+            e.name: {"value": e.value} for e in test_intent.entities
+        }
+
+
 async def test_intent_handle_error(
     hass: HomeAssistant, init_wyoming_intent: ConfigEntry
 ) -> None:
@@ -158,7 +251,68 @@ async def test_intent_handle_error(
         )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+
+
+async def test_multiple_intents_handle_error(
+    hass: HomeAssistant,
+    init_wyoming_intent: ConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test error during handling when multiple intents are recognized."""
+    agent_id = "conversation.test_intent"
+
+    test_intent_1 = Intent(name="TestIntent1", entities=[], text="success")
+    test_intent_2 = Intent(name="TestIntent2", entities=[], text="success")
+
+    class TestIntentHandler1(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestIntent1"
+
+        async def async_handle(self, intent_obj: intent.Intent):
+            """Handle the intent."""
+            return intent_obj.create_response()
+
+    class TestIntentHandler2(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestIntent2"
+
+        async def async_handle(self, intent_obj: intent.Intent):
+            """Handle the intent."""
+            raise intent.IntentError
+
+    intent.async_register(hass, TestIntentHandler1())
+    intent.async_register(hass, TestIntentHandler2())
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient(
+            [
+                IntentsStart().event(),
+                test_intent_1.event(),
+                test_intent_2.event(),
+                IntentsStop().event(),
+            ]
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+
+    # Ensure that no tool calls were recorded
+    assert not any(
+        isinstance(c, chat_log.AssistantContent) for c in mock_chat_log.content
+    )
 
 
 async def test_not_recognized(
@@ -244,7 +398,7 @@ async def test_not_handled(
         )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+    assert result.response.error_code is intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
 
@@ -343,3 +497,60 @@ async def test_supported_languages_empty_means_all(
     agent = conversation.async_get_agent(hass, agent_id)
     assert agent is not None
     assert agent.supported_languages == MATCH_ALL
+
+
+async def test_intent_supports_home_control(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry
+) -> None:
+    """Test that the CONTROL supported feature is always set for intent services."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=Info(intent=INTENT_INFO.intent),
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, agent_id)
+    assert isinstance(agent, conversation.ConversationEntity)
+    assert agent.supported_features is not None
+    assert (
+        agent.supported_features & conversation.ConversationEntityFeature.CONTROL
+    ) == conversation.ConversationEntityFeature.CONTROL
+
+
+@pytest.mark.parametrize(
+    "supports_home_control",
+    [False, True],
+)
+async def test_handle_supports_home_control(
+    hass: HomeAssistant, intent_config_entry: ConfigEntry, supports_home_control: bool
+) -> None:
+    """Test that the CONTROL supported feature matches the Wyoming info."""
+    agent_id = "conversation.test_handle"
+
+    with (
+        patch.object(
+            HANDLE_INFO.handle[0], "supports_home_control", supports_home_control
+        ),
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=Info(handle=HANDLE_INFO.handle),
+        ),
+    ):
+        await hass.config_entries.async_setup(intent_config_entry.entry_id)
+
+    agent = conversation.async_get_agent(hass, agent_id)
+    assert isinstance(agent, conversation.ConversationEntity)
+    supported_features = (
+        agent.supported_features or conversation.ConversationEntityFeature(0)
+    )
+
+    control_feature = (
+        supported_features & conversation.ConversationEntityFeature.CONTROL
+    )
+
+    if supports_home_control:
+        assert control_feature == conversation.ConversationEntityFeature.CONTROL
+    else:
+        assert control_feature == conversation.ConversationEntityFeature(0)
