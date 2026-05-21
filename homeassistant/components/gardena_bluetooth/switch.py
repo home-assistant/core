@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from gardena_bluetooth.const import Valve
+from gardena_bluetooth.const import Valve, Valve1, Valve2, ValveX
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -18,19 +18,29 @@ async def async_setup_entry(
     entry: GardenaBluetoothConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switch based on a config entry."""
+    """Set up switch entities based on a config entry."""
     coordinator = entry.runtime_data
-    entities = []
+    entities: list[SwitchEntity] = []
+
     if GardenaBluetoothValveSwitch.characteristics.issubset(
         coordinator.characteristics
     ):
         entities.append(GardenaBluetoothValveSwitch(coordinator))
 
+    for service in (Valve1, Valve2):
+        required = {
+            service.state.unique_id,
+            service.start_watering.unique_id,
+            service.stop_watering.unique_id,
+        }
+        if required.issubset(coordinator.characteristics):
+            entities.append(GardenaBluetoothValveXSwitch(coordinator, service))
+
     async_add_entities(entities)
 
 
 class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
-    """Representation of a valve switch."""
+    """Switch alias for the old single-valve Bluetooth-only Water Control."""
 
     characteristics = {
         Valve.state.unique_id,
@@ -70,3 +80,50 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         await self.coordinator.write(Valve.remaining_open_time, 0)
         self._attr_is_on = False
         self.async_write_ha_state()
+
+
+class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
+    """Switch alias for the Smart Water Control family (Valve1/Valve2)."""
+
+    def __init__(
+        self,
+        coordinator: GardenaBluetoothCoordinator,
+        service: type[ValveX],
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            coordinator,
+            {
+                service.state.uuid,
+                service.manual_watering_duration.uuid,
+                service.available.uuid,
+            },
+        )
+        self._service = service
+        self._attr_unique_id = f"{coordinator.address}-{service.state.unique_id}-switch"
+        self._attr_translation_key = (
+            "state_valve_2" if service is Valve2 else "state_valve_1"
+        )
+        self._attr_is_on = None
+        self._attr_entity_registry_enabled_default = False
+
+    def _handle_coordinator_update(self) -> None:
+        self._attr_is_on = self.coordinator.get_cached(self._service.state)
+        super()._handle_coordinator_update()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on for the configured manual watering duration."""
+        duration = (
+            self.coordinator.get_cached(self._service.manual_watering_duration) or 1800
+        )
+        await self.coordinator.client.start_watering(self._service, duration)
+        self._attr_is_on = True
+        self.async_write_ha_state()
+        await self.coordinator.async_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.coordinator.client.stop_watering(self._service)
+        self._attr_is_on = False
+        self.async_write_ha_state()
+        await self.coordinator.async_refresh()

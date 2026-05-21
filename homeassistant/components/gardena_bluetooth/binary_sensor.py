@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from gardena_bluetooth.const import AquaContour, Sensor, Valve
+from gardena_bluetooth.const import AquaContour, Sensor, Valve, Valve1, Valve2
 from gardena_bluetooth.parse import CharacteristicBool
 
 from homeassistant.components.binary_sensor import (
@@ -37,6 +37,20 @@ DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.connected_state,
+    ),
+    GardenaBluetoothBinarySensorEntityDescription(
+        key=Valve1.available.unique_id,
+        translation_key="valve_available_valve_1",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Valve1.available,
+    ),
+    GardenaBluetoothBinarySensorEntityDescription(
+        key=Valve2.available.unique_id,
+        translation_key="valve_available_valve_2",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Valve2.available,
     ),
     GardenaBluetoothBinarySensorEntityDescription(
         key=Sensor.connected_state.unique_id,

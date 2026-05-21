@@ -8,6 +8,8 @@ from gardena_bluetooth.const import (
     Sensor,
     Spray,
     Valve,
+    Valve1,
+    Valve2,
 )
 from gardena_bluetooth.parse import (
     Characteristic,
@@ -72,6 +74,32 @@ DESCRIPTIONS = (
         native_step=60,
         entity_category=EntityCategory.CONFIG,
         char=AquaContourWatering.manual_watering_time,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    # Smart Water Control family (Valve1/Valve2) — newer manual duration
+    # characteristic, accepts the same uint32 LE seconds format.
+    GardenaBluetoothNumberEntityDescription(
+        key=Valve1.manual_watering_duration.unique_id,
+        translation_key="manual_watering_duration_valve_1",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=24 * 60 * 60,
+        native_step=60,
+        entity_category=EntityCategory.CONFIG,
+        char=Valve1.manual_watering_duration,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key=Valve2.manual_watering_duration.unique_id,
+        translation_key="manual_watering_duration_valve_2",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=24 * 60 * 60,
+        native_step=60,
+        entity_category=EntityCategory.CONFIG,
+        char=Valve2.manual_watering_duration,
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
