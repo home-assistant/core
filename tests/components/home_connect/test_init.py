@@ -178,7 +178,7 @@ async def test_token_refresh_error(
         assert not await integration_setup(client)
         await hass.async_block_till_done()
 
-    assert config_entry.state == expected_config_entry_state
+    assert config_entry.state is expected_config_entry_state
 
 
 @pytest.mark.parametrize(

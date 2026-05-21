@@ -99,7 +99,7 @@ async def test_config_flow_errors(
 
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is data_entry_flow.FlowResultType.FORM
 
     # Retest error handling if error is corrected and connection is successful
 
