@@ -48,18 +48,30 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: |
+      Planned improvements: move init_integration to a conftest fixture with a
+      unique_id matching what the config flow sets; update mock patch targets to
+      the use site (homeassistant.components.zeversolar.coordinator); use the
+      shared config_entry fixture in test_abort_already_configured.
   # Gold
   devices: done
   diagnostics: done
   discovery:
     status: exempt
     comment: |
-      Zeversolar inverters do not support network discovery.
+      The inverter uses a locally administered MAC address (not tied to a
+      registered IEEE OUI), so DHCP-based discovery is not feasible. The device
+      does not advertise via mDNS, SSDP, or any other discovery protocol.
+      Manual host entry is the only viable setup path.
   discovery-update-info:
     status: exempt
     comment: |
-      Zeversolar inverters do not support network discovery.
+      The inverter uses a locally administered MAC address (not tied to a
+      registered IEEE OUI), so DHCP-based discovery is not feasible. The device
+      does not advertise via mDNS, SSDP, or any other discovery protocol.
+      Manual host entry is the only viable setup path.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
