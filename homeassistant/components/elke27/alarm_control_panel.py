@@ -215,7 +215,7 @@ def _iter_areas(snapshot: Any) -> Iterable[Any]:
         return []
     if isinstance(areas, Mapping):
         return list(areas.values())
-    if isinstance(areas, list | tuple):
+    if isinstance(areas, (list, tuple)):
         return areas
     return []
 
@@ -291,7 +291,7 @@ def _faulted_zones(snapshot: Any) -> list[tuple[int, str]]:
         return []
     if isinstance(zones, Mapping):
         zone_values = list(zones.values())
-    elif isinstance(zones, list | tuple):
+    elif isinstance(zones, (list, tuple)):
         zone_values = list(zones)
     else:
         return []
