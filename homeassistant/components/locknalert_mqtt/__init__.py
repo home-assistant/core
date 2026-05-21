@@ -550,7 +550,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def websocket_subscribe(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Subscribe to a MQTT topic."""
+    """Subscribe to an MQTT topic."""
     if not connection.user.is_admin:
         raise Unauthorized
 

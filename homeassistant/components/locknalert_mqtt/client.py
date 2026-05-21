@@ -50,7 +50,7 @@ def publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to a MQTT topic."""
+    """Publish message to an MQTT topic."""
     hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
@@ -62,7 +62,7 @@ async def async_publish(
     retain: bool | None = False,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
-    """Publish message to a MQTT topic."""
+    """Publish message to an MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot publish to topic '{topic}', MQTT is not enabled",
@@ -271,7 +271,7 @@ class MQTTAdapter:
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
-        """Publish a MQTT message."""
+        """Publish an MQTT message."""
         try:
             await self.client.async_publish(topic, payload, qos, retain)
         except MQTTError as err:

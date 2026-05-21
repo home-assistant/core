@@ -52,7 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 
-    When a new execute request arrives we cancel the current request
+    When a new execute request arrives, we cancel the current request
     and start a new one.
 
     We allow patching this util, as we generally have exceptions

@@ -279,7 +279,7 @@ class LocknAlertMqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     async def _publish(self, code: str | None, action: str) -> None:
-        """Publish via mqtt."""
+        """Publish via MQTT."""
         variables = {"action": action, "code": code}
         payload = self._command_template(None, variables=variables)
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

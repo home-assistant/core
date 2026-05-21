@@ -424,7 +424,7 @@ class MqttAvailabilityData(TypedDict, total=False):
 
 
 class MqttSubentryData(TypedDict, total=False):
-    """Hold the data for a MQTT subentry."""
+    """Hold the data for an MQTT subentry."""
 
     device: MqttDeviceData
     components: dict[str, dict[str, Any]]
