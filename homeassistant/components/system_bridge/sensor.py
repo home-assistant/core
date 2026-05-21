@@ -653,7 +653,7 @@ class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
             description.key,
         )
         self.entity_description = description
-        if description.name != UNDEFINED:
+        if description.name is not UNDEFINED:
             self._attr_has_entity_name = False
 
     @property
