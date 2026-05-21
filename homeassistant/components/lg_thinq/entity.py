@@ -105,6 +105,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise ServiceValidationError(
                 exc.message, translation_domain=DOMAIN, translation_key=exc.code
             ) from exc

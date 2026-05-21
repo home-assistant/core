@@ -47,7 +47,6 @@ TEST_LATEST_TEMPLATE = "{{ '2.0' }}"
 
 TEST_UPDATE = TemplatePlatformSetup(
     update.DOMAIN,
-    None,
     "template_update",
     make_test_trigger(TEST_INSTALLED_SENSOR, TEST_LATEST_SENSOR, TEST_SENSOR_ID),
 )
