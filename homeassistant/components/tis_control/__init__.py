@@ -101,7 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             with contextlib.suppress(asyncio.CancelledError):
                 await task
             entry.runtime_data.listener_task = None
-        tis_api.disconnect()
+        with contextlib.suppress(Exception):
+            tis_api.disconnect()
         raise
 
     return True
@@ -122,6 +123,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool
                 await task
             entry.runtime_data.listener_task = None
 
-        entry.runtime_data.tis_api.disconnect()
+        with contextlib.suppress(Exception):
+            entry.runtime_data.tis_api.disconnect()
 
     return unload_ok
