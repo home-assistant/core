@@ -30,18 +30,12 @@ class PrusaLinkBinarySensorEntityDescription[
     value_fn: Callable[[T], bool]
 
 
-def _status_connect_ok(data: PrinterStatus) -> bool:
-    """Return whether the printer connection status is healthy."""
-    status_connect = data["printer"].get("status_connect")
-    return bool(status_connect and status_connect.get("ok"))
-
-
 BINARY_SENSORS: dict[str, tuple[PrusaLinkBinarySensorEntityDescription, ...]] = {
     "status": (
         PrusaLinkBinarySensorEntityDescription[PrinterStatus](
             key="printer.status_connect",
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
-            value_fn=_status_connect_ok,
+            value_fn=lambda data: data["printer"]["status_connect"]["ok"],
             supported_fn=lambda data: (
                 data["printer"].get("status_connect") is not None
                 and data["printer"]["status_connect"].get("ok") is not None
