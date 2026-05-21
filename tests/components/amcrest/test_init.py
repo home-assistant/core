@@ -48,6 +48,7 @@ async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fail
         patch("homeassistant.components.amcrest.AmcrestChecker", return_value=api),
         patch("homeassistant.components.amcrest.dr.async_get") as mock_async_get,
         patch("homeassistant.components.amcrest.DeviceInfo") as mock_device_info,
+        patch("homeassistant.components.amcrest._start_event_monitor"),
         patch.object(hass.config_entries, "async_forward_entry_setups", async_forward),
     ):
         device_registry = MagicMock()
