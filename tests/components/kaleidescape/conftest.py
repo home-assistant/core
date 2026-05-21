@@ -26,6 +26,7 @@ def fixture_mock_device() -> Generator[MagicMock]:
 
         device = mock.return_value
         device.dispatcher = Dispatcher()
+        device.dispatcher.connect = MagicMock(wraps=device.dispatcher.connect)
         device.host = host
         device.port = 10000
         device.serial_number = MOCK_SERIAL
