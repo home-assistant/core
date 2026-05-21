@@ -86,12 +86,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     ) -> Callable[[], None]:
         """Listen for zone mapping changes."""
         self._zone_mapping_listeners.append(update_callback)
-
-        @callback
-        def _remove_listener() -> None:
-            self._zone_mapping_listeners.remove(update_callback)
-
-        return _remove_listener
+        return lambda: self._zone_mapping_listeners.remove(update_callback)
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
