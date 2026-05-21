@@ -5,13 +5,14 @@ import copy
 import logging
 from typing import Any
 
+from aiokii import KiiAudioClient, KiiAudioError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .client import KiiAudioClient, KiiAudioClientError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Handle WebSocket connection state changes."""
         if connected or not self._ready.is_set():
             return
-        self.async_set_update_error(KiiAudioClientError("WebSocket disconnected"))
+        self.async_set_update_error(KiiAudioError("WebSocket disconnected"))
 
     @callback
     def _handle_event(self, event: str, payload: dict[str, Any]) -> None:

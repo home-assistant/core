@@ -293,6 +293,9 @@ aiokafka==0.10.0
 # homeassistant.components.rehlko
 aiokem==1.0.1
 
+# homeassistant.components.kii_audio
+aiokii==0.1.0
+
 # homeassistant.components.lichess
 aiolichess==1.2.0
 

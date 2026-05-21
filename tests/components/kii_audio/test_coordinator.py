@@ -2,7 +2,8 @@
 
 import asyncio
 
-from homeassistant.components.kii_audio.client import KiiAudioClientError
+from aiokii import KiiAudioError
+
 from homeassistant.components.kii_audio.coordinator import KiiAudioCoordinator
 
 
@@ -34,7 +35,7 @@ def test_connection_loss_after_ready_marks_coordinator_unavailable() -> None:
     coordinator._handle_connection_state(False)
 
     assert len(errors) == 1
-    assert isinstance(errors[0], KiiAudioClientError)
+    assert isinstance(errors[0], KiiAudioError)
     assert str(errors[0]) == "WebSocket disconnected"
 
 
