@@ -473,7 +473,7 @@ async def test_config_flow_with_custom_url(
     hass: HomeAssistant,
 ) -> None:
     """Handle the config flow with a custom server URL."""
-    custom_url = "http://192.168.1.100:8080"
+    custom_url = "https://api-roborock.example.com:555"
     with patch(
         "homeassistant.components.roborock.async_setup_entry", return_value=True
     ) as mock_setup:
@@ -543,7 +543,7 @@ async def test_config_flow_custom_url_failures(
     request_code_errors: dict[str, str],
 ) -> None:
     """Handle errors in the custom URL step and recover."""
-    custom_url = "http://192.168.1.100:8080"
+    custom_url = "https://api-roborock.example.com:555"
     with patch(
         "homeassistant.components.roborock.async_setup_entry", return_value=True
     ) as mock_setup:
