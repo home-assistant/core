@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "appliance_state": {
+        "default": "mdi:information-outline"
+      },
+      "food_probe_state": {
+        "default": "mdi:thermometer-probe"
+      },
+      "food_probe_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "remote_control": {
+        "default": "mdi:remote"
+      }
+    }
+  }
+}
