@@ -63,7 +63,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the template switches."""
+    """Set up the template device trackers."""
     await async_setup_template_platform(
         hass,
         DEVICE_TRACKER_DOMAIN,
@@ -94,7 +94,7 @@ async def async_setup_entry(
 def async_create_preview_tracker(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> StateTrackerEntity:
-    """Create a preview switch."""
+    """Create a preview device tracker."""
     return async_setup_template_preview(
         hass,
         name,
@@ -130,7 +130,14 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
         self.setup_template(
             CONF_LOCATION_ACCURACY,
             "_attr_location_accuracy",
-            template_validators.number(self, CONF_LOCATION_ACCURACY, 0.0),
+            on_update=self._update_location_accuracy,
+            none_on_template_error=False,
+        )
+
+    def _update_location_accuracy(self, value: float | None) -> None:
+        """Update the location accuracy."""
+        self._attr_location_accuracy = (
+            template_validators.number(self, CONF_LOCATION_ACCURACY, 0.0)(value) or 0.0
         )
 
 
@@ -151,7 +158,7 @@ class StateTrackerEntity(TemplateEntity, AbstractTemplateTracker):
 
 
 class TriggerTrackerEntity(TriggerEntity, AbstractTemplateTracker):
-    """Switch entity based on trigger data."""
+    """Tracker entity based on trigger data."""
 
     domain = DEVICE_TRACKER_DOMAIN
 
