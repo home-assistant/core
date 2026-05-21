@@ -22,9 +22,10 @@ async def async_setup_entry(
     async_add_entities(SmartThingsScene(scene, client) for scene in scenes.values())
 
 
-# pylint: disable-next=home-assistant-missing-has-entity-name
 class SmartThingsScene(Scene):
     """Define a SmartThings scene."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, scene: STScene, client: SmartThings) -> None:
         """Init the scene class."""
