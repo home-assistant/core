@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntry
+
 if TYPE_CHECKING:
     from .coordinator import Elke27DataUpdateCoordinator
     from .hub import Elke27Hub
@@ -14,3 +16,6 @@ class Elke27RuntimeData:
 
     hub: Elke27Hub
     coordinator: Elke27DataUpdateCoordinator
+
+
+type Elke27ConfigEntry = ConfigEntry[Elke27RuntimeData]

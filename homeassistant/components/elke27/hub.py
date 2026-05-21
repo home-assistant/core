@@ -4,8 +4,6 @@ import asyncio
 from collections.abc import Callable
 import contextlib
 from enum import Enum
-from functools import partial
-import inspect
 import logging
 from typing import Any
 
@@ -14,6 +12,8 @@ from elke27_lib.client import Elke27Client
 from elke27_lib.errors import (
     Elke27ConnectionError,
     Elke27DisconnectedError,
+    Elke27Error,
+    Elke27InvalidArgument,
     Elke27LinkRequiredError,
     Elke27PinRequiredError,
     Elke27TimeoutError,
@@ -48,7 +48,7 @@ class Elke27Hub:
         host: str,
         port: int,
         link_keys_json: str,
-        integration_serial: str,
+        client_id: str,
         panel_name: str | None,
     ) -> None:
         """Initialize the hub wrapper."""
@@ -56,7 +56,7 @@ class Elke27Hub:
         self._host = host
         self._port = port
         self._link_keys_json = link_keys_json
-        self._integration_serial = integration_serial
+        self._client_id = client_id
         self._panel_name = panel_name
         self._client: Elke27Client | None = None
         self._connection_unsubscribe: Callable[[], None] | None = None
@@ -97,7 +97,7 @@ class Elke27Hub:
             await self._async_disconnect(log_unavailable=False)
             link_keys = LinkKeys.from_json(self._link_keys_json)
             client = Elke27Client(ClientConfig())
-            client_identity = build_client_identity(self._integration_serial)
+            client_identity = build_client_identity(self._client_id)
             await _async_set_client_identity(client, client_identity)
             self._client = client
 
@@ -151,7 +151,7 @@ class Elke27Hub:
         client = self._client
         if client is None:
             return None
-        return getattr(client, "snapshot", None)
+        return client.get_snapshot()
 
     async def refresh_csm(self) -> Any:
         """Refresh the panel CSM snapshot."""
@@ -212,37 +212,17 @@ class Elke27Hub:
         if pin is None:
             msg = "PIN required to bypass zones."
             raise Elke27PinRequiredError(msg)
-        try:
-            pin_value = int(pin)
-        except (TypeError, ValueError) as err:
-            msg = "Code must be numeric."
-            raise HomeAssistantError(msg) from err
         _LOGGER.debug(
             "Sending zone bypass request: zone_id=%s bypassed=%s",
             zone_id,
             bypassed,
         )
-        timeout_s = 15.0
-        start = self._hass.loop.time()
-        result = await client.async_execute(
-            "zone_set_status",
-            zone_id=zone_id,
-            pin=pin_value,
-            bypassed=bypassed,
-            timeout_s=timeout_s,
-        )
-        elapsed = self._hass.loop.time() - start
-        _LOGGER.debug(
-            "Zone bypass reply for zone %s in %.2fs (timeout %.1fs)",
-            zone_id,
-            elapsed,
-            timeout_s,
-        )
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            if error is not None:
-                _raise_command_error("Zone bypass", error)
-            return False
+        try:
+            await client.async_set_zone_bypass(zone_id, bypassed=bypassed, pin=pin)
+        except Elke27PinRequiredError:
+            raise
+        except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
+            _raise_command_error("Zone bypass", err)
         return True
 
     async def async_arm_area(
@@ -261,71 +241,39 @@ class Elke27Hub:
         if pin is None:
             msg = "PIN required to arm areas."
             raise Elke27PinRequiredError(msg)
-        try:
-            pin_value = int(pin)
-        except (TypeError, ValueError) as err:
-            msg = "Code must be numeric."
-            raise HomeAssistantError(msg) from err
 
         if mode is ArmMode.ARMED_STAY or (
             isinstance(mode, str) and mode.upper() == "ARMED_STAY"
         ):
-            arm_state = "ARMED_STAY"
+            arm_mode = ArmMode.ARMED_STAY
         elif mode is ArmMode.ARMED_NIGHT or (
             isinstance(mode, str) and mode.upper() == "ARMED_NIGHT"
         ):
-            arm_state = "ARMED_NIGHT"
+            arm_mode = ArmMode.ARMED_NIGHT
         elif (
             mode is ArmMode.ARMED_AWAY
             or (isinstance(mode, str) and mode.upper() == "ARMED_AWAY")
             or (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
-            or getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None) is mode
         ):
             # The panel applies custom-bypass behavior by bypassing zones first,
             # then using the normal away arm command.
-            arm_state = "ARMED_AWAY"
+            arm_mode = ArmMode.ARMED_AWAY
         else:
             msg = "Arm mode is not supported."
             raise HomeAssistantError(msg)
 
-        method = getattr(client, "async_arm_area", None)
-        if callable(method):
-            with contextlib.suppress(TypeError, ValueError):
-                params = inspect.signature(method).parameters
-                kwargs: dict[str, Any] = {}
-                if "auto_stay_cancel" in params:
-                    kwargs["auto_stay_cancel"] = auto_stay_cancel
-                if "exit_delay_cancel" in params:
-                    kwargs["exit_delay_cancel"] = exit_delay_cancel
-                if inspect.iscoroutinefunction(method):
-                    result = await method(area_id, pin, mode, **kwargs)
-                else:
-                    result = await self._hass.async_add_executor_job(
-                        partial(method, area_id, pin, mode, **kwargs)
-                    )
-                return bool(result) if isinstance(result, bool) else True
-
-        result = await client.async_execute(
-            "area_set_arm_state",
-            area_id=area_id,
-            arm_state=arm_state,
-            pin=pin_value,
-            auto_stay_cancel=auto_stay_cancel,
-            exit_delay_cancel=exit_delay_cancel,
-        )
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            error_message = getattr(error, "user_message", None) or getattr(
-                error, "message", None
-            )
-            _LOGGER.warning(
-                "Area arming failed for area %s: %s",
+        try:
+            await client.async_arm_area(
                 area_id,
-                error_message or error,
+                mode=arm_mode,
+                pin=pin,
+                auto_stay_cancel=auto_stay_cancel,
+                exit_delay_cancel=exit_delay_cancel,
             )
-            if error is not None:
-                raise HomeAssistantError(error_message or str(error)) from error
-            return False
+        except Elke27PinRequiredError:
+            raise
+        except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
+            _raise_command_error("Area arming", err)
         return True
 
     def _resubscribe_typed_callbacks(self) -> None:
@@ -358,50 +306,18 @@ class Elke27Hub:
         if pin is None:
             msg = "PIN required to disarm areas."
             raise Elke27PinRequiredError(msg)
+
         try:
-            pin_value = int(pin)
-        except (TypeError, ValueError) as err:
-            msg = "Code must be numeric."
-            raise HomeAssistantError(msg) from err
-
-        method = getattr(client, "async_disarm_area", None)
-        if callable(method):
-            with contextlib.suppress(TypeError, ValueError):
-                params = inspect.signature(method).parameters
-                kwargs: dict[str, Any] = {}
-                if "auto_stay_cancel" in params:
-                    kwargs["auto_stay_cancel"] = auto_stay_cancel
-                if "exit_delay_cancel" in params:
-                    kwargs["exit_delay_cancel"] = exit_delay_cancel
-                if inspect.iscoroutinefunction(method):
-                    result = await method(area_id, pin, **kwargs)
-                else:
-                    result = await self._hass.async_add_executor_job(
-                        partial(method, area_id, pin, **kwargs)
-                    )
-                return bool(result) if isinstance(result, bool) else True
-
-        result = await client.async_execute(
-            "area_set_arm_state",
-            area_id=area_id,
-            arm_state="DISARMED",
-            pin=pin_value,
-            auto_stay_cancel=auto_stay_cancel,
-            exit_delay_cancel=exit_delay_cancel,
-        )
-        if not getattr(result, "ok", False):
-            error = getattr(result, "error", None)
-            error_message = getattr(error, "user_message", None) or getattr(
-                error, "message", None
-            )
-            _LOGGER.warning(
-                "Area disarm failed for area %s: %s",
+            await client.async_disarm_area(
                 area_id,
-                error_message or error,
+                pin=pin,
+                auto_stay_cancel=auto_stay_cancel,
+                exit_delay_cancel=exit_delay_cancel,
             )
-            if error is not None:
-                raise HomeAssistantError(error_message or str(error)) from error
-            return False
+        except Elke27PinRequiredError:
+            raise
+        except (Elke27Error, Elke27InvalidArgument, ValueError) as err:
+            _raise_command_error("Area disarm", err)
         return True
 
     def _handle_connection_event(self, event: Any) -> None:
@@ -496,11 +412,7 @@ def _event_type(event: Any) -> str | None:
 async def _async_set_client_identity(
     client: Elke27Client, client_identity: dict[str, str]
 ) -> None:
-    set_client_identity = getattr(client, "set_client_identity", None)
-    if callable(set_client_identity):
-        result = set_client_identity(client_identity)
-        if inspect.isawaitable(result):
-            await result
+    client.set_client_identity(client_identity)
 
 
 def _connection_state(event: Any) -> bool | None:

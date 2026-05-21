@@ -6,13 +6,9 @@ from unittest.mock import AsyncMock, patch
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 
-from homeassistant.components.elke27 import (
-    _async_migrate_unique_ids,
-    async_unload_entry,
-)
+from homeassistant.components.elke27 import async_unload_entry
 from homeassistant.components.elke27.const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LEGACY_PIN,
+    CONF_CLIENT_ID,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
@@ -21,7 +17,6 @@ from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +44,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
             CONF_HOST: "192.168.1.10",
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_INTEGRATION_SERIAL: "112233445566",
+            CONF_CLIENT_ID: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -108,7 +103,7 @@ async def test_setup_transient_error_returns_not_ready(
             CONF_HOST: "192.168.1.12",
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_INTEGRATION_SERIAL: "112233445566",
+            CONF_CLIENT_ID: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -191,7 +186,7 @@ async def test_setup_link_required_raises_auth_failed(
             CONF_HOST: "192.168.1.14",
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_INTEGRATION_SERIAL: "112233445566",
+            CONF_CLIENT_ID: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -204,67 +199,26 @@ async def test_setup_link_required_raises_auth_failed(
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
-    """Verify unique IDs are migrated to the new format."""
+async def test_setup_missing_client_id_raises_setup_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify setup fails when client ID is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.10"},
+        data={
+            CONF_HOST: "192.168.1.15",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+        },
     )
     entry.add_to_hass(hass)
-    registry = er.async_get(hass)
-    base = "aa:bb:cc:dd:ee:ff"
-    old_unique_id = f"{base}_area_1"
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        old_unique_id,
-        config_entry=entry,
-    )
 
-    await _async_migrate_unique_ids(hass, entry, base)
-
-    entry_id = registry.async_get_entity_id(
-        "alarm_control_panel", DOMAIN, f"{base}:area:1"
-    )
-    assert entry_id is not None
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_migrate_unique_ids_skips_without_suffix(hass: HomeAssistant) -> None:
-    """Verify migration skips IDs without an underscore suffix."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.24"})
-    entry.add_to_hass(hass)
-    registry = er.async_get(hass)
-    base = "aa:bb:cc"
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        f"{base}_area",
-        config_entry=entry,
-    )
-
-    await _async_migrate_unique_ids(hass, entry, base)
-
-
-async def test_migrate_unique_ids_skips_other_entry(hass: HomeAssistant) -> None:
-    """Verify migration skips entries from other config entries."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.22"})
-    entry.add_to_hass(hass)
-    other_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.23"})
-    other_entry.add_to_hass(hass)
-    registry = er.async_get(hass)
-    base = "aa:bb:cc"
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        f"{base}_area_1",
-        config_entry=other_entry,
-    )
-
-    await _async_migrate_unique_ids(hass, entry, base)
-
-
-async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> None:
-    """Verify integration serial is generated and pin is removed."""
+async def test_setup_uses_client_id(hass: HomeAssistant) -> None:
+    """Verify setup passes the stored client ID to the hub."""
     hub = SimpleNamespace(
         panel_name=None,
         async_connect=AsyncMock(return_value=None),
@@ -282,22 +236,17 @@ async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> 
             CONF_HOST: "192.168.1.15",
             CONF_PORT: DEFAULT_PORT,
             CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_LEGACY_PIN: "1234",
+            CONF_CLIENT_ID: "entryclientid",
         },
     )
     entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub) as hub_cls,
         patch(
             "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
             return_value=coordinator,
         ),
-        patch(
-            "homeassistant.components.elke27.async_get_integration_serial",
-            AsyncMock(return_value="998877"),
-        ),
-        patch.object(hass.config_entries, "async_update_entry") as update_entry,
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
@@ -307,85 +256,11 @@ async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    update_entry.assert_called()
-
-
-async def test_setup_removes_pin_when_serial_exists(hass: HomeAssistant) -> None:
-    """Verify pin removal updates entry when serial exists."""
-    hub = SimpleNamespace(
-        panel_name=None,
-        async_connect=AsyncMock(return_value=None),
-        async_disconnect=AsyncMock(return_value=None),
+    hub_cls.assert_called_once_with(
+        hass,
+        "192.168.1.15",
+        DEFAULT_PORT,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "entryclientid",
+        None,
     )
-    coordinator = SimpleNamespace(
-        async_start=AsyncMock(return_value=None),
-        async_refresh_now=AsyncMock(return_value=None),
-        async_stop=AsyncMock(return_value=None),
-        data=None,
-    )
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.16",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-            CONF_INTEGRATION_SERIAL: "112233445566",
-            CONF_LEGACY_PIN: "1234",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
-        patch(
-            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
-            return_value=coordinator,
-        ),
-        patch.object(hass.config_entries, "async_update_entry") as update_entry,
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            AsyncMock(return_value=True),
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    update_entry.assert_called()
-
-
-async def test_migrate_unique_ids_skips_unmatched(hass: HomeAssistant) -> None:
-    """Verify migration skips non-matching entries and collisions."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.20"})
-    entry.add_to_hass(hass)
-    registry = er.async_get(hass)
-    base = "aa:bb"
-    registry.async_get_or_create("alarm_control_panel", DOMAIN, f"{base}_area")
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        f"{base}_area_2",
-        config_entry=entry,
-    )
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        f"{base}:area:2",
-        config_entry=entry,
-    )
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        "other",
-        f"{base}_area_3",
-        config_entry=entry,
-    )
-    other_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.21"})
-    other_entry.add_to_hass(hass)
-    registry.async_get_or_create(
-        "alarm_control_panel",
-        DOMAIN,
-        f"{base}_area",
-        config_entry=other_entry,
-    )
-
-    await _async_migrate_unique_ids(hass, entry, base)

@@ -7,7 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from elke27_lib import ArmMode, LinkKeys
-from elke27_lib.errors import Elke27LinkRequiredError
+from elke27_lib.errors import Elke27InvalidArgument, Elke27LinkRequiredError
 import pytest
 
 from homeassistant.components.elke27.const import READY_TIMEOUT
@@ -228,7 +228,7 @@ async def test_async_disconnect_cancels_reconnect_task(hass: HomeAssistant) -> N
 async def test_snapshot_and_refresh_paths(hass: HomeAssistant) -> None:
     """Verify snapshot and refresh paths with client."""
     client = SimpleNamespace(
-        snapshot="snap",
+        get_snapshot=Mock(return_value="snap"),
         async_refresh_csm=AsyncMock(return_value="ok"),
         async_refresh_domain_config=AsyncMock(return_value=None),
     )
@@ -280,7 +280,7 @@ async def test_subscribe_and_unsubscribe_typed_client(hass: HomeAssistant) -> No
 
 
 async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
-    """Verify zone bypass returns False when error is None."""
+    """Verify zone bypass returns False without a client and True on success."""
     hub = Elke27Hub(
         hass,
         "192.168.1.87",
@@ -289,13 +289,8 @@ async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    )
     assert await hub.async_set_zone_bypass(1, bypassed=True, pin="1234") is False
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
-    )
+    hub._client = SimpleNamespace(async_set_zone_bypass=AsyncMock(return_value=None))
     assert await hub.async_set_zone_bypass(1, bypassed=True, pin="1234") is True
 
 
@@ -309,29 +304,23 @@ async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
-    )
+    client = SimpleNamespace(async_arm_area=AsyncMock(return_value=None))
     hub._client = client
     assert await hub.async_arm_area(1, ArmMode.ARMED_STAY, "1234") is True
     assert await hub.async_arm_area(1, ArmMode.ARMED_NIGHT, "1234") is True
     assert await hub.async_arm_area(1, "ARMED_CUSTOM_BYPASS", "1234") is True
     assert await hub.async_arm_area(1, "ARMED_NIGHT", "1234") is True
-    assert any(
-        call.kwargs["arm_state"] == "ARMED_NIGHT"
-        for call in client.async_execute.await_args_list
+    assert (
+        client.async_arm_area.await_args_list[1].kwargs["mode"] is ArmMode.ARMED_NIGHT
     )
 
-    error = RuntimeError("nope")
     hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=error))
+        async_arm_area=AsyncMock(side_effect=Elke27InvalidArgument("nope"))
     )
     with pytest.raises(HomeAssistantError, match="nope"):
         await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
 
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    )
+    hub._client = None
     assert await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234") is False
 
 
@@ -367,17 +356,17 @@ async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    )
+    hub._client = SimpleNamespace(async_disarm_area=AsyncMock(return_value=None))
     with pytest.raises(Exception, match=r"PIN=.*required to disarm areas"):
         await hub.async_disarm_area(1, None)
-    with pytest.raises(HomeAssistantError, match="Code must be numeric"):
-        await hub.async_disarm_area(1, "aa")
-    assert await hub.async_disarm_area(1, "1234") is False
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
+    hub._client.async_disarm_area.side_effect = Elke27InvalidArgument(
+        "PIN must be a non-empty digit string."
     )
+    with pytest.raises(
+        HomeAssistantError, match="PIN=.*must be a non-empty digit string"
+    ):
+        await hub.async_disarm_area(1, "aa")
+    hub._client.async_disarm_area.side_effect = None
     assert await hub.async_disarm_area(1, "1234") is True
 
 
@@ -512,14 +501,18 @@ async def test_zone_bypass_validation_and_errors(
         None,
     )
     hub._client = SimpleNamespace(
-        async_execute=AsyncMock(
-            return_value=SimpleNamespace(ok=False, error=ValueError("bad"))
-        )
+        async_set_zone_bypass=AsyncMock(side_effect=Elke27InvalidArgument("bad"))
     )
     with pytest.raises(Exception, match=r"PIN=.*required to bypass zones"):
         await hub.async_set_zone_bypass(1, bypassed=True, pin=None)
-    with pytest.raises(HomeAssistantError, match="Code must be numeric"):
+    hub._client.async_set_zone_bypass.side_effect = Elke27InvalidArgument(
+        "PIN must be a non-empty digit string."
+    )
+    with pytest.raises(
+        HomeAssistantError, match="PIN=.*must be a non-empty digit string"
+    ):
         await hub.async_set_zone_bypass(1, bypassed=True, pin="aa")
+    hub._client.async_set_zone_bypass.side_effect = Elke27InvalidArgument("bad")
     with pytest.raises(HomeAssistantError, match="bad"):
         await hub.async_set_zone_bypass(1, bypassed=True, pin="1234")
 
@@ -536,41 +529,29 @@ async def test_arm_and_disarm_area_errors(
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(
-            return_value=SimpleNamespace(ok=False, error=ValueError("nope"))
-        )
-    )
+    hub._client = SimpleNamespace(async_arm_area=AsyncMock(return_value=None))
     with pytest.raises(Exception, match=r"PIN=.*required to arm areas"):
         await hub.async_arm_area(1, "ARMED_AWAY", pin=None)
-    with pytest.raises(HomeAssistantError, match="Code must be numeric"):
+    hub._client.async_arm_area.side_effect = Elke27InvalidArgument(
+        "PIN must be a non-empty digit string."
+    )
+    with pytest.raises(
+        HomeAssistantError, match="PIN=.*must be a non-empty digit string"
+    ):
         await hub.async_arm_area(1, "ARMED_AWAY", pin="aa")
     with pytest.raises(HomeAssistantError, match="Arm mode is not supported"):
         await hub.async_arm_area(1, "UNKNOWN_MODE", pin="1234")
-    hub._client = SimpleNamespace(
-        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
-    )
+    hub._client = None
     assert await hub.async_arm_area(1, "ARMED_NIGHT", pin="1234") is False
     hub._client = SimpleNamespace(
-        async_execute=AsyncMock(
-            return_value=SimpleNamespace(ok=False, error=ValueError("nope"))
-        )
+        async_disarm_area=AsyncMock(side_effect=Elke27InvalidArgument("nope"))
     )
     with pytest.raises(HomeAssistantError):
         await hub.async_disarm_area(1, pin="1234")
 
 
-@pytest.mark.parametrize(
-    ("method_name", "method_factory"),
-    [
-        ("async_arm_area", "_async_arm_area"),
-        ("async_arm_area", "_sync_arm_area"),
-    ],
-)
 async def test_async_arm_area_uses_client_method(
     hass: HomeAssistant,
-    method_name: str,
-    method_factory: str,
 ) -> None:
     """Verify arm requests use direct client methods when available."""
     hub = Elke27Hub(
@@ -582,7 +563,7 @@ async def test_async_arm_area_uses_client_method(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
+    hub._client = SimpleNamespace(async_arm_area=_async_arm_area(calls))
 
     assert (
         await hub.async_arm_area(
@@ -594,50 +575,25 @@ async def test_async_arm_area_uses_client_method(
         )
         is True
     )
-    assert calls == [(1, "1234", ArmMode.ARMED_AWAY, True, True)]
+    assert calls == [(1, ArmMode.ARMED_AWAY, "1234", True, True)]
 
 
 def _async_arm_area(calls: list[Any]) -> Any:
     async def _method(
         area_id: int,
-        pin: str,
-        mode: ArmMode,
         *,
+        mode: ArmMode,
+        pin: str,
         auto_stay_cancel: bool,
         exit_delay_cancel: bool,
-    ) -> bool:
-        calls.append((area_id, pin, mode, auto_stay_cancel, exit_delay_cancel))
-        return True
+    ) -> None:
+        calls.append((area_id, mode, pin, auto_stay_cancel, exit_delay_cancel))
 
     return _method
 
 
-def _sync_arm_area(calls: list[Any]) -> Any:
-    def _method(
-        area_id: int,
-        pin: str,
-        mode: ArmMode,
-        *,
-        auto_stay_cancel: bool,
-        exit_delay_cancel: bool,
-    ) -> bool:
-        calls.append((area_id, pin, mode, auto_stay_cancel, exit_delay_cancel))
-        return True
-
-    return _method
-
-
-@pytest.mark.parametrize(
-    ("method_name", "method_factory"),
-    [
-        ("async_disarm_area", "_async_disarm_area"),
-        ("async_disarm_area", "_sync_disarm_area"),
-    ],
-)
 async def test_async_disarm_area_uses_client_method(
     hass: HomeAssistant,
-    method_name: str,
-    method_factory: str,
 ) -> None:
     """Verify disarm requests use direct client methods when available."""
     hub = Elke27Hub(
@@ -649,7 +605,7 @@ async def test_async_disarm_area_uses_client_method(
         None,
     )
     calls: list[Any] = []
-    hub._client = SimpleNamespace(**{method_name: globals()[method_factory](calls)})
+    hub._client = SimpleNamespace(async_disarm_area=_async_disarm_area(calls))
 
     assert (
         await hub.async_disarm_area(
@@ -670,34 +626,19 @@ def _async_disarm_area(calls: list[Any]) -> Any:
         *,
         auto_stay_cancel: bool,
         exit_delay_cancel: bool,
-    ) -> bool:
+    ) -> None:
         calls.append((area_id, pin, auto_stay_cancel, exit_delay_cancel))
-        return True
 
     return _method
 
 
-def _sync_disarm_area(calls: list[Any]) -> Any:
-    def _method(
-        area_id: int,
-        pin: str,
-        *,
-        auto_stay_cancel: bool,
-        exit_delay_cancel: bool,
-    ) -> bool:
-        calls.append((area_id, pin, auto_stay_cancel, exit_delay_cancel))
-        return True
-
-    return _method
-
-
-async def test_async_set_client_identity_awaits_result() -> None:
-    """Verify async client identity setters are awaited."""
-    client = SimpleNamespace(set_client_identity=AsyncMock(return_value=None))
+async def test_async_set_client_identity_sets_identity() -> None:
+    """Verify client identity setter is called."""
+    client = SimpleNamespace(set_client_identity=Mock(return_value=None))
 
     await _async_set_client_identity(client, {"mn": "222", "sn": "112233445566"})
 
-    client.set_client_identity.assert_awaited_once_with(
+    client.set_client_identity.assert_called_once_with(
         {"mn": "222", "sn": "112233445566"}
     )
 

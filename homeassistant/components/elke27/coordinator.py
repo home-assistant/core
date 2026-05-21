@@ -5,6 +5,7 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
+from elke27_lib import PanelSnapshot
 from elke27_lib.events import (
     ConnectionStateChanged,
     CsmSnapshotUpdated,
@@ -21,13 +22,10 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-    from homeassistant.config_entries import ConfigEntry
-
     from .hub import Elke27Hub
+    from .models import Elke27ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-type PanelSnapshot = Any
 
 
 class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
@@ -37,7 +35,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         self,
         hass: HomeAssistant,
         hub: Elke27Hub,
-        entry: ConfigEntry,
+        entry: Elke27ConfigEntry,
         *,
         debounce_seconds: float = 0.3,
     ) -> None:
@@ -83,27 +81,23 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         if _is_event(event, ZoneStatusUpdated):
             _LOGGER.debug(
                 "Zone status event received: zone_id=%s changed_fields=%s",
-                getattr(event, "zone_id", None),
-                getattr(event, "changed_fields", None),
+                event.zone_id,
+                event.changed_fields,
             )
         if _is_event(event, ConnectionStateChanged):
-            if getattr(event, "connected", False):
+            if event.connected:
                 self.hass.async_create_task(self.async_refresh_now())
             return
         if _is_event(event, CsmSnapshotUpdated):
             self._set_snapshot(self._hub.get_snapshot())
             return
         if _is_event(event, DomainCsmChanged):
-            domain = getattr(event, "csm_domain", None) or getattr(
-                event, "domain", None
-            )
+            domain = event.domain
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
         if _is_event(event, TableCsmChanged):
-            domain = getattr(event, "csm_domain", None) or getattr(
-                event, "domain", None
-            )
+            domain = event.domain
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
