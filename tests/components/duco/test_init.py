@@ -94,25 +94,6 @@ async def test_setup_entry_error(
         assert mock_config_entry.error_reason_translation_placeholders is None
 
 
-async def test_setup_entry_without_unique_id_logs_platform_errors(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test setup logs platform errors when the config entry has no unique ID."""
-    config_entry = MockConfigEntry(
-        title="SILENT_CONNECT",
-        domain=DOMAIN,
-        data={"host": TEST_HOST},
-        unique_id=None,
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-
 @pytest.mark.usefixtures("mock_duco_client")
 async def test_setup_entry_success(
     hass: HomeAssistant,

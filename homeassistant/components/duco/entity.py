@@ -1,6 +1,9 @@
 """Base entity for the Duco integration."""
 
+from typing import cast
+
 from duco_connectivity.models import Node, NodeType
+from yarl import URL
 
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
@@ -20,10 +23,8 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._node_id = node.node_id
-        mac = coordinator.config_entry.unique_id
-        if mac is None:
-            msg = "Config entry unique_id is required for Duco device registration"
-            raise ValueError(msg)
+        # Loaded Duco entries always get a stable unique ID from the config flow.
+        mac = cast(str, coordinator.config_entry.unique_id)
 
         self._mac = mac
         self._is_box = node.general.node_type == NodeType.BOX
@@ -64,7 +65,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         host = self.coordinator.config_entry.data[CONF_HOST]
 
         if self._is_box:
-            return f"http://{host}"
+            return str(URL.build(scheme="http", host=host))
 
         if (
             zone_group := self.coordinator.data.node_zone_groups.get(self._node_id)
@@ -72,9 +73,17 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             return None
 
         zone_id, group_id = zone_group
-        return (
-            f"http://{host}/nodeconfig.html?node={self._node_id}"
-            f"&zone={zone_id}&group={group_id}"
+        return str(
+            URL.build(
+                scheme="http",
+                host=host,
+                path="/nodeconfig.html",
+                query=[
+                    ("node", str(self._node_id)),
+                    ("zone", str(zone_id)),
+                    ("group", str(group_id)),
+                ],
+            )
         )
 
     def _update_device_registry_configuration_url(self) -> None:
