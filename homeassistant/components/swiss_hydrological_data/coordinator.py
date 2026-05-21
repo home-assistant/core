@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = timedelta(seconds=60)
+UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 class SwissHydrologicalDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
