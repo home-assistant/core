@@ -1,7 +1,9 @@
 """Tests for the enum_identity_compare mypy plugin.
 
-Each test snippet is run through mypy's API with the plugin enabled. We
-assert which line numbers emit the ``ha-enum-identity-compare`` error.
+Each test snippet is run through mypy's API with the plugin enabled.
+Tests assert the number of ``ha-enum-identity-compare`` errors emitted
+and the relevant message content; the framework-allowlist tests also
+pin the exact reported line number.
 
 The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
 subclasses (where ``__eq__`` is identity-based) plus a small allowlist
@@ -20,20 +22,25 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _PLUGINS_ROOT = _PROJECT_ROOT  # mypy_plugins/ lives under the worktree root
 
 
-def _run_mypy(code: str, tmp_path: Path) -> list[str]:
+def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[str]:
     """Run mypy with the plugin and return ha-enum-identity-compare errors.
 
-    Each error is normalized to ``LINE: MESSAGE`` form.
+    Each error is normalized to ``LINE: MESSAGE`` form. ``mypy_path``, if
+    given, is written into ``mypy.ini`` so tests can supply stub modules
+    that resolve to specific fullnames (used for the framework allowlist).
     """
     src = tmp_path / "case.py"
     src.write_text(textwrap.dedent(code))
     config = tmp_path / "mypy.ini"
-    config.write_text(
+    config_body = (
         "[mypy]\n"
         "plugins = mypy_plugins.enum_identity_compare\n"
         "show_error_codes = true\n"
         "strict_equality = true\n"
     )
+    if mypy_path is not None:
+        config_body += f"mypy_path = {mypy_path}\n"
+    config.write_text(config_body)
 
     env_pythonpath = os.environ.get("PYTHONPATH", "")
     os.environ["PYTHONPATH"] = f"{_PLUGINS_ROOT}{os.pathsep}{env_pythonpath}"
@@ -111,6 +118,7 @@ def fn(s: ConfigEntryState) -> bool:
         tmp_path,
     )
     assert len(errors) == 1
+    assert "ConfigEntryState" in errors[0]
     assert "`is not`" in errors[0] and "`!=`" in errors[0]
 
 
@@ -125,6 +133,68 @@ def fn(s: ConfigEntryState) -> bool:
         tmp_path,
     )
     assert len(errors) == 1
+    assert "ConfigEntryState" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
+
+
+def _write_flow_result_type_stub(tmp_path: Path) -> None:
+    """Write a fake ``homeassistant.data_entry_flow`` module under tmp_path.
+
+    The plugin's allowlist matches by fullname
+    (``homeassistant.data_entry_flow.FlowResultType``), so we synthesize a
+    package at that path rather than depending on the real HA tree being
+    importable from the test environment.
+    """
+    pkg = tmp_path / "homeassistant"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("")
+    (pkg / "data_entry_flow.py").write_text(
+        "from enum import StrEnum\n"
+        "class FlowResultType(StrEnum):\n"
+        '    FORM = "form"\n'
+        '    ABORT = "abort"\n'
+    )
+
+
+def test_bad_framework_allowlist_eq(tmp_path: Path) -> None:
+    """``FlowResultType`` is on ``_FRAMEWORK_GUARANTEED_ENUMS`` and must flag.
+
+    StrEnum normally escapes the plugin, but this class is explicitly
+    allowlisted because HA's framework controls every value-assigning
+    callsite — see the plugin module docstring.
+    """
+    _write_flow_result_type_stub(tmp_path)
+    errors = _run_mypy(
+        """
+from homeassistant.data_entry_flow import FlowResultType
+
+def fn(r: FlowResultType) -> bool:
+    return r == FlowResultType.FORM
+""",
+        tmp_path,
+        mypy_path=str(tmp_path),
+    )
+    assert len(errors) == 1
+    assert "FlowResultType" in errors[0]
+    assert "`is`" in errors[0] and "`==`" in errors[0]
+
+
+def test_bad_framework_allowlist_ne(tmp_path: Path) -> None:
+    """And the same for ``!=`` against the allowlisted ``FlowResultType``."""
+    _write_flow_result_type_stub(tmp_path)
+    errors = _run_mypy(
+        """
+from homeassistant.data_entry_flow import FlowResultType
+
+def fn(r: FlowResultType) -> bool:
+    return r != FlowResultType.ABORT
+""",
+        tmp_path,
+        mypy_path=str(tmp_path),
+    )
+    assert len(errors) == 1
+    assert "FlowResultType" in errors[0]
+    assert "`is not`" in errors[0] and "`!=`" in errors[0]
 
 
 def test_good_strenum_not_allowlisted(tmp_path: Path) -> None:
