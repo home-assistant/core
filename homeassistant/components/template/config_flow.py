@@ -23,6 +23,8 @@ from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -74,6 +76,7 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
+from .device_tracker import async_create_preview_tracker
 from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
     CONF_OFF_ACTION,
@@ -225,6 +228,12 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.DEVICE_TRACKER:
+        schema |= {
+            vol.Required(CONF_LATITUDE): selector.TemplateSelector(),
+            vol.Required(CONF_LONGITUDE): selector.TemplateSelector(),
+        }
 
     if domain == Platform.EVENT:
         schema |= {
@@ -575,6 +584,11 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        config_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+    ),
     Platform.EVENT: SchemaFlowFormStep(
         config_schema(Platform.EVENT),
         preview="template",
@@ -660,6 +674,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        options_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+    ),
     Platform.EVENT: SchemaFlowFormStep(
         options_schema(Platform.EVENT),
         preview="template",
@@ -730,6 +749,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
