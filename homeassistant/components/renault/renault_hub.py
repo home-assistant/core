@@ -108,9 +108,15 @@ class RenaultHub:
         # Reuse the stored login token, or fall back to a password login.
         if login_token := config_entry.data.get(CONF_LOGIN_TOKEN):
             self._client.session.set_login_token(login_token)
-        elif not await self.attempt_login(
+        elif await self.attempt_login(
             config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
         ):
+            # Persist the login token so the next setup can skip the password.
+            self._hass.config_entries.async_update_entry(
+                config_entry,
+                data={**config_entry.data, CONF_LOGIN_TOKEN: self.login_token},
+            )
+        else:
             raise NotAuthenticatedException
 
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
