@@ -262,19 +262,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
-def has_tests(module: str) -> bool:
-    """Test if a module has tests.
-
-    Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue/__init__.py
-    """
-    path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
-        / "__init__.py"
-    )
-    return path.exists()
-
-
 def explore_module(package: str, explore_children: bool) -> list[str]:
     """Explore the modules."""
     module = importlib.import_module(package)
@@ -511,31 +498,6 @@ def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> s
     return "".join(output)
 
 
-def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
-    """Generate output for test_requirements."""
-    output = [
-        "# Home Assistant tests, full dependency set\n",
-        GENERATED_MESSAGE,
-        "-r requirements_test.txt\n",
-    ]
-
-    filtered = {
-        requirement: modules
-        for requirement, modules in reqs.items()
-        if any(
-            # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.")
-            or
-            # Install tests for integrations that have tests
-            has_tests(mdl)
-            for mdl in modules
-        )
-    }
-    output.append(generate_requirements_list(filtered))
-
-    return "".join(output)
-
-
 def requirements_pre_commit_output() -> str:
     """Generate output for pre-commit dependencies."""
     source = ".pre-commit-config.yaml"
@@ -609,7 +571,6 @@ def main(validate: bool, ci: bool) -> int:
         action: requirements_all_action_output(data, action)
         for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
     }
-    reqs_test_all_file = requirements_test_all_output(data)
     # Always calling requirements_pre_commit_output is intentional to ensure
     # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
@@ -619,7 +580,6 @@ def main(validate: bool, ci: bool) -> int:
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     ]
     if ci:

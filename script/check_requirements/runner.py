@@ -13,6 +13,9 @@ What the runner defers to the LLM (NEEDS_AGENT):
 - `pr_link`: presence of the right link in the PR description.
 - `release_pipeline`: inspection of the publish workflow when the attestation
   was missing or did not identify a recognised CI publisher.
+- `async_blocking`: inspection of the dependency source for blocking I/O
+  inside `async def` functions. Always deferred when the source repo is
+  available — the deterministic stage cannot read the upstream source.
 """
 
 from .diff import parse_diff
@@ -133,6 +136,7 @@ def run_checks(
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
+            pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
         elif pkg.repo_url:
             pkg.checks[CheckKind.REPO_PUBLIC] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
@@ -142,6 +146,20 @@ def run_checks(
                 CheckStatus.NEEDS_AGENT,
                 "Presence of the required link in the PR description must be verified by the agent.",
             )
+            if pkg.old_version is None:
+                async_reason = (
+                    "New dependency: agent must review the entire source tree "
+                    "at the new version for blocking I/O inside async functions."
+                )
+            else:
+                async_reason = (
+                    f"Version bump {pkg.old_version} → {pkg.new_version}: "
+                    "agent must review only the diff for newly introduced "
+                    "blocking I/O inside async functions."
+                )
+            pkg.checks[CheckKind.ASYNC_BLOCKING] = CheckResult(
+                CheckStatus.NEEDS_AGENT, async_reason
+            )
         else:
             fail = CheckResult(
                 CheckStatus.FAIL,
@@ -149,6 +167,7 @@ def run_checks(
             )
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
+            pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
     result = CheckRunResult(pr_number=pr_number, packages=packages)
     result.rendered_comment = render_comment(result)
     return result

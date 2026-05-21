@@ -22,6 +22,7 @@ _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
     (CheckKind.PR_LINK, "PR Link"),
+    (CheckKind.ASYNC_BLOCKING, "Async Safe"),
 )
 
 _ICONS: dict[CheckStatus, str] = {

@@ -51,14 +51,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: UnifiAccessConfigEntry) 
     try:
         await client.authenticate()
     except ApiAuthError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(
-            f"Authentication failed for UniFi Access at {entry.data[CONF_HOST]}"
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
     except ApiConnectionError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
-            f"Unable to connect to UniFi Access at {entry.data[CONF_HOST]}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
 
     coordinator = UnifiAccessCoordinator(hass, entry, client)
