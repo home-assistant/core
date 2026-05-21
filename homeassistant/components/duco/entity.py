@@ -3,6 +3,7 @@
 from duco_connectivity.models import Node, NodeType
 
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,22 +25,25 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             msg = "Config entry unique_id is required for Duco device registration"
             raise ValueError(msg)
 
-        is_box = node.general.node_type == NodeType.BOX
+        self._mac = mac
+        self._is_box = node.general.node_type == NodeType.BOX
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier(mac, node.node_id))},
             manufacturer="Duco",
             model=(
-                coordinator.board_info.box_name if is_box else node.general.node_type
+                coordinator.board_info.box_name
+                if self._is_box
+                else node.general.node_type
             ),
             name=(
                 (node.general.name or coordinator.board_info.box_name)
-                if is_box
+                if self._is_box
                 else (node.general.name or f"Node {node.node_id}")
             ),
-            configuration_url=self._configuration_url(coordinator, node, is_box),
+            configuration_url=self._configuration_url(),
         )
-        if is_box:
+        if self._is_box:
             device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
             device_info["serial_number"] = coordinator.board_info.serial_board_box
             device_info["sw_version"] = coordinator.board_info.software_version
@@ -55,26 +59,52 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Return the stable device identifier used in the registry."""
         return f"{mac}_{node_id}"
 
-    @staticmethod
-    def _configuration_url(
-        coordinator: DucoCoordinator,
-        node: Node,
-        is_box: bool,
-    ) -> str | None:
+    def _configuration_url(self) -> str | None:
         """Return the device configuration URL when it is unambiguous."""
-        host = coordinator.config_entry.data[CONF_HOST]
+        host = self.coordinator.config_entry.data[CONF_HOST]
 
-        if is_box:
+        if self._is_box:
             return f"http://{host}"
 
-        if (zone_group := coordinator.data.node_zone_groups.get(node.node_id)) is None:
+        if (
+            zone_group := self.coordinator.data.node_zone_groups.get(self._node_id)
+        ) is None:
             return None
 
         zone_id, group_id = zone_group
         return (
-            f"http://{host}/nodeconfig.html?node={node.node_id}"
+            f"http://{host}/nodeconfig.html?node={self._node_id}"
             f"&zone={zone_id}&group={group_id}"
         )
+
+    def _update_device_registry_configuration_url(self) -> None:
+        """Update the device visit link when coordinator data changes."""
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, self._device_identifier(self._mac, self._node_id))}
+        )
+        if device is None:
+            return
+
+        configuration_url = self._configuration_url()
+        if device.configuration_url == configuration_url:
+            return
+
+        # Home Assistant only applies entity device_info during registration.
+        device_info = self._attr_device_info
+        if device_info is None:
+            return
+
+        device_info["configuration_url"] = configuration_url
+        device_registry.async_update_device(
+            device_id=device.id,
+            configuration_url=configuration_url,
+        )
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated coordinator data."""
+        self._update_device_registry_configuration_url()
+        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:

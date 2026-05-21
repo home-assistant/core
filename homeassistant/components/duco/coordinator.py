@@ -31,16 +31,16 @@ def _build_node_zone_groups(zones_info: InfoZonesOverview) -> dict[int, NodeZone
     Nodes with no matches or multiple matches are omitted so callers only get
     deep-link metadata when the target is unambiguous.
     """
-    node_memberships: dict[int, list[NodeZoneGroup]] = {}
+    node_memberships: dict[int, set[NodeZoneGroup]] = {}
 
     for zone in zones_info.zones:
         for group in zone.groups:
             zone_group = (zone.zone_id, group.group_id)
             for node_id in group.nodes:
-                node_memberships.setdefault(node_id, []).append(zone_group)
+                node_memberships.setdefault(node_id, set()).add(zone_group)
 
     return {
-        node_id: memberships[0]
+        node_id: next(iter(memberships))
         for node_id, memberships in node_memberships.items()
         if len(memberships) == 1
     }
@@ -133,7 +133,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
-        node_zone_groups: dict[int, NodeZoneGroup] = {}
+        node_zone_groups = self.data.node_zone_groups if self.data else {}
         try:
             node_zone_groups = _build_node_zone_groups(
                 await self.client.async_get_zones_info()

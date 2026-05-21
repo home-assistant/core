@@ -15,9 +15,10 @@ from duco_connectivity import (
     LanInfo,
     Node,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.duco.const import DOMAIN
+from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -25,7 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -91,6 +92,25 @@ async def test_setup_entry_error(
         }
     else:
         assert mock_config_entry.error_reason_translation_placeholders is None
+
+
+async def test_setup_entry_without_unique_id_logs_platform_errors(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test setup logs platform errors when the config entry has no unique ID."""
+    config_entry = MockConfigEntry(
+        title="SILENT_CONNECT",
+        domain=DOMAIN,
+        data={"host": TEST_HOST},
+        unique_id=None,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("mock_duco_client")
@@ -257,6 +277,108 @@ async def test_child_device_visit_link_omitted_for_ambiguous_zone_matches(
     )
     assert child_device is not None
     assert child_device.configuration_url is None
+
+
+async def test_child_device_visit_link_kept_for_duplicate_zone_memberships(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that duplicate node entries in one group keep the visit link."""
+    mock_duco_client.async_get_zones_info.return_value = InfoZonesOverview(
+        zones=[
+            InfoZone(
+                zone_id=1,
+                name="VentEtaCentral",
+                groups=[InfoGroup(group_id=1, nodes=[2, 2, 113])],
+            )
+        ]
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert (
+        child_device.configuration_url
+        == f"http://{TEST_HOST}/nodeconfig.html?node=2&zone=1&group=1"
+    )
+
+
+async def test_child_device_visit_link_added_after_later_successful_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_zones_info: InfoZonesOverview,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a later successful zones refresh updates the device visit link."""
+    mock_duco_client.async_get_zones_info.side_effect = [
+        DucoConnectionError("offline"),
+        mock_zones_info,
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert child_device.configuration_url is None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    refreshed_child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert refreshed_child_device is not None
+    assert (
+        refreshed_child_device.configuration_url
+        == f"http://{TEST_HOST}/nodeconfig.html?node=2&zone=1&group=1"
+    )
+
+
+async def test_child_device_visit_link_preserved_after_zones_parse_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a later zones parse error does not remove the existing visit link."""
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert (
+        child_device.configuration_url
+        == f"http://{TEST_HOST}/nodeconfig.html?node=2&zone=1&group=1"
+    )
+
+    mock_duco_client.async_get_zones_info.side_effect = DucoError("bad zones")
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    refreshed_child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert refreshed_child_device is not None
+    assert (
+        refreshed_child_device.configuration_url
+        == f"http://{TEST_HOST}/nodeconfig.html?node=2&zone=1&group=1"
+    )
 
 
 async def test_unload_entry(
