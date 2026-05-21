@@ -254,10 +254,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
         if ATTR_RGB_COLOR in kwargs:
-            data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
+            data[ATTR_COLOR_PRIMARY] = tuple(kwargs[ATTR_RGB_COLOR])
 
         if ATTR_RGBW_COLOR in kwargs:
-            data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
+            data[ATTR_COLOR_PRIMARY] = tuple(kwargs[ATTR_RGBW_COLOR])
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             data[ATTR_CCT] = kelvin_to_255(
