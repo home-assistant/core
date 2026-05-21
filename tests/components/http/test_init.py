@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 import os
 from pathlib import Path
+from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -338,7 +339,7 @@ async def test_emergency_ssl_certificate_when_invalid(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test http can startup with an emergency self signed cert when the current one is broken."""
 
@@ -384,7 +385,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
 
@@ -418,7 +419,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken."""
 
@@ -446,7 +447,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     hass: HomeAssistant,
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
 
@@ -805,7 +806,7 @@ async def test_unix_socket_rejected_relative_path(
 async def test_yaml_migration_to_storage(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test YAML config is migrated to the HTTP config store with a deprecation issue.
 
@@ -847,7 +848,7 @@ async def test_yaml_migration_to_storage(
 async def test_yaml_migration_matches_stable_no_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """If the YAML matches the existing stable config, no pending should be created."""
     existing_stable = {
@@ -893,7 +894,7 @@ async def test_yaml_migration_matches_stable_no_pending(
 async def test_yaml_migration_differs_from_stable_creates_pending(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """If the YAML differs from the existing stable config, it must be stored as pending."""
     existing_stable = {
@@ -959,7 +960,7 @@ async def test_yaml_migration_failure_creates_error_issue(
 async def test_yaml_still_present_after_migration_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """When YAML lingers after migration, a repair issue is surfaced and YAML is ignored."""
     hass_storage["http"] = _stable_http_storage(
@@ -987,7 +988,7 @@ async def test_yaml_still_present_after_migration_creates_issue(
 async def test_yaml_still_present_issue_cleared_when_yaml_removed(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """A previously created leftover-YAML issue is cleared once YAML is removed."""
     hass_storage["http"] = _stable_http_storage(
@@ -1016,7 +1017,7 @@ async def test_yaml_still_present_issue_cleared_when_yaml_removed(
 async def test_setup_uses_stable_config_when_no_yaml(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test HTTP config is loaded from the stable slot when no YAML or pending is set."""
     hass_storage["http"] = _stable_http_storage(
@@ -1045,7 +1046,7 @@ async def test_setup_uses_stable_config_when_no_yaml(
 
 async def test_setup_prefers_pending_over_stable_in_normal_mode(
     hass: HomeAssistant,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Pending overrides stable on a normal boot so the new config gets tested."""
     hass_storage["http"] = _stable_http_storage(
@@ -1066,7 +1067,7 @@ async def test_setup_prefers_pending_over_stable_in_normal_mode(
 
 async def test_recovery_mode_falls_back_to_stable(
     hass: HomeAssistant,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """In recovery mode the pending config is ignored to keep HA reachable."""
     hass_storage["http"] = _stable_http_storage(
@@ -1088,7 +1089,7 @@ async def test_recovery_mode_falls_back_to_stable(
 
 async def test_recovery_mode_with_no_storage(
     hass: HomeAssistant,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Recovery mode with no prior storage starts HTTP on the schema defaults.
@@ -1116,7 +1117,7 @@ async def test_recovery_mode_with_no_storage(
 
 async def test_recovery_mode_ignores_yaml(
     hass: HomeAssistant,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """YAML config must not be applied or migrated while in recovery mode.
@@ -1151,7 +1152,7 @@ async def test_recovery_mode_ignores_yaml(
 
 async def test_setup_migrates_v1_storage_to_v2(
     hass: HomeAssistant,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """An existing v1 store is migrated into the stable slot."""
     hass_storage["http"] = {
@@ -1186,7 +1187,7 @@ async def test_setup_migrates_v1_storage_to_v2(
 async def test_websocket_http_config(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    hass_storage: dict,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test the http/config, configure and promote websocket commands."""
     with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
