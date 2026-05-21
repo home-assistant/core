@@ -13,13 +13,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.mcp.const import (
-    CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
