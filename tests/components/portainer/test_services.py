@@ -322,4 +322,3 @@ async def test_service_portainer_exceptions(
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_called_once()
-    mock_portainer_client.images_prune.reset_mock()
