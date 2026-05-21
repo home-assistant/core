@@ -79,10 +79,6 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         try:
             for heater in self.incomfort_data.heaters:
                 await heater.update()
-        except TimeoutError as exc:
-            raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="update_failed"
-            ) from exc
         except ClientResponseError as exc:
             if exc.status == 401:
                 raise ConfigEntryAuthFailed(
