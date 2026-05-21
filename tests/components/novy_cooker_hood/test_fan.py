@@ -1,5 +1,7 @@
 """Tests for the Novy Hood fan platform."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
@@ -261,6 +263,31 @@ async def test_decrease_speed_clamps_at_off(
     assert state is not None
     assert state.state == STATE_OFF
     assert len(mock_rf_entity.send_command_calls) == 1
+
+
+async def test_set_percentage_sleeps_between_presses(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+    init_novy_cooker_hood: MockConfigEntry,
+) -> None:
+    """A delay is awaited between every RF press, including between sequences."""
+    delay = 0.2
+    with (
+        patch("homeassistant.components.novy_cooker_hood.fan._COMMAND_DELAY", delay),
+        patch(
+            "homeassistant.components.novy_cooker_hood.fan.asyncio.sleep",
+            new_callable=AsyncMock,
+        ) as mock_sleep,
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 75},
+            blocking=True,
+        )
+
+    assert len(mock_rf_entity.send_command_calls) == 7
+    assert mock_sleep.await_args_list == [((delay,),)] * 6
 
 
 async def test_restore_state(
