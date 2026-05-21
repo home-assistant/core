@@ -104,7 +104,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Avea light platform."""
-    async_add_entities([AveaLight(entry.runtime_data, entry)], update_before_add=True)
+    async_add_entities(
+        [AveaLight(entry.runtime_data, entry.data[CONF_ADDRESS])],
+        update_before_add=True,
+    )
 
 
 def _discover_bulbs_for_import() -> list[dict[str, str]]:
@@ -187,22 +190,19 @@ class AveaLight(LightEntity):
     """Representation of an Avea."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.HS}
 
-    def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
+    def __init__(self, light: avea.Bulb, address: str) -> None:
         """Initialize an AveaLight."""
-        address = entry.data[CONF_ADDRESS]
-        unique_id = entry.unique_id or address
         self._light = light
-        self._attr_unique_id = unique_id
-        self._attr_name = entry.title
+        self._attr_unique_id = address
         self._attr_brightness = light.brightness
         self._last_brightness = 255
         self._device_info_updated = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, address)},
-            identifiers={(DOMAIN, address)},
-            name=entry.title,
             model=MODEL,
         )
 

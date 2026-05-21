@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.avea.const import DOMAIN
+from homeassistant.components.avea.const import UNKNOWN_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -75,12 +75,13 @@ async def test_init_state(
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
 
 
-async def test_device_info(hass: HomeAssistant, setup_integration: MagicMock) -> None:
+async def test_device_info(
+    device_registry: dr.DeviceRegistry,
+    setup_integration: MagicMock,
+) -> None:
     """Test the device info."""
     bulb = setup_integration
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, AVEA_DISCOVERY_INFO.address)},
         connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
     )
 
@@ -99,6 +100,7 @@ async def test_device_info(hass: HomeAssistant, setup_integration: MagicMock) ->
 
 async def test_device_info_populates_when_connect_fails(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_bulb: MagicMock,
 ) -> None:
@@ -123,9 +125,7 @@ async def test_device_info_populates_when_connect_fails(
     mock_bulb.get_serial_number.assert_called_once()
     mock_bulb.disconnect.assert_not_called()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, AVEA_DISCOVERY_INFO.address)},
         connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
     )
 
@@ -135,6 +135,41 @@ async def test_device_info_populates_when_connect_fails(
     assert device.hw_version == "Elgato Avea"
     assert device.sw_version == AVEA_FIRMWARE_VERSION
     assert device.serial_number == AVEA_SERIAL_NUMBER
+
+
+async def test_device_info_ignores_unknown_values(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_bulb: MagicMock,
+) -> None:
+    """Test unknown device info is not populated."""
+    mock_bulb.get_manufacturer_name.return_value = UNKNOWN_NAME
+    mock_bulb.get_hardware_revision.return_value = ""
+    mock_bulb.get_fw_version.return_value = UNKNOWN_NAME
+    mock_bulb.get_serial_number.return_value = ""
+
+    with (
+        patch(
+            "homeassistant.components.avea.async_ble_device_from_address",
+            return_value=AVEA_DISCOVERY_INFO.device,
+        ),
+        patch("homeassistant.components.avea.avea.Bulb", return_value=mock_bulb),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, AVEA_DISCOVERY_INFO.address)},
+    )
+
+    assert device is not None
+    assert device.manufacturer is None
+    assert device.model == "Avea"
+    assert device.hw_version is None
+    assert device.sw_version is None
+    assert device.serial_number is None
 
 
 async def test_device_info_is_read_once(
