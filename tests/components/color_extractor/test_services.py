@@ -124,7 +124,8 @@ async def _async_execute_service(hass: HomeAssistant, service_data: dict[str, An
     assert state
     assert state.state == STATE_OFF
 
-    # Call the shared service, our above mock should return the base64 decoded fixture 1x1 pixel
+    # Call the shared service, our above mock should return
+    # the base64 decoded fixture 1x1 pixel
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
 
     await hass.async_block_till_done()
@@ -293,7 +294,7 @@ async def test_file(hass: HomeAssistant, setup_integration) -> None:
 @patch("os.path.isfile", Mock(return_value=True))
 @patch("os.access", Mock(return_value=True))
 async def test_file_denied_dir(hass: HomeAssistant, setup_integration) -> None:
-    """Test that the file only service fails to read an image in a dir not explicitly allowed."""
+    """Test file service fails for images in disallowed dirs."""
     service_data = {
         ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
