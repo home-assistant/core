@@ -1117,6 +1117,178 @@
     'state': '2.972',
   })
 # ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Multi-State Sensor P100 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Multi-State Sensor P100 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome1895415629',
+  })
+# ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000016C-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_multi_state_p100][sensor.multi_state_sensor_p100_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Multi-State Sensor P100 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.multi_state_sensor_p100_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1449,6 +1621,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.94',
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome1895415629',
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_presence_fp300][sensor.presence_multi_sensor_fp300_1_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.presence_multi_sensor_fp300_1_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_battery-entry]
@@ -1889,6 +2233,178 @@
     'state': '27.73',
   })
 # ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Climate Sensor W100 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Climate Sensor W100 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'AqaraHome-0123',
+  })
+# ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_sensor_w100][sensor.climate_sensor_w100_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Climate Sensor W100 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.climate_sensor_w100_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2122,6 +2638,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.18',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '*********',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Floor Heating Thermostat Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
@@ -2469,6 +3157,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.5',
+  })
+# ---
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.connected_thermostat_ute_3000_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000007-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Connected Thermostat UTE 3000 Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.connected_thermostat_ute_3000_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-53',
   })
 # ---
 # name: test_sensors[ecovacs_deebot][sensor.ecodeebot_battery-entry]
@@ -2929,6 +3672,61 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ecodeebot_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[ecovacs_deebot][sensor.ecodeebot_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'ecodeebot Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ecodeebot_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-45',
+  })
+# ---
 # name: test_sensors[eufy_vacuum_omni_e28][sensor.2bavs_ab6031x_44pe_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3326,6 +4124,178 @@
     'state': '3.558',
   })
 # ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_door_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Door Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_door_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_door_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Door Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_door_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome1425454932',
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_door_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_contact_sensor][sensor.eve_door_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Door Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_door_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_current_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3498,6 +4468,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13.3999996185303',
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy 20ECN4101 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy 20ECN4101 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome********',
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Energy 20ECN4101 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_20ecn4101_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[eve_energy_20ecn4101][sensor.eve_energy_20ecn4101_voltage_top-entry]
@@ -3730,6 +4872,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome23',
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Energy Plug Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[eve_energy_plug][sensor.eve_energy_plug_voltage-entry]
@@ -3973,6 +5287,178 @@
     'state': '550.0',
   })
 # ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Patched Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Patched Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome23',
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Energy Plug Patched Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_energy_plug_patched_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4083,6 +5569,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_shutter][sensor.eve_shutter_switch_20eci1701_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_shutter_switch_20eci1701_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_battery-entry]
@@ -4259,6 +5917,178 @@
     'state': '21.0',
   })
 # ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20EBP1701 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20EBP1701 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '**REDACTED**',
+  })
+# ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Thermo 20EBP1701 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ebp1701_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[eve_thermo_v4][sensor.eve_thermo_20ebp1701_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4421,6 +6251,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.2',
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Thermo 20ECD1701 Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_thermo_20ecd1701_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[eve_thermo_v5][sensor.eve_thermo_20ecd1701_valve_position-entry]
@@ -4759,6 +6761,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.03',
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_weather_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Weather Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_weather_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_weather_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Weather Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_weather_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '**REDACTED**',
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.eve_weather_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Weather Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_weather_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-entry]
@@ -5259,6 +7433,178 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HJMT-6B Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome***',
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hjmt_6b_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'HJMT-6B Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hjmt_6b_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5478,6 +7824,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart CO sensor Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart CO sensor Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'OpenThread-da2f',
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_co_sensor_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000006-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Smart CO sensor Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_co_sensor_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[heiman_co_sensor][sensor.smart_co_sensor_time_remaining-entry]
@@ -5760,6 +8278,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '105.0',
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome1632128124',
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Smart motion sensor Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_motion_sensor_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[heiman_motion_sensor_m1][sensor.smart_motion_sensor_time_remaining-entry]
@@ -6280,6 +8970,178 @@
     'state': '19.71',
   })
 # ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ALPSTUGA air quality monitor Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ALPSTUGA air quality monitor Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Thread Beverage',
+  })
+# ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_air_quality_monitor][sensor.alpstuga_air_quality_monitor_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'ALPSTUGA air quality monitor Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.alpstuga_air_quality_monitor_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6550,6 +9412,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BILRESA dual button Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BILRESA dual button Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000089-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_bilresa_dual_button][sensor.bilresa_dual_button_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'BILRESA dual button Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_dual_button_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_battery-entry]
@@ -7195,6 +10229,178 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BILRESA scroll wheel Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BILRESA scroll wheel Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NanoleafThread78',
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ikea_scroll_wheel][sensor.bilresa_scroll_wheel_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'BILRESA scroll wheel Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bilresa_scroll_wheel_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7650,6 +10856,178 @@
     'state': '21.83',
   })
 # ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome*****',
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'White Series OnOff Switch Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.white_series_onoff_switch_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[inovelli_vtm30][sensor.white_series_onoff_switch_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7870,6 +11248,178 @@
     'state': '0',
   })
 # ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome442262884',
+  })
+# ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[inovelli_vtm31][sensor.inovelli_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Inovelli Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7984,6 +11534,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.3',
+  })
+# ---
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.longan_link_hvac_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Longan link HVAC Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.longan_link_hvac_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
   })
 # ---
 # name: test_sensors[mock_air_purifier][sensor.mock_air_purifier_activated_carbon_filter_condition-entry]
@@ -9500,6 +13105,116 @@
     'state': '180.0',
   })
 # ---
+# name: test_sensors[mock_dimmable_light][sensor.mock_dimmable_light_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_dimmable_light_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_dimmable_light][sensor.mock_dimmable_light_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock Dimmable Light Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_dimmable_light_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
+  })
+# ---
+# name: test_sensors[mock_dimmable_plugin_unit][sensor.dimmable_plugin_unit_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dimmable_plugin_unit_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_dimmable_plugin_unit][sensor.dimmable_plugin_unit_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Dimmable Plugin Unit Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dimmable_plugin_unit_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-66',
+  })
+# ---
 # name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -9606,6 +13321,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mocked Fan Switch Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mocked Fan Switch Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ha-thread',
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000037-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_fan][sensor.mocked_fan_switch_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mocked Fan Switch Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mocked_fan_switch_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-entry]
@@ -10404,6 +14291,171 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stopped',
+  })
+# ---
+# name: test_sensors[mock_onoff_light][sensor.mock_onoff_light_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_onoff_light_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_onoff_light][sensor.mock_onoff_light_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock OnOff Light Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_onoff_light_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
+  })
+# ---
+# name: test_sensors[mock_onoff_light_alt_name][sensor.mock_onoff_light_wi_fi_rssi_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_onoff_light_wi_fi_rssi_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_onoff_light_alt_name][sensor.mock_onoff_light_wi_fi_rssi_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock OnOff Light Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_onoff_light_wi_fi_rssi_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
+  })
+# ---
+# name: test_sensors[mock_onoff_light_no_name][sensor.mock_light_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_light_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_onoff_light_no_name][sensor.mock_light_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock Light Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_light_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
   })
 # ---
 # name: test_sensors[mock_oven][sensor.mock_oven_current_phase-entry]
@@ -11840,6 +15892,116 @@
     'state': '100',
   })
 # ---
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_full_window_covering_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock Full Window Covering Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_full_window_covering_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-88',
+  })
+# ---
+# name: test_sensors[mock_window_covering_lift][sensor.mock_lift_window_covering_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_lift_window_covering_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_window_covering_lift][sensor.mock_lift_window_covering_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock Lift Window Covering Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_lift_window_covering_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-88',
+  })
+# ---
 # name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -11889,6 +16051,226 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.longan_link_wncv_da01_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Longan link WNCV DA01 Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.longan_link_wncv_da01_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-36',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_tilt][sensor.mock_pa_tilt_window_covering_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_pa_tilt_window_covering_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_tilt][sensor.mock_pa_tilt_window_covering_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock PA Tilt Window Covering Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pa_tilt_window_covering_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-88',
+  })
+# ---
+# name: test_sensors[mock_window_covering_tilt][sensor.mock_tilt_window_covering_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_tilt_window_covering_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[mock_window_covering_tilt][sensor.mock_tilt_window_covering_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Mock Tilt Window Covering Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_tilt_window_covering_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-88',
+  })
+# ---
+# name: test_sensors[onoff_light_with_levelcontrol_present][sensor.d215s_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.d215s_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[onoff_light_with_levelcontrol_present][sensor.d215s_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'D215S Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.d215s_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-43',
   })
 # ---
 # name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-entry]
@@ -12228,6 +16610,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'docked',
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ha-thread-a2f2',
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[secuyou_smart_lock][sensor.secuyou_smart_lock_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Secuyou Smart Lock Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.secuyou_smart_lock_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-entry]
@@ -12602,6 +17156,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dishwasher_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dishwasher_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '**REDACTED**',
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dishwasher_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Dishwasher Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_active_current-entry]
@@ -13731,6 +18457,178 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_fan_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SL_Fan Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_fan_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_fan_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SL_Fan Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_fan_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_fan_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000063-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_fan][sensor.sl_fan_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'SL_Fan Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_fan_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -14165,6 +19063,178 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LaundryWasher Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'LaundryWasher Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
 # name: test_sensors[silabs_light_switch][sensor.light_switch_example_current_switch_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -14216,6 +19286,522 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.light_switch_example_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light switch example Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_switch_example_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.light_switch_example_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Light switch example Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_switch_example_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '*****',
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.light_switch_example_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000008E-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_light_switch][sensor.light_switch_example_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Light switch example Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.light_switch_example_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_rangehood_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SL-RangeHood Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_rangehood_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_rangehood_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SL-RangeHood Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_rangehood_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome',
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sl_rangehood_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-0000000000000072-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_range_hood][sensor.sl_rangehood_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'SL-RangeHood Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sl_rangehood_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'router',
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.refrigerator_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.refrigerator_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome36',
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.refrigerator_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_refrigerator][sensor.refrigerator_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Refrigerator Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.refrigerator_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'reed',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
@@ -15582,6 +21168,61 @@
     'state': '217.0',
   })
 # ---
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_wi_fi_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.yndx_00540_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_rssi',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-0-WiFiDiagnosticsRssi-54-4',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[yandex_smart_socket][sensor.yndx_00540_wi_fi_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'YNDX-00540 Wi-Fi RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.yndx_00540_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-53',
+  })
+# ---
 # name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -15758,5 +21399,177 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread channel',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread channel',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_channel',
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-0-ThreadDiagnosticsChannel-53-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zemismart MT25B Roller Motor Thread channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_network_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_network_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread network name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thread network name',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_network_name',
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-0-ThreadDiagnosticsNetworkName-53-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_network_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zemismart MT25B Roller Motor Thread network name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_network_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'MyHome36',
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_routing_role-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_routing_role',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thread routing role',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Thread routing role',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'thread_routing_role',
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-0-ThreadDiagnosticsRoutingRole-53-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zemismart_mt25b][sensor.zemismart_mt25b_roller_motor_thread_routing_role-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Zemismart MT25B Roller Motor Thread routing role',
+      'options': list([
+        'unspecified',
+        'unassigned',
+        'sleepy_end_device',
+        'end_device',
+        'reed',
+        'router',
+        'leader',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zemismart_mt25b_roller_motor_thread_routing_role',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sleepy_end_device',
   })
 # ---
