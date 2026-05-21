@@ -93,7 +93,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
     @property
-    def todo_items(self) -> list[TodoItem] | None:
+    def todo_items(self) -> list[TodoItem]:
         """All Todo items in the list.
 
         Returns:
