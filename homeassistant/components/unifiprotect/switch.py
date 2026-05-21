@@ -276,6 +276,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="can_detect_car_alarm",
         ufp_value="is_car_alarm_detection_on",
         ufp_enabled="is_recording_enabled",
+        # Public API renamed "car alarm" to "burglar"; internal model keeps the legacy name.
         ufp_set_method="set_burglar_detection_public",
         ufp_perm=PermRequired.WRITE,
     ),

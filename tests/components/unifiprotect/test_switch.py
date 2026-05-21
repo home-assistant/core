@@ -1,6 +1,6 @@
 """Test the UniFi Protect switch platform."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from uiprotect.data import (
@@ -422,14 +422,14 @@ async def test_switch_camera_hdr(
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-
-        mock_method.assert_called_once_with(PublicHdrMode.AUTO)
-
         await hass.services.async_call(
             "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
-        mock_method.assert_called_with(PublicHdrMode.OFF)
+        mock_method.assert_has_calls(
+            [call(PublicHdrMode.AUTO), call(PublicHdrMode.OFF)]
+        )
+        assert mock_method.call_count == 2
 
 
 @pytest.mark.parametrize("description", CAMERA_SWITCHES_DETECTIONS_EXTRA)
@@ -475,14 +475,12 @@ async def test_switch_camera_detections_public_api(
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-
-        mock_method.assert_called_once_with(True)
-
         await hass.services.async_call(
             "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
 
-        mock_method.assert_called_with(False)
+        mock_method.assert_has_calls([call(True), call(False)])
+        assert mock_method.call_count == 2
 
 
 async def test_switch_camera_privacy(
