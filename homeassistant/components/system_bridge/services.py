@@ -261,7 +261,7 @@ async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
 
 
 async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
-    """Handle the send_keypress service call."""
+    """Handle the send_text service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
     response = await coordinator.websocket_client.keyboard_text(
         KeyboardText(text=service_call.data[CONF_TEXT])
