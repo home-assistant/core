@@ -157,20 +157,6 @@ async def test_unload_keeps_runtime_when_platform_unload_fails(
     hub.async_disconnect.assert_not_awaited()
 
 
-async def test_setup_missing_link_keys_raises_auth_failed(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup fails when link keys are missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.13", CONF_PORT: DEFAULT_PORT},
-    )
-    entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
@@ -197,24 +183,6 @@ async def test_setup_link_required_raises_auth_failed(
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_missing_client_id_raises_setup_error(
-    hass: HomeAssistant,
-) -> None:
-    """Verify setup fails when client ID is missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.15",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
-        },
-    )
-    entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_uses_client_id(hass: HomeAssistant) -> None:

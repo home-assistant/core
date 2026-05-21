@@ -13,43 +13,28 @@ from elke27_lib.errors import (
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_CLIENT_ID, CONF_LINK_KEYS_JSON, DOMAIN
+from .const import CONF_CLIENT_ID, CONF_LINK_KEYS_JSON
 from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry, Elke27RuntimeData
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
 ]
 
 
-async def async_setup(_hass: HomeAssistant, _config: ConfigType) -> bool:
-    """Set up the Elke27 integration."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bool:
     """Set up Elke27 from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    link_keys_json = entry.data.get(CONF_LINK_KEYS_JSON)
-    if not link_keys_json:
-        msg = "Link keys are missing"
-        raise ConfigEntryError(msg)
-    client_id = entry.data.get(CONF_CLIENT_ID)
-    if not client_id:
-        msg = "Client ID is missing"
-        raise ConfigEntryError(msg)
+    link_keys_json = entry.data[CONF_LINK_KEYS_JSON]
+    client_id = entry.data[CONF_CLIENT_ID]
     hub = Elke27Hub(
         hass,
         host,
