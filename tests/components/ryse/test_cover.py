@@ -175,3 +175,80 @@ async def test_current_cover_position_valid(
     mock_device.is_valid_position.return_value = True
 
     assert entity.current_cover_position == 42
+
+
+async def test_entity_lifecycle(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test async_added_to_hass, async_will_remove_from_hass and _clear_callback."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+
+    # Mock async_on_remove to check registration
+    entity.async_on_remove = MagicMock()
+
+    # Call added_to_hass
+    await entity.async_added_to_hass()
+    assert mock_device.update_callback == entity._update_position
+    entity.async_on_remove.assert_called_once_with(entity._clear_callback)
+
+    # Call will_remove_from_hass
+    await entity.async_will_remove_from_hass()
+    assert mock_device.update_callback is None
+
+
+async def test_clear_callback_other_callback(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test _clear_callback does not clear if callback is different."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    other_cb = MagicMock()
+    mock_device.update_callback = other_cb
+
+    entity._clear_callback()
+    assert mock_device.update_callback == other_cb
+
+
+async def test_async_update_pairing_success(
+    mock_device: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test async_update when pairing succeeds."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    mock_device.client = None
+    mock_device.pair = AsyncMock(return_value=True)
+    mock_device.send_get_position = AsyncMock()
+
+    await entity.async_update()
+    assert entity.available is True
+    mock_device.send_get_position.assert_awaited_once()
+
+
+async def test_async_update_pairing_failure_log_debug(
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test debug log when pairing fails and entity was available."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity._attr_available = True
+    mock_device.client = None
+    mock_device.pair = AsyncMock(return_value=False)
+
+    await entity.async_update()
+    assert entity.available is False
+    assert "Failed to pair with device, skipping update" in caplog.text
+
+
+async def test_async_update_pairing_failure_no_log_debug(
+    mock_device: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no debug log when pairing fails and entity was not available."""
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
+    entity._attr_available = False
+    mock_device.client = None
+    mock_device.pair = AsyncMock(return_value=False)
+
+    await entity.async_update()
+    assert entity.available is False
+    assert "Failed to pair with device, skipping update" not in caplog.text
