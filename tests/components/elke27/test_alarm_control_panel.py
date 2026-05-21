@@ -16,10 +16,10 @@ import pytest
 
 from homeassistant.components.elke27 import alarm_control_panel as alarm_module
 from homeassistant.components.elke27.alarm_control_panel import async_setup_entry
-from homeassistant.components.elke27.const import CONF_CLIENT_ID, DOMAIN
+from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.models import Elke27RuntimeData
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 

@@ -8,14 +8,13 @@ from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 
 from homeassistant.components.elke27 import async_unload_entry
 from homeassistant.components.elke27.const import (
-    CONF_CLIENT_ID,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

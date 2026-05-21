@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 
 from elke27_lib import PanelInfo, PanelSnapshot, TableInfo
 
-from homeassistant.components.elke27.const import CONF_CLIENT_ID
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.helpers import (
     build_unique_id,
@@ -14,7 +13,7 @@ from homeassistant.components.elke27.helpers import (
     unique_base,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

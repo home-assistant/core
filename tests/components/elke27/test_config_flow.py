@@ -20,12 +20,11 @@ from homeassistant import config_entries
 from homeassistant.components.elke27 import config_flow
 from homeassistant.components.elke27.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.elke27.const import (
-    CONF_CLIENT_ID,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
