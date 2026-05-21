@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=entry.domain,
             translation_key="client_init_failed",
-            translation_placeholders={"status": client_status.value},
+            translation_placeholders={"status": str(client_status.value)},
         )
 
     # Create coordinator and perform first refresh
