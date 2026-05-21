@@ -164,12 +164,12 @@ def _get_coordinator(
             for entry in hass.config_entries.async_entries(DOMAIN)
             if entry.entry_id in device_entry.config_entries
         )
-    except StopIteration as exception:
+    except StopIteration as e:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
             translation_placeholders={"device": device_id},
-        ) from exception
+        ) from e
     entry: SystemBridgeConfigEntry = service.async_get_config_entry(
         hass, DOMAIN, entry_id
     )
@@ -191,12 +191,12 @@ async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse
                 if process.id == service_call.data[CONF_ID]
             )
         )
-    except StopIteration as exception:
+    except StopIteration as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="process_not_found",
             translation_placeholders={"id": service_call.data[CONF_ID]},
-        ) from exception
+        ) from e
 
 
 async def handle_get_processes_by_name(

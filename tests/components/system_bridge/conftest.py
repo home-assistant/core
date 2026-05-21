@@ -126,6 +126,36 @@ def mock_websocket_client(
             message="Data listener registered",
             data={EventKey.MODULES: register_data_listener_model.modules},
         )
+        websocket_client.open_url.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.OPENED,
+            message="Opened url",
+            data={"url": "https://example.com"},
+        )
+        websocket_client.open_path.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.OPENED,
+            message="Opened file",
+            data={"path": "/home/user/documents"},
+        )
+        websocket_client.power_shutdown.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.POWER_SHUTDOWN,
+            message="Shuttdown",
+            data={},
+        )
+        websocket_client.keyboard_keypress.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.KEYBOARD_KEY_PRESSED,
+            message="Keyboard key pressed",
+            data={"key": "backspace"},
+        )
+        websocket_client.keyboard_text.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.KEYBOARD_TEXT_SENT,
+            message="Keyboard text sent",
+            data={"text": "Hello world"},
+        )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
 
