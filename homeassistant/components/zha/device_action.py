@@ -24,11 +24,7 @@ INOVELLI_CLUSTER_ID = 0xFC31
 
 ACTION_SQUAWK = "squawk"
 ACTION_WARN = "warn"
-ATTR_DATA = "data"
 ATTR_IEEE = "ieee"
-CONF_ZHA_ACTION_TYPE = "zha_action_type"
-ZHA_ACTION_TYPE_SERVICE_CALL = "service_call"
-ZHA_ACTION_TYPE_CLUSTER_COMMAND = "cluster_command"
 INOVELLI_ALL_LED_EFFECT = "issue_all_led_effect"
 INOVELLI_INDIVIDUAL_LED_EFFECT = "issue_individual_led_effect"
 
@@ -69,7 +65,7 @@ ACTION_SCHEMA = vol.Any(
     DEFAULT_ACTION_SCHEMA,
 )
 
-# Maps a (cluster_id) the device must expose to the available actions.
+# Maps a cluster_id the device must expose to the available actions.
 DEVICE_ACTIONS_BY_CLUSTER_ID: dict[int, list[dict[str, str]]] = {
     IasWd.cluster_id: [
         {CONF_TYPE: ACTION_SQUAWK, CONF_DOMAIN: DOMAIN},
@@ -79,13 +75,6 @@ DEVICE_ACTIONS_BY_CLUSTER_ID: dict[int, list[dict[str, str]]] = {
         {CONF_TYPE: INOVELLI_ALL_LED_EFFECT, CONF_DOMAIN: DOMAIN},
         {CONF_TYPE: INOVELLI_INDIVIDUAL_LED_EFFECT, CONF_DOMAIN: DOMAIN},
     ],
-}
-
-DEVICE_ACTION_TYPES = {
-    ACTION_SQUAWK: ZHA_ACTION_TYPE_SERVICE_CALL,
-    ACTION_WARN: ZHA_ACTION_TYPE_SERVICE_CALL,
-    INOVELLI_ALL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_COMMAND,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: ZHA_ACTION_TYPE_CLUSTER_COMMAND,
 }
 
 DEVICE_ACTION_SCHEMAS = {
@@ -113,22 +102,6 @@ SERVICE_NAMES = {
     ACTION_WARN: SERVICE_WARNING_DEVICE_WARN,
 }
 
-# Maps a cluster-command action type to the (cluster_id, command_name) that
-# implements it.
-CLUSTER_COMMAND_MAPPINGS: dict[str, tuple[int, str]] = {
-    INOVELLI_ALL_LED_EFFECT: (INOVELLI_CLUSTER_ID, "led_effect"),
-    INOVELLI_INDIVIDUAL_LED_EFFECT: (INOVELLI_CLUSTER_ID, "individual_led_effect"),
-}
-
-# Maps schema field name → ZCL command kwarg name.
-INOVELLI_FIELD_TO_ZCL_KWARG = {
-    "effect_type": "led_effect",
-    "color": "led_color",
-    "level": "led_level",
-    "duration": "led_duration",
-    "led_number": "led_number",
-}
-
 
 async def async_call_action_from_config(
     hass: HomeAssistant,
@@ -137,9 +110,9 @@ async def async_call_action_from_config(
     context: Context | None,
 ) -> None:
     """Perform an action based on configuration."""
-    await ZHA_ACTION_TYPES[DEVICE_ACTION_TYPES[config[CONF_TYPE]]](
-        hass, config, variables, context
-    )
+    action_type = config[CONF_TYPE]
+    handler = ACTION_HANDLERS[action_type]
+    await handler(hass, config, context)
 
 
 async def async_validate_action_config(
@@ -182,70 +155,77 @@ async def async_get_action_capabilities(
     return {"extra_fields": fields}
 
 
-async def _execute_service_based_action(
+async def _execute_siren_service(
     hass: HomeAssistant,
     config: dict[str, Any],
-    variables: TemplateVarsType,
     context: Context | None,
 ) -> None:
-    action_type = config[CONF_TYPE]
-    service_name = SERVICE_NAMES[action_type]
     try:
         zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
     except KeyError, AttributeError:
         return
-
-    service_data = {ATTR_IEEE: str(zha_device.ieee)}
-
     await hass.services.async_call(
-        DOMAIN, service_name, service_data, blocking=True, context=context
+        DOMAIN,
+        SERVICE_NAMES[config[CONF_TYPE]],
+        {ATTR_IEEE: str(zha_device.ieee)},
+        blocking=True,
+        context=context,
     )
 
 
-def _find_cluster(zha_device, cluster_id: int):
-    """Return the first server cluster matching `cluster_id` on the device."""
-    for ep_id, endpoint in zha_device.device.endpoints.items():
-        if ep_id == 0:
-            continue
-        cluster = endpoint.in_clusters.get(cluster_id)
-        if cluster is not None:
-            return cluster
-    return None
-
-
-async def _execute_cluster_command_based_action(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    variables: TemplateVarsType,
-    context: Context | None,
-) -> None:
-    action_type = config[CONF_TYPE]
-    cluster_id, command_name = CLUSTER_COMMAND_MAPPINGS[action_type]
+def _find_inovelli_cluster(hass: HomeAssistant, config: dict[str, Any]) -> Any:
     try:
         zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
-    except KeyError, AttributeError:
-        return
-
-    cluster = _find_cluster(zha_device, cluster_id)
-    if cluster is None or not hasattr(cluster, command_name):
+    except (KeyError, AttributeError) as err:
         raise InvalidDeviceAutomationConfig(
-            f"Unable to execute cluster command action: cluster 0x{cluster_id:04x}"
-            f" command {command_name!r} not available"
-        )
-
-    kwargs = {
-        zcl_kwarg: config[field]
-        for field, zcl_kwarg in INOVELLI_FIELD_TO_ZCL_KWARG.items()
-        if field in config
-    }
-
+            f"ZHA device {config[CONF_DEVICE_ID]} not found"
+        ) from err
     try:
-        await getattr(cluster, command_name)(**kwargs)
+        return zha_device.device.find_cluster(cluster_id=INOVELLI_CLUSTER_ID)
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Device does not expose Inovelli cluster 0x{INOVELLI_CLUSTER_ID:04x}"
+        ) from err
+
+
+async def _execute_inovelli_all_led_effect(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    context: Context | None,
+) -> None:
+    cluster = _find_inovelli_cluster(hass, config)
+    try:
+        await cluster.led_effect(
+            led_effect=config["effect_type"],
+            led_color=config["color"],
+            led_level=config["level"],
+            led_duration=config["duration"],
+        )
     except ZHAException as err:
         raise HomeAssistantError(err) from err
 
 
-ZHA_ACTION_TYPES = {
-    ZHA_ACTION_TYPE_SERVICE_CALL: _execute_service_based_action,
-    ZHA_ACTION_TYPE_CLUSTER_COMMAND: _execute_cluster_command_based_action,
+async def _execute_inovelli_individual_led_effect(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    context: Context | None,
+) -> None:
+    cluster = _find_inovelli_cluster(hass, config)
+    try:
+        await cluster.individual_led_effect(
+            led_effect=config["effect_type"],
+            led_color=config["color"],
+            led_level=config["level"],
+            led_duration=config["duration"],
+            led_number=config["led_number"],
+        )
+    except ZHAException as err:
+        raise HomeAssistantError(err) from err
+
+
+ACTION_HANDLERS = {
+    ACTION_SQUAWK: _execute_siren_service,
+    ACTION_WARN: _execute_siren_service,
+    INOVELLI_ALL_LED_EFFECT: _execute_inovelli_all_led_effect,
+    INOVELLI_INDIVIDUAL_LED_EFFECT: _execute_inovelli_individual_led_effect,
 }
