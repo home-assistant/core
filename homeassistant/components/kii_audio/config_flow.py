@@ -51,8 +51,6 @@ class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle manual setup."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             host = user_input[CONF_HOST]
             system_id = user_input[CONF_SYSTEM_ID]
@@ -76,7 +74,7 @@ class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
-            errors=errors,
+            errors={},
         )
 
     async def async_step_zeroconf(

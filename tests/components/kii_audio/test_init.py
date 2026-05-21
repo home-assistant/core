@@ -222,7 +222,6 @@ async def test_setup_entry_removes_entry_with_mismatched_system_id(
         new=AsyncMock(),
     ) as mock_remove:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     mock_remove.assert_awaited_once_with(entry.entry_id)
 

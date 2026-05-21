@@ -104,7 +104,9 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Apply a pushed zone setting update to the cached system info."""
         zone_id = payload.get("zoneId")
         setting = payload.get("setting")
-        value = payload.get("value")
+        if "value" not in payload:
+            return
+        value = payload["value"]
 
         if not isinstance(zone_id, str) or not isinstance(setting, str):
             return

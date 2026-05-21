@@ -207,3 +207,22 @@ def test_handle_zone_setting_ignores_unknown_zone() -> None:
     )
 
     assert updates == []
+
+
+def test_handle_zone_setting_ignores_missing_value() -> None:
+    """Test zone setting payloads without a value do not update data."""
+    coordinator = _coordinator()
+    coordinator.data = {
+        "zones": [
+            {
+                "zoneId": "zone-id",
+                "settings": {"audio": {"volume": -50.0}},
+            }
+        ]
+    }
+    updates: list[dict[str, object]] = []
+    coordinator.async_set_updated_data = updates.append  # type: ignore[method-assign]
+
+    coordinator._handle_zone_setting({"zoneId": "zone-id", "setting": "audio.volume"})
+
+    assert updates == []

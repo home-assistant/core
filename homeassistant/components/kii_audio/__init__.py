@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> 
         if entry.unique_id is None:
             hass.config_entries.async_update_entry(entry, unique_id=system_id)
         else:
-            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            await hass.config_entries.async_remove(entry.entry_id)
             return True
 
     if CONF_PORT in entry.data:
