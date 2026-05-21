@@ -6,7 +6,6 @@ import logging
 
 import aiodns
 from aiodns.error import DNSError
-from pycares import AresError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
@@ -78,11 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DnsIPConfigEntry) -> boo
         ) from err
 
     errors = [
-        result
-        for result in results
-        if isinstance(
-            result, (TimeoutError, DNSError, AresError, asyncio.CancelledError)
-        )
+        result for result in results if isinstance(result, (TimeoutError, DNSError))
     ]
     if errors and len(errors) == len(results):
         await _close_resolvers()
