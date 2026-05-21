@@ -111,6 +111,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"Error during login: {err}") from err
 
         try:
