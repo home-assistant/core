@@ -221,7 +221,10 @@ async def test_modern_turn_on_invalid(hass: HomeAssistant, start_state) -> None:
 async def test_modern_turn_on_percentage_from_different_speed(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with a different percentage of the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with a different percentage of the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
     turn_on_calls = async_mock_service(hass, "fan", "turn_on")
@@ -250,7 +253,10 @@ async def test_modern_turn_on_percentage_from_different_speed(
 
 
 async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) -> None:
-    """Test modern fan state reproduction, turning on with the same percentage as in the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with the same percentage as in the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PERCENTAGE15_STATE)
 
     turn_on_calls = async_mock_service(hass, "fan", "turn_on")
@@ -289,7 +295,10 @@ async def test_modern_turn_on_percentage_from_same_speed(hass: HomeAssistant) ->
 async def test_modern_turn_on_preset_mode_from_different_speed(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with a different preset mode from the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with a different preset mode from the state.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
     turn_on_calls = async_mock_service(hass, "fan", "turn_on")
@@ -318,7 +327,10 @@ async def test_modern_turn_on_preset_mode_from_different_speed(
 
 
 async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -> None:
-    """Test modern fan state reproduction, turning on with the same preset mode as in the state."""
+    """Test modern fan state reproduction.
+
+    Turning on with the same preset mode as in the state.
+    """
     hass.states.async_set(
         MODERN_FAN_ENTITY, "off", MODERN_FAN_OFF_PPRESET_MODE_AUTO_STATE
     )
@@ -359,7 +371,10 @@ async def test_modern_turn_on_preset_mode_from_same_speed(hass: HomeAssistant) -
 async def test_modern_turn_on_preset_mode_reverse(
     hass: HomeAssistant, start_state
 ) -> None:
-    """Test modern fan state reproduction, turning on with preset mode "Auto" and reverse direction."""
+    """Test modern fan state reproduction.
+
+    Turning on with preset mode "Auto" and reverse direction.
+    """
     hass.states.async_set(MODERN_FAN_ENTITY, "off", start_state)
 
     turn_on_calls = async_mock_service(hass, "fan", "turn_on")

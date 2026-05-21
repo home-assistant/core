@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
 import logging
 
 from cookidoo_api import (
@@ -21,6 +21,7 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -81,7 +82,9 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
             subscription = await self.cookidoo.get_active_subscription()
-            week_plan = await self.cookidoo.get_recipes_in_calendar_week(date.today())  # noqa: DTZ011
+            week_plan = await self.cookidoo.get_recipes_in_calendar_week(
+                dt_util.now().date()
+            )
         except CookidooAuthException:
             try:
                 await self.cookidoo.refresh_token()
