@@ -12,6 +12,10 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    client = getattr(config_entry, "runtime_data", None)
+    if client is not None:
+        client.chat.completions.create.reset_mock()
+
 
 def get_subentry_id(mock_config_entry: MockConfigEntry, subentry_type: str) -> str:
     """Get the subentry ID for a given subentry type."""

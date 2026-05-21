@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from openai import AsyncOpenAI, OpenAIError
+from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from . import _create_client
+from . import _create_client, _validate_api_key
 from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,10 +54,9 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
             client = _create_client(self.hass, user_input[CONF_API_KEY])
             try:
-                # Unfortunately I couldn't find an endpoint that would authenticate the key
-                # without calling an LLM. This always succeeds regardless of auth.
-                async for _ in client.with_options(timeout=10.0).models.list():
-                    break
+                await _validate_api_key(client)
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
             except OpenAIError:
                 errors["base"] = "cannot_connect"
             except Exception:

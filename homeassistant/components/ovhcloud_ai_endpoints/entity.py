@@ -33,10 +33,6 @@ from .const import DOMAIN, LOGGER
 
 MAX_TOOL_ITERATIONS = 10
 
-# Reasoning models served by vLLM (Qwen3, gpt-oss, …) emit their chain of
-# thought wrapped in <think>…</think> when no server-side reasoning parser is
-# configured. We extract it into AssistantContent.thinking_content so it is
-# not spoken/displayed by Assist.
 _THINK_PATTERN = re.compile(r"<think>(.*?)</think>", re.DOTALL)
 
 
@@ -121,11 +117,13 @@ def _extract_thinking(
     """Return (cleaned_content, thinking_content) for an assistant message.
 
     Priority order:
-    1. ``message.reasoning`` (OpenRouter and some vLLM configurations).
-    2. ``message.reasoning_content`` (vLLM with ``--reasoning-parser``,
-       DeepSeek API).
-    3. Inline ``<think>…</think>`` markup in ``message.content`` (Qwen3
-       on vLLM without a server-side parser).
+    1. ``message.reasoning`` (OpenRouter, and vLLM >= 0.16.0 with a
+       ``reasoning_parser`` configured, following OpenAI's recommendation
+       for gpt-oss).
+    2. ``message.reasoning_content`` (DeepSeek API, and vLLM < 0.16.0
+       with a ``reasoning_parser`` configured).
+    3. Inline ``<think>…</think>`` markup in ``message.content`` (any
+       reasoning model on vLLM without a ``reasoning_parser`` set).
     """
     extras = message.model_extra or {}
     for key in ("reasoning", "reasoning_content"):

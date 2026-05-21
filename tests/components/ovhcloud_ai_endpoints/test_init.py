@@ -35,7 +35,7 @@ async def test_setup_cannot_connect(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a connection error surfaces a setup retry."""
-    mock_openai_client.models.list.side_effect = OpenAIError("boom")
+    mock_openai_client.chat.completions.create.side_effect = OpenAIError("boom")
 
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

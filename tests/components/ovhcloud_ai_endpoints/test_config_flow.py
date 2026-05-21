@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from openai import OpenAIError
+import httpx
+from openai import AuthenticationError, OpenAIError
 import pytest
 
 from homeassistant.components.ovhcloud_ai_endpoints.const import DOMAIN
@@ -61,6 +62,17 @@ async def test_second_account(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
+        (
+            AuthenticationError(
+                message="invalid key",
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="POST", url="https://example.com"),
+                ),
+                body=None,
+            ),
+            "invalid_auth",
+        ),
         (OpenAIError("boom"), "cannot_connect"),
         (Exception("boom"), "unknown"),
     ],
@@ -77,7 +89,7 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_openai_client.models.list.side_effect = exception
+    mock_openai_client.chat.completions.create.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -87,7 +99,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_openai_client.models.list.side_effect = None
+    mock_openai_client.chat.completions.create.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
