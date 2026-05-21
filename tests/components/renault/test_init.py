@@ -124,11 +124,13 @@ async def test_setup_entry_bad_password(
     assert flows[0]["context"]["entry_id"] == legacy_config_entry.entry_id
 
 
-@pytest.mark.parametrize("side_effect", [aiohttp.ClientConnectionError, GigyaException])
+@pytest.mark.parametrize(
+    "side_effect", [aiohttp.ClientConnectionError(), GigyaException()]
+)
 async def test_setup_entry_password_exception(
     hass: HomeAssistant,
     legacy_config_entry: MockConfigEntry,
-    side_effect: type[Exception],
+    side_effect: Exception,
 ) -> None:
     """Test ConfigEntryNotReady when the password login raises an exception."""
     with patch(
@@ -162,9 +164,11 @@ async def test_setup_entry_bad_token(
 
 
 @pytest.mark.usefixtures("patch_renault_account")
-@pytest.mark.parametrize("side_effect", [aiohttp.ClientConnectionError, GigyaException])
+@pytest.mark.parametrize(
+    "side_effect", [aiohttp.ClientConnectionError(), GigyaException()]
+)
 async def test_setup_entry_exception(
-    hass: HomeAssistant, config_entry: ConfigEntry, side_effect: type[Exception]
+    hass: HomeAssistant, config_entry: ConfigEntry, side_effect: Exception
 ) -> None:
     """Test ConfigEntryNotReady when API raises an exception during entry setup."""
     with patch(

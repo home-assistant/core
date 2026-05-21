@@ -36,8 +36,8 @@ def _mock_login(session: RenaultSession, login_id: str, password: str) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (Exception, "unknown"),
-        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (Exception(), "unknown"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
         (
             InvalidCredentialsException(403042, "invalid loginID or password"),
             "invalid_credentials",
@@ -47,7 +47,7 @@ def _mock_login(session: RenaultSession, login_id: str, password: str) -> None:
 async def test_config_flow_single_account(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    exception: Exception | type[Exception],
+    exception: Exception,
     error: str,
 ) -> None:
     """Test we get the form."""
