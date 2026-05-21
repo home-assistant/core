@@ -41,7 +41,9 @@ OPENAQ_UNIT_ALIASES = {
     "µg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     "ug/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     "ug/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     "μg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "mg/m³": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     "mg/m3": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 }
 
@@ -230,8 +232,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     first_exception = err.exceptions[0]
                     if isinstance(first_exception, AUTH_EXCEPTIONS):
                         raise UpdateFailed(
-                            f"Authentication failed for location {self.location_id}: "
-                            f"{first_exception}"
+                            translation_domain=DOMAIN,
+                            translation_key="authentication_failed",
                         ) from first_exception
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
@@ -255,7 +257,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 latest_response = await self.client.locations.latest(self.location_id)
         except AUTH_EXCEPTIONS as err:
             raise UpdateFailed(
-                f"Authentication failed for location {self.location_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
             ) from err
         except API_EXCEPTIONS as err:
             raise UpdateFailed(
