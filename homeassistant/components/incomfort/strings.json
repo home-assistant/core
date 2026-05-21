@@ -144,9 +144,6 @@
     "unknown": {
       "message": "[%key:component::incomfort::config::error::unknown%]"
     },
-    "update_failed": {
-      "message": "Update failed."
-    },
     "update_failed_with_error_message": {
       "message": "Update failed, got {error}."
     }
