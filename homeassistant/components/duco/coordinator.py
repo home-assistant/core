@@ -1,5 +1,6 @@
 """Data update coordinator for the Duco integration."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -12,7 +13,7 @@ from duco_connectivity.exceptions import (
 from duco_connectivity.models import BoardInfo, InfoZonesOverview, Node
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -76,6 +77,21 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self._zone_mapping_changed = False
+        self._zone_mapping_listeners: list[CALLBACK_TYPE] = []
+
+    @callback
+    def async_add_zone_mapping_listener(
+        self, update_callback: CALLBACK_TYPE
+    ) -> Callable[[], None]:
+        """Listen for zone mapping changes."""
+        self._zone_mapping_listeners.append(update_callback)
+
+        @callback
+        def _remove_listener() -> None:
+            self._zone_mapping_listeners.remove(update_callback)
+
+        return _remove_listener
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -133,7 +149,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
-        node_zone_groups = self.data.node_zone_groups if self.data else {}
+        previous_node_zone_groups = self.data.node_zone_groups if self.data else {}
+        node_zone_groups = previous_node_zone_groups
         try:
             node_zone_groups = _build_node_zone_groups(
                 await self.client.async_get_zones_info()
@@ -149,8 +166,19 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 err,
             )
 
+        self._zone_mapping_changed = node_zone_groups != previous_node_zone_groups
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             rssi_wifi=rssi_wifi,
             node_zone_groups=node_zone_groups,
         )
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle a finished refresh."""
+        if not self.last_update_success or not self._zone_mapping_changed:
+            return
+
+        for update_callback in list(self._zone_mapping_listeners):
+            update_callback()

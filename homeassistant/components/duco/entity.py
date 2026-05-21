@@ -6,6 +6,7 @@ from duco_connectivity.models import Node, NodeType
 from yarl import URL
 
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -55,6 +56,17 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
 
         self._attr_device_info = device_info
 
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when the entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        if not self._is_box:
+            self.async_on_remove(
+                self.coordinator.async_add_zone_mapping_listener(
+                    self._update_device_registry_configuration_url
+                )
+            )
+
     @staticmethod
     def _device_identifier(mac: str, node_id: int) -> str:
         """Return the stable device identifier used in the registry."""
@@ -86,6 +98,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             )
         )
 
+    @callback
     def _update_device_registry_configuration_url(self) -> None:
         """Update the device visit link when coordinator data changes."""
         device_registry = dr.async_get(self.hass)
@@ -109,11 +122,6 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
             device_id=device.id,
             configuration_url=configuration_url,
         )
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated coordinator data."""
-        self._update_device_registry_configuration_url()
-        super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
