@@ -66,9 +66,6 @@ def _run_mypy(code: str, tmp_path: Path) -> list[str]:
     return errors
 
 
-# ============================================================
-# Common fixture code prepended to each snippet for type definitions
-# ============================================================
 _PRELUDE = """
 from enum import Enum, IntEnum, IntFlag, StrEnum
 
@@ -86,11 +83,6 @@ class HTTPStatus(IntEnum):
 class ClimateFeature(IntFlag):
     SWING_MODE = 32
 """
-
-
-# ============================================================
-# BAD: plain Enum — should be flagged
-# ============================================================
 
 
 def test_bad_plain_enum_eq(tmp_path: Path) -> None:
@@ -135,11 +127,6 @@ def fn(s: ConfigEntryState) -> bool:
     assert len(errors) == 1
 
 
-# ============================================================
-# GOOD: StrEnum/IntEnum not in allowlist — silently allowed
-# ============================================================
-
-
 def test_good_strenum_not_allowlisted(tmp_path: Path) -> None:
     """A StrEnum defined in user code is NOT flagged.
 
@@ -169,12 +156,6 @@ def fn(code: HTTPStatus) -> bool:
         tmp_path,
     )
     assert errors == []
-
-
-# ============================================================
-# GOOD: type mismatches — silently allowed (these are pre-existing
-# semantic patterns, especially for StrEnum/IntEnum runtime ducktyping)
-# ============================================================
 
 
 def test_good_str_vs_strenum(tmp_path: Path) -> None:
@@ -220,11 +201,6 @@ def fn(m: MediaType | str) -> bool:
     assert errors == []
 
 
-# ============================================================
-# GOOD: IntFlag bitwise — idiomatic, must not flag
-# ============================================================
-
-
 def test_good_intflag_bitwise(tmp_path: Path) -> None:
     """``IntFlag`` bitwise ``==`` is the standard pattern."""
     errors = _run_mypy(
@@ -236,11 +212,6 @@ def fn(features: ClimateFeature) -> bool:
         tmp_path,
     )
     assert errors == []
-
-
-# ============================================================
-# GOOD: misc
-# ============================================================
 
 
 def test_good_is_already(tmp_path: Path) -> None:
