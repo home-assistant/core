@@ -17,6 +17,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+_PATCH_GET_DATA = "homeassistant.components.zeversolar.config_flow.zeversolar.ZeverSolarClient.get_data"
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -60,10 +62,7 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "zeversolar.ZeverSolarClient.get_data",
-        side_effect=side_effect,
-    ):
+    with patch(_PATCH_GET_DATA, side_effect=side_effect):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
@@ -77,15 +76,11 @@ async def test_form_errors(
     await _set_up_zeversolar(hass=hass, flow_id=result["flow_id"])
 
 
-async def test_abort_already_configured(hass: HomeAssistant) -> None:
+async def test_abort_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test we abort when the device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Zeversolar",
-        data={CONF_HOST: "test_ip"},
-        unique_id="test_serial",
-    )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,9 +90,9 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     assert "flow_id" in result
 
     mock_data = MagicMock()
-    mock_data.serial_number = "test_serial"
+    mock_data.serial_number = config_entry.unique_id
     with (
-        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
+        patch(_PATCH_GET_DATA, return_value=mock_data),
         patch(
             "homeassistant.components.zeversolar.async_setup_entry",
         ) as mock_setup_entry,
@@ -120,7 +115,7 @@ async def _set_up_zeversolar(hass: HomeAssistant, flow_id: str) -> None:
     mock_data = MagicMock()
     mock_data.serial_number = "test_serial"
     with (
-        patch("zeversolar.ZeverSolarClient.get_data", return_value=mock_data),
+        patch(_PATCH_GET_DATA, return_value=mock_data),
         patch(
             "homeassistant.components.zeversolar.async_setup_entry",
             return_value=True,
