@@ -6,14 +6,7 @@ from datetime import timedelta
 from ipaddress import ip_address
 import json
 from typing import Any
-from unittest.mock import (
-    AsyncMock,
-    MagicMock,
-    PropertyMock,
-    call,
-    create_autospec,
-    patch,
-)
+from unittest.mock import AsyncMock, MagicMock, call, create_autospec, patch
 import uuid
 
 import pytest
@@ -2165,17 +2158,11 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     result = await advanced_pick_radio(RadioType.znp)
 
-    with patch(
-        "homeassistant.config_entries.ConfigFlow.show_advanced_options",
-        new_callable=PropertyMock(return_value=is_advanced),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "next_step_id": (config_flow.FORMATION_CHOOSE_AUTOMATIC_BACKUP)
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": (config_flow.FORMATION_CHOOSE_AUTOMATIC_BACKUP)},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
