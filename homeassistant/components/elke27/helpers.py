@@ -3,20 +3,20 @@
 import re
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_HOST
+from elke27_lib import PanelSnapshot
+
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
     format_mac,
 )
 
-from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
+from .const import CONF_CLIENT_ID, DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-
     from .coordinator import Elke27DataUpdateCoordinator
     from .hub import Elke27Hub
+    from .models import Elke27ConfigEntry
 
 _NAME_SAFE_RE = re.compile(r"[^A-Za-z0-9 _-]")
 
@@ -28,32 +28,32 @@ def sanitize_name(name: str | None) -> str | None:
     return _NAME_SAFE_RE.sub("", name)
 
 
-def get_panel_field(snapshot: Any | None, panel_name: str | None, field: str) -> Any:
+def get_panel_field(
+    snapshot: PanelSnapshot | None, panel_name: str | None, field: str
+) -> Any:
     """Return a field from the current panel snapshot."""
     if field == "name" and panel_name:
         return sanitize_name(panel_name)
     if snapshot is None:
         return None
-    panel_info = getattr(snapshot, "panel_info", None) or getattr(
-        snapshot, "panel", None
-    )
-    if panel_info is None:
+    panel_info = snapshot.panel
+    if field == "name":
         return None
-    if isinstance(panel_info, dict):
-        if field == "name":
-            return sanitize_name(panel_info.get("name") or panel_info.get("panel_name"))
-        if field == "mac":
-            return panel_info.get("mac") or panel_info.get("panel_mac")
-        if field == "serial":
-            return panel_info.get("serial") or panel_info.get("panel_serial")
-        return panel_info.get(field)
-    return getattr(panel_info, field, None)
+    if field == "mac":
+        return panel_info.mac
+    if field == "serial":
+        return panel_info.serial
+    if field == "model":
+        return panel_info.model
+    if field == "firmware":
+        return panel_info.firmware
+    return None
 
 
 def device_info_for_entry(
     hub: Elke27Hub,
     coordinator: Elke27DataUpdateCoordinator,
-    entry: ConfigEntry,
+    entry: Elke27ConfigEntry,
 ) -> DeviceInfo:
     """Build device info for entities tied to a config entry."""
     snapshot = coordinator.data
@@ -63,12 +63,7 @@ def device_info_for_entry(
     panel_serial = get_panel_field(snapshot, hub.panel_name, "serial")
     model = get_panel_field(snapshot, hub.panel_name, "model")
     firmware = get_panel_field(snapshot, hub.panel_name, "firmware")
-    integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
-    identifier = (
-        f"{MANUFACTURER_NUMBER}-{integration_serial}"
-        if integration_serial
-        else entry.entry_id
-    )
+    identifier = entry.data.get(CONF_CLIENT_ID, entry.entry_id)
     identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -85,20 +80,17 @@ def device_info_for_entry(
 def unique_base(
     hub: Elke27Hub,
     coordinator: Elke27DataUpdateCoordinator,
-    entry: ConfigEntry,
+    entry: Elke27ConfigEntry,
 ) -> str:
     """Return the stable unique ID base for this config entry."""
-    mac = get_panel_field(coordinator.data, hub.panel_name, "mac")
-    if mac:
-        return format_mac(str(mac))
-    integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
-    if integration_serial:
-        return str(integration_serial)
+    client_id = entry.data.get(CONF_CLIENT_ID)
+    if client_id:
+        return str(client_id)
     if entry.unique_id:
         return entry.unique_id
-    return entry.data[CONF_HOST]
+    return entry.entry_id
 
 
-def build_unique_id(base: str, domain: str, numeric_id: int | str) -> str:
-    """Build a stable unique ID in <mac>:<domain>:<id> format."""
-    return f"{base}:{domain}:{numeric_id}"
+def build_unique_id(base: str, numeric_id: int | str) -> str:
+    """Build a stable unique ID in <base>:<id> format."""
+    return f"{base}:{numeric_id}"

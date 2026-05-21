@@ -20,7 +20,7 @@ from homeassistant import config_entries
 from homeassistant.components.elke27 import config_flow
 from homeassistant.components.elke27.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.elke27.const import (
-    CONF_INTEGRATION_SERIAL,
+    CONF_CLIENT_ID,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
@@ -53,7 +53,7 @@ class FakeTableInfo:
 class FakeSnapshot:
     """Snapshot stub."""
 
-    panel_info: FakePanelInfo
+    panel: FakePanelInfo
     table_info: FakeTableInfo
 
 
@@ -68,36 +68,17 @@ def _client_factory(instances: list[AsyncMock]) -> callable:
 
 def test_snapshot_to_dict() -> None:
     """Verify snapshot serialization to dict."""
-    snapshot = FakeSnapshot(
-        panel_info=FakePanelInfo(panel_name="Panel", mac="aa:bb", panel_serial="1"),
-        table_info=FakeTableInfo(areas=1, zones=2),
+    data = config_flow._snapshot_to_dict(
+        FakePanelInfo(panel_name="Panel", mac="aa:bb", panel_serial="1")
     )
-    data = config_flow._snapshot_to_dict(snapshot)
-    assert data["panel_info"]["panel_name"] == "Panel"
-    assert data["table_info"]["areas"] == 1
+    assert data["panel_name"] == "Panel"
     assert config_flow._snapshot_to_dict({"a": 1}) == {"a": 1}
     assert config_flow._snapshot_to_dict(None) == {}
-
-    class SlottedObj:
-        __slots__ = ("value",)
-
-        def __init__(self) -> None:
-            self.value = 1
-
-    class Obj:
-        def __init__(self) -> None:
-            self.value = 1
-            self._hidden = 2
-
-    assert config_flow._snapshot_to_dict(SlottedObj()) == {}
-    assert config_flow._snapshot_to_dict(Obj()) == {"value": 1}
+    assert config_flow._snapshot_to_dict(object()) == {}
 
 
 def test_panel_helpers() -> None:
     """Verify panel info helpers."""
-    assert config_flow._panel_mac({}) is None
-    assert config_flow._panel_mac({"mac": "ee:ff"}) == "ee:ff"
-    assert config_flow._panel_mac({"mac": "AA-BB-CC-DD-EE-FF"}) == "aa:bb:cc:dd:ee:ff"
     assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
     assert config_flow._panel_name({"serial": "1234"}) == "1234"
 
@@ -133,18 +114,13 @@ async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> No
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
     flow._context = {}
+    flow.flow_id = "flow123"
     flow._selected_host = "1.2.3.4"
     flow._selected_port = DEFAULT_PORT
 
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233"),
-        ),
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
     ):
         result = await flow._async_link_and_create_entry(
             access_code="1",
@@ -169,18 +145,13 @@ async def test_link_and_create_entry_suppresses_disconnect_error(
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
     flow._context = {}
+    flow.flow_id = "flow123"
     flow._selected_host = "1.2.3.4"
     flow._selected_port = DEFAULT_PORT
 
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233"),
-        ),
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
     ):
         result = await flow._async_link_and_create_entry(
             access_code="1",
@@ -202,12 +173,13 @@ async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     client.snapshot = FakeSnapshot(
-        panel_info=FakePanelInfo(panel_name="Panel", mac="aa", panel_serial="1"),
+        panel=FakePanelInfo(panel_name="Panel", mac="aa", panel_serial="1"),
         table_info=FakeTableInfo(areas=1, zones=1),
     )
 
     flow = config_flow.Elke27ConfigFlow()
     flow.hass = hass
+    flow.flow_id = "flow123"
     flow._selected_host = "1.2.3.4"
     flow._selected_port = DEFAULT_PORT
 
@@ -215,10 +187,6 @@ async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None
         patch(
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233"),
         ),
         patch.object(
             flow,
@@ -264,7 +232,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     client.snapshot = FakeSnapshot(
-        panel_info=FakePanelInfo(
+        panel=FakePanelInfo(
             panel_name="Test Panel",
             mac="aa:bb:cc:dd:ee:ff",
             panel_serial="1234",
@@ -276,10 +244,6 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
         ),
         patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
@@ -305,7 +269,9 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         assert (
             result2["data"][CONF_LINK_KEYS_JSON] == LinkKeys("tk", "lk", "lh").to_json()
         )
-        assert result2["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
+        assert result2["data"][CONF_CLIENT_ID] == config_flow.derive_client_id(
+            result["flow_id"]
+        )
         assert "panel_info" in result2["options"]
         assert "table_info" in result2["options"]
         client.async_disconnect.assert_awaited_once()
@@ -321,10 +287,6 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
         ),
         patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
@@ -357,10 +319,6 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
         ),
         patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
     ):
@@ -415,15 +373,9 @@ async def test_unknown_error_maps_to_unknown(hass: HomeAssistant) -> None:
     )
     client.async_disconnect = AsyncMock(return_value=None)
 
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
-        ),
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -447,15 +399,9 @@ async def test_auth_error_maps_to_cannot_connect(hass: HomeAssistant) -> None:
     client.async_link = AsyncMock(side_effect=Elke27AuthError())
     client.async_disconnect = AsyncMock(return_value=None)
 
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
-        ),
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -478,15 +424,9 @@ async def test_link_required_maps_to_link_required(hass: HomeAssistant) -> None:
     client.async_connect = AsyncMock(side_effect=Elke27LinkRequiredError())
     client.async_disconnect = AsyncMock(return_value=None)
 
-    with (
-        patch(
-            "homeassistant.components.elke27.config_flow._create_client",
-            side_effect=_client_factory([client]),
-        ),
-        patch(
-            "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-            AsyncMock(return_value="112233445566"),
-        ),
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

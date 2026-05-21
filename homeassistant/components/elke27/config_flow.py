@@ -20,17 +20,16 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import selector
 
 from .const import (
-    CONF_INTEGRATION_SERIAL,
+    CONF_CLIENT_ID,
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
     DOMAIN,
     READY_TIMEOUT,
 )
-from .identity import async_get_integration_serial, build_client_identity
+from .identity import build_client_identity, derive_client_id
 
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
@@ -101,8 +100,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        integration_serial = await async_get_integration_serial(self.hass, host)
-        client_identity = build_client_identity(integration_serial)
+        client_id = derive_client_id(self.flow_id)
+        client_identity = build_client_identity(client_id)
         client = _create_client()
         link_keys: LinkKeys | None = None
         panel_info: dict[str, Any] = {}
@@ -126,11 +125,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             snapshot = client.snapshot
-            panel_info = _snapshot_to_dict(
-                getattr(snapshot, "panel_info", None)
-                or getattr(snapshot, "panel", None)
-            )
-            table_info = _snapshot_to_dict(getattr(snapshot, "table_info", None))
+            panel_info = _snapshot_to_dict(snapshot.panel)
+            table_info = _snapshot_to_dict(snapshot.table_info)
         except InvalidCredentials:
             errors["base"] = "invalid_auth"
         except Elke27AuthError:
@@ -161,20 +157,13 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_LINK_KEYS_JSON: link_keys_json,
-            CONF_INTEGRATION_SERIAL: integration_serial,
+            CONF_CLIENT_ID: client_id,
         }
 
         options: dict[str, Any] = {
             CONF_PANEL_INFO: panel_info,
             CONF_TABLE_INFO: table_info,
         }
-
-        unique_id = _panel_mac(panel_info) or integration_serial
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port}
-            )
 
         title = _panel_name(panel_info) or host
         result = self.async_create_entry(title=title, data=data, options=options)
@@ -186,12 +175,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 def _create_client() -> Elke27Client:
     """Create a configured client instance."""
     return Elke27Client(ClientConfig())
-
-
-def _panel_mac(panel_info: dict[str, Any]) -> str | None:
-    if mac := panel_info.get("mac") or panel_info.get("panel_mac"):
-        return format_mac(str(mac))
-    return None
 
 
 def _panel_name(panel_info: dict[str, Any]) -> str | None:
@@ -211,7 +194,4 @@ def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
         return asdict(snapshot)
     if isinstance(snapshot, dict):
         return dict(snapshot)
-    attributes = getattr(snapshot, "__dict__", None)
-    if attributes is None:
-        return {}
-    return {key: value for key, value in attributes.items() if not key.startswith("_")}
+    return {}
