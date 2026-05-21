@@ -41,7 +41,7 @@ async def test_setup_cannot_connect(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_dynamic_subentry_creates_entity_and_device(
+async def test_new_subentry_creates_entity_and_device(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     entity_registry: er.EntityRegistry,
