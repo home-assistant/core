@@ -1,9 +1,10 @@
 """The tests the History component websocket_api."""
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import timedelta
+from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
@@ -1599,7 +1600,28 @@ async def test_overflow_queue(
     """Test overflowing the history stream queue."""
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
-    with patch.object(websocket_api, "MAX_PENDING_HISTORY_STATES", 5):
+
+    unsub_calls = 0
+
+    def spy_track_state_change_event(*args: Any, **kwargs: Any) -> Callable[[], None]:
+        nonlocal unsub_calls
+        real_unsub = async_track_state_change_event(*args, **kwargs)
+
+        def wrapped_unsub() -> None:
+            nonlocal unsub_calls
+            unsub_calls += 1
+            real_unsub()
+
+        return wrapped_unsub
+
+    with (
+        patch.object(websocket_api, "MAX_PENDING_HISTORY_STATES", 5),
+        patch.object(
+            websocket_api,
+            "async_track_state_change_event",
+            spy_track_state_change_event,
+        ),
+    ):
         await async_setup_component(
             hass,
             "history",
@@ -1678,6 +1700,8 @@ async def test_overflow_queue(
                     "sensor.two", str(val), attributes={"any": "attr"}
                 )
             await async_recorder_block_till_done(hass)
+
+    assert unsub_calls == 1
 
 
 @pytest.mark.usefixtures("recorder_mock")
