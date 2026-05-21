@@ -150,6 +150,15 @@ class _MockTrigger(Trigger):
         return self._hass.bus.async_listen("mock_trigger_fire", _on_event)
 
 
+_BASE_DATA_TEMPLATE = {
+    "name": "{{ name }}",
+    "via_event": "{{ via_event }}",
+    "trigger_id": "{{ trigger.id }}",
+    "trigger_idx": "{{ trigger.idx }}",
+    "trigger_platform": "{{ trigger.platform }}",
+    "trigger_description": "{{ trigger.description }}",
+    "this_entity_id": "{{ this.entity_id }}",
+}
 _LEGACY_TRIGGER = {"platform": "event", "event_type": "test_event"}
 _LEGACY_PER_TRIGGER_VARS = {
     "name": "Paulus",
@@ -173,23 +182,6 @@ _MODERN_PER_TRIGGER_VARS = {
     "name": "Paulus",
     "via_event": "{{ trigger.entity_id }}",
 }
-_BASE_DATA_TEMPLATE = {
-    "name": "{{ name }}",
-    "via_event": "{{ via_event }}",
-    "trigger_id": "{{ trigger.id }}",
-    "trigger_idx": "{{ trigger.idx }}",
-    "trigger_platform": "{{ trigger.platform }}",
-    "trigger_description": "{{ trigger.description }}",
-    "this_entity_id": "{{ this.entity_id }}",
-}
-_MOCK_DATA_TEMPLATE = {
-    **_BASE_DATA_TEMPLATE,
-    "top_level_extra": "{{ extra_var | default('NOT_AT_TOP_LEVEL') }}",
-    "trigger_extra_var": "{{ trigger.extra_var }}",
-    "trigger_rendered_option": "{{ trigger.rendered_option }}",
-    "automation_in_action": "{{ automation_var }}",
-    "per_trigger_in_action": "{{ per_trigger_var }}",
-}
 _MODERN_EXPECTED = {
     "name": "Paulus",
     "via_event": "event.foo",
@@ -198,6 +190,14 @@ _MODERN_EXPECTED = {
     "trigger_platform": "event.received",
     "trigger_description": "state of event.foo",
     "this_entity_id": "automation.automation_0",
+}
+_MOCK_DATA_TEMPLATE = {
+    **_BASE_DATA_TEMPLATE,
+    "top_level_extra": "{{ extra_var | default('NOT_AT_TOP_LEVEL') }}",
+    "trigger_extra_var": "{{ trigger.extra_var }}",
+    "trigger_rendered_option": "{{ trigger.rendered_option }}",
+    "automation_in_action": "{{ automation_var }}",
+    "per_trigger_in_action": "{{ per_trigger_var }}",
 }
 _MOCK_EXPECTED = {
     "name": "Paulus",
