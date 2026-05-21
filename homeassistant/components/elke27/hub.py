@@ -98,7 +98,7 @@ class Elke27Hub:
             link_keys = LinkKeys.from_json(self._link_keys_json)
             client = Elke27Client(ClientConfig())
             client_identity = build_client_identity(self._client_id)
-            await _async_set_client_identity(client, client_identity)
+            _set_client_identity(client, client_identity)
             self._client = client
 
             def _raise_not_ready() -> None:
@@ -140,7 +140,8 @@ class Elke27Hub:
             self._connection_unsubscribe()
             self._connection_unsubscribe = None
         if self._client is not None:
-            await self._client.async_disconnect()
+            with contextlib.suppress(Exception):
+                await self._client.async_disconnect()
         self._client = None
         self._clear_typed_subscriptions()
         if was_connected and not self._stopping and log_unavailable:
@@ -409,9 +410,8 @@ def _event_type(event: Any) -> str | None:
     return None
 
 
-async def _async_set_client_identity(
-    client: Elke27Client, client_identity: dict[str, str]
-) -> None:
+def _set_client_identity(client: Elke27Client, client_identity: dict[str, str]) -> None:
+    """Set the client identity used for future connects."""
     client.set_client_identity(client_identity)
 
 
