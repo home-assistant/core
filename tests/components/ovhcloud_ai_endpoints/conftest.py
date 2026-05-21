@@ -87,16 +87,10 @@ async def mock_openai_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
         for model in models:
             yield model
 
-    with (
-        patch(
-            "homeassistant.components.ovhcloud_ai_endpoints._create_client"
-        ) as mock_create_client,
-        patch(
-            "homeassistant.components.ovhcloud_ai_endpoints.config_flow._create_client",
-            new=mock_create_client,
-        ),
-    ):
-        client = mock_create_client.return_value
+    with patch(
+        "homeassistant.components.ovhcloud_ai_endpoints.AsyncOpenAI"
+    ) as mock_async_openai:
+        client = mock_async_openai.return_value
         client.with_options.return_value = client
         client.models.list = MagicMock(side_effect=_list_models)
         client.chat.completions.create = AsyncMock(
