@@ -1415,8 +1415,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
 /tests/components/pvoutput/ @frenck
-/homeassistant/components/pvpc_hourly_pricing/ @azogue
-/tests/components/pvpc_hourly_pricing/ @azogue
+/homeassistant/components/pvpc_hourly_pricing/ @azogue @chiro79
+/tests/components/pvpc_hourly_pricing/ @azogue @chiro79
 /homeassistant/components/pyload/ @tr4nt0r
 /tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
