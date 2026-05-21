@@ -222,8 +222,9 @@ class HTTPConfigStore:
 
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
+        await self.async_load()
         validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
-        await self.async_set_pending(validated_config)
+        self._pending = None if validated_config == self._stable else validated_config
         self._yaml_migration_done = True
         await self._async_persist()
 
@@ -267,13 +268,21 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
     yaml_conf: ConfData | None = config.get(DOMAIN)
     if store.yaml_migration_done:
         if yaml_conf is not None:
-            # todo create repair issue about YAML still being present after migration completed
-            # it will be ignored
-            pass
+            # YAML is still present after migration completed; surface a repair
+            # issue so the user knows their YAML is being ignored.
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "yaml_still_present_after_migration",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="yaml_still_present_after_migration",
+            )
         else:
             # Clear any leftover deprecation issues if YAML was removed after migration.
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml_import_error")
             ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
+            ir.async_delete_issue(hass, DOMAIN, "yaml_still_present_after_migration")
     else:
         # Migrate YAML to storage and use it directly for this start. The
         # migration function also marks the migration as done so future

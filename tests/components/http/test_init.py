@@ -956,6 +956,63 @@ async def test_yaml_migration_failure_creates_error_issue(
     assert issue_registry.async_get_issue("http", "deprecated_yaml") is None
 
 
+async def test_yaml_still_present_after_migration_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict,
+) -> None:
+    """When YAML lingers after migration, a repair issue is surfaced and YAML is ignored."""
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, yaml_migration_done=True
+    )
+
+    yaml_conf = {"server_port": 1234}
+    mock_server = Mock()
+    with patch(
+        "asyncio.BaseEventLoop.create_server", return_value=mock_server
+    ) as mock_create_server:
+        assert await async_setup_component(hass, "http", {"http": yaml_conf})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # YAML must be ignored once migration is done; stable wins.
+    args, _ = mock_create_server.call_args
+    assert args[2] == 9876
+
+    issue = issue_registry.async_get_issue("http", "yaml_still_present_after_migration")
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+
+
+async def test_yaml_still_present_issue_cleared_when_yaml_removed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict,
+) -> None:
+    """A previously created leftover-YAML issue is cleared once YAML is removed."""
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, yaml_migration_done=True
+    )
+    ir.async_create_issue(
+        hass,
+        "http",
+        "yaml_still_present_after_migration",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_still_present_after_migration",
+    )
+
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue("http", "yaml_still_present_after_migration")
+        is None
+    )
+
+
 async def test_setup_uses_stable_config_when_no_yaml(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
