@@ -8,6 +8,7 @@ from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_STATION, DOMAIN
 
@@ -61,6 +62,31 @@ class SwissHydrologicalDataConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        station_id: int = import_data[CONF_STATION]
+
+        await self.async_set_unique_id(str(station_id))
+        self._abort_if_unique_id_configured()
+
+        try:
+            data = await self.hass.async_add_executor_job(
+                self._fetch_station, station_id
+            )
+        except RequestException:
+            _LOGGER.exception(
+                "Cannot connect to Swiss Hydrological Data service during import"
+            )
+            return self.async_abort(reason="cannot_connect")
+
+        if data is None:
+            return self.async_abort(reason="invalid_station")
+
+        return self.async_create_entry(
+            title=f"{data['water-body-name']} {data['name']}",
+            data={CONF_STATION: station_id},
         )
 
     def _fetch_station(self, station_id: int) -> dict[str, Any] | None:

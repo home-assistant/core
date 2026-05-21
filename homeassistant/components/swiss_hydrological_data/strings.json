@@ -40,5 +40,11 @@
     "station_not_found": {
       "message": "Station {station} was not found."
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Configuring Swiss Hydrological Data using YAML is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the FOEN API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "Swiss Hydrological Data YAML configuration deprecated"
+    }
   }
 }

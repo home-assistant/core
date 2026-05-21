@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -38,7 +38,7 @@ async def test_entities_unavailable_on_update_failure(
     """Test entities become unavailable when data is None after update."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.aare_bern_temperature")
+    state = hass.states.get("sensor.aare_temperature")
     assert state is not None
     assert state.state == "5.2"
 
@@ -48,9 +48,9 @@ async def test_entities_unavailable_on_update_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.aare_bern_temperature")
+    state = hass.states.get("sensor.aare_temperature")
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_only_available_conditions_create_sensors(
@@ -69,6 +69,6 @@ async def test_only_available_conditions_create_sensors(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.aare_bern_temperature") is not None
-    assert hass.states.get("sensor.aare_bern_level") is not None
-    assert hass.states.get("sensor.aare_bern_discharge") is None
+    assert hass.states.get("sensor.aare_temperature") is not None
+    assert hass.states.get("sensor.aare_level") is not None
+    assert hass.states.get("sensor.aare_discharge") is None

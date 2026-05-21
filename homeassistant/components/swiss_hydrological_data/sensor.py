@@ -1,75 +1,110 @@
 """Support for hydrological data from the Fed. Office for the Environment."""
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from requests.exceptions import RequestException
 from swisshydrodata import SwissHydroData
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import (
-    CONF_STATION,
-    DOMAIN,
-    SENSOR_DISCHARGE,
-    SENSOR_LEVEL,
-    SENSOR_TEMPERATURE,
-)
+from .const import CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+ATTR_MAX_24H = "max-24h"
+ATTR_MEAN_24H = "mean-24h"
+ATTR_MIN_24H = "min-24h"
+ATTR_STATION = "station"
+ATTR_STATION_UPDATE = "station_update"
+ATTR_WATER_BODY = "water_body"
+ATTR_WATER_BODY_TYPE = "water_body_type"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
-ATTR_MAX_24H = "max_24h"
-ATTR_MEAN_24H = "mean_24h"
-ATTR_MIN_24H = "min_24h"
-ATTR_STATION_UPDATE = "station_update"
-ATTR_WATER_BODY_TYPE = "water_body_type"
+SENSOR_DISCHARGE = "discharge"
+SENSOR_LEVEL = "level"
+SENSOR_TEMPERATURE = "temperature"
 
+CONDITIONS = {
+    SENSOR_DISCHARGE: "mdi:waves",
+    SENSOR_LEVEL: "mdi:zodiac-aquarius",
+    SENSOR_TEMPERATURE: "mdi:oil-temperature",
+}
 
-@dataclass(frozen=True, kw_only=True)
-class SwissHydroSensorEntityDescription(SensorEntityDescription):
-    """Describes a Swiss Hydrological Data sensor entity."""
+CONDITION_DETAILS = [
+    ATTR_MAX_24H,
+    ATTR_MEAN_24H,
+    ATTR_MIN_24H,
+]
 
-    condition: str
-
-
-SENSORS: tuple[SwissHydroSensorEntityDescription, ...] = (
-    SwissHydroSensorEntityDescription(
-        key=SENSOR_DISCHARGE,
-        translation_key=SENSOR_DISCHARGE,
-        condition=SENSOR_DISCHARGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SwissHydroSensorEntityDescription(
-        key=SENSOR_LEVEL,
-        translation_key=SENSOR_LEVEL,
-        condition=SENSOR_LEVEL,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SwissHydroSensorEntityDescription(
-        key=SENSOR_TEMPERATURE,
-        translation_key=SENSOR_TEMPERATURE,
-        condition=SENSOR_TEMPERATURE,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATION): vol.Coerce(int),
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
+            cv.ensure_list, [vol.In(CONDITIONS)]
+        ),
+    }
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import Swiss Hydrological Data configuration from YAML."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Swiss Hydrological Data",
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Swiss Hydrological Data",
+        },
+    )
 
 
 async def async_setup_entry(
@@ -77,109 +112,90 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Swiss Hydrological Data sensors based on a config entry."""
-    station_id = entry.data[CONF_STATION]
-    hydro_data = HydrologicalData(station_id)
-    try:
-        await hass.async_add_executor_job(hydro_data.update)
-    except RequestException as err:
-        raise ConfigEntryNotReady(
-            "Cannot connect to the Swiss Hydrological Data service"
-        ) from err
+    """Set up Swiss Hydrological Data sensors from a config entry."""
+    hydro_data: HydrologicalData = entry.runtime_data
+    station_id: int = entry.data[CONF_STATION]
 
     if hydro_data.data is None:
         return
 
     async_add_entities(
-        SwissHydrologicalDataSensor(hydro_data, description, entry)
-        for description in SENSORS
-        if description.condition in hydro_data.data.get("parameters", {})
+        SwissHydrologicalDataSensor(hydro_data, station_id, condition)
+        for condition in CONDITIONS
+        if condition in hydro_data.data.get("parameters", {})
     )
 
 
 class HydrologicalData:
-    """Representation of the hydrological data."""
+    """The Class for handling the data retrieval."""
 
-    def __init__(self, station_id: int) -> None:
+    def __init__(self, station: int) -> None:
         """Initialize the data object."""
-        self._station_id = station_id
+        self.station = station
         self.data: dict[str, Any] | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Get the latest data from the Swiss Federal Office for the Environment."""
-        self.data = SwissHydroData().get_station(self._station_id)
+        """Get the latest data."""
+        self.data = SwissHydroData().get_station(self.station)
 
 
 class SwissHydrologicalDataSensor(SensorEntity):
-    """Representation of a Swiss Hydrological Data sensor."""
+    """Implementation of a Swiss hydrological sensor."""
 
-    entity_description: SwissHydroSensorEntityDescription
     _attr_attribution = (
         "Data provided by the Swiss Federal Office for the Environment FOEN"
     )
-    _attr_has_entity_name = True
 
     def __init__(
-        self,
-        hydro_data: HydrologicalData,
-        description: SwissHydroSensorEntityDescription,
-        entry: ConfigEntry,
+        self, hydro_data: HydrologicalData, station: int, condition: str
     ) -> None:
-        """Initialize the sensor."""
-        self.entity_description = description
-        self._hydro_data = hydro_data
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(entry.data[CONF_STATION]))},
-            manufacturer="Swiss Federal Office for the Environment FOEN",
-            name=entry.title,
+        """Initialize the Swiss hydrological sensor."""
+        self.hydro_data = hydro_data
+        data = hydro_data.data
+        if TYPE_CHECKING:
+            assert data is not None
+
+        self._condition = condition
+        self._data: dict[str, Any] | None = data
+        self._attr_icon = CONDITIONS[condition]
+        self._attr_name = f"{data['water-body-name']} {condition}"
+        self._attr_native_unit_of_measurement = data["parameters"][condition]["unit"]
+        self._attr_unique_id = f"{station}_{condition}"
+        self._station = station
+        value = data["parameters"][condition]["value"]
+        self._attr_native_value = (
+            round(value, 2) if isinstance(value, (int, float)) else None
         )
-
-    def _get_condition_data(self) -> dict[str, Any]:
-        """Return data for this sensor's condition."""
-        if self._hydro_data.data is None:
-            return {}
-        return self._hydro_data.data.get("parameters", {}).get(
-            self.entity_description.condition, {}
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._hydro_data.data is not None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self._get_condition_data().get("unit")
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current value."""
-        value = self._get_condition_data().get("value")
-        if isinstance(value, (int, float)):
-            return round(value, 2)
-        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return additional state attributes."""
-        condition_data = self._get_condition_data()
-        if not condition_data:
-            return {}
+        """Return the device state attributes."""
+        attrs: dict[str, Any] = {}
 
-        return {
-            ATTR_WATER_BODY_TYPE: self._hydro_data.data.get("water-body-type")
-            if self._hydro_data.data
-            else None,
-            ATTR_STATION_UPDATE: condition_data.get("datetime"),
-            ATTR_MAX_24H: condition_data.get("max-24h"),
-            ATTR_MEAN_24H: condition_data.get("mean-24h"),
-            ATTR_MIN_24H: condition_data.get("min-24h"),
-        }
+        if not self._data:
+            return attrs
 
-    async def async_update(self) -> None:
-        """Update sensor data."""
-        await self.hass.async_add_executor_job(self._hydro_data.update)
+        attrs[ATTR_WATER_BODY_TYPE] = self._data["water-body-type"]
+        attrs[ATTR_STATION] = self._data["name"]
+        attrs[ATTR_STATION_UPDATE] = self._data["parameters"][self._condition][
+            "datetime"
+        ]
+
+        for entry in CONDITION_DETAILS:
+            attrs[entry.replace("-", "_")] = self._data["parameters"][self._condition][
+                entry
+            ]
+
+        return attrs
+
+    def update(self) -> None:
+        """Get the latest data and update the state."""
+        self.hydro_data.update()
+        self._data = self.hydro_data.data
+
+        self._attr_native_value = None
+        if self._data is not None:
+            state = self._data["parameters"][self._condition]["value"]
+            if isinstance(state, (int, float)):
+                self._attr_native_value = round(state, 2)
