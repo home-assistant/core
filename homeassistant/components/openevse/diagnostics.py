@@ -1,5 +1,6 @@
 """Provide diagnostics for OpenEVSE."""
 
+import asyncio
 from datetime import date, datetime
 from enum import Enum
 from typing import Any
@@ -107,6 +108,8 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
             for k in sorted(val, key=str):
                 if isinstance(k, str):
                     key_str = k
+                elif isinstance(k, (int, float, bool)) or k is None:
+                    key_str = f"<{type(k).__name__}: {k}>"
                 elif isinstance(k, Enum):
                     key_str = f"{type(k).__name__}.{k.name}"
                 else:
@@ -134,6 +137,8 @@ async def async_get_config_entry_diagnostics(
             val = getattr(charger, prop)
         except AttributeError:
             continue
+        except asyncio.CancelledError:
+            raise
         except Exception as err:  # noqa: BLE001
             charger_data[prop] = f"Error: {type(err).__name__}"
             continue

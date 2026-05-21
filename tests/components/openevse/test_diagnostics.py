@@ -1,11 +1,17 @@
 """Test OpenEVSE diagnostics."""
 
+import asyncio
 from datetime import datetime
 from enum import Enum
 from typing import Any
 from unittest.mock import MagicMock
 
-from homeassistant.components.openevse.diagnostics import MAX_JSON_DEPTH
+import pytest
+
+from homeassistant.components.openevse.diagnostics import (
+    MAX_JSON_DEPTH,
+    async_get_config_entry_diagnostics,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -140,6 +146,13 @@ async def test_entry_diagnostics_exceptions(
             return CustomObj()
 
         @property
+        def custom_key_obj(self) -> object:
+            class CustomKeyObj:
+                pass
+
+            return CustomKeyObj()
+
+        @property
         def wifi_firmware(self) -> Any:
             return lambda: "callable_value"
 
@@ -165,6 +178,7 @@ async def test_entry_diagnostics_exceptions(
                 "simple": "val",
                 123: "int_key",
                 MockEnum.TEST: "enum_key",
+                self.custom_key_obj: "obj_key",
             }
 
     mock_config_entry.add_to_hass(hass)
@@ -221,8 +235,9 @@ async def test_entry_diagnostics_exceptions(
 
     # freeram key types and deterministic serialization
     assert diagnostics["charger"]["freeram"] == {
-        "<int>": "int_key",
+        "<int: 123>": "int_key",
         "MockEnum.TEST": "enum_key",
+        "<CustomKeyObj>": "obj_key",
         "simple": "val",
     }
 
@@ -230,3 +245,31 @@ async def test_entry_diagnostics_exceptions(
     assert diagnostics["charger"]["openevse_firmware"] == [
         "<Circular reference detected: list>"
     ]
+
+
+async def test_entry_diagnostics_cancelled_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test OpenEVSE diagnostics handles asyncio.CancelledError correctly."""
+
+    class CancelledFakeCharger:
+        @property
+        def status(self) -> str:
+            raise asyncio.CancelledError
+
+        @property
+        def websocket(self) -> Any:
+            return None
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    coordinator.charger = CancelledFakeCharger()
+
+    with pytest.raises(asyncio.CancelledError):
+        await async_get_config_entry_diagnostics(hass, mock_config_entry)
