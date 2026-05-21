@@ -38,7 +38,6 @@ from homeassistant.util.async_ import create_eager_task
 from . import discovery
 from .client import (
     MQTT,
-    MQTTAdapter,
     async_on_subscribe_done,
     async_publish,
     async_subscribe,
@@ -144,7 +143,6 @@ __all__ = [
     "DOMAIN",
     "ENTITY_PLATFORMS",
     "ENTRY_OPTION_FIELDS",
-    "MQTTAdapter",
     "MQTT_BASE_SCHEMA",
     "MQTT_CONNECTION_STATE",
     "MQTT_RO_SCHEMA",
@@ -430,7 +428,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
-        client = MQTTAdapter(hass, entry, conf)
+        client = MQTT(hass, entry, conf)
         if DATA_MQTT in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
     from aiolocknalert.client import Subscription
 
-    from .client import MQTTAdapter
+    from .client import MQTT
     from .discovery import MQTTDiscoveryPayload
 from .const import DOMAIN, TEMPLATE_ERRORS
 
@@ -356,7 +356,7 @@ class EntityTopicState:
 class MqttData:
     """Keep the MQTT entry data."""
 
-    client: MQTTAdapter
+    client: MQTT
     config: list[ConfigType]
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to

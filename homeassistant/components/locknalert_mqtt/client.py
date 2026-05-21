@@ -209,9 +209,31 @@ def subscribe(
 
 
 class MQTT(_LibMQTT):
-    """Library MQTT client extended with HA entity state write flushing."""
+    """HA-aware MQTT client backed by aiolocknalert."""
 
     _mqtt_data: MqttData
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, conf: dict
+    ) -> None:
+        """Initialize the MQTT client."""
+        super().__init__(conf)
+        self.hass = hass
+        self.config_entry = config_entry
+        self.on_connection_state_changed = (
+            lambda connected: async_dispatcher_send(hass, MQTT_CONNECTION_STATE, connected)
+        )
+        self.on_subscriptions_acknowledged = (
+            lambda subs: async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, subs)
+        )
+        self.on_reauth_required = lambda: config_entry.async_start_reauth(hass)
+        self._cleanup_on_unload: list[Callable[[], None]] = [
+            async_at_started(hass, lambda _: self.async_signal_ha_started()),
+            hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP,
+                lambda _event: hass.async_create_task(self.async_disconnect()),
+            ),
+        ]
 
     def _async_mqtt_on_message(
         self,
@@ -222,58 +244,19 @@ class MQTT(_LibMQTT):
         super()._async_mqtt_on_message(_mqttc, _userdata, msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
-
-class MQTTAdapter:
-    """Thin HA wrapper around aiolocknalert.client.MQTT."""
-
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, conf: dict
-    ) -> None:
-        """Initialize the MQTT adapter."""
-        self.hass = hass
-        self.config_entry = config_entry
-
-        self.client = MQTT(conf)
-
-        self.client.on_connection_state_changed = (
-            lambda connected: async_dispatcher_send(hass, MQTT_CONNECTION_STATE, connected)
-        )
-        self.client.on_subscriptions_acknowledged = (
-            lambda subs: async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, subs)
-        )
-        self.client.on_reauth_required = (
-            lambda: config_entry.async_start_reauth(hass)
-        )
-
-        self._cleanup_on_unload: list[Callable[[], None]] = [
-            async_at_started(hass, lambda _: self.client.async_signal_ha_started()),
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_STOP,
-                lambda _event: hass.async_create_task(self.client.async_disconnect()),
-            ),
-        ]
-
     async def async_start(self, mqtt_data: MqttData) -> None:
         """Start the MQTT client."""
-        self.client._mqtt_data = mqtt_data  # noqa: SLF001
+        self._mqtt_data = mqtt_data
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
             await async_import_module(self.hass, "aiolocknalert.async_client")
-        await self.client.async_start()
-
-    async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
-        """Connect to the broker."""
-        await self.client.async_connect(client_available)
-
-    async def async_disconnect(self, disconnect_paho_client: bool = False) -> None:
-        """Stop the MQTT client."""
-        await self.client.async_disconnect(disconnect_paho_client)
+        await super().async_start()
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
         """Publish an MQTT message."""
         try:
-            await self.client.async_publish(topic, payload, qos, retain)
+            await super().async_publish(topic, payload, qos, retain)
         except MQTTError as err:
             raise HomeAssistantError(
                 str(err),
@@ -297,27 +280,10 @@ class MQTTAdapter:
             msg_callback = catch_log_exception(
                 msg_callback, lambda: f"Exception handling msg on '{topic}'"
             )
-        return self.client.async_subscribe(topic, msg_callback, qos, encoding)
-
-    @callback
-    def async_restore_tracked_subscriptions(
-        self, subscriptions: set[Subscription]
-    ) -> None:
-        """Restore tracked subscriptions after reload."""
-        self.client.async_restore_tracked_subscriptions(subscriptions)
-
-    @property
-    def connected(self) -> bool:
-        """Return whether the client is connected."""
-        return self.client.connected
-
-    @property
-    def subscriptions(self) -> set[Subscription]:
-        """Return the tracked subscriptions."""
-        return self.client.subscriptions
+        return super().async_subscribe(topic, msg_callback, qos, encoding)
 
     def cleanup(self) -> None:
         """Clean up HA listeners."""
         while self._cleanup_on_unload:
             self._cleanup_on_unload.pop()()
-        self.client.cleanup()
+        super().cleanup()
