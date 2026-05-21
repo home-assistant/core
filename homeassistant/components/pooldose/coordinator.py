@@ -59,7 +59,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
                 f"Failed to connect to PoolDose device while fetching data: {err}"
             ) from err
 
-        if status != RequestStatus.SUCCESS:
+        if status is not RequestStatus.SUCCESS:
             # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"API returned status: {status}")
 

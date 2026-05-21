@@ -265,12 +265,12 @@ async def _client_listen(
     try:
         await mass.start_listening(init_ready)
     except MusicAssistantError as err:
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:  # pylint: disable=broad-except
         # We need to guard against unknown exceptions to not crash this task.
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.exception("Unexpected exception: %s", err)
 
