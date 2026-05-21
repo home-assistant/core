@@ -37,6 +37,7 @@ from homeassistant.util.async_ import create_eager_task
 # Loading the config flow file will register the flow
 from . import discovery
 from .client import (
+    MQTT,
     MQTTAdapter,
     async_on_subscribe_done,
     async_publish,
