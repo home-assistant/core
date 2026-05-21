@@ -166,11 +166,12 @@ class FreeboxRouter:
         # Drop devices the Freebox no longer reports (e.g. the user forgot
         # them in the LAN browser). The Freebox keeps offline devices in its
         # host list with active=False, so a disappearance is always intentional.
-        # Only prune when host reporting is supported and we got a non-trivial
-        # host list back — otherwise fbx_macs only contains the router itself
-        # and pruning would wipe every tracked device on a transient failure.
+        # Transient transport failures bubble up from get_hosts_list_if_supported
+        # as HttpRequestError and short-circuit this method before pruning, so
+        # reaching here with supports_hosts=True means the response is authoritative —
+        # including a legitimately empty fbx_devices when the user unpaired every host.
         fbx_macs = {fbx_device["l2ident"]["id"] for fbx_device in fbx_devices}
-        if self.supports_hosts and len(fbx_macs) > 1:
+        if self.supports_hosts:
             for stale_mac in set(self.devices) - fbx_macs:
                 del self.devices[stale_mac]
 

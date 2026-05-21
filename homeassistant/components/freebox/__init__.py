@@ -120,7 +120,7 @@ async def async_remove_config_entry_device(
     config_entry: FreeboxConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Remove a config entry from a device."""
+    """Return True if the device can be removed from this config entry."""
     router = config_entry.runtime_data
     router_mac = dr.format_mac(router.mac)
     # device_entry.connections values are auto-normalised by the device
