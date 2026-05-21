@@ -27,7 +27,11 @@ async def async_fetch_airtouch_data(host: str, port: int = DEFAULT_PORT) -> Airc
         return await AirTouchClient(host, port, logger=_LOGGER).fetch_aircon()
     except AirTouchError as err:
         _LOGGER.debug("AirTouch 3 communication with %s:%s failed: %s", host, port, err)
-        raise UpdateFailed(str(err)) from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 class Airtouch3DataUpdateCoordinator(DataUpdateCoordinator[Aircon]):

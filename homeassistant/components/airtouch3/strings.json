@@ -53,5 +53,10 @@
         "name": "Zone"
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error communicating with the AirTouch 3 controller: {error}"
+    }
   }
 }
