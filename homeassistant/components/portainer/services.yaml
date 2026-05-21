@@ -32,4 +32,4 @@ recreate_container:
     pull_image:
       required: false
       selector:
-        boolean: {}
+        boolean:
