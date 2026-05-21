@@ -54,7 +54,9 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
-        notification = Notification(message=message, title=title or ATTR_TITLE_DEFAULT)
+        notification = Notification(
+            message=message, title=ATTR_TITLE_DEFAULT if title is None else title
+        )
         try:
             await self.coordinator.websocket_client.send_notification(notification)
         except ConnectionClosedException as e:
