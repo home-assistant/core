@@ -63,6 +63,7 @@
       "battery_group_mode": {
         "name": "Battery group mode",
         "state": {
+          "predictive": "Smart charge mode",
           "standby": "Standby",
           "to_full": "Manual charge mode",
           "zero": "Zero mode",
