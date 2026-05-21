@@ -20,7 +20,7 @@ async def test_switch_unique_id(
     """Test a light unique id."""
     await async_setup_integration(hass, MockBridge)
 
-    switch_entity_id = "switch.basement_bathroom_exhaust_fan"
+    switch_entity_id = "switch.basement_bathroom_basement_bathroom_exhaust_fan"
 
     # Assert that Caseta switches will have the bridge serial hash
     # and the zone id as the uniqueID
@@ -33,7 +33,7 @@ async def test_smart_away_switch_setup(
     """Test smart away switch is created when bridge supports it."""
     await async_setup_integration(hass, MockBridge, smart_away_state="Disabled")
 
-    smart_away_entity_id = "switch.bridge_hallway_smart_away"
+    smart_away_entity_id = "switch.hallway_bridge_hallway_smart_away"
 
     # Verify entity is registered
     entity_entry = entity_registry.async_get(smart_away_entity_id)
@@ -69,7 +69,7 @@ async def test_smart_away_turn_on(hass: HomeAssistant) -> None:
 
     await async_setup_integration(hass, MockBridge, smart_away_state="Disabled")
 
-    smart_away_entity_id = "switch.bridge_hallway_smart_away"
+    smart_away_entity_id = "switch.hallway_bridge_hallway_smart_away"
 
     # Verify initial state is off
     state = hass.states.get(smart_away_entity_id)
@@ -93,7 +93,7 @@ async def test_smart_away_turn_off(hass: HomeAssistant) -> None:
 
     await async_setup_integration(hass, MockBridge, smart_away_state="Enabled")
 
-    smart_away_entity_id = "switch.bridge_hallway_smart_away"
+    smart_away_entity_id = "switch.hallway_bridge_hallway_smart_away"
 
     # Verify initial state is off
     state = hass.states.get(smart_away_entity_id)

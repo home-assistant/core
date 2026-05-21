@@ -215,12 +215,9 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    # Set up all platforms except notify
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Set up notify platform
+    # Set up legacy notify platform
     hass.async_create_task(
         discovery.async_load_platform(
             hass,

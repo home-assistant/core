@@ -20,6 +20,17 @@
     }
   },
   "entity": {
+    "button": {
+      "loudness": {
+        "name": "Loudness"
+      },
+      "source_direct": {
+        "name": "Source direct"
+      },
+      "speaker_ab": {
+        "name": "Speaker A/B"
+      }
+    },
     "media_player": {
       "receiver": {
         "state_attributes": {

@@ -13,7 +13,6 @@ ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
 ATTR_LQI = "lqi"
-ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NWK = "nwk"
@@ -63,6 +62,8 @@ DEFAULT_DATABASE_NAME = "zigbee.db"
 DEVICE_PAIRING_STATUS = "pairing_status"
 
 DOMAIN = "zha"
+
+LEGACY_ZEROCONF_PORT = 6638
 
 GROUP_ID = "group_id"
 
