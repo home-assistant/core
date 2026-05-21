@@ -26,12 +26,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_LOCKED, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DeconzConfigEntry
-from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
+from .const import ATTR_OFFSET, ATTR_VALVE
 from .entity import DeconzDevice
 from .hub import DeconzHub
 
