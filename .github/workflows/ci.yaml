@@ -400,6 +400,9 @@ jobs:
             libudev-dev
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
+      - name: Refresh dynamic linker cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: sudo ldconfig
       - name: Read uv version from requirements.txt
         if: steps.cache-venv.outputs.cache-hit != 'true'
         id: read-uv-version
@@ -480,6 +483,8 @@ jobs:
         with:
           packages: libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -842,6 +847,8 @@ jobs:
             libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -909,6 +916,8 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1053,6 +1062,8 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1211,6 +1222,8 @@ jobs:
         with:
           packages: postgresql-server-dev-14
           version: ${{ env.APT_CACHE_VERSION }}
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1381,6 +1394,8 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
+      - name: Refresh dynamic linker cache
+        run: sudo ldconfig
       - name: Check out code from GitHub
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
