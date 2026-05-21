@@ -53,7 +53,7 @@ class ProtectSwitchEntityDescription(
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
-    await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
+    await obj.set_video_mode_public(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
@@ -72,7 +72,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_led_status",
         ufp_value="led_settings.is_enabled",
-        ufp_set_method="set_status_light",
+        ufp_set_method="set_status_light_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -109,7 +109,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         translation_key="overlay_show_name",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_name_enabled",
-        ufp_set_method="set_osd_name",
+        ufp_set_method="set_osd_name_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -117,7 +117,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         translation_key="overlay_show_date",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_date_enabled",
-        ufp_set_method="set_osd_date",
+        ufp_set_method="set_osd_date_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -125,7 +125,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         translation_key="overlay_show_logo",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_logo_enabled",
-        ufp_set_method="set_osd_logo",
+        ufp_set_method="set_osd_logo_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
@@ -133,7 +133,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         translation_key="overlay_show_nerd_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_debug_enabled",
-        ufp_set_method="set_osd_bitrate",
+        ufp_set_method="set_osd_nerd_mode_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(

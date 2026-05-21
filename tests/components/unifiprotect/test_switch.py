@@ -363,7 +363,7 @@ async def test_switch_camera_highfps(
     )
 
     with patch_ufp_method(
-        doorbell, "set_video_mode", new_callable=AsyncMock
+        doorbell, "set_video_mode_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
