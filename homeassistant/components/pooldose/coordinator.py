@@ -65,7 +65,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
             raise UpdateFailed(
                 translation_domain=self.config_entry.domain,
                 translation_key="api_status_error",
-                translation_placeholders={"status": str(status)},
+                translation_placeholders={"status": status.value},
             )
 
         if not instant_values:
