@@ -269,7 +269,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
     "Humidifier": (TEMPERATURE_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
         BATTERY_DESCRIPTION,

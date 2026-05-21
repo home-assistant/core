@@ -109,7 +109,7 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Hub 3": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
-    "Climate Panel": SwitchbotCloudDeviceConfig(
+    "Home Climate Panel": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR)
     ),
     "WeatherStation": SwitchbotCloudDeviceConfig(

@@ -125,7 +125,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
     "Water Detector": (LEAK_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
