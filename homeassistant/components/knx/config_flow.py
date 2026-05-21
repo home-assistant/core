@@ -556,9 +556,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(
                 CONF_KNX_ROUTE_BACK, default=_route_back
             ): selector.BooleanSelector(),
+            vol.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
-        if self.show_advanced_options:
-            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
         if not self._found_tunnels and not errors.get("base"):
             errors["base"] = "no_tunnel_discovered"
@@ -890,10 +889,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             ): selector.BooleanSelector(),
             vol.Required(CONF_KNX_MCAST_GRP, default=_multicast_group): _IP_SELECTOR,
             vol.Required(CONF_KNX_MCAST_PORT, default=_multicast_port): _PORT_SELECTOR,
+            vol.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
         }
-        if self.show_advanced_options:
-            # Optional with default doesn't work properly in flow UI
-            fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
