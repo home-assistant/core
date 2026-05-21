@@ -13,9 +13,9 @@ import pytest
 from homeassistant.components.elke27.const import READY_TIMEOUT
 from homeassistant.components.elke27.hub import (
     Elke27Hub,
-    _async_set_client_identity,
     _connection_state,
     _event_type,
+    _set_client_identity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -632,11 +632,11 @@ def _async_disarm_area(calls: list[Any]) -> Any:
     return _method
 
 
-async def test_async_set_client_identity_sets_identity() -> None:
+def test_set_client_identity_sets_identity() -> None:
     """Verify client identity setter is called."""
     client = SimpleNamespace(set_client_identity=Mock(return_value=None))
 
-    await _async_set_client_identity(client, {"mn": "222", "sn": "112233445566"})
+    _set_client_identity(client, {"mn": "222", "sn": "112233445566"})
 
     client.set_client_identity.assert_called_once_with(
         {"mn": "222", "sn": "112233445566"}
@@ -691,6 +691,30 @@ async def test_disconnect_clears_typed_subscriptions(hass: HomeAssistant) -> Non
     hub._typed_callbacks = {lambda *_: None: unsubscribe}
     hub._client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
     await hub._async_disconnect()
+    unsubscribe.assert_called_once()
+
+
+async def test_disconnect_suppresses_client_disconnect_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Verify disconnect cleanup continues when the client raises."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    unsubscribe = Mock()
+    hub._typed_callbacks = {lambda *_: None: unsubscribe}
+    hub._client = SimpleNamespace(
+        async_disconnect=AsyncMock(side_effect=RuntimeError("boom"))
+    )
+
+    await hub._async_disconnect()
+
+    assert hub._client is None
     unsubscribe.assert_called_once()
 
 

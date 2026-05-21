@@ -92,12 +92,12 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
             self._set_snapshot(self._hub.get_snapshot())
             return
         if _is_event(event, DomainCsmChanged):
-            domain = event.domain
+            domain = event.csm_domain
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
         if _is_event(event, TableCsmChanged):
-            domain = event.domain
+            domain = event.csm_domain
             if domain:
                 self._queue_domain_refresh({str(domain)})
             return
@@ -131,7 +131,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
 
     def _set_snapshot(self, snapshot: PanelSnapshot | None) -> None:
         """Update coordinator data and track snapshot version."""
-        self.async_set_updated_data(snapshot)
+        self.async_set_updated_data(snapshot or PanelSnapshot.empty())
 
 
 def _is_event(event: Any, klass: type[Any]) -> bool:
