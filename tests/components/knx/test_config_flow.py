@@ -220,16 +220,13 @@ async def test_routing_setup(
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
 )
-async def test_routing_setup_advanced(
+async def test_routing_setup_with_local_ip(
     gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
-    """Test routing setup with advanced options."""
+    """Test routing setup where user specifies a local IP."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -728,10 +725,7 @@ async def test_tunneling_setup_for_local_ip(
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
