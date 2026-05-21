@@ -1,6 +1,6 @@
 """Constant values for pvpc_hourly_pricing."""
 
-from aiopvpc_ng.const import TARIFFS
+from esios_api.const import TARIFFS
 import voluptuous as vol
 
 DOMAIN = "pvpc_hourly_pricing"

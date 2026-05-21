@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from aiopvpc_ng import DEFAULT_POWER_KW, PVPCData
+from esios_api import DEFAULT_POWER_KW, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import (

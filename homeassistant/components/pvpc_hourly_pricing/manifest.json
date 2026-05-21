@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/pvpc_hourly_pricing",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aiopvpc-ng"],
-  "requirements": ["aiopvpc-ng==5.0.0"]
+  "loggers": ["esios_api"],
+  "requirements": ["esios_api==4.4.0"]
 }
