@@ -198,7 +198,7 @@ get_library:
           default: 0
           selector:
             number:
-              min: 1
+              min: 0
               max: 1000000
               step: 1
     order_by:
