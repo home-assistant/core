@@ -41,7 +41,7 @@ class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         emitter_entity_ids = async_get_emitters(self.hass)
         if not emitter_entity_ids:
-            return self.async_abort(reason="no_emitters")
+            return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
             entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
