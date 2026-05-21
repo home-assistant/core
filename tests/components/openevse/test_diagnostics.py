@@ -226,7 +226,7 @@ async def test_entry_diagnostics_exceptions(
     # wifi_signal has a deeply nested list exceeding the limit
     expected_wifi_signal: list[Any] = []
     curr = expected_wifi_signal
-    for _ in range(MAX_JSON_DEPTH):
+    for _ in range(MAX_JSON_DEPTH - 1):
         new_list = []
         curr.append(new_list)
         curr = new_list

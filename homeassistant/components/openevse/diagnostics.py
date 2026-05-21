@@ -75,7 +75,9 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
     if isinstance(val, (str, int, float, bool)) or val is None:
         return val
 
-    if depth > MAX_JSON_DEPTH:
+    # Limit the maximum allowed depth value (0-based) to MAX_JSON_DEPTH.
+    # At depth = MAX_JSON_DEPTH, we truncate and return a placeholder.
+    if depth >= MAX_JSON_DEPTH:
         return f"<Depth limit exceeded: {type(val).__name__}>"
 
     if seen is None:
@@ -92,7 +94,8 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
     if isinstance(val, (set, frozenset)):
         seen.add(val_id)
         try:
-            return [_to_json_safe(v, seen, depth + 1) for v in sorted(val, key=str)]
+            coerced_vals = [_to_json_safe(v, seen, depth + 1) for v in val]
+            return sorted(coerced_vals, key=str)
         finally:
             seen.remove(val_id)
     if isinstance(val, (list, tuple)):
@@ -104,8 +107,8 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
     if isinstance(val, dict):
         seen.add(val_id)
         try:
-            res = {}
-            for k in sorted(val, key=str):
+            key_mappings = []
+            for k in val:
                 if isinstance(k, str):
                     key_str = k
                 elif isinstance(k, (int, float, bool)) or k is None:
@@ -114,6 +117,13 @@ def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any
                     key_str = f"{type(k).__name__}.{k.name}"
                 else:
                     key_str = f"<{type(k).__name__}>"
+                key_mappings.append((key_str, k))
+
+            # Sort key_str pairs deterministically, avoiding comparisons on original objects/keys
+            key_mappings.sort(key=lambda item: item[0])
+
+            res = {}
+            for key_str, k in key_mappings:
                 res[key_str] = _to_json_safe(val[k], seen, depth + 1)
             return res
         finally:
