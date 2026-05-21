@@ -38,7 +38,7 @@
   },
   "exceptions": {
     "missing_device_info": {
-      "message": "Couldn't read device information. Check the network connection of the device"
+      "message": "Couldn't read device information. Check the network connection of the device."
     }
   }
 }
