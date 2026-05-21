@@ -6,7 +6,13 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import (
+    Device as WLEDDevice,
+    WLEDConnectionError,
+    WLEDEmptyResponseError,
+    WLEDError,
+    WLEDInvalidResponseError,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -285,6 +291,34 @@ async def test_single_segment_behavior(
     ("side_effect", "expected_state", "expected_translation_key"),
     [
         (WLEDError, STATE_ON, "invalid_response_wled_error"),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /json"
+            ),
+            STATE_ON,
+            "invalid_response_wled_error",
+        ),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /presets.json"
+            ),
+            STATE_ON,
+            "invalid_response_presets_wled_error",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on full update"
+            ),
+            STATE_ON,
+            "invalid_response_wled_error",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on presets update"
+            ),
+            STATE_ON,
+            "invalid_response_presets_wled_error",
+        ),
         (WLEDConnectionError, STATE_UNAVAILABLE, "connection_error"),
     ],
 )

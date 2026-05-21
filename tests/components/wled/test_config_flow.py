@@ -4,8 +4,13 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from wled import WLEDConnectionError, WLEDUnsupportedVersionError
+from wled import (
+    WLEDConnectionError,
+    WLEDEmptyResponseError,
+    WLEDUnsupportedVersionError,
+)
 
+from homeassistant.components.wled.config_flow import WLEDInvalidResponseError
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
@@ -219,6 +224,30 @@ async def test_zeroconf_during_onboarding(
     [
         (WLEDConnectionError, {"base": "cannot_connect"}),
         (WLEDUnsupportedVersionError, {"base": "unsupported_version"}),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /json"
+            ),
+            {"base": "invalid_response"},
+        ),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /presets.json"
+            ),
+            {"base": "invalid_response_presets"},
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on full update"
+            ),
+            {"base": "invalid_response"},
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on presets update"
+            ),
+            {"base": "invalid_response_presets"},
+        ),
     ],
 )
 async def test_form_submission_errors(
@@ -237,11 +266,45 @@ async def test_form_submission_errors(
     assert result.get("errors") == errors
 
 
-async def test_zeroconf_connection_error(
-    hass: HomeAssistant, mock_wled: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        (WLEDConnectionError, "cannot_connect"),
+        (WLEDUnsupportedVersionError, "unsupported_version"),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /json"
+            ),
+            "invalid_response",
+        ),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /presets.json"
+            ),
+            "invalid_response_presets",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on full update"
+            ),
+            "invalid_response",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on presets update"
+            ),
+            "invalid_response_presets",
+        ),
+    ],
+)
+async def test_zeroconf_errors(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    side_effect: Exception,
+    expected_reason: str,
 ) -> None:
-    """Test we abort zeroconf flow on WLED connection error."""
-    mock_wled.update.side_effect = WLEDConnectionError
+    """Test we abort zeroconf flow on WLED errors."""
+    mock_wled.update.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -258,31 +321,7 @@ async def test_zeroconf_connection_error(
     )
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
-
-
-async def test_zeroconf_unsupported_version_error(
-    hass: HomeAssistant, mock_wled: MagicMock
-) -> None:
-    """Test we abort zeroconf flow on WLED unsupported version error."""
-    mock_wled.update.side_effect = WLEDUnsupportedVersionError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.1.123"),
-            ip_addresses=[ip_address("192.168.1.123")],
-            hostname="example.local.",
-            name="mock_name",
-            port=None,
-            properties={CONF_MAC: "aabbccddeeff"},
-            type="mock_type",
-        ),
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "unsupported_version"
+    assert result.get("reason") == expected_reason
 
 
 @pytest.mark.usefixtures("mock_wled")

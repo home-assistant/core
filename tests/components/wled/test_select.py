@@ -14,6 +14,7 @@ from wled import (
     Preset as WLEDPreset,
     WLEDConnectionError,
     WLEDError,
+    WLEDInvalidResponseError,
 )
 
 from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
@@ -126,6 +127,27 @@ async def test_color_palette_state(
     assert method_mock.call_count == 2
     method_mock.assert_called_with(**called_with)
 
+    # Test invalid preset response, not becoming unavailable
+    method_mock.side_effect = (
+        WLEDInvalidResponseError(
+            "Received a non-UTF-8 response from request: GET /presets.json"
+        ),
+    )
+    with pytest.raises(
+        HomeAssistantError, match="Check preset configurations in WLED UI."
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            blocking=True,
+        )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
+    assert method_mock.call_count == 3
+    method_mock.assert_called_with(**called_with)
+
     # Test connection error, leading to becoming unavailable
     method_mock.side_effect = WLEDConnectionError
     with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
@@ -138,7 +160,7 @@ async def test_color_palette_state(
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
-    assert method_mock.call_count == 3
+    assert method_mock.call_count == 4
     method_mock.assert_called_with(**called_with)
 
 

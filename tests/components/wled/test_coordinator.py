@@ -11,7 +11,9 @@ from wled import (
     Device as WLEDDevice,
     WLEDConnectionClosedError,
     WLEDConnectionError,
+    WLEDEmptyResponseError,
     WLEDError,
+    WLEDInvalidResponseError,
     WLEDUnsupportedVersionError,
 )
 
@@ -258,16 +260,81 @@ async def test_fail_when_other_device(
     )
 
 
-async def test_fail_when_unsupported_version(
+@pytest.mark.parametrize(
+    (
+        "exception",
+        "expected_state",
+        "expected_error_reason_translation_key",
+        "expected_log_message",
+    ),
+    [
+        pytest.param(
+            WLEDUnsupportedVersionError(
+                "Unsupported firmware version 0.14.0-b1. Minimum required version is 0.14.0. "
+                "Please update your WLED device."
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            "unsupported_version",
+            "Unsupported firmware version 0.14.0-b1. Minimum required version is 0.14.0. Please update your WLED device.",
+            id="unsupported_version",
+        ),
+        pytest.param(
+            WLEDConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            "Error communicating with WLED API:",
+            id="connection_error",
+        ),
+        pytest.param(
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /json"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            "Invalid response from WLED API: ",
+            id="invalid_response",
+        ),
+        pytest.param(
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /presets.json"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            "Failed to download presets from device. Check preset configurations in WLED UI.",
+            id="invalid_response_presets",
+        ),
+        pytest.param(
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on full update"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            "Invalid response from WLED API: ",
+            id="empty_response_full_update",
+        ),
+        pytest.param(
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on presets update"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            "Failed to download presets from device. Check preset configurations in WLED UI.",
+            id="empty_response_presets_update",
+        ),
+    ],
+)
+async def test_errors_on_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
+    expected_error_reason_translation_key: str,
+    expected_log_message: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Ensure entry fails to setup when unsupported version."""
-    mock_wled.update.side_effect = WLEDUnsupportedVersionError(
-        "Unsupported firmware version 0.14.0-b1. Minimum required version is 0.14.0. "
-        "Please update your WLED device."
-    )
+    mock_wled.update.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
 
@@ -275,10 +342,10 @@ async def test_fail_when_unsupported_version(
 
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason
+    assert mock_config_entry.state is expected_state
+
     assert (
-        "The WLED device's firmware version is not supported:"
-        in mock_config_entry.reason
+        mock_config_entry.error_reason_translation_key
+        == expected_error_reason_translation_key
     )
-    assert "0.14.0-b1" in mock_config_entry.reason
+    assert expected_log_message in caplog.text

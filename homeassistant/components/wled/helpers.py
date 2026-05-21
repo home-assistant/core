@@ -3,7 +3,12 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from wled import WLEDConnectionError, WLEDError
+from wled import (
+    WLEDConnectionError,
+    WLEDEmptyResponseError,
+    WLEDError,
+    WLEDInvalidResponseError,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,6 +36,17 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+        except (WLEDInvalidResponseError, WLEDEmptyResponseError) as error:
+            translation_key = (
+                "invalid_response_presets_wled_error"
+                if "presets" in str(error)
+                else "invalid_response_wled_error"
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
                 translation_placeholders={"error": str(error)},
             ) from error
         except WLEDError as error:

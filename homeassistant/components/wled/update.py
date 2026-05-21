@@ -2,15 +2,19 @@
 
 from typing import Any, cast
 
+from wled import WLEDUpgradeError
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLED_KEY
+from .const import DOMAIN
 from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
@@ -110,5 +114,13 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         if version is None:
             # We cast here, as we know that the latest_version is a string.
             version = cast(str, self.latest_version)
-        await self.coordinator.wled.upgrade(version=version)
-        await self.coordinator.async_refresh()
+        try:
+            await self.coordinator.wled.upgrade(version=version)
+        except WLEDUpgradeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_update_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
+        finally:
+            await self.coordinator.async_refresh()

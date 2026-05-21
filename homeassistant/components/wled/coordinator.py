@@ -7,7 +7,9 @@ from wled import (
     Device as WLEDDevice,
     Releases,
     WLEDConnectionClosedError,
+    WLEDEmptyResponseError,
     WLEDError,
+    WLEDInvalidResponseError,
     WLEDReleases,
     WLEDUnsupportedVersionError,
 )
@@ -154,13 +156,23 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_key="unsupported_version",
                 translation_placeholders={"error": str(error)},
             ) from error
+        except (WLEDInvalidResponseError, WLEDEmptyResponseError) as error:
+            translation_key = (
+                "invalid_response_presets_wled_error"
+                if "presets" in str(error)
+                else "invalid_response_wled_error"
+            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_response_wled_error",
+                translation_key="connection_error",
                 translation_placeholders={"error": str(error)},
             ) from error
-
         device_mac_address = normalize_mac_address(device.info.mac_address)
         if device_mac_address != self.config_mac_address:
             raise ConfigEntryError(

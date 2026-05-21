@@ -5,9 +5,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import WLEDConnectionError, WLEDError
+from wled import WLEDConnectionError, WLEDError, WLEDInvalidResponseError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.wled.config_flow import WLEDEmptyResponseError
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -87,6 +88,34 @@ async def test_button_restart(
     ("side_effect", "expected_state", "expected_translation_key"),
     [
         (WLEDError, "2021-11-04T16:37:00+00:00", "invalid_response_wled_error"),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /json"
+            ),
+            "2021-11-04T16:37:00+00:00",
+            "invalid_response_wled_error",
+        ),
+        (
+            WLEDInvalidResponseError(
+                "Received a non-UTF-8 response from request: GET /presets.json"
+            ),
+            "2021-11-04T16:37:00+00:00",
+            "invalid_response_presets_wled_error",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on full update"
+            ),
+            "2021-11-04T16:37:00+00:00",
+            "invalid_response_wled_error",
+        ),
+        (
+            WLEDEmptyResponseError(
+                "WLED device at X returned an empty API response on presets update"
+            ),
+            "2021-11-04T16:37:00+00:00",
+            "invalid_response_presets_wled_error",
+        ),
         (WLEDConnectionError, STATE_UNAVAILABLE, "connection_error"),
     ],
 )
@@ -116,3 +145,5 @@ async def test_button_restart_errors(
     # Ensure this made the entity unavailable
     assert (state := hass.states.get("button.wled_rgb_light_restart"))
     assert state.state == expected_state
+
+    mock_wled.reset.assert_called_with()

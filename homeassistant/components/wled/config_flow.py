@@ -3,7 +3,14 @@
 from typing import Any
 
 import voluptuous as vol
-from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+from wled import (
+    WLED,
+    Device,
+    WLEDConnectionError,
+    WLEDEmptyResponseError,
+    WLEDInvalidResponseError,
+    WLEDUnsupportedVersionError,
+)
 import yarl
 
 from homeassistant.components import onboarding
@@ -62,6 +69,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
+            except (WLEDInvalidResponseError, WLEDEmptyResponseError) as er:
+                if "presets" in str(er):
+                    errors["base"] = "invalid_response_presets"
+                else:
+                    errors["base"] = "invalid_response"
             else:
                 mac_address = normalize_mac_address(device.info.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
@@ -119,6 +131,14 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             self.discovered_device = await self._async_get_device(discovery_info.host)
         except WLEDUnsupportedVersionError:
             return self.async_abort(reason="unsupported_version")
+        except (WLEDInvalidResponseError, WLEDEmptyResponseError) as ex:
+            return self.async_abort(
+                reason=(
+                    "invalid_response_presets"
+                    if "presets" in str(ex)
+                    else "invalid_response"
+                ),
+            )
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
