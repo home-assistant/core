@@ -53,7 +53,7 @@ def async_static_info_updated(
     platform: entity_platform.EntityPlatform,
     async_add_entities: AddEntitiesCallback,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: type[_EntityT] | Callable[[_InfoT], type[_EntityT]],
     state_type: type[_StateT],
     infos: list[EntityInfo],
 ) -> None:
@@ -67,6 +67,13 @@ def async_static_info_updated(
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
+
+    def _entity_class(info: EntityInfo) -> type[_EntityT]:
+        return (
+            entity_type
+            if isinstance(entity_type, type)
+            else entity_type(cast(_InfoT, info))
+        )
 
     # Track info by (info.device_id, info.key) to properly handle entities
     # moving between devices and support sub-devices with overlapping keys
@@ -88,7 +95,7 @@ def async_static_info_updated(
 
         # Create new entity if it doesn't exist
         if not old_info:
-            entity = entity_type(entry_data, info, state_type)
+            entity = _entity_class(info)(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -111,7 +118,7 @@ def async_static_info_updated(
                 old_info.device_id,
                 info.device_id,
             )
-            entity = entity_type(entry_data, info, state_type)
+            entity = _entity_class(info)(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -163,7 +170,7 @@ def async_static_info_updated(
         entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
 
         # Create new entity with the new device_id
-        add_entities.append(entity_type(entry_data, info, state_type))
+        add_entities.append(_entity_class(info)(entry_data, info, state_type))
 
     # Anything still in current_infos is now gone
     if current_infos:
@@ -188,7 +195,7 @@ async def platform_async_setup_entry(
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: type[_EntityT] | Callable[[_InfoT], type[_EntityT]],
     state_type: type[_StateT],
     info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
@@ -196,6 +203,10 @@ async def platform_async_setup_entry(
 
     This method is in charge of receiving, distributing and storing
     info and state updates.
+
+    `entity_type` may be either an entity class or a callable that picks the
+    entity class per static info, allowing a single platform to instantiate
+    different entity classes based on the info's contents.
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}

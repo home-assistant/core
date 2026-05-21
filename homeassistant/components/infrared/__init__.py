@@ -1,7 +1,6 @@
 """Provides functionality to interact with infrared devices."""
 
 from datetime import timedelta
-from enum import StrEnum
 import logging
 
 from homeassistant.config_entries import ConfigEntry
