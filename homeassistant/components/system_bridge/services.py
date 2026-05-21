@@ -19,7 +19,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -192,7 +192,7 @@ async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse
             )
         )
     except StopIteration as e:
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="process_not_found",
             translation_placeholders={"id": service_call.data[CONF_ID]},
