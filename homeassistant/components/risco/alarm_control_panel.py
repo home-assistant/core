@@ -16,8 +16,10 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import cloud_update_signal
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -216,8 +218,7 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._cloud_data.alarm = alarm
-        self._partition = alarm.partitions[self._partition_id]
-        self.async_write_ha_state()
+        async_dispatcher_send(self.hass, cloud_update_signal(self._entry_id))
 
 
 class RiscoLocalAlarm(RiscoAlarm):

@@ -191,14 +191,17 @@ async def _async_setup_cloud_entry(
             _LOGGER.debug("SSE error from Risco cloud. Reloading integration")
             hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-    entry.async_on_unload(risco.close)
-    entry.async_on_unload(risco.add_state_handler(_state))
-    entry.async_on_unload(risco.add_error_handler(_error))
+    remove_state_handler = risco.add_state_handler(_state)
+    remove_error_handler = risco.add_error_handler(_error)
     try:
         await risco.subscribe_states()
     except (CannotConnectError, UnauthorizedError, OperationError) as error:
         await risco.close()
         raise ConfigEntryNotReady from error
+
+    entry.async_on_unload(risco.close)
+    entry.async_on_unload(remove_state_handler)
+    entry.async_on_unload(remove_error_handler)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 

@@ -154,8 +154,8 @@ async def test_cloud_sse_error_triggers_reload(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that an SSE error from the cloud triggers an integration reload."""
+    assert mock_cloud_error_handler.called
     callback = mock_cloud_error_handler.call_args.args[0]
-    assert callback is not None
 
     cloud_data = setup_risco_cloud.runtime_data.cloud_data
     login_mock = cast(AsyncMock, cloud_data.system.login)

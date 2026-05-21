@@ -7,8 +7,10 @@ from pyrisco.common import Zone
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import cloud_update_signal
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 from .models import CloudData, RiscoConfigEntry
 
@@ -69,8 +71,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     async def _bypass(self, bypass: bool) -> None:
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)
         self._cloud_data.alarm = alarm
-        self._zone = alarm.zones[self._zone_id]
-        self.async_write_ha_state()
+        async_dispatcher_send(self.hass, cloud_update_signal(self._entry_id))
 
 
 class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
