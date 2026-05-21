@@ -143,10 +143,11 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    router_mac = dr.format_mac(DATA_SYSTEM_GET_CONFIG["mac"])
-
-    # The Freebox router itself cannot be removed.
-    router_device = device_registry.async_get_device(identifiers={(DOMAIN, router_mac)})
+    # The Freebox router itself cannot be removed. Identifiers are stored
+    # verbatim (no auto-normalisation), so look up with the raw API casing.
+    router_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, DATA_SYSTEM_GET_CONFIG["mac"])}
+    )
     assert router_device is not None
     assert await async_remove_config_entry_device(hass, entry, router_device) is False
 
@@ -155,7 +156,7 @@ async def test_remove_config_entry_device(
         connections={
             (
                 dr.CONNECTION_NETWORK_MAC,
-                dr.format_mac(DATA_LAN_GET_HOSTS_LIST[0]["l2ident"]["id"]),
+                DATA_LAN_GET_HOSTS_LIST[0]["l2ident"]["id"],
             )
         }
     )
@@ -165,7 +166,7 @@ async def test_remove_config_entry_device(
     # A LAN device whose MAC is gone from the Freebox can be removed.
     stale_tracked_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac("AA:BB:CC:DD:EE:FF"))},
+        connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
     )
     assert (
         await async_remove_config_entry_device(hass, entry, stale_tracked_device)

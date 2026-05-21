@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 from .const import (
@@ -66,7 +66,7 @@ async def test_remove_stale_tracker_entities(
     """Stale tracker entities are pruned when the Freebox forgets a MAC."""
     await setup_platform(hass, DEVICE_TRACKER_DOMAIN)
 
-    stale_unique_id = dr.format_mac(DATA_LAN_GET_HOSTS_LIST[1]["l2ident"]["id"])
+    stale_unique_id = DATA_LAN_GET_HOSTS_LIST[1]["l2ident"]["id"]
     assert (
         entity_registry.async_get_entity_id(
             DEVICE_TRACKER_DOMAIN, DOMAIN, stale_unique_id
@@ -78,7 +78,7 @@ async def test_remove_stale_tracker_entities(
     remaining_hosts = [
         host
         for host in DATA_LAN_GET_HOSTS_LIST
-        if dr.format_mac(host["l2ident"]["id"]) != stale_unique_id
+        if host["l2ident"]["id"] != stale_unique_id
     ]
     router().lan.get_hosts_list = AsyncMock(
         side_effect=lambda interface: (
@@ -102,13 +102,13 @@ async def test_remove_stale_tracker_entities(
         entity_registry.async_get_entity_id(
             DEVICE_TRACKER_DOMAIN,
             DOMAIN,
-            dr.format_mac(DATA_LAN_GET_HOSTS_LIST[0]["l2ident"]["id"]),
+            DATA_LAN_GET_HOSTS_LIST[0]["l2ident"]["id"],
         )
         is not None
     )
     assert (
         entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, dr.format_mac(DATA_SYSTEM_GET_CONFIG["mac"])
+            DEVICE_TRACKER_DOMAIN, DOMAIN, DATA_SYSTEM_GET_CONFIG["mac"]
         )
         is not None
     )

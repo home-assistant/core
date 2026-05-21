@@ -123,20 +123,23 @@ async def async_remove_config_entry_device(
     """Remove a config entry from a device."""
     router = config_entry.runtime_data
     router_mac = dr.format_mac(router.mac)
+    # device_entry.connections values are auto-normalised by the device
+    # registry; normalise router.devices keys (raw API casing) here so the
+    # comparison happens on a level playing field.
+    active_macs = {dr.format_mac(mac) for mac in router.devices}
 
-    # Persisted identifiers and connections may pre-date MAC normalisation, so
-    # always compare the format_mac()-normalised value rather than the raw one.
+    # Never allow removal of the Freebox router itself. Identifiers are not
+    # auto-normalised, so compare the format_mac()-normalised value to cover
+    # registries that may have stored the MAC in any casing.
     for domain, identifier in device_entry.identifiers:
         if domain == DOMAIN and dr.format_mac(identifier) == router_mac:
             return False
 
+    # Block removal of a LAN device whose MAC is still reported by the Freebox.
     for connection_type, connection_value in device_entry.connections:
-        if connection_type != dr.CONNECTION_NETWORK_MAC:
-            continue
-        connection_mac = dr.format_mac(connection_value)
-        # Never allow removal of the Freebox router itself, nor of a tracked
-        # LAN device whose MAC is still reported by the Freebox.
-        if connection_mac == router_mac or connection_mac in router.devices:
+        if connection_type == dr.CONNECTION_NETWORK_MAC and (
+            connection_value == router_mac or connection_value in active_macs
+        ):
             return False
 
     return True
