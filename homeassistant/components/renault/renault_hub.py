@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
@@ -16,6 +17,8 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_MODEL_ID,
     ATTR_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -29,6 +32,7 @@ from time import time
 
 from .const import (
     CONF_KAMEREON_ACCOUNT_ID,
+    CONF_LOGIN_TOKEN,
     COOLING_UPDATES_SECONDS,
     MAX_CALLS_PER_HOURS,
 )
@@ -68,6 +72,11 @@ class RenaultHub:
 
         self._got_throttled_at_time: float | None = None
 
+    @property
+    def login_token(self) -> str | None:
+        """Return the Gigya login token obtained from a successful login."""
+        return self._client.session.login_token
+
     def set_throttled(self) -> None:
         """We got throttled, we need to adjust the rate limit."""
         if self._got_throttled_at_time is None:
@@ -96,6 +105,14 @@ class RenaultHub:
 
     async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
+        # Reuse the stored login token, or fall back to a password login.
+        if login_token := config_entry.data.get(CONF_LOGIN_TOKEN):
+            self._client.session.set_login_token(login_token)
+        elif not await self.attempt_login(
+            config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+        ):
+            raise NotAuthenticatedException
+
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
 
         self._account = await self._client.get_api_account(account_id)
