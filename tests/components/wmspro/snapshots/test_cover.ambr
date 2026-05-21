@@ -41,7 +41,7 @@
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.markise',
+    'entity_id': 'cover.terrasse_markise',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

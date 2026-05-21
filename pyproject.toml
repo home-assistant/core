@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==4.0.3",
+  "aiodns==4.0.4",
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
@@ -78,9 +78,9 @@ dependencies = [
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
-  "yarl==1.23.0",
+  "yarl==1.24.2",
   "webrtc-models==0.3.0",
-  "zeroconf==0.148.0",
+  "zeroconf==0.149.7",
 ]
 
 [project.urls]
