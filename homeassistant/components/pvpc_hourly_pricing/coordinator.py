@@ -56,8 +56,16 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
+        requested_at = dt_util.utcnow()
         try:
-            api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+            api_data = await self.api.async_update_all(self.data, requested_at)
+        except KeyError as err:
+            missing_key = err.args[0] if err.args else None
+            if missing_key in (requested_at.year, str(requested_at.year)):
+                raise UpdateFailed(
+                    f"PVPC data is not available for requested year {requested_at.year}"
+                ) from err
+            raise
         except BadApiTokenAuthError as exc:
             raise ConfigEntryAuthFailed from exc
         if (
