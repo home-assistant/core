@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_dynamic_new_devices[light.mock_classicledcontrol_e_channel_1-entry]
+# name: test_dynamic_new_devices[light.mock_aquarium_mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_dynamic_new_devices[light.mock_classicledcontrol_e_channel_1-state]
+# name: test_dynamic_new_devices[light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 99,
@@ -59,14 +59,14 @@
       'supported_features': <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig0][light.mock_classicledcontrol_e_channel_0-entry]
+# name: test_setup_classic_led_ctrl[tankconfig0][light.mock_aquarium_mock_classicledcontrol_e_channel_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_0',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -110,7 +110,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig0][light.mock_classicledcontrol_e_channel_0-state]
+# name: test_setup_classic_led_ctrl[tankconfig0][light.mock_aquarium_mock_classicledcontrol_e_channel_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 26,
@@ -126,14 +126,14 @@
       'supported_features': <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_0',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig1][light.mock_classicledcontrol_e_channel_1-entry]
+# name: test_setup_classic_led_ctrl[tankconfig1][light.mock_aquarium_mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -154,7 +154,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -177,7 +177,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig1][light.mock_classicledcontrol_e_channel_1-state]
+# name: test_setup_classic_led_ctrl[tankconfig1][light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 99,
@@ -193,14 +193,14 @@
       'supported_features': <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_0-entry]
+# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -221,7 +221,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_0',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -244,7 +244,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_0-state]
+# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 26,
@@ -260,14 +260,14 @@
       'supported_features': <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_0',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_1-entry]
+# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -288,7 +288,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -311,7 +311,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_1-state]
+# name: test_setup_classic_led_ctrl[tankconfig2][light.mock_aquarium_mock_classicledcontrol_e_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 99,
@@ -327,7 +327,7 @@
       'supported_features': <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.mock_classicledcontrol_e_channel_1',
+    'entity_id': 'light.mock_aquarium_mock_classicledcontrol_e_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

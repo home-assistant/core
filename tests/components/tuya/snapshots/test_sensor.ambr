@@ -702,7 +702,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzccur_current',
+    'unique_id': 'tuya.ycttanlnpa0aivbfzccur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -760,7 +760,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzccur_power',
+    'unique_id': 'tuya.ycttanlnpa0aivbfzccur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -821,7 +821,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzcadd_ele',
+    'unique_id': 'tuya.ycttanlnpa0aivbfzcadd_ele',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -882,7 +882,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.ZDldMHS0tjmQgGxEzccur_voltage',
+    'unique_id': 'tuya.ycttanlnpa0aivbfzccur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -11374,8 +11374,11 @@
     'name': None,
     'object_id_base': 'Coil temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Coil temperature',
     'platform': 'tuya',
@@ -11384,15 +11387,16 @@
     'supported_features': 0,
     'translation_key': 'coil_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_coiler',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_coil_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Coil temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_coil_temperature',
@@ -11482,8 +11486,11 @@
     'name': None,
     'object_id_base': 'Flow temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Flow temperature',
     'platform': 'tuya',
@@ -11492,15 +11499,16 @@
     'supported_features': 0,
     'translation_key': 'flow_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_effluent',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_flow_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Flow temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_flow_temperature',
@@ -11536,8 +11544,11 @@
     'name': None,
     'object_id_base': 'Heat exchanger temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Heat exchanger temperature',
     'platform': 'tuya',
@@ -11546,15 +11557,16 @@
     'supported_features': 0,
     'translation_key': 'heat_exchanger_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_venting',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_heat_exchanger_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Heat exchanger temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_heat_exchanger_temperature',
@@ -11590,8 +11602,11 @@
     'name': None,
     'object_id_base': 'Outside temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
     'platform': 'tuya',
@@ -11600,15 +11615,16 @@
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_around',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_outside_temperature',
@@ -11644,8 +11660,11 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -11654,15 +11673,16 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_current',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.inverter_pool_heat_pump_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Inverter Pool Heat Pump Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_pool_heat_pump_temperature',
@@ -13805,8 +13825,11 @@
     'name': None,
     'object_id_base': 'Coil temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Coil temperature',
     'platform': 'tuya',
@@ -13815,15 +13838,16 @@
     'supported_features': 0,
     'translation_key': 'coil_temperature',
     'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_coiler',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.madimack_elite_v3_pool_heat_pump_coil_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Madimack Elite V3 Pool Heat Pump Coil temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madimack_elite_v3_pool_heat_pump_coil_temperature',
@@ -13913,8 +13937,11 @@
     'name': None,
     'object_id_base': 'Flow temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Flow temperature',
     'platform': 'tuya',
@@ -13923,15 +13950,16 @@
     'supported_features': 0,
     'translation_key': 'flow_temperature',
     'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_effluent',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.madimack_elite_v3_pool_heat_pump_flow_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Madimack Elite V3 Pool Heat Pump Flow temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madimack_elite_v3_pool_heat_pump_flow_temperature',
@@ -13967,8 +13995,11 @@
     'name': None,
     'object_id_base': 'Heat exchanger temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Heat exchanger temperature',
     'platform': 'tuya',
@@ -13977,15 +14008,16 @@
     'supported_features': 0,
     'translation_key': 'heat_exchanger_temperature',
     'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_venting',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.madimack_elite_v3_pool_heat_pump_heat_exchanger_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Madimack Elite V3 Pool Heat Pump Heat exchanger temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madimack_elite_v3_pool_heat_pump_heat_exchanger_temperature',
@@ -14021,8 +14053,11 @@
     'name': None,
     'object_id_base': 'Outside temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outside temperature',
     'platform': 'tuya',
@@ -14031,15 +14066,16 @@
     'supported_features': 0,
     'translation_key': 'outside_temperature',
     'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_around',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.madimack_elite_v3_pool_heat_pump_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Madimack Elite V3 Pool Heat Pump Outside temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madimack_elite_v3_pool_heat_pump_outside_temperature',
@@ -14075,8 +14111,11 @@
     'name': None,
     'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'tuya',
@@ -14085,15 +14124,16 @@
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_current',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.madimack_elite_v3_pool_heat_pump_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
       'friendly_name': 'Madimack Elite V3 Pool Heat Pump Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.madimack_elite_v3_pool_heat_pump_temperature',
@@ -22140,7 +22180,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.ifiw20mpsqldphase_aelectriccurrent',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_aelectriccurrent',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -22201,7 +22241,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.ifiw20mpsqldphase_apower',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_apower',
     'unit_of_measurement': 'kW',
   })
 # ---
@@ -22259,7 +22299,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.ifiw20mpsqldphase_avoltage',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_avoltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -22320,7 +22360,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_current',
-    'unique_id': 'tuya.ifiw20mpsqldphase_belectriccurrent',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_belectriccurrent',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -22381,7 +22421,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_power',
-    'unique_id': 'tuya.ifiw20mpsqldphase_bpower',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_bpower',
     'unit_of_measurement': 'kW',
   })
 # ---
@@ -22439,7 +22479,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
-    'unique_id': 'tuya.ifiw20mpsqldphase_bvoltage',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_bvoltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -22500,7 +22540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_current',
-    'unique_id': 'tuya.ifiw20mpsqldphase_celectriccurrent',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_celectriccurrent',
     'unit_of_measurement': 'A',
   })
 # ---
@@ -22561,7 +22601,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_power',
-    'unique_id': 'tuya.ifiw20mpsqldphase_cpower',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_cpower',
     'unit_of_measurement': 'kW',
   })
 # ---
@@ -22619,7 +22659,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
-    'unique_id': 'tuya.ifiw20mpsqldphase_cvoltage',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldphase_cvoltage',
     'unit_of_measurement': 'V',
   })
 # ---
@@ -22677,7 +22717,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy',
-    'unique_id': 'tuya.ifiw20mpsqldtotal_forward_energy',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldtotal_forward_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -22735,7 +22775,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_production',
-    'unique_id': 'tuya.ifiw20mpsqldcur_neutral',
+    'unique_id': 'tuya.ouabwhlarnczogyfqldcur_neutral',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
