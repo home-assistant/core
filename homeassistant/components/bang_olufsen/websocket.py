@@ -1,11 +1,10 @@
 """Update coordinator and WebSocket listener(s) for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
 from mozart_api.models import (
+    BatteryState,
     BeoRemoteButton,
     ButtonEvent,
     ListeningModeProps,
@@ -60,6 +59,7 @@ class BeoWebsocket(BeoBase):
         self._client.get_active_listening_mode_notifications(
             self.on_active_listening_mode
         )
+        self._client.get_battery_notifications(self.on_battery_notification)
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
@@ -115,6 +115,14 @@ class BeoWebsocket(BeoBase):
             notification,
         )
 
+    def on_battery_notification(self, notification: BatteryState) -> None:
+        """Send battery dispatch."""
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BATTERY}",
+            notification,
+        )
+
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
         if TYPE_CHECKING:
@@ -144,7 +152,8 @@ class BeoWebsocket(BeoBase):
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
-        # Try to match the notification type with available WebsocketNotification members
+        # Try to match the notification type with available
+        # WebsocketNotification members
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
         if notification_type in (
@@ -167,8 +176,10 @@ class BeoWebsocket(BeoBase):
                 f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
             )
 
-        # This notification is triggered by a remote pairing, unpairing and connecting to a device
-        # So the current remote devices have to be compared to available remotes to determine action
+        # This notification is triggered by a remote pairing,
+        # unpairing and connecting to a device.
+        # So the current remote devices have to be compared
+        # to available remotes to determine action
         elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
             device_registry = dr.async_get(self.hass)
             # Get remote devices connected to the device from Home Assistant
@@ -189,7 +200,9 @@ class BeoWebsocket(BeoBase):
             # Check if number of remote devices correspond to number of paired remotes
             if len(remote_serial_numbers) != len(device_serial_numbers):
                 _LOGGER.info(
-                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device and entities",
+                    "A Beoremote One has been paired or unpaired"
+                    " to %s. Reloading config entry to add"
+                    " device and entities",
                     self.entry.title,
                 )
                 self.hass.config_entries.async_schedule_reload(self.entry.entry_id)

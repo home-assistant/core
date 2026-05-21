@@ -21,12 +21,13 @@ from homeassistant.util import dt as dt_util, slugify
 from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
     UNIT_MAP,
 )
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, constraint_fetcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ BSH_PROGRAM_SENSORS = (
             "CookProcessor",
             "Dishwasher",
             "Dryer",
+            "Microwave",
             "Hood",
             "Oven",
             "Washer",
@@ -115,7 +117,6 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_counter",
     ),
     HomeConnectSensorEntityDescription(
@@ -199,7 +200,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="program_aborted",
-        appliance_types=("Dishwasher", "CleaningRobot", "CookProcessor"),
+        appliance_types=("Dishwasher", "Microwave", "CleaningRobot", "CookProcessor"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_PROGRAM_FINISHED,
@@ -212,6 +213,7 @@ EVENT_SENSORS = (
             "Dishwasher",
             "Washer",
             "Dryer",
+            "Microwave",
             "WasherDryer",
             "CleaningRobot",
             "CookProcessor",
@@ -509,26 +511,26 @@ EVENT_SENSORS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         *[
-            HomeConnectEventSensor(entry.runtime_data, appliance, description)
+            HomeConnectEventSensor(appliance_coordinator, description)
             for description in EVENT_SENSORS
             if description.appliance_types
-            and appliance.info.type in description.appliance_types
+            and appliance_coordinator.data.info.type in description.appliance_types
         ],
         *[
-            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+            HomeConnectProgramSensor(appliance_coordinator, desc)
             for desc in BSH_PROGRAM_SENSORS
-            if desc.appliance_types and appliance.info.type in desc.appliance_types
+            if desc.appliance_types
+            and appliance_coordinator.data.info.type in desc.appliance_types
         ],
         *[
-            HomeConnectSensor(entry.runtime_data, appliance, description)
+            HomeConnectSensor(appliance_coordinator, description)
             for description in SENSORS
-            if description.key in appliance.status
+            if description.key in appliance_coordinator.data.status
         ],
     ]
 
@@ -540,6 +542,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -597,9 +600,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
-    """Sensor class for Home Connect sensors that reports information related to the running program."""
-
-    program_running: bool = False
+    """Sensor class for Home Connect running program information."""
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
@@ -607,41 +608,39 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self._handle_operation_state_event,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
+                EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
             )
         )
 
     @callback
     def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
-            BSH_OPERATION_STATE_RUN,
-            BSH_OPERATION_STATE_PAUSE,
-            BSH_OPERATION_STATE_FINISHED,
-        ]
         if not self.program_running:
             # reset the value when the program is not running, paused or finished
             self._attr_native_value = None
         self.async_write_ha_state()
 
     @property
-    def available(self) -> bool:
-        """Return true if the sensor is available."""
-        # These sensors are only available if the program is running, paused or finished.
-        # Otherwise, some sensors report erroneous values.
-        return super().available and self.program_running
-
-    def update_native_value(self) -> None:
-        """Update the program sensor's status."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
+    def program_running(self) -> bool:
+        """Return whether a program is running, paused or finished."""
+        status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        return status is not None and status.value in [
+            BSH_OPERATION_STATE_DELAYED_START,
             BSH_OPERATION_STATE_RUN,
             BSH_OPERATION_STATE_PAUSE,
             BSH_OPERATION_STATE_FINISHED,
         ]
+
+    @property
+    def available(self) -> bool:
+        """Return true if the sensor is available."""
+        # These sensors are only available if the program is
+        # running, paused or finished. Otherwise, some sensors
+        # report erroneous values.
+        return super().available and self.program_running
+
+    def update_native_value(self) -> None:
+        """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)

@@ -126,8 +126,6 @@ async def test_switch_services(
 
 async def test_switch_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -155,14 +153,10 @@ async def test_switch_streaming(
     # Reload the entry
     await reload_platform(hass, entry, [Platform.SWITCH])
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "switch.test_sentry_mode",
-        "switch.test_auto_seat_climate_left",
-        "switch.test_auto_seat_climate_right",
-        "switch.test_auto_steering_wheel_heater",
-        "switch.test_defrost",
-        "switch.test_charge",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=entity_id)
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("switch.test_sentry_mode").state == STATE_ON
+    assert hass.states.get("switch.test_auto_seat_climate_left").state == STATE_ON
+    assert hass.states.get("switch.test_auto_seat_climate_right").state == STATE_OFF
+    assert hass.states.get("switch.test_auto_steering_wheel_heater").state == STATE_ON
+    assert hass.states.get("switch.test_defrost").state == STATE_OFF
+    assert hass.states.get("switch.test_charge").state == STATE_ON

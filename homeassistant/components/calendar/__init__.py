@@ -1,7 +1,5 @@
 """Support for Calendar event device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
@@ -15,8 +13,12 @@ from aiohttp import web
 from dateutil.rrule import rrulestr
 import voluptuous as vol
 
+from homeassistant.auth.models import User
+from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.components import frontend, http, websocket_api
+from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.websocket_api import (
+    ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ActiveConnection,
@@ -31,8 +33,9 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
@@ -76,6 +79,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
+EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
@@ -146,7 +150,8 @@ def _has_min_duration(
             duration = end - start
             if duration < min_duration:
                 raise vol.Invalid(
-                    f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                    "Expected minimum event duration"
+                    f" of {min_duration} ({start}, {end})"
                 )
         return obj
 
@@ -320,6 +325,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
     websocket_api.async_register_command(hass, handle_calendar_event_update)
+    websocket_api.async_register_command(hass, handle_calendar_event_subscribe)
 
     component.async_register_entity_service(
         CREATE_EVENT_SERVICE,
@@ -506,6 +512,8 @@ def is_offset_reached(
 class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes calendar entities."""
 
+    initial_color: str | None = None
+
 
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
@@ -515,6 +523,41 @@ class CalendarEntity(Entity):
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
+    _event_listeners: (
+        list[
+            tuple[
+                datetime.datetime,
+                datetime.datetime,
+                Callable[[list[JsonValueType] | None], None],
+            ]
+        ]
+        | None
+    ) = None
+    _event_listener_debouncer: Debouncer[None] | None = None
+
+    _attr_initial_color: str | None
+
+    @property
+    def initial_color(self) -> str | None:
+        """Return the initial color for the calendar entity."""
+        if hasattr(self, "_attr_initial_color"):
+            return self._attr_initial_color
+        if hasattr(self, "entity_description"):
+            return self.entity_description.initial_color
+        return None
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options."""
+        if self.initial_color is None:
+            return None
+
+        # Validate that it's a valid hex color string with # prefix
+        try:
+            validated_color = cv.color_hex(self.initial_color)
+        except vol.Invalid:
+            return None
+
+        return {DOMAIN: {"color": validated_color}}
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -533,8 +576,8 @@ class CalendarEntity(Entity):
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
+            "location": event.location or "",
+            "description": event.description or "",
         }
 
     @final
@@ -552,13 +595,17 @@ class CalendarEntity(Entity):
         return STATE_OFF
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
         This sets up listeners to handle state transitions for start or end of
         the current or upcoming event.
         """
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
+
+        # Notify websocket subscribers of event changes (debounced)
+        if self._event_listeners and self._event_listener_debouncer:
+            self._event_listener_debouncer.async_schedule_call()
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
@@ -599,6 +646,13 @@ class CalendarEntity(Entity):
             event.end_datetime_local,
         )
 
+    @callback
+    def _async_cancel_event_listener_debouncer(self) -> None:
+        """Cancel and clear the event listener debouncer."""
+        if self._event_listener_debouncer:
+            self._event_listener_debouncer.async_cancel()
+            self._event_listener_debouncer = None
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -607,6 +661,87 @@ class CalendarEntity(Entity):
         for unsub in self._alarm_unsubs or ():
             unsub()
         self._alarm_unsubs = None
+        self._async_cancel_event_listener_debouncer()
+
+    @final
+    @callback
+    def async_subscribe_events(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        event_listener: Callable[[list[JsonValueType] | None], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to calendar event updates.
+
+        Called by websocket API.
+        """
+        if self._event_listeners is None:
+            self._event_listeners = []
+
+        if self._event_listener_debouncer is None:
+            self._event_listener_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=EVENT_LISTENER_DEBOUNCE_COOLDOWN,
+                immediate=True,
+                function=self.async_update_event_listeners,
+            )
+
+        listener_data = (start_date, end_date, event_listener)
+        self._event_listeners.append(listener_data)
+
+        @callback
+        def unsubscribe() -> None:
+            if self._event_listeners:
+                self._event_listeners.remove(listener_data)
+            if not self._event_listeners:
+                self._async_cancel_event_listener_debouncer()
+
+        return unsubscribe
+
+    @final
+    @callback
+    def async_update_event_listeners(self) -> None:
+        """Push updated calendar events to all listeners."""
+        if not self._event_listeners:
+            return
+
+        for start_date, end_date, listener in self._event_listeners:
+            self.async_update_single_event_listener(start_date, end_date, listener)
+
+    @final
+    @callback
+    def async_update_single_event_listener(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listener: Callable[[list[JsonValueType] | None], None],
+    ) -> None:
+        """Schedule an event fetch and push to a single listener."""
+        self.hass.async_create_task(
+            self._async_update_listener(start_date, end_date, listener)
+        )
+
+    async def _async_update_listener(
+        self,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        listener: Callable[[list[JsonValueType] | None], None],
+    ) -> None:
+        """Fetch events and push to a single listener."""
+        try:
+            events = await self.async_get_events(self.hass, start_date, end_date)
+        except HomeAssistantError as err:
+            _LOGGER.debug(
+                "Error fetching calendar events for %s: %s",
+                self.entity_id,
+                err,
+            )
+            listener(None)
+            return
+
+        event_list: list[JsonValueType] = [event.as_dict() for event in events]
+        listener(event_list)
 
     async def async_get_events(
         self,
@@ -653,6 +788,10 @@ class CalendarEventView(http.HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Return calendar events."""
+        user: User = request[KEY_HASS_USER]
+        if not user.permissions.check_entity(entity_id, POLICY_READ):
+            raise Unauthorized(entity_id=entity_id)
+
         if not (entity := self.component.get_entity(entity_id)) or not isinstance(
             entity, CalendarEntity
         ):
@@ -665,7 +804,7 @@ class CalendarEventView(http.HomeAssistantView):
         try:
             start_date = dt_util.parse_datetime(start)
             end_date = dt_util.parse_datetime(end)
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
@@ -704,10 +843,14 @@ class CalendarListView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
+        user: User = request[KEY_HASS_USER]
         hass = request.app[http.KEY_HASS]
+        entity_perm = user.permissions.check_entity
         calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
+            if not entity_perm(entity.entity_id, POLICY_READ):
+                continue
             state = hass.states.get(entity.entity_id)
             assert state
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
@@ -727,6 +870,9 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
@@ -766,6 +912,8 @@ async def handle_calendar_event_delete(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
 
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
@@ -811,7 +959,10 @@ async def handle_calendar_event_delete(
 async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle creation of a calendar event."""
+    """Handle update of a calendar event."""
+    if not connection.user.permissions.check_entity(msg["entity_id"], POLICY_CONTROL):
+        raise Unauthorized(entity_id=msg["entity_id"])
+
     if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
@@ -841,20 +992,85 @@ async def handle_calendar_event_update(
         connection.send_result(msg["id"])
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "calendar/event/subscribe",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        vol.Required("start"): cv.datetime,
+        vol.Required("end"): cv.datetime,
+    }
+)
+@websocket_api.async_response
+async def handle_calendar_event_subscribe(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Subscribe to calendar event updates."""
+    entity_id: str = msg["entity_id"]
+
+    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
+        raise Unauthorized(entity_id=entity_id)
+
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            f"Calendar entity not found: {entity_id}",
+        )
+        return
+
+    start_date = dt_util.as_local(msg["start"])
+    end_date = dt_util.as_local(msg["end"])
+
+    if start_date >= end_date:
+        connection.send_error(
+            msg["id"],
+            ERR_INVALID_FORMAT,
+            "Start must be before end",
+        )
+        return
+
+    subscription_id = msg["id"]
+
+    @callback
+    def event_listener(events: list[JsonValueType] | None) -> None:
+        """Push updated calendar events to websocket."""
+        if subscription_id not in connection.subscriptions:
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                subscription_id,
+                {
+                    "events": events,
+                },
+            )
+        )
+
+    connection.subscriptions[subscription_id] = entity.async_subscribe_events(
+        start_date, end_date, event_listener
+    )
+    connection.send_result(subscription_id)
+
+    # Push initial events only to the new subscriber
+    entity.async_update_single_event_listener(start_date, end_date, event_listener)
+
+
 def _validate_timespan(
     values: dict[str, Any],
 ) -> tuple[datetime.datetime | datetime.date, datetime.datetime | datetime.date]:
-    """Parse a create event service call and convert the args ofr a create event entity call.
+    """Parse a create event service call.
 
-    This converts the input service arguments into a `start` and `end` date or date time. This
-    exists because service calls use `start_date` and `start_date_time` whereas the
-    normal entity methods can take either a `datetime` or `date` as a single `start` argument.
+    Convert the args for a create event entity call.
+    This converts the input service arguments into a
+    `start` and `end` date or date time. This exists because
+    service calls use `start_date` and `start_date_time`
+    whereas the normal entity methods can take either a
+    `datetime` or `date` as a single `start` argument.
     It also handles the other service call variations like "in days" as well.
     """
 
     if event_in := values.get(EVENT_IN):
         days = event_in.get(EVENT_IN_DAYS, 7 * event_in.get(EVENT_IN_WEEKS, 0))
-        today = datetime.date.today()
+        today = dt_util.now().date()
         return (
             today + datetime.timedelta(days=days),
             today + datetime.timedelta(days=days + 1),

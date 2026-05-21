@@ -1,7 +1,5 @@
 """Sensors for cloud based weatherflow."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,23 +18,32 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    UV_INDEX,
     EntityCategory,
+    UnitOfIrradiance,
     UnitOfLength,
+    UnitOfMass,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
-from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
-from .const import DOMAIN
-from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
+from .coordinator import (
+    WeatherFlowCloudConfigEntry,
+    WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowObservationCoordinator,
+    WeatherFlowWindCoordinator,
+)
 from .entity import WeatherFlowCloudEntity
 
 PRECIPITATION_TYPE = {
@@ -146,7 +153,43 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         value_fn=lambda data: data.air_density,
-        native_unit_of_measurement="kg/m³",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfVolume.CUBIC_METERS}",
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="relative_humidity",
+        translation_key="relative_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.relative_humidity,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Light Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="brightness",
+        translation_key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.brightness,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="uv",
+        translation_key="uv_index",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.uv,
+        native_unit_of_measurement=UV_INDEX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="solar_radiation",
+        translation_key="solar_radiation",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.solar_radiation,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     ),
     # Temp Sensors
     WeatherFlowCloudSensorEntityDescription(
@@ -235,42 +278,47 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_last_1hr",
         translation_key="precip_accum_last_1hr",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_last_1hr,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day",
         translation_key="precip_accum_local_day",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_day_final",
         translation_key="precip_accum_local_day_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_day_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday",
         translation_key="precip_accum_local_yesterday",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_accum_local_yesterday_final",
         translation_key="precip_accum_local_yesterday_final",
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_accum_local_yesterday_final,
-        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_analysis_type_yesterday",
@@ -338,11 +386,11 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data: datetime.fromtimestamp(
-                data.lightning_strike_last_epoch, tz=UTC
+            lambda data: (
+                datetime.fromtimestamp(data.lightning_strike_last_epoch, tz=UTC)
+                if data.lightning_strike_last_epoch is not None
+                else None
             )
-            if data.lightning_strike_last_epoch is not None
-            else None
         ),
     ),
 )
@@ -350,15 +398,15 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WeatherFlowCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
-    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
     rest_coordinator = coordinators.rest
-    wind_coordinator = coordinators.wind  # Now properly typed
-    observation_coordinator = coordinators.observation  # Now properly typed
+    wind_coordinator = coordinators.wind
+    observation_coordinator = coordinators.observation
 
     entities: list[SensorEntity] = [
         WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)
@@ -480,8 +528,21 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
     coordinator: WeatherFlowCloudUpdateCoordinatorREST
 
     @property
+    def _observation(self) -> Observation | None:
+        """Return the current station observation."""
+        observations = self.coordinator.data[self.station_id].observation.obs
+        if not observations:
+            return None
+        return observations[0]
+
+    @property
+    def available(self) -> bool:
+        """Get if available."""
+        return super().available and self._observation is not None
+
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.station_id].observation.obs[0]
-        )
+        if (observation := self._observation) is None:
+            return None
+        return self.entity_description.value_fn(observation)

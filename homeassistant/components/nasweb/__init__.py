@@ -1,7 +1,5 @@
 """The NASweb integration."""
 
-from __future__ import annotations
-
 import logging
 
 from webio_api import WebioAPI
@@ -21,6 +19,7 @@ from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.CLIMATE,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -51,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
             )
         if not await webio_api.refresh_device_info():
             _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
+            # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
             raise ConfigEntryError(
                 translation_key="config_entry_error_internal_error",
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
         webio_serial = webio_api.get_serial_number()
         if webio_serial is None:
             _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
+            # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
             raise ConfigEntryError(
                 translation_key="config_entry_error_internal_error",
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
@@ -66,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
             _LOGGER.error(
                 "[%s] Serial number doesn't match config entry", entry.data[CONF_HOST]
             )
+            # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
             raise ConfigEntryError(translation_key="config_entry_error_serial_mismatch")
 
         coordinator = NASwebCoordinator(
@@ -77,12 +79,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
         webhook_url = nasweb_data.get_webhook_url(hass)
         if not await webio_api.status_subscription(webhook_url, True):
             _LOGGER.error("Failed to subscribe for status updates from webio")
+            # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
             raise ConfigEntryError(
                 translation_key="config_entry_error_internal_error",
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
             )
         if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
             _LOGGER.error("Did not receive status from device")
+            # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
             raise ConfigEntryError(
                 translation_key="config_entry_error_no_status_update",
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
@@ -92,10 +96,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
             f"[{entry.data[CONF_HOST]}] Check connection reached timeout"
         ) from error
     except AuthError as error:
+        # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
         raise ConfigEntryError(
             translation_key="config_entry_error_invalid_authentication"
         ) from error
     except NoURLAvailableError as error:
+        # pylint: disable-next=home-assistant-exception-translation-key-domain-mismatch
         raise ConfigEntryError(
             translation_key="config_entry_error_missing_internal_url"
         ) from error

@@ -1,7 +1,5 @@
 """Conftest for the KNX integration."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
@@ -11,9 +9,15 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import Telegram, TelegramDirection, tpci
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import (
+    APCI,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    SecureAPDU,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -82,18 +86,17 @@ class KNXTestKit:
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
-            self.xknx.cemi_handler.send_telegram = AsyncMock(
-                side_effect=self._outgoing_telegrams.append
-            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
-            # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
+            # set XknxConnectionState.CONNECTED to avoid `unavailable`
+            # entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             self.xknx.connection_manager.connection_state_changed(
                 state=XknxConnectionState.CONNECTED,
                 connection_type=XknxConnectionType.TUNNEL_TCP,
             )
+            await self.hass.async_block_till_done()
 
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""
@@ -118,13 +121,18 @@ class KNXTestKit:
         if add_entry_to_hass:
             self.mock_config_entry.add_to_hass(self.hass)
 
+        # capture outgoing telegrams for assertion instead of sending to socket
+        # before l_data_confirmation would be awaited in xknx
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram",
+            side_effect=self._outgoing_telegrams.append,
+        ).start()  # keep patched for the whole test run
+
         knx_config = {DOMAIN: yaml_config or {}}
-        with (
-            patch(
-                "xknx.xknx.knx_interface_factory",
-                return_value=knx_ip_interface_mock(),
-                side_effect=fish_xknx,
-            ),
+        with patch(
+            "xknx.xknx.knx_interface_factory",
+            return_value=knx_ip_interface_mock(),
+            side_effect=fish_xknx,
         ):
             state_updater_patcher = patch(
                 "xknx.xknx.StateUpdater.register_remote_value"
@@ -134,7 +142,7 @@ class KNXTestKit:
 
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
-
+            # remove patch after setup so state_updater can be tested
             state_updater_patcher.stop()
 
     ########################
@@ -312,6 +320,23 @@ class KNXTestKit:
             source=source,
         )
 
+    def receive_data_secure_issue(
+        self,
+        group_address: str,
+        source: str | None = None,
+    ) -> None:
+        """Inject incoming telegram with undecodable data secure payload."""
+        telegram = Telegram(
+            destination_address=GroupAddress(group_address),
+            direction=TelegramDirection.INCOMING,
+            source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
+            tpci=tpci.TDataGroup(),
+            payload=SecureAPDU.from_knx(
+                bytes.fromhex("03f110002446cfef4ac085e7092ab062b44d")
+            ),
+        )
+        self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -320,8 +345,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=DOMAIN,
         data={
-            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA has additional keys
-            # there are installations out there without these keys so we test with legacy data
+            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA
+            # has additional keys - there are installations out there
+            # without these keys so we test with legacy data
             # to ensure backwards compatibility (local_ip, telegram_log_size)
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,

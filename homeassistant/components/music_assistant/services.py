@@ -1,7 +1,5 @@
 """Custom actions (previously known as services) for the Music Assistant integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from music_assistant_models.enums import MediaType, QueueOption
@@ -42,6 +40,7 @@ from .const import (
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
     ATTR_PODCASTS,
+    ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO,
     ATTR_RADIO_MODE,
     ATTR_SEARCH,
@@ -150,6 +149,7 @@ def register_actions(hass: HomeAssistant) -> None:
         schema={
             vol.Required(ATTR_URL): cv.string,
             vol.Optional(ATTR_USE_PRE_ANNOUNCE): vol.Coerce(bool),
+            vol.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
             vol.Optional(ATTR_ANNOUNCE_VOLUME): vol.Coerce(int),
         },
         func="_async_handle_play_announcement",

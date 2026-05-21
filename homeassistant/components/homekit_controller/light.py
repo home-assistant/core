@@ -1,7 +1,5 @@
 """Support for Homekit lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -131,7 +129,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         # aiohomekit does not keep track of the light's color mode, report
         # hs for light supporting both hs and ct

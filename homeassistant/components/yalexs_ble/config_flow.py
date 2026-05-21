@@ -1,7 +1,5 @@
 """Config flow for Yale Access Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any, Self
@@ -54,7 +52,7 @@ async def async_validate_lock_or_error(
         return {CONF_SLOT: "invalid_key_index"}
     try:
         await PushLock(local_name, device.address, device, key, slot).validate()
-    except (DisconnectedError, AuthError, ValueError):
+    except DisconnectedError, AuthError, ValueError:
         return {CONF_KEY: "invalid_auth"}
     except BleakError:
         return {"base": "cannot_connect"}

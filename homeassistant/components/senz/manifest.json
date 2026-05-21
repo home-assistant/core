@@ -5,7 +5,8 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/senz",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["aiosenz"],
-  "requirements": ["aiosenz==1.0.0"]
+  "loggers": ["pysenz"],
+  "requirements": ["pysenz==1.0.2"]
 }

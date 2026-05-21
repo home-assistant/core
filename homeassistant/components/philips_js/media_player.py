@@ -1,7 +1,5 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from haphilipsjs import ConnectionFailure
@@ -250,6 +248,10 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                     media_content_type=MediaType.CHANNEL,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MediaType.CHANNEL,
+                        f"{self._tv.channel_list_id}/{channel['ccid']}",
+                    ),
                 )
                 for channel in self._tv.channels_current
             ]
@@ -289,6 +291,10 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                         media_content_type=MediaType.CHANNEL,
                         can_play=True,
                         can_expand=False,
+                        thumbnail=self.get_browse_image_url(
+                            MediaType.CHANNEL,
+                            f"{list_id}/{channel['ccid']}",
+                        ),
                     )
                     for channel in favorites.get("channels", [])
                 ]
@@ -412,7 +418,11 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
             if media_content_type == MediaType.APP and media_content_id:
                 return await self._tv.getApplicationIcon(media_content_id)
             if media_content_type == MediaType.CHANNEL and media_content_id:
-                return await self._tv.getChannelLogo(media_content_id)
+                list_id, _, channel_id = media_content_id.partition("/")
+                if not channel_id:
+                    channel_id = list_id
+                    list_id = "all"
+                return await self._tv.getChannelLogo(channel_id, list_id)
         except ConnectionFailure:
             _LOGGER.warning("Failed to fetch image")
         return None, None

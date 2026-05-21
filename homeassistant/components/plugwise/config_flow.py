@@ -1,7 +1,5 @@
 """Config flow for Plugwise integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self
 
@@ -103,7 +101,7 @@ async def verify_connection(
         errors[CONF_BASE] = "invalid_auth"
     except InvalidSetupError:
         errors[CONF_BASE] = "invalid_setup"
-    except (InvalidXMLError, ResponseError):
+    except InvalidXMLError, ResponseError:
         errors[CONF_BASE] = "response_error"
     except UnsupportedDeviceError:
         errors[CONF_BASE] = "unsupported"

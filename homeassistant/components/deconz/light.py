@@ -1,7 +1,5 @@
 """Support for deCONZ lights."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict, cast
 
 from pydeconz.interfaces.groups import GroupHandler
@@ -244,7 +242,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
                     self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.color_mode in DECONZ_TO_COLOR_MODE:
             color_mode = DECONZ_TO_COLOR_MODE[self._device.color_mode]

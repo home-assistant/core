@@ -1,16 +1,11 @@
 """The Derivative integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SOURCE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
@@ -21,11 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Derivative from a config entry."""
-
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass, entry.entry_id, entry.options[CONF_SOURCE]
-    )
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
@@ -73,7 +63,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_options = {**config_entry.options}
 
             if new_options.get("unit_prefix") == "none":
-                # Before we had support for optional selectors, "none" was used for selecting nothing
+                # Before we had support for optional selectors,
+                # "none" was used for selecting nothing
                 del new_options["unit_prefix"]
 
             hass.config_entries.async_update_entry(

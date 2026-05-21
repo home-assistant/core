@@ -8,7 +8,7 @@ from typing import Any, cast
 import pypck
 
 from homeassistant.components.climate import (
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -36,7 +36,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -66,14 +66,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_CLIMATE: add_entities}
+        {CLIMATE_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+            if entity_config[CONF_DOMAIN] == CLIMATE_DOMAIN
         ),
     )
 
@@ -113,7 +113,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        # Config schema only allows for: UnitOfTemperature.CELSIUS and UnitOfTemperature.FAHRENHEIT
+        # Config schema only allows for:
+        # UnitOfTemperature.CELSIUS and
+        # UnitOfTemperature.FAHRENHEIT
         if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS

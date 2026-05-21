@@ -1,7 +1,5 @@
 """Support for Locative."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 
@@ -113,6 +111,8 @@ async def handle_webhook(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
     if DOMAIN not in hass.data:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
     webhook.async_register(
         hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook

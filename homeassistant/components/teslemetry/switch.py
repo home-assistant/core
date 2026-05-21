@@ -1,7 +1,5 @@
 """Switch platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -89,8 +87,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_right",
         polling=True,
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_AutoSeatClimateRight(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_AutoSeatClimateRight(callback)
+        ),
         on_func=lambda api: api.remote_auto_seat_climate_request(
             AutoSeat.FRONT_RIGHT, True
         ),
@@ -102,8 +101,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
         polling=True,
-        streaming_listener=lambda vehicle,
-        callback: vehicle.listen_HvacSteeringWheelHeatAuto(callback),
+        streaming_listener=lambda vehicle, callback: (
+            vehicle.listen_HvacSteeringWheelHeatAuto(callback)
+        ),
         on_func=lambda api: api.remote_auto_steering_wheel_heat_climate_request(
             on=True
         ),
@@ -140,7 +140,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="guest_mode_enabled",
-        polling=False,
         unique_id="guest_mode_enabled",
         streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
             callback

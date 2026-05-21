@@ -1,7 +1,5 @@
 """Support for Homekit climate devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 
@@ -287,9 +285,9 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         await self.async_put_characteristics(
             {
                 CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
-                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
-                    hvac_mode
-                ],
+                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                    TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[hvac_mode]
+                ),
             }
         )
 
@@ -547,7 +545,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         """Return the temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
         if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT, HVACMode.COOL}) or (
-            (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL})
+            (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL)
             and ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             not in self.supported_features
         ):
@@ -558,7 +556,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             return self.service.value(
@@ -570,7 +568,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             return self.service.value(
@@ -582,7 +580,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def min_temp(self) -> float:
         """Return the minimum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             min_temp = self.service[
@@ -604,7 +602,7 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
     def max_temp(self) -> float:
         """Return the maximum target temp."""
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVACMode.HEAT_COOL}) and (
+        if (MODE_HOMEKIT_TO_HASS.get(value) == HVACMode.HEAT_COOL) and (
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in self.supported_features
         ):
             max_temp = self.service[

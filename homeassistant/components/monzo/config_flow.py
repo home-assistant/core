@@ -1,7 +1,5 @@
 """Config flow for Monzo."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -21,6 +19,8 @@ class MonzoFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = DOMAIN
+    VERSION = 1
+    MINOR_VERSION = 2
 
     oauth_data: dict[str, Any]
 
@@ -51,7 +51,7 @@ class MonzoFlowHandler(
         """Create an entry for the flow."""
         self.oauth_data = data
         user_id = data[CONF_TOKEN]["user_id"]
-        await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(str(user_id))
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
         else:

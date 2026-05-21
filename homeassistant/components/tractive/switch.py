@@ -1,16 +1,15 @@
 """Support for Tractive switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
@@ -19,6 +18,7 @@ from .const import (
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     ATTR_POWER_SAVING,
+    DOMAIN,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -100,13 +100,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
-        if self.entity_description.key not in event:
-            return
+        if ATTR_POWER_SAVING in event:
+            self._attr_available = not event[ATTR_POWER_SAVING]
 
-        # We received an event, so the service is online and the switch entities should
-        #  be available.
-        self._attr_available = not event[ATTR_POWER_SAVING]
-        self._attr_is_on = event[self.entity_description.key]
+        if self.entity_description.key in event:
+            self._attr_is_on = event[self.entity_description.key]
 
         self.async_write_ha_state()
 
@@ -115,8 +113,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         try:
             result = await self._method(True)
         except TractiveError as error:
-            _LOGGER.error(error)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_turn_on",
+                translation_placeholders={"entity": self.entity_id},
+            ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = True
@@ -127,8 +128,11 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         try:
             result = await self._method(False)
         except TractiveError as error:
-            _LOGGER.error(error)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_turn_off",
+                translation_placeholders={"entity": self.entity_id},
+            ) from error
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = False
@@ -136,14 +140,12 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_set_buzzer(self, active: bool) -> dict[str, Any]:
         """Set the buzzer on/off."""
-        return cast(dict[str, Any], await self._tracker.set_buzzer_active(active))
+        return await self._tracker.set_buzzer_active(active)
 
     async def async_set_led(self, active: bool) -> dict[str, Any]:
         """Set the LED on/off."""
-        return cast(dict[str, Any], await self._tracker.set_led_active(active))
+        return await self._tracker.set_led_active(active)
 
     async def async_set_live_tracking(self, active: bool) -> dict[str, Any]:
         """Set the live tracking on/off."""
-        return cast(
-            dict[str, Any], await self._tracker.set_live_tracking_active(active)
-        )
+        return await self._tracker.set_live_tracking_active(active)

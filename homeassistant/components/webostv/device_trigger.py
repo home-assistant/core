@@ -1,7 +1,5 @@
 """Provides device automations for control of LG webOS TV."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -44,6 +42,7 @@ async def async_validate_trigger_config(
             device = async_get_device_entry_by_device_id(hass, device_id)
             async_get_client_by_device_entry(hass, device)
         except ValueError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise InvalidDeviceAutomationConfig(err) from err
 
     return config

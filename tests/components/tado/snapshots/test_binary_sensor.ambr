@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_entities[binary_sensor.air_conditioning_connectivity-entry]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -34,24 +36,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_connectivity-state]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Air Conditioning Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_overlay-entry]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -61,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -83,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_overlay-state]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -91,17 +95,18 @@
       'termination': 'TADO_MODE',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_power-entry]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -111,7 +116,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_power',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -119,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -133,24 +139,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_power-state]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Air Conditioning Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_power',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_window-entry]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -160,7 +167,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_window',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -182,24 +190,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_window-state]
+# name: test_entities[binary_sensor.air_conditioning_air_conditioning_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Air Conditioning Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_window',
+    'entity_id': 'binary_sensor.air_conditioning_air_conditioning_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_connectivity-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -209,7 +218,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -217,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -231,24 +241,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_connectivity-state]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Air Conditioning with fanlevel Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_overlay-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -258,7 +269,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -266,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -280,7 +292,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_overlay-state]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -288,17 +300,18 @@
       'termination': 'MANUAL',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_power-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,7 +321,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_power',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -316,6 +329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -330,24 +344,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_power-state]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Air Conditioning with fanlevel Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_power',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_window-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -357,7 +372,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_window',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -365,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -379,24 +395,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_window-state]
+# name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Air Conditioning with fanlevel Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_window',
+    'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_connectivity-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,7 +423,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -414,6 +431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -428,24 +446,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_connectivity-state]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Air Conditioning with swing Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_connectivity',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_overlay-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -455,7 +474,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -463,6 +482,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -477,24 +497,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_overlay-state]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Air Conditioning with swing Overlay',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_overlay',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_power-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -504,7 +525,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_power',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -512,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -526,24 +548,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_power-state]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Air Conditioning with swing Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_power',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_window-entry]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -553,7 +576,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_window',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -561,6 +584,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -575,24 +599,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.air_conditioning_with_swing_window-state]
+# name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Air Conditioning with swing Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.air_conditioning_with_swing_window',
+    'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_connectivity-entry]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -602,7 +627,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.baseboard_heater_connectivity',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -610,6 +635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -624,24 +650,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_connectivity-state]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Baseboard Heater Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.baseboard_heater_connectivity',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_early_start-entry]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_early_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -651,7 +678,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.baseboard_heater_early_start',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_early_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -659,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Early start',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -673,24 +701,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_early_start-state]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_early_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Baseboard Heater Early start',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.baseboard_heater_early_start',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_early_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_overlay-entry]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,7 +729,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.baseboard_heater_overlay',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -708,6 +737,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -722,7 +752,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_overlay-state]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -730,17 +760,18 @@
       'termination': 'MANUAL',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.baseboard_heater_overlay',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_power-entry]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -750,7 +781,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.baseboard_heater_power',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -758,6 +789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -772,24 +804,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_power-state]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Baseboard Heater Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.baseboard_heater_power',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_window-entry]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -799,7 +832,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.baseboard_heater_window',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -807,6 +840,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -821,24 +855,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.baseboard_heater_window-state]
+# name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Baseboard Heater Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.baseboard_heater_window',
+    'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_connectivity-entry]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -848,7 +883,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.second_water_heater_connectivity',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -856,6 +891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -870,24 +906,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_connectivity-state]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Second Water Heater Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.second_water_heater_connectivity',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_overlay-entry]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -897,7 +934,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.second_water_heater_overlay',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -905,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -919,7 +957,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_overlay-state]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -927,17 +965,18 @@
       'termination': 'TADO_MODE',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.second_water_heater_overlay',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_power-entry]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -947,7 +986,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.second_water_heater_power',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -955,6 +994,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -969,24 +1009,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.second_water_heater_power-state]
+# name: test_entities[binary_sensor.second_water_heater_second_water_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Second Water Heater Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.second_water_heater_power',
+    'entity_id': 'binary_sensor.second_water_heater_second_water_heater_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_connectivity-entry]
+# name: test_entities[binary_sensor.water_heater_water_heater_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -996,7 +1037,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.water_heater_connectivity',
+    'entity_id': 'binary_sensor.water_heater_water_heater_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1004,6 +1045,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1018,24 +1060,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_connectivity-state]
+# name: test_entities[binary_sensor.water_heater_water_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Water Heater Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.water_heater_connectivity',
+    'entity_id': 'binary_sensor.water_heater_water_heater_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_overlay-entry]
+# name: test_entities[binary_sensor.water_heater_water_heater_overlay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1045,7 +1088,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.water_heater_overlay',
+    'entity_id': 'binary_sensor.water_heater_water_heater_overlay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1053,6 +1096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overlay',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1067,24 +1111,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_overlay-state]
+# name: test_entities[binary_sensor.water_heater_water_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Water Heater Overlay',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.water_heater_overlay',
+    'entity_id': 'binary_sensor.water_heater_water_heater_overlay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_power-entry]
+# name: test_entities[binary_sensor.water_heater_water_heater_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1094,7 +1139,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.water_heater_power',
+    'entity_id': 'binary_sensor.water_heater_water_heater_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1102,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1116,14 +1162,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.water_heater_power-state]
+# name: test_entities[binary_sensor.water_heater_water_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Water Heater Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.water_heater_power',
+    'entity_id': 'binary_sensor.water_heater_water_heater_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1132,8 +1178,9 @@
 # ---
 # name: test_entities[binary_sensor.wr1_connection_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1151,6 +1198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1181,8 +1229,9 @@
 # ---
 # name: test_entities[binary_sensor.wr4_connection_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1200,6 +1249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,

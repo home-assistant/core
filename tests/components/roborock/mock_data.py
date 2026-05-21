@@ -1,9 +1,9 @@
 """Mock data for Roborock tests."""
 
-from __future__ import annotations
-
 from PIL import Image
 from roborock.data import (
+    B01Props,
+    CleanPathPreferenceMapping,
     CleanRecord,
     CleanSummary,
     Consumable,
@@ -15,7 +15,14 @@ from roborock.data import (
     S7Status,
     UserData,
     ValleyElectricityTimer,
+    WorkStatusMapping,
 )
+from roborock.data.b01_q10.b01_q10_code_mappings import (
+    YXDeviceState,
+    YXFanLevel,
+    YXWaterLevel,
+)
+from roborock.data.b01_q10.b01_q10_containers import Q10Status
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
 from vacuum_map_parser_roborock.map_data_parser import MapData
@@ -150,7 +157,9 @@ HOME_DATA_RAW = {
                     "code": "main_brush_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -159,7 +168,9 @@ HOME_DATA_RAW = {
                     "code": "side_brush_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -168,7 +179,9 @@ HOME_DATA_RAW = {
                     "code": "filter_life",
                     "mode": "rw",
                     "type": "VALUE",
-                    "property": '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
+                    "property": (
+                        '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}'
+                    ),
                     "desc": None,
                 },
                 {
@@ -531,6 +544,239 @@ HOME_DATA_RAW = {
             ],
         },
         {
+            "id": "q7_product_id",
+            "name": "Roborock Q7 Series",
+            "model": "roborock.vacuum.sc01",
+            "category": "robot.vacuum.cleaner",
+            "capability": 0,
+            "schema": [
+                {
+                    "id": 101,
+                    "name": "RPC Request",
+                    "code": "rpc_request",
+                    "mode": "rw",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 102,
+                    "name": "RPC Response",
+                    "code": "rpc_response",
+                    "mode": "rw",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 120,
+                    "name": "错误代码",
+                    "code": "error_code",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 121,
+                    "name": "设备状态",
+                    "code": "state",
+                    "mode": "ro",
+                    "type": "VALUE",
+                    "property": "null",
+                },
+                {
+                    "id": 122,
+                    "name": "设备电量",
+                    "code": "battery",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 123,
+                    "name": "吸力档位",
+                    "code": "fan_power",
+                    "mode": "rw",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 124,
+                    "name": "拖地档位",
+                    "code": "water_box_mode",
+                    "mode": "rw",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 125,
+                    "name": "主刷寿命",
+                    "code": "main_brush_life",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 126,
+                    "name": "边刷寿命",
+                    "code": "side_brush_life",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 127,
+                    "name": "滤网寿命",
+                    "code": "filter_life",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 135,
+                    "name": "离线原因",
+                    "code": "offline_status",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 136,
+                    "name": "清洁次数",
+                    "code": "clean_times",
+                    "mode": "rw",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 137,
+                    "name": "扫拖模式",
+                    "code": "cleaning_preference",
+                    "mode": "rw",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 138,
+                    "name": "清洁任务类型",
+                    "code": "clean_task_type",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 139,
+                    "name": "返回基站类型",
+                    "code": "back_type",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 141,
+                    "name": "清洁进度",
+                    "code": "cleaning_progress",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 142,
+                    "name": "窜货信息",
+                    "code": "fc_state",
+                    "mode": "ro",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 201,
+                    "name": "启动清洁任务",
+                    "code": "start_clean_task",
+                    "mode": "wo",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 202,
+                    "name": "返回基站任务",
+                    "code": "start_back_dock_task",
+                    "mode": "wo",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 203,
+                    "name": "启动基站任务",
+                    "code": "start_dock_task",
+                    "mode": "wo",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 204,
+                    "name": "暂停任务",
+                    "code": "pause",
+                    "mode": "wo",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 205,
+                    "name": "继续任务",
+                    "code": "resume",
+                    "mode": "wo",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 206,
+                    "name": "结束任务",
+                    "code": "stop",
+                    "mode": "wo",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 10000,
+                    "name": "request_cmd",
+                    "code": "request_cmd",
+                    "mode": "wo",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 10001,
+                    "name": "response_cmd",
+                    "code": "response_cmd",
+                    "mode": "ro",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 10002,
+                    "name": "request_map",
+                    "code": "request_map",
+                    "mode": "ro",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 10003,
+                    "name": "response_map",
+                    "code": "response_map",
+                    "mode": "ro",
+                    "type": "RAW",
+                    "property": "null",
+                },
+                {
+                    "id": 10004,
+                    "name": "event_report",
+                    "code": "event_report",
+                    "mode": "rw",
+                    "type": "RAW",
+                    "property": "null",
+                },
+            ],
+        },
+        {
             "id": "zeo_id",
             "name": "Zeo One",
             "model": "roborock.wm.a102",
@@ -819,6 +1065,39 @@ HOME_DATA_RAW = {
                 },
             ],
         },
+        {
+            "id": "q10_product_id",
+            "name": "Roborock Q10 S5+",
+            "model": "roborock.vacuum.ss07",
+            "category": "robot.vacuum.cleaner",
+            "capability": 0,
+            "schema": [
+                {
+                    "id": 121,
+                    "name": "设备状态",
+                    "code": "state",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 122,
+                    "name": "设备电量",
+                    "code": "battery",
+                    "mode": "ro",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+                {
+                    "id": 123,
+                    "name": "清扫模式",
+                    "code": "fan_level",
+                    "mode": "rw",
+                    "type": "ENUM",
+                    "property": '{"range": []}',
+                },
+            ],
+        },
     ],
     "devices": [
         {
@@ -926,10 +1205,30 @@ HOME_DATA_RAW = {
                 "237": 0,
                 "10007": '{"mqttOtaData":{"mqttOtaStatus":{"status":"IDLE"}}}',
                 "227": 1320,
-                "10005": '{"sn":"dyad_sn","ssid":"dyad_ssid","timezone":"Europe/Stockholm","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"1.123.12.1","mac":"b0:4a:33:33:33:33","oba":{"language":"en","name":"A.03.0291_CE","bom":"A.03.0291","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","featureset":"0"}"}',
+                "10005": (
+                    '{"sn":"dyad_sn","ssid":"dyad_ssid",'
+                    '"timezone":"Europe/Stockholm",'
+                    '"posix_timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3",'
+                    '"ip":"1.123.12.1",'
+                    '"mac":"b0:4a:33:33:33:33",'
+                    '"oba":{"language":"en",'
+                    '"name":"A.03.0291_CE",'
+                    '"bom":"A.03.0291","location":"de",'
+                    '"wifiplan":"EU",'
+                    '"timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3;'
+                    'Europe/Berlin",'
+                    '"logserver":"awsde0",'
+                    '"featureset":"0"}"}'
+                ),
                 "213": 1,
                 "207": 4,
-                "10004": '{"sid_in_use":25,"sid_version":5,"location":"de","bom":"A.03.0291","language":"en"}',
+                "10004": (
+                    '{"sid_in_use":25,"sid_version":5,'
+                    '"location":"de","bom":"A.03.0291",'
+                    '"language":"en"}'
+                ),
                 "206": 3,
                 "216": 0,
                 "221": 100,
@@ -942,7 +1241,11 @@ HOME_DATA_RAW = {
                 "200": 0,
                 "226": 0,
                 "208": 1,
-                "229": "000,000,003,000,005,000,000,000,003,000,005,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,012,003,000,000",
+                "229": (
+                    "000,000,003,000,005,000,000,000,003,000,"
+                    "005,000,000,000,000,000,000,000,000,000,"
+                    "000,000,000,000,000,000,012,003,000,000"
+                ),
                 "201": 3,
                 "215": 513,
                 "204": 1,
@@ -950,6 +1253,76 @@ HOME_DATA_RAW = {
             },
             "silentOtaSwitch": False,
             "f": False,
+        },
+        {
+            "duid": "q7_duid",
+            "name": "Roborock Q7",
+            "localKey": "q7_local_key",
+            "productId": "q7_product_id",
+            "fv": "03.01.71",
+            "activeTime": 1749513705,
+            "timeZoneId": "Pacific/Auckland",
+            "iconUrl": "",
+            "share": True,
+            "shareTime": 1754789238,
+            "online": True,
+            "pv": "B01",
+            "tuyaMigrated": False,
+            "extra": '{"1749518432": "0", "1753581557": "0", "clean_finish": "{}"}',
+            "sn": "q7_sn",
+            "deviceStatus": {
+                "135": 0,
+                "120": 0,
+                "121": 8,
+                "122": 100,
+                "123": 4,
+                "124": 2,
+                "125": 77,
+                "126": 4294965348,
+                "127": 54,
+                "136": 1,
+                "137": 1,
+                "138": 0,
+                "139": 0,
+                "141": 0,
+                "142": 0,
+            },
+            "silentOtaSwitch": False,
+            "f": False,
+            "createTime": 1749513706,
+            "cid": "DE",
+            "shareType": "UNLIMITED_TIME",
+        },
+        {
+            "duid": "q10_duid",
+            "name": "Roborock Q10 S5+",
+            "localKey": "q10_local_key",
+            "productId": "q10_product_id",
+            "fv": "03.10.0",
+            "activeTime": 1767044247,
+            "timeZoneId": "America/Los_Angeles",
+            "iconUrl": "",
+            "share": True,
+            "shareTime": 1754789238,
+            "online": True,
+            "pv": "B01",
+            "tuyaMigrated": False,
+            "sn": "9FFC112EQAD843",
+            "deviceStatus": {
+                "121": 8,
+                "122": 100,
+                "123": 2,
+                "124": 1,
+                "135": 0,
+                "136": 1,
+                "137": 1,
+                "138": 0,
+                "139": 5,
+            },
+            "silentOtaSwitch": False,
+            "f": False,
+            "createTime": 1767044139,
+            "cid": "4C",
         },
         {
             "duid": "zeo_duid",
@@ -985,7 +1358,23 @@ HOME_DATA_RAW = {
                 "220": 0,
                 "201": 0,
                 "202": 1,
-                "10005": '{"sn":"zeo_sn","ssid":"internet","timezone":"Europe/Berlin","posix_timezone":"CET-1CEST,M3.5.0,M10.5.0/3","ip":"192.111.11.11","mac":"b0:4a:00:00:00:00","rssi":-57,"oba":{"language":"en","name":"A.03.0403_CE","bom":"A.03.0403","location":"de","wifiplan":"EU","timezone":"CET-1CEST,M3.5.0,M10.5.0/3;Europe/Berlin","logserver":"awsde0","loglevel":"4","featureset":"0"}}',
+                "10005": (
+                    '{"sn":"zeo_sn","ssid":"internet",'
+                    '"timezone":"Europe/Berlin",'
+                    '"posix_timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3",'
+                    '"ip":"192.111.11.11",'
+                    '"mac":"b0:4a:00:00:00:00","rssi":-57,'
+                    '"oba":{"language":"en",'
+                    '"name":"A.03.0403_CE",'
+                    '"bom":"A.03.0403","location":"de",'
+                    '"wifiplan":"EU",'
+                    '"timezone":'
+                    '"CET-1CEST,M3.5.0,M10.5.0/3;'
+                    'Europe/Berlin",'
+                    '"logserver":"awsde0","loglevel":"4",'
+                    '"featureset":"0"}}'
+                ),
                 "211": 1,
                 "210": 1,
                 "217": 0,
@@ -1115,6 +1504,7 @@ STATUS = S7Status.from_dict(
         "home_sec_enable_password": 0,
         "adbumper_status": [0, 0, 0],
         "water_shortage_status": 0,
+        "clean_fluid_status": 0,
         "dock_type": 3,
         "dust_collection_status": 0,
         "auto_dust_collection": 1,
@@ -1127,6 +1517,7 @@ STATUS = S7Status.from_dict(
         "charge_status": 1,
         "unsave_map_reason": 0,
         "unsave_map_flag": 0,
+        "dss": 20,
     }
 )
 
@@ -1209,3 +1600,29 @@ SCENES = [
         },
     ),
 ]
+
+Q7_B01_PROPS = B01Props(
+    status=WorkStatusMapping.SWEEP_MOPING,
+    clean_path_preference=CleanPathPreferenceMapping.BALANCED,
+    main_brush=5000,
+    side_brush=3000,
+    hypa=1500,
+    main_sensor=500,
+    mop_life=1200,
+    real_clean_time=3000,
+    quantity=100,
+)
+
+Q10_STATUS = Q10Status(
+    clean_time=1800,
+    clean_area=15,
+    battery=100,
+    status=YXDeviceState.CHARGING,
+    fan_level=YXFanLevel.BALANCED,
+    water_level=YXWaterLevel.MEDIUM,
+    clean_count=1,
+    main_brush_life=81,
+    side_brush_life=90,
+    filter_life=90,
+    sensor_life=28,
+)

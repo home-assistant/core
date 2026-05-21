@@ -1,7 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
@@ -36,7 +34,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.util.signal_type import SignalType
 
 # Pre-import backup to avoid it being imported
@@ -50,7 +48,6 @@ from . import (
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
-    CONF_ACCOUNTS_SERVER,
     CONF_ACME_SERVER,
     CONF_ALEXA,
     CONF_ALIASES,
@@ -138,7 +135,6 @@ _BASE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
         vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
-        vol.Optional(CONF_ACCOUNTS_SERVER): str,
         vol.Optional(CONF_ACME_SERVER): str,
         vol.Optional(CONF_API_SERVER): str,
         vol.Optional(CONF_RELAYER_SERVER): str,
@@ -183,7 +179,6 @@ class CloudConnectionState(Enum):
     CLOUD_DISCONNECTED = "cloud_disconnected"
 
 
-@bind_hass
 @callback
 def async_is_logged_in(hass: HomeAssistant) -> bool:
     """Test if user is logged in.
@@ -193,7 +188,6 @@ def async_is_logged_in(hass: HomeAssistant) -> bool:
     return DATA_CLOUD in hass.data and hass.data[DATA_CLOUD].is_logged_in
 
 
-@bind_hass
 @callback
 def async_is_connected(hass: HomeAssistant) -> bool:
     """Test if connected to the cloud."""
@@ -209,7 +203,6 @@ def async_listen_connection_change(
     return async_dispatcher_connect(hass, SIGNAL_CLOUD_CONNECTION_STATE, target)
 
 
-@bind_hass
 @callback
 def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
@@ -232,7 +225,6 @@ async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) ->
     return await async_create_cloudhook(hass, webhook_id)
 
 
-@bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
     if not async_is_connected(hass):
@@ -247,7 +239,6 @@ async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     return cloudhook_url
 
 
-@bind_hass
 async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Delete a cloudhook."""
     if DATA_CLOUD not in hass.data:
@@ -262,7 +253,10 @@ def async_listen_cloudhook_change(
     webhook_id: str,
     on_change: Callable[[dict[str, Any] | None], None],
 ) -> Callable[[], None]:
-    """Listen for cloudhook changes for the given webhook and notify when modified or deleted."""
+    """Listen for cloudhook changes for the given webhook.
+
+    Notify when modified or deleted.
+    """
 
     @callback
     def _handle_cloudhooks_updated(cloudhooks: dict[str, Any]) -> None:
@@ -274,7 +268,6 @@ def async_listen_cloudhook_change(
     )
 
 
-@bind_hass
 @callback
 def async_remote_ui_url(hass: HomeAssistant) -> str:
     """Get the remote UI URL."""

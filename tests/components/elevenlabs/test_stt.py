@@ -156,6 +156,26 @@ async def test_stt_transcription_success_auto_language(
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "hello world"
     entity._client.speech_to_text.convert.assert_called_once()
+    # Verify language_code is NOT passed when auto-detect is enabled
+    call_kwargs = entity._client.speech_to_text.convert.call_args.kwargs
+    assert "language_code" not in call_kwargs
+
+
+async def test_stt_transcription_passes_language_code(
+    hass: HomeAssistant,
+    setup: AsyncMock,
+    default_metadata: stt.SpeechMetadata,
+    simple_stream,
+) -> None:
+    """Test that language_code is passed when auto-detect is disabled."""
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
+    assert not entity._auto_detect_language
+    result = await entity.async_process_audio_stream(default_metadata, simple_stream())
+    assert result.result == stt.SpeechResultState.SUCCESS
+    # Verify language_code IS passed when auto-detect is disabled
+    call_kwargs = entity._client.speech_to_text.convert.call_args.kwargs
+    assert call_kwargs["language_code"] == "en"
 
 
 # === ERROR CASES (PARAMETRIZED) ===

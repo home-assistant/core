@@ -1,7 +1,5 @@
 """The Seko Pooldose integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -20,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -65,15 +64,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     try:
         client_status = await client.connect()
     except TimeoutError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             f"Timeout connecting to PoolDose device: {err}"
         ) from err
     except (ConnectionError, OSError) as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             f"Failed to connect to PoolDose device: {err}"
         ) from err
 
     if client_status != RequestStatus.SUCCESS:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             f"Failed to create PoolDose client while initialization: {client_status}"
         )

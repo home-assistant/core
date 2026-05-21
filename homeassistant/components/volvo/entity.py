@@ -55,7 +55,8 @@ class VolvoBaseEntity(Entity):
         model = (
             f"{vehicle.description.model} ({vehicle.model_year})"
             if vehicle.fuel_type == "NONE"
-            else f"{vehicle.description.model} {vehicle.fuel_type} ({vehicle.model_year})"
+            else f"{vehicle.description.model}"
+            f" {vehicle.fuel_type} ({vehicle.model_year})"
         )
 
         self._attr_device_info = DeviceInfo(
@@ -103,4 +104,3 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator], VolvoBaseEntity):
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
-        raise NotImplementedError

@@ -1,7 +1,5 @@
 """Base SamsungTV Entity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from wakeonlan import send_magic_packet
@@ -14,7 +12,7 @@ from homeassistant.const import (
     CONF_MODEL,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.trigger import PluggableAction
@@ -23,6 +21,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_MANUFACTURER, DOMAIN, LOGGER
 from .coordinator import SamsungTVDataUpdateCoordinator
 from .triggers.turn_on import async_get_turn_on_trigger
+
+DEPRECATED_IMPLICIT_WAKE_ON_LAN = "deprecated_implicit_wake_on_lan_{}"
 
 
 class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity):
@@ -37,7 +37,8 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         config_entry = coordinator.config_entry
         self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._host: str | None = config_entry.data.get(CONF_HOST)
-        # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
+        # Fallback for legacy models that doesn't have a API
+        # to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
@@ -92,11 +93,18 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
-            LOGGER.warning(
-                "Attempting to turn on %s via Wake-On-Lan; if this does not work, "
-                "please ensure that Wake-On-Lan is available for your device or use "
-                "a turn_on automation",
-                self.entity_id,
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                DEPRECATED_IMPLICIT_WAKE_ON_LAN.format(self._mac),
+                is_fixable=False,
+                breaks_in_ha_version="2026.8.0",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_implicit_wake_on_lan",
+                translation_placeholders={
+                    "mac_address": self._mac,
+                    "wol_documentation_url": "https://www.home-assistant.io/integrations/wake_on_lan/",
+                },
             )
             await self.hass.async_add_executor_job(self._wake_on_lan)
         else:

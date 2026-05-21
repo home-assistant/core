@@ -18,11 +18,6 @@ from homeassistant.util import yaml as yaml_util
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(autouse=True)
 async def setup_script(hass: HomeAssistant, script_config: dict[str, Any]) -> None:
     """Set up script integration."""

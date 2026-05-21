@@ -1,7 +1,5 @@
 """Support for binary sensor using RPi GPIO."""
 
-from __future__ import annotations
-
 from gpiozero import DigitalInputDevice
 import requests
 import voluptuous as vol
@@ -59,7 +57,7 @@ def setup_platform(
     for port_num, port_name in ports.items():
         try:
             remote_sensor = setup_input(address, port_num, pull_mode, bouncetime)
-        except (ValueError, IndexError, KeyError, OSError):
+        except ValueError, IndexError, KeyError, OSError:
             return
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, remote_sensor, invert_logic)
         devices.append(new_sensor)

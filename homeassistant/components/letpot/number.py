@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import DeviceFeature
+from letpot.models import DeviceFeature, LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -25,25 +25,29 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotNumberEntityDescription(LetPotEntityDescription, NumberEntityDescription):
+class LetPotNumberEntityDescription[_DataT: LetPotDeviceStatus](
+    LetPotEntityDescription, NumberEntityDescription
+):
     """Describes a LetPot number entity."""
 
-    max_value_fn: Callable[[LetPotDeviceCoordinator], float]
-    value_fn: Callable[[LetPotDeviceCoordinator], float | None]
+    max_value_fn: Callable[[LetPotDeviceCoordinator[_DataT]], float]
+    value_fn: Callable[[LetPotDeviceCoordinator[_DataT]], float | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, float], Coroutine[Any, Any, None]]
 
 
-NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
-    LetPotNumberEntityDescription(
+NUMBERS: tuple[LetPotNumberEntityDescription[LetPotGardenStatus], ...] = (
+    LetPotNumberEntityDescription[LetPotGardenStatus](
         key="light_brightness_levels",
         translation_key="light_brightness",
         value_fn=(
-            lambda coordinator: coordinator.device_client.get_light_brightness_levels(
-                coordinator.device.serial_number
-            ).index(coordinator.data.light_brightness)
-            + 1
-            if coordinator.data.light_brightness is not None
-            else None
+            lambda coordinator: (
+                coordinator.device_client.get_light_brightness_levels(
+                    coordinator.device.serial_number
+                ).index(coordinator.data.light_brightness)
+                + 1
+                if coordinator.data.light_brightness is not None
+                else None
+            )
         ),
         set_value_fn=(
             lambda device_client, serial, value: device_client.set_light_brightness(
@@ -52,10 +56,12 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
             )
         ),
         supported_fn=(
-            lambda coordinator: DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
         native_min_value=float(1),
         max_value_fn=lambda coordinator: float(
@@ -69,7 +75,7 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
     ),
-    LetPotNumberEntityDescription(
+    LetPotNumberEntityDescription[LetPotGardenStatus](
         key="plant_days",
         translation_key="plant_days",
         native_unit_of_measurement=UnitOfTime.DAYS,
@@ -92,30 +98,36 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot number entities based on a config entry and device status/features."""
+    """Set up LetPot number entities."""
     coordinators = entry.runtime_data
     async_add_entities(
-        LetPotNumberEntity(coordinator, description)
+        LetPotNumberEntity[LetPotGardenStatus](coordinator, description)
         for description in NUMBERS
         for coordinator in coordinators
         if description.supported_fn(coordinator)
     )
 
 
-class LetPotNumberEntity(LetPotEntity, NumberEntity):
+class LetPotNumberEntity[_DataT: LetPotDeviceStatus](
+    LetPotEntity[_DataT], NumberEntity
+):
     """Defines a LetPot number entity."""
 
-    entity_description: LetPotNumberEntityDescription
+    entity_description: LetPotNumberEntityDescription[_DataT]
 
     def __init__(
         self,
-        coordinator: LetPotDeviceCoordinator,
-        description: LetPotNumberEntityDescription,
+        coordinator: LetPotDeviceCoordinator[_DataT],
+        description: LetPotNumberEntityDescription[_DataT],
     ) -> None:
         """Initialize LetPot number entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
     def native_max_value(self) -> float:

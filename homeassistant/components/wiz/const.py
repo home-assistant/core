@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from pywizlight.bulb import PIR_SOURCE
 from pywizlight.exceptions import (
     WizLightConnectionError,
     WizLightNotKnownBulb,
@@ -24,3 +25,4 @@ WIZ_EXCEPTIONS = (
 WIZ_CONNECT_EXCEPTIONS = (WizLightNotKnownBulb, *WIZ_EXCEPTIONS)
 
 SIGNAL_WIZ_PIR = "wiz_pir_{}"
+OCCUPANCY_SOURCES = frozenset({PIR_SOURCE, "wfsens"})

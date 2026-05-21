@@ -1,7 +1,5 @@
 """The lookin integration config_flow."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -38,7 +36,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             device: Device = await self._validate_device(host=host)
-        except (aiohttp.ClientError, NoUsableService):
+        except aiohttp.ClientError, NoUsableService:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             LOGGER.exception("Unexpected exception")
@@ -63,7 +61,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             try:
                 device = await self._validate_device(host=host)
-            except (aiohttp.ClientError, NoUsableService):
+            except aiohttp.ClientError, NoUsableService:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:
                 LOGGER.exception("Unexpected exception")

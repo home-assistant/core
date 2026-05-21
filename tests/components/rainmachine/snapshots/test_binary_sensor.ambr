@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_hourly_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_month_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Month restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_rain_delay_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain delay restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +201,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_rain_sensor_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +251,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekday restrictions',
     'options': dict({
     }),
     'original_device_class': None,

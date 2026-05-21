@@ -1,7 +1,5 @@
 """Test helpers for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
@@ -38,6 +36,7 @@ class MockUFPFixture:
     api: ProtectApiClient
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -127,7 +126,7 @@ async def ids_from_device_description(
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id using real Home Assistant translation logic."""
+    """Return expected unique_id and entity_id using HA translation logic."""
 
     entity_name = normalize_name(device.display_name)
 
@@ -177,7 +176,7 @@ def add_device(
         return
 
     device._api = bootstrap.api
-    if isinstance(device, Camera):
+    if isinstance(device, Camera) and device.model is ModelType.CAMERA:
         for channel in device.channels:
             channel._api = bootstrap.api
 
@@ -244,6 +243,8 @@ async def adopt_devices(
 
         devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
         devices[ufp_device.id] = ufp_device
+        # Add to id_lookup so get_device_from_id works
+        add_device_ref(ufp.api.bootstrap, ufp_device)
 
         mock_msg = Mock()
         mock_msg.changed_data = {}

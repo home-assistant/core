@@ -1,7 +1,5 @@
 """Helper methods for common tasks."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable
@@ -15,6 +13,7 @@ from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
@@ -94,7 +93,7 @@ def soco_error[_T: _SonosEntitiesType, **_P, _R](
 
 
 def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
-    """Extract the best available target identifier from the provided instance object."""
+    """Extract the best target identifier from the instance."""
     if entity_id := getattr(instance, "entity_id", None):
         # SonosEntity instance
         return entity_id
@@ -135,6 +134,7 @@ class UnjoinData:
 
     speakers: list[SonosSpeaker] = field(default_factory=list)
     event: asyncio.Event = field(default_factory=asyncio.Event)
+    exception: HomeAssistantError | OSError | SoCoException | None = None
 
 
 @dataclass

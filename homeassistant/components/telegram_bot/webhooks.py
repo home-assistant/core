@@ -14,20 +14,19 @@ from telegram.ext import Application, ApplicationBuilder, TypeHandler
 from homeassistant.components.http import HomeAssistantRequest, HomeAssistantView
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
 from .const import CONF_TRUSTED_NETWORKS
+from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
-REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> BaseTelegramBot | None:
     """Set up the Telegram webhooks platform."""
@@ -38,10 +37,17 @@ async def async_setup_platform(
 
     pushbot = PushBot(hass, bot, config, secret_token)
 
-    await pushbot.start_application()
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        raise ConfigEntryNotReady("Failed to register webhook with Telegram")
+        raise RuntimeError("Failed to register webhook with Telegram")
+    _LOGGER.info(
+        "[%s %s] Webhook registered with %s",
+        bot.username,
+        bot.id,
+        get_base_url(bot),
+    )
+
+    await pushbot.start_application()
 
     hass.http.register_view(
         PushBotView(
@@ -52,6 +58,8 @@ async def async_setup_platform(
             secret_token,
         )
     )
+
+    _LOGGER.info("[%s %s] Webhook bot ready", bot.username, bot.id)
     return pushbot
 
 
@@ -61,7 +69,7 @@ def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
 
 
 class PushBot(BaseTelegramBot):
-    """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
+    """Handles push/webhook logic, passes updates to `self.handle_update`."""
 
     def __init__(
         self,
@@ -74,7 +82,8 @@ class PushBot(BaseTelegramBot):
         self.bot = bot
         self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
-        # Dumb Application that just gets our updates to our handler callback (self.handle_update)
+        # Application that gets our updates to our handler
+        # callback (self.handle_update)
         self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config, bot)
@@ -87,6 +96,7 @@ class PushBot(BaseTelegramBot):
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()
+        _LOGGER.info("[%s %s] Webhook bot shutdown", self.bot.username, self.bot.id)
 
     async def _try_to_set_webhook(self) -> bool:
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
@@ -117,14 +127,7 @@ class PushBot(BaseTelegramBot):
         # Some logging of Bot current status:
         _LOGGER.debug("telegram webhook status: %s", current_status)
 
-        result = await self._try_to_set_webhook()
-        if result:
-            _LOGGER.debug("Set new telegram webhook %s", self.webhook_url)
-        else:
-            _LOGGER.error("Set telegram webhook failed %s", self.webhook_url)
-            return False
-
-        return True
+        return await self._try_to_set_webhook()
 
     async def stop_application(self) -> None:
         """Handle gracefully stopping the Application object."""

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.10_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -58,8 +60,9 @@
 # ---
 # name: test_sensors[sensor.12_111111111111_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -79,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -115,8 +119,9 @@
 # ---
 # name: test_sensors[sensor.12_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -136,6 +141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -172,8 +178,9 @@
 # ---
 # name: test_sensors[sensor.1d_111111111111_counter_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -193,6 +200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Counter A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -224,8 +232,9 @@
 # ---
 # name: test_sensors[sensor.1d_111111111111_counter_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -245,6 +254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Counter B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -276,8 +286,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_latest_voltage_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -297,6 +308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -333,8 +345,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_latest_voltage_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -354,6 +367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -390,8 +404,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_latest_voltage_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -411,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -447,8 +463,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_latest_voltage_d-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -468,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latest voltage D',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -504,8 +522,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_voltage_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -525,6 +544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage A',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -561,8 +581,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_voltage_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -582,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage B',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -618,8 +640,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_voltage_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -639,6 +662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage C',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -675,8 +699,9 @@
 # ---
 # name: test_sensors[sensor.20_111111111111_voltage_d-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -696,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage D',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -732,8 +758,9 @@
 # ---
 # name: test_sensors[sensor.22_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -753,6 +780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -789,8 +817,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_hih3600_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -810,6 +839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH3600 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -843,8 +873,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_hih4000_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -864,6 +895,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH4000 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -897,8 +929,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_hih5030_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -918,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH5030 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -951,8 +985,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_htm1735_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -972,6 +1007,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTM1735 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1005,8 +1041,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1026,6 +1063,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1059,8 +1097,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1080,6 +1119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1113,8 +1153,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1134,6 +1175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1170,8 +1212,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1191,6 +1234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1227,8 +1271,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_vad_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1248,6 +1293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VAD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1284,8 +1330,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_vdd_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1305,6 +1352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1341,8 +1389,9 @@
 # ---
 # name: test_sensors[sensor.26_111111111111_vis_voltage_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1362,6 +1411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1398,8 +1448,9 @@
 # ---
 # name: test_sensors[sensor.28_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1419,6 +1470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1455,8 +1507,9 @@
 # ---
 # name: test_sensors[sensor.28_222222222222_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1476,6 +1529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1512,8 +1566,9 @@
 # ---
 # name: test_sensors[sensor.28_222222222223_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1533,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1569,8 +1625,9 @@
 # ---
 # name: test_sensors[sensor.30_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1590,6 +1647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1626,8 +1684,9 @@
 # ---
 # name: test_sensors[sensor.30_111111111111_thermocouple_k_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1647,6 +1706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermocouple K temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1683,8 +1743,9 @@
 # ---
 # name: test_sensors[sensor.30_111111111111_vis_voltage_gradient-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1704,6 +1765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage gradient',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1740,8 +1802,9 @@
 # ---
 # name: test_sensors[sensor.30_111111111111_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1761,6 +1824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1797,8 +1861,9 @@
 # ---
 # name: test_sensors[sensor.3b_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1818,6 +1883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1854,8 +1920,9 @@
 # ---
 # name: test_sensors[sensor.42_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1875,6 +1942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1911,8 +1979,9 @@
 # ---
 # name: test_sensors[sensor.7e_111111111111_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1932,6 +2001,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1965,8 +2035,9 @@
 # ---
 # name: test_sensors[sensor.7e_111111111111_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1986,6 +2057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -2019,8 +2091,9 @@
 # ---
 # name: test_sensors[sensor.7e_111111111111_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2040,6 +2113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2076,8 +2150,9 @@
 # ---
 # name: test_sensors[sensor.7e_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2097,6 +2172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2133,8 +2209,9 @@
 # ---
 # name: test_sensors[sensor.7e_222222222222_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2154,6 +2231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2190,8 +2268,9 @@
 # ---
 # name: test_sensors[sensor.7e_222222222222_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2211,6 +2290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2245,10 +2325,126 @@
     'state': '13.9375',
   })
 # ---
+# name: test_sensors[sensor.7e_333333333333_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.7e_333333333333_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'onewire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '/7E.333333333333/EDS0065/humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.7e_333333333333_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'device_file': '/7E.333333333333/EDS0065/humidity',
+      'friendly_name': '7E.333333333333 Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.7e_333333333333_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41.375',
+  })
+# ---
+# name: test_sensors[sensor.7e_333333333333_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.7e_333333333333_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'onewire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '/7E.333333333333/EDS0065/temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[sensor.7e_333333333333_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'device_file': '/7E.333333333333/EDS0065/temperature',
+      'friendly_name': '7E.333333333333 Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.7e_333333333333_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.9375',
+  })
+# ---
 # name: test_sensors[sensor.a6_111111111111_hih3600_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2268,6 +2464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH3600 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2301,8 +2498,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_hih4000_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2322,6 +2520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH4000 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2355,8 +2554,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_hih5030_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2376,6 +2576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HIH5030 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2409,8 +2610,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_htm1735_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2430,6 +2632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTM1735 humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2463,8 +2666,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2484,6 +2688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2517,8 +2722,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2538,6 +2744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -2571,8 +2778,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2592,6 +2800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2628,8 +2837,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2649,6 +2859,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2685,8 +2896,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_vad_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2706,6 +2918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VAD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2742,8 +2955,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_vdd_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2763,6 +2977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VDD voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2799,8 +3014,9 @@
 # ---
 # name: test_sensors[sensor.a6_111111111111_vis_voltage_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2820,6 +3036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VIS voltage difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2856,8 +3073,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111111_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2877,6 +3095,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2910,8 +3129,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111111_raw_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2931,6 +3151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2964,8 +3185,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111111_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2985,6 +3207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3021,8 +3244,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111112_moisture_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3042,6 +3266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3078,8 +3303,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111112_moisture_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3099,6 +3325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3135,8 +3362,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111112_wetness_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3156,6 +3384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wetness 0',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3189,8 +3418,9 @@
 # ---
 # name: test_sensors[sensor.ef_111111111112_wetness_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3210,6 +3440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wetness 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,

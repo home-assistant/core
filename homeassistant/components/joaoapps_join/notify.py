@@ -1,8 +1,7 @@
 """Support for Join notifications."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 from pyjoin import get_devices, send_notification
 import voluptuous as vol
@@ -66,7 +65,7 @@ class JoinNotificationService(BaseNotificationService):
         self._device_ids = device_ids
         self._device_names = device_names
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}

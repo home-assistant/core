@@ -4,6 +4,8 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from actron_neo_api import ActronAirAuthError
+from actron_neo_api.models.auth import ActronAirUserInfo
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -14,6 +16,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_oauth2_success(
     hass: HomeAssistant, mock_actron_api: AsyncMock
 ) -> None:
@@ -89,6 +92,7 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
     assert result["reason"] == "oauth2_error"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_token_polling_error(
     hass: HomeAssistant, mock_actron_api
 ) -> None:
@@ -148,17 +152,14 @@ async def test_user_flow_token_polling_error(
 
 
 async def test_user_flow_duplicate_account(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test duplicate account handling - should abort when same account is already configured."""
+    """Test duplicate account handling.
+
+    Should abort when same account is already configured.
+    """
     # Create an existing config entry for the same user account
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@example.com",
-        data={CONF_API_TOKEN: "existing_refresh_token"},
-        unique_id="test_user_id",
-    )
-    existing_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     # Start the config flow
     result = await hass.config_entries.flow.async_init(
@@ -180,5 +181,223 @@ async def test_user_flow_duplicate_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort because the account is already configured
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_success(
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful reauthentication flow."""
+    # Create an existing config entry
+    mock_config_entry.add_to_hass(hass)
+    existing_entry = mock_config_entry
+
+    # Start the reauth flow
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    # Should show the reauth confirmation form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit the confirmation form to start the OAuth flow
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should start with a progress step
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should update the existing entry with new token
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert existing_entry.data[CONF_API_TOKEN] == "test_refresh_token"
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication flow with wrong account."""
+    # Create an existing config entry
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock the API to return a different user ID
+    mock_actron_api.get_user_info = AsyncMock(
+        return_value=ActronAirUserInfo(
+            id="different_user_id", email="different@example.com"
+        )
+    )
+
+    # Start the reauth flow
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    # Should show the reauth confirmation form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # Submit the confirmation form
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should start with a progress step
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should abort because of wrong account
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_timeout(
+    hass: HomeAssistant, mock_actron_api: AsyncMock
+) -> None:
+    """Test OAuth2 flow when login task raises a non-CannotConnect exception."""
+
+    # Override the default mock to raise a generic exception (not CannotConnect)
+    async def raise_generic_error(device_code):
+        raise RuntimeError("Unexpected error")
+
+    mock_actron_api.poll_for_token = raise_generic_error
+
+    # Start the config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Task raises a non-CannotConnect exception, so it goes to timeout
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "timeout"
+
+    # Continue to the timeout step
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show the timeout form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "timeout"
+
+    # Now fix the mock to allow successful token polling for recovery
+    async def successful_poll_for_token(device_code):
+        await asyncio.sleep(0.1)
+        return {
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+        }
+
+    mock_actron_api.poll_for_token = successful_poll_for_token
+
+    # User clicks retry button
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Should start progress again
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should create entry on successful recovery
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test@example.com"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_finish_login_auth_error(
+    hass: HomeAssistant, mock_actron_api: AsyncMock
+) -> None:
+    """Test finish_login step when get_user_info raises ActronAirAuthError."""
+    # Start the config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
+    # Now make get_user_info fail with auth error
+    mock_actron_api.get_user_info = AsyncMock(
+        side_effect=ActronAirAuthError("Auth error getting user info")
+    )
+
+    # Continue the flow after progress is done
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should abort with oauth2_error
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth2_error"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+    assert result["progress_action"] == "wait_for_authorization"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_TOKEN] == "test_refresh_token"
+
+
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow aborts when wrong account is used."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_actron_api.get_user_info = AsyncMock(
+        return_value=ActronAirUserInfo(
+            id="different_user_id", email="different@example.com"
+        )
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"

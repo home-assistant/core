@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Sequence
 from contextlib import suppress
@@ -369,9 +367,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             [{"type": "totp", "id": "totp", "name": "Authenticator app"}],
         )
 
-        setattr(
-            hass, "auth", await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
-        )
+        hass.auth = await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
 
     await hass.config.async_load()
 
@@ -526,7 +522,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
-    def discard(self, value: str) -> None:
+    def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 
@@ -630,6 +626,16 @@ class Config:
         """
         return os.path.join(self.config_dir, *path)
 
+    def cache_path(self, *path: str) -> str:
+        """Generate path to the file within the cache directory.
+
+        The cache directory is used for temporary data that can be
+        regenerated and is not included in backups.
+
+        Async friendly.
+        """
+        return self.path(".cache", *path)
+
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
         parsed_url = f"{yarl.URL(url)!s}/"
@@ -655,7 +661,7 @@ class Config:
                 thepath = thepath.resolve()
             else:
                 thepath = thepath.parent.resolve()
-        except (FileNotFoundError, RuntimeError, PermissionError):
+        except FileNotFoundError, RuntimeError, PermissionError:
             return False
 
         for allowed_path in self.allowlist_external_dirs:

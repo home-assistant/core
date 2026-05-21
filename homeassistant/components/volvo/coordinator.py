@@ -1,7 +1,5 @@
 """Volvo coordinators."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -27,7 +25,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
 
-VERY_SLOW_INTERVAL = 60
+VERY_SLOW_INTERVAL = 30
 SLOW_INTERVAL = 15
 MEDIUM_INTERVAL = 2
 FAST_INTERVAL = 1
@@ -186,7 +184,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        raise NotImplementedError
+        """Determine which API calls to make for this coordinator."""
 
 
 class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
@@ -214,11 +212,8 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
         api = self.context.api
 
         return [
-            api.async_get_brakes_status,
+            api.async_get_command_accessibility,
             api.async_get_diagnostics,
-            api.async_get_engine_warnings,
-            api.async_get_odometer,
-            api.async_get_statistics,
             api.async_get_tyre_states,
             api.async_get_warnings,
         ]
@@ -260,15 +255,28 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         api = self.context.api
-        api_calls: list[Any] = [api.async_get_command_accessibility]
+        api_calls: list[Any] = [
+            api.async_get_brakes_status,
+            api.async_get_engine_warnings,
+            api.async_get_odometer,
+        ]
 
-        location = await api.async_get_location()
+        # Volvo is returning FORBIDDEN for the location request in case the vehicle
+        # is in an unsupported region. Since we can't know where the vehicle is
+        # located, we silently ignore the failure. If (re-)authentication is needed,
+        # other requests will fail as well and trigger the re-auth flow.
+        location = None
+        try:
+            location = await api.async_get_location()
+        except VolvoAuthException as ex:
+            _LOGGER.debug(
+                "%s - Location not supported for this vehicle. %s",
+                self.config_entry.entry_id,
+                ex.message,
+            )
 
-        if location.get("location") is not None:
+        if location and location.get("location") is not None:
             api_calls.append(api.async_get_location)
-
-        if self.context.vehicle.has_combustion_engine():
-            api_calls.append(api.async_get_fuel_status)
 
         return api_calls
 
@@ -299,7 +307,10 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         api = self.context.api
         vehicle = self.context.vehicle
-        api_calls: list[Any] = [api.async_get_engine_status]
+        api_calls: list[Any] = [
+            api.async_get_engine_status,
+            api.async_get_statistics,
+        ]
 
         if vehicle.has_battery_engine():
             capabilities = await api.async_get_energy_capabilities()
@@ -316,6 +327,9 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
                 ]
 
                 api_calls.append(self._async_get_energy_state)
+
+        if self.context.vehicle.has_combustion_engine():
+            api_calls.append(api.async_get_fuel_status)
 
         return api_calls
 

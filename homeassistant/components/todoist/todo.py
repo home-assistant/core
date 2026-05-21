@@ -12,23 +12,21 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import TodoistCoordinator
+from .coordinator import TodoistConfigEntry, TodoistCoordinator
+from .util import parse_due_date
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TodoistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Todoist todo platform config entry."""
-    coordinator: TodoistCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     projects = await coordinator.async_get_projects()
     async_add_entities(
         TodoistTodoListEntity(coordinator, entry.entry_id, project.id, project.name)
@@ -45,9 +43,9 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     }
     if due := item.due:
         if isinstance(due, datetime.datetime):
-            item_data["due_datetime"] = due.isoformat()
+            item_data["due_datetime"] = due
         else:
-            item_data["due_date"] = due.isoformat()
+            item_data["due_date"] = due
         # In order to not lose any recurrence metadata for the task, we need to
         # ensure that we send the `due_string` param if the task has it set.
         # NOTE: It's ok to send stale data for non-recurring tasks. Any provided
@@ -99,24 +97,16 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                 if task.parent_id is not None:
                     # Filter out sub-tasks until they are supported by the UI.
                     continue
-                if task.is_completed:
+                if task.completed_at is not None:
                     status = TodoItemStatus.COMPLETED
                 else:
                     status = TodoItemStatus.NEEDS_ACTION
-                due: datetime.date | datetime.datetime | None = None
-                if task_due := task.due:
-                    if task_due.datetime:
-                        due = dt_util.as_local(
-                            datetime.datetime.fromisoformat(task_due.datetime)
-                        )
-                    elif task_due.date:
-                        due = datetime.date.fromisoformat(task_due.date)
                 items.append(
                     TodoItem(
                         summary=task.content,
                         uid=task.id,
                         status=status,
-                        due=due,
+                        due=parse_due_date(task.due),
                         description=task.description or None,  # Don't use empty string
                     )
                 )
@@ -147,9 +137,9 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
                 if item.status != existing_item.status:
                     if item.status == TodoItemStatus.COMPLETED:
-                        await self.coordinator.api.close_task(task_id=uid)
+                        await self.coordinator.api.complete_task(task_id=uid)
                     else:
-                        await self.coordinator.api.reopen_task(task_id=uid)
+                        await self.coordinator.api.uncomplete_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

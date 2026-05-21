@@ -1,7 +1,5 @@
 """Sensor platform for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -48,9 +46,11 @@ SENSOR_DESCRIPTIONS: tuple[CookidooSensorEntityDescription, ...] = (
         key=CookidooSensor.SUBSCRIPTION,
         translation_key=CookidooSensor.SUBSCRIPTION,
         value_fn=(
-            lambda data: SUBSCRIPTION_MAP[data.subscription.type]
-            if data.subscription
-            else SUBSCRIPTION_MAP["NONE"]
+            lambda data: (
+                SUBSCRIPTION_MAP[data.subscription.type]
+                if data.subscription
+                else SUBSCRIPTION_MAP["NONE"]
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         options=list(SUBSCRIPTION_MAP.values()),
@@ -60,9 +60,11 @@ SENSOR_DESCRIPTIONS: tuple[CookidooSensorEntityDescription, ...] = (
         key=CookidooSensor.EXPIRES,
         translation_key=CookidooSensor.EXPIRES,
         value_fn=(
-            lambda data: dt_util.parse_datetime(data.subscription.expires)
-            if data.subscription
-            else None
+            lambda data: (
+                dt_util.parse_datetime(data.subscription.expires)
+                if data.subscription
+                else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,

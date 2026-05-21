@@ -1,7 +1,5 @@
 """Support for lights."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
@@ -68,4 +66,4 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON
+        return bool(self.coordinator.data[LIGHT][self._device.index].status == STATE_ON)

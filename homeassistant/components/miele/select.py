@@ -1,7 +1,5 @@
 """Platform for Miele select entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
@@ -71,7 +69,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:

@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from roborock.data import Status
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
@@ -13,7 +12,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
 
 
 class RoborockEntity(Entity):
@@ -89,12 +93,6 @@ class RoborockCoordinatedEntityV1(
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
 
-    @property
-    def _device_status(self) -> Status:
-        """Return the status of the device."""
-        data = self.coordinator.data
-        return data.status
-
     async def send(
         self,
         command: RoborockCommand | str,
@@ -123,4 +121,44 @@ class RoborockCoordinatedEntityA01(
             device_info=coordinator.device_info,
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
+        self._attr_unique_id = unique_id
+
+
+class RoborockCoordinatedEntityB01Q7(
+    RoborockEntity, CoordinatorEntity[RoborockB01Q7UpdateCoordinator]
+):
+    """Representation of coordinated Roborock Entity."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockB01Q7UpdateCoordinator,
+    ) -> None:
+        """Initialize the coordinated Roborock Device."""
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
+        RoborockEntity.__init__(
+            self,
+            unique_id=unique_id,
+            device_info=coordinator.device_info,
+        )
+        self._attr_unique_id = unique_id
+
+
+class RoborockCoordinatedEntityB01Q10(
+    RoborockEntity, CoordinatorEntity[RoborockB01Q10UpdateCoordinator]
+):
+    """Representation of coordinated Roborock Q10 Entity."""
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Initialize the coordinated Roborock Device."""
+        CoordinatorEntity.__init__(self, coordinator=coordinator)
+        RoborockEntity.__init__(
+            self,
+            unique_id=unique_id,
+            device_info=coordinator.device_info,
+        )
         self._attr_unique_id = unique_id

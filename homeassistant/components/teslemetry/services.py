@@ -18,16 +18,19 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 _LOGGER = logging.getLogger(__name__)
 
 # Attributes
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_ID = "id"
 ATTR_GPS = "gps"
 ATTR_TYPE = "type"
 ATTR_VALUE = "value"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LOCATION = "location"
 ATTR_LOCALE = "locale"
 ATTR_ORDER = "order"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_FIELDS = "fields"
 ATTR_ENABLE = "enable"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_TIME = "time"
 ATTR_PIN = "pin"
 ATTR_TOU_SETTINGS = "tou_settings"
@@ -41,6 +44,7 @@ ATTR_DAYS_OF_WEEK = "days_of_week"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_NAME = "name"
 ATTR_PRECONDITION_TIME = "precondition_time"
 
@@ -149,7 +153,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        time: int | None = None
+        time: int
         # Convert time to minutes since minute
         if "time" in call.data:
             (hours, minutes, *_seconds) = call.data["time"].split(":")
@@ -158,6 +162,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
+        else:
+            time = 0
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
@@ -198,6 +204,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_preconditioning",
             )
+        else:
+            departure_time = 0
 
         # Off peak charging
         off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
@@ -214,6 +222,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_off_peak",
             )
+        else:
+            end_off_peak_time = 0
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_departure(
@@ -252,9 +262,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
-            vehicle.api.set_valet_mode(
-                call.data.get("enable"), call.data.get("pin", "")
-            )
+            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"])
         )
 
     hass.services.async_register(
@@ -276,14 +284,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get("enable")
+        enable = call.data["enable"]
         if enable is True:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_activate(call.data.get("pin"))
+                vehicle.api.speed_limit_activate(call.data["pin"])
             )
         elif enable is False:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_deactivate(call.data.get("pin"))
+                vehicle.api.speed_limit_deactivate(call.data["pin"])
             )
 
     hass.services.async_register(
@@ -305,9 +313,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
 
-        resp = await handle_command(
-            site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
-        )
+        tou_settings = call.data[ATTR_TOU_SETTINGS]
+        # Unwrap tariff_content_v2 if user included it, since the SDK adds this wrapper
+        if "tariff_content_v2" in tou_settings:
+            tou_settings = tou_settings["tariff_content_v2"]
+
+        resp = await handle_command(site.api.time_of_use_settings(tou_settings))
         if "error" in resp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -338,7 +349,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
@@ -438,7 +450,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]

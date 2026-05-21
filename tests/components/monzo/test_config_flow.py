@@ -244,7 +244,7 @@ async def test_config_reauth_wrong_account(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
-            "user_id": 12346,
+            "user_id": "12346",
         },
     )
 

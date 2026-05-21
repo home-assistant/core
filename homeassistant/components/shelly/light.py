@@ -1,7 +1,5 @@
 """Light for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, Final, cast
 
@@ -72,8 +70,8 @@ BLOCK_LIGHTS = {
     ),
     ("relay", "output"): BlockLightDescription(
         key="relay|output",
-        removal_condition=lambda settings, block: not is_block_channel_type_light(
-            settings, block
+        removal_condition=lambda settings, block: (
+            not is_block_channel_type_light(settings, block)
         ),
     ),
 }
@@ -110,7 +108,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
     entity_description: BlockLightDescription
-    _attr_supported_color_modes: set[str]
+    _attr_supported_color_modes: set[ColorMode]
 
     def __init__(
         self,
@@ -538,8 +536,8 @@ LIGHTS: Final = {
     "switch": RpcEntityDescription(
         key="switch",
         sub_key="output",
-        removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, get_rpc_key_id(key)
+        removal_condition=lambda config, _status, key: (
+            not is_rpc_channel_type_light(config, get_rpc_key_id(key))
         ),
         entity_class=RpcShellySwitchAsLight,
     ),

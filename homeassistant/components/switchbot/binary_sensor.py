@@ -1,7 +1,5 @@
 """Support for SwitchBot binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -82,6 +80,15 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         key="leak",
         name=None,
         device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    "battery_charging": SwitchbotBinarySensorEntityDescription(
+        key="battery_charging",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    ),
+    "tamper_alarm": SwitchbotBinarySensorEntityDescription(
+        key="tamper_alarm",
+        device_class=BinarySensorDeviceClass.TAMPER,
     ),
 }
 

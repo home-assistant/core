@@ -1,5 +1,6 @@
 """Test homee sensors."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,22 +11,26 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.homee.const import (
-    DOMAIN,
     OPEN_CLOSE_MAP,
     OPEN_CLOSE_MAP_REVERSED,
     WINDOW_MAP,
     WINDOW_MAP_REVERSED,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import async_update_attribute_value, build_mock_node, setup_integration
-from .conftest import HOMEE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +57,7 @@ async def test_up_down_values(
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
-    attribute = mock_homee.nodes[0].attributes[27]
+    attribute = mock_homee.nodes[0].attributes[28]
     for i in range(1, 5):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -82,7 +87,7 @@ async def test_window_position(
         == WINDOW_MAP[0]
     )
 
-    attribute = mock_homee.nodes[0].attributes[32]
+    attribute = mock_homee.nodes[0].attributes[33]
     for i in range(1, 3):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -98,79 +103,6 @@ async def test_window_position(
             hass.states.get("sensor.test_multisensor_window_position").state
             == WINDOW_MAP_REVERSED[i]
         )
-
-
-@pytest.mark.parametrize(
-    ("disabler", "expected_entity", "expected_issue"),
-    [
-        (None, False, False),
-        (er.RegistryEntryDisabler.USER, True, True),
-    ],
-)
-async def test_sensor_deprecation(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-    entity_registry: er.EntityRegistry,
-    disabler: er.RegistryEntryDisabler,
-    expected_entity: bool,
-    expected_issue: bool,
-) -> None:
-    """Test sensor deprecation issue."""
-    entity_uid = f"{HOMEE_ID}-1-9"
-    entity_id = "test_multisensor_valve_position"
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        entity_uid,
-        suggested_object_id=entity_id,
-        disabled_by=disabler,
-    )
-
-    with patch(
-        "homeassistant.components.homee.sensor.entity_used_in", return_value=True
-    ):
-        await setup_sensor(hass, mock_homee, mock_config_entry)
-
-    assert (entity_registry.async_get(f"sensor.{entity_id}") is None) is expected_entity
-    assert (
-        issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{entity_uid}",
-        )
-        is None
-    ) is expected_issue
-
-
-async def test_sensor_deprecation_unused_entity(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor deprecation issue."""
-    entity_uid = f"{HOMEE_ID}-1-9"
-    entity_id = "test_multisensor_valve_position"
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        entity_uid,
-        suggested_object_id=entity_id,
-        disabled_by=None,
-    )
-
-    await setup_sensor(hass, mock_homee, mock_config_entry)
-
-    assert entity_registry.async_get(f"sensor.{entity_id}") is not None
-    assert (
-        issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{entity_uid}",
-        )
-        is None
-    )
 
 
 async def test_entity_connection_listener(
@@ -213,7 +145,7 @@ async def test_entity_update_action(
         blocking=True,
     )
 
-    mock_homee.update_attribute.assert_called_once_with(1, 23)
+    mock_homee.update_attribute.assert_called_once_with(1, 24)
 
 
 async def test_sensor_snapshot(
@@ -226,7 +158,6 @@ async def test_sensor_snapshot(
     """Test the multisensor snapshot."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

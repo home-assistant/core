@@ -311,6 +311,8 @@ async def test_knx_subscribe_telegrams_command_no_project(
         "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
     await knx.assert_write("1/2/4", 1)
+    # receive undecodable data secure telegram
+    knx.receive_data_secure_issue("1/2/5")
 
     # receive events
     res = await client.receive_json()
@@ -353,6 +355,14 @@ async def test_knx_subscribe_telegrams_command_no_project(
         res["event"]["source"] == "0.0.0"
     )  # needs to be the IA currently connected to
     assert res["event"]["direction"] == "Outgoing"
+    assert res["event"]["timestamp"] is not None
+
+    res = await client.receive_json()
+    assert res["event"]["destination"] == "1/2/5"
+    assert res["event"]["payload"] is None
+    assert res["event"]["telegramtype"] == "SecureAPDU"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
 
@@ -428,6 +438,43 @@ async def test_knx_get_schema(
     await knx.setup_integration()
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "knx/get_schema", "platform": platform})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+async def test_knx_get_expose_groups(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_groups command returning proper expose groups data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_expose_groups"})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+async def test_knx_get_expose_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_config command returning proper expose config data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/get_expose_config",
+            "entity_id": "cover.test",
+        }
+    )
     res = await client.receive_json()
     assert res == snapshot
 

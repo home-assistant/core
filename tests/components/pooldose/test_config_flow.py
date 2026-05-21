@@ -1,8 +1,10 @@
 """Test the PoolDose config flow."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.pooldose.const import DOMAIN
@@ -14,10 +16,11 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import RequestStatus
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -35,8 +38,9 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["result"].unique_id == "TEST123456789"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_device_unreachable(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that the form shows error when device is unreachable."""
     mock_pooldose_client.is_connected = False
@@ -63,8 +67,9 @@ async def test_device_unreachable(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_api_version_unsupported(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that the form shows error when API version is unsupported."""
     mock_pooldose_client.check_apiversion_supported.return_value = (
@@ -96,11 +101,9 @@ async def test_api_version_unsupported(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_device_info(
-    hass: HomeAssistant,
-    mock_pooldose_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    device_info: dict[str, Any],
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, device_info: dict[str, Any]
 ) -> None:
     """Test that the form shows error when device_info is None."""
     mock_pooldose_client.device_info = None
@@ -133,10 +136,10 @@ async def test_form_no_device_info(
         (RequestStatus.UNKNOWN_ERROR, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_errors(
     hass: HomeAssistant,
     mock_pooldose_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     client_status: str,
     expected_error: str,
 ) -> None:
@@ -163,8 +166,9 @@ async def test_connection_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_api_no_data(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that the form shows error when API returns NO_DATA."""
     mock_pooldose_client.check_apiversion_supported.return_value = (
@@ -195,11 +199,9 @@ async def test_api_no_data(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_serial_number(
-    hass: HomeAssistant,
-    mock_pooldose_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    device_info: dict[str, Any],
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, device_info: dict[str, Any]
 ) -> None:
     """Test that the form shows error when device_info has no serial number."""
     mock_pooldose_client.device_info = {"NAME": "Pool Device", "MODEL": "POOL DOSE"}
@@ -240,7 +242,8 @@ async def test_duplicate_entry_aborts(
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Test the full DHCP config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -261,8 +264,9 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["result"].unique_id == "TEST123456789"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_no_serial_number(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that the DHCP flow aborts if no serial number is found."""
     mock_pooldose_client.device_info = {"NAME": "Pool Device", "MODEL": "POOL DOSE"}
@@ -286,11 +290,9 @@ async def test_dhcp_no_serial_number(
         (RequestStatus.UNKNOWN_ERROR),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_connection_errors(
-    hass: HomeAssistant,
-    mock_pooldose_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    client_status: str,
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, client_status: str
 ) -> None:
     """Test that the DHCP flow aborts on connection errors."""
     mock_pooldose_client.connect.return_value = client_status
@@ -313,11 +315,9 @@ async def test_dhcp_connection_errors(
         RequestStatus.API_VERSION_UNSUPPORTED,
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_api_errors(
-    hass: HomeAssistant,
-    mock_pooldose_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    api_status: str,
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, api_status: str
 ) -> None:
     """Test that the DHCP flow aborts on API errors."""
     mock_pooldose_client.check_apiversion_supported.return_value = (api_status, {})
@@ -333,8 +333,9 @@ async def test_dhcp_api_errors(
     assert result["reason"] == "no_serial_number"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_updates_host(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that DHCP discovery updates the host if it has changed."""
     mock_config_entry.add_to_hass(hass)
@@ -358,8 +359,9 @@ async def test_dhcp_updates_host(
     assert mock_config_entry.data[CONF_HOST] == "192.168.0.123"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_adds_mac_if_not_present(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that DHCP flow adds MAC address if not already in config entry data."""
     # Create a config entry without MAC address
@@ -391,8 +393,9 @@ async def test_dhcp_adds_mac_if_not_present(
     assert entry.data[CONF_MAC] == "a4e57caabbcc"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_preserves_existing_mac(
-    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock
 ) -> None:
     """Test that DHCP flow preserves existing MAC in config entry data."""
     # Create a config entry with MAC address already set
@@ -426,3 +429,80 @@ async def test_dhcp_preserves_existing_mac(
     assert entry.data[CONF_HOST] == "192.168.0.123"  # IP was updated
     assert entry.data[CONF_MAC] == "existing11aabb"  # MAC remains unchanged
     assert entry.data[CONF_MAC] != "different22ccdd"  # Not updated to new MAC
+
+
+async def _start_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, host_ip: str
+) -> Any:
+    """Initialize a reconfigure flow for PoolDose and submit new host."""
+    mock_config_entry.add_to_hass(hass)
+
+    reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+
+    return await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"], {CONF_HOST: host_ip}
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test successful reconfigure updates host and reloads entry."""
+    # Ensure the mocked device returns the same serial number as the
+    # config entry so the reconfigure flow matches the device
+    mock_pooldose_client.device_info = {"SERIAL_NUMBER": mock_config_entry.unique_id}
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Config entry should have updated host
+    assert mock_config_entry.data.get(CONF_HOST) == "192.168.0.200"
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Config entry should have updated host
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.data.get(CONF_HOST) == "192.168.0.200"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure shows cannot_connect when device unreachable."""
+    mock_pooldose_client.connect.return_value = RequestStatus.HOST_UNREACHABLE
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when serial number doesn't match existing entry."""
+    # Return device info with different serial number
+    mock_pooldose_client.device_info = {"SERIAL_NUMBER": "OTHER123"}
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"

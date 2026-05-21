@@ -1,7 +1,5 @@
 """Support for esphome sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 import math
 
@@ -63,6 +61,9 @@ _STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | No
             EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
             EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
             EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
+            EsphomeSensorStateClass.MEASUREMENT_ANGLE: (
+                SensorStateClass.MEASUREMENT_ANGLE
+            ),
         }
     )
 )

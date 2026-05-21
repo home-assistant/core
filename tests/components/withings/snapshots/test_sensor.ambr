@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.body_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -61,8 +63,9 @@
 # ---
 # name: test_all_entities[sensor.henk_active_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -117,8 +121,9 @@
 # ---
 # name: test_all_entities[sensor.henk_active_time_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -138,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active time today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -177,8 +183,9 @@
 # ---
 # name: test_all_entities[sensor.henk_average_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -198,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,8 +237,9 @@
 # ---
 # name: test_all_entities[sensor.henk_average_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -250,6 +259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -281,8 +291,9 @@
 # ---
 # name: test_all_entities[sensor.henk_body_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Body temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -337,8 +349,9 @@
 # ---
 # name: test_all_entities[sensor.henk_bone_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bone mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -393,8 +407,9 @@
 # ---
 # name: test_all_entities[sensor.henk_breathing_disturbances_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -414,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breathing disturbances intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -444,8 +460,9 @@
 # ---
 # name: test_all_entities[sensor.henk_calories_burnt_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -463,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calories burnt last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -496,8 +514,9 @@
 # ---
 # name: test_all_entities[sensor.henk_deep_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -517,6 +536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deep sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -555,8 +575,9 @@
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -576,6 +597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Diastolic blood pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -611,8 +633,9 @@
 # ---
 # name: test_all_entities[sensor.henk_distance_travelled_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -630,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -664,8 +688,9 @@
 # ---
 # name: test_all_entities[sensor.henk_distance_travelled_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -685,6 +710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -721,8 +747,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_feet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -740,6 +767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity feet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -770,8 +798,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_left_foot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -789,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity left foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -819,8 +849,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_right_foot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -838,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity right foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -868,8 +900,9 @@
 # ---
 # name: test_all_entities[sensor.henk_elevation_change_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -887,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -921,8 +955,9 @@
 # ---
 # name: test_all_entities[sensor.henk_elevation_change_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -942,6 +977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -978,8 +1014,9 @@
 # ---
 # name: test_all_entities[sensor.henk_extracellular_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -999,6 +1036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extracellular water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1034,8 +1072,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1055,6 +1094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1090,8 +1130,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1111,6 +1152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1146,8 +1188,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1167,6 +1210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1202,8 +1246,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1223,6 +1268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1258,8 +1304,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1279,6 +1326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1314,8 +1362,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1335,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1370,8 +1420,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1391,6 +1442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1426,8 +1478,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1447,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1482,8 +1536,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1503,6 +1558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1538,8 +1594,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1559,6 +1616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1594,8 +1652,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1615,6 +1674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1650,8 +1710,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1671,6 +1732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1706,8 +1768,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1727,6 +1790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat ratio',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1761,8 +1825,9 @@
 # ---
 # name: test_all_entities[sensor.henk_heart_pulse-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1782,6 +1847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heart pulse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1813,8 +1879,9 @@
 # ---
 # name: test_all_entities[sensor.henk_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1834,6 +1901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Height',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1869,8 +1937,9 @@
 # ---
 # name: test_all_entities[sensor.henk_hydration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1890,6 +1959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1925,8 +1995,9 @@
 # ---
 # name: test_all_entities[sensor.henk_intense_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1946,6 +2017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intense activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1985,8 +2057,9 @@
 # ---
 # name: test_all_entities[sensor.henk_intracellular_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2006,6 +2079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intracellular water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2041,8 +2115,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2060,6 +2135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2097,8 +2173,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2116,6 +2193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2145,8 +2223,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2216,6 +2295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2297,8 +2377,9 @@
 # ---
 # name: test_all_entities[sensor.henk_light_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2318,6 +2399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2356,8 +2438,9 @@
 # ---
 # name: test_all_entities[sensor.henk_maximum_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2377,6 +2460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2408,8 +2492,9 @@
 # ---
 # name: test_all_entities[sensor.henk_maximum_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2429,6 +2514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2460,8 +2546,9 @@
 # ---
 # name: test_all_entities[sensor.henk_minimum_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2481,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2512,8 +2600,9 @@
 # ---
 # name: test_all_entities[sensor.henk_minimum_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2533,6 +2622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2564,8 +2654,9 @@
 # ---
 # name: test_all_entities[sensor.henk_moderate_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2585,6 +2676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moderate activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2624,8 +2716,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2645,6 +2738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2680,8 +2774,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2701,6 +2796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2736,8 +2832,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2757,6 +2854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2792,8 +2890,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2813,6 +2912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2848,8 +2948,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2869,6 +2970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2904,8 +3006,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2925,6 +3028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2960,8 +3064,9 @@
 # ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2979,6 +3084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause during last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3016,8 +3122,9 @@
 # ---
 # name: test_all_entities[sensor.henk_pulse_wave_velocity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3037,6 +3144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pulse wave velocity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3072,8 +3180,9 @@
 # ---
 # name: test_all_entities[sensor.henk_rem_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3093,6 +3202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'REM sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3131,8 +3241,9 @@
 # ---
 # name: test_all_entities[sensor.henk_skin_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3152,6 +3263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3187,8 +3299,9 @@
 # ---
 # name: test_all_entities[sensor.henk_sleep_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3208,6 +3321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep goal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3246,8 +3360,9 @@
 # ---
 # name: test_all_entities[sensor.henk_sleep_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3267,6 +3382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3298,8 +3414,9 @@
 # ---
 # name: test_all_entities[sensor.henk_snoring-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3319,6 +3436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3357,8 +3475,9 @@
 # ---
 # name: test_all_entities[sensor.henk_snoring_episode_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3378,6 +3497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring episode count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3408,8 +3528,9 @@
 # ---
 # name: test_all_entities[sensor.henk_soft_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3429,6 +3550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soft activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3468,8 +3590,9 @@
 # ---
 # name: test_all_entities[sensor.henk_spo2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3489,6 +3612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SpO2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3520,8 +3644,9 @@
 # ---
 # name: test_all_entities[sensor.henk_step_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3541,6 +3666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Step goal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3572,8 +3698,9 @@
 # ---
 # name: test_all_entities[sensor.henk_steps_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3593,6 +3720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steps today',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3625,8 +3753,9 @@
 # ---
 # name: test_all_entities[sensor.henk_systolic_blood_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3646,6 +3775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Systolic blood pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3681,8 +3811,9 @@
 # ---
 # name: test_all_entities[sensor.henk_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3702,6 +3833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3737,8 +3869,9 @@
 # ---
 # name: test_all_entities[sensor.henk_time_to_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3758,6 +3891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3796,8 +3930,9 @@
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3817,6 +3952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to wakeup',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3855,8 +3991,9 @@
 # ---
 # name: test_all_entities[sensor.henk_total_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3876,6 +4013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3911,8 +4049,9 @@
 # ---
 # name: test_all_entities[sensor.henk_vascular_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3930,6 +4069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vascular age',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3959,8 +4099,9 @@
 # ---
 # name: test_all_entities[sensor.henk_visceral_fat_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3978,6 +4119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visceral fat index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4007,8 +4149,9 @@
 # ---
 # name: test_all_entities[sensor.henk_vo2_max-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4028,6 +4171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VO2 max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4059,8 +4203,9 @@
 # ---
 # name: test_all_entities[sensor.henk_wakeup_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4080,6 +4225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4111,8 +4257,9 @@
 # ---
 # name: test_all_entities[sensor.henk_wakeup_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4132,6 +4279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4170,8 +4318,9 @@
 # ---
 # name: test_all_entities[sensor.henk_weight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4191,6 +4340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4226,8 +4376,9 @@
 # ---
 # name: test_all_entities[sensor.henk_weight_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4247,6 +4398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight goal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

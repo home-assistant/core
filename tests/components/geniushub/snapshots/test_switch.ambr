@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cloud_all_sensors[switch.bedroom_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -58,8 +60,9 @@
 # ---
 # name: test_cloud_all_sensors[switch.kitchen_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -77,6 +80,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -115,8 +119,9 @@
 # ---
 # name: test_cloud_all_sensors[switch.study_socket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,

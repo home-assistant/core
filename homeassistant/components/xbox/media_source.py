@@ -1,7 +1,5 @@
 """Xbox Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -161,9 +159,10 @@ class XboxSource(MediaSource):
                         )
                     )
                 else:
-                    screenshot_response = await client.screenshots.get_recent_community_screenshots_by_title_id(
-                        identifier.title_id
+                    get_community = (
+                        client.screenshots.get_recent_community_screenshots_by_title_id
                     )
+                    screenshot_response = await get_community(identifier.title_id)
             except TimeoutException as e:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
@@ -209,10 +208,10 @@ class XboxSource(MediaSource):
             if images is not None:
                 try:
                     return PlayMedia(
-                        images[int(identifier.media_id)].url,
+                        to_https(images[int(identifier.media_id)].url),
                         MIME_TYPE_MAP[ATTR_SCREENSHOTS],
                     )
-                except (ValueError, IndexError):
+                except ValueError, IndexError:
                     pass
 
         raise Unresolvable(
@@ -423,7 +422,10 @@ class XboxSource(MediaSource):
             identifier=str(identifier),
             media_class=MEDIA_CLASS_MAP[identifier.media_type],
             media_content_type=MediaClass.DIRECTORY,
-            title=f"Xbox / {entry.title} / {game.name} / {MAP_TITLE[identifier.media_type]}",
+            title=(
+                f"Xbox / {entry.title} / {game.name}"
+                f" / {MAP_TITLE[identifier.media_type]}"
+            ),
             can_play=False,
             can_expand=True,
             children=[
@@ -559,7 +561,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,
@@ -603,7 +606,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,
@@ -641,7 +645,7 @@ class XboxSource(MediaSource):
 
 def gamerpic(config_entry: XboxConfigEntry) -> str | None:
     """Return gamerpic."""
-    coordinator = config_entry.runtime_data.status
+    coordinator = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     person = coordinator.data.presence[coordinator.client.xuid]

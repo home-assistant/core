@@ -1,7 +1,5 @@
 """Tests for the Airthings BLE integration."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from airthings_ble import (
@@ -274,6 +272,7 @@ WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
     name="Airthings Wave Enhance",
     identifier="123456",
     sensors={
+        "connectivity_mode": "Bluetooth",
         "lux": 25,
         "battery": 85,
         "humidity": 60.0,

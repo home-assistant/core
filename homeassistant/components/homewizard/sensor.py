@@ -1,12 +1,11 @@
 """Creates HomeWizard sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
 
+from homewizard_energy.const import Model
 from homewizard_energy.models import CombinedModels, ExternalDevice
 
 from homeassistant.components.sensor import (
@@ -112,9 +111,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         translation_key="active_tariff",
         has_fn=lambda data: data.measurement.tariff is not None,
         value_fn=(
-            lambda data: None
-            if data.measurement.tariff is None
-            else str(data.measurement.tariff)
+            lambda data: (
+                None
+                if data.measurement.tariff is None
+                else str(data.measurement.tariff)
+            )
         ),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4"],
@@ -127,13 +128,14 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
-            lambda data: data.system is not None
-            and data.system.wifi_strength_pct is not None
+            lambda data: (
+                data.system is not None and data.system.wifi_strength_pct is not None
+            )
         ),
         value_fn=(
-            lambda data: data.system.wifi_strength_pct
-            if data.system is not None
-            else None
+            lambda data: (
+                data.system.wifi_strength_pct if data.system is not None else None
+            )
         ),
     ),
     HomeWizardSensorEntityDescription(
@@ -144,8 +146,9 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
-            lambda data: data.system is not None
-            and data.system.wifi_rssi_db is not None
+            lambda data: (
+                data.system is not None and data.system.wifi_rssi_db is not None
+            )
         ),
         value_fn=(
             lambda data: data.system.wifi_rssi_db if data.system is not None else None
@@ -605,6 +608,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_liter_lpm",
         translation_key="active_liter_lpm",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.measurement.active_liter_lpm is not None,
         value_fn=lambda data: data.measurement.active_liter_lpm,
@@ -669,11 +673,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Heat meter",
     ),
-    ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="warm_water_meter",
-        suggested_device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Warm water meter",
+    ExternalDevice.DeviceType.WARM_WATER_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="warm_water_meter",
+            suggested_device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Warm water meter",
+        )
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="water_meter",
@@ -681,11 +687,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Water meter",
     ),
-    ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="inlet_heat_meter",
-        suggested_device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Inlet heat meter",
+    ExternalDevice.DeviceType.INLET_HEAT_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="inlet_heat_meter",
+            suggested_device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Inlet heat meter",
+        )
     ),
 }
 
@@ -703,6 +711,44 @@ async def async_setup_entry(
         for description in SENSORS
         if description.has_fn(entry.runtime_data.data)
     ]
+    # Add optional production power sensor for supported energy monitoring devices
+    # or plug-in battery
+    if entry.runtime_data.data.device.product_type in (
+        Model.ENERGY_SOCKET,
+        Model.ENERGY_METER_1_PHASE,
+        Model.ENERGY_METER_3_PHASE,
+        Model.ENERGY_METER_EASTRON_SDM230,
+        Model.ENERGY_METER_EASTRON_SDM630,
+        Model.BATTERY,
+    ):
+        active_prodution_power_sensor_description = HomeWizardSensorEntityDescription(
+            key="active_production_power_w",
+            translation_key="active_production_power_w",
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            entity_registry_enabled_default=(
+                entry.runtime_data.data.device.product_type == Model.BATTERY
+                or (
+                    (
+                        total_export
+                        := entry.runtime_data.data.measurement.energy_export_kwh
+                    )
+                    is not None
+                    and total_export > 0
+                )
+            ),
+            has_fn=lambda x: True,
+            value_fn=lambda data: (
+                power_w * -1 if (power_w := data.measurement.power_w) else power_w
+            ),
+        )
+        entities.append(
+            HomeWizardSensorEntity(
+                entry.runtime_data, active_prodution_power_sensor_description
+            )
+        )
 
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement

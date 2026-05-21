@@ -1,7 +1,5 @@
 """Config flow to configure Renault component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -60,7 +58,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 login_success = await self.renault_hub.attempt_login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
-            except (aiohttp.ClientConnectionError, GigyaException):
+            except aiohttp.ClientConnectionError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

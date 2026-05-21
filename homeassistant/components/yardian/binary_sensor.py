@@ -1,7 +1,5 @@
 """Binary sensors for Yardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -10,14 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import YardianUpdateCoordinator
+from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -32,8 +28,8 @@ def _zone_enabled_value(
 ) -> bool | None:
     """Return True if zone is enabled on controller."""
     try:
-        return coordinator.data.zones[zone_id][1] == 1
-    except (IndexError, TypeError):
+        return coordinator.data.zones[zone_id].is_enabled
+    except IndexError:
         return None
 
 
@@ -77,11 +73,11 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YardianConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yardian binary sensors."""
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[BinarySensorEntity] = [
         YardianBinarySensor(coordinator, description)

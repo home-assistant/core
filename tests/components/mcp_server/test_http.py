@@ -6,6 +6,7 @@ from http import HTTPStatus
 import json
 import logging
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import mcp
@@ -33,6 +34,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     llm,
 )
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, setup_test_component_platform
@@ -42,6 +44,8 @@ from tests.typing import ClientSessionGenerator
 _LOGGER = logging.getLogger(__name__)
 
 TEST_ENTITY = "light.kitchen"
+SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
+TEST_LLM_API_ID = "test-api"
 INITIALIZE_MESSAGE = {
     "jsonrpc": "2.0",
     "id": "request-id-1",
@@ -62,6 +66,21 @@ EXPECTED_PROMPT_SUFFIX = """
   domain: light
   areas: Kitchen
 """
+
+
+class MockLLMAPI(llm.API):
+    """Test LLM API that does not expose any tools."""
+
+    async def async_get_api_instance(
+        self, llm_context: llm.LLMContext
+    ) -> llm.APIInstance:
+        """Return a test API instance."""
+        return llm.APIInstance(
+            api=self,
+            api_prompt="Test prompt",
+            llm_context=llm_context,
+            tools=[],
+        )
 
 
 @pytest.fixture
@@ -300,6 +319,7 @@ async def mcp_url(mcp_protocol: str, hass_client: ClientSessionGenerator) -> str
 
 @asynccontextmanager
 async def mcp_sse_session(
+    hass: HomeAssistant,
     mcp_url: str,
     hass_supervisor_access_token: str,
 ) -> AsyncGenerator[mcp.client.session.ClientSession]:
@@ -317,6 +337,7 @@ async def mcp_sse_session(
 
 @asynccontextmanager
 async def mcp_streamable_session(
+    hass: HomeAssistant,
     mcp_url: str,
     hass_supervisor_access_token: str,
 ) -> AsyncGenerator[mcp.client.session.ClientSession]:
@@ -325,11 +346,9 @@ async def mcp_streamable_session(
     headers = {"Authorization": f"Bearer {hass_supervisor_access_token}"}
 
     async with (
-        mcp.client.streamable_http.streamablehttp_client(mcp_url, headers=headers) as (
-            read_stream,
-            write_stream,
-            _,
-        ),
+        mcp.client.streamable_http.streamable_http_client(
+            mcp_url, http_client=create_async_httpx_client(hass, headers=headers)
+        ) as (read_stream, write_stream, _),
         mcp.client.session.ClientSession(read_stream, write_stream) as session,
     ):
         await session.initialize()
@@ -356,7 +375,7 @@ async def test_mcp_tools_list(
 ) -> None:
     """Test the tools list endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.list_tools()
 
     # Pick a single arbitrary tool and test that description and parameters
@@ -384,7 +403,7 @@ async def test_mcp_tool_call(
     assert state
     assert state.state == STATE_OFF
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
             arguments={"name": "kitchen light"},
@@ -413,7 +432,7 @@ async def test_mcp_tool_call_failed(
 ) -> None:
     """Test the tool call endpoint with a failure."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
             arguments={"name": "backyard"},
@@ -435,7 +454,7 @@ async def test_prompt_list(
 ) -> None:
     """Test the list prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.list_prompts()
 
     assert len(result.prompts) == 1
@@ -454,7 +473,7 @@ async def test_prompt_get(
 ) -> None:
     """Test the get prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.get_prompt(name="Assist")
 
     assert result.description == "Default prompt for Home Assistant Assist API"
@@ -474,6 +493,143 @@ async def test_get_unknown_prompt(
 ) -> None:
     """Test the get prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError):
             await session.get_prompt(name="Unknown")
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resources_list(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the resource list endpoint."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+
+    assert len(result.resources) == 1
+    resource = result.resources[0]
+    assert str(resource.uri) == SNAPSHOT_RESOURCE_URI
+    assert resource.name == "assist_context_snapshot"
+    assert resource.title == "Assist context snapshot"
+    assert resource.description is not None
+    assert resource.mimeType == "text/plain"
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test reading an MCP resource."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        resources = await session.list_resources()
+        resource = resources.resources[0]
+        result = await session.read_resource(resource.uri)
+
+    assert len(result.contents) == 1
+    content = result.contents[0]
+    assert content.uri == resource.uri
+    assert content.mimeType == "text/plain"
+    assert content.text == (
+        "Live Context: An overview of the areas and the devices in this smart home:\n"
+        "- names: Kitchen Light\n"
+        "  domain: light\n"
+        "  state: 'off'\n"
+        "  areas: Kitchen\n"
+    )
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_resource_read_unknown_resource(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test reading an unknown MCP resource."""
+
+    unknown_uri = mcp.types.Resource(
+        uri="homeassistant://assist/missing",
+        name="missing",
+    ).uri
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        with pytest.raises(McpError, match="Unknown resource"):
+            await session.read_resource(unknown_uri)
+
+
+@pytest.mark.parametrize("llm_hass_api", [TEST_LLM_API_ID])
+async def test_mcp_resources_unavailable_without_live_context_tool(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test resources are unavailable when the selected API exposes no live context."""
+
+    llm.async_register_api(
+        hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test API")
+    )
+
+    resource_uri = mcp.types.Resource(
+        uri=SNAPSHOT_RESOURCE_URI,
+        name="assist_context_snapshot",
+    ).uri
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        result = await session.list_resources()
+
+        assert result.resources == []
+
+        with pytest.raises(McpError, match="Unknown resource"):
+            await session.read_resource(resource_uri)
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
+async def test_mcp_tool_call_unicode(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the tool call endpoint preserves unicode characters."""
+
+    # Mock the API instance
+    mock_api = AsyncMock()
+    mock_api.api.name = "Assist"
+    mock_api.tools = []
+    mock_api.custom_serializer = None
+    mock_api.async_call_tool.return_value = {"message": "这是一个测试"}
+
+    # We need to ensure when the server calls llm.async_get_api, it gets our mock
+    # async_get_api is awaited, so we need an AsyncMock
+    with patch(
+        "homeassistant.helpers.llm.async_get_api", new_callable=AsyncMock
+    ) as mock_get_api:
+        mock_get_api.return_value = mock_api
+        async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+            result = await session.call_tool(
+                name="AnyTool",
+                arguments={},
+            )
+
+    assert not result.isError
+    assert len(result.content) == 1
+    assert result.content[0].type == "text"
+
+    # Check that the text contains the raw unicode characters, NOT the escaped version
+    response_text = result.content[0].text
+    assert "这是一个测试" in response_text
+    assert "\\u" not in response_text

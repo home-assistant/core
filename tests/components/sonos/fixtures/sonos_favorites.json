@@ -12,6 +12,23 @@
     ]
   },
   {
+    "title": "Les P'tits Bateaux",
+    "parent_id": "FV:2",
+    "item_id": "FV:2/11",
+    "album_art_uri": "https://www.radiofrance.fr/s3/cruiser-production/2023/05/67b86ee2-78c7-41a9-9d89-62c95e619036/1000x1000_sc_les-p-tits-bateaux.jpg",
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"10fe206cpodcast%3A3d680a63-ec3d-11e1-a7b7-782bcb76618d\" parentID=\"10fe206cpodcast%3A3d680a63-ec3d-11e1-a7b7-782bcb76618d\" restricted=\"true\"><dc:title>Les P'tits Bateaux</dc:title><upnp:class>object.container.podcast</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">SA_RINCON149767_</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-rincon-cpcontainer:10fe206cpodcast%3A3d680a63-ec3d-11e1-a7b7-782bcb76618d?sid=585&flags=8300&sn=3",
+        "protocol_info": "x-rincon-cpcontainer:*:*:*"
+      }
+    ],
+    "desc": null,
+    "type": "instantPlay",
+    "description": "Radio France",
+    "favorite_nr": "10"
+  },
+  {
     "title": "James Taylor Radio",
     "parent_id": "FV:2",
     "item_id": "FV:2/13",

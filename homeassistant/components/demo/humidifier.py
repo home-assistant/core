@@ -1,7 +1,5 @@
 """Demo platform that offers a fake humidifier device."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.humidifier import (
@@ -28,10 +26,11 @@ async def async_setup_entry(
             DemoHumidifier(
                 name="Humidifier",
                 mode=None,
-                target_humidity=68,
+                target_humidity=65,
                 current_humidity=45,
                 action=HumidifierAction.HUMIDIFYING,
                 device_class=HumidifierDeviceClass.HUMIDIFIER,
+                target_humidity_step=5,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
@@ -66,6 +65,7 @@ class DemoHumidifier(HumidifierEntity):
         is_on: bool = True,
         action: HumidifierAction | None = None,
         device_class: HumidifierDeviceClass | None = None,
+        target_humidity_step: float | None = None,
     ) -> None:
         """Initialize the humidifier device."""
         self._attr_name = name
@@ -79,6 +79,7 @@ class DemoHumidifier(HumidifierEntity):
         self._attr_mode = mode
         self._attr_available_modes = available_modes
         self._attr_device_class = device_class
+        self._attr_target_humidity_step = target_humidity_step
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

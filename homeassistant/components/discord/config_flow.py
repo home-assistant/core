@@ -1,7 +1,5 @@
 """Config flow for Discord integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -87,7 +85,7 @@ async def _async_try_connect(token: str) -> tuple[str | None, nextcord.AppInfo |
         info = await discord_bot.application_info()
     except nextcord.LoginFailure:
         return "invalid_auth", None
-    except (ClientConnectorError, nextcord.HTTPException, nextcord.NotFound):
+    except ClientConnectorError, nextcord.HTTPException, nextcord.NotFound:
         return "cannot_connect", None
     except Exception:
         _LOGGER.exception("Unexpected exception")

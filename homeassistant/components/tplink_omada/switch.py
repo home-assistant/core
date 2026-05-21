@@ -1,11 +1,9 @@
 """Support for TPLink Omada device toggle options."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from tplink_omada_client import (
     GatewayPortSettings,
@@ -13,12 +11,18 @@ from tplink_omada_client import (
     PortProfileOverrides,
     SwitchPortSettings,
 )
-from tplink_omada_client.definitions import GatewayPortMode, PoEMode, PortType
+from tplink_omada_client.definitions import (
+    DeviceStatusCategory,
+    GatewayPortMode,
+    PoEMode,
+    PortType,
+)
 from tplink_omada_client.devices import (
     OmadaDevice,
     OmadaGateway,
     OmadaGatewayPortConfig,
     OmadaGatewayPortStatus,
+    OmadaListDevice,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
@@ -26,6 +30,7 @@ from tplink_omada_client.devices import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
@@ -33,9 +38,7 @@ from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
 from .coordinator import OmadaCoordinator
 from .entity import OmadaDeviceEntity
 
-TPort = TypeVar("TPort")
-TDevice = TypeVar("TDevice", bound="OmadaDevice")
-TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -45,18 +48,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     controller = config_entry.runtime_data
-    omada_client = controller.omada_client
 
-    # Naming fun. Omada switches, as in the network hardware
-    network_switches = await omada_client.get_switches()
-
-    entities: list = []
-    for switch in [
-        ns for ns in network_switches if ns.device_capabilities.supports_poe
-    ]:
+    async def _create_switch_port_entities(
+        device: OmadaListDevice,
+    ) -> None:
+        """Create entities for a switch's ports."""
+        omada_client = controller.omada_client
+        switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_request_refresh()
 
+        entities: list[Entity] = []
         entities.extend(
             OmadaDevicePortSwitchEntity[
                 OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
@@ -72,10 +74,26 @@ async def async_setup_entry(
             for desc in SWITCH_PORT_DETAILS_SWITCHES
             if desc.exists_func(switch, port)
         )
+        async_add_entities(entities)
 
-    gateway_coordinator = controller.gateway_coordinator
-    if gateway_coordinator:
-        for gateway in gateway_coordinator.data.values():
+    # Register switch port entities for switches that are
+    # connected, so we can determine the port information
+    await controller.async_register_device_entities(
+        device_filter=lambda d: (
+            d.type == "switch" and d.status_category == DeviceStatusCategory.CONNECTED
+        ),
+        entity_callback=_create_switch_port_entities,
+    )
+
+    # Set up gateway port switches
+    async def _create_gateway_port_entities(
+        device: OmadaListDevice,
+    ) -> None:
+        """Create entities for a gateway's ports."""
+        entities: list[Entity] = []
+        gateway_coordinator = controller.gateway_coordinator
+        if gateway_coordinator:
+            gateway = gateway_coordinator.data[device.mac]
             entities.extend(
                 OmadaDevicePortSwitchEntity[
                     OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
@@ -92,8 +110,14 @@ async def async_setup_entry(
                 for desc in GATEWAY_PORT_CONFIG_SWITCHES
                 if desc.exists_func(gateway, p)
             )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    await controller.async_register_device_entities(
+        device_filter=lambda d: (
+            d.type == "gateway" and d.status_category == DeviceStatusCategory.CONNECTED
+        ),
+        entity_callback=_create_gateway_port_entities,
+    )
 
 
 def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
@@ -105,10 +129,12 @@ def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
 
 
 @dataclass(frozen=True, kw_only=True)
-class OmadaDevicePortSwitchEntityDescription(
-    SwitchEntityDescription, Generic[TCoordinator, TDevice, TPort]
-):
-    """Entity description for a toggle switch derived from a network port on an Omada device."""
+class OmadaDevicePortSwitchEntityDescription[
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
+    TPort,
+](SwitchEntityDescription):
+    """Entity description for a port toggle on an Omada device."""
 
     exists_func: Callable[[TDevice, TPort], bool] = lambda _, p: True
     coordinator_update_func: Callable[[TCoordinator, TDevice, TPort], TPort | None]
@@ -122,7 +148,7 @@ class OmadaSwitchPortSwitchEntityDescription(
         OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
     ]
 ):
-    """Entity description for a toggle switch for a feature of a Port on an Omada Switch."""
+    """Entity description for a switch port feature toggle."""
 
     coordinator_update_func: Callable[
         [OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails],
@@ -136,7 +162,7 @@ class OmadaGatewayPortConfigSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
     ]
 ):
-    """Entity description for a toggle switch for a configuration of a Port on an Omada Gateway."""
+    """Entity description for a gateway port config toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig],
@@ -154,7 +180,7 @@ class OmadaGatewayPortStatusSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
     ]
 ):
-    """Entity description for a toggle switch for a status of a Port on an Omada Gateway."""
+    """Entity description for a gateway port status toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus],
@@ -184,7 +210,11 @@ SWITCH_PORT_DETAILS_SWITCHES: list[OmadaSwitchPortSwitchEntityDescription] = [
         key="poe",
         translation_key="poe_control",
         exists_func=(
-            lambda d, p: d.device_capabilities.supports_poe and p.type != PortType.SFP
+            lambda d, p: (
+                d.device_capabilities.supports_poe
+                and p.supports_poe
+                and p.type != PortType.SFP
+            )
         ),
         set_func=(
             lambda client, device, port, enable: client.update_switch_port(
@@ -231,12 +261,15 @@ GATEWAY_PORT_CONFIG_SWITCHES: list[OmadaGatewayPortConfigSwitchEntityDescription
 ]
 
 
-class OmadaDevicePortSwitchEntity(
+class OmadaDevicePortSwitchEntity[
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
+    TPort,
+](
     OmadaDeviceEntity[TCoordinator],
     SwitchEntity,
-    Generic[TCoordinator, TDevice, TPort],
 ):
-    """Generic toggle switch entity for a Netork Port of an Omada Device."""
+    """Generic toggle switch entity for a Network Port of an Omada Device."""
 
     entity_description: OmadaDevicePortSwitchEntityDescription[
         TCoordinator, TDevice, TPort

@@ -6,19 +6,19 @@ from unittest.mock import AsyncMock
 from iometer import IOmeterConnectionError, IOmeterNoReadingsError, IOmeterNoStatusError
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
 IP_ADDRESS = "10.0.0.2"
 IOMETER_DEVICE_ID = "658c2b34-2017-45f2-a12b-731235f8bb97"
 
-ZEROCONF_DISCOVERY = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(IP_ADDRESS),
     ip_addresses=[ip_address(IP_ADDRESS)],
     hostname="IOmeter-EC63E8.local.",
@@ -132,10 +132,10 @@ async def test_zeroconf_flow_abort_errors(
     ],
     ids=["status-connection", "status-missing", "reading-missing"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     method_name: str,
     exception: Exception,
     error_key: str,
@@ -169,10 +169,10 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_abort_duplicate(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""

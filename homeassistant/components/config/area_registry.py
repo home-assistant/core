@@ -1,7 +1,5 @@
 """HTTP views to interact with the area registry."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -65,8 +63,10 @@ def websocket_create_area(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
         # Convert labels to a set
@@ -133,8 +133,10 @@ def websocket_update_area(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
         # Convert labels to a set

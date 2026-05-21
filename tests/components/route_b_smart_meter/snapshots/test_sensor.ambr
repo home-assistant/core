@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous current R phase',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -57,8 +59,9 @@
 # ---
 # name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_t_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous current T phase',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -113,8 +117,9 @@
 # ---
 # name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Instantaneous power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -169,8 +175,9 @@
 # ---
 # name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_total_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

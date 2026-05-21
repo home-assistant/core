@@ -1,7 +1,5 @@
 """The Epic Games Store integration data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -51,13 +49,15 @@ class EGSCalendarUpdateCoordinator(
         data = raw_data["data"]["Catalog"]["searchStore"]["elements"]
 
         discount_games = filter(
-            lambda game: game.get("promotions")
-            and (
-                # Current discount(s)
-                game["promotions"]["promotionalOffers"]
-                or
-                # Upcoming discount(s)
-                game["promotions"]["upcomingPromotionalOffers"]
+            lambda game: (
+                game.get("promotions")
+                and (
+                    # Current discount(s)
+                    game["promotions"]["promotionalOffers"]
+                    or
+                    # Upcoming discount(s)
+                    game["promotions"]["upcomingPromotionalOffers"]
+                )
             ),
             data,
         )

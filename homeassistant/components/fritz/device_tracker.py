@@ -1,7 +1,5 @@
 """Support for FRITZ!Box devices."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 
@@ -10,6 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DEFAULT_DEVICE_NAME
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import device_filter_out_from_trackers
@@ -52,9 +51,6 @@ def _async_add_entities(
     """Add new tracker entities from the AVM device."""
 
     new_tracked = []
-    if avm_wrapper.unique_id not in data_fritz.tracked:
-        data_fritz.tracked[avm_wrapper.unique_id] = set()
-
     for mac, device in avm_wrapper.devices.items():
         if device_filter_out_from_trackers(mac, device, data_fritz.tracked.values()):
             continue
@@ -68,9 +64,12 @@ def _async_add_entities(
 class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     """Class which queries a FRITZ!Box device."""
 
+    _attr_translation_key = "device_tracker"
+
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         super().__init__(avm_wrapper, device)
+        self._attr_name: str = device.hostname or DEFAULT_DEVICE_NAME
         self._last_activity: datetime.datetime | None = device.last_activity
 
     @property
@@ -87,13 +86,6 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     def mac_address(self) -> str:
         """Return mac_address."""
         return self._mac
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        if self.is_connected:
-            return "mdi:lan-connect"
-        return "mdi:lan-disconnect"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:

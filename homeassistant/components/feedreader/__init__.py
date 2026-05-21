@@ -1,7 +1,5 @@
 """Support for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
@@ -9,14 +7,12 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator, StoredData
 
-CONF_URLS = "urls"
-
-MY_KEY: HassKey[StoredData] = HassKey(DOMAIN)
+FEEDREADER_KEY: HassKey[StoredData] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
     """Set up Feedreader from a config entry."""
-    storage = hass.data.setdefault(MY_KEY, StoredData(hass))
+    storage = hass.data.setdefault(FEEDREADER_KEY, StoredData(hass))
     if not storage.is_initialized:
         await storage.async_setup()
 
@@ -42,5 +38,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     )
     # if this is the last entry, remove the storage
     if len(entries) == 1:
-        hass.data.pop(MY_KEY)
+        hass.data.pop(FEEDREADER_KEY)
     return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])

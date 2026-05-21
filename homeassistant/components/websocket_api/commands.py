@@ -1,8 +1,7 @@
 """Commands part of Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
@@ -14,6 +13,7 @@ from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
+    CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -56,6 +56,7 @@ from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
+    async_track_time_interval,
 )
 from homeassistant.helpers.json import (
     JSON_DUMP,
@@ -125,6 +126,7 @@ def async_register_commands(
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
@@ -331,6 +333,7 @@ async def handle_call_service(
         connection.logger.error(
             "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
         )
+        connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -369,7 +372,7 @@ def handle_get_states(
 
     try:
         serialized_states = [state.as_dict_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_get_states_response(connection, msg["id"], serialized_states)
@@ -380,7 +383,7 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -477,7 +480,7 @@ def handle_subscribe_entities(
         else:
             # Fast path when not filtering
             serialized_states = [state.as_compressed_state_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_entities_init_response(
@@ -493,7 +496,7 @@ def handle_subscribe_entities(
             continue
         try:
             serialized_states.append(state.as_compressed_state_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -650,7 +653,12 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_result(msg["id"], hass.config.as_dict())
+    config = hass.config.as_dict()
+
+    if connection.user.local_only:
+        config.pop(CONF_EXTERNAL_URL)
+
+    connection.send_result(msg["id"], config)
 
 
 @decorators.websocket_command(
@@ -858,6 +866,7 @@ def handle_entity_source(
         vol.Required("type"): "extract_from_target",
         vol.Required("target"): cv.TARGET_FIELDS,
         vol.Optional("expand_group", default=False): bool,
+        vol.Optional("primary_entities_only", default=True): bool,
     }
 )
 def handle_extract_from_target(
@@ -865,9 +874,12 @@ def handle_extract_from_target(
 ) -> None:
     """Handle extract from target command."""
 
-    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=msg["expand_group"]
+        hass,
+        target_selection,
+        expand_group=msg["expand_group"],
+        primary_entities_only=msg["primary_entities_only"],
     )
 
     extracted_dict = {
@@ -898,8 +910,8 @@ async def handle_get_triggers_for_target(
 ) -> None:
     """Handle get triggers for target command.
 
-    This command returns all triggers that can be used with any entities that are currently
-    part of a target.
+    This command returns all triggers that can be used
+    with any entities that are currently part of a target.
     """
     triggers = await async_get_triggers_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -921,8 +933,8 @@ async def handle_get_conditions_for_target(
 ) -> None:
     """Handle get conditions for target command.
 
-    This command returns all conditions that can be used with any entities that are currently
-    part of a target.
+    This command returns all conditions that can be used
+    with any entities that are currently part of a target.
     """
     conditions = await async_get_conditions_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -944,8 +956,8 @@ async def handle_get_services_for_target(
 ) -> None:
     """Handle get services for target command.
 
-    This command returns all services that can be used with any entities that are currently
-    part of a target.
+    This command returns all services that can be used
+    with any entities that are currently part of a target.
     """
     services = await async_get_services_for_target(
         hass, msg["target"], msg["expand_group"]
@@ -1017,10 +1029,62 @@ async def handle_test_condition(
     # Do static + dynamic validation of the condition
     config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await async_condition_from_config(hass, config)
-    connection.send_result(
-        msg["id"], {"result": check_condition(hass, msg.get("variables"))}
+    condition = await async_condition_from_config(hass, config)
+    try:
+        connection.send_result(
+            msg["id"], {"result": condition.async_check(variables=msg.get("variables"))}
+        )
+    finally:
+        condition.async_unload()
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_condition",
+        vol.Required("condition"): cv.CONDITION_SCHEMA,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_subscribe_condition(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe condition command."""
+    condition_config = await async_validate_condition_config(hass, msg["condition"])
+
+    condition = await async_condition_from_config(hass, condition_config)
+    event_data: dict[str, Any] = {}
+
+    @callback
+    def evaluate_condition(now: datetime | None) -> None:
+        """Forward events to websocket."""
+        nonlocal event_data
+        new_event_data: dict[str, Any]
+
+        try:
+            new_event_data = {"result": condition.async_check()}
+        except HomeAssistantError as err:
+            new_event_data = {"error": str(err)}
+        if new_event_data == event_data:
+            return
+        event_data = new_event_data
+        connection.send_event(msg["id"], event_data)
+
+    @callback
+    def unsubscribe() -> None:
+        """Unsubscribe from condition updates."""
+        condition.async_unload()
+        unsub()
+
+    unsub = async_track_time_interval(
+        hass,
+        evaluate_condition,
+        timedelta(seconds=1),
+        name="websocket_api_condition_subscription",
     )
+    connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_result(msg["id"])
+    evaluate_condition(None)
 
 
 @decorators.websocket_command(
@@ -1062,6 +1126,8 @@ async def handle_execute_script(
             translation_placeholders=err.translation_placeholders,
         )
         return
+    finally:
+        await script_obj.async_unload()
     connection.send_result(
         msg["id"],
         {

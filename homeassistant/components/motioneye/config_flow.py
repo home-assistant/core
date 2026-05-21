@@ -1,7 +1,5 @@
 """Config flow for motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -14,13 +12,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -30,6 +28,7 @@ from . import create_motioneye_client
 from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_MORE_OPTIONS,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -39,6 +38,7 @@ from .const import (
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
+from .coordinator import MotionEyeConfigEntry
 
 
 class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -143,7 +143,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         title = user_input[CONF_URL]
         if self._hassio_discovery:
-            title = "Add-on"
+            title = "App"
 
         return self.async_create_entry(
             title=title,
@@ -180,7 +180,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionEyeConfigEntry,
     ) -> MotionEyeOptionsFlow:
         """Get the Hyperion Options flow."""
         return MotionEyeOptionsFlow()
@@ -194,38 +194,47 @@ class MotionEyeOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input.update(more_options)
             return self.async_create_entry(title="", data=user_input)
 
-        schema: dict[vol.Marker, type] = {
-            vol.Required(
-                CONF_WEBHOOK_SET,
-                default=self.config_entry.options.get(
-                    CONF_WEBHOOK_SET,
-                    DEFAULT_WEBHOOK_SET,
-                ),
-            ): bool,
-            vol.Required(
-                CONF_WEBHOOK_SET_OVERWRITE,
-                default=self.config_entry.options.get(
-                    CONF_WEBHOOK_SET_OVERWRITE,
-                    DEFAULT_WEBHOOK_SET_OVERWRITE,
-                ),
-            ): bool,
-        }
+        # The input URL is not validated as being a URL, to allow for the possibility
+        # the template input won't be a valid URL until after it's rendered
+        description: dict[str, str] | None = None
+        if CONF_STREAM_URL_TEMPLATE in self.config_entry.options:
+            description = {
+                "suggested_value": self.config_entry.options[CONF_STREAM_URL_TEMPLATE]
+            }
 
-        if self.show_advanced_options:
-            # The input URL is not validated as being a URL, to allow for the possibility
-            # the template input won't be a valid URL until after it's rendered
-            description: dict[str, str] | None = None
-            if CONF_STREAM_URL_TEMPLATE in self.config_entry.options:
-                description = {
-                    "suggested_value": self.config_entry.options[
-                        CONF_STREAM_URL_TEMPLATE
-                    ]
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_WEBHOOK_SET,
+                        default=self.config_entry.options.get(
+                            CONF_WEBHOOK_SET,
+                            DEFAULT_WEBHOOK_SET,
+                        ),
+                    ): bool,
+                    vol.Required(
+                        CONF_WEBHOOK_SET_OVERWRITE,
+                        default=self.config_entry.options.get(
+                            CONF_WEBHOOK_SET_OVERWRITE,
+                            DEFAULT_WEBHOOK_SET_OVERWRITE,
+                        ),
+                    ): bool,
+                    vol.Required(CONF_MORE_OPTIONS): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    CONF_STREAM_URL_TEMPLATE,
+                                    description=description,
+                                ): str,
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
                 }
-
-            schema[vol.Optional(CONF_STREAM_URL_TEMPLATE, description=description)] = (
-                str
-            )
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
+            ),
+        )

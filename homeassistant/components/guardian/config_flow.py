@@ -1,7 +1,5 @@
 """Config flow for Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioguardian import Client
@@ -31,7 +29,7 @@ UNIQUE_ID = "guardian_{0}"
 @callback
 def async_get_pin_from_discovery_hostname(hostname: str) -> str:
     """Get the device's 4-digit PIN from its zeroconf-discovered hostname."""
-    return hostname.split(".")[0].split("-")[1]
+    return hostname.split(".", maxsplit=1)[0].split("-")[1]
 
 
 @callback

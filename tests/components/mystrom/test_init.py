@@ -11,9 +11,11 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     MyStromBulbMock,
+    MyStromPirMock,
     MyStromSwitchMock,
     get_default_bulb_state,
     get_default_device_response,
+    get_default_pir_state,
     get_default_switch_state,
 )
 from .conftest import DEVICE_MAC
@@ -39,12 +41,31 @@ async def init_integration(
             return_value=MyStromBulbMock("6001940376EB", get_default_bulb_state()),
         ),
         patch(
+            "homeassistant.components.mystrom._get_mystrom_pir",
+            return_value=MyStromPirMock(get_default_pir_state()),
+        ),
+        patch(
             "homeassistant.components.mystrom._get_mystrom_switch",
             return_value=MyStromSwitchMock(get_default_switch_state()),
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_init_pir_and_unload(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the initialization of a myStrom pir motion sensor."""
+    await init_integration(hass, config_entry, 110)
+    for sensor in ("illuminance", "temperature"):
+        state = hass.states.get(f"sensor.mystrom_device_{sensor}")
+        assert state is not None
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_init_switch_and_unload(
@@ -72,7 +93,7 @@ async def test_init_switch_and_unload(
         (105, "light", ConfigEntryState.LOADED, False),
         (106, "switch", ConfigEntryState.LOADED, False),
         (107, "switch", ConfigEntryState.LOADED, False),
-        (110, "sensor", ConfigEntryState.SETUP_ERROR, True),
+        (110, "sensor", ConfigEntryState.LOADED, True),
         (113, "switch", ConfigEntryState.SETUP_ERROR, True),
         (118, "button", ConfigEntryState.SETUP_ERROR, True),
         (120, "switch", ConfigEntryState.LOADED, False),

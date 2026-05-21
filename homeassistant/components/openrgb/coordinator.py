@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for OpenRGB."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -14,7 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN, SCAN_INTERVAL
+from .const import (
+    CONNECTION_ERRORS,
+    DEFAULT_CLIENT_NAME,
+    DOMAIN,
+    SCAN_INTERVAL,
+    UID_SEPARATOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +64,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 DEFAULT_CLIENT_NAME,
             )
         except CONNECTION_ERRORS as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -111,7 +116,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             device.metadata.location or "none",
         )
         # Double pipe is readable and is unlikely to appear in metadata
-        return "||".join(parts)
+        return UID_SEPARATOR.join(parts)
 
     async def async_client_disconnect(self, *args) -> None:
         """Disconnect the OpenRGB client."""

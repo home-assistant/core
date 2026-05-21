@@ -1,7 +1,5 @@
 """Support for Hue groups (room/zone)."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -81,7 +79,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
@@ -99,7 +97,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         controller = bridge.api.groups.grouped_light
         super().__init__(bridge, controller, resource)
         self.resource = resource
-        self.group = group
+        self.hue_group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= LightEntityFeature.FLASH
@@ -109,7 +107,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
+            identifiers={(DOMAIN, self.hue_group.id)},
         )
         self._dynamic_mode_active = False
         self._update_values()
@@ -120,7 +118,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # subscribe to group updates
         self.async_on_remove(
-            self.api.groups.subscribe(self._handle_event, self.group.id)
+            self.api.groups.subscribe(self._handle_event, self.hue_group.id)
         )
         # We need to watch the underlying lights too
         # if we want feedback about color/brightness changes
@@ -141,7 +139,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         scenes = {
-            x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
+            x.metadata.name for x in self.api.scenes if x.group.rid == self.hue_group.id
         }
         light_resource_ids = tuple(
             x.id for x in self.controller.get_lights(self.resource.id)
@@ -152,7 +150,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
-            "hue_type": self.group.type.value,
+            "hue_type": self.hue_group.type.value,
             "lights": light_names,
             "entity_id": light_entities,
             "dynamics": self._dynamic_mode_active,
@@ -231,7 +229,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _update_values(self) -> None:
         """Set base values from underlying lights of a group."""
-        supported_color_modes: set[ColorMode | str] = set()
+        supported_color_modes: set[ColorMode] = set()
         lights_with_color_support = 0
         lights_with_color_temp_support = 0
         lights_with_dimming_support = 0

@@ -346,9 +346,9 @@ async def test_instant_arming_exceptions(
         (ArmingState.ARMED_STAY_PROA7, AlarmControlPanelState.ARMED_HOME),
         (ArmingState.ARMED_STAY_BYPASS, AlarmControlPanelState.ARMED_HOME),
         (ArmingState.ARMED_STAY_BYPASS_PROA7, AlarmControlPanelState.ARMED_HOME),
-        (ArmingState.ARMED_STAY_INSTANT, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_INSTANT, AlarmControlPanelState.ARMED_NIGHT),
         (ArmingState.ARMED_STAY_INSTANT_PROA7, AlarmControlPanelState.ARMED_HOME),
-        (ArmingState.ARMED_STAY_INSTANT_BYPASS, AlarmControlPanelState.ARMED_HOME),
+        (ArmingState.ARMED_STAY_INSTANT_BYPASS, AlarmControlPanelState.ARMED_NIGHT),
         (
             ArmingState.ARMED_STAY_INSTANT_BYPASS_PROA7,
             AlarmControlPanelState.ARMED_HOME,

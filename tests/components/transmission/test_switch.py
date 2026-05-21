@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from transmission_rpc.session import Session
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -101,10 +102,10 @@ async def test_on_off_switch_with_torrents(
 
 
 @pytest.mark.parametrize(
-    ("service", "alt_speed_enabled"),
+    ("service", "alt_speed_enabled", "expected_state"),
     [
-        (SERVICE_TURN_ON, True),
-        (SERVICE_TURN_OFF, False),
+        (SERVICE_TURN_ON, True, "on"),
+        (SERVICE_TURN_OFF, False, "off"),
     ],
 )
 async def test_turtle_mode_switch(
@@ -113,9 +114,22 @@ async def test_turtle_mode_switch(
     mock_config_entry: MockConfigEntry,
     service: str,
     alt_speed_enabled: bool,
+    expected_state: str,
 ) -> None:
     """Test turtle mode switch."""
     client = mock_transmission_client.return_value
+
+    current_alt_speed = not alt_speed_enabled
+
+    def set_session_side_effect(**kwargs):
+        nonlocal current_alt_speed
+        if "alt_speed_enabled" in kwargs:
+            current_alt_speed = kwargs["alt_speed_enabled"]
+
+    client.set_session.side_effect = set_session_side_effect
+    client.get_session.side_effect = lambda: Session(
+        fields={"alt-speed-enabled": current_alt_speed}
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -129,3 +143,7 @@ async def test_turtle_mode_switch(
     )
 
     client.set_session.assert_called_once_with(alt_speed_enabled=alt_speed_enabled)
+
+    state = hass.states.get("switch.transmission_turtle_mode")
+    assert state is not None
+    assert state.state == expected_state

@@ -1,7 +1,5 @@
 """Configuration for Sonos tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from copy import copy
@@ -19,6 +17,7 @@ from soco.data_structures import (
     SearchResult,
 )
 from soco.events_base import Event as SonosEvent
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -122,7 +121,8 @@ class SonosMockEvent:
             soco: The mock SoCo device associated with this event.
             service: The Sonos mock service that generated the event.
             variables: A dictionary of event variables and their values.
-            zone_player_uui_ds_in_group: Optional comma-separated string of unique zone IDs in the group.
+            zone_player_uui_ds_in_group: Optional comma-separated string
+                of unique zone IDs in the group.
 
         """
         self.sid = f"{soco.uid}_sub0000000001"
@@ -228,7 +228,7 @@ class MockSoCo(MagicMock):
 
     @property
     def visible_zones(self):
-        """Return visible zones and allow property to be overridden by device classes."""
+        """Return visible zones, overridable by device classes."""
         return {self}
 
     @property
@@ -295,7 +295,7 @@ class SoCoMockFactory:
         # Generate a different MAC for the non-default speakers.
         # otherwise new devices will not be created.
         if ip_address != "192.168.42.2":
-            last_octet = ip_address.split(".")[-1]
+            last_octet = ip_address.rsplit(".", maxsplit=1)[-1]
             my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
@@ -309,6 +309,14 @@ class SoCoMockFactory:
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
+        mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+            side_effect=SoCoUPnPException("Not supported", 714, "")
+        )
+        mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()
         mock_soco.zone_group_state.processed_count = 10
         mock_soco.zone_group_state.total_requests = 12
@@ -491,6 +499,10 @@ class MockMusicServiceItem:
         self.parent_id = parent_id
         self.album_art_uri: None | str = album_art_uri
 
+    def get_uri(self) -> str:
+        """Return URI."""
+        return self.item_id.replace("S://", "x-file-cifs://")
+
 
 def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
     """Create a list of music service items from a json fixture file."""
@@ -628,7 +640,10 @@ def mock_browse_by_idstring(
 
 
 def mock_get_music_library_information(
-    search_type: str, search_term: str | None = None, full_album_art_uri: bool = True
+    search_type: str,
+    search_term: str | None = None,
+    full_album_art_uri: bool = True,
+    complete_result: bool = False,
 ) -> list[MockMusicServiceItem]:
     """Mock the call to get music library information."""
     if search_type == "albums" and search_term == "Abbey Road":
@@ -662,7 +677,9 @@ def music_library_fixture(
     music_library = MagicMock()
     music_library.get_sonos_favorites.return_value = sonos_favorites
     music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
-    music_library.get_music_library_information = mock_get_music_library_information
+    music_library.get_music_library_information = Mock(
+        side_effect=mock_get_music_library_information
+    )
     music_library.browse = Mock(return_value=music_library_browse_categories)
     music_library.build_album_art_full_uri = Mock(
         return_value="build_album_art_full_uri.jpg"
@@ -677,9 +694,12 @@ def alarm_clock_fixture() -> SonosMockAlarmClock:
         {
             "CurrentAlarmListVersion": "RINCON_test:14",
             "CurrentAlarmList": "<Alarms>"
-            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
-            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
-            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            '<Alarm ID="14" StartTime="07:00:00"'
+            ' Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="1" RoomUUID="RINCON_test"'
+            ' ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT"'
+            ' Volume="25" '
             'IncludeLinkedZones="0"/>'
             "</Alarms>",
         }
@@ -693,13 +713,15 @@ def alarm_clock_fixture_extended() -> SonosMockAlarmClock:
         {
             "CurrentAlarmListVersion": "RINCON_test:15",
             "CurrentAlarmList": "<Alarms>"
-            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00"'
+            ' Recurrence="DAILY" '
             'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
             'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
             'IncludeLinkedZones="0"/>'
             '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
             'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
-            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData=""'
+            ' PlayMode="SHUFFLE_NOREPEAT" '
             'Volume="25" IncludeLinkedZones="0"/>'
             "</Alarms>",
         }
@@ -786,7 +808,10 @@ def alarm_event_fixture(soco):
     """Create alarm_event fixture."""
     variables = {
         "time_zone": "ffc40a000503000003000502ffc4",
-        "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
+        "time_server": (
+            "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,"
+            "2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org"
+        ),
         "time_generation": "20000001",
         "alarm_list_version": "RINCON_test:1",
         "time_format": "INV",
@@ -952,7 +977,7 @@ def create_zgs_sonos_event(
     soco_2: MockSoCo,
     create_uui_ds_in_group: bool = True,
 ) -> SonosMockEvent:
-    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
+    """Create a Sonos Event for zone group state."""
     zgs = load_fixture(fixture_file, DOMAIN)
     variables = {}
     variables["ZoneGroupState"] = zgs

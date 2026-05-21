@@ -1,12 +1,12 @@
 """Base entity for Seko Pooldose integration."""
 
-from __future__ import annotations
-
-from typing import Literal
+from collections.abc import Callable, Coroutine
+from typing import Any, Literal
 
 from pooldose.type_definitions import DeviceInfoDict, ValueDict
 
 from homeassistant.const import CONF_MAC
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -32,7 +32,9 @@ def device_info(
         name=info.get("NAME") or None,
         serial_number=unique_id,
         sw_version=(
-            f"{info.get('FW_VERSION')} (SW v{info.get('SW_VERSION')}, API {api_version})"
+            f"{info.get('FW_VERSION')}"
+            f" (SW v{info.get('SW_VERSION')},"
+            f" API {api_version})"
             if info.get("FW_VERSION") and info.get("SW_VERSION") and api_version
             else None
         ),
@@ -77,3 +79,31 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         """Get data for this entity, only if available."""
         platform_data = self.coordinator.data[self.platform_name]
         return platform_data.get(self.entity_description.key)
+
+    async def _async_perform_write(
+        self,
+        api_call: Callable[[str, Any], Coroutine[Any, Any, bool]],
+        key: str,
+        value: bool | str | float,
+    ) -> None:
+        """Perform a write call to the API with unified error handling.
+
+        - `api_call` should be a bound coroutine function like
+          `self.coordinator.client.set_number`.
+        - Raises ServiceValidationError on connection errors or when the API
+          returns False.
+        """
+        if not await api_call(key, value):
+            if not self.coordinator.client.is_connected:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="cannot_connect"
+                )
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="write_rejected",
+                translation_placeholders={
+                    "entity": self.entity_description.key,
+                    "value": str(value),
+                },
+            )

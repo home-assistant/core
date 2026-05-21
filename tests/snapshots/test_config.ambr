@@ -78,7 +78,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -146,7 +146,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -262,7 +262,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -306,7 +306,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
     dict({
       'has_exc_info': False,
@@ -357,7 +357,7 @@
     ''',
     "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2",
     "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken, please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1",
-    'config_validator_unknown_err',
+    'Unknown error calling custom_validator_bad_2 config validator - broken',
   ])
 # ---
 # name: test_individual_packages_schema_validation_errors[packages_dict]

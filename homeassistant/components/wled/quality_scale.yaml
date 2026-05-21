@@ -6,10 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      test_connection_error and test_unsupported_version_error should end in CREATE_ENTRY
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -27,10 +24,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -38,37 +36,25 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      The test_setting_unique_id test is redundant.
-      The test_websocket_already_connected test can use the freezer.
-      The snapshot tests should be used more widely.
-      We should use pytest.mark.freeze_time instead of mock.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: todo
-    comment: |
-      Analog RGBCCT Strip are poor supported by HA.
-      See: https://github.com/home-assistant/core/issues/123614
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
       This integration has a fixed single device.
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: Led count could receive unit of measurement
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done

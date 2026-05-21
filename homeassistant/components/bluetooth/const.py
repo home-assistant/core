@@ -1,7 +1,5 @@
 """Constants for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from habluetooth import (  # noqa: F401
@@ -18,6 +16,7 @@ CONF_DETAILS = "details"
 CONF_PASSIVE = "passive"
 
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_SOURCE: Final = "source"
 CONF_SOURCE_DOMAIN: Final = "source_domain"
 CONF_SOURCE_MODEL: Final = "source_model"

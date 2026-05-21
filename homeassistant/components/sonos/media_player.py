@@ -1,7 +1,5 @@
 """Support to interface with Sonos players."""
 
-from __future__ import annotations
-
 import datetime
 from functools import partial
 import logging
@@ -15,6 +13,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite, DidlMusicTrack
+from soco.exceptions import SoCoException
 from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 
@@ -36,10 +35,12 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.plex.services import (  # pylint: disable=home-assistant-component-root-import
     process_plex_payload,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -53,6 +54,7 @@ from . import media_browser
 from .const import (
     ATTR_QUEUE_POSITION,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
@@ -75,7 +77,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-LONG_SERVICE_TIMEOUT = 30.0
 UNJOIN_SERVICE_TIMEOUT = 0.1
 VOLUME_INCREMENT = 2
 
@@ -125,6 +126,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
@@ -308,7 +310,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = int(round(volume * 100))
+        self.soco.volume = round(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_shuffle(self, shuffle: bool) -> None:
@@ -807,6 +809,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the music library for media matching the query."""
+        return await media_browser.async_search_media(
+            self.hass,
+            self.media,
+            self.get_browse_image_url,
+            query,
+        )
+
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         speakers = []
@@ -840,23 +854,29 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group.
 
-        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to allow use of SonosSpeaker.unjoin_multi()
-        which optimizes the order in which speakers are removed from their groups.
-        Removing coordinators last better preserves playqueues on the speakers.
+        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to
+        allow use of SonosSpeaker.unjoin_multi() which
+        optimizes the order in which speakers are removed
+        from their groups. Removing coordinators last better
+        preserves playqueues on the speakers.
         """
         sonos_data = self.config_entry.runtime_data
         household_id = self.speaker.household_id
 
         async def async_process_unjoin(now: datetime.datetime) -> None:
-            """Process the unjoin with all remove requests within the coalescing period."""
+            """Process the unjoin with all remove requests."""
             unjoin_data = sonos_data.unjoin_data.pop(household_id)
             _LOGGER.debug(
                 "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]
             )
-            await SonosSpeaker.unjoin_multi(
-                self.hass, self.config_entry, unjoin_data.speakers
-            )
-            unjoin_data.event.set()
+            try:
+                await SonosSpeaker.unjoin_multi(
+                    self.hass, self.config_entry, unjoin_data.speakers
+                )
+            except (HomeAssistantError, SoCoException, OSError) as err:
+                unjoin_data.exception = err
+            finally:
+                unjoin_data.event.set()
 
         if unjoin_data := sonos_data.unjoin_data.get(household_id):
             unjoin_data.speakers.append(self.speaker)
@@ -868,3 +888,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         _LOGGER.debug("Requesting unjoin for %s", self.speaker.zone_name)
         await unjoin_data.event.wait()
+
+        # Re-raise any exception that occurred during processing
+        if unjoin_data.exception:
+            raise unjoin_data.exception

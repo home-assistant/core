@@ -1,7 +1,5 @@
 """Data update coordinator for the PoolDose integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -51,18 +49,22 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
         try:
             status, instant_values = await self.client.instant_values_structured()
         except TimeoutError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Timeout fetching data from PoolDose device: {err}"
             ) from err
         except (ConnectionError, OSError) as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Failed to connect to PoolDose device while fetching data: {err}"
             ) from err
 
         if status != RequestStatus.SUCCESS:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"API returned status: {status}")
 
         if not instant_values:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed("No data received from API")
 
         _LOGGER.debug("Instant values structured: %s", instant_values)

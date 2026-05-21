@@ -1,7 +1,5 @@
 """Config flow for Wyoming integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -64,7 +62,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Handle Supervisor add-on discovery."""
+        """Handle Supervisor app discovery."""
         _LOGGER.debug("Supervisor discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()

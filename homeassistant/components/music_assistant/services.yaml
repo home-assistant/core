@@ -46,7 +46,6 @@ play_media:
             - "add"
           translation_key: enqueue
     radio_mode:
-      advanced: true
       selector:
         boolean:
 
@@ -68,6 +67,10 @@ play_announcement:
       example: "true"
       selector:
         boolean:
+    pre_announce_url:
+      example: "http://someremotesite.com/chime.mp3"
+      selector:
+        text:
     announce_volume:
       example: 75
       selector:
@@ -134,20 +137,21 @@ search:
       example: "News of the world"
       selector:
         text:
-    limit:
-      advanced: true
-      example: 25
-      default: 5
-      selector:
-        number:
-          min: 1
-          max: 100
-          step: 1
-    library_only:
-      example: "true"
-      default: false
-      selector:
-        boolean:
+    search_options:
+      fields:
+        limit:
+          example: 25
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 100
+              step: 1
+        library_only:
+          example: "true"
+          default: false
+          selector:
+            boolean:
 
 get_library:
   fields:
@@ -179,24 +183,24 @@ get_library:
       example: "We Are The Champions"
       selector:
         text:
-    limit:
-      advanced: true
-      example: 25
-      default: 25
-      selector:
-        number:
-          min: 1
-          max: 500
-          step: 1
-    offset:
-      advanced: true
-      example: 25
-      default: 0
-      selector:
-        number:
-          min: 1
-          max: 1000000
-          step: 1
+    pagination:
+      fields:
+        limit:
+          example: 25
+          default: 25
+          selector:
+            number:
+              min: 1
+              max: 500
+              step: 1
+        offset:
+          example: 25
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 1000000
+              step: 1
     order_by:
       example: "random"
       selector:

@@ -1,7 +1,5 @@
 """Config flow for the SolarEdge platform."""
 
-from __future__ import annotations
-
 import socket
 from typing import TYPE_CHECKING, Any
 
@@ -61,7 +59,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             if response["details"]["status"].lower() != "active":
                 self._errors[CONF_SITE_ID] = "site_not_active"
                 return False
-        except (TimeoutError, ClientError, socket.gaierror):
+        except TimeoutError, ClientError, socket.gaierror:
             self._errors[CONF_SITE_ID] = "cannot_connect"
             return False
         except KeyError:
@@ -87,7 +85,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self._errors["base"] = "cannot_connect"
             return False
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             self._errors["base"] = "cannot_connect"
             return False
         return True
@@ -161,6 +159,8 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema_dict: dict[vol.Marker, Any] = {}
         if self.source != SOURCE_RECONFIGURE:
             data_schema_dict[
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME))
             ] = str
             data_schema_dict[

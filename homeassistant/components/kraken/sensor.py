@@ -1,7 +1,5 @@
 """The kraken integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -11,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,13 +19,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import KrakenData
 from .const import (
     CONF_TRACKED_ASSET_PAIRS,
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     KrakenResponse,
 )
+from .coordinator import KrakenConfigEntry, KrakenData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +135,7 @@ SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: KrakenConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kraken entities from a config_entry."""
@@ -149,7 +146,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     KrakenSensor(
-                        hass.data[DOMAIN],
+                        config_entry.runtime_data,
                         tracked_asset_pair,
                         description,
                     )
@@ -161,7 +158,9 @@ async def async_setup_entry(
     _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 
     @callback
-    def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def async_update_sensors(
+        hass: HomeAssistant, config_entry: KrakenConfigEntry
+    ) -> None:
         """Add or remove sensors for configured tracked asset pairs."""
         dev_reg = dr.async_get(hass)
 
@@ -225,7 +224,7 @@ class KrakenSensor(
         self._device_name = create_device_name(tracked_asset_pair)
         self._attr_unique_id = "_".join(
             [
-                tracked_asset_pair.split("/")[0],
+                tracked_asset_pair.split("/", maxsplit=1)[0],
                 tracked_asset_pair.split("/")[1],
                 description.key,
             ]
@@ -291,4 +290,5 @@ class KrakenSensor(
 
 def create_device_name(tracked_asset_pair: str) -> str:
     """Create the device name for a given tracked asset pair."""
-    return f"{tracked_asset_pair.split('/')[0]} {tracked_asset_pair.split('/')[1]}"
+    parts = tracked_asset_pair.split("/", maxsplit=2)
+    return f"{parts[0]} {parts[1]}"

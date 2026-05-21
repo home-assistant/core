@@ -133,6 +133,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         await coordinator.async_config_entry_first_refresh()
 
         self.update_manager = update_manager
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
@@ -173,7 +175,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         request = partial(function, *args, **kwargs)
         try:
             return await self.hass.async_add_executor_job(request)
-        except (AuthorizationError, ConnectionClosedError):
+        except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
             return await self.hass.async_add_executor_job(request)

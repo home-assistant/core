@@ -1,9 +1,17 @@
 """Tests for Shelly binary sensor platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION, MODEL_PLUS_SMOKE
+from aioshelly.const import (
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_CURY_G4,
+    MODEL_FLOOD_G4,
+    MODEL_MOTION,
+    MODEL_PLUS_SMOKE,
+    MODEL_WALL_DISPLAY,
+)
+from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -329,7 +337,13 @@ async def test_rpc_sleeping_binary_sensor(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    config_entry = await init_integration(hass, 2, sleep_period=1000)
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        config_entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
@@ -370,7 +384,13 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
@@ -515,7 +535,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test if the virtual binary sensor will be removed if the mode has been changed to a toggle."""
+    """Test virtual binary sensor removal when mode changes to toggle."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -547,7 +567,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
+    """Test virtual binary sensor removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
 
     # create orphaned entity on main device
@@ -612,7 +632,7 @@ async def test_rpc_flood_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test RPC flood sensor entities."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     for entity in ("flood", "mute", "cable_unplugged"):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
@@ -630,7 +650,7 @@ async def test_rpc_flood_cable_unplugged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC flood cable unplugged entity."""
-    await init_integration(hass, 4)
+    await init_integration(hass, 4, model=MODEL_FLOOD_G4)
 
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_cable_unplugged"
 
@@ -783,3 +803,77 @@ async def test_migrate_unique_id_virtual_components_roles(
     assert (
         "Migrating unique_id for binary_sensor.test_name_test_sensor" in caplog.text
     ) == (old_id != new_id)
+
+
+async def test_rpc_cury_orientation_errors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC cury orientation error entities."""
+    status = {
+        "cury:0": {
+            "id": 0,
+            "slots": {
+                "left": {
+                    "intensity": 70,
+                    "on": True,
+                    "vial": {"level": 27, "name": "Forest Dream"},
+                },
+                "right": {
+                    "intensity": 70,
+                    "on": False,
+                    "vial": {"level": 84, "name": "Velvet Rose"},
+                },
+            },
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 4, model=MODEL_CURY_G4)
+
+    entity_tilt = f"{BINARY_SENSOR_DOMAIN}.test_name_tilt"
+    entity_rotation = f"{BINARY_SENSOR_DOMAIN}.test_name_rotation"
+
+    assert (state := hass.states.get(entity_tilt))
+    assert state.state == STATE_OFF
+
+    assert (state := hass.states.get(entity_rotation))
+    assert state.state == STATE_OFF
+
+    status["cury:0"]["errors"] = ["orientation_tilt", "orientation_plug_rotated"]
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_tilt))
+    assert state.state == STATE_ON
+
+    assert (state := hass.states.get(entity_rotation))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_occupancy_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC occupancy binary sensor."""
+    status = {
+        "occupancy:0": {
+            "id": 0,
+            "value": False,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status["occupancy:0"]["value"] = True
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON

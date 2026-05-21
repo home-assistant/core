@@ -1,7 +1,5 @@
 """Platform for Miele vacuum integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
@@ -29,8 +27,9 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
-# Miele have used the same and overlapping names for fan_speeds and programs even
-# if the contexts are different. This is an attempt to make it clearer in the integration.
+# Miele have used the same and overlapping names for
+# fan_speeds and programs even if the contexts are different.
+# This is an attempt to make it clearer in the integration.
 
 
 class FanSpeed(IntEnum):
@@ -128,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vacuum platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         MieleVacuum(coordinator, device_id, definition.description)
@@ -181,9 +180,9 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return (
+        return super().available and (
             self.action.power_off_enabled or self.action.power_on_enabled
-        ) and super().available
+        )
 
     async def send(self, device_id: str, action: dict[str, Any]) -> None:
         """Send action to the device."""

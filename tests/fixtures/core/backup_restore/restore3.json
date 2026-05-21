@@ -1,0 +1,7 @@
+{
+  "path": "test",
+  "password": "psw",
+  "remove_after_restore": false,
+  "restore_database": false,
+  "restore_homeassistant": true
+}

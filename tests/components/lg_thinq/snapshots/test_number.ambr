@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -59,8 +61,9 @@
 # ---
 # name: test_number_entities[air_conditioner][number.test_air_conditioner_schedule_turn_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,8 +121,9 @@
 # ---
 # name: test_number_entities[washer][number.test_washer_delayed_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 19,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Delayed start',
     'options': dict({
     }),
     'original_device_class': None,

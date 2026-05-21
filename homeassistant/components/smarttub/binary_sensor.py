@@ -1,7 +1,5 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -49,6 +47,8 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
     )
 }
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -93,11 +93,15 @@ async def async_setup_entry(
 
 
 class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
-    """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
+    """A binary sensor indicating whether the spa is online.
+
+    Indicates if it is connected to the cloud.
+    """
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     # This seems to be very noisy and not generally useful, so disable by default.
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "online"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -115,6 +119,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "reminder"
 
     def __init__(
         self,
@@ -130,6 +135,9 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         )
         self.reminder_id = reminder.id
         self._attr_unique_id = f"{spa.id}-reminder-{reminder.id}"
+        self._attr_translation_placeholders = {
+            "reminder_name": reminder.name.title(),
+        }
 
     @property
     def reminder(self) -> SpaReminder:
@@ -167,6 +175,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     """
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "error"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
@@ -211,6 +220,7 @@ class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     """Wireless magnetic cover sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OPENING
+    _attr_translation_key = "cover_sensor"
 
     @property
     def is_on(self) -> bool:

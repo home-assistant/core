@@ -29,7 +29,7 @@ class AbodeEntity(Entity):
             self._update_connection_status,
         )
 
-        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+        self._data.entity_ids.add(self.entity_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from Abode connection status updates."""

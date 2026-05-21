@@ -1,7 +1,5 @@
 """Platform for Miele button integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Final
@@ -112,7 +110,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:

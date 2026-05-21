@@ -1,13 +1,13 @@
 """Platform providing event entities for UniFi Protect."""
 
-from __future__ import annotations
-
 import dataclasses
 from typing import Any
 
+from uiprotect.data import ModelType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -19,7 +19,6 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
-    EVENT_TYPE_DOORBELL_RING,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -31,7 +30,6 @@ from .const import (
     VEHICLE_EVENT_DELAY_SECONDS,
 )
 from .data import (
-    Camera,
     EventType,
     ProtectAdoptableDeviceModel,
     ProtectData,
@@ -49,7 +47,7 @@ PARALLEL_UPDATES = 0
 def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
     """Sort key: (has_lpr, confidence, clock_best_wall)."""
     has_lpr = bool((t.group and t.group.matched_name) or (t.name and len(t.name) > 0))
-    confidence = t.confidence if t.confidence else 0.0
+    confidence = t.confidence or 0.0
     clock = t.clock_best_wall.timestamp() if t.clock_best_wall else 0.0
     return (has_lpr, confidence, clock)
 
@@ -96,7 +94,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
             and not self._event_already_ended(prev_event, prev_event_end)
             and event.type is EventType.RING
         ):
-            self._trigger_event(EVENT_TYPE_DOORBELL_RING, {ATTR_EVENT_ID: event.id})
+            self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 
 
@@ -367,7 +365,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         device_class=EventDeviceClass.DOORBELL,
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
-        event_types=[EVENT_TYPE_DOORBELL_RING],
+        event_types=[DoorbellEventType.RING],
         entity_class=ProtectDeviceRingEventEntity,
     ),
     ProtectEventEntityDescription(
@@ -423,7 +421,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.is_adopted and isinstance(device, Camera):
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
             async_add_entities(_async_event_entities(data, ufp_device=device))
 
     data.async_subscribe_adopt(_add_new_device)

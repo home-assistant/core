@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
@@ -25,12 +23,13 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .frame import report_usage
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -198,7 +197,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
         for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+            try:
+                update_callback()
+            except Exception:
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
@@ -333,11 +339,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                "`async_config_entry_first_refresh` called when"
+                f" config entry state is"
+                f" {self.config_entry.state},"
+                " but should only be called in state"
+                f" {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
@@ -355,6 +362,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Error handling for _async_setup."""
         try:
             await self._async_setup()
+
+        except OAuth2TokenRequestError as err:
+            self.last_exception = err
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                self.last_update_success = False
+                # Non-recoverable error
+                raise ConfigEntryAuthFailed from err
+
         except (
             TimeoutError,
             requests.exceptions.Timeout,
@@ -423,6 +438,33 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Timeout fetching %s data", self.name)
+                    self.logger.debug("Full error:", exc_info=True)
+                self.last_update_success = False
+
+        except OAuth2TokenRequestError as err:
+            self.last_exception = err
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                # Non-recoverable error
+                auth_failed = True
+                if self.last_update_success:
+                    if log_failures:
+                        self.logger.error(
+                            "Authentication failed while fetching %s data: %s",
+                            self.name,
+                            err,
+                        )
+                    self.last_update_success = False
+                if raise_on_auth_failed:
+                    raise ConfigEntryAuthFailed from err
+
+                if self.config_entry:
+                    self.config_entry.async_start_reauth(self.hass)
+                return
+
+            # Recoverable error
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
@@ -430,6 +472,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error requesting %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except urllib.error.URLError as err:
@@ -442,6 +485,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.logger.error(
                             "Error requesting %s data: %s", self.name, err
                         )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except UpdateFailed as err:
@@ -459,6 +503,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except ConfigEntryError as err:
@@ -470,6 +515,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_entry_error:
                 raise
@@ -484,6 +530,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_auth_failed:
                 raise

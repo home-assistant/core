@@ -17,12 +17,8 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
-default_entry_data = {
-    "broker": "mock-broker",
-}
-default_entry_options = {
-    "birth_message": {},
-}
+default_entry_data = {"broker": "mock-broker", "protocol": "5"}
+default_entry_options = {"birth_message": {}}
 
 
 async def test_entry_diagnostics(
@@ -73,7 +69,7 @@ async def test_entry_diagnostics(
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "sensor.none_mqtt_sensor",
+                "entity_id": "sensor.mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -102,13 +98,13 @@ async def test_entry_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "sensor.none_mqtt_sensor",
+                "entity_id": "sensor.mqtt_sensor",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
                     "attributes": {"friendly_name": "MQTT Sensor"},
-                    "entity_id": "sensor.none_mqtt_sensor",
+                    "entity_id": "sensor.mqtt_sensor",
                     "last_changed": ANY,
                     "last_reported": ANY,
                     "last_updated": ANY,
@@ -145,6 +141,7 @@ async def test_entry_diagnostics(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "5",
                 CONF_PASSWORD: "hunter2",
                 CONF_USERNAME: "my_user",
             },
@@ -239,6 +236,7 @@ async def test_redact_diagnostics(
                 "state": {
                     "attributes": {
                         "gps_accuracy": 1.5,
+                        "in_zones": ["zone.home"],
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
                         "source_type": "gps",

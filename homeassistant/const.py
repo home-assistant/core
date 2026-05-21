@@ -1,7 +1,5 @@
 """Constants used by Home Assistant components."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -16,14 +14,11 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 6
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
-# Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 14, 2)
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -96,6 +91,7 @@ CONF_COMMAND_ON: Final = "command_on"
 CONF_COMMAND_OPEN: Final = "command_open"
 CONF_COMMAND_STATE: Final = "command_state"
 CONF_COMMAND_STOP: Final = "command_stop"
+CONF_COMMENT: Final = "comment"
 CONF_CONDITION: Final = "condition"
 CONF_CONDITIONS: Final = "conditions"
 CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
@@ -335,6 +331,9 @@ ATTR_NAME: Final = "name"
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
 
+# Contains a list of entity ids that are members of a group
+ATTR_GROUP_ENTITIES: Final = "group_entities"
+
 # Contains one string, the config entry ID
 ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
 
@@ -523,6 +522,7 @@ class UnitOfEnergyDistance(StrEnum):
 class UnitOfElectricCurrent(StrEnum):
     """Electric current units."""
 
+    MICROAMPERE = "μA"
     MILLIAMPERE = "mA"
     AMPERE = "A"
 
@@ -590,6 +590,7 @@ class UnitOfLength(StrEnum):
 class UnitOfFrequency(StrEnum):
     """Frequency units."""
 
+    MILLIHERTZ = "mHz"
     HERTZ = "Hz"
     KILOHERTZ = "kHz"
     MEGAHERTZ = "MHz"

@@ -88,7 +88,7 @@
     },
     "number": {
       "bbw_dose": {
-        "name": "Brew by weight {dose}"
+        "name": "Brew by weight dose {dose}"
       },
       "coffee_temp": {
         "name": "Coffee target temperature"
@@ -197,6 +197,9 @@
     "bluetooth_connection_failed": {
       "message": "Error while connecting to machine via Bluetooth"
     },
+    "bluetooth_required_offline": {
+      "message": "Bluetooth is required when offline mode is enabled, but no Bluetooth device was found"
+    },
     "button_error": {
       "message": "Error while executing button {key}"
     },
@@ -223,12 +226,17 @@
     }
   },
   "options": {
+    "error": {
+      "bluetooth_required_offline": "Bluetooth is required when offline mode is enabled."
+    },
     "step": {
       "init": {
         "data": {
+          "offline_mode": "Offline Mode",
           "use_bluetooth": "Use Bluetooth"
         },
         "data_description": {
+          "offline_mode": "Enable offline mode to operate without internet connectivity through Bluetooth. Only local features will be available. Requires Bluetooth to be enabled.",
           "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
         }
       }

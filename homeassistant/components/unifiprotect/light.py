@@ -1,7 +1,5 @@
 """Component providing Lights for UniFi Protect."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
+from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -71,6 +70,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
             updated_device.light_device_settings.led_level
         )
 
+    @async_ufp_instance_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -100,6 +100,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
             ),
         )
 
+    @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")

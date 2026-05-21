@@ -108,6 +108,9 @@
       },
       "reconnect": {
         "name": "Reconnect"
+      },
+      "wake_on_lan": {
+        "name": "Wake on LAN"
       }
     },
     "sensor": {
@@ -116,9 +119,6 @@
       },
       "cpu_temperature": {
         "name": "CPU temperature"
-      },
-      "device_uptime": {
-        "name": "Last restart"
       },
       "external_ip": {
         "name": "External IP"
@@ -162,14 +162,40 @@
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
       }
+    },
+    "switch": {
+      "internet_access": {
+        "name": "Internet access"
+      },
+      "wi_fi_guest": {
+        "name": "Guest"
+      },
+      "wi_fi_main_2_4ghz": {
+        "name": "Main 2.4 GHz"
+      },
+      "wi_fi_main_5ghz": {
+        "name": "Main 5 GHz"
+      },
+      "wi_fi_main_5ghz_high_6ghz": {
+        "name": "Main 5 GHz High / 6 GHz"
+      }
     }
   },
   "exceptions": {
     "config_entry_not_found": {
       "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
+    "error_connecting": {
+      "message": "Error connecting to the FRITZ!Box: {error}"
+    },
+    "error_parse_device_info": {
+      "message": "Error parsing device info. Please check the system event log of your FRITZ!Box for malformed data and clear the event list."
+    },
     "error_refresh_hosts_info": {
       "message": "Error refreshing hosts info"
+    },
+    "error_upnp_disabled": {
+      "message": "UPnP is disabled on the FRITZ!Box. Please enable UPnP to use this integration."
     },
     "service_dial_failed": {
       "message": "Failed to dial, check if the click to dial service of the FRITZ!Box is activated"
@@ -180,11 +206,18 @@
     "service_parameter_unknown": {
       "message": "Action or parameter unknown"
     },
-    "unable_to_connect": {
-      "message": "Unable to establish a connection"
-    },
     "update_failed": {
       "message": "Error while updating the data: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_cleanup_button": {
+      "description": "The 'Cleanup' button is deprecated and will be removed in Home Assistant Core {removal_version}. Please update your automations and dashboards to remove any usage of this button. The action is now performed automatically at each data refresh.",
+      "title": "'Cleanup' button is deprecated"
+    },
+    "deprecated_firmware_update_button": {
+      "description": "The 'Firmware update' button is deprecated and will be removed in Home Assistant Core {removal_version}. It has been superseded by an update entity. Please update your automations and dashboards to remove any usage of this button.",
+      "title": "'Firmware update' button is deprecated"
     }
   },
   "options": {

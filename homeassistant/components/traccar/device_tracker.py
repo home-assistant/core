@@ -1,6 +1,5 @@
 """Support for Traccar device tracking."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
@@ -132,7 +131,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         )
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return battery value of the device."""
         return self._battery
 

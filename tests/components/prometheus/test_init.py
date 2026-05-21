@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any, Self
+from typing import Any
 from unittest import mock
 
 from freezegun import freeze_time
@@ -19,6 +19,7 @@ from homeassistant.components import (
     cover,
     device_tracker,
     fan,
+    geo_location,
     humidifier,
     input_boolean,
     input_number,
@@ -56,7 +57,8 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
 
-# Alias water_heater constants to avoid name clashes with similarly named climate constants
+# Alias water_heater constants to avoid name clashes with similarly
+# named climate constants
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
@@ -89,13 +91,20 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
@@ -126,7 +135,7 @@ class EntityMetric:
             assert labelname in self.labels
             assert self.labels[labelname] != ""
 
-    def withValue(self, value: float) -> Self:
+    def withValue(self, value: float) -> EntityMetricWithValue:
         """Return a metric with value."""
         return EntityMetricWithValue(self, value)
 
@@ -199,7 +208,7 @@ def test_entity_metric_generates_metric_name_string_without_value() -> None:
 
 
 def test_entity_metric_generates_metric_string_with_value() -> None:
-    """Test using EntityMetric to format a simple metric string but with a metric value included."""
+    """Test EntityMetric formats metric string with a value."""
     domain = "sensor"
     object_id = "outside_temperature"
     entity_metric = EntityMetric(
@@ -239,7 +248,7 @@ def test_entity_metric_raises_exception_without_required_labels() -> None:
 
 
 def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> None:
-    """Test using EntityMetric to raise exception when required label value is empty string."""
+    """Test EntityMetric raises on empty required label value."""
     domain = "sensor"
     object_id = "outside_temperature"
     test_kwargs = {
@@ -260,7 +269,7 @@ def test_entity_metric_raises_exception_if_required_label_is_empty_string() -> N
 
 
 def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
-    """Test using EntityMetric to format a simple metric string with labels alphabetically ordered."""
+    """Test EntityMetric orders labels alphabetically."""
     domain = "sensor"
     object_id = "outside_temperature"
 
@@ -294,7 +303,7 @@ def test_entity_metric_generates_alphabetically_ordered_labels() -> None:
 
 
 def test_entity_metric_generates_metric_string_with_non_required_labels() -> None:
-    """Test using EntityMetric to format a simple metric string but with extra labels and values included."""
+    """Test EntityMetric with extra labels and values."""
     mode_entity_metric = EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
@@ -847,7 +856,7 @@ async def test_climate_mode(
     climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test prometheus metrics for climate mode enum."""
-    data = {**climate_entities}
+    data: dict[str, Any] = {**climate_entities}
 
     # Set climate_2 to a specific HVAC mode from its available modes
     set_state_with_entry(
@@ -1332,6 +1341,39 @@ async def test_person(
         friendly_name="Alice",
         entity="person.alice",
     ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_geo_location(
+    client: ClientSessionGenerator,
+    geo_location_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test prometheus metrics for geo_location."""
+    body = await generate_latest_metrics(client)
+
+    EntityMetric(
+        metric_name="geo_location_distance_meters",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+        source="usgs_earthquakes",
+    ).withValue(25500.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="geo_location_latitude_degrees",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+        source="usgs_earthquakes",
+    ).withValue(34.05).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="geo_location_longitude_degrees",
+        domain="geo_location",
+        friendly_name="Earthquake",
+        entity="geo_location.earthquake",
+        source="usgs_earthquakes",
+    ).withValue(-118.25).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1863,7 +1905,8 @@ async def test_entity_becomes_unavailable(
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
-    # Check that the availability changed on sensor_1 and the metric with the value is gone.
+    # Check that the availability changed on sensor_1 and the metric
+    # with the value is gone.
     EntityMetric(
         metric_name="sensor_temperature_celsius",
         domain="sensor",
@@ -2748,6 +2791,36 @@ async def device_tracker_fixture(
     return data
 
 
+@pytest.fixture(name="geo_location_entities")
+async def geo_location_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate geo_location entities."""
+    data = {}
+    geo_location_1 = entity_registry.async_get_or_create(
+        domain=geo_location.DOMAIN,
+        platform="test",
+        unique_id="geo_location_1",
+        suggested_object_id="earthquake",
+        original_name="Earthquake",
+    )
+    set_state_with_entry(
+        hass,
+        geo_location_1,
+        25.5,
+        {
+            "source": "usgs_earthquakes",
+            "latitude": 34.05,
+            "longitude": -118.25,
+            "unit_of_measurement": UnitOfLength.KILOMETERS,
+        },
+    )
+    data["geo_location_1"] = geo_location_1
+
+    await hass.async_block_till_done()
+    return data
+
+
 @pytest.fixture(name="counter_entities")
 async def counter_fixture(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -2818,7 +2891,7 @@ def set_state_with_entry(
         attributes = {**attributes, **additional_attributes}
 
     hass.states.async_set(
-        entity_id=new_entity_id if new_entity_id else entry.entity_id,
+        entity_id=new_entity_id or entry.entity_id,
         new_state=state,
         attributes=attributes,
     )
@@ -2830,7 +2903,7 @@ def mock_client_fixture():
     with mock.patch(f"{PROMETHEUS_PATH}.prometheus_client") as client:
         counter_client = mock.MagicMock()
         client.Counter = mock.MagicMock(return_value=counter_client)
-        setattr(counter_client, "labels", mock.MagicMock(return_value=mock.MagicMock()))
+        counter_client.labels = mock.MagicMock(return_value=mock.MagicMock())
         yield counter_client
 
 
@@ -2961,3 +3034,295 @@ async def test_filtered_denylist(
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
+
+
+class InfoMetric(EntityMetric):
+    """Represents a Prometheus info metric."""
+
+    @classmethod
+    def required_labels(cls) -> list[str]:
+        """No required labels for info metrics."""
+        return []
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_floor_metric(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test floor metric."""
+
+    # create a floor
+    floor = floor_registry.async_create("Floor", level=1)
+    floor_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="1",
+        floor_name="Floor",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_in_metrics(body)
+
+    # update floor
+    floor_registry.async_update(floor.floor_id, level=99, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="99",
+        floor_name="Updated",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_metric(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test area metric."""
+    # create an area
+    area = area_registry.async_create("Area")
+    area_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_in_metrics(body)
+
+    # update area
+    area_registry.async_update(area.id, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Updated",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete area
+    area_registry.async_delete(area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_delete_floor_of_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test entity/area correlation."""
+
+    # create floor and area
+    floor = floor_registry.async_create("Floor", level=1)
+    area = area_registry.async_create("Area", floor_id=floor.floor_id)
+    metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="floor",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    updated = area_registry.async_get_area(area.id)
+    assert updated is not None
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/area correlation."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    metric_1 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_in_metrics(body)
+
+    # link entity to another area
+    area_2 = area_registry.async_create("Area 2")
+    metric_2 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_2"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_in_metrics(body)
+
+    # delete current area
+    area_registry.async_delete(area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/device/area correlation."""
+
+    # create a device
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "test-device")},
+    )
+
+    # link entity to device
+    sensor = sensor_entities["sensor_1"]
+    entity_registry.async_update_entity(sensor.entity_id, device_id=device.id)
+
+    # create areas
+    entity_area = area_registry.async_create("Entity Area")
+    entity_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="entity_area",
+    )
+    device_area = area_registry.async_create("Device Area")
+    device_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="device_area",
+    )
+
+    # no area yet
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # set device area
+    device_registry.async_update_device(device.id, area_id=device_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # set entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=entity_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # unset entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=None)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # remove device
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity_on_entity_id_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test simultaneous update of entity_id and area_id."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    original_metric = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_in_metrics(body)
+
+    # link entity to another area and update entity_id
+    area_2 = area_registry.async_create("Area 2")
+    updated_metric_with_old_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="area_2",
+    )
+    updated_metric_with_new_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature_updated",
+        area="area_2",
+    )
+    updated_sensor = entity_registry.async_update_entity(
+        sensor.entity_id,
+        area_id=area_2.id,
+        new_entity_id="sensor.outside_temperature_updated",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_not_in_metrics(body)
+
+    set_state_with_entry(hass, updated_sensor, 10)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_in_metrics(body)

@@ -38,6 +38,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_RESTORED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -68,7 +69,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -189,7 +190,7 @@ async def test_switch_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if switch entities availability are based on the appliance connection state."""
+    """Test switch entities availability based on appliance connection."""
     entity_ids = [
         "switch.dishwasher_power",
         "switch.dishwasher_child_lock",
@@ -878,3 +879,42 @@ async def test_options_available_when_program_is_null(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_restore_option_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test restoration of option entities when program options are missing.
+
+    This test ensures that number entities representing options are restored
+    to the entity registry and set to unavailable if the current available
+    program does not include them, but they existed previously.
+    """
+    entity_id = "switch.dishwasher_half_load"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.DISHCARE_DISHWASHER_HALF_LOAD}",
+        suggested_object_id="dishwasher_half_load",
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_RESTORED)

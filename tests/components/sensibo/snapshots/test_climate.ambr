@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_climate[load_platforms0][climate.bedroom-entry]
+# name: test_climate[load_platforms0][climate.bedroom_bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -19,7 +20,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom',
+    'entity_id': 'climate.bedroom_bedroom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -41,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate[load_platforms0][climate.bedroom-state]
+# name: test_climate[load_platforms0][climate.bedroom_bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -55,17 +57,18 @@
       'target_temp_step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom',
+    'entity_id': 'climate.bedroom_bedroom',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_climate[load_platforms0][climate.hallway-entry]
+# name: test_climate[load_platforms0][climate.hallway_hallway-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -102,7 +105,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.hallway',
+    'entity_id': 'climate.hallway_hallway',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -110,6 +113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -124,7 +128,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate[load_platforms0][climate.hallway-state]
+# name: test_climate[load_platforms0][climate.hallway_hallway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 32.9,
@@ -163,17 +167,18 @@
       'temperature': 25,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.hallway',
+    'entity_id': 'climate.hallway_hallway',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
 # ---
-# name: test_climate[load_platforms0][climate.kitchen-entry]
+# name: test_climate[load_platforms0][climate.kitchen_kitchen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -195,7 +200,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.kitchen',
+    'entity_id': 'climate.kitchen_kitchen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -203,6 +208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -217,7 +223,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate[load_platforms0][climate.kitchen-state]
+# name: test_climate[load_platforms0][climate.kitchen_kitchen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -237,7 +243,7 @@
       'target_temp_step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.kitchen',
+    'entity_id': 'climate.kitchen_kitchen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -246,7 +252,7 @@
 # ---
 # name: test_climate_get_device_capabilities
   dict({
-    'climate.hallway': dict({
+    'climate.hallway_hallway': dict({
       'horizontalswing': list([
         'stopped',
         'fixedLeft',

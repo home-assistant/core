@@ -4,10 +4,10 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier, is_outlet, is_purifier
 from .const import (
-    DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -25,12 +24,10 @@ from .const import (
     PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
     PURIFIER_NIGHT_LIGHT_LEVEL_OFF,
     PURIFIER_NIGHT_LIGHT_LEVEL_ON,
-    VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
-    VS_MANAGER,
 )
-from .coordinator import VeSyncDataCoordinator
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +41,29 @@ VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
 HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
     v: k for k, v in VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.items()
 }
+
+PARALLEL_UPDATES = 1
+
+
+def _set_humidifier_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+    """Toggle humidifier nightlight on."""
+    if is_humidifier(device):
+        return device.set_nightlight_brightness(*args)
+    raise HomeAssistantError("Device does not support toggling nightlight.")
+
+
+def _toggle_purifier_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+    """Toggle air purifier nightlight on."""
+    if is_purifier(device):
+        return device.set_nightlight_mode(*args)
+    raise HomeAssistantError("Device does not support toggling nightlight.")
+
+
+def _toggle_outlet_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+    """Toggle outlet nightlight on."""
+    if is_outlet(device) and device.supports_nightlight:
+        return device.set_nightlight_state(*args)
+    raise HomeAssistantError("Device does not support toggling nightlight.")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,8 +85,8 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         exists_fn=lambda device: is_humidifier(device) and device.supports_nightlight,
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
-        select_option_fn=lambda device, value: device.set_nightlight_brightness(
-            HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
+        select_option_fn=lambda device, value: _set_humidifier_nightlight(
+            device, HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
         ),
         # Reporting "off" as the choice for unhandled level.
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
@@ -85,7 +105,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         ],
         icon="mdi:brightness-6",
         exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
-        select_option_fn=lambda device, value: device.set_nightlight_mode(value),
+        select_option_fn=_toggle_purifier_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
     ),
     # night_light for outlets
@@ -99,7 +119,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         ],
         icon="mdi:brightness-6",
         exists_fn=lambda device: is_outlet(device) and device.supports_nightlight,
-        select_option_fn=lambda device, value: device.set_nightlight_state(value),
+        select_option_fn=_toggle_outlet_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
     ),
 ]
@@ -107,12 +127,12 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -124,13 +144,13 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
+    devices: DeviceContainer | list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
@@ -169,4 +189,4 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
             raise HomeAssistantError(self.device.last_response.message)
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()

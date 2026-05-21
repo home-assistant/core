@@ -19,7 +19,18 @@
         "data_description": {
           "host": "The hostname or IP address of your CoolMasterNet device."
         },
-        "description": "Set up your CoolMasterNet connection details."
+        "description": "Set up your CoolMasterNet connection details.",
+        "sections": {
+          "more_options": {
+            "data": {
+              "send_wakeup_prompt": "Send wakeup prompt"
+            },
+            "data_description": {
+              "send_wakeup_prompt": "Send the coolmaster unit an empty command before issuing any actual command. This is required for serial models."
+            },
+            "name": "More options"
+          }
+        }
       }
     }
   },

@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for WLED."""
 
-from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from wled import (
     WLED,
@@ -32,6 +32,17 @@ from .const import (
 type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 
+def normalize_mac_address(mac: str) -> str:
+    """Normalize a MAC address to lowercase without separators.
+
+    This format is used by WLED firmware as well as unique IDs in Home Assistant.
+
+    The homeassistant.helpers.device_registry.format_mac function is preferred but
+    returns MAC addresses with colons as separators.
+    """
+    return mac.lower().replace(":", "").replace(".", "").replace("-", "").strip()
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
@@ -51,6 +62,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
 
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        self.config_mac_address = normalize_mac_address(entry.unique_id)
+
         super().__init__(
             hass,
             LOGGER,
@@ -66,6 +81,15 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.data is not None and len(self.data.state.segments) > 1
         )
 
+    @property
+    def segment_ids(self) -> set[int]:
+        """Return the set of segment IDs."""
+        return {
+            segment.segment_id
+            for segment in self.data.state.segments.values()
+            if segment.segment_id is not None
+        }
+
     @callback
     def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
@@ -73,29 +97,35 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
             try:
-                await self.wled.connect()
-            except WLEDError as err:
-                self.logger.info(err)
+                try:
+                    await self.wled.connect()
+                except WLEDError as err:
+                    self.logger.info(err)
+                    return
+
+                try:
+                    # Stop polling as long as we have a websocket. WS will push
+                    # updates to us
+                    self.update_interval = None
+                    await self.wled.listen(callback=self.async_set_updated_data)
+                except WLEDConnectionClosedError as err:
+                    self.last_update_success = False
+                    self.logger.info(err)
+                except WLEDError as err:
+                    self.last_update_success = False
+                    self.async_update_listeners()
+                    self.logger.error(err)
+                finally:
+                    # Pull data immediately and restart polling
+                    self.update_interval = SCAN_INTERVAL
+                    self.hass.async_create_task(self.async_request_refresh())
+
+                # Ensure we are disconnected
+                await self.wled.disconnect()
+            finally:
                 if self.unsub:
                     self.unsub()
                     self.unsub = None
-                return
-
-            try:
-                await self.wled.listen(callback=self.async_set_updated_data)
-            except WLEDConnectionClosedError as err:
-                self.last_update_success = False
-                self.logger.info(err)
-            except WLEDError as err:
-                self.last_update_success = False
-                self.async_update_listeners()
-                self.logger.error(err)
-
-            # Ensure we are disconnected
-            await self.wled.disconnect()
-            if self.unsub:
-                self.unsub()
-                self.unsub = None
 
         async def close_websocket(_: Event) -> None:
             """Close WebSocket connection."""
@@ -131,13 +161,14 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_placeholders={"error": str(error)},
             ) from error
 
-        if device.info.mac_address != self.config_entry.unique_id:
+        device_mac_address = normalize_mac_address(device.info.mac_address)
+        if device_mac_address != self.config_mac_address:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="mac_address_mismatch",
                 translation_placeholders={
-                    "expected_mac": format_mac(self.config_entry.unique_id).upper(),
-                    "actual_mac": format_mac(device.info.mac_address).upper(),
+                    "expected_mac": format_mac(self.config_mac_address).upper(),
+                    "actual_mac": format_mac(device_mac_address).upper(),
                 },
             )
 

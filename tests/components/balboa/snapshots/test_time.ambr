@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_times[time.fakespa_filter_cycle_1_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1 end',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_1_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1 start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_2_end-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2 end',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_times[time.fakespa_filter_cycle_2_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2 start',
     'options': dict({
     }),
     'original_device_class': None,

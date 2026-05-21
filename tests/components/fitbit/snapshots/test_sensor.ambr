@@ -47,264 +47,443 @@
     }),
   )
 # ---
-# name: test_sensors[monitored_resources0-sensor.first_l_activity_calories-activities/activityCalories-135]
-  tuple(
-    '135',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_activity_calories-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_activity_calories',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activity calories',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:fire',
+    'original_name': 'Activity calories',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activity_calories',
+    'unique_id': 'fitbit-api-user-id-1_activities/activityCalories',
+    'unit_of_measurement': 'cal',
+  })
+# ---
+# name: test_sensors[sensor.first_l_activity_calories-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'First L. Activity calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
     }),
-    'fitbit-api-user-id-1_activities/activityCalories',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_activity_calories',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '135',
+  })
 # ---
-# name: test_sensors[monitored_resources1-sensor.first_l_tracker_activity_calories-activities/tracker/activityCalories-135]
-  tuple(
-    '135',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Activity calories',
-      'icon': 'mdi:fire',
+# name: test_sensors[sensor.first_l_awakenings_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'cal',
     }),
-    'fitbit-api-user-id-1_activities/tracker/activityCalories',
-  )
-# ---
-# name: test_sensors[monitored_resources10-sensor.first_l_minutes_lightly_active-activities/minutesLightlyActive-95]
-  tuple(
-    '95',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes lightly active',
-      'icon': 'mdi:walk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_awakenings_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    'fitbit-api-user-id-1_activities/minutesLightlyActive',
-  )
-# ---
-# name: test_sensors[monitored_resources11-sensor.first_l_minutes_sedentary-activities/minutesSedentary-18]
-  tuple(
-    '18',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes sedentary',
-      'icon': 'mdi:seat-recline-normal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'name': None,
+    'object_id_base': 'Awakenings count',
+    'options': dict({
     }),
-    'fitbit-api-user-id-1_activities/minutesSedentary',
-  )
+    'original_device_class': None,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Awakenings count',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'awakenings_count',
+    'unique_id': 'fitbit-api-user-id-1_sleep/awakeningsCount',
+    'unit_of_measurement': 'times awaken',
+  })
 # ---
-# name: test_sensors[monitored_resources12-sensor.first_l_minutes_very_active-activities/minutesVeryActive-20]
-  tuple(
-    '20',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes very active',
-      'icon': 'mdi:run',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'fitbit-api-user-id-1_activities/minutesVeryActive',
-  )
-# ---
-# name: test_sensors[monitored_resources13-sensor.first_l_steps-activities/steps-5600]
-  tuple(
-    '5600',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Steps',
-      'icon': 'mdi:walk',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'steps',
-    }),
-    'fitbit-api-user-id-1_activities/steps',
-  )
-# ---
-# name: test_sensors[monitored_resources14-sensor.first_l_weight-body/weight-175]
-  tuple(
-    '175.0',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'weight',
-      'friendly_name': 'First L. Weight',
-      'icon': 'mdi:human',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
-    }),
-    'fitbit-api-user-id-1_body/weight',
-  )
-# ---
-# name: test_sensors[monitored_resources15-sensor.first_l_body_fat-body/fat-18]
-  tuple(
-    '18.0',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Body fat',
-      'icon': 'mdi:human',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'fitbit-api-user-id-1_body/fat',
-  )
-# ---
-# name: test_sensors[monitored_resources16-sensor.first_l_bmi-body/bmi-23.7]
-  tuple(
-    '23.7',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. BMI',
-      'icon': 'mdi:human',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'BMI',
-    }),
-    'fitbit-api-user-id-1_body/bmi',
-  )
-# ---
-# name: test_sensors[monitored_resources17-sensor.first_l_awakenings_count-sleep/awakeningsCount-7]
-  tuple(
-    '7',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_awakenings_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'First L. Awakenings count',
       'icon': 'mdi:sleep',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'times awaken',
     }),
-    'fitbit-api-user-id-1_sleep/awakeningsCount',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_awakenings_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
 # ---
-# name: test_sensors[monitored_resources18-sensor.first_l_sleep_efficiency-sleep/efficiency-80]
-  tuple(
-    '80',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_bmi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_bmi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'BMI',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human',
+    'original_name': 'BMI',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bmi',
+    'unique_id': 'fitbit-api-user-id-1_body/bmi',
+    'unit_of_measurement': 'BMI',
+  })
+# ---
+# name: test_sensors[sensor.first_l_bmi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep efficiency',
-      'icon': 'mdi:sleep',
+      'friendly_name': 'First L. BMI',
+      'icon': 'mdi:human',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'BMI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_bmi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.7',
+  })
+# ---
+# name: test_sensors[sensor.first_l_body_fat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_body_fat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Body fat',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human',
+    'original_name': 'Body fat',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'body_fat',
+    'unique_id': 'fitbit-api-user-id-1_body/fat',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.first_l_body_fat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Body fat',
+      'icon': 'mdi:human',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
-    'fitbit-api-user-id-1_sleep/efficiency',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_body_fat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.0',
+  })
 # ---
-# name: test_sensors[monitored_resources19-sensor.first_l_minutes_after_wakeup-sleep/minutesAfterWakeup-17]
-  tuple(
-    '17',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Minutes after wakeup',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+# name: test_sensors[sensor.first_l_calories-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
-    'fitbit-api-user-id-1_sleep/minutesAfterWakeup',
-  )
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.first_l_calories',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calories',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:fire',
+    'original_name': 'Calories',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories',
+    'unique_id': 'fitbit-api-user-id-1_activities/calories',
+    'unit_of_measurement': 'cal',
+  })
 # ---
-# name: test_sensors[monitored_resources2-sensor.first_l_calories-activities/calories-139]
-  tuple(
-    '139',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_calories-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'First L. Calories',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
     }),
-    'fitbit-api-user-id-1_activities/calories',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_calories',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '139',
+  })
 # ---
-# name: test_sensors[monitored_resources20-sensor.first_l_sleep_minutes_asleep-sleep/minutesAsleep-360]
-  tuple(
-    '360',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes asleep',
-      'icon': 'mdi:sleep',
+# name: test_sensors[sensor.first_l_calories_bmr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    'fitbit-api-user-id-1_sleep/minutesAsleep',
-  )
-# ---
-# name: test_sensors[monitored_resources21-sensor.first_l_sleep_minutes_awake-sleep/minutesAwake-35]
-  tuple(
-    '35',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes awake',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_calories_bmr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    'fitbit-api-user-id-1_sleep/minutesAwake',
-  )
-# ---
-# name: test_sensors[monitored_resources22-sensor.first_l_sleep_minutes_to_fall_asleep-sleep/minutesToFallAsleep-35]
-  tuple(
-    '35',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep minutes to fall asleep',
-      'icon': 'mdi:sleep',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'name': None,
+    'object_id_base': 'Calories BMR',
+    'options': dict({
     }),
-    'fitbit-api-user-id-1_sleep/minutesToFallAsleep',
-  )
+    'original_device_class': None,
+    'original_icon': 'mdi:fire',
+    'original_name': 'Calories BMR',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories_bmr',
+    'unique_id': 'fitbit-api-user-id-1_activities/caloriesBMR',
+    'unit_of_measurement': 'cal',
+  })
 # ---
-# name: test_sensors[monitored_resources23-sensor.first_l_sleep_start_time-sleep/startTime-2020-01-27T00:17:30.000]
-  tuple(
-    '2020-01-27T00:17:30.000',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_calories_bmr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Sleep start time',
-      'icon': 'mdi:clock',
-    }),
-    'fitbit-api-user-id-1_sleep/startTime',
-  )
-# ---
-# name: test_sensors[monitored_resources24-sensor.first_l_sleep_time_in_bed-sleep/timeInBed-462]
-  tuple(
-    '462',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'duration',
-      'friendly_name': 'First L. Sleep time in bed',
-      'icon': 'mdi:hotel',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'fitbit-api-user-id-1_sleep/timeInBed',
-  )
-# ---
-# name: test_sensors[monitored_resources3-sensor.first_l_tracker_calories-activities/tracker/calories-139]
-  tuple(
-    '139',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. tracker Calories',
+      'friendly_name': 'First L. Calories BMR',
       'icon': 'mdi:fire',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'cal',
     }),
-    'fitbit-api-user-id-1_activities/tracker/calories',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_calories_bmr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1900',
+  })
 # ---
-# name: test_sensors[monitored_resources4-sensor.first_l_distance-activities/distance-12.7]
-  tuple(
-    '12.70',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_calories_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_calories_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calories in',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:food-apple',
+    'original_name': 'Calories in',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories_in',
+    'unique_id': 'fitbit-api-user-id-1_foods/log/caloriesIn',
+    'unit_of_measurement': 'cal',
+  })
+# ---
+# name: test_sensors[sensor.first_l_calories_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Calories in',
+      'icon': 'mdi:food-apple',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_calories_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1600',
+  })
+# ---
+# name: test_sensors[sensor.first_l_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.first_l_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Distance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:map-marker',
+    'original_name': 'Distance',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'fitbit-api-user-id-1_activities/distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'distance',
       'friendly_name': 'First L. Distance',
@@ -312,27 +491,59 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'fitbit-api-user-id-1_activities/distance',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.70',
+  })
 # ---
-# name: test_sensors[monitored_resources5-sensor.first_l_tracker_distance-activities/distance-12.7]
-  tuple(
-    'unknown',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'device_class': 'distance',
-      'friendly_name': 'First L. tracker Distance',
-      'icon': 'mdi:map-marker',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+# name: test_sensors[sensor.first_l_elevation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
-    'fitbit-api-user-id-1_activities/tracker/distance',
-  )
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_elevation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Elevation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Elevation',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'elevation',
+    'unique_id': 'fitbit-api-user-id-1_activities/elevation',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
 # ---
-# name: test_sensors[monitored_resources6-sensor.first_l_elevation-activities/elevation-7600.24]
-  tuple(
-    '7600.24',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_elevation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'distance',
       'friendly_name': 'First L. Elevation',
@@ -340,39 +551,175 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
-    'fitbit-api-user-id-1_activities/elevation',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_elevation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7600.24',
+  })
 # ---
-# name: test_sensors[monitored_resources7-sensor.first_l_floors-activities/floors-8]
-  tuple(
-    '8',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_floors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_floors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Floors',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Floors',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'floors',
+    'unique_id': 'fitbit-api-user-id-1_activities/floors',
+    'unit_of_measurement': 'floors',
+  })
+# ---
+# name: test_sensors[sensor.first_l_floors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'friendly_name': 'First L. Floors',
       'icon': 'mdi:walk',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'floors',
     }),
-    'fitbit-api-user-id-1_activities/floors',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_floors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
 # ---
-# name: test_sensors[monitored_resources8-sensor.first_l_resting_heart_rate-activities/heart-api_value8]
-  tuple(
-    '76',
-    ReadOnlyDict({
-      'attribution': 'Data provided by Fitbit.com',
-      'friendly_name': 'First L. Resting heart rate',
-      'icon': 'mdi:heart-pulse',
+# name: test_sensors[sensor.first_l_minutes_after_wakeup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bpm',
     }),
-    'fitbit-api-user-id-1_activities/heart',
-  )
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_minutes_after_wakeup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes after wakeup',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Minutes after wakeup',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_after_wakeup',
+    'unique_id': 'fitbit-api-user-id-1_sleep/minutesAfterWakeup',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
 # ---
-# name: test_sensors[monitored_resources9-sensor.first_l_minutes_fairly_active-activities/minutesFairlyActive-35]
-  tuple(
-    '35',
-    ReadOnlyDict({
+# name: test_sensors[sensor.first_l_minutes_after_wakeup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Minutes after wakeup',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_minutes_after_wakeup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_fairly_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_minutes_fairly_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes fairly active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Minutes fairly active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_fairly_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/minutesFairlyActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_fairly_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Fitbit.com',
       'device_class': 'duration',
       'friendly_name': 'First L. Minutes fairly active',
@@ -380,6 +727,1351 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    'fitbit-api-user-id-1_activities/minutesFairlyActive',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_minutes_fairly_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_lightly_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_minutes_lightly_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes lightly active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Minutes lightly active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_lightly_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/minutesLightlyActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_lightly_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Minutes lightly active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_minutes_lightly_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95',
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_sedentary-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_minutes_sedentary',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes sedentary',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:seat-recline-normal',
+    'original_name': 'Minutes sedentary',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_sedentary',
+    'unique_id': 'fitbit-api-user-id-1_activities/minutesSedentary',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_sedentary-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Minutes sedentary',
+      'icon': 'mdi:seat-recline-normal',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_minutes_sedentary',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18',
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_very_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_minutes_very_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes very active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:run',
+    'original_name': 'Minutes very active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_very_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/minutesVeryActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_minutes_very_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Minutes very active',
+      'icon': 'mdi:run',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_minutes_very_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensors[sensor.first_l_resting_heart_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.first_l_resting_heart_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Resting heart rate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:heart-pulse',
+    'original_name': 'Resting heart rate',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'resting_heart_rate',
+    'unique_id': 'fitbit-api-user-id-1_activities/heart',
+    'unit_of_measurement': 'bpm',
+  })
+# ---
+# name: test_sensors[sensor.first_l_resting_heart_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Resting heart rate',
+      'icon': 'mdi:heart-pulse',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'bpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_resting_heart_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '76',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_efficiency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_efficiency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep efficiency',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Sleep efficiency',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_efficiency',
+    'unique_id': 'fitbit-api-user-id-1_sleep/efficiency',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_efficiency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Sleep efficiency',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_efficiency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_asleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_minutes_asleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep minutes asleep',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Sleep minutes asleep',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_minutes_asleep',
+    'unique_id': 'fitbit-api-user-id-1_sleep/minutesAsleep',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_asleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Sleep minutes asleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_minutes_asleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '360',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_awake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_minutes_awake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep minutes awake',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Sleep minutes awake',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_minutes_awake',
+    'unique_id': 'fitbit-api-user-id-1_sleep/minutesAwake',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_awake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Sleep minutes awake',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_minutes_awake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_to_fall_asleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_minutes_to_fall_asleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep minutes to fall asleep',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:sleep',
+    'original_name': 'Sleep minutes to fall asleep',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_minutes_to_fall_asleep',
+    'unique_id': 'fitbit-api-user-id-1_sleep/minutesToFallAsleep',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_minutes_to_fall_asleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Sleep minutes to fall asleep',
+      'icon': 'mdi:sleep',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_minutes_to_fall_asleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep start time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:clock',
+    'original_name': 'Sleep start time',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_start_time',
+    'unique_id': 'fitbit-api-user-id-1_sleep/startTime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Sleep start time',
+      'icon': 'mdi:clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-01-27T00:17:30.000',
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_time_in_bed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_sleep_time_in_bed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep time in bed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bed',
+    'original_name': 'Sleep time in bed',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_time_in_bed',
+    'unique_id': 'fitbit-api-user-id-1_sleep/timeInBed',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_sleep_time_in_bed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. Sleep time in bed',
+      'icon': 'mdi:bed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_sleep_time_in_bed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '462',
+  })
+# ---
+# name: test_sensors[sensor.first_l_steps-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.first_l_steps',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Steps',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Steps',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'steps',
+    'unique_id': 'fitbit-api-user-id-1_activities/steps',
+    'unit_of_measurement': 'steps',
+  })
+# ---
+# name: test_sensors[sensor.first_l_steps-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Steps',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'steps',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_steps',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5600',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_activity_calories-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_activity_calories',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activity calories',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:fire',
+    'original_name': 'Activity calories',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activity_calories',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/activityCalories',
+    'unit_of_measurement': 'cal',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_activity_calories-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. tracker Activity calories',
+      'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_activity_calories',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '135',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_calories-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_calories',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calories',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:fire',
+    'original_name': 'Calories',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calories',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/calories',
+    'unit_of_measurement': 'cal',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_calories-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. tracker Calories',
+      'icon': 'mdi:fire',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_calories',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '139',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Distance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:map-marker',
+    'original_name': 'Distance',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'distance',
+      'friendly_name': 'First L. tracker Distance',
+      'icon': 'mdi:map-marker',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.70',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_elevation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_elevation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Elevation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Elevation',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'elevation',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/elevation',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_elevation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'distance',
+      'friendly_name': 'First L. tracker Elevation',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_elevation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7600.24',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_floors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_floors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Floors',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Floors',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'floors',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/floors',
+    'unit_of_measurement': 'floors',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_floors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. tracker Floors',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'floors',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_floors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_fairly_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_minutes_fairly_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes fairly active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Minutes fairly active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_fairly_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/minutesFairlyActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_fairly_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. tracker Minutes fairly active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_minutes_fairly_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_lightly_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_minutes_lightly_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes lightly active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Minutes lightly active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_lightly_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/minutesLightlyActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_lightly_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. tracker Minutes lightly active',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_minutes_lightly_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_sedentary-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_minutes_sedentary',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes sedentary',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:seat-recline-normal',
+    'original_name': 'Minutes sedentary',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_sedentary',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/minutesSedentary',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_sedentary-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. tracker Minutes sedentary',
+      'icon': 'mdi:seat-recline-normal',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_minutes_sedentary',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_very_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_minutes_very_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes very active',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:run',
+    'original_name': 'Minutes very active',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_very_active',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/minutesVeryActive',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_minutes_very_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'duration',
+      'friendly_name': 'First L. tracker Minutes very active',
+      'icon': 'mdi:run',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_minutes_very_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_steps-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_tracker_steps',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Steps',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:walk',
+    'original_name': 'Steps',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'steps',
+    'unique_id': 'fitbit-api-user-id-1_activities/tracker/steps',
+    'unit_of_measurement': 'steps',
+  })
+# ---
+# name: test_sensors[sensor.first_l_tracker_steps-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. tracker Steps',
+      'icon': 'mdi:walk',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'steps',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_tracker_steps',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5600',
+  })
+# ---
+# name: test_sensors[sensor.first_l_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.first_l_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cup-water',
+    'original_name': 'Water',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water',
+    'unique_id': 'fitbit-api-user-id-1_foods/log/water',
+    'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'friendly_name': 'First L. Water',
+      'icon': 'mdi:cup-water',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensors[sensor.first_l_weight-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.first_l_weight',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Weight',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': 'mdi:human',
+    'original_name': 'Weight',
+    'platform': 'fitbit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'fitbit-api-user-id-1_body/weight',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_sensors[sensor.first_l_weight-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Fitbit.com',
+      'device_class': 'weight',
+      'friendly_name': 'First L. Weight',
+      'icon': 'mdi:human',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.first_l_weight',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '175.0',
+  })
 # ---

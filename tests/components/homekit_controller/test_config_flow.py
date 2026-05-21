@@ -34,6 +34,7 @@ PAIRING_START_FORM_ERRORS = [
 ]
 
 PAIRING_START_ABORT_ERRORS = [
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
     (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
     (aiohomekit.UnavailableError, "already_paired"),
 ]
@@ -53,7 +54,8 @@ PAIRING_FINISH_FORM_ERRORS = [
 ]
 
 PAIRING_FINISH_ABORT_ERRORS = [
-    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
+    (aiohomekit.AccessoryDisconnectedError, "accessory_disconnected_error"),
+    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
 ]
 
 
@@ -156,7 +158,7 @@ def test_insecure_pairing_codes(pairing_code) -> None:
 
 @pytest.mark.parametrize("pairing_code", VALID_PAIRING_CODES)
 def test_valid_pairing_codes(pairing_code) -> None:
-    """Test ensure_pin_format corrects format for a valid pin in an alternative format."""
+    """Test ensure_pin_format corrects format for valid pin."""
     valid_pin = config_flow.ensure_pin_format(pairing_code).split("-")
     assert len(valid_pin) == 3
     assert len(valid_pin[0]) == 3
@@ -365,7 +367,7 @@ async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
 async def test_discovery_ignored_hk_bridge(
     hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
+    """Ensure we ignore bridges and accessories from the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
@@ -418,7 +420,7 @@ async def test_discovery_does_not_ignore_non_homekit(
 
 
 async def test_discovery_broken_pairing_flag(hass: HomeAssistant, controller) -> None:
-    """There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+    """Test handling existing pairing with wrong zeroconf pairing flag.
 
     We have seen this particular implementation error in 2 different devices.
     """
@@ -641,7 +643,8 @@ async def test_pair_try_later_errors_on_start(
         data=discovery_info,
     )
 
-    # User initiates pairing - device refuses to enter pairing mode but may be successful after entering pairing mode or rebooting
+    # User initiates pairing - device refuses to enter pairing mode but may be
+    # successful after entering pairing mode or rebooting
     test_exc = exception("error")
     with patch.object(device, "async_start_pairing", side_effect=test_exc):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -696,6 +699,7 @@ async def test_pair_form_errors_on_start(
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -744,6 +748,7 @@ async def test_pair_abort_errors_on_finish(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -786,6 +791,7 @@ async def test_pair_form_errors_on_finish(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -799,6 +805,7 @@ async def test_pair_form_errors_on_finish(
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -833,6 +840,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -849,6 +857,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
     )
 
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
@@ -1006,7 +1015,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
 async def test_mdns_update_to_paired_during_pairing(
     hass: HomeAssistant, controller
 ) -> None:
-    """Test we do not abort pairing if mdns is updated to reflect paired during pairing."""
+    """Test we do not abort pairing if mdns reflects paired during pairing."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
     discovery_info_paired = get_device_discovery_info(device, paired=True)
@@ -1046,6 +1055,7 @@ async def test_mdns_update_to_paired_during_pairing(
 
     assert result["type"] is FlowResultType.FORM
     assert get_flow_context(hass, result) == {
+        "dismiss_protected": True,
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,

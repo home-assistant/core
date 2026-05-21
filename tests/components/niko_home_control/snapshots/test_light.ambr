@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_entities[light.dimmable_light-entry]
+# name: test_entities[light.room_dimmable_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -16,7 +17,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.dimmable_light',
+    'entity_id': 'light.room_dimmable_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -38,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.dimmable_light-state]
+# name: test_entities[light.room_dimmable_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 100,
@@ -50,17 +52,18 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.dimmable_light',
+    'entity_id': 'light.room_dimmable_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[light.light-entry]
+# name: test_entities[light.room_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -74,7 +77,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.light',
+    'entity_id': 'light.room_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -96,7 +100,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.light-state]
+# name: test_entities[light.room_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
@@ -107,7 +111,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.light',
+    'entity_id': 'light.room_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

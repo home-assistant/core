@@ -2,6 +2,7 @@
 
 import copy
 from datetime import datetime, timedelta
+from enum import StrEnum
 import json
 import logging
 from pathlib import Path
@@ -20,6 +21,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfElectricPotential,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
@@ -406,7 +409,8 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
     state = hass.states.get("sensor.test")
     assert state.state == "21"
 
-    # omitting value, causing it to be ignored, native sensor value should not change (template warning will be logged though)
+    # omitting value, causing it to be ignored, native sensor value
+    # should not change (template warning will be logged though)
     async_fire_mqtt_message(hass, "test-topic", '{ "current": 5.34 }')
     state = hass.states.get("sensor.test")
     assert state.state == "21"
@@ -582,7 +586,9 @@ async def test_setting_sensor_value_via_mqtt_json_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
+                    "value_template": (
+                        "{{ value_json.val | is_defined }}-{{ value_json.par }}"
+                    ),
                 }
             }
         }
@@ -668,7 +674,11 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(
                     "state_topic": "test-topic",
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",
-                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
+                    "last_reset_value_template": (
+                        "{{ utcnow().fromtimestamp("
+                        "value_json.time / 1000,"
+                        " tz=utcnow().tzinfo) }}"
+                    ),
                 },
             }
         },
@@ -909,24 +919,113 @@ async def test_invalid_unit_of_measurement(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "device_class", "unit", "equivalent_unit"),
     [
-        {
-            mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "test-topic",
-                    "device_class": "voltage",
-                    "unit_of_measurement": "\u00b5V",  # microVolt
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "\u00b5V",  # microVolt
+                    }
                 }
-            }
-        }
+            },
+            "voltage",
+            UnitOfElectricPotential.MICROVOLT,
+            "\u00b5V",
+            id="microvolt",
+        ),
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "reactive_power",
+                        "unit_of_measurement": "mVAr",
+                    }
+                }
+            },
+            "reactive_power",
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            "mVAr",
+            id="mvar",
+        ),
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "reactive_power",
+                        "unit_of_measurement": "VAr",
+                    }
+                }
+            },
+            "reactive_power",
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            "VAr",
+            id="var",
+        ),
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "reactive_power",
+                        "unit_of_measurement": "kVAr",
+                    }
+                }
+            },
+            "reactive_power",
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+            "kVAr",
+            id="kvar",
+        ),
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "reactive_energy",
+                        "unit_of_measurement": "VArh",
+                    }
+                }
+            },
+            "reactive_energy",
+            UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+            "VArh",
+            id="varh",
+        ),
+        pytest.param(
+            {
+                mqtt.DOMAIN: {
+                    sensor.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "test-topic",
+                        "device_class": "reactive_energy",
+                        "unit_of_measurement": "kVArh",
+                    }
+                }
+            },
+            "reactive_energy",
+            UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+            "kVArh",
+            id="kvarh",
+        ),
     ],
 )
 async def test_device_class_with_equivalent_unit_of_measurement_received(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    device_class: str,
+    unit: StrEnum,
+    equivalent_unit: str,
 ) -> None:
     """Test device_class with equivalent unit of measurement."""
     assert await mqtt_mock_entry()
@@ -935,20 +1034,17 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     state = hass.states.get("sensor.test")
     assert state is not None
     assert state.state == "100"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        is UnitOfElectricPotential.MICROVOLT
-    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is unit
 
     caplog.clear()
 
     discovery_payload = {
         "name": "bla",
         "state_topic": "test-topic2",
-        "device_class": "voltage",
-        "unit_of_measurement": "\u00b5V",
+        "device_class": device_class,
+        "unit_of_measurement": equivalent_unit,
     }
-    # Now discover a sensor with an altarantive mu char
+    # Now discover a sensor with an ambiguous unit
     async_fire_mqtt_message(
         hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
     )
@@ -958,10 +1054,7 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
     state = hass.states.get("sensor.bla")
     assert state is not None
     assert state.state == "21"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        is UnitOfElectricPotential.MICROVOLT
-    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is unit
 
 
 @pytest.mark.parametrize(
@@ -1068,7 +1161,7 @@ async def test_equivalent_unit_of_measurement_received_without_device_class(
 async def test_valid_device_class_and_uom(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test device_class option with valid values and test with an empty unit of measurement."""
+    """Test device_class with valid values and empty unit."""
     await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test_1")
@@ -1137,8 +1230,8 @@ async def test_invalid_state_class_with_unit_of_measurement(
     """Test state_class option with invalid unit of measurement."""
     assert await mqtt_mock_entry()
     assert (
-        "The unit of measurement 'deg' is not valid together with state class 'measurement_angle'"
-        in caplog.text
+        "The unit of measurement 'deg' is not valid together"
+        " with state class 'measurement_angle'" in caplog.text
     )
 
 
@@ -1622,7 +1715,6 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -1878,8 +1970,8 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )
 
 
@@ -1923,11 +2015,11 @@ async def test_value_incorrect_state_class_config(
     caplog: pytest.LogCaptureFixture,
     hass_config: ConfigType,
 ) -> None:
-    """Test a sensor config with incorrect state_class config fails from yaml or discovery."""
+    """Test incorrect state_class config fails from yaml or discovery."""
     await mqtt_mock_entry()
     assert (
-        "The option `last_reset_value_template` cannot be used together with state class"
-        in caplog.text
+        "The option `last_reset_value_template` cannot be used"
+        " together with state class" in caplog.text
     )
     caplog.clear()
 
@@ -1937,6 +2029,6 @@ async def test_value_incorrect_state_class_config(
     )
     await hass.async_block_till_done()
     assert (
-        "The option `last_reset_value_template` cannot be used together with state class"
-        in caplog.text
+        "The option `last_reset_value_template` cannot be used"
+        " together with state class" in caplog.text
     )

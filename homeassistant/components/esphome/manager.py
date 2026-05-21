@@ -1,7 +1,5 @@
 """Manager for esphome devices."""
 
-from __future__ import annotations
-
 import base64
 from functools import partial
 import logging
@@ -344,7 +342,7 @@ class ESPHomeManager:
         call_id: int,
         response_template: str | None = None,
     ) -> None:
-        """Handle service call that expects a response and send response back to ESPHome."""
+        """Handle service call with response and send it back to ESPHome."""
         try:
             # Call the service with response capture enabled
             action_response = await self.hass.services.async_call(
@@ -366,6 +364,7 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise HomeAssistantError(
                         f"Error rendering response template: {ex}"
                     ) from ex
@@ -1034,7 +1033,7 @@ def _async_setup_device_registry(
         and dashboard.data
         and dashboard.data.get(device_info.name)
     ):
-        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
+        configuration_url = f"homeassistant://app/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:

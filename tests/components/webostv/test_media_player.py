@@ -26,19 +26,21 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.webostv.const import (
-    ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     DOMAIN,
     LIVE_TV_APP_ID,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
     WebOsTvCommandError,
 )
 from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
+)
+from homeassistant.components.webostv.services import (
+    ATTR_BUTTON,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -188,7 +190,7 @@ async def test_select_source_with_empty_source_list(
     }
     with pytest.raises(
         HomeAssistantError,
-        match=f"Source nonexistent not found in the sources list for {TV_NAME}",
+        match=f"Source nonexistent not found in the sources list for {ENTITY_ID}",
     ):
         await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
@@ -526,17 +528,20 @@ async def test_client_key_update_on_connect(
         (
             True,
             WebOsTvCommandError("Some error"),
-            f"Communication error while calling async_media_play for device {TV_NAME}: Some error",
+            "Communication error while calling async_media_play"
+            f" for device {TV_NAME}: Some error",
         ),
         (
             True,
             WebOsTvCommandError("Some other error"),
-            f"Communication error while calling async_media_play for device {TV_NAME}: Some other error",
+            "Communication error while calling async_media_play"
+            f" for device {TV_NAME}: Some other error",
         ),
         (
             False,
             None,
-            f"Error calling async_media_play for device {TV_NAME}: Device is off and cannot be controlled",
+            f"Error calling async_media_play for device {TV_NAME}:"
+            " Device is off and cannot be controlled",
         ),
     ],
 )

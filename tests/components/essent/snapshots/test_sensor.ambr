@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.essent_average_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -57,8 +59,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_market_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity market price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -113,8 +117,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -169,8 +175,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_price_excl_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity price excl. VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -225,8 +233,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_purchasing_fee-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -246,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity purchasing fee',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -281,8 +291,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_tax-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity tax',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -337,8 +349,9 @@
 # ---
 # name: test_entities[sensor.essent_current_electricity_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current electricity VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -393,8 +407,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_market_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -414,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas market price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -449,8 +465,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -470,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -505,8 +523,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_price_excl_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -526,6 +545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas price excl. VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -561,8 +581,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_purchasing_fee-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -582,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas purchasing fee',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -617,8 +639,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_tax-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -638,6 +661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas tax',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -673,8 +697,9 @@
 # ---
 # name: test_entities[sensor.essent_current_gas_vat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -694,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current gas VAT',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -729,8 +755,9 @@
 # ---
 # name: test_entities[sensor.essent_highest_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -750,6 +777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -785,8 +813,9 @@
 # ---
 # name: test_entities[sensor.essent_lowest_electricity_price_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -806,6 +835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest electricity price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -841,8 +871,9 @@
 # ---
 # name: test_entities[sensor.essent_next_electricity_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -862,6 +893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next electricity price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -897,8 +929,9 @@
 # ---
 # name: test_entities[sensor.essent_next_gas_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -918,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next gas price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,

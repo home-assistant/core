@@ -1,9 +1,8 @@
 """Details about the built-in battery."""
 
-from __future__ import annotations
-
 import logging
 import os
+from typing import Any
 
 from batinfo import Batteries
 import voluptuous as vol
@@ -29,6 +28,7 @@ ATTR_CYCLE_COUNT = "cycle_count"
 ATTR_ENERGY_FULL = "energy_full"
 ATTR_ENERGY_FULL_DESIGN = "energy_full_design"
 ATTR_ENERGY_NOW = "energy_now"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL_NAME = "model_name"
 ATTR_POWER_NOW = "power_now"
@@ -97,7 +97,7 @@ class LinuxBatterySensor(SensorEntity):
         self._system = system
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         if self._system == "android":
             return {

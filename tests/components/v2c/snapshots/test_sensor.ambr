@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.evse_1_1_1_1_battery_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_charge_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_charge_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -169,8 +175,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_charge_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -225,8 +233,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_house_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -246,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'House power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -281,8 +291,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_installation_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -337,8 +349,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_ip_address-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +399,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_meter_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -442,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -509,8 +525,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_photovoltaic_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -530,6 +547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photovoltaic power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -565,8 +583,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_signal_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -586,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -616,8 +636,9 @@
 # ---
 # name: test_sensor[sensor.evse_1_1_1_1_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -635,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,

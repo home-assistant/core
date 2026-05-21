@@ -40,11 +40,11 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=(
-            lambda machine: cast(
-                NoWater, machine.dashboard.config[WidgetType.CM_NO_WATER]
-            ).allarm
-            if WidgetType.CM_NO_WATER in machine.dashboard.config
-            else False
+            lambda machine: (
+                cast(NoWater, machine.dashboard.config[WidgetType.CM_NO_WATER]).allarm
+                if WidgetType.CM_NO_WATER in machine.dashboard.config
+                else False
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         bt_offline_mode=True,
@@ -54,10 +54,13 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="brew_active",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
-            lambda machine: cast(
-                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
-            ).status
-            is MachineState.BREWING
+            lambda machine: (
+                cast(
+                    MachineStatus,
+                    machine.dashboard.config[WidgetType.CM_MACHINE_STATUS],
+                ).status
+                is MachineState.BREWING
+            )
         ),
         available_fn=lambda coordinator: not coordinator.websocket_terminated,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -67,13 +70,15 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="backflush_enabled",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
-            lambda machine: cast(
-                BackFlush,
-                machine.dashboard.config.get(
-                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
-                ),
-            ).status
-            in (BackFlushStatus.REQUESTED, BackFlushStatus.CLEANING)
+            lambda machine: (
+                cast(
+                    BackFlush,
+                    machine.dashboard.config.get(
+                        WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                    ),
+                ).status
+                in (BackFlushStatus.REQUESTED, BackFlushStatus.CLEANING)
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: (

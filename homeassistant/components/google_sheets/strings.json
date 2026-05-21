@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "open_spreadsheet_failure": "Error while opening spreadsheet, see error log for details",
@@ -41,6 +42,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "services": {
     "append_sheet": {
       "description": "Appends data to a worksheet in Google Sheets.",
@@ -62,7 +68,7 @@
           "name": "Worksheet"
         }
       },
-      "name": "Append to sheet"
+      "name": "Append data to Google sheet"
     },
     "get_sheet": {
       "description": "Gets data from a worksheet in Google Sheets.",
@@ -80,7 +86,7 @@
           "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]"
         }
       },
-      "name": "Get data from sheet"
+      "name": "Get data from Google sheet"
     }
   }
 }

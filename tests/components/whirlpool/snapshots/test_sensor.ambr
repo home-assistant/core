@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.dryer_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_all_entities[sensor.dryer_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -94,6 +97,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -147,8 +151,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_lower_oven_cook_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -177,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -217,8 +223,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_lower_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -238,6 +245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -273,8 +281,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_lower_oven_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -298,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -333,8 +343,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_lower_oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -354,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lower oven target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -389,8 +401,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_upper_oven_cook_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -419,6 +432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -459,8 +473,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_upper_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -480,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -515,8 +531,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_upper_oven_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -540,6 +557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -575,8 +593,9 @@
 # ---
 # name: test_all_entities[sensor.dual_cavity_oven_upper_oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -596,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper oven target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -631,8 +651,9 @@
 # ---
 # name: test_all_entities[sensor.single_cavity_oven_cook_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -661,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cook mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -701,8 +723,9 @@
 # ---
 # name: test_all_entities[sensor.single_cavity_oven_current_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -722,6 +745,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -757,8 +781,9 @@
 # ---
 # name: test_all_entities[sensor.single_cavity_oven_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -782,6 +807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -817,8 +843,9 @@
 # ---
 # name: test_all_entities[sensor.single_cavity_oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -838,6 +865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -873,8 +901,9 @@
 # ---
 # name: test_all_entities[sensor.washer_detergent_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -900,6 +929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detergent level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -937,8 +967,9 @@
 # ---
 # name: test_all_entities[sensor.washer_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -956,6 +987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'End time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -987,8 +1019,9 @@
 # ---
 # name: test_all_entities[sensor.washer_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1034,6 +1067,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

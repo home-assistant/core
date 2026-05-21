@@ -8,7 +8,7 @@ from itertools import chain
 import pypck
 
 from homeassistant.components.sensor import (
-    DOMAIN as DOMAIN_SENSOR,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -40,7 +40,7 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
@@ -102,14 +102,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SENSOR: add_entities}
+        {SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR
+            if entity_config[CONF_DOMAIN] == SENSOR_DOMAIN
         ),
     )
 

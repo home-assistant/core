@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_states[platforms0][switch.freezer_superfreezing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Superfreezing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.hood_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.refrigerator_supercooling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supercooling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +201,9 @@
 # ---
 # name: test_switch_states[platforms0][switch.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +251,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.freezer_superfreezing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Superfreezing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +301,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.hood_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,8 +351,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +401,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.refrigerator_supercooling-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supercooling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -433,8 +451,9 @@
 # ---
 # name: test_switch_states_api_push[platforms0][switch.washing_machine_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': None,

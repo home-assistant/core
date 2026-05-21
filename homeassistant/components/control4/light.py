@@ -1,7 +1,5 @@
 """Platform for Control4 Lights."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -66,6 +64,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_non_dimmer,
         update_interval=timedelta(seconds=runtime_data.scan_interval),
+        config_entry=entry,
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
@@ -73,6 +72,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_dimmer,
         update_interval=timedelta(seconds=runtime_data.scan_interval),
+        config_entry=entry,
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -182,12 +182,13 @@ class Control4Light(Control4Entity, LightEntity):
     def _create_api_object(self):
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Light(self.runtime_data.director, self._idx)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return whether this light is on or off."""
         if self._is_dimmer:
             for var in CONTROL4_DIMMER_VARS:
@@ -197,7 +198,7 @@ class Control4Light(Control4Entity, LightEntity):
         return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
             for var in CONTROL4_DIMMER_VARS:

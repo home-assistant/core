@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_awair_gen1_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -56,8 +58,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -77,6 +80,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -111,8 +115,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -132,6 +137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -166,8 +172,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -187,6 +194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -221,8 +229,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -242,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,8 +284,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -295,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -332,8 +344,9 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -353,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -387,8 +401,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -408,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -442,8 +458,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -463,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -497,8 +515,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -518,6 +537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -552,8 +572,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -573,6 +594,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -605,8 +627,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -626,6 +649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -663,8 +687,9 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -684,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -718,8 +744,9 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -739,6 +766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -773,8 +801,9 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -794,6 +823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -828,8 +858,9 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -849,6 +880,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -881,8 +913,9 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -902,6 +935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -939,8 +973,9 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -960,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -994,8 +1030,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1015,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1049,8 +1087,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1070,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1103,8 +1143,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1124,6 +1165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1158,8 +1200,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1179,6 +1222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1211,8 +1255,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1232,6 +1277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1269,8 +1315,9 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1290,6 +1337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -1324,8 +1372,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1345,6 +1394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1379,8 +1429,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1400,6 +1451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1434,8 +1486,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1455,6 +1508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1488,8 +1542,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1509,6 +1564,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1543,8 +1599,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1564,6 +1621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1596,8 +1654,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_sound_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1617,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
@@ -1650,8 +1710,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1671,6 +1732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1708,8 +1770,9 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1729,6 +1792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -1763,8 +1827,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_absolute_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1784,6 +1849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1820,8 +1886,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1841,6 +1908,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1874,8 +1942,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_dew_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1895,6 +1964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1931,8 +2001,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1952,6 +2023,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1985,8 +2057,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2006,6 +2079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -2039,8 +2113,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2060,6 +2135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2092,8 +2168,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2113,6 +2190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2149,8 +2227,9 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2170,6 +2249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,

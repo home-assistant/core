@@ -1,7 +1,5 @@
 """Support for sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -20,43 +18,63 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CATEGORY_NOTIFICATIONS, CATEGORY_SENSORS
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
+from .utils import async_remove_unsupported_notification_sensors
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
+type ValueFn = Callable[
+    [AmazonDevice, str, AmazonDevicesCoordinator], StateType | datetime
+]
+
+
 @dataclass(frozen=True, kw_only=True)
-class AmazonSensorEntityDescription(SensorEntityDescription):
-    """Amazon Devices sensor entity description."""
+class AmazonBaseEntityDescription(SensorEntityDescription):
+    """Shared Amazon Devices entity description."""
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
+    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
+        device.online
+    )
+    value_fn: ValueFn
+
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
+    """Amazon Devices sensor entity description."""
+
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
         and sensor.error is False
     )
-    category: str = CATEGORY_SENSORS
+    value_fn: ValueFn = lambda device, key, _: device.sensors[key].value
 
 
 @dataclass(frozen=True, kw_only=True)
-class AmazonNotificationEntityDescription(SensorEntityDescription):
+class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (notification := device.notifications.get(key)) is not None
         and notification.next_occurrence is not None
     )
-    category: str = CATEGORY_NOTIFICATIONS
+    value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
 
 
 SENSORS: Final = (
@@ -74,6 +92,41 @@ SENSORS: Final = (
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmazonSensorEntityDescription(
+        key="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmazonSensorEntityDescription(
+        key="PM10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmazonSensorEntityDescription(
+        key="PM25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmazonSensorEntityDescription(
+        key="CO",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AmazonSensorEntityDescription(
+        key="VOC",
+        # No device class as this is an index not a concentration
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voc_index",
+    ),
+    AmazonSensorEntityDescription(
+        key="Air Quality",
+        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -105,6 +158,9 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    # Remove notification sensors from unsupported devices
+    await async_remove_unsupported_notification_sensors(hass, coordinator)
+
     known_devices: set[str] = set()
 
     def _check_device() -> None:
@@ -122,6 +178,7 @@ async def async_setup_entry(
                 AmazonSensorEntity(coordinator, serial_num, notification_desc)
                 for notification_desc in NOTIFICATIONS
                 for serial_num in new_devices
+                if coordinator.data[serial_num].notifications_supported
             ]
             async_add_entities(sensors_list + notifications_list)
 
@@ -149,11 +206,11 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        # Sensors
-        if self.entity_description.category == CATEGORY_SENSORS:
-            return self.device.sensors[self.entity_description.key].value
-        # Notifications
-        return self.device.notifications[self.entity_description.key].next_occurrence
+        return self.entity_description.value_fn(
+            self.device,
+            self.entity_description.key,
+            self.coordinator,
+        )
 
     @property
     def available(self) -> bool:

@@ -17,11 +17,6 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(name="client")
 async def client_fixture(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -475,7 +470,10 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device doesn't lead to an error when the integration removes the entry."""
+    """Test removing config entry from device.
+
+    Should not error when the integration removes the entry.
+    """
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 

@@ -1,16 +1,30 @@
 """Notify platform tests for mobile_app."""
 
+import asyncio
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp import ClientError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockUser
+from tests.common import MockConfigEntry, MockUser, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -143,13 +157,37 @@ async def setup_websocket_channel_only_push(
     assert hass.services.has_service("notify", "mobile_app_websocket_push_name")
 
 
+@pytest.fixture
+async def notify_only() -> AsyncGenerator[None]:
+    """Enable only the notify platform."""
+    with patch(
+        "homeassistant.components.mobile_app.PLATFORMS",
+        [Platform.NOTIFY],
+    ):
+        yield
+
+
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_notify_works(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
     """Test notify works."""
+
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
     assert hass.services.has_service("notify", "mobile_app_test") is True
     await hass.services.async_call(
-        "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
+        "notify",
+        "mobile_app_test",
+        {
+            "message": "Hello world",
+            "title": "Demo",
+            "target": ["mock-webhook_id"],
+            "data": {"field1": "value1"},
+        },
+        blocking=True,
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -159,9 +197,16 @@ async def test_notify_works(
 
     assert call_json["push_token"] == "PUSH_TOKEN"
     assert call_json["message"] == "Hello world"
+    assert call_json["title"] == "Demo"
+    assert call_json["data"] == {"field1": "value1"}
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
+
+    await hass.async_block_till_done()
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
 
 
 async def test_notify_ws_works(
@@ -173,9 +218,8 @@ async def test_notify_ws_works(
     """Test notify works."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -185,9 +229,8 @@ async def test_notify_ws_works(
     assert sub_result["success"]
 
     # Subscribe twice, it should forward all messages to 2nd subscription
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
         }
@@ -195,6 +238,7 @@ async def test_notify_ws_works(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    new_sub_id = sub_result["id"]
 
     await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
@@ -204,14 +248,13 @@ async def test_notify_ws_works(
 
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
-    assert msg_result["id"] == 6  # This is the new subscription
+    assert msg_result["id"] == new_sub_id  # This is the new subscription
 
     # Unsubscribe, now it should go over http
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "unsubscribe_events",
-            "subscription": 6,
+            "subscription": new_sub_id,
         }
     )
     sub_result = await client.receive_json()
@@ -224,9 +267,8 @@ async def test_notify_ws_works(
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test non-existing webhook ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "non-existing",
         }
@@ -239,9 +281,8 @@ async def test_notify_ws_works(
     }
 
     # Test webhook ID linked to other user
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "webhook_id_2",
         }
@@ -263,9 +304,8 @@ async def test_notify_ws_confirming_works(
     """Test notify confirming works."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
             "support_confirm": True,
@@ -274,6 +314,7 @@ async def test_notify_ws_confirming_works(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
 
     # Sent a message that will be delivered locally
     await hass.services.async_call(
@@ -286,9 +327,8 @@ async def test_notify_ws_confirming_works(
     assert msg_result["event"] == {"message": "Hello world"}
 
     # Try to confirm with incorrect confirm ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": "incorrect-confirm-id",
@@ -303,9 +343,8 @@ async def test_notify_ws_confirming_works(
     }
 
     # Confirm with correct confirm ID
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": confirm_id,
@@ -316,19 +355,17 @@ async def test_notify_ws_confirming_works(
     assert result["success"]
 
     # Drop local push channel and try to confirm another message
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "unsubscribe_events",
-            "subscription": 5,
+            "subscription": sub_id,
         }
     )
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "mobile_app/push_notification_confirm",
             "webhook_id": "mock-webhook_id",
             "confirm_id": confirm_id,
@@ -352,9 +389,8 @@ async def test_notify_ws_not_confirming(
     """Test we go via cloud when failed to confirm."""
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "mock-webhook_id",
             "support_confirm": True,
@@ -388,13 +424,20 @@ async def test_notify_ws_not_confirming(
     assert len(aioclient_mock.mock_calls) == 3
 
 
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_local_push_only(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_websocket_channel_only_push,
 ) -> None:
     """Test a local only push registration."""
-    with pytest.raises(HomeAssistantError) as e_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            r"Device.*websocket-push-webhook-id"
+            r".*not connected to local push notifications"
+        ),
+    ):
         await hass.services.async_call(
             "notify",
             "mobile_app_websocket_push_name",
@@ -402,13 +445,10 @@ async def test_local_push_only(
             blocking=True,
         )
 
-    assert str(e_info.value) == "Device not connected to local push notifications"
-
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "websocket-push-webhook-id",
         }
@@ -416,6 +456,11 @@ async def test_local_push_only(
 
     sub_result = await client.receive_json()
     assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    state = hass.states.get("notify.websocket_push_name")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
         "notify",
@@ -425,4 +470,392 @@ async def test_local_push_only(
     )
 
     msg = await client.receive_json()
-    assert msg == {"id": 5, "type": "event", "event": {"message": "Hello world 1"}}
+    assert msg["id"] == sub_id
+    assert msg["type"] == "event"
+    assert msg["event"] == {"message": "Hello world 1"}
+
+    state = hass.states.get("notify.websocket_push_name")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    "target", [["webhook_id_2", "mock-webhook_id", "websocket-push-webhook-id"], None]
+)
+async def test_notify_multiple_targets(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    setup_websocket_channel_only_push,
+    target: list[str] | None,
+) -> None:
+    """Test notify to multiple targets.
+
+    Messages will be sent to three targets, one (with webhook id
+    `webhook_id_2`) will be remote target and will send the notification
+    via HTTP request, the other two (`mock-webhook_id` and
+    `websocket-push-webhook-id`) will be local push only and will be
+    sent via websocket.
+    """
+
+    # Setup mock for non-local push notification target
+    # with webhook_id "webhook_id_2"
+    aioclient_mock.post(
+        "https://mobile-push.home-assistant.dev/push2",
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Setup local push notification channels
+    local_push_sub_ids = []
+    for webhook_id in ("mock-webhook_id", "websocket-push-webhook-id"):
+        await client.send_json_auto_id(
+            {
+                "type": "mobile_app/push_notification_channel",
+                "webhook_id": webhook_id,
+            }
+        )
+        sub_result = await client.receive_json()
+        assert sub_result["success"]
+        local_push_sub_ids.append(sub_result["id"])
+
+    await hass.services.async_call(
+        "notify",
+        "notify",
+        {
+            "message": "Hello world",
+            "target": target,
+        },
+        blocking=True,
+    )
+
+    # Assert notification sent to non-local push notification target
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+    call_json = call[0][2]
+    assert call_json["push_token"] == "PUSH_TOKEN2"
+    assert call_json["message"] == "Hello world"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
+
+    # Assert notification sent to the two local push targets
+    for sub_id in local_push_sub_ids:
+        msg_result = await client.receive_json()
+        assert msg_result["event"] == {"message": "Hello world"}
+        msg_id = msg_result["id"]
+        assert msg_id == sub_id
+
+
+@pytest.mark.parametrize(
+    "target", [["webhook_id_2", "mock-webhook_id", "websocket-push-webhook-id"], None]
+)
+async def test_notify_multiple_targets_if_any_disconnected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    setup_websocket_channel_only_push,
+    target: list[str] | None,
+) -> None:
+    """Notify works with disconnected targets.
+
+    Test that although one target is disconnected,
+    notify still works to other targets and the exception is still raised.
+    """
+    # Setup mock for non-local push notification target
+    # with webhook_id "webhook_id_2"
+    aioclient_mock.post(
+        "https://mobile-push.home-assistant.dev/push2",
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Setup the local push notification channel
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r".*websocket-push-webhook-id.*not connected to local push notifications",
+    ):
+        await hass.services.async_call(
+            "notify",
+            "notify",
+            {
+                "message": "Hello world",
+                "target": target,
+            },
+            blocking=True,
+        )
+
+    # Assert notification sent to non-local push notification target
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+    call_json = call[0][2]
+    assert call_json["push_token"] == "PUSH_TOKEN2"
+    assert call_json["message"] == "Hello world"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
+
+    # Assert that the notification has been sent to the local
+    # push notification target that has been setup
+    msg_result = await client.receive_json()
+    assert msg_result["event"] == {"message": "Hello world"}
+    assert msg_result["id"] == sub_id
+
+    # Check that there are no more messages to receive (timeout expected)
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(client.receive_json(), timeout=0.1)
+
+
+@pytest.mark.usefixtures("notify_only")
+async def test_notify_platform(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setup of the Mobile app notify platform."""
+    config_entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "PUSH_TOKEN",
+                "push_url": "https://mobile-push.home-assistant.dev/push",
+            },
+            "app_id": "io.homeassistant.mobile_app",
+            "app_name": "mobile_app tests",
+            "app_version": "1.0",
+            "device_id": "4d5e6f",
+            "device_name": "Test",
+            "manufacturer": "Home Assistant",
+            "model": "mobile_app",
+            "os_name": "Linux",
+            "os_version": "5.0.6",
+            "secret": "123abc",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "mock-webhook_id",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="mobile_app test entry",
+        version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("setup_push_receiver")
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
+async def test_send_message(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test sending message via notify.send_message action."""
+
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.test",
+            ATTR_MESSAGE: "Hello world",
+            ATTR_TITLE: "test",
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["push_token"] == "PUSH_TOKEN"
+    assert call_json["message"] == "Hello world"
+    assert call_json["title"] == "test"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
+
+    state = hass.states.get("notify.test")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
+
+
+@pytest.mark.usefixtures("setup_websocket_channel_only_push")
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
+async def test_send_message_local_push(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test sending message via notify.send_message action through local push."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+    sub_id = sub_result["id"]
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.websocket_push_name",
+            ATTR_MESSAGE: "Hello world",
+            ATTR_TITLE: "test",
+        },
+        blocking=True,
+    )
+
+    msg = await client.receive_json()
+    assert msg["id"] == sub_id
+    assert msg["type"] == "event"
+    assert msg["event"] == {"message": "Hello world", "title": "test"}
+
+    state = hass.states.get("notify.websocket_push_name")
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("exc", "status", "error_msg"),
+    [
+        (
+            None,
+            HTTPStatus.TOO_MANY_REQUESTS,
+            "rate_limit_exceeded_sending_notification",
+        ),
+        (
+            None,
+            HTTPStatus.BAD_REQUEST,
+            "error_sending_notification",
+        ),
+        (
+            TimeoutError,
+            HTTPStatus.OK,
+            "timeout_sending_notification",
+        ),
+        (
+            ClientError,
+            HTTPStatus.OK,
+            "error_sending_notification",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_push_receiver")
+@pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
+async def test_send_message_exceptions(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    exc: Exception | None,
+    status: HTTPStatus,
+    error_msg: str,
+) -> None:
+    """Test sending message via notify.send_message action with exceptions."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://mobile-push.home-assistant.dev/push",
+        json={
+            "message": "Unknown error",
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": "1970-01-02T00:00:00Z",
+            },
+        },
+        status=status,
+        exc=exc,
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.test",
+                ATTR_MESSAGE: "Hello world",
+                ATTR_TITLE: "test",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == error_msg
+    assert err.value.translation_placeholders == {
+        "device_name": "mobile_app test entry"
+    }
+
+
+@pytest.mark.usefixtures("setup_websocket_channel_only_push")
+async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
+    """Test send_message via local push with exceptions."""
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.websocket_push_name",
+                ATTR_MESSAGE: "Hello world",
+                ATTR_TITLE: "test",
+            },
+            blocking=True,
+        )
+    assert (
+        err.value.translation_key == "device_not_connected_for_local_push_notifications"
+    )
+    assert err.value.translation_placeholders == {
+        "device_name": "websocket push test entry"
+    }

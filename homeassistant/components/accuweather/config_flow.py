@@ -1,10 +1,8 @@
 """Adds config flow for AccuWeather."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
@@ -12,7 +10,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -43,7 +41,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                         longitude=user_input[CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
-            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
+            except ApiError, ClientConnectorError, TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
                 errors[CONF_API_KEY] = "invalid_api_key"
@@ -55,8 +53,11 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
+                if TYPE_CHECKING:
+                    assert accuweather.location_name is not None
+
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=accuweather.location_name, data=user_input
                 )
 
         return self.async_show_form(
@@ -70,9 +71,6 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
                 }
             ),
             errors=errors,
@@ -104,7 +102,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                         longitude=self._longitude,
                     )
                     await accuweather.async_get_location()
-            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
+            except ApiError, ClientConnectorError, TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
                 errors["base"] = "invalid_api_key"

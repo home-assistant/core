@@ -1,7 +1,5 @@
 """Support for 1-Wire environment sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import timedelta
@@ -297,6 +295,20 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
 # 7E sensors are special sensors by Embedded Data Systems
 
 EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
+    "EDS0065": (
+        OneWireSensorEntityDescription(
+            key="EDS0065/temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        OneWireSensorEntityDescription(
+            key="EDS0065/humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     "EDS0066": (
         OneWireSensorEntityDescription(
             key="EDS0066/temperature",

@@ -95,6 +95,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
         device,
@@ -249,6 +251,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             try:
                 await device.async_request(device.api.send_data, code)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (BroadlinkException, OSError) as err:
                 _LOGGER.error("Error during %s: %s", service, err)
                 break
@@ -299,6 +302,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     if toggle:
                         code = [code, await learn_command(command)]
 
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break
@@ -337,7 +341,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 
@@ -413,7 +417,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except (ReadError, StorageError):
+                except ReadError, StorageError:
                     continue
                 return b64encode(code).decode("utf8")
 

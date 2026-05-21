@@ -1,7 +1,5 @@
 """Support for Apple TV media player."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import Any
@@ -115,6 +113,7 @@ class AppleTvMediaPlayer(
     """Representation of an Apple TV media player."""
 
     _attr_supported_features = SUPPORT_APPLE_TV
+    _attr_name = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize the Apple TV media player."""
@@ -238,6 +237,15 @@ class AppleTvMediaPlayer(
         This is a callback function from pyatv.interface.AudioListener.
         """
         self.async_write_ha_state()
+
+    @callback
+    def volume_device_update(
+        self, output_device: OutputDevice, old_level: float, new_level: float
+    ) -> None:
+        """Output device volume was updated.
+
+        This is a callback function from pyatv.interface.AudioListener.
+        """
 
     @callback
     def outputdevices_update(
@@ -455,7 +463,8 @@ class AppleTvMediaPlayer(
         """Implement the websocket media browsing helper."""
         if media_content_id == "apps" or (
             # If we can't stream files or URLs, we can't browse media.
-            # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
+            # In that case the `BROWSE_MEDIA` feature was added
+            # because of AppList/LaunchApp
             not self._is_feature_available(FeatureName.PlayUrl)
             and not self._is_feature_available(FeatureName.StreamFile)
         ):

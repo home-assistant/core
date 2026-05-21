@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_adam_switch_snapshot[platforms0][switch.cv_pomp_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.fibaro_hc2_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,8 +102,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.fibaro_hc2_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -147,8 +153,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.nas_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -195,8 +203,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.nas_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -214,6 +223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -244,8 +254,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.nvr_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -263,6 +274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -292,8 +304,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.nvr_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -311,6 +324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -341,8 +355,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.playstation_smart_plug_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -360,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -389,8 +405,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.playstation_smart_plug_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -408,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -438,8 +456,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.test_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -457,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -487,8 +507,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.usg_smart_plug_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -506,6 +527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -535,8 +557,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.usg_smart_plug_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -554,6 +577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -584,8 +608,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.ziggo_modem_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -603,6 +628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -632,8 +658,9 @@
 # ---
 # name: test_adam_switch_snapshot[platforms0][switch.ziggo_modem_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -651,6 +678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -681,8 +709,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.boiler_1eb31_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -729,8 +759,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.boiler_1eb31_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -778,8 +810,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.droger_52559_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -797,6 +830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -826,8 +860,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.droger_52559_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -845,6 +880,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -875,8 +911,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.koelkast_92c4a_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -894,6 +931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -923,8 +961,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.koelkast_92c4a_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -942,6 +981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -972,8 +1012,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.schakel_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -991,6 +1032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -1021,8 +1063,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.stroomvreters_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1040,6 +1083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -1070,8 +1114,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.vaatwasser_2a1ab_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1089,6 +1134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1118,8 +1164,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.vaatwasser_2a1ab_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1137,6 +1184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -1167,8 +1215,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.wasmachine_52ac1_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1186,6 +1235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1215,8 +1265,9 @@
 # ---
 # name: test_stretch_switch_snapshot[platforms0][switch.wasmachine_52ac1_relay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1234,6 +1285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,

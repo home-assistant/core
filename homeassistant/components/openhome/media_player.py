@@ -1,7 +1,5 @@
 """Support for Openhome Devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
@@ -9,7 +7,6 @@ from typing import Any, Concatenate
 
 import aiohttp
 from async_upnp_client.client import UpnpError
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -20,13 +17,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
+from . import OpenhomeConfigEntry
+from .const import DOMAIN
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -39,26 +35,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenhomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Openhome config entry."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device = config_entry.runtime_data
 
     entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_INVOKE_PIN,
-        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
-        "async_invoke_pin",
-    )
 
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
@@ -84,7 +72,7 @@ def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callab
             """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
             try:
                 return await func(self, *args, **kwargs)
-            except (TimeoutError, aiohttp.ClientError, UpnpError):
+            except TimeoutError, aiohttp.ClientError, UpnpError:
                 _LOGGER.error("Error during call %s", func.__name__)
             return None
 
@@ -179,19 +167,22 @@ class OpenhomeDevice(MediaPlayerEntity):
                 self._attr_state = MediaPlayerState.PLAYING
 
             self._attr_available = True
-        except (TimeoutError, aiohttp.ClientError, UpnpError):
+        except TimeoutError, aiohttp.ClientError, UpnpError:
             self._attr_available = False
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_turn_on(self) -> None:
         """Bring device out of standby."""
         await self._device.set_standby(False)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_turn_off(self) -> None:
         """Put device in standby."""
         await self._device.set_standby(True)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -217,31 +208,37 @@ class OpenhomeDevice(MediaPlayerEntity):
         track_details = {"title": "Home Assistant", "uri": media_id}
         await self._device.play_media(track_details)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._device.pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._device.stop()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._device.play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._device.skip(1)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._device.skip(-1)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
@@ -258,21 +255,25 @@ class OpenhomeDevice(MediaPlayerEntity):
         except UpnpError:
             _LOGGER.error("Error invoking pin %s", pin)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_volume_up(self) -> None:
         """Volume up media player."""
         await self._device.increase_volume()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._device.decrease_volume()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @catch_request_errors()
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""

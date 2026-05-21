@@ -1,7 +1,5 @@
 """Component providing sensors for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -606,7 +604,12 @@ async def async_setup_entry(
             model_descriptions=_MODEL_DESCRIPTIONS,
             ufp_device=device,
         )
-        if device.is_adopted_by_us and isinstance(device, Camera):
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if (
+            device.model is ModelType.CAMERA
+            and isinstance(device, Camera)
+            and device.is_adopted_by_us
+        ):
             entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 

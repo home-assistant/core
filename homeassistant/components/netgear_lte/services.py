@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -14,7 +15,6 @@ from .const import (
     AUTOCONNECT_MODES,
     DOMAIN,
     FAILOVER_MODES,
-    LOGGER,
 )
 from .coordinator import NetgearLTEConfigEntry
 
@@ -56,8 +56,11 @@ async def _service_handler(call: ServiceCall) -> None:
             break
 
     if not entry or not (modem := entry.runtime_data.modem).token:
-        LOGGER.error("%s: host %s unavailable", call.service, host)
-        return
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"service": call.service},
+        )
 
     if call.service == SERVICE_DELETE_SMS:
         for sms_id in call.data[ATTR_SMS_ID]:

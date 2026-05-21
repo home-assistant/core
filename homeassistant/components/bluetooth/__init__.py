@@ -1,7 +1,5 @@
 """The bluetooth integration."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 import platform
@@ -58,6 +56,7 @@ from .api import (
     async_address_present,
     async_ble_device_from_address,
     async_clear_address_from_match_history,
+    async_clear_advertisement_history,
     async_current_scanners,
     async_discovered_service_info,
     async_get_advertisement_callback,
@@ -116,6 +115,7 @@ __all__ = [
     "async_address_present",
     "async_ble_device_from_address",
     "async_clear_address_from_match_history",
+    "async_clear_advertisement_history",
     "async_current_scanners",
     "async_discovered_service_info",
     "async_get_advertisement_callback",

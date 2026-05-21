@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
@@ -90,8 +88,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:
+            LOGGER.debug("Failed to connect", exc_info=True)
             raise UpdateFailed("Failed to connect.") from exception
-        except (ServerDisconnectedError, NotAuthenticatedException):
+        except ServerDisconnectedError:
             self.executions = {}
 
             # During the relogin, similar exceptions can be thrown.

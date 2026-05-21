@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[binary_sensor.fake_name_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_button_lock_on_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock on device',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_button_lock_via_ui-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock via UI',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -197,8 +205,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_holiday_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Holiday mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -245,8 +255,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_open_window_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -264,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open window detected',
     'options': dict({
     }),
     'original_device_class': None,
@@ -293,8 +305,9 @@
 # ---
 # name: test_setup[binary_sensor.fake_name_summer_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Summer mode',
     'options': dict({
     }),
     'original_device_class': None,

@@ -92,6 +92,7 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+uv.lock
 share/*
 /Scripts/
 
@@ -141,5 +142,6 @@ pytest_buckets.txt
 
 # AI tooling
 .claude/settings.local.json
+.claude/worktrees/
 .serena/
 

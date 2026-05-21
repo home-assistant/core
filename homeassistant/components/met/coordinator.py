@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Met.no integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
@@ -116,8 +114,12 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
         """Fetch data from Met."""
         try:
             return await self.weather.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
+        except CannotConnect as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     def track_home(self) -> None:
         """Start tracking changes to HA home setting."""

@@ -1,7 +1,5 @@
 """Support for LIFX Cloud scenes."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 import logging
@@ -51,7 +49,7 @@ async def async_setup_platform(
         async with asyncio.timeout(timeout):
             scenes_resp = await httpsession.get(url, headers=headers)
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.exception("Error on %s", url)
         return
 
@@ -93,5 +91,6 @@ class LifxCloudScene(Scene):
             async with asyncio.timeout(self._timeout):
                 await httpsession.put(url, headers=self._headers)
 
-        except (TimeoutError, aiohttp.ClientError):
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.exception("Error on %s", url)

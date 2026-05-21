@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.wallet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -40,6 +42,8 @@
       'altitude': 0,
       'friendly_name': 'Wallet',
       'gps_accuracy': 13.496111,
+      'in_zones': list([
+      ]),
       'is_lost': False,
       'last_lost_timestamp': datetime.datetime(1970, 1, 1, 3, 0, tzinfo=datetime.timezone.utc),
       'last_timestamp': datetime.datetime(2020, 8, 13, 0, 55, 26, tzinfo=datetime.timezone.utc),

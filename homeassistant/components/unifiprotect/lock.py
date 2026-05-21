@@ -1,7 +1,5 @@
 """Support for locks on Ubiquiti's UniFi Protect NVR."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -18,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
+from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -85,12 +84,14 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         elif lock_status != LockStatusType.OPEN:
             self._attr_available = False
 
+    @async_ufp_instance_command
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         _LOGGER.debug("Unlocking %s", self.device.display_name)
-        return await self.device.open_lock()
+        await self.device.open_lock()
 
+    @async_ufp_instance_command
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         _LOGGER.debug("Locking %s", self.device.display_name)
-        return await self.device.close_lock()
+        await self.device.close_lock()

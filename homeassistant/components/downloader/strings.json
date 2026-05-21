@@ -13,6 +13,12 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Connection error occurred while downloading {url}"
+    },
+    "invalid_value": {
+      "message": "Invalid filename derived from {url}"
+    },
     "subdir_invalid": {
       "message": "Invalid subdirectory, got: {subdir}"
     },
@@ -27,6 +33,10 @@
         "filename": {
           "description": "Custom name for the downloaded file.",
           "name": "Filename"
+        },
+        "headers": {
+          "description": "Additional custom HTTP headers.",
+          "name": "Headers"
         },
         "overwrite": {
           "description": "Overwrite file if it exists.",

@@ -1,16 +1,12 @@
 """Support for SmartThings Cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
 from dataclasses import dataclass
-from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
@@ -46,7 +42,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -69,6 +70,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def format_zigbee_address(address: str) -> str:
+    """Format a zigbee address to be more readable."""
+    return ":".join(address.lower()[i : i + 2] for i in range(0, 16, 2))
 
 
 @dataclass
@@ -107,6 +113,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -131,9 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == HTTPStatus.BAD_REQUEST:
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
@@ -149,7 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     def _handle_max_connections() -> None:
         _LOGGER.debug(
-            "We hit the limit of max connections or we could not remove the old one, so retrying"
+            "We hit the limit of max connections or we could"
+            " not remove the old one, so retrying"
         )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -328,7 +336,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry migration."""
 
     if entry.version < 3:
-        # We keep the old data around, so we can use that to clean up the webhook in the future
+        # We keep the old data around, so we can use that
+        # to clean up the webhook in the future
         hass.config_entries.async_update_entry(
             entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
@@ -370,7 +379,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         "energySaved_meter",
                     }:
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.POWER_CONSUMPTION_REPORT}_{Attribute.POWER_CONSUMPTION}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.POWER_CONSUMPTION_REPORT}"
+                                f"_{Attribute.POWER_CONSUMPTION}"
+                                f"_{attribute}"
+                            ),
                         }
                     if attribute in {
                         "X Coordinate",
@@ -383,7 +397,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             "Z Coordinate": "z_coordinate",
                         }[attribute]
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.THREE_AXIS}"
+                                f"_{Attribute.THREE_AXIS}"
+                                f"_{new_attribute}"
+                            ),
                         }
                     if attribute in {
                         Attribute.MACHINE_STATE,
@@ -395,16 +414,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         if capability is None:
                             return None
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{capability}"
+                                f"_{attribute}_{attribute}"
+                            ),
                         }
                     return None
                 return {
-                    "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                    "new_unique_id": (
+                        f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}"
+                    ),
                 }
 
             if entity_entry.domain == "switch":
                 return {
-                    "new_unique_id": f"{entity_entry.unique_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+                    "new_unique_id": (
+                        f"{entity_entry.unique_id}_{MAIN}"
+                        f"_{Capability.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                    ),
                 }
 
             return None
@@ -486,6 +516,14 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
+            if device.device.hub.hub_eui:
+                connections = kwargs.setdefault(ATTR_CONNECTIONS, set())
+                connections.add(
+                    (
+                        dr.CONNECTION_ZIGBEE,
+                        format_zigbee_address(device.device.hub.hub_eui),
+                    )
+                )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
@@ -509,6 +547,10 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (zigbee := device.device.zigbee) is not None:
+            kwargs[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
+            }
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {
@@ -517,6 +559,35 @@ def create_devices(
                     ATTR_SERIAL_NUMBER: matter.serial_number,
                 }
             )
+        if (main_component := device.status.get(MAIN)) is not None:
+            if (
+                device_identification := main_component.get(
+                    Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
+                )
+            ) is not None:
+                new_kwargs = {
+                    ATTR_SERIAL_NUMBER: device_identification[
+                        Attribute.SERIAL_NUMBER
+                    ].value
+                }
+                if ATTR_MODEL_ID not in kwargs:
+                    new_kwargs[ATTR_MODEL_ID] = device_identification[
+                        Attribute.MODEL_NAME
+                    ].value
+                kwargs.update(new_kwargs)
+            if (
+                device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
+            ) is not None:
+                mac_connections: set[tuple[str, str]] = set()
+                status = cast(dict[str, str], device_status[Attribute.STATUS].value)
+                if wifi_mac := status.get("wifiMac"):
+                    mac_connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
+                if bluetooth_address := status.get("btAddr"):
+                    mac_connections.add(
+                        (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
+                    )
+                if mac_connections:
+                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
         if (
             device_registry.async_get_device({(DOMAIN, device.device.device_id)})
             is None
@@ -578,7 +649,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
                 if "burner" in component:
                     burner_id = int(component.split("-")[-1])
                     component = f"burner-0{burner_id}"
-                if component in status:
+                # Don't delete 'lamp' component even when disabled
+                if component in status and component != "lamp":
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)

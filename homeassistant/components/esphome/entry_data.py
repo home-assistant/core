@@ -1,7 +1,5 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -29,11 +27,13 @@ from aioesphomeapi import (
     Event,
     EventInfo,
     FanInfo,
+    InfraredInfo,
     LightInfo,
     LockInfo,
     MediaPlayerInfo,
     MediaPlayerSupportedFormat,
     NumberInfo,
+    RadioFrequencyInfo,
     SelectInfo,
     SensorInfo,
     SensorState,
@@ -44,6 +44,7 @@ from aioesphomeapi import (
     UpdateInfo,
     UserService,
     ValveInfo,
+    WaterHeaterInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -84,7 +85,9 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     DateTimeInfo: Platform.DATETIME,
     EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
+    InfraredInfo: Platform.INFRARED,
     LightInfo: Platform.LIGHT,
+    RadioFrequencyInfo: Platform.RADIO_FREQUENCY,
     LockInfo: Platform.LOCK,
     MediaPlayerInfo: Platform.MEDIA_PLAYER,
     NumberInfo: Platform.NUMBER,
@@ -96,6 +99,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TimeInfo: Platform.TIME,
     UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
+    WaterHeaterInfo: Platform.WATER_HEATER,
 }
 
 
@@ -208,7 +212,7 @@ class RuntimeEntryData:
         entity_info_type: type[EntityInfo],
         callback_: Callable[[list[EntityInfo]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info changes for an EntityInfo type."""
+        """Register to receive callbacks when static info changes."""
         callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
         callbacks.append(callback_)
         return partial(callbacks.remove, callback_)
@@ -219,7 +223,7 @@ class RuntimeEntryData:
         static_info: EntityInfo,
         callback_: Callable[[EntityInfo], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when static info is updated for a specific key."""
+        """Register callbacks when static info is updated for a specific key."""
         callback_key = (type(static_info), static_info.device_id, static_info.key)
         callbacks = self.entity_info_key_updated_callbacks.setdefault(callback_key, [])
         callbacks.append(callback_)
@@ -298,16 +302,23 @@ class RuntimeEntryData:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
-        needed_platforms.update(INFO_TYPE_TO_PLATFORM[type(info)] for info in infos)
-        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
-
         # Make a dict of the EntityInfo by type and send
         # them to the listeners for each specific EntityInfo type
+        info_types_to_platform = INFO_TYPE_TO_PLATFORM
         infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
             list
         )
         for info in infos:
-            infos_by_type[type(info)].append(info)
+            info_type = type(info)
+            if platform := info_types_to_platform.get(info_type):
+                needed_platforms.add(platform)
+                infos_by_type[info_type].append(info)
+            else:
+                _LOGGER.warning(
+                    "Entity type %s is not supported in this version of Home Assistant",
+                    info_type,
+                )
+        await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         for type_, callbacks in self.entity_info_callbacks.items():
             # If all entities for a type are removed, we
@@ -523,7 +534,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[AssistSatelliteConfiguration], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's configuration is updated."""
+        """Register callbacks when the Assist satellite's configuration is updated."""
         self.assist_satellite_config_update_callbacks.append(callback_)
         return partial(self.assist_satellite_config_update_callbacks.remove, callback_)
 
@@ -540,7 +551,7 @@ class RuntimeEntryData:
         self,
         callback_: Callable[[list[str]], None],
     ) -> CALLBACK_TYPE:
-        """Register to receive callbacks when the Assist satellite's wake word is set."""
+        """Register callbacks when the Assist satellite's wake word is set."""
         self.assist_satellite_set_wake_words_callbacks.append(callback_)
         return partial(self.assist_satellite_set_wake_words_callbacks.remove, callback_)
 

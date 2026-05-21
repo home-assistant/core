@@ -1,7 +1,5 @@
 """Support for Homematic thermostats."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -178,7 +176,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         # Homematic
         return self._data.get("CONTROL_MODE")
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dict (self._data) from the Homematic metadata."""
         self._state = next(iter(self._hmdevice.WRITENODE.keys()))
         self._data[self._state] = None

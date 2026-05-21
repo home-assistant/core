@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.coolmaster.config_flow import AVAILABLE_MODES
 from homeassistant.components.coolmaster.const import DOMAIN
@@ -9,18 +11,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def _flow_data():
-    options = {"host": "1.1.1.1"}
+def _flow_data(send_wakeup_prompt: bool = False) -> dict:
+    options: dict = {"host": "1.1.1.1"}
     for mode in AVAILABLE_MODES:
         options[mode] = True
     options["swing_support"] = False
+    options["more_options"] = {"send_wakeup_prompt": send_wakeup_prompt}
     return options
 
 
-async def test_form(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("send_wakeup_prompt", [True, False])
+async def test_form(hass: HomeAssistant, send_wakeup_prompt: bool) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -36,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], _flow_data()
+            result["flow_id"], _flow_data(send_wakeup_prompt)
         )
         await hass.async_block_till_done()
 
@@ -47,6 +52,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "port": 10102,
         "supported_modes": AVAILABLE_MODES,
         "swing_support": False,
+        "send_wakeup_prompt": send_wakeup_prompt,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

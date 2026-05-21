@@ -1,7 +1,5 @@
 """Support for Traccar server binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -13,13 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TraccarServerCoordinator
+from .coordinator import TraccarServerConfigEntry, TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
 
@@ -54,18 +50,18 @@ TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS: tuple[
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TraccarServerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities."""
-    coordinator: TraccarServerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TraccarServerBinarySensor(
             coordinator=coordinator,
-            device=entry["device"],
+            device=device_entry["device"],
             description=description,
         )
-        for entry in coordinator.data.values()
+        for device_entry in coordinator.data.values()
         for description in TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS
     )
 

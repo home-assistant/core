@@ -1,7 +1,5 @@
 """The WMS WebControl pro API integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from wmspro.webcontrol import WebControlPro
 
@@ -20,6 +18,7 @@ PLATFORMS: list[Platform] = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SWITCH,
 ]
 
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]

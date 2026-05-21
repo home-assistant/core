@@ -1,7 +1,5 @@
 """Platform for Kostal Plenticore numbers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -64,6 +62,22 @@ NUMBER_SETTINGS_DATA = [
         native_step=1,
         module_id="devices:local",
         data_id="Battery:MinHomeComsumption",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
+    PlenticoreNumberEntityDescription(
+        key="active_power_limitation",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        name="Active Power Limitation",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_max_value=10000,
+        native_min_value=0,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Inverter:ActivePowerLimitation",
         fmt_from="format_round",
         fmt_to="format_round_back",
     ),

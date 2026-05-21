@@ -1,7 +1,5 @@
 """Twitter platform for notify component."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
@@ -9,6 +7,7 @@ import json
 import logging
 import mimetypes
 import os
+from typing import Any
 
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
@@ -79,7 +78,7 @@ class TwitterNotificationService(BaseNotificationService):
             consumer_key, consumer_secret, access_token_key, access_token_secret
         )
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Tweet a message, optionally with media."""
         data = kwargs.get(ATTR_DATA)
         targets = kwargs.get(ATTR_TARGET)

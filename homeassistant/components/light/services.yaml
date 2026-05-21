@@ -225,8 +225,9 @@ turn_on:
         supported_features:
           - light.LightEntityFeature.EFFECT
       selector:
-        text:
-    advanced_fields:
+        state:
+          attribute: effect
+    additional_fields:
       collapsed: true
       fields:
         rgbw_color: &rgbw_color
@@ -255,13 +256,6 @@ turn_on:
           example: "[0.52, 0.43]"
           selector:
             object:
-        color_temp: &color_temp
-          filter: *color_temp_support
-          selector:
-            color_temp:
-              unit: "mired"
-              min: 153
-              max: 500
         brightness: &brightness
           filter: *brightness_support
           selector:
@@ -304,7 +298,7 @@ turn_off:
       domain: light
   fields:
     transition: *transition
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         flash: *flash
@@ -319,7 +313,7 @@ toggle:
     color_temp_kelvin: *color_temp_kelvin
     brightness_pct: *brightness_pct
     effect: *effect
-    advanced_fields:
+    additional_fields:
       collapsed: true
       fields:
         rgbw_color: *rgbw_color
@@ -327,7 +321,6 @@ toggle:
         color_name: *color_name
         hs_color: *hs_color
         xy_color: *xy_color
-        color_temp: *color_temp
         brightness: *brightness
         white: *white
         profile: *profile

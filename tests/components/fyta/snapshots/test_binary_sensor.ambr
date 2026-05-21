@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.gummibaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_light_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,8 +102,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -146,8 +152,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_productive_plant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -165,6 +172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -194,8 +202,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_repotted-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -213,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -242,8 +252,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_temperature_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -261,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -290,8 +302,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -309,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
@@ -339,8 +353,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_water_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -358,6 +373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -387,8 +403,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -436,8 +454,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_light_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -455,6 +474,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -484,8 +504,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -503,6 +524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -532,8 +554,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_productive_plant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -551,6 +574,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -580,8 +604,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_repotted-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -599,6 +624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -628,8 +654,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -647,6 +674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -676,8 +704,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -695,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
@@ -725,8 +755,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_water_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -744,6 +775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
     'original_device_class': None,

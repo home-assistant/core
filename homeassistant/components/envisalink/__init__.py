@@ -18,12 +18,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "envisalink"
 
-DATA_EVL = "envisalink"
+DATA_EVL: HassKey[EnvisalinkAlarmPanel] = HassKey(DOMAIN)
 
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
@@ -235,8 +236,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-        # Zone bypass switches are not currently created due to an issue with some panels.
-        # These switches will be re-added in the future after some further refactoring of the integration.
+        # Zone bypass switches are not currently created due
+        # to an issue with some panels. These switches will be
+        # re-added in the future after some further refactoring
+        # of the integration.
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA

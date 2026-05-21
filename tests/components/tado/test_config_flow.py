@@ -58,11 +58,8 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_full_flow_reauth(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow_reauth(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     """Test the full flow of the config when reauthticating."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -189,16 +186,32 @@ async def test_wait_for_login_exception(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    # @joostlek: I think the timeout step is not rightfully named, but heck, it works
+
     assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     assert result["step_id"] == error
 
 
-async def test_options_flow(
+async def test_wait_for_login_rate_limit(
     hass: HomeAssistant,
     mock_tado_api: MagicMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a rate limit error in wait_for_login is handled properly."""
+    mock_tado_api.device_activation.side_effect = TadoException("rate limited")
+    mock_tado_api.rate_limit_info.return_value = {"remaining": "0"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_rate_limit_reached"
+    assert "Tado API rate limit reached" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow(
+    hass: HomeAssistant, mock_tado_api: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options."""
     mock_config_entry.add_to_hass(hass)

@@ -1,7 +1,5 @@
 """Climate platform for Airobot thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyairobotrest.const import (
@@ -29,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirobotConfigEntry
 from .const import DOMAIN
+from .coordinator import AirobotDataUpdateCoordinator
 from .entity import AirobotEntity
 
 PARALLEL_UPDATES = 1
@@ -62,6 +61,11 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
     )
     _attr_min_temp = SETPOINT_TEMP_MIN
     _attr_max_temp = SETPOINT_TEMP_MAX
+
+    def __init__(self, coordinator: AirobotDataUpdateCoordinator) -> None:
+        """Initialize the climate entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.data.status.device_id
 
     @property
     def _status(self) -> ThermostatStatus:

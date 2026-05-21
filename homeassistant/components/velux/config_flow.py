@@ -1,5 +1,6 @@
 """Config flow for Velux integration."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
@@ -11,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 
 USER_SCHEMA = vol.Schema(
     {
@@ -21,20 +22,35 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-async def _check_connection(host: str, password: str) -> dict[str, Any]:
-    """Check if we can connect to the Velux bridge."""
+async def _check_connection(
+    host: str, password: str
+) -> tuple[PyVLX | None, dict[str, str]]:
+    """Connect to the Velux bridge and return the live instance.
+
+    The caller is responsible for storing the returned instance so that
+    async_setup_entry can reuse it, avoiding a disconnect/reboot cycle.
+    Returns (None, errors) on failure, (pyvlx, {}) on success.
+    """
     pyvlx = PyVLX(host=host, password=password)
     try:
         await pyvlx.connect()
-        await pyvlx.disconnect()
     except (PyVLXException, ConnectionError) as err:
+        # since pyvlx raises the same exception for auth and connection errors,
+        # we need to check the exception message to distinguish them
+        if (
+            isinstance(err, PyVLXException)
+            and err.description == "Login to KLF 200 failed, check credentials"
+        ):
+            LOGGER.debug("Invalid password")
+            return None, {"base": "invalid_auth"}
+
         LOGGER.debug("Cannot connect: %s", err)
-        return {"base": "cannot_connect"}
+        return None, {"base": "cannot_connect"}
     except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unexpected exception: %s", err)
-        return {"base": "unknown"}
+        return None, {"base": "unknown"}
 
-    return {}
+    return pyvlx, {}
 
 
 class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,12 +70,15 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            errors = await _check_connection(
-                user_input[CONF_HOST], user_input[CONF_PASSWORD]
-            )
+            host = user_input[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
             if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST],
+                    title=host,
                     data=user_input,
                 )
 
@@ -67,6 +86,45 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth flow when password has changed."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = reauth_entry.data[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
+            if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "host": reauth_entry.data[CONF_HOST],
+            },
         )
 
     async def async_step_dhcp(
@@ -107,10 +165,13 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Velux device."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await _check_connection(
-                self.discovery_data[CONF_HOST], user_input[CONF_PASSWORD]
-            )
+            host = self.discovery_data[CONF_HOST]
+            pyvlx, errors = await _check_connection(host, user_input[CONF_PASSWORD])
             if not errors:
+                assert pyvlx is not None
+                # Keep the live connection so async_setup_entry can reuse it
+                # without triggering a disconnect/reboot cycle.
+                self.hass.data.setdefault(PYVLX_FROM_CONFIG_FLOW, {})[host] = pyvlx
                 return self.async_create_entry(
                     title=self.discovery_data[CONF_NAME],
                     data={**self.discovery_data, **user_input},

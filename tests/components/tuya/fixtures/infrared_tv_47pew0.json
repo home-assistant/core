@@ -1,0 +1,129 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "TV",
+  "category": "infrared_tv",
+  "product_id": "47pew0",
+  "product_name": "TV",
+  "online": true,
+  "sub": true,
+  "time_zone": "-03:00",
+  "active_time": "2025-11-16T18:13:00+00:00",
+  "create_time": "2025-11-16T18:13:00+00:00",
+  "update_time": "2025-11-16T18:13:00+00:00",
+  "function": {
+    "-/--": {
+      "type": "STRING",
+      "value": "-/--"
+    },
+    "0": {
+      "type": "STRING",
+      "value": 0
+    },
+    "1": {
+      "type": "STRING",
+      "value": 1
+    },
+    "2": {
+      "type": "STRING",
+      "value": 2
+    },
+    "3": {
+      "type": "STRING",
+      "value": 3
+    },
+    "4": {
+      "type": "STRING",
+      "value": 4
+    },
+    "5": {
+      "type": "STRING",
+      "value": 5
+    },
+    "6": {
+      "type": "STRING",
+      "value": 6
+    },
+    "7": {
+      "type": "STRING",
+      "value": 7
+    },
+    "8": {
+      "type": "STRING",
+      "value": 8
+    },
+    "9": {
+      "type": "STRING",
+      "value": 9
+    },
+    "Back": {
+      "type": "STRING",
+      "value": "Back"
+    },
+    "C": {
+      "type": "ENUM",
+      "value": {
+        "min": 1,
+        "max": 999,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    },
+    "Channel+": {
+      "type": "STRING",
+      "value": "Channel+"
+    },
+    "Channel-": {
+      "type": "STRING",
+      "value": "Channel-"
+    },
+    "Down": {
+      "type": "STRING",
+      "value": "Down"
+    },
+    "Home": {
+      "type": "STRING",
+      "value": "Home"
+    },
+    "Left": {
+      "type": "STRING",
+      "value": "Left"
+    },
+    "Menu": {
+      "type": "STRING",
+      "value": "Menu"
+    },
+    "OK": {
+      "type": "STRING",
+      "value": "OK"
+    },
+    "Power": {
+      "type": "STRING",
+      "value": "Power"
+    },
+    "Right": {
+      "type": "STRING",
+      "value": "Right"
+    },
+    "Up": {
+      "type": "STRING",
+      "value": "Up"
+    },
+    "Volume+": {
+      "type": "STRING",
+      "value": "Volume+"
+    },
+    "Volume-": {
+      "type": "STRING",
+      "value": "Volume-"
+    }
+  },
+  "status_range": {},
+  "status": {},
+  "set_up": false,
+  "support_local": false,
+  "local_strategy": {}
+}

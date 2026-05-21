@@ -23,12 +23,6 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_get_device_automations, async_mock_service
 
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
 COMMAND_SINGLE = "single"
@@ -36,7 +30,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only set up the required platforms and required base platforms to speed up tests."""
+    """Only set up required platforms and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -279,7 +273,8 @@ async def test_client_unique_id_suffix_stripped(
                     "platform": "event",
                     "event_type": "zha_event",
                     "event_data": {
-                        "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006",  # no `_CLIENT` suffix
+                        # no `_CLIENT` suffix
+                        "unique_id": "38:5b:44:ff:fe:a7:cc:69:1:0x0006",
                         "endpoint_id": 1,
                         "cluster_id": 6,
                         "command": "on",

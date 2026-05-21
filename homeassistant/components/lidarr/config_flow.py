@@ -1,7 +1,5 @@
 """Config flow for Lidarr."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -51,7 +49,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_API_KEY] = result[1]
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
-            except (ClientConnectorError, exceptions.ArrConnectionException):
+            except ClientConnectorError, exceptions.ArrConnectionException:
                 errors = {"base": "cannot_connect"}
             except exceptions.ArrWrongAppException:
                 errors = {"base": "wrong_app"}

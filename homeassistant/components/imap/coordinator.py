@@ -1,7 +1,5 @@
 """Coordinator for imap integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
@@ -306,7 +304,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                         data | {"text": message.text}, parse_result=True
                     )
                     _LOGGER.debug(
-                        "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",
+                        "IMAP custom template (%s) for msguid"
+                        " %s (%s) rendered to: %s, initial: %s",
                         self.custom_event_template,
                         last_message_uid,
                         message_id,
@@ -338,7 +337,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
 
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
-                "Message with id %s (%s) processed, sender: %s, subject: %s, initial: %s",
+                "Message with id %s (%s) processed,"
+                " sender: %s, subject: %s, initial: %s",
                 last_message_uid,
                 message_id,
                 message.sender,
@@ -356,7 +356,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         )
         if result != "OK":
             raise UpdateFailed(
-                f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
+                "Invalid response for search"
+                f" '{self.config_entry.data[CONF_SEARCH]}':"
+                f" {result} / {lines[0]}"
             )
         # Check we do have returned items.
         #
@@ -395,7 +397,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, TimeoutError):
+            except AioImapException, TimeoutError:
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -494,6 +496,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
 
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
+        idle: asyncio.Future | None = None
         while True:
             try:
                 self.number_of_messages = await self._async_fetch_number_of_messages()
@@ -527,14 +530,15 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             else:
                 self.auth_errors = 0
                 self.async_set_updated_data(self.number_of_messages)
+
             try:
-                idle: asyncio.Future = await self.imap_client.idle_start()
+                idle = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
                 async with asyncio.timeout(10):
                     await idle
 
-            except (AioImapException, TimeoutError):
+            except AioImapException, TimeoutError:
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],
@@ -542,6 +546,24 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
+
+            finally:
+                # Ensure no pending IDLE future survives
+                if idle is not None and not idle.done():
+                    idle.cancel()
+                    _LOGGER.debug(
+                        "Canceling IDLE wait for %s",
+                        self.config_entry.data[CONF_SERVER],
+                    )
+                    try:
+                        await idle
+                    except asyncio.CancelledError:
+                        if (
+                            current_task := asyncio.current_task()
+                        ) and current_task.cancelling():
+                            raise
+                    except AioImapException:
+                        pass
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""

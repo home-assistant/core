@@ -1,7 +1,5 @@
 """Homematic base entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import timedelta
 import logging
@@ -11,6 +9,7 @@ from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import track_time_interval
@@ -45,15 +44,16 @@ class HMDevice(Entity):
         entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a generic HomeMatic device."""
-        self._name = config.get(ATTR_NAME)
+        self._attr_name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
-        self._unique_id = config.get(ATTR_UNIQUE_ID)
+        if unique_id := config.get(ATTR_UNIQUE_ID):
+            self._attr_unique_id = unique_id.replace(" ", "_")
         self._data: dict[str, Any] = {}
         self._connected = False
-        self._available = False
+        self._attr_available = False
         self._channel_map: dict[str, str] = {}
 
         if entity_description is not None:
@@ -68,22 +68,7 @@ class HMDevice(Entity):
         self._subscribe_homematic_events()
 
     @property
-    def unique_id(self):
-        """Return unique ID. HomeMatic entity IDs are unique by default."""
-        return self._unique_id.replace(" ", "_")
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return true if device is available."""
-        return self._available
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         # Static attributes
         attr = {
@@ -116,7 +101,7 @@ class HMDevice(Entity):
             self._load_data_from_hm()
 
             # Link events from pyhomematic
-            self._available = not self._hmdevice.UNREACH
+            self._attr_available = not self._hmdevice.UNREACH
         except Exception as err:  # noqa: BLE001
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s", self._address, str(err))
@@ -132,7 +117,7 @@ class HMDevice(Entity):
 
         # Availability has changed
         if self.available != (not self._hmdevice.UNREACH):
-            self._available = not self._hmdevice.UNREACH
+            self._attr_available = not self._hmdevice.UNREACH
             has_changed = True
 
         # If it has changed data point, update Home Assistant
@@ -157,7 +142,8 @@ class HMDevice(Entity):
                         channel = channels[0]
                     else:
                         channel = self._channel
-                    # Remember the channel for this attribute to ignore invalid events later
+                    # Remember the channel for this attribute to
+                    # ignore invalid events later
                     self._channel_map[node] = str(channel)
 
         _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
@@ -204,7 +190,7 @@ class HMDevice(Entity):
         self._init_data_struct()
 
     @abstractmethod
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dictionary from the HomeMatic device metadata."""
 
 
@@ -213,14 +199,14 @@ class HMHub(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, hass, homematic, name):
+    def __init__(self, hass: HomeAssistant, homematic: HMConnection, name: str) -> None:
         """Initialize HomeMatic hub."""
         self.hass = hass
         self.entity_id = f"{DOMAIN}.{name.lower()}"
         self._homematic = homematic
-        self._variables = {}
+        self._variables: dict[str, Any] = {}
         self._name = name
-        self._state = None
+        self._state: int | None = None
 
         # Load data
         track_time_interval(self.hass, self._update_hub, SCAN_INTERVAL_HUB)
@@ -230,22 +216,22 @@ class HMHub(Entity):
         self.hass.add_job(self._update_variables, None)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> int | None:
         """Return the state of the entity."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         return "mdi:gradient-vertical"
 

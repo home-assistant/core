@@ -110,16 +110,10 @@ class MyUplinkNumber(MyUplinkEntity, NumberEntity):
         # Internal properties
         self.point_id = device_point.parameter_id
         self._attr_name = device_point.parameter_name
-        _scale = float(device_point.scale_value if device_point.scale_value else 1.0)
-        self._attr_native_min_value = (
-            device_point.min_value if device_point.min_value else -30000
-        ) * _scale
-        self._attr_native_max_value = (
-            device_point.max_value if device_point.max_value else 30000
-        ) * _scale
-        self._attr_native_step = (
-            device_point.step_value if device_point.step_value else 1.0
-        ) * _scale
+        _scale = float(device_point.scale_value or 1.0)
+        self._attr_native_min_value = (device_point.min_value or -30000) * _scale
+        self._attr_native_max_value = (device_point.max_value or 30000) * _scale
+        self._attr_native_step = (device_point.step_value or 1.0) * _scale
         if entity_description is not None:
             self.entity_description = entity_description
 

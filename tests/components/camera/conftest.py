@@ -148,13 +148,30 @@ def mock_stream_source_fixture() -> Generator[AsyncMock]:
         yield mock_stream_source
 
 
+@pytest.fixture(name="mock_create_stream")
+def mock_create_stream_fixture() -> Generator[Mock]:
+    """Fixture to mock create_stream and prevent real stream threads."""
+    mock_stream = Mock()
+    mock_stream.add_provider = Mock()
+    mock_stream.start = AsyncMock()
+    mock_stream.endpoint_url = Mock(return_value="http://home.assistant/playlist.m3u8")
+    mock_stream.set_update_callback = Mock()
+    mock_stream.available = True
+    with patch(
+        "homeassistant.components.camera.create_stream",
+        return_value=mock_stream,
+    ):
+        yield mock_stream
+
+
 @pytest.fixture
 async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
     """Initialize test WebRTC cameras with native RTC support."""
 
-    # Cannot use the fixture mock_camera_web_rtc as it's mocking Camera.async_handle_web_rtc_offer
-    # and native support is checked by verify the function "async_handle_web_rtc_offer" was
-    # overwritten(implemented) or not
+    # Cannot use the fixture mock_camera_web_rtc as it's
+    # mocking Camera.async_handle_web_rtc_offer and native
+    # support is checked by verifying the function
+    # "async_handle_web_rtc_offer" was overwritten or not
     class BaseCamera(camera.Camera):
         """Base Camera."""
 
@@ -166,7 +183,10 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
             return STREAM_SOURCE
 
     class AsyncNoCandidateCamera(BaseCamera):
-        """Mock Camera with native async WebRTC support but not implemented candidate support."""
+        """Mock Camera with native async WebRTC support.
+
+        Does not implement candidate support.
+        """
 
         _attr_name = "Async No Candidate"
 

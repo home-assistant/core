@@ -1,7 +1,5 @@
 """Support for the Fitbit API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -25,6 +23,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -461,7 +460,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="sleep/timeInBed",
         translation_key="sleep_time_in_bed",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        icon="mdi:hotel",
+        icon="mdi:bed",
         device_class=SensorDeviceClass.DURATION,
         scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -510,14 +509,12 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
 )
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     key="devices/battery_level",
     translation_key="battery_level",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
     device_class=SensorDeviceClass.BATTERY,
     native_unit_of_measurement=PERCENTAGE,
 )
@@ -536,6 +533,8 @@ async def async_setup_entry(
     # These are run serially to reuse the cached user profile, not gathered
     # to avoid two racing requests.
     user_profile = await api.async_get_user_profile()
+    if user_profile.encoded_id is None:
+        raise ConfigEntryNotReady("Could not get user profile")
     unit_system = await api.async_get_unit_system()
 
     fitbit_config = config_from_entry_data(entry.data)
@@ -653,6 +652,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -712,6 +712,7 @@ class FitbitBatteryLevelSensor(
     """Implementation of a Fitbit battery level sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
 
     def __init__(

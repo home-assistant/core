@@ -1,7 +1,5 @@
 """Support for monitoring the local system."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
@@ -30,6 +28,7 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +67,11 @@ SENSORS_NO_ARG = (
     "memory_",
     "processor_use",
     "swap_",
+    "memory_pressure_",
+    "io_pressure_",
+    "cpu_pressure_",
 )
+
 SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
     "fan_speed": "fan_speed_arguments",
@@ -176,9 +179,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda entity: entity.coordinator.data.battery.percent
-            if entity.coordinator.data.battery
-            else None
+            lambda entity: (
+                entity.coordinator.data.battery.percent
+                if entity.coordinator.data.battery
+                else None
+            )
         ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
@@ -200,11 +205,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda entity: round(
-                entity.coordinator.data.disk_usage[entity.argument].free / 1024**3, 1
+            lambda entity: (
+                round(
+                    entity.coordinator.data.disk_usage[entity.argument].free / 1024**3,
+                    1,
+                )
+                if entity.argument in entity.coordinator.data.disk_usage
+                else None
             )
-            if entity.argument in entity.coordinator.data.disk_usage
-            else None
         ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
@@ -217,11 +225,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda entity: round(
-                entity.coordinator.data.disk_usage[entity.argument].used / 1024**3, 1
+            lambda entity: (
+                round(
+                    entity.coordinator.data.disk_usage[entity.argument].used / 1024**3,
+                    1,
+                )
+                if entity.argument in entity.coordinator.data.disk_usage
+                else None
             )
-            if entity.argument in entity.coordinator.data.disk_usage
-            else None
         ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
@@ -233,9 +244,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda entity: entity.coordinator.data.disk_usage[entity.argument].percent
-            if entity.argument in entity.coordinator.data.disk_usage
-            else None
+            lambda entity: (
+                entity.coordinator.data.disk_usage[entity.argument].percent
+                if entity.argument in entity.coordinator.data.disk_usage
+                else None
+            )
         ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
@@ -268,8 +281,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "last_boot": SysMonitorSensorEntityDescription(
         key="last_boot",
-        translation_key="last_boot",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         value_fn=lambda entity: entity.coordinator.data.boot_time,
         add_to_update=lambda entity: ("boot", ""),
     ),
@@ -458,6 +470,224 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         mandatory_arg=True,
         value_fn=get_throughput,
         add_to_update=lambda entity: ("io_counters", ""),
+    ),
+    "memory_pressure_some_avg10": SysMonitorSensorEntityDescription(
+        key="memory_pressure_some_avg10",
+        translation_key="memory_pressure_some_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg10")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_some_avg60": SysMonitorSensorEntityDescription(
+        key="memory_pressure_some_avg60",
+        translation_key="memory_pressure_some_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg60")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_some_avg300": SysMonitorSensorEntityDescription(
+        key="memory_pressure_some_avg300",
+        translation_key="memory_pressure_some_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg300")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_some_total": SysMonitorSensorEntityDescription(
+        key="memory_pressure_some_total",
+        translation_key="memory_pressure_some_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("total")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_avg10": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg10",
+        translation_key="memory_pressure_full_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg10")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_avg60": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg60",
+        translation_key="memory_pressure_full_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg60")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_avg300": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_avg300",
+        translation_key="memory_pressure_full_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg300")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "memory_pressure_full_total": SysMonitorSensorEntityDescription(
+        key="memory_pressure_full_total",
+        translation_key="memory_pressure_full_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("total")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_some_avg10": SysMonitorSensorEntityDescription(
+        key="io_pressure_some_avg10",
+        translation_key="io_pressure_some_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg10")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_some_avg60": SysMonitorSensorEntityDescription(
+        key="io_pressure_some_avg60",
+        translation_key="io_pressure_some_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg60")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_some_avg300": SysMonitorSensorEntityDescription(
+        key="io_pressure_some_avg300",
+        translation_key="io_pressure_some_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg300")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_some_total": SysMonitorSensorEntityDescription(
+        key="io_pressure_some_total",
+        translation_key="io_pressure_some_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("total")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_full_avg10": SysMonitorSensorEntityDescription(
+        key="io_pressure_full_avg10",
+        translation_key="io_pressure_full_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg10")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_full_avg60": SysMonitorSensorEntityDescription(
+        key="io_pressure_full_avg60",
+        translation_key="io_pressure_full_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg60")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_full_avg300": SysMonitorSensorEntityDescription(
+        key="io_pressure_full_avg300",
+        translation_key="io_pressure_full_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg300")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "io_pressure_full_total": SysMonitorSensorEntityDescription(
+        key="io_pressure_full_total",
+        translation_key="io_pressure_full_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("total")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg10": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg10",
+        translation_key="cpu_pressure_some_avg10",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg10")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg60": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg60",
+        translation_key="cpu_pressure_some_avg60",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg60")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_avg300": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_avg300",
+        translation_key="cpu_pressure_some_avg300",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {})
+            .get("some", {})
+            .get("avg300")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
+    ),
+    "cpu_pressure_some_total": SysMonitorSensorEntityDescription(
+        key="cpu_pressure_some_total",
+        translation_key="cpu_pressure_some_total",
+        native_unit_of_measurement=UnitOfTime.MICROSECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("total")
+        ),
+        add_to_update=lambda entity: ("pressure", ""),
     ),
 }
 

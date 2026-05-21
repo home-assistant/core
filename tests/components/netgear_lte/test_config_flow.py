@@ -65,18 +65,3 @@ async def test_flow_user_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_flow_user_unknown_error(hass: HomeAssistant, unknown: None) -> None:
-    """Test unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=CONF_DATA,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "unknown"

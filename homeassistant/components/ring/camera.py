@@ -1,7 +1,5 @@
 """Component providing support to the Ring Door Bell camera."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -46,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):
+class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     exists_fn: Callable[[RingDoorBell], bool]
@@ -128,8 +126,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )
+
         history_data = self._device.last_history
-        if history_data:
+        if history_data and self._device.has_subscription:
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -154,8 +153,16 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        if self._video_url is None:
+            if not self._device.has_subscription:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="no_subscription",
+                )
+            return None
+
         key = (width, height)
-        if not (image := self._images.get(key)) and self._video_url is not None:
+        if not (image := self._images.get(key)):
             image = await ffmpeg.async_get_image(
                 self.hass,
                 self._video_url,

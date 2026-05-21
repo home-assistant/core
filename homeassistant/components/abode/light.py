@@ -1,7 +1,5 @@
 """Support for Abode Security System lights."""
 
-from __future__ import annotations
-
 from math import ceil
 from typing import Any
 
@@ -16,22 +14,20 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode light devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeLight(data, device)
@@ -100,7 +96,7 @@ class AbodeLight(AbodeDevice, LightEntity):
         return _hs
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.is_dimmable and self._device.is_color_capable:
             if self.hs_color is not None:
@@ -111,7 +107,7 @@ class AbodeLight(AbodeDevice, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         if self._device.is_dimmable and self._device.is_color_capable:
             return {ColorMode.COLOR_TEMP, ColorMode.HS}

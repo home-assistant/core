@@ -1,0 +1,257 @@
+[
+  {
+    "deviceId": "Dummy_Appliance_3",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": 63,
+      "twinDosContainer2FillingLevel": 20,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyWasher",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": 63,
+      "twinDosContainer2FillingLevel": 20,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "Dummy_Appliance_5",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": 80.5,
+      "saltFillingLevel": 75,
+      "rinseAidFillingLevel": 25,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_18",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": 33,
+      "fatFilterSaturation": 66,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "Dummy_Appliance_4",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_12",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_74",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_74_off",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "Dummy_Appliance_1",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "Dummy_Appliance_2",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyDryer",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyOven",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "Dummy_Vacuum_1",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_Fridge_Freezer",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_hob_w_extr",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_Fridge_Freezer_Offline",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": null,
+      "degreasingCounter": null,
+      "milkCleaningCounter": null
+    }
+  },
+  {
+    "deviceId": "DummyAppliance_CoffeeSystem",
+    "fillingLevels": {
+      "twinDosContainer1FillingLevel": null,
+      "twinDosContainer2FillingLevel": null,
+      "powerDiscFillingLevel": null,
+      "saltFillingLevel": null,
+      "rinseAidFillingLevel": null,
+      "coalFilterSaturation": null,
+      "fatFilterSaturation": null,
+      "descalingCounter": 1,
+      "degreasingCounter": 2,
+      "milkCleaningCounter": 3
+    }
+  }
+]

@@ -57,14 +57,29 @@
     }
   },
   "exceptions": {
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
+    "api_call_failed": {
+      "message": "Action execute for {entity} failed."
+    },
+    "clear_cache_failed": {
+      "message": "Could not clear the Velbus cache: {error}"
+    },
+    "connection_failed": {
+      "message": "Could not connect to Velbus."
     },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
     },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+    "module_not_found": {
+      "message": "Module with address {address} not found."
+    },
+    "scan_failed": {
+      "message": "Scan service: {error}."
+    },
+    "set_memo_text_failed": {
+      "message": "Failed to set the memo text on the Velbus module: {error}."
+    },
+    "sync_clock_failed": {
+      "message": "Failed to sync the Velbus clock: {error}."
     }
   },
   "issues": {

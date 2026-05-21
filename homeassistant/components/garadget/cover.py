@@ -1,7 +1,5 @@
 """Platform for the Garadget cover component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -221,7 +219,7 @@ class GaradgetCover(CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
-        if self._state not in ["stopped"]:
+        if self._state != "stopped":
             self._put_command("setState", "stop")
             self._start_watcher("stop")
 
@@ -254,7 +252,10 @@ class GaradgetCover(CoverEntity):
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
+        url = (
+            f"{self.particle_url}/v1/devices/{self.device_id}"
+            f"/{var}?access_token={self.access_token}"
+        )
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

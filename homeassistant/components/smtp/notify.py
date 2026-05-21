@@ -1,7 +1,5 @@
 """Mail (SMTP) notification service."""
 
-from __future__ import annotations
-
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -26,6 +24,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
@@ -46,7 +45,6 @@ from homeassistant.util.ssl import create_client_context
 from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
-    CONF_DEBUG,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
@@ -170,7 +168,7 @@ class MailNotificationService(BaseNotificationService):
         server = None
         try:
             server = self.connect()
-        except (socket.gaierror, ConnectionRefusedError):
+        except socket.gaierror, ConnectionRefusedError:
             _LOGGER.exception(
                 (
                     "SMTP server not found or refused connection (%s:%s). Please check"

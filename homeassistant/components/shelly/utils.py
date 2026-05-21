@@ -1,9 +1,6 @@
 """Shelly helpers functions."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
@@ -22,6 +19,7 @@ from aioshelly.const import (
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    MODEL_PLUG,
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
@@ -29,6 +27,7 @@ from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -49,11 +48,11 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.util.dt import utcnow
 
 from .const import (
     API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
@@ -66,16 +65,18 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    PUSH_UPDATE_ISSUE_ID,
     ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
+    SHELLY_WALL_DISPLAY_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
-    UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
+    WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
 
@@ -116,7 +117,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
@@ -188,29 +189,6 @@ def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
     return is_block_channel_type_light(settings, block)
 
 
-def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
-    """Return device uptime string, tolerate up to 5 seconds deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=uptime)
-
-    if (
-        not last_uptime
-        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
-        > UPTIME_DEVIATION
-    ):
-        if last_uptime:
-            LOGGER.debug(
-                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
-                diff,
-                UPTIME_DEVIATION,
-                uptime,
-                last_uptime,
-                delta_uptime,
-            )
-        return delta_uptime
-
-    return last_uptime
-
-
 def get_block_input_triggers(
     device: BlockDevice, block: Block
 ) -> list[tuple[str, str]]:
@@ -242,6 +220,15 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
+def get_coiot_port(hass: HomeAssistant) -> int:
+    """Get CoIoT port from config."""
+    if DOMAIN in hass.data:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
+        return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
+    return DEFAULT_COAP_PORT
+
+
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
@@ -253,7 +240,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
         ipv4.extend(
-            address
+            cast(IPv4Address, address)
             for address in await network.async_get_enabled_source_ips(hass)
             if address.version == 4
             and not (
@@ -264,10 +251,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
             )
         )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
-    if DOMAIN in hass.data:
-        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
-    else:
-        port = DEFAULT_COAP_PORT
+    port = get_coiot_port(hass)
     LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port, ipv4)
 
@@ -580,6 +564,9 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
+    if model in SHELLY_WALL_DISPLAY_MODELS:
+        return WALL_DISPLAY_RELEASE_URL
+
     if beta:
         return GEN2_BETA_RELEASE_URL
 
@@ -718,14 +705,29 @@ def async_remove_orphaned_entities(
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
-def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
-    """Return the RPC websocket URL."""
+def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
+    """Return HomeAssistant URL."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        LOGGER.debug("URL not available, skipping setup")
         return None
-    url = URL(raw_url)
+    return URL(raw_url)
+
+
+async def get_coiot_address(hass: HomeAssistant) -> str | None:
+    """Return the CoIoT ip address."""
+    url = _get_homeassistant_url(hass)
+    if url is None or url.host is None:
+        return None
+    return await async_get_source_ip(hass, url.host)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
 
@@ -947,6 +949,30 @@ def format_ble_addr(ble_addr: str) -> str:
 
 
 @callback
+def async_migrate_rpc_sensor_description_unique_ids(
+    entity_entry: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    """Migrate RPC sensor unique_ids after sensor description key rename."""
+    unique_id_map = {
+        "-temperature_0": "-temperature_tc",
+        "-humidity_0": "-humidity_rh",
+    }
+
+    for old_suffix, new_suffix in unique_id_map.items():
+        if entity_entry.unique_id.endswith(old_suffix):
+            new_unique_id = entity_entry.unique_id.removesuffix(old_suffix) + new_suffix
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+    return None
+
+
+@callback
 def async_migrate_rpc_virtual_components_unique_ids(
     config: dict[str, Any], entity_entry: er.RegistryEntry
 ) -> dict[str, Any] | None:
@@ -983,4 +1009,87 @@ def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
     return (
         entry.runtime_data.rpc_supports_scripts
         and not entry.runtime_data.rpc_zigbee_firmware
+    )
+
+
+async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
+    """Check if CoIoT is correctly configured."""
+    if device.model == MODEL_PLUG:
+        # Shelly Plug Gen 1 does not have CoIoT settings
+        return True
+
+    coiot_config = device.settings["coiot"]
+
+    # Check if CoIoT is disabled
+    if not coiot_config.get("enabled"):
+        return False
+
+    coiot_address = await get_coiot_address(hass)
+    if coiot_address is None:
+        LOGGER.debug(
+            "Skipping CoIoT peer check for device %s as no local address is available",
+            device.name,
+        )
+        return True
+
+    coiot_peer = f"{coiot_address}:{get_coiot_port(hass)}"
+    # Check if CoIoT address is not correctly set
+    if (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer:
+        LOGGER.debug(
+            "CoIoT is unconfigured for device %s, peer_config: %s, coiot_peer: %s",
+            device.name,
+            peer_config,
+            coiot_peer,
+        )
+        return False
+
+    return True
+
+
+async def async_manage_coiot_issues_task(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """CoIoT configuration or push updates issues task."""
+    config_issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
+    push_updates_issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.block is not None
+
+    device = entry.runtime_data.block.device
+
+    if await check_coiot_config(device, hass):
+        # CoIoT is correctly configured, create push updates issue
+        ir.async_delete_issue(hass, DOMAIN, config_issue_id)
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            push_updates_issue_id,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
+            translation_key="push_update_failure",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+        )
+        return
+
+    # CoIoT is not correctly configured, create config issue
+    ir.async_delete_issue(hass, DOMAIN, push_updates_issue_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        config_issue_id,
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="coiot_unconfigured",
+        translation_placeholders={
+            "device_name": device.name,
+            "ip_address": device.ip_address,
+        },
+        data={"entry_id": entry.entry_id},
     )

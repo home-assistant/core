@@ -1,7 +1,5 @@
 """The coordinator for APsystems local API integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -64,7 +62,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     async def _async_setup(self) -> None:
         try:
             device_info = await self.api.get_device_info()
-        except (ConnectionError, TimeoutError):
+        except ConnectionError, TimeoutError:
             raise UpdateFailed from None
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower

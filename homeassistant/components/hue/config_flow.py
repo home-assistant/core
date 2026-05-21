@@ -1,7 +1,5 @@
 """Config flow to configure Philips Hue."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
@@ -81,8 +79,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host,
                 websession=aiohttp_client.async_get_clientsession(
-                    # NOTE: we disable SSL verification for now due to the fact that the (BSB003)
-                    # Hue bridge uses a certificate from a on-bridge root authority.
+                    # NOTE: we disable SSL verification for now
+                    # due to the fact that the (BSB003) Hue bridge
+                    # uses a certificate from a on-bridge root
+                    # authority.
                     # We need to specifically handle this case in a follow-up update.
                     self.hass,
                     verify_ssl=False,
@@ -315,7 +315,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             api = HueBridgeV2(bridge.host, conf_entry.data[CONF_API_KEY])
             try:
                 await api.fetch_full_state()
-            except (AiohueException, aiohttp.ClientError):
+            except AiohueException, aiohttp.ClientError:
                 continue
             old_bridge_id = conf_entry.unique_id
             assert old_bridge_id is not None
@@ -337,7 +337,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                     bridge_device.id,
                     # overwrite identifiers with new bridge id
                     new_identifiers={(DOMAIN, bridge.id)},
-                    # overwrite mac addresses with empty set to drop the old (incorrect) addresses
+                    # overwrite mac addresses with empty set to drop
+                    # the old (incorrect) addresses
                     # this will be auto corrected once the integration is loaded
                     new_connections=set(),
                 )

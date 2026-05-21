@@ -1,7 +1,5 @@
 """Support for Minut Point binary sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -15,9 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PointConfigEntry
 from .const import SIGNAL_WEBHOOK
-from .coordinator import PointDataUpdateCoordinator
+from .coordinator import PointConfigEntry, PointDataUpdateCoordinator
 from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)

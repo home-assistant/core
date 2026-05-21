@@ -8,6 +8,7 @@ from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -345,7 +346,7 @@ class Plant(Entity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the entity.
 
         Provide the individual measurements from the

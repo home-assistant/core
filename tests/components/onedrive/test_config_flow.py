@@ -4,7 +4,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import AppRoot, Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
 import pytest
 
 from homeassistant import config_entries
@@ -141,55 +141,11 @@ async def test_full_flow_with_owner_not_found(
     mock_onedrive_client.reset_mock()
 
 
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_folder_already_in_use(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
-    mock_onedrive_client: MagicMock,
-    mock_instance_id: AsyncMock,
-    mock_folder: Folder,
-) -> None:
-    """Ensure a folder that is already in use is not allowed."""
-
-    mock_folder.description = "1234"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_FOLDER_NAME: "folder_already_in_use"}
-
-    # clear error and try again
-    mock_onedrive_client.create_folder.return_value.description = mock_instance_id
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "John Doe's OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
-    assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
-    assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
-    assert result["data"][CONF_FOLDER_NAME] == "myFolder"
-    assert result["data"][CONF_FOLDER_ID] == "my_folder_id"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_error_during_folder_creation(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
     mock_onedrive_client: MagicMock,
 ) -> None:
     """Ensure we can create the backup folder."""
@@ -255,12 +211,11 @@ async def test_flow_errors(
     assert result["reason"] == error
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test already configured account."""
@@ -276,12 +231,11 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the reauth flow works."""
@@ -299,14 +253,16 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert mock_config_entry.data[CONF_FOLDER_ID] == "my_folder_id"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reauth_flow_id_changed(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     mock_approot: AppRoot,
@@ -330,14 +286,13 @@ async def test_reauth_flow_id_changed(
     assert result["reason"] == "wrong_drive"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Testing reconfgure flow."""
     await setup_integration(hass, mock_config_entry)
@@ -362,14 +317,13 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Testing reconfgure flow errors."""
     mock_config_entry.add_to_hass(hass)
@@ -403,12 +357,11 @@ async def test_reconfigure_flow_error(
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_reconfigure_flow_id_changed(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     mock_approot: AppRoot,

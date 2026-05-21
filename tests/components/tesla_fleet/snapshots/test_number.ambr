@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[number.energy_site_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -61,8 +63,9 @@
 # ---
 # name: test_number[number.energy_site_off_grid_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -85,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -121,8 +125,9 @@
 # ---
 # name: test_number[number.test_charge_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 16,
@@ -145,6 +150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge current',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
@@ -180,8 +186,9 @@
 # ---
 # name: test_number[number.test_charge_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -204,6 +211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,

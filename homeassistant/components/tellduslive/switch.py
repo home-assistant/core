@@ -22,6 +22,8 @@ async def async_setup_entry(
 
     async def async_discover_switch(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSwitch(client, device_id)])
 
@@ -38,7 +40,7 @@ class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     _attr_name = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.is_on
 

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[envoy_eu_batt][number.envoy_1234_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.enpower_654321_reserve_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -119,8 +123,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -177,8 +183,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -201,6 +208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -235,8 +243,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -259,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -293,8 +303,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -317,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -351,8 +363,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_cutoff_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -375,6 +388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -409,8 +423,9 @@
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_restore_battery_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -433,6 +448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,

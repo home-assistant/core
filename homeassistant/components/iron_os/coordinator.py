@@ -1,7 +1,5 @@
 """Update coordinator for IronOS Integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
@@ -84,7 +82,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             self.device_info = await self.device.get_device_info()
 
-        except (CommunicationError, TimeoutError):
+        except CommunicationError, TimeoutError:
             self.device_info = DeviceInfoResponse()
 
         self.v223_features = (
@@ -148,7 +146,9 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         device_registry.async_update_device(
             device_id=device.id,
             sw_version=self.device_info.build,
-            serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
+            serial_number=(
+                f"{self.device_info.device_sn} (ID:{self.device_info.device_id})"
+            ),
         )
 
 

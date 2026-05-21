@@ -1,7 +1,5 @@
 """Support for interface with an LG webOS TV."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
@@ -12,7 +10,6 @@ import logging
 from typing import Any, Concatenate, cast
 
 from aiowebostv import WebOsTvPairError, WebOsTvState
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -22,27 +19,21 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.const import ATTR_COMMAND, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_EXCEPTIONS,
 )
 from .helpers import WebOsTvConfigEntry, update_client_key
@@ -70,34 +61,6 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=10)
 
-BUTTON_SCHEMA: VolDictType = {vol.Required(ATTR_BUTTON): cv.string}
-COMMAND_SCHEMA: VolDictType = {
-    vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PAYLOAD): dict,
-}
-SOUND_OUTPUT_SCHEMA: VolDictType = {vol.Required(ATTR_SOUND_OUTPUT): cv.string}
-
-SERVICES = (
-    (
-        SERVICE_BUTTON,
-        BUTTON_SCHEMA,
-        "async_button",
-        SupportsResponse.NONE,
-    ),
-    (
-        SERVICE_COMMAND,
-        COMMAND_SCHEMA,
-        "async_command",
-        SupportsResponse.OPTIONAL,
-    ),
-    (
-        SERVICE_SELECT_SOUND_OUTPUT,
-        SOUND_OUTPUT_SCHEMA,
-        "async_select_sound_output",
-        SupportsResponse.OPTIONAL,
-    ),
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -105,12 +68,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LG webOS TV platform."""
-    platform = entity_platform.async_get_current_platform()
-
-    for service_name, schema, method, supports_response in SERVICES:
-        platform.async_register_entity_service(
-            service_name, schema, method, supports_response=supports_response
-        )
 
     async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
@@ -297,7 +254,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             }
 
     def _update_sources(self) -> None:
-        """Update list of sources from current source, apps, inputs and configured list."""
+        """Update list of sources from current source and apps."""
         tv_state = self._client.tv_state
         source_list = self._source_list
         self._source_list = {}
@@ -405,7 +362,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     @cmd
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        tv_volume = int(round(volume * 100))
+        tv_volume = round(volume * 100)
         await self._client.set_volume(tv_volume)
 
     @cmd
@@ -435,7 +392,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 translation_key="source_not_found",
                 translation_placeholders={
                     "source": source,
-                    "name": str(self._friendly_name_internal()),
+                    "name": self.entity_id,
                 },
             )
         if source_dict.get("title"):

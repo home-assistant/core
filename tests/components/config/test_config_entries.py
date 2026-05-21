@@ -455,7 +455,8 @@ async def test_initialize_flow_unmet_dependency(
     mock_integration(
         hass, MockModule(domain="dependency_1", config_schema=config_schema)
     )
-    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    # The test2 config flow should fail because
+    # dependency_1 can't be automatically set up
     mock_integration(
         hass,
         MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
@@ -1028,7 +1029,7 @@ async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
             "test", context={"source": core_ce.SOURCE_IMPORT}, data={}
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(subscription_mock.mock_calls) == 0
 
 
@@ -3303,7 +3304,7 @@ async def test_flow_with_multiple_schema_errors(
 async def test_flow_with_multiple_schema_errors_base(
     hass: HomeAssistant, client: TestClient
 ) -> None:
-    """Test an config flow with multiple schema errors where fields are not in the schema."""
+    """Test config flow with multiple schema errors."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )

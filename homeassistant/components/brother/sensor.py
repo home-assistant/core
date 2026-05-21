@@ -1,7 +1,5 @@
 """Support for the Brother service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -10,7 +8,7 @@ import logging
 from brother import BrotherSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -293,9 +291,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="uptime",
-        translation_key="last_restart",
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.uptime,
     ),
@@ -314,7 +311,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.brother.serial.lower()}_b/w_counter"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.brother.serial.lower()}_bw_counter"
         _LOGGER.debug(

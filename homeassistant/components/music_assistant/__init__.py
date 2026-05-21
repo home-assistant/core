@@ -1,7 +1,5 @@
 """Music Assistant (music-assistant.io) integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -25,9 +23,13 @@ from music_assistant_models.errors import (
 from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -36,7 +38,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, CONF_TOKEN, DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
 from .helpers import get_music_assistant_client
 from .services import register_actions
 
@@ -45,7 +47,14 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.typing import ConfigType
 
-PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.TEXT,
+]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -101,6 +110,15 @@ async def async_setup_entry(  # noqa: C901
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
+        assert mass.server_info is not None
+        # Users cannot reauthenticate when running as Home Assistant addon,
+        # so raising ConfigEntryAuthFailed in that case would be incorrect.
+        # Instead we should wait until the addon discovery is completed,
+        # as that will set up authentication and reload the entry automatically.
+        if mass.server_info.homeassistant_addon:
+            raise ConfigEntryError(
+                "Authentication failed, addon discovery not completed yet"
+            ) from err
         raise ConfigEntryAuthFailed(
             f"Authentication failed for {mass_url}: {err}"
         ) from err
@@ -200,7 +218,8 @@ async def async_setup_entry(  # noqa: C901
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
     )
 
-    # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
+    # register listener for player configs
+    # (to handle toggling of the 'expose_to_ha' setting)
     def handle_player_config_updated(event: MassEvent) -> None:
         """Handle Mass Player Config Updated event."""
         if event.object_id is None or not event.data:

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup_lcn_cover[cover.testmodule_cover_outputs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Outputs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -39,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Outputs',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -51,8 +54,9 @@
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -101,8 +107,9 @@
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_bs4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_BS4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -139,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_BS4',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -151,8 +160,9 @@
 # ---
 # name: test_setup_lcn_cover[cover.testmodule_cover_relays_module-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cover_Relays_Module',
     'options': dict({
     }),
     'original_device_class': None,
@@ -189,6 +200,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_Module',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

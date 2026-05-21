@@ -27,6 +27,10 @@ from homeassistant.components.mqtt.discovery import (
     async_start,
 )
 from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt.schemas import (
+    DEVICE_DISCOVERY_SCHEMA,
+    SHARED_OPTIONS,
+)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
@@ -320,7 +324,7 @@ async def test_invalid_device_discovery_config(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test sending in JSON that violates the discovery schema if device or platform key is missing."""
+    """Test JSON violating schema when device or platform key missing."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -628,7 +632,8 @@ async def test_discovery_integration_info(
         "Processing device discovery for 'bla' from external "
         "application bla2mqtt, version: 1.0"
         in caplog.text
-        or f"Found new component: binary_sensor {discovery_id} from external application bla2mqtt, version: 1.0"
+        or f"Found new component: binary_sensor {discovery_id}"
+        " from external application bla2mqtt, version: 1.0"
         in caplog.text
     )
     caplog.clear()
@@ -1151,7 +1156,7 @@ async def test_discovery_component_availability_overridden(
         payload,
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.none_beer")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
     assert state.name == "Beer"
     assert state.state == STATE_UNAVAILABLE
@@ -1162,7 +1167,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.none_beer")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -1172,7 +1177,7 @@ async def test_discovery_component_availability_overridden(
         "online",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.none_beer")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -1182,7 +1187,7 @@ async def test_discovery_component_availability_overridden(
         "ON",
     )
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.none_beer")
+    state = hass.states.get("binary_sensor.beer")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -1261,7 +1266,7 @@ async def test_discovery_with_invalid_integration_info(
     async_fire_mqtt_message(hass, discovery_topic, config_message)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.none_beer")
+    state = hass.states.get("binary_sensor.beer")
 
     assert state is None
     assert error_message in caplog.text
@@ -1328,257 +1333,6 @@ async def test_discover_alarm_control_panel(
     assert ("alarm_control_panel", "bla") in hass.data[
         "mqtt"
     ].discovery_already_discovered
-
-
-@pytest.mark.parametrize(
-    ("topic", "config", "entity_id", "name", "domain", "deprecation_warning"),
-    [
-        (
-            "homeassistant/alarm_control_panel/object/bla/config",
-            '{ "name": "Hello World 1", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "alarm_control_panel.hello_id",
-            "Hello World 1",
-            "alarm_control_panel",
-            True,
-        ),
-        (
-            "homeassistant/binary_sensor/object/bla/config",
-            '{ "name": "Hello World 2", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "binary_sensor.hello_id",
-            "Hello World 2",
-            "binary_sensor",
-            True,
-        ),
-        (
-            "homeassistant/button/object/bla/config",
-            '{ "name": "Hello World button", "obj_id": "hello_id", "command_topic": "test-topic" }',
-            "button.hello_id",
-            "Hello World button",
-            "button",
-            True,
-        ),
-        (
-            "homeassistant/camera/object/bla/config",
-            '{ "name": "Hello World 3", "obj_id": "hello_id", "state_topic": "test-topic", "topic": "test-topic" }',
-            "camera.hello_id",
-            "Hello World 3",
-            "camera",
-            True,
-        ),
-        (
-            "homeassistant/climate/object/bla/config",
-            '{ "name": "Hello World 4", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "climate.hello_id",
-            "Hello World 4",
-            "climate",
-            True,
-        ),
-        (
-            "homeassistant/cover/object/bla/config",
-            '{ "name": "Hello World 5", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "cover.hello_id",
-            "Hello World 5",
-            "cover",
-            True,
-        ),
-        (
-            "homeassistant/fan/object/bla/config",
-            '{ "name": "Hello World 6", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "fan.hello_id",
-            "Hello World 6",
-            "fan",
-            True,
-        ),
-        (
-            "homeassistant/humidifier/object/bla/config",
-            '{ "name": "Hello World 7", "obj_id": "hello_id", "state_topic": "test-topic", "target_humidity_command_topic": "test-topic", "command_topic": "test-topic" }',
-            "humidifier.hello_id",
-            "Hello World 7",
-            "humidifier",
-            True,
-        ),
-        (
-            "homeassistant/number/object/bla/config",
-            '{ "name": "Hello World 8", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "number.hello_id",
-            "Hello World 8",
-            "number",
-            True,
-        ),
-        (
-            "homeassistant/scene/object/bla/config",
-            '{ "name": "Hello World 9", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "scene.hello_id",
-            "Hello World 9",
-            "scene",
-            True,
-        ),
-        (
-            "homeassistant/select/object/bla/config",
-            '{ "name": "Hello World 10", "obj_id": "hello_id", "state_topic": "test-topic", "options": [ "opt1", "opt2" ], "command_topic": "test-topic" }',
-            "select.hello_id",
-            "Hello World 10",
-            "select",
-            True,
-        ),
-        (
-            "homeassistant/sensor/object/bla/config",
-            '{ "name": "Hello World 11", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "sensor.hello_id",
-            "Hello World 11",
-            "sensor",
-            True,
-        ),
-        (
-            "homeassistant/switch/object/bla/config",
-            '{ "name": "Hello World 12", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "switch.hello_id",
-            "Hello World 12",
-            "switch",
-            True,
-        ),
-        (
-            "homeassistant/light/object/bla/config",
-            '{ "name": "Hello World 13", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "light.hello_id",
-            "Hello World 13",
-            "light",
-            True,
-        ),
-        (
-            "homeassistant/light/object/bla/config",
-            '{ "name": "Hello World 14", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic", "schema": "json" }',
-            "light.hello_id",
-            "Hello World 14",
-            "light",
-            True,
-        ),
-        (
-            "homeassistant/light/object/bla/config",
-            '{ "name": "Hello World 15", "obj_id": "hello_id", "state_topic": "test-topic", "command_off_template": "template", "command_on_template": "template", "command_topic": "test-topic", "schema": "template" }',
-            "light.hello_id",
-            "Hello World 15",
-            "light",
-            True,
-        ),
-        (
-            "homeassistant/vacuum/object/bla/config",
-            '{ "name": "Hello World 16", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "state" }',
-            "vacuum.hello_id",
-            "Hello World 16",
-            "vacuum",
-            True,
-        ),
-        (
-            "homeassistant/valve/object/bla/config",
-            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "valve.hello_id",
-            "Hello World 17",
-            "valve",
-            True,
-        ),
-        (
-            "homeassistant/lock/object/bla/config",
-            '{ "name": "Hello World 18", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "lock.hello_id",
-            "Hello World 18",
-            "lock",
-            True,
-        ),
-        (
-            "homeassistant/device_tracker/object/bla/config",
-            '{ "name": "Hello World 19", "obj_id": "hello_id", "state_topic": "test-topic" }',
-            "device_tracker.hello_id",
-            "Hello World 19",
-            "device_tracker",
-            True,
-        ),
-        (
-            "homeassistant/binary_sensor/object/bla/config",
-            '{ "name": "Hello World 2", "obj_id": "hello_id", '
-            '"o": {"name": "X2mqtt"}, "state_topic": "test-topic" }',
-            "binary_sensor.hello_id",
-            "Hello World 2",
-            "binary_sensor",
-            True,
-        ),
-        (
-            "homeassistant/button/object/bla/config",
-            '{ "name": "Hello World button", "obj_id": "hello_id", '
-            '"o": {"name": "X2mqtt", "url": "https://example.com/x2mqtt"}, '
-            '"command_topic": "test-topic" }',
-            "button.hello_id",
-            "Hello World button",
-            "button",
-            True,
-        ),
-        (
-            "homeassistant/alarm_control_panel/object/bla/config",
-            '{ "name": "Hello World 1", "def_ent_id": "alarm_control_panel.hello_id", '
-            '"state_topic": "test-topic", "command_topic": "test-topic" }',
-            "alarm_control_panel.hello_id",
-            "Hello World 1",
-            "alarm_control_panel",
-            False,
-        ),
-        (
-            "homeassistant/binary_sensor/object/bla/config",
-            '{ "name": "Hello World 2", "def_ent_id": "binary_sensor.hello_id", '
-            '"o": {"name": "X2mqtt"}, "state_topic": "test-topic" }',
-            "binary_sensor.hello_id",
-            "Hello World 2",
-            "binary_sensor",
-            False,
-        ),
-        (
-            "homeassistant/button/object/bla/config",
-            '{ "name": "Hello World button", "def_ent_id": "button.hello_id", '
-            '"o": {"name": "X2mqtt", "url": "https://example.com/x2mqtt"}, '
-            '"command_topic": "test-topic" }',
-            "button.hello_id",
-            "Hello World button",
-            "button",
-            False,
-        ),
-        (
-            "homeassistant/button/object/bla/config",
-            '{ "name": "Hello World button", "def_ent_id": "button.hello_id", '
-            '"obj_id": "hello_id_old", '
-            '"o": {"name": "X2mqtt", "url": "https://example.com/x2mqtt"}, '
-            '"command_topic": "test-topic" }',
-            "button.hello_id",
-            "Hello World button",
-            "button",
-            False,
-        ),
-    ],
-)
-async def test_discovery_with_object_id(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-    topic: str,
-    config: str,
-    entity_id: str,
-    name: str,
-    domain: str,
-    deprecation_warning: bool,
-) -> None:
-    """Test discovering an MQTT entity with object_id."""
-    await mqtt_mock_entry()
-    async_fire_mqtt_message(hass, topic, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-
-    assert state is not None
-    assert state.name == name
-    assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
-
-    assert (
-        f"The configuration for entity {domain}.hello_id uses the deprecated option `object_id`"
-        in caplog.text
-    ) is deprecation_warning
 
 
 async def test_discovery_with_default_entity_id_for_previous_deleted_entity(
@@ -1945,7 +1699,7 @@ async def test_duplicate_removal(
                 '"name": "sensor2"'
                 "}",
             },
-            ["sensor.none_sensor1", "sensor.none_sensor2"],
+            ["sensor.sensor1", "sensor.sensor2"],
         ),
         (
             {
@@ -1964,7 +1718,7 @@ async def test_duplicate_removal(
                 '"unique_id": "unique2"'
                 "}}}"
             },
-            ["sensor.none_sensor1", "sensor.none_sensor2"],
+            ["sensor.sensor1", "sensor.sensor2"],
         ),
     ],
 )
@@ -2012,7 +1766,7 @@ async def test_cleanup_device_manual(
     # Verify device and registry entries are cleared
     device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
-    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
 
     # Verify state is removed
@@ -2022,7 +1776,10 @@ async def test_cleanup_device_manual(
 
     # Verify retained discovery topics have been cleared
     mqtt_mock.async_publish.assert_has_calls(
-        [call(discovery_topic, None, 0, True) for discovery_topic in discovery_payloads]
+        [
+            call(discovery_topic, None, 0, True, message_expiry_interval=None)
+            for discovery_topic in discovery_payloads
+        ]
     )
 
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -2036,7 +1793,7 @@ async def test_cleanup_device_manual(
             '{ "device":{"identifiers":["0AFFD2"]},'
             '  "state_topic": "foobar/sensor",'
             '  "unique_id": "unique" }',
-            ["sensor.none_mqtt_sensor"],
+            ["sensor.mqtt_sensor"],
         ),
         (
             "homeassistant/device/bla/config",
@@ -2053,7 +1810,7 @@ async def test_cleanup_device_manual(
             '  "state_topic": "foobar/sensor2",'
             '  "unique_id": "unique2"'
             "}}}",
-            ["sensor.none_sensor1", "sensor.none_sensor2"],
+            ["sensor.sensor1", "sensor.sensor2"],
         ),
     ],
 )
@@ -2077,7 +1834,7 @@ async def test_cleanup_device_mqtt(
         '  "unique_id": "unique_base" }'
     )
     base_discovery_topic = "homeassistant/sensor/bla_base/config"
-    base_entity_id = "sensor.none_sensor_base"
+    base_entity_id = "sensor.sensor_base"
     async_fire_mqtt_message(hass, base_discovery_topic, data)
     await hass.async_block_till_done()
 
@@ -2161,7 +1918,7 @@ async def test_cleanup_device_mqtt_device_discovery(
         '  "unique_id": "unique2"'
         "}}}"
     )
-    entity_ids = ["sensor.none_sensor1", "sensor.none_sensor2"]
+    entity_ids = ["sensor.sensor1", "sensor.sensor2"]
     async_fire_mqtt_message(hass, discovery_topic, discovery_payload)
     await hass.async_block_till_done()
 
@@ -2299,10 +2056,10 @@ async def test_cleanup_device_multiple_config_entries(
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.none_mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
 
     # Remove MQTT from the device
@@ -2320,21 +2077,39 @@ async def test_cleanup_device_multiple_config_entries(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.none_mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("homeassistant/sensor/bla/config", None, 0, True),
-            call("homeassistant/tag/bla/config", None, 0, True),
-            call("homeassistant/device_automation/bla/config", None, 0, True),
+            call(
+                "homeassistant/sensor/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
+            call(
+                "homeassistant/tag/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
+            call(
+                "homeassistant/device_automation/bla/config",
+                None,
+                0,
+                True,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )
@@ -2399,10 +2174,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         mqtt_config_entry.entry_id,
         config_entry.entry_id,
     }
-    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
 
-    state = hass.states.get("sensor.none_mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
 
     # Send MQTT messages to remove
@@ -2418,12 +2193,12 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
         connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("sensor.none_mqtt_sensor")
+    entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert device_entry.config_entries == {config_entry.entry_id}
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("sensor.none_mqtt_sensor")
+    state = hass.states.get("sensor.mqtt_sensor")
     assert state is None
     await hass.async_block_till_done()
 
@@ -2685,10 +2460,23 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_TEMP_STEP",
     # Removed
     "CONF_WHITE_VALUE",
+    # Config entry only settings
+    "CONF_BROKER",
+    "CONF_BIRTH_MESSAGE",
+    "CONF_DISCOVERY_PREFIX",
+    "CONF_DISCOVERY_QOS",
+    "CONF_KEEPALIVE",
+    "CONF_TRANSPORT",
+    "CONF_WS_PATH",
+    "CONF_WS_HEADERS",
+    "CONF_WILL_MESSAGE",
+    "CONF_CERTIFICATE",
+    "CONF_CLIENT_KEY",
+    "CONF_CLIENT_CERT",
+    "CONF_TLS_INSECURE",
 ]
 
 EXCLUDED_MODULES = {
-    "const.py",
     "config.py",
     "config_flow.py",
     "device_trigger.py",
@@ -2984,6 +2772,67 @@ async def test_mqtt_discovery_flow_starts_once(
         assert not mqtt_client_mock.unsubscribe.called
 
 
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_options", "discovery_qos"),
+    [
+        (ENTRY_DEFAULT_BIRTH_MESSAGE, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 0}, 0),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 1}, 1),
+        (ENTRY_DEFAULT_BIRTH_MESSAGE | {"discovery_qos": 2}, 2),
+    ],
+)
+async def test_mqtt_discovery_flow_subscribes_atr_configured_qos(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    caplog: pytest.LogCaptureFixture,
+    mock_mqtt_flow: config_entries.ConfigFlow,
+    mqtt_data_flow_calls: list[MqttServiceInfo],
+    mqtt_config_entry_options: dict[str, Any],
+    discovery_qos: int,
+) -> None:
+    """Check MQTT integration discovery subscribes at the configured QoS."""
+    mock_integration(
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    birth = asyncio.Event()
+
+    @callback
+    def wait_birth(msg: ReceiveMessage) -> None:
+        """Handle birth message."""
+        birth.set()
+
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        options=mqtt_config_entry_options,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.mqtt.discovery.async_get_mqtt",
+            return_value={"comp": ["comp/discovery/#"]},
+        ),
+        mock_config_flow("comp", mock_mqtt_flow),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await birth.wait()
+
+        assert ("comp/discovery/#", discovery_qos) in help_all_subscribe_calls(
+            mqtt_client_mock
+        )
+
+
 async def test_clear_config_topic_disabled_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -3049,11 +2898,23 @@ async def test_clear_config_topic_disabled_entity(
     # Assert all valid discovery topics are cleared
     assert mqtt_mock.async_publish.call_count == 2
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", None, 0, True)
+        call(
+            "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+            None,
+            0,
+            True,
+            message_expiry_interval=None,
+        )
         in mqtt_mock.async_publish.mock_calls
     )
     assert (
-        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", None, 0, True)
+        call(
+            "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+            None,
+            0,
+            True,
+            message_expiry_interval=None,
+        )
         in mqtt_mock.async_publish.mock_calls
     )
 
@@ -3081,7 +2942,7 @@ async def test_clean_up_registry_monitoring(
     }
     # Publish it config
     # Since it is not enabled_by_default the sensor will not be loaded
-    # it should register a hook for monitoring the entiry registry
+    # it should register a hook for monitoring the entity registry
     async_fire_mqtt_message(
         hass,
         "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
@@ -3116,7 +2977,7 @@ async def test_unique_id_collission_has_priority(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the unique_id collision detection has priority over registry disabled items."""
+    """Test unique_id collision has priority over disabled items."""
     await mqtt_mock_entry()
     config = {
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
@@ -3129,7 +2990,8 @@ async def test_unique_id_collission_has_priority(
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
     }
-    # discover an entity that is not unique and disabled by default (part 1), will be added
+    # discover an entity that is not unique and disabled by default
+    # (part 1), will be added
     config_not_unique1 = copy.deepcopy(config)
     config_not_unique1["name"] = "sbfspot_12345_1"
     config_not_unique1["unique_id"] = "not_unique"
@@ -3138,7 +3000,8 @@ async def test_unique_id_collission_has_priority(
         "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
         json.dumps(config_not_unique1),
     )
-    # discover an entity that is not unique (part 2), will not be added, and the registry entry is cleared
+    # discover an entity that is not unique (part 2), will not be
+    # added, and the registry entry is cleared
     config_not_unique2 = copy.deepcopy(config_not_unique1)
     config_not_unique2["name"] = "sbfspot_12345_2"
     async_fire_mqtt_message(
@@ -3262,7 +3125,7 @@ async def test_discovery_dispatcher_signal_type_messages(
             '  "state_topic": "foobar/sensor3",'
             '  "unique_id": "unique3"'
             "}}}",
-            ["sensor.none_sensor1", "sensor.none_sensor2", "sensor.none_sensor3"],
+            ["sensor.sensor1", "sensor.sensor2", "sensor.sensor3"],
         ),
     ],
 )
@@ -3382,7 +3245,7 @@ async def test_discovery_with_late_via_device_update(
     tag_mock: AsyncMock,
     single_configs: list[tuple[str, dict[str, Any]]],
 ) -> None:
-    """Test a via device is available and the discovery of the via device is is set via an update."""
+    """Test via device discovery is set via an update."""
     await mqtt_mock_entry()
 
     await hass.async_block_till_done()
@@ -3448,3 +3311,154 @@ async def test_discovery_with_late_via_device_update(
     assert via_device_entry.name == "My Switch"
 
     await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+async def test_shared_options_in_sync_with_device_schema() -> None:
+    """Test shared options in device discovery schema are in sync.
+
+    The SHARED_OPTIONS should be in sync with the device discovery schema.
+    """
+    # Check if shared options are present in the device discovery schema and vice versa.
+    for option in SHARED_OPTIONS:
+        assert option in DEVICE_DISCOVERY_SCHEMA.schema
+
+    for option in set(DEVICE_DISCOVERY_SCHEMA.schema) - {
+        "device",
+        "origin",
+        "components",
+    }:
+        assert option in SHARED_OPTIONS
+
+
+@pytest.mark.parametrize(
+    ("device_config", "shared_option", "platform_values"),
+    [
+        (
+            TEST_DEVICE_CONFIG | {"encoding": "utf-16"},
+            "encoding",
+            {
+                "device_automation": "utf-16",
+                "sensor": "utf-16",
+                "tag": "utf-16",
+            },
+        ),
+        (
+            TEST_DEVICE_CONFIG | {"state_topic": "blabla"},
+            "state_topic",
+            {
+                "device_automation": "blabla",
+                "sensor": "foobar/sensors/bla2/state",
+                "tag": "blabla",
+            },
+        ),
+        (
+            TEST_DEVICE_CONFIG | {"qos": 1},
+            "qos",
+            {"device_automation": 1, "sensor": 1, "tag": 1},
+        ),
+    ],
+    ids=["encoding", "state_topic", "qos"],
+)
+async def test_shared_options_with_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    tag_mock: AsyncMock,
+    device_config: dict[str, Any],
+    shared_option: str,
+    platform_values: dict[str, str | int],
+) -> None:
+    """Test shared options are passed forward to component configs.
+
+    Shared options should not be overridden. They can exist as extra options,
+    and these extra options are ignored if they are not part of the component
+    discovery schema.
+    Possible shared options are:
+        CONF_AVAILABILITY,
+        CONF_AVAILABILITY_MODE,
+        CONF_AVAILABILITY_TEMPLATE,
+        CONF_AVAILABILITY_TOPIC,
+        CONF_COMMAND_TOPIC,
+        CONF_ENCODING,
+        CONF_PAYLOAD_AVAILABLE,
+        CONF_PAYLOAD_NOT_AVAILABLE,
+        CONF_STATE_TOPIC,
+        CONF_QOS.
+
+    Note that not all options are tested.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock.reset_mock()
+
+    # Listen to discovery handler to catch the component discovery payloads
+    # that are being processed.
+    discovery_payloads: dict[str, MQTTDiscoveryPayload] = {}
+
+    async def async_discovery_handler(discovery_payload: MQTTDiscoveryPayload) -> None:
+        component = discovery_payload.discovery_data["discovery_hash"][0]
+        discovery_payloads[component] = discovery_payload
+
+    handler_handles = [
+        async_dispatcher_connect(
+            hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), async_discovery_handler
+        )
+        for component in platform_values
+    ]
+
+    async_fire_mqtt_message(
+        hass, TEST_DEVICE_DISCOVERY_TOPIC, json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+
+    assert len(handler_handles) == 3
+
+    # Check if shared options are being passed to the component configs
+    assert discovery_payloads.keys() == platform_values.keys()
+    for component, discovery_payload in discovery_payloads.items():
+        assert (
+            discovery_payload.discovery_data["discovery_payload"][shared_option]
+            == platform_values[component]
+        )
+
+    # Cleanup dispatcher handlers
+    for handle in handler_handles:
+        handle()
+
+    # Verify device and registry entries are created
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    # Check if the MQTT items are all available
+    await help_check_discovered_items(hass, device_registry, tag_mock)
+
+
+@pytest.mark.usefixtures("tag_mock")
+@pytest.mark.parametrize(
+    ("device_config", "qos"),
+    [(TEST_DEVICE_CONFIG | {"qos": 1}, 1), (TEST_DEVICE_CONFIG | {"qos": 2}, 2)],
+)
+async def test_shared_qos_with_device_discovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_config: dict[str, Any],
+    qos: int,
+) -> None:
+    """Test shared qos options are passed forward to component configs."""
+    mqtt_mock = await mqtt_mock_entry()
+    mqtt_mock.reset_mock()
+    async_fire_mqtt_message(
+        hass, TEST_DEVICE_DISCOVERY_TOPIC, json.dumps(device_config)
+    )
+    await hass.async_block_till_done()
+    # Verify device and registry entries are created
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    assert device_entry is not None
+
+    # Check the subscriptions for tag and sensor were done with shared QoS
+    mqtt_mock.async_subscribe.assert_has_calls(
+        [call("foobar/tags/bla3/see", ANY, qos, "utf-8", ANY)]
+    )
+    mqtt_mock.async_subscribe.assert_has_calls(
+        [call("foobar/sensors/bla2/state", ANY, qos, "utf-8", ANY)]
+    )

@@ -1,8 +1,183 @@
 # serializer version: 1
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy last month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy last month',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_last_month',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_last_month',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy last month',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy this month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy this month',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_this_month',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_this_month',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy yesterday',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy yesterday',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_yesterday',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_yesterday',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy yesterday',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_filter_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +226,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -71,6 +248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -103,8 +281,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -124,6 +303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
@@ -156,8 +336,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -177,6 +358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -209,8 +391,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -230,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -262,8 +446,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -281,6 +466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-off',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -315,8 +501,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -334,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -368,8 +556,9 @@
 # ---
 # name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -387,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -415,10 +605,11 @@
     'state': '2024-10-10T13:14:00+00:00',
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-entry]
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_last_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -430,7 +621,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_last_month',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -438,118 +629,7 @@
     'labels': set({
     }),
     'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy yesterday',
-    'platform': 'lg_thinq',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_usage_yesterday',
-    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_yesterday',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy yesterday',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy this month',
-    'platform': 'lg_thinq',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_usage_this_month',
-    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_this_month',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy this month',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
+    'object_id_base': 'Energy last month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -563,23 +643,252 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_usage_last_month',
-    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_last_month',
+    'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_energyUsage_last_month',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-state]
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_last_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test air conditioner Energy last month',
+      'friendly_name': 'Test kimchi refrigerator Energy last month',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_last_month',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy this month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy this month',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_this_month',
+    'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_energyUsage_this_month',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test kimchi refrigerator Energy this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy yesterday',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy yesterday',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_yesterday',
+    'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_energyUsage_yesterday',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_energy_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test kimchi refrigerator Energy yesterday',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_kimchi_refrigerator_energy_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_middle_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'kimchi',
+        'meat_fish',
+        'vegetable_fruit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_kimchi_refrigerator_middle_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'middle temperature',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'middle temperature',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_temperature_for_location',
+    'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_middle_target_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_middle_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test kimchi refrigerator middle temperature',
+      'options': list([
+        'kimchi',
+        'meat_fish',
+        'vegetable_fruit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_kimchi_refrigerator_middle_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'kimchi',
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_top_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_kimchi_refrigerator_top_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'top temperature',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'top temperature',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_temperature_for_location',
+    'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_top_target_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_top_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test kimchi refrigerator top temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_kimchi_refrigerator_top_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
   })
 # ---

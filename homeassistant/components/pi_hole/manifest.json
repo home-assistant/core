@@ -4,6 +4,7 @@
   "codeowners": ["@shenxn"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pi_hole",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["hole"],
   "requirements": ["hole==0.9.0"]

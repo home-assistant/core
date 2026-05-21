@@ -495,7 +495,7 @@ async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
 async def test_ssdp_legacy_not_remote_control_receiver_udn(
     hass: HomeAssistant, data: SsdpServiceInfo
 ) -> None:
-    """Test we abort if the st is not usable for legacy discovery since it will have a different UDN."""
+    """Test we abort if it is not usable for legacy discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=data
     )
@@ -505,7 +505,7 @@ async def test_ssdp_legacy_not_remote_control_receiver_udn(
 
 @pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
 async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
-    """Test starting a flow from discovery when friendly name doesn't start with [TV]."""
+    """Test discovery flow when friendly name has no [TV] prefix."""
     ssdp_data = deepcopy(MOCK_SSDP_DATA)
     ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME] = ssdp_data.upnp[ATTR_UPNP_FRIENDLY_NAME][
         4:
@@ -1481,7 +1481,7 @@ async def test_update_zeroconf_discovery_preserved_unique_id(
 async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the wrong st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location and wrong st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1513,10 +1513,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
 @pytest.mark.usefixtures(
     "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
 )
-async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_updated_from_ssdp(
+async def test_update_missing_mac_unique_id_ssdp_location_rendering_st_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the correct st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location, correct st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1549,10 +1549,10 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
 @pytest.mark.usefixtures(
     "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
 )
-async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st_updated_from_ssdp(
+async def test_update_missing_mac_unique_id_ssdp_location_tv_agent_st_from_ssdp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing mac and unique id with outdated ssdp_location with the correct st added via ssdp."""
+    """Test missing mac/unique id with outdated ssdp_location, correct st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1778,7 +1778,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
 async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_control_st(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
+    """Test missing ssdp_location and unique id with rendering st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={**ENTRYDATA_LEGACY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
@@ -1821,6 +1821,65 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_reconfigure_host(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates the host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
+
+
+async def test_reconfigure_host_invalid(hass: HomeAssistant) -> None:
+    """Test reconfigure flow retries on invalid host."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_WEBSOCKET)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror("invalid host"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "bad-host"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_RECONFIGURE
+    assert result["errors"] == {"base": "invalid_host"}
+
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="10.10.12.77",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "new-host"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.10.12.77"
 
 
 @pytest.mark.usefixtures("remote_websocket", "rest_api")
@@ -2160,7 +2219,7 @@ async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["type"] is FlowResultType.FORM
     assert result_user["step_id"] == "user"
 
     # While user flow is pending (form shown), trigger DHCP flow
@@ -2178,4 +2237,4 @@ async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp_data,
         )
-    assert result_dhcp["type"] == FlowResultType.ABORT
+    assert result_dhcp["type"] is FlowResultType.ABORT

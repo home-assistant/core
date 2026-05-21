@@ -5,7 +5,6 @@ from typing import Final
 from ohme import OhmeApiClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -13,8 +12,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, service
 
 from .const import DOMAIN
 from .coordinator import OhmeConfigEntry
@@ -48,25 +46,9 @@ SERVICE_SET_PRICE_CAP_SCHEMA: Final = vol.Schema(
 
 def __get_client(call: ServiceCall) -> OhmeApiClient:
     """Get the client from the config entry."""
-    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: OhmeConfigEntry | None = call.hass.config_entries.async_get_entry(entry_id)
-
-    if not entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
-        )
-    if entry.state != ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry": entry.title,
-            },
-        )
+    entry: OhmeConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
 
     return entry.runtime_data.charge_session_coordinator.client
 

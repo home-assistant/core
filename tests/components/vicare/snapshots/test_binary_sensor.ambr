@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.model0_burner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_circulation_pump_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -197,8 +205,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -246,8 +256,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_dhw_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -295,8 +307,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_frost_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frost protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -343,8 +357,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_frost_protection_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -362,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frost protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,8 +407,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model0_one_time_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -410,6 +427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'One-time charge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -440,8 +458,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_child_safety_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child safety lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -488,8 +508,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -507,6 +528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -536,8 +558,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_mounting_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -555,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mounting mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -584,8 +608,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model1_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -603,6 +628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -633,8 +659,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model2_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -652,6 +679,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -681,8 +709,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model3_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -729,8 +759,9 @@
 # ---
 # name: test_all_entities[binary_sensor.model4_valve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,

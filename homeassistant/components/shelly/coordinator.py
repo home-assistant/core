@@ -1,7 +1,5 @@
 """Coordinators for the Shelly integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -47,6 +45,7 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -72,6 +71,7 @@ from .const import (
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_manage_coiot_issues_task,
     get_block_device_sleep_period,
     get_device_entry_gen,
     get_host,
@@ -122,8 +122,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
-        # The device has come online at least once. In the case of a sleeping RPC
-        # device, this means that the device has connected to the WS server at least once.
+        # The device has come online at least once. In the case
+        # of a sleeping RPC device, this means that the device
+        # has connected to the WS server at least once.
         self._came_online_once = False
         super().__init__(
             hass,
@@ -442,26 +443,19 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                     DOMAIN,
                     PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
                 )
+                ir.async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    COIOT_UNCONFIGURED_ISSUE_ID.format(unique=self.mac),
+                )
             self._push_update_failures = 0
         elif update_type is BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
             if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
-                LOGGER.debug(
-                    "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
-                )
-                ir.async_create_issue(
+                self.config_entry.async_create_background_task(
                     self.hass,
-                    DOMAIN,
-                    PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
-                    is_fixable=False,
-                    is_persistent=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
-                    translation_key="push_update_failure",
-                    translation_placeholders={
-                        "device_name": self.config_entry.title,
-                        "ip_address": self.device.ip_address,
-                    },
+                    async_manage_coiot_issues_task(self.hass, self.config_entry),
+                    "coiot_issues",
                 )
         if self._push_update_failures:
             LOGGER.debug(

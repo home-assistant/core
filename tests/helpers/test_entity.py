@@ -33,7 +33,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -1026,8 +1031,9 @@ async def _test_friendly_name(
         "expected_friendly_name",
     ),
     [
-        (False, "Entity Blu", "Device Bla", "Entity Blu"),
-        (False, None, "Device Bla", None),
+        (False, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", UNDEFINED, "Entity Blu"),
@@ -1063,12 +1069,13 @@ async def test_friendly_name_attr(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1100,9 +1107,10 @@ async def test_friendly_name_description(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla English cls"),
@@ -1169,7 +1177,7 @@ async def test_friendly_name_description_device_class_name(
         "expected_friendly_name",
     ),
     [
-        (False, None, None, None, "Entity Blu"),
+        (False, None, None, None, "Device Bla Entity Blu"),
         (True, None, None, None, "Device Bla Entity Blu"),
         (
             True,
@@ -1187,7 +1195,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             {"placeholder": "special"},
@@ -1198,7 +1207,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "English ent {placeholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1262,7 +1272,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1276,7 +1287,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1287,7 +1299,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             None,
@@ -1367,12 +1380,13 @@ async def test_entity_name_translation_placeholder_errors(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1403,13 +1417,14 @@ async def test_friendly_name_property(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(
@@ -1464,7 +1479,7 @@ async def test_friendly_name_property_device_class_name(
 @pytest.mark.parametrize(
     ("has_entity_name", "expected_friendly_name"),
     [
-        (False, None),
+        (False, "Device Bla"),
         (True, "Device Bla English cls"),
     ],
 )
@@ -1513,6 +1528,38 @@ async def test_friendly_name_device_class_name(
             ent,
             expected_friendly_name,
         )
+
+
+async def test_friendly_name_ignores_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the entity's area is not included in the friendly name."""
+    area = area_registry.async_create("Living Room")
+    entry = entity_registry.async_get_or_create(
+        "test_domain",
+        "test",
+        "qwer",
+        original_name="Entity Blu",
+        has_entity_name=True,
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id=area.id)
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent._attr_has_entity_name = True
+    ent._attr_name = "Entity Blu"
+
+    await _test_friendly_name(hass, ent, "Device Bla Entity Blu")
+
+    assert entity_registry.async_get(ent.entity_id).area_id == area.id
 
 
 @pytest.mark.parametrize(
@@ -1633,7 +1680,7 @@ async def test_repr(hass: HomeAssistant) -> None:
             """Return the state."""
             raise ValueError("Boom")
 
-    platform = MockEntityPlatform(hass, domain="hello")
+    platform = MockEntityPlatform(hass, domain="test")
     my_entity = MyEntity(entity_id="test.test", available=False)
 
     # Not yet added

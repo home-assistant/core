@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -70,6 +71,9 @@
       "freezer_door": {
         "name": "Freezer door"
       },
+      "interior_illumination_active": {
+        "name": "Interior illumination active"
+      },
       "left_chiller_door": {
         "name": "Left chiller door"
       },
@@ -113,6 +117,35 @@
       },
       "stop_program": {
         "name": "Stop program"
+      }
+    },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "active_clean": "Active clean"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
       }
     },
     "light": {
@@ -227,16 +260,23 @@
           "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
+          "cooking_oven_program_heating_mode_3_d_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_hot_air%]",
+          "cooking_oven_program_heating_mode_air_fry": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_air_fry%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
           "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
           "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_dough_proving": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_dough_proving%]",
           "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
+          "cooking_oven_program_heating_mode_grill_large_area": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_grill_large_area%]",
+          "cooking_oven_program_heating_mode_grill_small_area": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_grill_small_area%]",
           "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
           "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
           "cooking_oven_program_heating_mode_hot_air_30_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_30_steam%]",
           "cooking_oven_program_heating_mode_hot_air_60_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_60_steam%]",
           "cooking_oven_program_heating_mode_hot_air_80_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_80_steam%]",
           "cooking_oven_program_heating_mode_hot_air_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_eco%]",
+          "cooking_oven_program_heating_mode_hot_air_gentle": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_gentle%]",
           "cooking_oven_program_heating_mode_hot_air_grilling": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_grilling%]",
           "cooking_oven_program_heating_mode_intensive_heat": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_intensive_heat%]",
           "cooking_oven_program_heating_mode_keep_warm": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_keep_warm%]",
@@ -268,6 +308,7 @@
           "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
           "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
           "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_intensive_fixed_zone": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensive_fixed_zone%]",
           "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
           "dishcare_dishwasher_program_learning_dishwasher": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_learning_dishwasher%]",
           "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
@@ -336,15 +377,18 @@
           "laundry_care_washer_program_down_duvet_duvet": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_down_duvet_duvet%]",
           "laundry_care_washer_program_drum_clean": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_drum_clean%]",
           "laundry_care_washer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_easy_care%]",
+          "laundry_care_washer_program_hygiene_plus": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_hygiene_plus%]",
           "laundry_care_washer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix%]",
           "laundry_care_washer_program_mix_night_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix_night_wash%]",
           "laundry_care_washer_program_monsoon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_monsoon%]",
           "laundry_care_washer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_outdoor%]",
           "laundry_care_washer_program_plush_toy": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_plush_toy%]",
           "laundry_care_washer_program_power_speed_59": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_power_speed_59%]",
+          "laundry_care_washer_program_rinse": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse%]",
           "laundry_care_washer_program_rinse_rinse_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse_rinse_spin_drain%]",
           "laundry_care_washer_program_sensitive": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sensitive%]",
           "laundry_care_washer_program_shirts_blouses": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_shirts_blouses%]",
+          "laundry_care_washer_program_spin_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_spin_spin_drain%]",
           "laundry_care_washer_program_sport_fitness": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sport_fitness%]",
           "laundry_care_washer_program_super_153045_super_15": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_15%]",
           "laundry_care_washer_program_super_153045_super_1530": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_1530%]",
@@ -357,6 +401,12 @@
         "name": "Ambient light color",
         "state": {
           "b_s_h_common_enum_type_ambient_light_color_custom_color": "Custom"
+        }
+      },
+      "auto_stain": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_stains::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_stains_off": "[%key:common::state::off%]"
         }
       },
       "bean_amount": {
@@ -381,7 +431,7 @@
         }
       },
       "bean_container": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_container::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_bean_container_selection::name%]",
         "state": {
           "consumer_products_coffee_maker_enum_type_bean_container_selection_left": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_left%]",
           "consumer_products_coffee_maker_enum_type_bean_container_selection_right": "[%key:component::home_connect::selector::bean_container::options::consumer_products_coffee_maker_enum_type_bean_container_selection_right%]"
@@ -434,9 +484,9 @@
       "current_map": {
         "name": "Current map",
         "state": {
-          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_3%]",
           "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]"
         }
       },
@@ -507,20 +557,26 @@
         }
       },
       "intensive_level": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_intensive_level::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_common_option_hood_intensive_level::name%]",
         "state": {
-          "cooking_hood_enum_type_intensive_stage_intensive_stage1": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage1%]",
-          "cooking_hood_enum_type_intensive_stage_intensive_stage2": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage2%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage_1": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_1%]",
+          "cooking_hood_enum_type_intensive_stage_intensive_stage_2": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_2%]",
           "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "[%key:component::home_connect::selector::intensive_level::options::cooking_hood_enum_type_intensive_stage_intensive_stage_off%]"
         }
       },
       "reference_map_id": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_cleaning_robot_option_reference_map_id::name%]",
         "state": {
-          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
-          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map_3%]",
           "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]"
+        }
+      },
+      "rinse_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_rinse_plus::name%]",
+        "state": {
+          "laundry_care_washer_enum_type_rinse_plus_off": "[%key:common::state::off%]"
         }
       },
       "selected_program": {
@@ -564,16 +620,23 @@
           "cooking_common_program_hood_automatic": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_automatic%]",
           "cooking_common_program_hood_delayed_shut_off": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_delayed_shut_off%]",
           "cooking_common_program_hood_venting": "[%key:component::home_connect::selector::programs::options::cooking_common_program_hood_venting%]",
+          "cooking_oven_program_heating_mode_3_d_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_3_d_hot_air%]",
+          "cooking_oven_program_heating_mode_air_fry": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_air_fry%]",
           "cooking_oven_program_heating_mode_bottom_heating": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bottom_heating%]",
+          "cooking_oven_program_heating_mode_bread_baking": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_bread_baking%]",
           "cooking_oven_program_heating_mode_defrost": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_defrost%]",
           "cooking_oven_program_heating_mode_desiccation": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_desiccation%]",
+          "cooking_oven_program_heating_mode_dough_proving": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_dough_proving%]",
           "cooking_oven_program_heating_mode_frozen_heatup_special": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_frozen_heatup_special%]",
+          "cooking_oven_program_heating_mode_grill_large_area": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_grill_large_area%]",
+          "cooking_oven_program_heating_mode_grill_small_area": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_grill_small_area%]",
           "cooking_oven_program_heating_mode_hot_air": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air%]",
           "cooking_oven_program_heating_mode_hot_air_100_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_100_steam%]",
           "cooking_oven_program_heating_mode_hot_air_30_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_30_steam%]",
           "cooking_oven_program_heating_mode_hot_air_60_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_60_steam%]",
           "cooking_oven_program_heating_mode_hot_air_80_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_80_steam%]",
           "cooking_oven_program_heating_mode_hot_air_eco": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_eco%]",
+          "cooking_oven_program_heating_mode_hot_air_gentle": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_gentle%]",
           "cooking_oven_program_heating_mode_hot_air_grilling": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_hot_air_grilling%]",
           "cooking_oven_program_heating_mode_intensive_heat": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_intensive_heat%]",
           "cooking_oven_program_heating_mode_keep_warm": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_heating_mode_keep_warm%]",
@@ -594,6 +657,7 @@
           "cooking_oven_program_microwave_900_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_900_watt%]",
           "cooking_oven_program_microwave_90_watt": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_90_watt%]",
           "cooking_oven_program_microwave_max": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_microwave_max%]",
+          "cooking_oven_program_steam_modes_steam": "[%key:component::home_connect::selector::programs::options::cooking_oven_program_steam_modes_steam%]",
           "dishcare_dishwasher_program_auto_1": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_1%]",
           "dishcare_dishwasher_program_auto_2": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_2%]",
           "dishcare_dishwasher_program_auto_3": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_auto_3%]",
@@ -605,6 +669,7 @@
           "dishcare_dishwasher_program_intensiv_45": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_45%]",
           "dishcare_dishwasher_program_intensiv_70": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_70%]",
           "dishcare_dishwasher_program_intensiv_power": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensiv_power%]",
+          "dishcare_dishwasher_program_intensive_fixed_zone": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_intensive_fixed_zone%]",
           "dishcare_dishwasher_program_kurz_60": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_kurz_60%]",
           "dishcare_dishwasher_program_learning_dishwasher": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_learning_dishwasher%]",
           "dishcare_dishwasher_program_machine_care": "[%key:component::home_connect::selector::programs::options::dishcare_dishwasher_program_machine_care%]",
@@ -673,15 +738,18 @@
           "laundry_care_washer_program_down_duvet_duvet": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_down_duvet_duvet%]",
           "laundry_care_washer_program_drum_clean": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_drum_clean%]",
           "laundry_care_washer_program_easy_care": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_easy_care%]",
+          "laundry_care_washer_program_hygiene_plus": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_hygiene_plus%]",
           "laundry_care_washer_program_mix": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix%]",
           "laundry_care_washer_program_mix_night_wash": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_mix_night_wash%]",
           "laundry_care_washer_program_monsoon": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_monsoon%]",
           "laundry_care_washer_program_outdoor": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_outdoor%]",
           "laundry_care_washer_program_plush_toy": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_plush_toy%]",
           "laundry_care_washer_program_power_speed_59": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_power_speed_59%]",
+          "laundry_care_washer_program_rinse": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse%]",
           "laundry_care_washer_program_rinse_rinse_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_rinse_rinse_spin_drain%]",
           "laundry_care_washer_program_sensitive": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sensitive%]",
           "laundry_care_washer_program_shirts_blouses": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_shirts_blouses%]",
+          "laundry_care_washer_program_spin_spin_drain": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_spin_spin_drain%]",
           "laundry_care_washer_program_sport_fitness": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_sport_fitness%]",
           "laundry_care_washer_program_super_153045_super_15": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_15%]",
           "laundry_care_washer_program_super_153045_super_1530": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_program_super_153045_super_1530%]",
@@ -718,7 +786,7 @@
         }
       },
       "vario_perfect": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_vario_perfect::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_common_option_vario_perfect::name%]",
         "state": {
           "laundry_care_common_enum_type_vario_perfect_eco_perfect": "[%key:component::home_connect::selector::vario_perfect::options::laundry_care_common_enum_type_vario_perfect_eco_perfect%]",
           "laundry_care_common_enum_type_vario_perfect_off": "[%key:common::state::off%]",
@@ -726,7 +794,7 @@
         }
       },
       "venting_level": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_hood_option_venting_level::name%]",
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_common_option_hood_venting_level::name%]",
         "state": {
           "cooking_hood_enum_type_stage_fan_off": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_off%]",
           "cooking_hood_enum_type_stage_fan_stage_01": "[%key:component::home_connect::selector::venting_level::options::cooking_hood_enum_type_stage_fan_stage_01%]",
@@ -1204,13 +1272,22 @@
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_hygiene_plus::name%]"
       },
       "i_dos1_active": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos1_active::name%]"
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos_1_active::name%]"
       },
       "i_dos2_active": {
-        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos2_active::name%]"
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_i_dos_2_active::name%]"
       },
       "intensiv_zone": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_intensiv_zone::name%]"
+      },
+      "intensive_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_intensive_plus::name%]"
+      },
+      "less_ironing": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_less_ironing::name%]"
+      },
+      "mini_load": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_mini_load::name%]"
       },
       "multiple_beverages": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::consumer_products_coffee_maker_option_multiple_beverages::name%]"
@@ -1218,8 +1295,14 @@
       "power": {
         "name": "Power"
       },
+      "prewash": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_prewash::name%]"
+      },
       "refrigerator_super_mode": {
         "name": "Refrigerator super mode"
+      },
+      "rinse_hold": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_rinse_hold::name%]"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
@@ -1227,11 +1310,20 @@
       "silence_on_demand": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_silence_on_demand::name%]"
       },
+      "silent_mode": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_common_option_silent_mode::name%]"
+      },
+      "soaking": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_soak::name%]"
+      },
       "vacation_mode": {
         "name": "Vacation mode"
       },
       "vario_speed_plus": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_vario_speed_plus::name%]"
+      },
+      "water_plus": {
+        "name": "[%key:component::home_connect::services::set_program_and_options::fields::laundry_care_washer_option_water_plus::name%]"
       },
       "zeolite_dry": {
         "name": "[%key:component::home_connect::services::set_program_and_options::fields::dishcare_dishwasher_option_zeolite_dry::name%]"
@@ -1239,6 +1331,9 @@
     }
   },
   "exceptions": {
+    "appliance_disconnected": {
+      "message": "Appliance {appliance_name} ({ha_id}) is disconnected"
+    },
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },
@@ -1256,6 +1351,12 @@
     },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
+    },
+    "fetch_program_error": {
+      "message": "Error obtaining the selected or active program: {error}"
+    },
+    "no_program_to_start": {
+      "message": "No program to start"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -1357,9 +1458,9 @@
     },
     "available_maps": {
       "options": {
-        "consumer_products_cleaning_robot_enum_type_available_maps_map1": "Map 1",
-        "consumer_products_cleaning_robot_enum_type_available_maps_map2": "Map 2",
-        "consumer_products_cleaning_robot_enum_type_available_maps_map3": "Map 3",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_1": "Map 1",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_2": "Map 2",
+        "consumer_products_cleaning_robot_enum_type_available_maps_map_3": "Map 3",
         "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "Temporary map"
       }
     },
@@ -1483,8 +1584,8 @@
     },
     "intensive_level": {
       "options": {
-        "cooking_hood_enum_type_intensive_stage_intensive_stage1": "Intensive stage 1",
-        "cooking_hood_enum_type_intensive_stage_intensive_stage2": "Intensive stage 2",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage_1": "Intensive stage 1",
+        "cooking_hood_enum_type_intensive_stage_intensive_stage_2": "Intensive stage 2",
         "cooking_hood_enum_type_intensive_stage_intensive_stage_off": "Intensive stage off"
       }
     },
@@ -1528,16 +1629,23 @@
         "cooking_common_program_hood_automatic": "Automatic",
         "cooking_common_program_hood_delayed_shut_off": "Delayed shut off",
         "cooking_common_program_hood_venting": "Venting",
+        "cooking_oven_program_heating_mode_3_d_hot_air": "3D hot air",
+        "cooking_oven_program_heating_mode_air_fry": "Air fry",
         "cooking_oven_program_heating_mode_bottom_heating": "Bottom heating",
+        "cooking_oven_program_heating_mode_bread_baking": "Bread baking",
         "cooking_oven_program_heating_mode_defrost": "Defrost",
         "cooking_oven_program_heating_mode_desiccation": "Desiccation",
+        "cooking_oven_program_heating_mode_dough_proving": "Dough proving",
         "cooking_oven_program_heating_mode_frozen_heatup_special": "Special heat-up for frozen products",
+        "cooking_oven_program_heating_mode_grill_large_area": "Grill (large area)",
+        "cooking_oven_program_heating_mode_grill_small_area": "Grill (small area)",
         "cooking_oven_program_heating_mode_hot_air": "Hot air",
         "cooking_oven_program_heating_mode_hot_air_100_steam": "Hot air + 100 RH",
         "cooking_oven_program_heating_mode_hot_air_30_steam": "Hot air + 30 RH",
         "cooking_oven_program_heating_mode_hot_air_60_steam": "Hot air + 60 RH",
         "cooking_oven_program_heating_mode_hot_air_80_steam": "Hot air + 80 RH",
         "cooking_oven_program_heating_mode_hot_air_eco": "Hot air eco",
+        "cooking_oven_program_heating_mode_hot_air_gentle": "Hot air gentle",
         "cooking_oven_program_heating_mode_hot_air_grilling": "Hot air grilling",
         "cooking_oven_program_heating_mode_intensive_heat": "Intensive heat",
         "cooking_oven_program_heating_mode_keep_warm": "Keep warm",
@@ -1558,6 +1666,7 @@
         "cooking_oven_program_microwave_900_watt": "900 Watt",
         "cooking_oven_program_microwave_90_watt": "90 Watt",
         "cooking_oven_program_microwave_max": "Max",
+        "cooking_oven_program_steam_modes_steam": "Steam mode",
         "dishcare_dishwasher_program_auto_1": "Auto 1",
         "dishcare_dishwasher_program_auto_2": "Auto 2",
         "dishcare_dishwasher_program_auto_3": "Auto 3",
@@ -1569,6 +1678,7 @@
         "dishcare_dishwasher_program_intensiv_45": "Intensive 45ºC",
         "dishcare_dishwasher_program_intensiv_70": "Intensive 70ºC",
         "dishcare_dishwasher_program_intensiv_power": "Intensive power",
+        "dishcare_dishwasher_program_intensive_fixed_zone": "Intensive fixed zone",
         "dishcare_dishwasher_program_kurz_60": "Speed 60ºC",
         "dishcare_dishwasher_program_learning_dishwasher": "Intelligent",
         "dishcare_dishwasher_program_machine_care": "Machine care",
@@ -1637,21 +1747,29 @@
         "laundry_care_washer_program_down_duvet_duvet": "Down duvet",
         "laundry_care_washer_program_drum_clean": "Drum clean",
         "laundry_care_washer_program_easy_care": "Easy care",
+        "laundry_care_washer_program_hygiene_plus": "Hygiene",
         "laundry_care_washer_program_mix": "Mix",
         "laundry_care_washer_program_mix_night_wash": "Mix night wash",
         "laundry_care_washer_program_monsoon": "Monsoon",
         "laundry_care_washer_program_outdoor": "Outdoor",
         "laundry_care_washer_program_plush_toy": "Plush toy",
         "laundry_care_washer_program_power_speed_59": "Power speed <59 min",
+        "laundry_care_washer_program_rinse": "Rinse",
         "laundry_care_washer_program_rinse_rinse_spin_drain": "Rinse spin drain",
         "laundry_care_washer_program_sensitive": "Sensitive",
         "laundry_care_washer_program_shirts_blouses": "Shirts/blouses",
+        "laundry_care_washer_program_spin_spin_drain": "Spin/drain",
         "laundry_care_washer_program_sport_fitness": "Sport/fitness",
         "laundry_care_washer_program_super_153045_super_15": "Super 15 min",
         "laundry_care_washer_program_super_153045_super_1530": "Super 15/30 min",
         "laundry_care_washer_program_towels": "Towels",
         "laundry_care_washer_program_water_proof": "Water proof",
         "laundry_care_washer_program_wool": "Wool"
+      }
+    },
+    "rinse_plus": {
+      "options": {
+        "laundry_care_washer_enum_type_rinse_plus_off": "[%key:common::state::off%]"
       }
     },
     "spin_speed": {
@@ -1670,6 +1788,11 @@
         "laundry_care_washer_enum_type_spin_speed_ul_low": "[%key:common::state::low%]",
         "laundry_care_washer_enum_type_spin_speed_ul_medium": "[%key:common::state::medium%]",
         "laundry_care_washer_enum_type_spin_speed_ul_off": "[%key:common::state::off%]"
+      }
+    },
+    "stains": {
+      "options": {
+        "laundry_care_washer_enum_type_stains_off": "[%key:common::state::off%]"
       }
     },
     "suction_power": {
@@ -1769,7 +1892,7 @@
           "description": "Describes the amount of coffee beans used in a coffee machine program.",
           "name": "Bean amount"
         },
-        "consumer_products_coffee_maker_option_bean_container": {
+        "consumer_products_coffee_maker_option_bean_container_selection": {
           "description": "Defines the preferred bean container.",
           "name": "Bean container"
         },
@@ -1797,11 +1920,11 @@
           "description": "Defines if double dispensing is enabled.",
           "name": "Multiple beverages"
         },
-        "cooking_hood_option_intensive_level": {
+        "cooking_common_option_hood_intensive_level": {
           "description": "Defines the intensive setting.",
           "name": "Intensive level"
         },
-        "cooking_hood_option_venting_level": {
+        "cooking_common_option_hood_venting_level": {
           "description": "Defines the required fan setting.",
           "name": "Venting level"
         },
@@ -1865,29 +1988,69 @@
           "description": "Setting to adjust the venting level of the air conditioner as a percentage.",
           "name": "Fan speed percentage"
         },
+        "laundry_care_common_option_silent_mode": {
+          "description": "Defines if the silent mode is activated.",
+          "name": "Silent mode"
+        },
+        "laundry_care_common_option_vario_perfect": {
+          "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect).",
+          "name": "Vario perfect"
+        },
         "laundry_care_dryer_option_drying_target": {
           "description": "Describes the drying target for a dryer program.",
           "name": "Drying target"
         },
-        "laundry_care_washer_option_i_dos1_active": {
+        "laundry_care_washer_option_i_dos_1_active": {
           "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 1)",
           "name": "i-Dos 1 Active"
         },
-        "laundry_care_washer_option_i_dos2_active": {
+        "laundry_care_washer_option_i_dos_2_active": {
           "description": "Defines if the detergent feed is activated / deactivated. (i-Dos content 2)",
           "name": "i-Dos 2 Active"
+        },
+        "laundry_care_washer_option_intensive_plus": {
+          "description": "Defines if the intensive washing is enabled for heavily soiled laundry.",
+          "name": "Intensive +"
+        },
+        "laundry_care_washer_option_less_ironing": {
+          "description": "Defines if the laundry is treated gently to reduce creasing and make ironing easier.",
+          "name": "Less ironing"
+        },
+        "laundry_care_washer_option_mini_load": {
+          "description": "Defines if the mini load option is activated.",
+          "name": "Mini load"
+        },
+        "laundry_care_washer_option_prewash": {
+          "description": "Defines if an additional prewash cycle is added to the program.",
+          "name": "Prewash"
+        },
+        "laundry_care_washer_option_rinse_hold": {
+          "description": "Defines if the rinse hold option is activated.",
+          "name": "Rinse hold"
+        },
+        "laundry_care_washer_option_rinse_plus": {
+          "description": "Defines if an additional rinse cycle is added to the program.",
+          "name": "Extra rinse"
+        },
+        "laundry_care_washer_option_soak": {
+          "description": "Defines if the soaking is activated.",
+          "name": "Soaking"
         },
         "laundry_care_washer_option_spin_speed": {
           "description": "Defines the spin speed of a washer program.",
           "name": "Spin speed"
         },
+        "laundry_care_washer_option_stains": {
+          "description": "Defines the type of stains to be treated.",
+          "name": "Auto stain"
+        },
         "laundry_care_washer_option_temperature": {
           "description": "Defines the temperature of the washing program.",
           "name": "Temperature"
         },
-        "laundry_care_washer_option_vario_perfect": {
-          "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect).",
-          "name": "Vario perfect"
+        "laundry_care_washer_option_water_plus": {
+          "description": "Defines if the water plus option is activated.",
+          "name": "Water +"
         },
         "program": {
           "description": "Program to select",
@@ -1933,6 +2096,24 @@
           "name": "Washer options"
         }
       }
+    },
+    "start_selected_program": {
+      "description": "Starts the already selected program. You can update start-only options to start the program with them or modify them on a program that is already active with a delayed start.",
+      "fields": {
+        "b_s_h_common_option_finish_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::name%]"
+        },
+        "b_s_h_common_option_start_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]"
+        }
+      },
+      "name": "Start selected program"
     }
   }
 }

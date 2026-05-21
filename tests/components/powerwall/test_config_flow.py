@@ -109,7 +109,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_form_unknown_exeption(hass: HomeAssistant) -> None:
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle an unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -558,7 +558,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
 async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery does not update the ip unless the powerwall at the old ip is offline."""
+    """Test discovery does not update IP if powerwall is still online."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=VALID_CONFIG,
@@ -596,7 +596,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
 async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery does not update the ip unless the powerwall at the old ip is offline."""
+    """Test discovery does not update IP if powerwall is still online."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=VALID_CONFIG,

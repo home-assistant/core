@@ -31,11 +31,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     "device_class",
     [
@@ -106,6 +101,7 @@ async def test_get_conditions(
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     }
     expected_conditions = [
         {
@@ -207,6 +203,7 @@ async def test_get_conditions_no_state(
         SensorDeviceClass.DATE,  # No condition
         SensorDeviceClass.ENUM,  # No condition
         SensorDeviceClass.TIMESTAMP,  # No condition
+        SensorDeviceClass.UPTIME,  # No condition
         SensorDeviceClass.AQI,  # No unit of measurement
         SensorDeviceClass.PH,  # No unit of measurement
         SensorDeviceClass.MONETARY,  # No unit of measurement
@@ -249,7 +246,7 @@ async def test_get_conditions_no_unit_or_stateclass(
     unit,
     condition_types,
 ) -> None:
-    """Test we get the expected conditions from an entity with no unit or state class."""
+    """Test conditions from entity with no unit or state class."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(

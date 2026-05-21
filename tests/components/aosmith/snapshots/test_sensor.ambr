@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_state[sensor.my_water_heater_energy_usage-entry]
+# name: test_state[sensor.basement_my_water_heater_energy_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -14,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_water_heater_energy_usage',
+    'entity_id': 'sensor.basement_my_water_heater_energy_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -39,7 +41,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_state[sensor.my_water_heater_energy_usage-state]
+# name: test_state[sensor.basement_my_water_heater_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -48,17 +50,18 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_water_heater_energy_usage',
+    'entity_id': 'sensor.basement_my_water_heater_energy_usage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '132.825',
   })
 # ---
-# name: test_state[sensor.my_water_heater_hot_water_availability-entry]
+# name: test_state[sensor.basement_my_water_heater_hot_water_availability-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,7 +71,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.my_water_heater_hot_water_availability',
+    'entity_id': 'sensor.basement_my_water_heater_hot_water_availability',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -76,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water availability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -90,14 +94,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_state[sensor.my_water_heater_hot_water_availability-state]
+# name: test_state[sensor.basement_my_water_heater_hot_water_availability-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My water heater Hot water availability',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_water_heater_hot_water_availability',
+    'entity_id': 'sensor.basement_my_water_heater_hot_water_availability',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

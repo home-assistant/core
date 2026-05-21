@@ -1,6 +1,7 @@
 """Implementation of a base class for all IHC devices."""
 
 import logging
+from typing import Any
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -44,7 +45,8 @@ class IHCEntity(Entity):
             if "id" in product:
                 product_id = product["id"]
                 self.device_id = f"{controller_id}_{product_id}"
-                # this will name the device the same way as the IHC visual application: Product name + position
+                # Name the device like the IHC visual app:
+                # Product name + position
                 self.device_name = product["name"]
                 if self.ihc_position:
                     self.device_name += f" ({self.ihc_position})"
@@ -70,7 +72,7 @@ class IHCEntity(Entity):
         return f"{self.controller_id}-{self.ihc_id}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self.hass.data[DOMAIN][self.controller_id][CONF_INFO]:
             return {}

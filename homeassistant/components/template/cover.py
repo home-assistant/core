@@ -1,9 +1,5 @@
 """Support for covers which integrate with other components."""
 
-from __future__ import annotations
-
-from collections.abc import Generator, Sequence
-import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -14,31 +10,21 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_COVERS,
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -48,34 +34,19 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 OPEN_STATE = "open"
 OPENING_STATE = "opening"
 CLOSED_STATE = "closed"
 CLOSING_STATE = "closing"
 
-_VALID_STATES = [
-    OPEN_STATE,
-    OPENING_STATE,
-    CLOSED_STATE,
-    CLOSING_STATE,
-    "true",
-    "false",
-    "none",
-]
-
 CONF_POSITION = "position"
-CONF_POSITION_TEMPLATE = "position_template"
 CONF_TILT = "tilt"
-CONF_TILT_TEMPLATE = "tilt_template"
 OPEN_ACTION = "open_cover"
 CLOSE_ACTION = "close_cover"
 STOP_ACTION = "stop_cover"
@@ -85,18 +56,20 @@ CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 
 CONF_OPEN_AND_CLOSE = "open_or_close"
 
+SCRIPT_FIELDS = (
+    CLOSE_ACTION,
+    OPEN_ACTION,
+    POSITION_ACTION,
+    STOP_ACTION,
+    TILT_ACTION,
+)
+
 TILT_FEATURES = (
     CoverEntityFeature.OPEN_TILT
     | CoverEntityFeature.CLOSE_TILT
     | CoverEntityFeature.STOP_TILT
     | CoverEntityFeature.SET_TILT_POSITION
 )
-
-LEGACY_FIELDS = {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-    CONF_POSITION_TEMPLATE: CONF_POSITION,
-    CONF_TILT_TEMPLATE: CONF_TILT,
-}
 
 DEFAULT_NAME = "Template Cover"
 
@@ -128,34 +101,6 @@ COVER_YAML_SCHEMA = vol.All(
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-COVER_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
-            vol.Optional(CONF_TILT_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
-            vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
-    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
-)
-
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_LEGACY_YAML_SCHEMA)}
-)
-
 COVER_CONFIG_ENTRY_SCHEMA = vol.All(
     COVER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
@@ -177,8 +122,7 @@ async def async_setup_platform(
         TriggerCoverEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_COVERS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -195,6 +139,7 @@ async def async_setup_entry(
         StateCoverEntity,
         COVER_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -219,28 +164,44 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _extra_optimistic_options = (CONF_POSITION,)
+    _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
-    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
+    def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
-        self._position_template = config.get(CONF_POSITION)
-        self._tilt_template = config.get(CONF_TILT)
+        self.setup_state_template(
+            "_attr_current_cover_position",
+            template_validators.strenum(
+                self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
+            ),
+            self._update_cover_state,
+        )
+        self.setup_template(
+            CONF_POSITION,
+            "_attr_current_cover_position",
+            template_validators.number(self, CONF_POSITION, 0, 100),
+        )
+        self.setup_template(
+            CONF_TILT,
+            "_attr_current_cover_tilt_position",
+            template_validators.number(self, CONF_TILT, 0, 100),
+        )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
-        self._tilt_optimistic = tilt_optimistic or not self._tilt_template
+        self._tilt_optimistic = (
+            config.get(CONF_TILT_OPTIMISTIC) or CONF_TILT not in self._templates
+        )
 
         # The config requires (open and close scripts) or a set position script,
         # therefore the base supported features will always include them.
         self._attr_supported_features: CoverEntityFeature = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-
-    def _iterate_scripts(
-        self, config: dict[str, Any]
-    ) -> Generator[tuple[str, Sequence[dict[str, Any]], CoverEntityFeature | int]]:
         for action_id, supported_feature in (
             (OPEN_ACTION, 0),
             (CLOSE_ACTION, 0),
@@ -249,7 +210,8 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             (TILT_ACTION, TILT_FEATURES),
         ):
             if (action_config := config.get(action_id)) is not None:
-                yield (action_id, action_config, supported_feature)
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
 
     @property
     def is_closed(self) -> bool | None:
@@ -259,70 +221,19 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
         return self._attr_current_cover_position == 0
 
-    @callback
-    def _update_position(self, result):
-        if result is None:
-            self._attr_current_cover_position = None
-            return
-
-        try:
-            state = float(result)
-        except ValueError as err:
-            _LOGGER.error(err)
-            self._attr_current_cover_position = None
-            return
-
-        if state < 0 or state > 100:
-            self._attr_current_cover_position = None
-            _LOGGER.error(
-                "Cover position value must be between 0 and 100. Value was: %.2f",
-                state,
-            )
-        else:
-            self._attr_current_cover_position = state
-
-    @callback
-    def _update_tilt(self, result):
-        if result is None:
-            self._attr_current_cover_tilt_position = None
-            return
-
-        try:
-            state = float(result)
-        except ValueError as err:
-            _LOGGER.error(err)
-            self._attr_current_cover_tilt_position = None
-            return
-
-        if state < 0 or state > 100:
-            self._attr_current_cover_tilt_position = None
-            _LOGGER.error(
-                "Tilt value must be between 0 and 100. Value was: %.2f",
-                state,
-            )
-        else:
-            self._attr_current_cover_tilt_position = state
-
-    def _update_opening_and_closing(self, result: Any) -> None:
-        state = str(result).lower()
-
-        if state in _VALID_STATES:
-            if not self._position_template:
-                if state in ("true", OPEN_STATE):
+    def _update_cover_state(self, state: CoverState | None) -> None:
+        """Update the state of the cover."""
+        if state:
+            if CONF_POSITION not in self._templates:
+                if state == CoverState.OPEN:
                     self._attr_current_cover_position = 100
                 else:
                     self._attr_current_cover_position = 0
 
-            self._attr_is_opening = state == OPENING_STATE
-            self._attr_is_closing = state == CLOSING_STATE
+            self._attr_is_opening = state == CoverState.OPENING
+            self._attr_is_closing = state == CoverState.CLOSING
         else:
-            _LOGGER.error(
-                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
-                state,
-                self.entity_id,
-                ", ".join(_VALID_STATES),
-            )
-            if not self._position_template:
+            if CONF_POSITION not in self._templates:
                 self._attr_current_cover_position = None
 
             self._attr_is_opening = False
@@ -419,50 +330,11 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
     ) -> None:
         """Initialize the Template cover."""
         TemplateEntity.__init__(self, hass, config, unique_id)
-        AbstractTemplateCover.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
 
-        for action_id, action_config, supported_feature in self._iterate_scripts(
-            config
-        ):
-            self.add_script(action_id, action_config, name, DOMAIN)
-            self._attr_supported_features |= supported_feature
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template:
-            self.add_template_attribute(
-                "_attr_current_cover_position", self._template, None, self._update_state
-            )
-        if self._position_template:
-            self.add_template_attribute(
-                "_attr_current_cover_position",
-                self._position_template,
-                None,
-                self._update_position,
-                none_on_template_error=True,
-            )
-        if self._tilt_template:
-            self.add_template_attribute(
-                "_attr_current_cover_tilt_position",
-                self._tilt_template,
-                None,
-                self._update_tilt,
-                none_on_template_error=True,
-            )
-        super()._async_setup_templates()
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_current_cover_position = None
-            return
-
-        self._update_opening_and_closing(result)
+        AbstractTemplateCover.__init__(self, name, config)
 
 
 class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
@@ -478,46 +350,6 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        AbstractTemplateCover.__init__(self, config)
-
         # Render the _attr_name before initializing TriggerCoverEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-
-        for action_id, action_config, supported_feature in self._iterate_scripts(
-            config
-        ):
-            self.add_script(action_id, action_config, name, DOMAIN)
-            self._attr_supported_features |= supported_feature
-
-        for key in (CONF_STATE, CONF_POSITION, CONF_TILT):
-            if isinstance(config.get(key), template.Template):
-                self._to_render_simple.append(key)
-                self._parse_result.add(key)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        write_ha_state = False
-        for key, updater in (
-            (CONF_STATE, self._update_opening_and_closing),
-            (CONF_POSITION, self._update_position),
-            (CONF_TILT, self._update_tilt),
-        ):
-            if (rendered := self._rendered.get(key)) is not None:
-                updater(rendered)
-                write_ha_state = True
-
-        if not self._attr_assumed_state:
-            write_ha_state = True
-        elif self._attr_assumed_state and len(self._rendered) > 0:
-            # In case any non optimistic template
-            write_ha_state = True
-
-        if write_ha_state:
-            self.async_write_ha_state()
+        AbstractTemplateCover.__init__(self, name, config)

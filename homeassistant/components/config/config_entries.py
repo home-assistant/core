@@ -1,7 +1,5 @@
 """Http views to control the config manager."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -421,7 +419,7 @@ def config_entries_flow_subscribe(
                 config_entries.SOURCE_USER,
             )
         ]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If we can't serialize, we'll filter out unserializable flows
         serialized_flows = []
         for flw in hass.config_entries.flow.async_progress():
@@ -434,7 +432,7 @@ def config_entries_flow_subscribe(
                 serialized_flows.append(
                     json_bytes({"type": None, "flow_id": flw["flow_id"], "flow": flw})
                 )
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 _LOGGER.error(
                     "Unable to serialize to JSON. Bad data found at %s",
                     format_unserializable_data(

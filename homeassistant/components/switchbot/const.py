@@ -47,13 +47,16 @@ class SupportedModels(StrEnum):
     HUB3 = "hub3"
     LOCK_LITE = "lock_lite"
     LOCK_ULTRA = "lock_ultra"
-    AIR_PURIFIER = "air_purifier"
-    AIR_PURIFIER_TABLE = "air_purifier_table"
+    AIR_PURIFIER_JP = "air_purifier_jp"
+    AIR_PURIFIER_US = "air_purifier_us"
+    AIR_PURIFIER_TABLE_JP = "air_purifier_table_jp"
+    AIR_PURIFIER_TABLE_US = "air_purifier_table_us"
     EVAPORATIVE_HUMIDIFIER = "evaporative_humidifier"
     FLOOR_LAMP = "floor_lamp"
     STRIP_LIGHT_3 = "strip_light_3"
     RGBICWW_STRIP_LIGHT = "rgbicww_strip_light"
     RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
+    PERMANENT_OUTDOOR_LIGHT = "permanent_outdoor_light"
     PLUG_MINI_EU = "plug_mini_eu"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
     K11_PLUS_VACUUM = "k11+_vacuum"
@@ -61,6 +64,12 @@ class SupportedModels(StrEnum):
     CLIMATE_PANEL = "climate_panel"
     SMART_THERMOSTAT_RADIATOR = "smart_thermostat_radiator"
     S20_VACUUM = "s20_vacuum"
+    ART_FRAME = "art_frame"
+    KEYPAD_VISION = "keypad_vision"
+    KEYPAD_VISION_PRO = "keypad_vision_pro"
+    LOCK_VISION_PRO = "lock_vision_pro"
+    LOCK_VISION = "lock_vision"
+    LOCK_PRO_WIFI = "lock_pro_wifi"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -87,19 +96,29 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K10_PRO_COMBO_VACUUM: SupportedModels.K10_PRO_COMBO_VACUUM,
     SwitchbotModel.LOCK_LITE: SupportedModels.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA: SupportedModels.LOCK_ULTRA,
-    SwitchbotModel.AIR_PURIFIER: SupportedModels.AIR_PURIFIER,
-    SwitchbotModel.AIR_PURIFIER_TABLE: SupportedModels.AIR_PURIFIER_TABLE,
+    SwitchbotModel.AIR_PURIFIER_JP: SupportedModels.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US: SupportedModels.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP: SupportedModels.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US: SupportedModels.AIR_PURIFIER_TABLE_US,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: SupportedModels.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP: SupportedModels.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3: SupportedModels.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: SupportedModels.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: SupportedModels.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
+    SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
+    SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -128,17 +147,26 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO,
     SwitchbotModel.LOCK_LITE,
     SwitchbotModel.LOCK_ULTRA,
-    SwitchbotModel.AIR_PURIFIER,
-    SwitchbotModel.AIR_PURIFIER_TABLE,
+    SwitchbotModel.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER,
     SwitchbotModel.FLOOR_LAMP,
     SwitchbotModel.STRIP_LIGHT_3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT,
     SwitchbotModel.RGBICWW_FLOOR_LAMP,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME,
+    SwitchbotModel.KEYPAD_VISION,
+    SwitchbotModel.KEYPAD_VISION_PRO,
+    SwitchbotModel.LOCK_VISION_PRO,
+    SwitchbotModel.LOCK_VISION,
+    SwitchbotModel.LOCK_PRO_WIFI,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -150,29 +178,62 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.LOCK_LITE: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_ULTRA: switchbot.SwitchbotLock,
-    SwitchbotModel.AIR_PURIFIER: switchbot.SwitchbotAirPurifier,
-    SwitchbotModel.AIR_PURIFIER_TABLE: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_JP: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_US: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP: switchbot.SwitchbotAirPurifier,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US: switchbot.SwitchbotAirPurifier,
     SwitchbotModel.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
     SwitchbotModel.FLOOR_LAMP: switchbot.SwitchbotStripLight3,
     SwitchbotModel.STRIP_LIGHT_3: switchbot.SwitchbotStripLight3,
     SwitchbotModel.RGBICWW_STRIP_LIGHT: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.RGBICWW_FLOOR_LAMP: switchbot.SwitchbotRgbicLight,
+    SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: switchbot.SwitchbotPermanentOutdoorLight,
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
-    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: (
+        switchbot.SwitchbotSmartThermostatRadiator
+    ),
+    SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
+    SwitchbotModel.KEYPAD_VISION: switchbot.SwitchbotKeypadVision,
+    SwitchbotModel.KEYPAD_VISION_PRO: switchbot.SwitchbotKeypadVision,
+    SwitchbotModel.LOCK_VISION_PRO: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
 }
 
+# Deprecated sensor type values used before pySwitchbot 2.0.0.
+# AIR_PURIFIER and AIR_PURIFIER_TABLE were split into JP/US variants.
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER = "air_purifier"
+DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE = "air_purifier_table"
+
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
+DEFAULT_CURTAIN_SPEED = 255
+CURTAIN_SPEED_MIN = 0
+CURTAIN_SPEED_MAX = 255
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
+CONF_CURTAIN_SPEED = "curtain_speed"
+
+AIRPURIFIER_BASIC_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_JP,
+    SwitchbotModel.AIR_PURIFIER_US,
+}
+AIRPURIFIER_TABLE_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_TABLE_JP,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
+}
+AIRPURIFIER_PM25_MODELS = {
+    SwitchbotModel.AIR_PURIFIER_US,
+    SwitchbotModel.AIR_PURIFIER_TABLE_US,
+}

@@ -37,11 +37,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceRegistry, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceRegistry,
+    format_mac,
+)
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
+
+from tests.common import MockConfigEntry
 
 
 async def test_custom_coap_port(
@@ -126,7 +132,15 @@ async def test_shared_device_mac(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test first time shared device with another domain."""
+    other_entry = MockConfigEntry(domain="other_domain", unique_id=MOCK_MAC)
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC)},
+    )
+
     await init_integration(hass, gen, sleep_period=1000)
+    assert "Detected first time setup for device" in caplog.text
     assert "will resume when device is online" in caplog.text
 
 

@@ -1,7 +1,5 @@
 """Binary sensor platform integration for Numato USB GPIO expanders."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
@@ -121,7 +119,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic
 

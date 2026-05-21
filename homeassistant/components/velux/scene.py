@@ -1,7 +1,5 @@
 """Support for VELUX scenes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyvlx import Scene as PyVLXScene
@@ -13,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
 from .const import DOMAIN
+from .entity import wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
@@ -51,6 +50,7 @@ class VeluxScene(Scene):
             identifiers={(DOMAIN, f"gateway_{config_entry_id}")},
         )
 
+    @wrap_pyvlx_call_exceptions
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run(wait_for_completion=False)

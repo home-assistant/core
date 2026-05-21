@@ -1,16 +1,11 @@
 """BSBLan base entity."""
 
-from __future__ import annotations
-
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BSBLanData
-from .const import DOMAIN
+from . import BSBLanData, get_bsblan_device_info
+from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 
@@ -22,16 +17,10 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
     def __init__(self, coordinator: _T, data: BSBLanData) -> None:
         """Initialize BSBLan entity with device info."""
         super().__init__(coordinator)
-        host = coordinator.config_entry.data["host"]
-        mac = data.device.MAC
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
-            connections={(CONNECTION_NETWORK_MAC, format_mac(mac))},
-            name=data.device.name,
-            manufacturer="BSBLAN Inc.",
-            model=data.info.device_identification.value,
-            sw_version=data.device.version,
-            configuration_url=f"http://{host}",
+        host = coordinator.config_entry.data[CONF_HOST]
+        port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        self._attr_device_info = get_bsblan_device_info(
+            data.device, data.info, host, port
         )
 
 
@@ -41,6 +30,32 @@ class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
     def __init__(self, coordinator: BSBLanFastCoordinator, data: BSBLanData) -> None:
         """Initialize BSBLan entity."""
         super().__init__(coordinator, data)
+
+
+class BSBLanCircuitEntity(BSBLanEntity):
+    """BSBLan entity belonging to a heating circuit sub-device."""
+
+    def __init__(
+        self,
+        coordinator: BSBLanFastCoordinator,
+        data: BSBLanData,
+        circuit: int,
+    ) -> None:
+        """Initialize BSBLan circuit entity with sub-device info."""
+        super().__init__(coordinator, data)
+        mac = data.device.MAC
+        host = coordinator.config_entry.data[CONF_HOST]
+        port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        main_info = get_bsblan_device_info(data.device, data.info, host, port)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}-circuit-{circuit}")},
+            translation_key="heating_circuit",
+            translation_placeholders={"circuit": str(circuit)},
+            via_device=(DOMAIN, mac),
+            manufacturer=main_info["manufacturer"],
+            model=main_info.get("model"),
+            model_id=main_info.get("model_id"),
+        )
 
 
 class BSBLanDualCoordinatorEntity(BSBLanEntity):
@@ -62,4 +77,29 @@ class BSBLanDualCoordinatorEntity(BSBLanEntity):
         # Also listen to slow coordinator updates
         self.async_on_remove(
             self.slow_coordinator.async_add_listener(self._handle_coordinator_update)
+        )
+
+
+class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
+    """BSBLan entity belonging to the water heater sub-device."""
+
+    def __init__(
+        self,
+        fast_coordinator: BSBLanFastCoordinator,
+        slow_coordinator: BSBLanSlowCoordinator,
+        data: BSBLanData,
+    ) -> None:
+        """Initialize BSBLan water heater sub-device entity."""
+        super().__init__(fast_coordinator, slow_coordinator, data)
+        mac = data.device.MAC
+        host = fast_coordinator.config_entry.data[CONF_HOST]
+        port = fast_coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        main_info = get_bsblan_device_info(data.device, data.info, host, port)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}-water-heater")},
+            translation_key="water_heater",
+            via_device=(DOMAIN, mac),
+            manufacturer=main_info["manufacturer"],
+            model=main_info.get("model"),
+            model_id=main_info.get("model_id"),
         )

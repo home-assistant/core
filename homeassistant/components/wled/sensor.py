@@ -1,7 +1,5 @@
 """Support for WLED sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -70,10 +68,10 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - device.info.uptime),
+        value_fn=lambda device: utcnow() - device.info.uptime,
     ),
     WLEDSensorEntityDescription(
         key="free_heap",

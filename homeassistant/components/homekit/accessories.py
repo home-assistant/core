@@ -1,7 +1,5 @@
 """Extend the basic Accessory and Bridge functions."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -220,31 +218,33 @@ def get_accessory(  # noqa: C901
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
-        elif (
-            device_class == SensorDeviceClass.PM10
-            or SensorDeviceClass.PM10 in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.PM10:
             a_type = "PM10Sensor"
-        elif (
-            device_class == SensorDeviceClass.PM25
-            or SensorDeviceClass.PM25 in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.PM25:
             a_type = "PM25Sensor"
         elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
-        elif (
-            device_class == SensorDeviceClass.GAS
-            or SensorDeviceClass.GAS in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
+        elif device_class == SensorDeviceClass.CO2:
             a_type = "CarbonDioxideSensor"
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
+
+        # Fallbacks based on entity_id
+        elif SensorDeviceClass.PM10 in state.entity_id:
+            a_type = "PM10Sensor"
+        elif SensorDeviceClass.PM25 in state.entity_id:
+            a_type = "PM25Sensor"
+        elif SensorDeviceClass.GAS in state.entity_id:
+            a_type = "AirQualitySensor"
+        elif "co2" in state.entity_id:
+            a_type = "CarbonDioxideSensor"
+
         else:
             _LOGGER.debug(
                 "%s: Unsupported sensor type (device_class=%s) (unit=%s)",
@@ -527,7 +527,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             for attr in self._reload_on_change_attrs:
                 if old_attributes.get(attr) != new_attributes.get(attr):
                     _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since %s has changed from %s -> %s",
+                        "%s: Reloading HomeKit accessory since"
+                        " %s has changed from %s -> %s",
                         self.entity_id,
                         attr,
                         old_attributes.get(attr),
@@ -650,7 +651,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
     @ha_callback
     def async_reload(self) -> None:
-        """Reload and recreate an accessory and update the c# value in the mDNS record."""
+        """Reload and recreate an accessory.
+
+        Update the c# value in the mDNS record.
+        """
         async_dispatcher_send(
             self.hass,
             SIGNAL_RELOAD_ENTITIES.format(self.driver.entry_id),

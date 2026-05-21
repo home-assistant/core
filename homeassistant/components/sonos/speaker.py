@@ -1,7 +1,5 @@
 """Base class for common speaker tasks."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
@@ -40,6 +38,7 @@ from .const import (
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
@@ -72,6 +71,7 @@ if TYPE_CHECKING:
 
 NEVER_TIME = -1200.0
 RESUB_COOLDOWN_SECONDS = 10.0
+WAIT_FOR_GROUPS_TIMEOUT = 30.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -163,6 +163,8 @@ class SonosSpeaker:
         self.dialog_level_enum: int | None = None
         self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
+        self.tv_autoplay: str | None = None
+        self.tv_ungroup_autoplay: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
@@ -289,7 +291,7 @@ class SonosSpeaker:
         else:
             try:
                 value = int(state)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.error(
                     "Invalid value for %s %s",
                     speaker_attribute,
@@ -349,7 +351,7 @@ class SonosSpeaker:
     def log_subscription_result(
         self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
-        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        """Log if a subscription action results in an exception."""
         if not isinstance(result, Exception):
             return
 
@@ -690,7 +692,8 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
-        assert self._subscription_lock is not None
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -935,12 +938,14 @@ class SonosSpeaker:
 
             for uid in group:
                 speaker = self.data.discovered.get(uid)
-                if speaker:
+                entity_id = (
+                    entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
+                    if speaker
+                    else None
+                )
+                if speaker and entity_id:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = cast(
-                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
-                    )
                     sonos_group_entities.append(entity_id)
                 else:
                     self._group_members_missing.add(uid)
@@ -955,6 +960,24 @@ class SonosSpeaker:
                 # Useful in polling mode for speakers with stereo pairs or surrounds
                 # as those "invisible" speakers will bypass the single speaker check
                 return
+
+            # Clear coordinator on speakers that are no longer in this group
+            old_members = set(self.sonos_group[1:])
+            new_members = set(sonos_group[1:])
+            removed_members = old_members - new_members
+            for removed_speaker in removed_members:
+                # Only clear if this speaker was coordinated
+                # by self and in the same group
+                if (
+                    removed_speaker.coordinator == self
+                    and removed_speaker.sonos_group is self.sonos_group
+                ):
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s] (removed from group)",
+                        removed_speaker.zone_name,
+                        self.zone_name,
+                    )
+                    removed_speaker.clear_coordinator()
 
             self.coordinator = None
             self.sonos_group = sonos_group
@@ -988,6 +1011,19 @@ class SonosSpeaker:
 
         return _async_handle_group_event(event)
 
+    @callback
+    def clear_coordinator(self) -> None:
+        """Clear coordinator from speaker."""
+        self.coordinator = None
+        self.sonos_group = [self]
+        entity_registry = er.async_get(self.hass)
+        speaker_entity_id = cast(
+            str,
+            entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.uid),
+        )
+        self.sonos_group_entities = [speaker_entity_id]
+        self.async_write_entity_states()
+
     @soco_error()
     def join(self, speakers: list[SonosSpeaker]) -> list[SonosSpeaker]:
         """Form a group with other players."""
@@ -1014,19 +1050,28 @@ class SonosSpeaker:
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
+        # When joining multiple speakers, build the group incrementally and
+        # wait for the grouping to complete after each join. This avoids race
+        # conditions in zone topology updates.
         async with config_entry.runtime_data.topology_condition:
-            group: list[SonosSpeaker] = await hass.async_add_executor_job(
-                master.join, speakers
-            )
-            await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+            join_list: list[SonosSpeaker] = []
+            for speaker in speakers:
+                _LOGGER.debug("Join %s to %s", speaker.zone_name, master.zone_name)
+                join_list.append(speaker)
+                group: list[SonosSpeaker] = await hass.async_add_executor_job(
+                    master.join, join_list
+                )
+                await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+                _LOGGER.debug(
+                    "Join Complete %s to %s", speaker.zone_name, master.zone_name
+                )
 
     @soco_error()
     def unjoin(self) -> None:
         """Unjoin the player from a group."""
         if self.sonos_group == [self]:
             return
-        self.soco.unjoin()
-        self.coordinator = None
+        self.soco.unjoin(timeout=LONG_SERVICE_TIMEOUT)
 
     @staticmethod
     async def unjoin_multi(
@@ -1048,7 +1093,10 @@ class SonosSpeaker:
         async with config_entry.runtime_data.topology_condition:
             await hass.async_add_executor_job(_unjoin_all, speakers)
             await SonosSpeaker.wait_for_groups(
-                hass, config_entry, [[s] for s in speakers]
+                hass,
+                config_entry,
+                [[s] for s in speakers],
+                action="unjoin",
             )
 
     @soco_error()
@@ -1129,10 +1177,12 @@ class SonosSpeaker:
             if not with_group:
                 return groups
 
-            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            # Unjoin non-coordinator speakers not contained in
+            # the desired snapshot group
             #
-            # If a coordinator is unjoined from its group, another speaker from the group
-            # will inherit the coordinator's playqueue and its own playqueue will be lost
+            # If a coordinator is unjoined from its group,
+            # another speaker from the group will inherit the
+            # coordinator's playqueue and its own will be lost
             speakers_to_unjoin = set()
             for speaker in speakers:
                 if speaker.sonos_group == speaker.snapshot_group:
@@ -1192,6 +1242,7 @@ class SonosSpeaker:
         hass: HomeAssistant,
         config_entry: SonosConfigEntry,
         groups: list[list[SonosSpeaker]],
+        action: str = "join",
     ) -> None:
         """Wait until all groups are present, or timeout."""
 
@@ -1212,18 +1263,21 @@ class SonosSpeaker:
             return True
 
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(WAIT_FOR_GROUPS_TIMEOUT):
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            group_description = [
-                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+            group_description = "; ".join(
+                f"{group[0].zone_name}: "
+                f"{', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
-            ]
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_join",
-                translation_placeholders={"group_description": str(group_description)},
+                translation_key=f"timeout_{action}",
+                translation_placeholders={
+                    "group_description": group_description,
+                },
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()

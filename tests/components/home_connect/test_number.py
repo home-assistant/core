@@ -44,7 +44,12 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_RESTORED,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -68,7 +73,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
@@ -198,7 +203,7 @@ async def test_number_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if number entities availability are based on the appliance connection state."""
+    """Test number entities availability based on appliance connection."""
     entity_ids = [
         f"{NUMBER_DOMAIN.lower()}.oven_alarm_clock",
         f"{NUMBER_DOMAIN.lower()}.oven_setpoint_temperature",
@@ -393,7 +398,7 @@ async def test_fetch_constraints_after_rate_limit_error(
     step_size: int,
     unit_of_measurement: str,
 ) -> None:
-    """Test that, if a API rate limit error is raised, the constraints are fetched later."""
+    """Test constraints are fetched later on rate limit error."""
 
     def get_settings_side_effect(ha_id: str):
         if ha_id != appliance.ha_id:
@@ -757,3 +762,42 @@ async def test_options_available_when_program_is_null(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_restore_option_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test restoration of option entities when program options are missing.
+
+    This test ensures that number entities representing options are restored
+    to the entity registry and set to unavailable if the current available
+    program does not include them, but they existed previously.
+    """
+    entity_id = "number.oven_setpoint_temperature"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+
+    entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE}",
+        suggested_object_id="oven_setpoint_temperature",
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_RESTORED)

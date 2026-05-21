@@ -1,17 +1,14 @@
 """Support for functionality to download files."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import os
 import re
-import threading
 
 import requests
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -19,6 +16,7 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from .const import (
     _LOGGER,
     ATTR_FILENAME,
+    ATTR_HEADERS,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
     ATTR_URL,
@@ -30,8 +28,8 @@ from .const import (
 )
 
 
-def download_file(service: ServiceCall) -> None:
-    """Start thread to download file specified in the URL."""
+async def download_file(service: ServiceCall) -> None:
+    """Download file specified in the URL."""
 
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
@@ -39,6 +37,7 @@ def download_file(service: ServiceCall) -> None:
     subdir: str | None = service.data.get(ATTR_SUBDIR)
     target_filename: str | None = service.data.get(ATTR_FILENAME)
     overwrite: bool = service.data[ATTR_OVERWRITE]
+    headers: dict[str, str] = service.data[ATTR_HEADERS]
 
     if subdir:
         # Check the path
@@ -62,7 +61,7 @@ def download_file(service: ServiceCall) -> None:
         final_path = None
         filename = target_filename
         try:
-            req = requests.get(url, stream=True, timeout=10)
+            req = requests.get(url, stream=True, headers=headers, timeout=10)
 
             if req.status_code != HTTPStatus.OK:
                 _LOGGER.warning(
@@ -124,18 +123,7 @@ def download_file(service: ServiceCall) -> None:
                     {"url": url, "filename": filename},
                 )
 
-        except requests.exceptions.ConnectionError:
-            _LOGGER.exception("ConnectionError occurred for %s", url)
-            service.hass.bus.fire(
-                f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
-                {"url": url, "filename": filename},
-            )
-
-            # Remove file if we started downloading but failed
-            if final_path and os.path.isfile(final_path):
-                os.remove(final_path)
-        except ValueError:
-            _LOGGER.exception("Invalid value")
+        except requests.exceptions.ConnectionError as err:
             service.hass.bus.fire(
                 f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                 {"url": url, "filename": filename},
@@ -145,7 +133,28 @@ def download_file(service: ServiceCall) -> None:
             if final_path and os.path.isfile(final_path):
                 os.remove(final_path)
 
-    threading.Thread(target=do_download).start()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"url": url},
+            ) from err
+        except ValueError as err:
+            service.hass.bus.fire(
+                f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
+                {"url": url, "filename": filename},
+            )
+
+            # Remove file if we started downloading but failed
+            if final_path and os.path.isfile(final_path):
+                os.remove(final_path)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value",
+                translation_placeholders={"url": url},
+            ) from err
+
+    await service.hass.async_add_executor_job(do_download)
 
 
 @callback
@@ -162,6 +171,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
+                    {cv.string: cv.string}
+                ),
             }
         ),
     )

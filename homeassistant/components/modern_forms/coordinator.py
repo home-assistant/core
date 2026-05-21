@@ -1,7 +1,5 @@
 """Coordinator for the Modern Forms integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -18,6 +16,9 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 _LOGGER = logging.getLogger(__name__)
+
+
+type ModernFormsConfigEntry = ConfigEntry[ModernFormsDataUpdateCoordinator]
 
 
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):

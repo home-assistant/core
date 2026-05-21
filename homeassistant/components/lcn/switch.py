@@ -7,7 +7,7 @@ from typing import Any
 
 import pypck
 
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,8 +17,8 @@ from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS, RELAY_PORTS, SET
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(minutes=1)
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_switch_entities(
@@ -56,14 +56,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SWITCH: add_entities}
+        {SWITCH_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH
+            if entity_config[CONF_DOMAIN] == SWITCH_DOMAIN
         ),
     )
 

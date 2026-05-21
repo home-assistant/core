@@ -1,7 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, Literal
@@ -23,7 +21,6 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .agent_manager import (
     AgentInfo,
@@ -127,7 +124,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
-@bind_hass
 def async_set_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -138,7 +134,6 @@ def async_set_agent(
 
 
 @callback
-@bind_hass
 def async_unset_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -335,20 +330,18 @@ def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, 
     """Return config intents."""
     intents = config.get(DOMAIN, {}).get("intents", {})
     return {
-        "intents": {
-            intent_name: {
-                "data": [
-                    {
-                        "sentences": sentences,
-                        "metadata": {
-                            METADATA_CUSTOM_SENTENCE: True,
-                            METADATA_CUSTOM_FILE: hass_config_path,
-                        },
-                    }
-                ]
-            }
-            for intent_name, sentences in intents.items()
+        intent_name: {
+            "data": [
+                {
+                    "sentences": sentences,
+                    "metadata": {
+                        METADATA_CUSTOM_SENTENCE: True,
+                        METADATA_CUSTOM_FILE: hass_config_path,
+                    },
+                }
+            ]
         }
+        for intent_name, sentences in intents.items()
     }
 
 

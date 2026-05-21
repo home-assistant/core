@@ -142,3 +142,6 @@ ERROR_KEYS = [
     "wrong_pin_code",
     "zone_generator_problem",
 ]
+
+MOW = "mow"
+PARK = "park"

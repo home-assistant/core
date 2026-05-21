@@ -1,7 +1,5 @@
 """Support for interface with an Samsung TV."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Sequence
 from typing import Any
@@ -97,7 +95,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
         if self._mac:
-            # (deprecated) add turn-on if mac is available
+            # Deprecated: Implicit Wake-On-LAN, will be removed in 2026.8.0
             # Triggers have not yet been registered so this is adjusted in the property
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
@@ -368,9 +366,12 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
-        except vol.Invalid:
+        except vol.Invalid as err:
             LOGGER.error("Media ID must be positive integer")
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="media_id_invalid",
+            ) from err
 
         await self._async_send_keys(
             keys=[f"KEY_{digit}" for digit in media_id] + ["KEY_ENTER"]

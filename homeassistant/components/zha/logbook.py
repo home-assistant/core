@@ -1,7 +1,5 @@
 """Describe ZHA logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -44,7 +42,7 @@ def async_describe_events(
             zha_device = async_get_zha_device_proxy(
                 hass, event.data[ATTR_DEVICE_ID]
             ).device
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
 
         if (

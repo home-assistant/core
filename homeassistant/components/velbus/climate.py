@@ -1,7 +1,5 @@
 """Support for Velbus thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from velbusaio.channels import Temperature as VelbusTemp
@@ -65,7 +63,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         )
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._channel.get_state()
 

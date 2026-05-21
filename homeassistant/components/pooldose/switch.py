@@ -1,7 +1,5 @@
 """Switches for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -17,6 +15,8 @@ if TYPE_CHECKING:
     from .coordinator import PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 SWITCH_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
@@ -84,12 +84,18 @@ class PooldoseSwitch(PooldoseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.client.set_switch(self.entity_description.key, True)
+        await self._async_perform_write(
+            self.coordinator.client.set_switch, self.entity_description.key, True
+        )
+
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.client.set_switch(self.entity_description.key, False)
+        await self._async_perform_write(
+            self.coordinator.client.set_switch, self.entity_description.key, False
+        )
+
         self._attr_is_on = False
         self.async_write_ha_state()

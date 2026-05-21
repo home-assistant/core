@@ -23,7 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_SEVERITY = "severity"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LATITUDE = "latitude"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
@@ -104,7 +106,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
-        """Handle a message event from the API and trigger the event entity if it matches the entity's mower ID."""
+        """Handle a message event from the API and trigger for matching mower ID."""
         if msg.id != self.mower_id:
             return
         message = msg.attributes.message

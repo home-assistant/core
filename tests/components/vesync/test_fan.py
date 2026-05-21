@@ -80,7 +80,7 @@ async def test_turn_on_off_success(
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -143,8 +143,8 @@ async def test_turn_on_off_raises_error(
     [
         ("normal", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode"),
         (
-            "advancedSleep",
-            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_advanced_sleep_mode",
+            "sleep",
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_sleep_mode",
         ),
         ("turbo", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_turbo_mode"),
         ("auto", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode"),
@@ -158,7 +158,7 @@ async def test_set_preset_mode(
     preset_mode: str,
     patch_target: str,
 ) -> None:
-    """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
+    """Test set_preset_mode method via turn on for test coverage."""
 
     # If VeSyncTowerFan.mode fails (returns False), then HomeAssistantError is raised
     with (
@@ -169,7 +169,7 @@ async def test_set_preset_mode(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
@@ -214,7 +214,7 @@ async def test_oscillation_success(
         ) as method_mock,
     ):
         with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,

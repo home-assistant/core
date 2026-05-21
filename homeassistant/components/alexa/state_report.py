@@ -1,9 +1,8 @@
 """Alexa state report code."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 import logging
@@ -13,7 +12,12 @@ from uuid import uuid4
 import aiohttp
 
 from homeassistant.components import event
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -51,6 +55,25 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_TIMEOUT = 10
 
 TO_REDACT = {"correlationToken", "token"}
+
+
+def valid_doorbell_timestamp(entity_id: str, event_state: str) -> bool:
+    """Check if doorbell event timestamp is valid."""
+    if event_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+    try:
+        timestamp = datetime.fromisoformat(event_state)
+    except ValueError:
+        _LOGGER.debug(
+            "Unable to parse ISO timestamp from state for %s. Got %s",
+            entity_id,
+            event_state,
+        )
+        return False
+    else:
+        if (dt_util.utcnow() - timestamp) < timedelta(seconds=30):
+            return True
+        return False
 
 
 class AlexaDirective:
@@ -317,9 +340,17 @@ async def async_enable_proactive_mode(
 
         if should_doorbell:
             old_state = data["old_state"]
-            if new_state.domain == event.DOMAIN or (
+            if (
+                new_state.domain == event.DOMAIN
+                and valid_doorbell_timestamp(new_state.entity_id, new_state.state)
+                and (old_state is None or old_state.state != STATE_UNAVAILABLE)
+                and (old_state is None or old_state.state != new_state.state)
+            ) or (
                 new_state.state == STATE_ON
-                and (old_state is None or old_state.state != STATE_ON)
+                and (
+                    old_state is None
+                    or old_state.state not in (STATE_ON, STATE_UNAVAILABLE)
+                )
             ):
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity
@@ -358,7 +389,7 @@ async def async_send_changereport_message(
     """
     try:
         token = await config.async_get_access_token()
-    except (RequireRelink, NoTokenAvailable):
+    except RequireRelink, NoTokenAvailable:
         await config.set_authorized(False)
         _LOGGER.error(
             "Error when sending ChangeReport to Alexa, could not get access token"
@@ -392,7 +423,7 @@ async def async_send_changereport_message(
                 allow_redirects=True,
             )
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
@@ -549,7 +580,7 @@ async def async_send_doorbell_event_message(
                 allow_redirects=True,
             )
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 

@@ -71,7 +71,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(user_input)
-            except (ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId):
+            except ET.ParseError, vol.MultipleInvalid, ec_exc.UnknownStationId:
                 errors["base"] = "bad_station_id"
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
@@ -89,7 +89,8 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LATITUDE] = info[CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = info[CONF_LONGITUDE]
 
-                # The combination of station and language are unique for all EC weather reporting
+                # The combination of station and language are
+                # unique for all EC weather reporting
                 await self.async_set_unique_id(
                     f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE].lower()}"
                 )

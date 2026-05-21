@@ -1,7 +1,5 @@
 """The IntelliFire Light."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -61,7 +59,7 @@ class IntellifireLight(IntellifireEntity, LightEntity):
         return 85 * self.entity_description.value_fn(self.coordinator.read_api.data)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 

@@ -6,17 +6,14 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
     entity_registry as er,
 )
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
@@ -31,7 +28,6 @@ CONF_SENSOR = "target_sensor"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MAX_HUMIDITY = "max_humidity"
 CONF_TARGET_HUMIDITY = "target_humidity"
-CONF_DEVICE_CLASS = "device_class"
 CONF_MIN_DUR = "min_cycle_duration"
 CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_WET_TOLERANCE = "wet_tolerance"
@@ -95,13 +91,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass,
-        entry.entry_id,
-        entry.options[CONF_HUMIDIFIER],
-    )
 
     def set_humidifier_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(

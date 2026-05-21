@@ -1,7 +1,5 @@
 """Config flow for Nibe Heat Pump integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from nibe.connection.modbus import Modbus
@@ -96,7 +94,6 @@ async def validate_nibegw_input(
     """Validate the user input allows us to connect."""
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
-    heatpump.word_swap = True
     await heatpump.initialize()
 
     connection = NibeGW(
@@ -113,6 +110,9 @@ async def validate_nibegw_input(
         raise FieldError(
             "Address already in use", "listening_port", "address_in_use"
         ) from exception
+
+    if heatpump.word_swap is None:
+        heatpump.word_swap = True
 
     try:
         await connection.verify_connectivity()

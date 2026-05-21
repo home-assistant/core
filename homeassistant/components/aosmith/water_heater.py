@@ -120,7 +120,7 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         return MODE_AOSMITH_TO_HA.get(self.device.status.current_mode, STATE_OFF)
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool:
         """Return True if away mode is on."""
         return self.device.status.current_mode == AOSmithOperationMode.VACATION
 

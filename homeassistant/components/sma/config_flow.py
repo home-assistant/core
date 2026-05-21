@@ -1,7 +1,5 @@
 """Config flow for the sma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -144,6 +142,51 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            errors, device_info = await self._handle_user_input(
+                user_input={
+                    **reconf_entry.data,
+                    **user_input,
+                }
+            )
+
+            if not errors:
+                await self.async_set_unique_id(
+                    str(device_info["serial"]), raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_SSL: user_input[CONF_SSL],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_GROUP: user_input[CONF_GROUP],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Optional(CONF_SSL): cv.boolean,
+                        vol.Optional(CONF_VERIFY_SSL): cv.boolean,
+                        vol.Optional(CONF_GROUP): vol.In(GROUPS),
+                    }
+                ),
+                suggested_values=user_input or dict(reconf_entry.data),
+            ),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -157,7 +200,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            errors, _device_info = await self._handle_user_input(
+            errors, _ = await self._handle_user_input(
                 user_input={
                     **reauth_entry.data,
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -212,7 +255,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
 
-        # Finally, check if the hostname (which represents the SMA serial number) is unique
+        # Finally, check if the hostname
+        # (which represents the SMA serial number) is unique
         serial_number = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
         # Remove 'sma' prefix and strip everything after the dash (including the dash)
@@ -230,7 +274,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors, _device_info = await self._handle_user_input(
+            errors, _ = await self._handle_user_input(
                 user_input=user_input, discovery=True
             )
 

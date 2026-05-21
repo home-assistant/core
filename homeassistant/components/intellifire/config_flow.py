@@ -1,7 +1,5 @@
 """Config flow for IntelliFire integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -13,7 +11,13 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -21,9 +25,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    API_MODE_CLOUD,
     API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
@@ -34,6 +41,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import IntellifireConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -62,7 +70,8 @@ async def _async_poll_local_fireplace_for_serial(
 
     LOGGER.debug("Found a fireplace: %s", serial)
 
-    # Return the serial number which will be used to calculate a unique ID for the device/sensors
+    # Return the serial number which will be used to
+    # calculate a unique ID for the device/sensors
     return serial
 
 
@@ -70,7 +79,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the Config Flow Handler."""
@@ -105,7 +114,11 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Authenticate against IFTAPI Cloud in order to see configured devices.
 
-        Local control of IntelliFire devices requires that the user download the correct API KEY which is only available on the cloud. Cloud control of the devices requires the user has at least once authenticated against the cloud and a set of cookie variables have been stored locally.
+        Local control of IntelliFire devices requires that the
+        user download the correct API KEY which is only available
+        on the cloud. Cloud control of the devices requires the
+        user has at least once authenticated against the cloud
+        and a set of cookie variables have been stored locally.
 
         """
         errors: dict[str, str] = {}
@@ -140,7 +153,8 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step to select a device from the cloud.
 
-        We can only get here if we have logged in. If there is only one device available it will be auto-configured,
+        We can only get here if we have logged in. If there is
+        only one device available it will be auto-configured,
         else the user will be given a choice to pick a device.
         """
         errors: dict[str, str] = {}
@@ -200,7 +214,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_config_entry_from_common_data(
         self, fireplace: IntelliFireCommonFireplaceData
     ) -> ConfigFlowResult:
-        """Construct a config entry based on an object of IntelliFireCommonFireplaceData."""
+        """Construct a config entry from IntelliFireCommonFireplaceData."""
 
         data = {
             CONF_IP_ADDRESS: fireplace.ip_address,
@@ -252,7 +266,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             self._dhcp_discovered_serial = await _async_poll_local_fireplace_for_serial(
                 ip_address, dhcp_mode=True
             )
-        except (ConnectionError, ClientConnectionError):
+        except ConnectionError, ClientConnectionError:
             LOGGER.debug(
                 "DHCP Discovery has determined %s is not an IntelliFire device",
                 ip_address,
@@ -260,3 +274,83 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_intellifire_device")
 
         return await self.async_step_cloud_api()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: IntellifireConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return IntelliFireOptionsFlowHandler()
+
+
+class IntelliFireOptionsFlowHandler(OptionsFlow):
+    """Options flow for IntelliFire component."""
+
+    config_entry: IntellifireConfigEntry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                fireplace = self.config_entry.runtime_data.fireplace
+
+                # Refresh connectivity status before validating
+                await fireplace.async_validate_connectivity()
+
+                if (
+                    user_input[CONF_READ_MODE] == API_MODE_LOCAL
+                    and not fireplace.local_connectivity
+                ):
+                    errors[CONF_READ_MODE] = "local_unavailable"
+                if (
+                    user_input[CONF_READ_MODE] == API_MODE_CLOUD
+                    and not fireplace.cloud_connectivity
+                ):
+                    errors[CONF_READ_MODE] = "cloud_unavailable"
+                if (
+                    user_input[CONF_CONTROL_MODE] == API_MODE_LOCAL
+                    and not fireplace.local_connectivity
+                ):
+                    errors[CONF_CONTROL_MODE] = "local_unavailable"
+                if (
+                    user_input[CONF_CONTROL_MODE] == API_MODE_CLOUD
+                    and not fireplace.cloud_connectivity
+                ):
+                    errors[CONF_CONTROL_MODE] = "cloud_unavailable"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        existing_read = self.config_entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+        existing_control = self.config_entry.options.get(
+            CONF_CONTROL_MODE, API_MODE_LOCAL
+        )
+
+        cloud_local_options = selector.SelectSelectorConfig(
+            options=[API_MODE_LOCAL, API_MODE_CLOUD],
+            translation_key="api_mode",
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_READ_MODE,
+                        default=user_input.get(CONF_READ_MODE, existing_read)
+                        if user_input
+                        else existing_read,
+                    ): selector.SelectSelector(cloud_local_options),
+                    vol.Required(
+                        CONF_CONTROL_MODE,
+                        default=user_input.get(CONF_CONTROL_MODE, existing_control)
+                        if user_input
+                        else existing_control,
+                    ): selector.SelectSelector(cloud_local_options),
+                }
+            ),
+            errors=errors,
+        )

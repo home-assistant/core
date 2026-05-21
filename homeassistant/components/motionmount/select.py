@@ -69,7 +69,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
             return True
         try:
             await self.mm.connect()
-        except (ConnectionError, TimeoutError, socket.gaierror):
+        except ConnectionError, TimeoutError, socket.gaierror:
             # We're not interested in exceptions here. In case of a failed connection
             # the try/except from the caller will report it.
             # The purpose of `_ensure_connected()` is only to make sure we try to
@@ -111,7 +111,8 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         if self.mm.is_moving:
             return self._attr_current_option
 
-        # When the mount isn't moving we select the option that matches the current position
+        # When the mount isn't moving we select the option
+        # that matches the current position
         self._attr_current_option = None
         if self.mm.extension == 0 and self.mm.turn == 0:
             self._attr_current_option = self._attr_options[0]  # Select Wall preset

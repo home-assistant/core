@@ -1,7 +1,5 @@
 """Support for AirVisual Pro sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -22,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirVisualProConfigEntry
+from .coordinator import AirVisualProConfigEntry
 from .entity import AirVisualProEntity
 
 

@@ -1,7 +1,5 @@
 """Const for conversation integration."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
@@ -21,6 +19,7 @@ ATTR_AGENT_ID = "agent_id"
 ATTR_CONVERSATION_ID = "conversation_id"
 
 SERVICE_PROCESS = "process"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_RELOAD = "reload"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
@@ -34,6 +33,13 @@ class ConversationEntityFeature(IntFlag):
 
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+
+
+class IntentSource(StrEnum):
+    """Source of intents."""
+
+    CONFIG = "config"
+    TRIGGER = "trigger"
 
 
 class ChatLogEventType(StrEnum):

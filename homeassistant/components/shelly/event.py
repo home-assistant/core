@@ -1,7 +1,5 @@
 """Event for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
@@ -64,8 +62,8 @@ BLOCK_EVENT: Final = ShellyBlockEventDescription(
     key="input",
     translation_key="input",
     device_class=EventDeviceClass.BUTTON,
-    removal_condition=lambda settings, block: not is_block_momentary_input(
-        settings, block, True
+    removal_condition=lambda settings, block: (
+        not is_block_momentary_input(settings, block, True)
     ),
 )
 RPC_EVENT: Final = ShellyRpcEventDescription(
@@ -73,8 +71,8 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
     translation_key="input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
-    removal_condition=lambda config, status, key: not is_rpc_momentary_input(
-        config, status, key
+    removal_condition=lambda config, status, key: (
+        not is_rpc_momentary_input(config, status, key)
     ),
 )
 SCRIPT_EVENT: Final = ShellyRpcEventDescription(
@@ -165,7 +163,8 @@ def _async_setup_rpc_entry(
                 ShellyRpcScriptEvent(coordinator, script, SCRIPT_EVENT, event_types)
             )
 
-    # If a script is removed, from the device configuration, we need to remove orphaned entities
+    # If a script is removed, from the device configuration,
+    # we need to remove orphaned entities
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,

@@ -1,7 +1,5 @@
 """Initialize the Imeon component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.core import HomeAssistant

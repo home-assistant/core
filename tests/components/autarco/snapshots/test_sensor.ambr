@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.battery_charged_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -57,8 +59,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_charged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -113,8 +117,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_charged_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charged total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -169,8 +175,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_discharged_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -225,8 +233,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_discharged_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -246,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -281,8 +291,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_discharged_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharged total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -337,8 +349,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_flow_now-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow now',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -393,8 +407,9 @@
 # ---
 # name: test_all_sensors[sensor.battery_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -414,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -446,8 +462,9 @@
 # ---
 # name: test_all_sensors[sensor.inverter_test_serial_1_energy_ac_output_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -467,6 +484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy AC output total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -502,8 +520,9 @@
 # ---
 # name: test_all_sensors[sensor.inverter_test_serial_1_power_ac_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -523,6 +542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power AC output',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -558,8 +578,9 @@
 # ---
 # name: test_all_sensors[sensor.inverter_test_serial_2_energy_ac_output_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -579,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy AC output total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -614,8 +636,9 @@
 # ---
 # name: test_all_sensors[sensor.inverter_test_serial_2_power_ac_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -635,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power AC output',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -670,8 +694,9 @@
 # ---
 # name: test_all_sensors[sensor.solar_energy_production_month-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -691,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production month',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -726,8 +752,9 @@
 # ---
 # name: test_all_sensors[sensor.solar_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -747,6 +774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -782,8 +810,9 @@
 # ---
 # name: test_all_sensors[sensor.solar_energy_production_total-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -803,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy production total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -838,8 +868,9 @@
 # ---
 # name: test_all_sensors[sensor.solar_power_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -859,6 +890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power production',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

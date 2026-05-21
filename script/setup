@@ -31,7 +31,7 @@ fi
 
 script/bootstrap
 
-pre-commit install
+prek install
 
 hass --script ensure_config -c config
 

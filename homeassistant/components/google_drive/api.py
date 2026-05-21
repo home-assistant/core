@@ -1,8 +1,7 @@
 """API for Google Drive bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
+from dataclasses import dataclass
 import json
 import logging
 from typing import Any
@@ -21,10 +20,22 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .const import DOMAIN
+
 _UPLOAD_AND_DOWNLOAD_TIMEOUT = 12 * 3600
 _UPLOAD_MAX_RETRIES = 20
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class StorageQuotaData:
+    """Class to represent storage quota data."""
+
+    limit: int | None
+    usage: int
+    usage_in_drive: int
+    usage_in_trash: int
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
@@ -50,14 +61,21 @@ class AsyncConfigEntryAuth(AbstractAuth):
             ):
                 if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
                     raise ConfigEntryAuthFailed(
-                        "OAuth session is not valid, reauth required"
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_not_valid",
                     ) from ex
-                raise ConfigEntryNotReady from ex
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from ex
             if hasattr(ex, "status") and ex.status == 400:
                 self._oauth_session.config_entry.async_start_reauth(
                     self._oauth_session.hass
                 )
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from ex
         return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
 
@@ -95,13 +113,27 @@ class DriveClient:
         res = await self._api.get_user(params={"fields": "user(emailAddress)"})
         return str(res["user"]["emailAddress"])
 
+    async def async_get_storage_quota(self) -> StorageQuotaData:
+        """Get storage quota of the current user."""
+        res = await self._api.get_user(params={"fields": "storageQuota"})
+
+        storageQuota = res["storageQuota"]
+        limit = storageQuota.get("limit")
+        return StorageQuotaData(
+            limit=int(limit) if limit is not None else None,
+            usage=int(storageQuota.get("usage", 0)),
+            usage_in_drive=int(storageQuota.get("usageInDrive", 0)),
+            usage_in_trash=int(storageQuota.get("usageInTrash", 0)),
+        )
+
     async def async_create_ha_root_folder_if_not_exists(self) -> tuple[str, str]:
         """Create Home Assistant folder if it doesn't exist."""
         fields = "id,name"
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='root' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -165,7 +197,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -178,12 +211,19 @@ class DriveClient:
             backups.append(backup)
         return backups
 
+    async def async_get_size_of_all_backups(self) -> int:
+        """Get size of all backups."""
+        backups = await self.async_list_backups()
+
+        return sum(backup.size for backup in backups)
+
     async def async_get_backup_file_id(self, backup_id: str) -> str | None:
         """Get file_id of backup if it exists."""
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]
         )

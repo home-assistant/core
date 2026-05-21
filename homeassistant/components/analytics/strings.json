@@ -1,0 +1,10 @@
+{
+  "preview_features": {
+    "snapshots": {
+      "description": "We're creating the [Open Home Foundation Device Database](https://www.home-assistant.io/blog/2026/02/02/about-device-database/): a free, open source community-powered resource to help users find practical information about how smart home devices perform in real installations.\n\nYou can help us build it by opting in to share anonymized data about your devices. This data will only ever include device-specific details (like model or manufacturer) – never personally identifying information (like the names you assign).\n\nFind out how we process your data (should you choose to contribute) in our [Data Use Statement](https://www.openhomefoundation.org/device-database-data-use-statement).",
+      "disable_confirmation": "Your data will no longer be shared with the Open Home Foundation's device database.",
+      "enable_confirmation": "This feature is still in development and may change. The device database is being refined based on user feedback and is not yet complete.",
+      "name": "Device database"
+    }
+  }
+}

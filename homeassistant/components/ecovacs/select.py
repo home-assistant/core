@@ -164,7 +164,7 @@ class EcovacsActiveMapSelectEntity(
         self._option_to_id.clear()
 
         for map_info in event.maps:
-            name = map_info.name if map_info.name else map_info.id
+            name = map_info.name or map_info.id
             self._id_to_option[map_info.id] = name
             self._option_to_id[name] = map_info.id
 
@@ -174,7 +174,8 @@ class EcovacsActiveMapSelectEntity(
         if self._attr_current_option not in self._option_to_id:
             self._attr_current_option = None
 
-        # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
+        # Sort named maps first, then numeric IDs
+        # (unnamed maps during building) in ascending order.
         self._attr_options = sorted(
             self._option_to_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )

@@ -1,7 +1,5 @@
 """Config flow for Google integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -194,7 +192,8 @@ class OAuth2FlowHandler(
             primary_calendar = await calendar_service.async_get_calendar("primary")
         except ApiForbiddenException as err:
             _LOGGER.error(
-                "Error reading primary calendar, make sure Google Calendar API is enabled: %s",
+                "Error reading primary calendar, make sure"
+                " Google Calendar API is enabled: %s",
                 err,
             )
             return self.async_abort(

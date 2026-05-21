@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -17,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from .const import API_MODE_CLOUD, API_MODE_LOCAL
 from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
@@ -67,11 +66,27 @@ def _uptime_to_timestamp(
 
 INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
+        key="read_mode",
+        translation_key="read_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.read_mode.value,
+    ),
+    IntellifireSensorEntityDescription(
+        key="control_mode",
+        translation_key="control_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[API_MODE_LOCAL, API_MODE_CLOUD],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.fireplace.control_mode.value,
+    ),
+    IntellifireSensorEntityDescription(
         key="flame_height",
         translation_key="flame_height",
         state_class=SensorStateClass.MEASUREMENT,
         # UI uses 1-5 for flame height, backing lib uses 0-4
-        value_fn=lambda coordinator: (coordinator.data.flameheight + 1),
+        value_fn=lambda coordinator: coordinator.data.flameheight + 1,
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
@@ -97,7 +112,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="timer_end_timestamp",
         translation_key="timer_end_timestamp",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,
     ),

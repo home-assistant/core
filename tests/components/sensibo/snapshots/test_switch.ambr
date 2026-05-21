@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_switch[load_platforms0][switch.bedroom_pure_boost-entry]
+# name: test_switch[load_platforms0][switch.bedroom_bedroom_pure_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.bedroom_pure_boost',
+    'entity_id': 'switch.bedroom_bedroom_pure_boost',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -34,24 +36,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[load_platforms0][switch.bedroom_pure_boost-state]
+# name: test_switch[load_platforms0][switch.bedroom_bedroom_pure_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Bedroom Pure Boost',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_pure_boost',
+    'entity_id': 'switch.bedroom_bedroom_pure_boost',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch[load_platforms0][switch.hallway_climate_react-entry]
+# name: test_switch[load_platforms0][switch.hallway_hallway_climate_react-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -61,7 +64,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.hallway_climate_react',
+    'entity_id': 'switch.hallway_hallway_climate_react',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -83,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[load_platforms0][switch.hallway_climate_react-state]
+# name: test_switch[load_platforms0][switch.hallway_hallway_climate_react-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -91,17 +95,18 @@
       'type': 'temperature',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hallway_climate_react',
+    'entity_id': 'switch.hallway_hallway_climate_react',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch[load_platforms0][switch.hallway_timer-entry]
+# name: test_switch[load_platforms0][switch.hallway_hallway_timer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -111,7 +116,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.hallway_timer',
+    'entity_id': 'switch.hallway_hallway_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -119,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -133,7 +139,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[load_platforms0][switch.hallway_timer-state]
+# name: test_switch[load_platforms0][switch.hallway_hallway_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -142,17 +148,18 @@
       'turn_on': None,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hallway_timer',
+    'entity_id': 'switch.hallway_hallway_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch[load_platforms0][switch.kitchen_pure_boost-entry]
+# name: test_switch[load_platforms0][switch.kitchen_kitchen_pure_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -162,7 +169,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_pure_boost',
+    'entity_id': 'switch.kitchen_kitchen_pure_boost',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -184,14 +192,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[load_platforms0][switch.kitchen_pure_boost-state]
+# name: test_switch[load_platforms0][switch.kitchen_kitchen_pure_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
       'friendly_name': 'Kitchen Pure Boost',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_pure_boost',
+    'entity_id': 'switch.kitchen_kitchen_pure_boost',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

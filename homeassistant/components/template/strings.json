@@ -292,6 +292,7 @@
       },
       "number": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "max": "Maximum value",
           "min": "Minimum value",
@@ -463,7 +464,8 @@
           "sensor": "[%key:component::sensor::title%]",
           "switch": "[%key:component::switch::title%]",
           "update": "[%key:component::update::title%]",
-          "vacuum": "[%key:component::vacuum::title%]"
+          "vacuum": "[%key:component::vacuum::title%]",
+          "weather": "[%key:component::weather::title%]"
         },
         "title": "Template helper"
       },
@@ -507,12 +509,45 @@
           }
         },
         "title": "Template vacuum"
+      },
+      "weather": {
+        "data": {
+          "condition": "Condition",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "forecast_daily": "Forecast daily",
+          "forecast_hourly": "Forecast hourly",
+          "humidity": "Humidity",
+          "name": "[%key:common::config_flow::data::name%]",
+          "temperature": "Temperature",
+          "temperature_unit": "Temperature unit"
+        },
+        "data_description": {
+          "condition": "Defines a template to get the current weather condition",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "forecast_daily": "Defines a template to get the [daily forecast data]({daily_link})",
+          "forecast_hourly": "Defines a template to get the [hourly forecast data]({hourly_link})",
+          "humidity": "Defines a template to get the current humidity",
+          "temperature": "Defines a template to get the current temperature",
+          "temperature_unit": "The temperature unit"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template weather"
       }
     }
   },
   "exceptions": {
     "code_format_template_error": {
       "message": "Error evaluating code format template \"{code_format_template}\" for {entity_id}: {cause}"
+    },
+    "failed_to_reload_template_entities": {
+      "message": "Error reloading template entities: {error}"
     }
   },
   "issues": {
@@ -527,10 +562,6 @@
     "deprecated_battery_level": {
       "description": "The template vacuum options `battery_level` and `battery_level_template` are being removed in 2026.8.\n\nPlease remove the `battery_level` or `battery_level_template` option from the YAML configuration for {entity_id} ({entity_name}).",
       "title": "Deprecated battery level option in {entity_name}"
-    },
-    "deprecated_legacy_templates": {
-      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n#### Step 1 - Remove legacy configuration\nRemove the `{breadcrumb}` template definition from the `configuration.yaml` `{domain}:` section.\n\n**Note:** If you are using `{domain}: !include {filename}.yaml` in `configuration.yaml`, remove the {domain} definition from the included `{filename}.yaml`.\n#### Step 2 -  Add the modern configuration\nAdd new template definition inside `configuration.yaml`:\n{config}\n**Note:** If there are any existing `template:` sections in your configuration, make sure to omit the `template:` line from the yaml above.  There can only be 1 `template:` section in `configuration.yaml`.  Also, ensure the indentation is aligned with the existing entities within the `template:` section.\n#### Step 3 - Restart Home Assistant or reload template entities",
-      "title": "Legacy {domain} template deprecation"
     }
   },
   "options": {
@@ -577,6 +608,7 @@
       },
       "binary_sensor": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "state": "[%key:component::template::common::state%]"
         },
@@ -804,6 +836,7 @@
       },
       "number": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "max": "[%key:component::template::config::step::number::data::max%]",
           "min": "[%key:component::template::config::step::number::data::min%]",
@@ -995,6 +1028,36 @@
           }
         },
         "title": "[%key:component::template::config::step::vacuum::title%]"
+      },
+      "weather": {
+        "data": {
+          "condition": "[%key:component::template::config::step::weather::data::condition%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data::forecast_hourly%]",
+          "humidity": "[%key:component::template::config::step::weather::data::humidity%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "temperature": "[%key:component::template::config::step::weather::data::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data::temperature_unit%]"
+        },
+        "data_description": {
+          "condition": "[%key:component::template::config::step::weather::data_description::condition%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data_description::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data_description::forecast_hourly%]",
+          "humidity": "[%key:component::template::config::step::weather::data_description::humidity%]",
+          "temperature": "[%key:component::template::config::step::weather::data_description::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data_description::temperature_unit%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::weather::title%]"
       }
     }
   },
@@ -1066,7 +1129,7 @@
         "motion": "[%key:component::event::entity_component::motion::name%]"
       }
     },
-    "sensor_device_class": {
+    "number_device_class": {
       "options": {
         "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
@@ -1080,12 +1143,8 @@
         "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
-        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
-        "date": "[%key:component::sensor::entity_component::date::name%]",
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
-        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
-        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
         "gas": "[%key:component::sensor::entity_component::gas::name%]",
@@ -1093,7 +1152,6 @@
         "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
         "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
         "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
-        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
         "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
         "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
         "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
@@ -1116,7 +1174,62 @@
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
-        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "sensor_device_class": {
+      "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
@@ -1151,7 +1264,7 @@
   "services": {
     "reload": {
       "description": "Reloads template entities from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload template entities"
     }
   }
 }

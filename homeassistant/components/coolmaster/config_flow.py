@@ -1,7 +1,5 @@
 """Config flow to configure Coolmaster."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pycoolmasternet_async import CoolMasterNet
@@ -11,8 +9,16 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 
-from .const import CONF_SUPPORTED_MODES, CONF_SWING_SUPPORT, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_MORE_OPTIONS,
+    CONF_SEND_WAKEUP_PROMPT,
+    CONF_SUPPORTED_MODES,
+    CONF_SWING_SUPPORT,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 AVAILABLE_MODES = [
     HVACMode.OFF.value,
@@ -30,12 +36,20 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         **MODES_SCHEMA,
         vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+        vol.Required(CONF_MORE_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False): bool,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
     }
 )
 
 
-async def _validate_connection(host: str) -> bool:
-    cool = CoolMasterNet(host, DEFAULT_PORT)
+async def _validate_connection(host: str, send_wakeup_prompt: bool) -> bool:
+    cool = CoolMasterNet(host, DEFAULT_PORT, send_initial_line_feed=send_wakeup_prompt)
     units = await cool.status()
     return bool(units)
 
@@ -47,6 +61,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_get_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        more_options = data.get(CONF_MORE_OPTIONS, {})
         supported_modes = [
             key for (key, value) in data.items() if key in AVAILABLE_MODES and value
         ]
@@ -57,6 +72,9 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
                 CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
+                CONF_SEND_WAKEUP_PROMPT: more_options.get(
+                    CONF_SEND_WAKEUP_PROMPT, False
+                ),
             },
         )
 
@@ -70,9 +88,12 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         host = user_input[CONF_HOST]
+        more_options = user_input.get(CONF_MORE_OPTIONS, {})
 
         try:
-            result = await _validate_connection(host)
+            result = await _validate_connection(
+                host, more_options.get(CONF_SEND_WAKEUP_PROMPT, False)
+            )
             if not result:
                 errors["base"] = "no_units"
         except OSError:

@@ -1,7 +1,5 @@
 """Config flow for Whirlpool Appliances integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -57,7 +55,7 @@ async def authenticate(
         await auth.do_auth()
     except WhirlpoolAccountLocked:
         return "account_locked"
-    except (TimeoutError, ClientError):
+    except TimeoutError, ClientError:
         return "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
@@ -75,6 +73,7 @@ async def authenticate(
             and not appliances_manager.washers
             and not appliances_manager.dryers
             and not appliances_manager.ovens
+            and not appliances_manager.refrigerators
         ):
             return "no_appliances"
 

@@ -9,6 +9,7 @@
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
@@ -61,6 +62,29 @@
       "setpoint_status": {
         "name": "Setpoint status"
       }
+    }
+  },
+  "exceptions": {
+    "failed_to_set_fan_mode": {
+      "message": "Failed to set fan mode"
+    },
+    "failed_to_set_hold_time": {
+      "message": "Failed to set hold time"
+    },
+    "failed_to_set_hvac_mode": {
+      "message": "Failed to set HVAC mode"
+    },
+    "failed_to_set_preset_mode": {
+      "message": "Failed to set preset mode"
+    },
+    "failed_to_set_temperature": {
+      "message": "Failed to set temperature"
+    },
+    "invalid_fan_mode": {
+      "message": "The fan mode {fan_mode} is not supported by this device"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "services": {

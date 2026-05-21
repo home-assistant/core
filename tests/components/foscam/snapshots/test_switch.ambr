@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[switch.mock_title_car_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_entities[switch.mock_title_flip-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flip',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_entities[switch.mock_title_human_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Human detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_entities[switch.mock_title_infrared_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Infrared mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +201,9 @@
 # ---
 # name: test_entities[switch.mock_title_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +251,9 @@
 # ---
 # name: test_entities[switch.mock_title_mirror-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mirror',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +301,9 @@
 # ---
 # name: test_entities[switch.mock_title_pet_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pet detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,8 +351,9 @@
 # ---
 # name: test_entities[switch.mock_title_siren_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +401,9 @@
 # ---
 # name: test_entities[switch.mock_title_sleep_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -433,8 +451,9 @@
 # ---
 # name: test_entities[switch.mock_title_volume_muted-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume muted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -481,8 +501,9 @@
 # ---
 # name: test_entities[switch.mock_title_white_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'White light',
     'options': dict({
     }),
     'original_device_class': None,

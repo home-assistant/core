@@ -1,7 +1,5 @@
 """Support for Blue Current switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -29,13 +27,20 @@ class BlueCurrentSwitchEntityDescription(SwitchEntityDescription):
     function: Callable[[Connector, str, bool], Any]
 
     turn_on_off_fn: Callable[[str, Connector], tuple[bool, bool]]
-    """Update the switch based on the latest data received from the websocket. The first returned boolean is _attr_is_on, the second one has_value."""
+    """Update the switch based on the latest data received from the websocket.
+
+    The first returned boolean is _attr_is_on,
+    the second one has_value.
+    """
 
 
 def update_on_value_and_activity(
     key: str, evse_id: str, connector: Connector, reverse_is_on: bool = False
 ) -> tuple[bool, bool]:
-    """Return the updated state of the switch based on received chargepoint data and activity."""
+    """Return the updated state of the switch.
+
+    Based on received chargepoint data and activity.
+    """
 
     data_object = connector.charge_points[evse_id].get(key)
     is_on = data_object[VALUE] if data_object is not None else None
@@ -80,18 +85,16 @@ SWITCHES = (
         key=PLUG_AND_CHARGE,
         translation_key=PLUG_AND_CHARGE,
         function=set_plug_and_charge,
-        turn_on_off_fn=lambda evse_id, connector: (
-            update_on_value_and_activity(PLUG_AND_CHARGE, evse_id, connector)
+        turn_on_off_fn=lambda evse_id, connector: update_on_value_and_activity(
+            PLUG_AND_CHARGE, evse_id, connector
         ),
     ),
     BlueCurrentSwitchEntityDescription(
         key=LINKED_CHARGE_CARDS,
         translation_key=LINKED_CHARGE_CARDS,
         function=set_linked_charge_cards,
-        turn_on_off_fn=lambda evse_id, connector: (
-            update_on_value_and_activity(
-                PUBLIC_CHARGING, evse_id, connector, reverse_is_on=True
-            )
+        turn_on_off_fn=lambda evse_id, connector: update_on_value_and_activity(
+            PUBLIC_CHARGING, evse_id, connector, reverse_is_on=True
         ),
     ),
     BlueCurrentSwitchEntityDescription(

@@ -34,42 +34,37 @@ class MockDeviceEntry(dr.DeviceEntry):
     id: str = attr.ib(default="very_unique")
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 def fake_integration(hass: HomeAssistant) -> None:
     """Set up a mock integration with device automation support."""
-    DOMAIN = "fake_integration"
+    FAKE_DOMAIN = "fake_integration"
 
-    hass.config.components.add(DOMAIN)
+    hass.config.components.add(FAKE_DOMAIN)
 
     async def _async_get_actions(
         hass: HomeAssistant, device_id: str
     ) -> list[dict[str, str]]:
         """List device actions."""
-        return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
+        return await toggle_entity.async_get_actions(hass, device_id, FAKE_DOMAIN)
 
     async def _async_get_conditions(
         hass: HomeAssistant, device_id: str
     ) -> list[dict[str, str]]:
         """List device conditions."""
-        return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
+        return await toggle_entity.async_get_conditions(hass, device_id, FAKE_DOMAIN)
 
     async def _async_get_triggers(
         hass: HomeAssistant, device_id: str
     ) -> list[dict[str, str]]:
         """List device triggers."""
-        return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
+        return await toggle_entity.async_get_triggers(hass, device_id, FAKE_DOMAIN)
 
     mock_platform(
         hass,
-        f"{DOMAIN}.device_action",
+        f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): DOMAIN}
+                {vol.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             spec=["ACTION_SCHEMA", "async_get_actions"],
@@ -78,10 +73,10 @@ def fake_integration(hass: HomeAssistant) -> None:
 
     mock_platform(
         hass,
-        f"{DOMAIN}.device_condition",
+        f"{FAKE_DOMAIN}.device_condition",
         Mock(
             CONDITION_SCHEMA=toggle_entity.CONDITION_SCHEMA.extend(
-                {vol.Required("domain"): DOMAIN}
+                {vol.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_conditions=_async_get_conditions,
             spec=["CONDITION_SCHEMA", "async_get_conditions"],
@@ -90,11 +85,13 @@ def fake_integration(hass: HomeAssistant) -> None:
 
     mock_platform(
         hass,
-        f"{DOMAIN}.device_trigger",
+        f"{FAKE_DOMAIN}.device_trigger",
         Mock(
             TRIGGER_SCHEMA=vol.All(
                 toggle_entity.TRIGGER_SCHEMA,
-                vol.Schema({vol.Required("domain"): DOMAIN}, extra=vol.ALLOW_EXTRA),
+                vol.Schema(
+                    {vol.Required("domain"): FAKE_DOMAIN}, extra=vol.ALLOW_EXTRA
+                ),
             ),
             async_get_triggers=_async_get_triggers,
             spec=["TRIGGER_SCHEMA", "async_get_triggers"],
@@ -704,7 +701,7 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we get can fetch all the actions when no device id is passed and can handle one throwing an exception."""
+    """Test we can fetch all actions with no device id and handle exceptions."""
     await async_setup_component(hass, "device_automation", {})
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -1121,7 +1118,7 @@ async def test_automation_with_dynamically_validated_condition(
 async def test_automation_with_integration_without_device_condition(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test device automation condition with integration without device condition support."""
+    """Test device condition with integration without device condition support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
         hass,
@@ -1238,7 +1235,7 @@ async def test_automation_with_dynamically_validated_trigger(
 async def test_automation_with_integration_without_device_trigger(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test device automation trigger with integration without device trigger support."""
+    """Test device trigger with integration without device trigger support."""
     mock_integration(hass, MockModule(domain="test"))
     assert await async_setup_component(
         hass,
@@ -1403,7 +1400,7 @@ async def test_automation_with_sub_condition(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test automation with device condition under and/or conditions."""
-    DOMAIN = "light"
+    LIGHT_DOMAIN = "light"
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -1434,14 +1431,14 @@ async def test_automation_with_sub_condition(
                             "conditions": [
                                 {
                                     "condition": "device",
-                                    "domain": DOMAIN,
+                                    "domain": LIGHT_DOMAIN,
                                     "device_id": device_entry.id,
                                     "entity_id": entity_entry1.id,
                                     "type": "is_on",
                                 },
                                 {
                                     "condition": "device",
-                                    "domain": DOMAIN,
+                                    "domain": LIGHT_DOMAIN,
                                     "device_id": device_entry.id,
                                     "entity_id": entity_entry2.id,
                                     "type": "is_on",
@@ -1467,14 +1464,14 @@ async def test_automation_with_sub_condition(
                             "conditions": [
                                 {
                                     "condition": "device",
-                                    "domain": DOMAIN,
+                                    "domain": LIGHT_DOMAIN,
                                     "device_id": device_entry.id,
                                     "entity_id": entity_entry1.id,
                                     "type": "is_on",
                                 },
                                 {
                                     "condition": "device",
-                                    "domain": DOMAIN,
+                                    "domain": LIGHT_DOMAIN,
                                     "device_id": device_entry.id,
                                     "entity_id": entity_entry2.id,
                                     "type": "is_on",
@@ -1735,7 +1732,7 @@ async def test_automation_with_device_component_not_loaded(
 async def test_async_get_device_automations_platform_reraises_exceptions(
     hass: HomeAssistant, exc: Exception
 ) -> None:
-    """Test InvalidDeviceAutomationConfig is raised when async_get_integration_with_requirements fails."""
+    """Test InvalidDeviceAutomationConfig is raised when get_integration fails."""
     await async_setup_component(hass, "device_automation", {})
     with (
         patch(

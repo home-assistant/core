@@ -1,8 +1,7 @@
 """Support for the Mailgun mail notifications."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 from pymailgunner import (
     Client,
@@ -43,6 +42,8 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     data = hass.data[DOMAIN]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),
@@ -91,7 +92,7 @@ class MailgunNotificationService(BaseNotificationService):
             return False
         return True
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a mail to the recipient."""
 
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -110,5 +111,6 @@ class MailgunNotificationService(BaseNotificationService):
                 files=files,
             )
             _LOGGER.debug("Message sent: %s", resp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MailgunError:
             _LOGGER.exception("Failed to send message")

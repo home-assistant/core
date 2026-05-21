@@ -1,7 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
@@ -47,12 +45,15 @@ from zha.application.helpers import (
     qr_to_install_code,
 )
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
-from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64, KeyData
+from zigpy.typing import (
+    UNDEFINED as ZIGPY_UNDEFINED,
+    UndefinedType as ZigpyUndefinedType,
+)
 from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
@@ -631,10 +632,17 @@ async def websocket_remove_group_members(
 async def websocket_reconfigure_node(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Reconfigure a ZHA nodes entities by its ieee address."""
+    """Reconfigure a ZHA node by its ieee address with a prior re-interview."""
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: Device | None = zha_gateway.get_device(ieee)
+
+    if zha_gateway.get_device(ieee) is None:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
+            )
+        )
+        return
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -651,9 +659,8 @@ async def websocket_reconfigure_node(
 
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
-    assert device
-    hass.async_create_task(device.async_configure())
+    _LOGGER.debug("Re-interview node with ieee_address: %s", ieee)
+    hass.async_create_task(zha_gateway.async_reinterview_device(ieee))
 
 
 @websocket_api.require_admin
@@ -850,7 +857,7 @@ async def websocket_read_zigbee_cluster_attributes(
     cluster_id: int = msg[ATTR_CLUSTER_ID]
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     attribute: int = msg[ATTR_ATTRIBUTE]
-    manufacturer: int | None = msg.get(ATTR_MANUFACTURER)
+    manufacturer: int | ZigpyUndefinedType = msg.get(ATTR_MANUFACTURER, ZIGPY_UNDEFINED)
     zha_device = zha_gateway.get_device(ieee)
     success = {}
     failure = {}
@@ -1326,7 +1333,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
         attribute: int | str = service.data[ATTR_ATTRIBUTE]
         value: int | bool | str = service.data[ATTR_VALUE]
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
@@ -1380,7 +1389,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         command_type: str = service.data[ATTR_COMMAND_TYPE]
         args: list | None = service.data.get(ATTR_ARGS)
         params: dict | None = service.data.get(ATTR_PARAMS)
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None:
             if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
@@ -1435,7 +1446,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_id: int = service.data[ATTR_CLUSTER_ID]
         command: int = service.data[ATTR_COMMAND]
         args: list = service.data[ATTR_ARGS]
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         group = zha_gateway.get_group(group_id)
         if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
             _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
@@ -1488,7 +1501,8 @@ def async_load_api(hass: HomeAssistant) -> None:
                 await cluster_handler.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
+                    "Squawking IASWD: %s: [%s] is missing"
+                    " the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )
@@ -1533,7 +1547,8 @@ def async_load_api(hass: HomeAssistant) -> None:
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
+                    "Warning IASWD: %s: [%s] is missing"
+                    " the required IASWD cluster handler!",
                     ATTR_IEEE,
                     str(ieee),
                 )

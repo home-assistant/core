@@ -15,8 +15,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_validate_input_success(
-    hass: HomeAssistant, mock_setup_entry, mock_london_underground_client
+    hass: HomeAssistant, mock_london_underground_client
 ) -> None:
     """Test successful validation of TfL API."""
 
@@ -38,13 +39,12 @@ async def test_validate_input_success(
     assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
 
 
-async def test_options(
-    hass: HomeAssistant, mock_setup_entry, mock_config_entry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options(hass: HomeAssistant, mock_config_entry) -> None:
     """Test updating options."""
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -54,7 +54,7 @@ async def test_options(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_LINE: ["Bakerloo", "Central"],
     }
@@ -67,12 +67,9 @@ async def test_options(
         (asyncio.TimeoutError, "timeout_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_validate_input_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry,
-    mock_london_underground_client,
-    side_effect,
-    expected_error,
+    hass: HomeAssistant, mock_london_underground_client, side_effect, expected_error
 ) -> None:
     """Test validation with connection and timeout errors."""
 
@@ -104,11 +101,9 @@ async def test_validate_input_exceptions(
     assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
-    hass: HomeAssistant,
-    mock_london_underground_client,
-    mock_setup_entry,
-    mock_config_entry,
+    hass: HomeAssistant, mock_london_underground_client, mock_config_entry
 ) -> None:
     """Try (and fail) setting up a config entry when one already exists."""
 

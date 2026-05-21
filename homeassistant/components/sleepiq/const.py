@@ -11,10 +11,16 @@ FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
+# pylint: disable-next=home-assistant-duplicate-const
 PRESSURE = "pressure"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"
+SLEEP_SCORE = "sleep_score"
+SLEEP_DURATION = "sleep_duration"
+HEART_RATE = "heart_rate"
+RESPIRATORY_RATE = "respiratory_rate"
+HRV = "hrv"
 ENTITY_TYPES = {
     ACTUATOR: "Position",
     CORE_CLIMATE_TIMER: "Core Climate Timer",
@@ -25,6 +31,11 @@ ENTITY_TYPES = {
     SLEEP_NUMBER: "SleepNumber",
     FOOT_WARMING_TIMER: "Foot Warming Timer",
     FOOT_WARMER: "Foot Warmer",
+    SLEEP_SCORE: "Sleep Score",
+    SLEEP_DURATION: "Sleep Duration",
+    HEART_RATE: "Heart Rate Average",
+    RESPIRATORY_RATE: "Respiratory Rate Average",
+    HRV: "Heart Rate Variability",
 }
 
 LEFT = "left"

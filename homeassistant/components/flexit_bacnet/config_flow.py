@@ -1,7 +1,5 @@
 """Config flow for Flexit Nordic (BACnet) integration."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 import logging
 from typing import Any
@@ -44,7 +42,7 @@ class FlexitBacnetConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await device.update()
-            except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError):
+            except asyncio.exceptions.TimeoutError, ConnectionError, DecodingError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

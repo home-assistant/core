@@ -3,12 +3,13 @@
 from unittest.mock import AsyncMock
 
 from aiocomelit.api import (
-    AlarmDataObject,
     ComelitSerialBridgeObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
 from aiocomelit.const import (
+    ALARM_AREA,
+    ALARM_ZONE,
     CLIMATE,
     COVER,
     IRRIGATION,
@@ -19,7 +20,12 @@ from aiocomelit.const import (
     AlarmAreaState,
     AlarmZoneState,
 )
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -39,6 +45,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         CannotConnect,
         CannotRetrieveData,
         CannotAuthenticate,
+        DeviceStorageFailureError,
     ],
 )
 async def test_coordinator_data_update_fails(
@@ -139,8 +146,8 @@ async def test_coordinator_stale_device_vedo(
     entity_id_0 = "sensor.zone0"
     entity_id_1 = "sensor.zone1"
 
-    mock_vedo.get_all_areas_and_zones.return_value = AlarmDataObject(
-        alarm_areas={
+    mock_vedo.get_all_areas_and_zones.return_value = {
+        ALARM_AREA: {
             0: ComelitVedoAreaObject(
                 index=0,
                 name="Area0",
@@ -157,7 +164,7 @@ async def test_coordinator_stale_device_vedo(
                 human_status=AlarmAreaState.DISARMED,
             )
         },
-        alarm_zones={
+        ALARM_ZONE: {
             0: ZONE0,
             1: ComelitVedoZoneObject(
                 index=1,
@@ -167,7 +174,7 @@ async def test_coordinator_stale_device_vedo(
                 human_status=AlarmZoneState.REST,
             ),
         },
-    )
+    }
     await setup_integration(hass, mock_vedo_config_entry)
 
     assert (state := hass.states.get(entity_id_0))
@@ -175,8 +182,8 @@ async def test_coordinator_stale_device_vedo(
     assert (state := hass.states.get(entity_id_1))
     assert state.state == AlarmZoneState.REST.value
 
-    mock_vedo.get_all_areas_and_zones.return_value = AlarmDataObject(
-        alarm_areas={
+    mock_vedo.get_all_areas_and_zones.return_value = {
+        ALARM_AREA: {
             0: ComelitVedoAreaObject(
                 index=0,
                 name="Area0",
@@ -193,10 +200,10 @@ async def test_coordinator_stale_device_vedo(
                 human_status=AlarmAreaState.DISARMED,
             )
         },
-        alarm_zones={
+        ALARM_ZONE: {
             0: ZONE0,
         },
-    )
+    }
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

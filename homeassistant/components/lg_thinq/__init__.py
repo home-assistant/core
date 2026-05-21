@@ -1,7 +1,5 @@
 """Support for LG ThinQ Connect device."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 import logging
@@ -42,6 +40,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.EVENT,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

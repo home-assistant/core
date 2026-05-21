@@ -1,7 +1,5 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
@@ -42,6 +40,7 @@ from homeassistant.loader import (
     async_get_loaded_integration,
 )
 from homeassistant.util.location import async_detect_location_info
+from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
@@ -139,7 +138,8 @@ def async_setup(hass: HomeAssistant) -> None:
             ),
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
-                "Multi-factor authentication expired, or not started. Please try again.",
+                "Multi-factor authentication expired,"
+                " or not started. Please try again.",
             ),
             AlreadyConnectedError: (
                 HTTPStatus.CONFLICT,
@@ -515,6 +515,8 @@ class DownloadSupportPackageView(HomeAssistantView):
         hass_info: dict[str, Any],
         domains_info: dict[str, dict[str, str]],
     ) -> str:
+        cloud = hass.data[DATA_CLOUD]
+
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -560,7 +562,12 @@ class DownloadSupportPackageView(HomeAssistantView):
                 markdown += "--- | --- | --- | ---\n"
                 for integration in integration_info["custom_integrations"]:
                     doc_url = integration.get("documentation") or "N/A"
-                    markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
+                    markdown += (
+                        f"{integration['domain']} | "
+                        f"{integration['name']} | "
+                        f"{integration['version']} | "
+                        f"{doc_url}\n"
+                    )
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
@@ -570,6 +577,34 @@ class DownloadSupportPackageView(HomeAssistantView):
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        # Add stored latency response if available
+        if locations := cloud.remote.latency_by_location:
+            markdown += "## Latency by location\n\n"
+            markdown += "Location | Latency (ms)\n"
+            markdown += "--- | ---\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
+            markdown += "\n"
+
+        # Add installed packages section
+        try:
+            installed_packages = await async_get_installed_packages()
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Installed packages\n\n"
+            markdown += "Unable to collect installed packages information\n\n"
+        else:
+            if installed_packages:
+                markdown += "## Installed packages\n\n"
+                markdown += (
+                    "<details><summary>Installed packages</summary>\n\n"
+                    "Package | Version\n"
+                    "--- | ---\n"
+                )
+                for pkg in sorted(installed_packages, key=lambda p: p["name"].lower()):
+                    markdown += f"{pkg['name']} | {pkg['version']}\n"
+                markdown += "\n</details>\n\n"
 
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
         logs = "\n".join(await log_handler.get_logs(hass))
@@ -584,6 +619,7 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         return markdown
 
+    @require_admin
     async def get(self, request: web.Request) -> web.Response:
         """Download support package file."""
 
@@ -678,6 +714,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
@@ -719,6 +756,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     return value
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -759,7 +797,7 @@ async def websocket_update_prefs(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
@@ -778,6 +816,7 @@ async def websocket_update_prefs(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -798,6 +837,7 @@ async def websocket_hook_create(
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {

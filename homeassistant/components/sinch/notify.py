@@ -1,8 +1,7 @@
 """Support for Sinch notifications."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 from clx.xms.api import MtBatchTextSmsResult
 from clx.xms.client import Client
@@ -67,7 +66,7 @@ class SinchNotificationService(BaseNotificationService):
         self.sender = config[CONF_SENDER]
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
         data = kwargs.get(ATTR_DATA) or {}
@@ -90,6 +89,7 @@ class SinchNotificationService(BaseNotificationService):
                 _LOGGER.debug(
                     'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ErrorResponseException as ex:
             _LOGGER.error(
                 "Caught ErrorResponseException. Response code: %s (%s)",

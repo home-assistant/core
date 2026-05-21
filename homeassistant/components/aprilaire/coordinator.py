@@ -1,7 +1,5 @@
 """The Aprilaire coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
@@ -168,7 +166,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         name = data.get(Attribute.NAME) if data else None
 
-        return name if name else "Aprilaire"
+        return name or "Aprilaire"
 
     def get_hw_version(self, data: dict[str, Any]) -> str:
         """Get the hardware version."""

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[camera.front_door_last_recording-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last recording',
     'options': dict({
     }),
     'original_device_class': None,
@@ -56,8 +58,9 @@
 # ---
 # name: test_states[camera.front_door_live_view-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live view',
     'options': dict({
     }),
     'original_device_class': None,
@@ -110,8 +114,9 @@
 # ---
 # name: test_states[camera.front_last_recording-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last recording',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,8 +170,9 @@
 # ---
 # name: test_states[camera.front_live_view-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -183,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live view',
     'options': dict({
     }),
     'original_device_class': None,
@@ -218,8 +226,9 @@
 # ---
 # name: test_states[camera.internal_last_recording-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -237,6 +246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last recording',
     'options': dict({
     }),
     'original_device_class': None,
@@ -273,8 +283,9 @@
 # ---
 # name: test_states[camera.internal_live_view-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -292,6 +303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Live view',
     'options': dict({
     }),
     'original_device_class': None,

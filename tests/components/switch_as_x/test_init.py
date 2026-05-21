@@ -1,7 +1,5 @@
 """Tests for the Switch as X."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -1146,8 +1144,8 @@ async def test_migrate(
         capabilities=CAPABILITY_MAP[target_domain],
         config_entry=config_entry,
         device_id=device_entry.id,
+        object_id_base="ABC",
         original_name="ABC",
-        suggested_object_id="abc",
         supported_features=SUPPORTED_FEATURE_MAP[target_domain],
     )
     entity_registry.async_update_entity_options(

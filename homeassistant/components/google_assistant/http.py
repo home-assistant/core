@@ -1,7 +1,5 @@
 """Support for Google Actions Smart Home Control."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -140,7 +138,7 @@ class GoogleConfig(AbstractConfig):
         return found_agent_user_id
 
     def get_local_webhook_id(self, agent_user_id):
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for a given agent user id via the local SDK."""
         if data := self._store.agent_user_ids.get(agent_user_id):
             return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
         return None
@@ -283,7 +281,7 @@ class GoogleConfig(AbstractConfig):
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
             return error.status
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             _LOGGER.error("Could not contact %s", url)
             return HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -325,7 +323,8 @@ class GoogleConfigStore:
         if (data := await self._store.async_load()) is None:
             # if the store is not found create an empty one
             # Note that the first request is always a cloud request,
-            # and that will store the correct agent user id to be used for local requests
+            # and that will store the correct agent user id
+            # to be used for local requests
             data = {
                 STORE_AGENT_USER_IDS: {},
             }

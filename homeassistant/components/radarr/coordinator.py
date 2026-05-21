@@ -1,7 +1,5 @@
 """Data update coordinator for the Radarr integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
@@ -25,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass(kw_only=True, slots=True)
@@ -57,7 +55,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry
@@ -130,21 +128,20 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
-    """Movies update coordinator."""
+    """Movies count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies data."""
+        """Fetch the total count of movies in Radarr."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
 
 
-class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
-    """Queue update coordinator."""
+class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
+    """Queue count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies in queue."""
-        return (
-            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
-        ).totalRecords
+        """Fetch the number of movies in the download queue."""
+        # page_size=1 is sufficient since we only need the totalRecords count
+        return (await self.api_client.async_get_queue(page_size=1)).totalRecords
 
 
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):

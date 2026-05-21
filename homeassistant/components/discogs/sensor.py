@@ -1,10 +1,9 @@
 """Show the amount of records in a user's Discogs collection."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import random
+from typing import Any
 
 import discogs_client
 import voluptuous as vol
@@ -118,7 +117,7 @@ class DiscogsSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes of the sensor."""
         if self._attr_native_value is None or self._attrs is None:
             return None
@@ -131,7 +130,8 @@ class DiscogsSensor(SensorEntity):
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
                 "format": (
-                    f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})"
+                    f"{self._attrs['formats'][0]['name']}"
+                    f" ({self._attrs['formats'][0]['descriptions'][0]})"
                 ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],

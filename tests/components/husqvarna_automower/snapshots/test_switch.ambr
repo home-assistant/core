@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_switch_snapshot[switch.test_mower_1_avoid_danger_zone-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_avoid_danger_zone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_avoid_danger_zone',
+    'entity_id': 'switch.garden_test_mower_1_avoid_danger_zone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avoid Danger Zone',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,23 +36,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_avoid_danger_zone-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_avoid_danger_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Avoid Danger Zone',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_avoid_danger_zone',
+    'entity_id': 'switch.garden_test_mower_1_avoid_danger_zone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_avoid_springflowers-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_avoid_springflowers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -60,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_avoid_springflowers',
+    'entity_id': 'switch.garden_test_mower_1_avoid_springflowers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avoid Springflowers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,23 +86,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_avoid_springflowers-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_avoid_springflowers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Avoid Springflowers',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_avoid_springflowers',
+    'entity_id': 'switch.garden_test_mower_1_avoid_springflowers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_back_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -108,7 +113,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_back_lawn',
+    'entity_id': 'switch.garden_test_mower_1_back_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -130,23 +136,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_back_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Back lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_back_lawn',
+    'entity_id': 'switch.garden_test_mower_1_back_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_enable_schedule-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -156,7 +163,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_enable_schedule',
+    'entity_id': 'switch.garden_test_mower_1_enable_schedule',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,23 +186,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_enable_schedule-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Enable schedule',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_enable_schedule',
+    'entity_id': 'switch.garden_test_mower_1_enable_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_front_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -204,7 +213,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_front_lawn',
+    'entity_id': 'switch.garden_test_mower_1_front_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -212,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -226,23 +236,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_front_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Front lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_front_lawn',
+    'entity_id': 'switch.garden_test_mower_1_front_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_my_lawn-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -252,7 +263,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_my_lawn',
+    'entity_id': 'switch.garden_test_mower_1_my_lawn',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -260,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,23 +286,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_1_my_lawn-state]
+# name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 My lawn',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_my_lawn',
+    'entity_id': 'switch.garden_test_mower_1_my_lawn',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_2_enable_schedule-entry]
+# name: test_switch_snapshot[switch.garden_test_mower_2_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,7 +313,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_2_enable_schedule',
+    'entity_id': 'switch.garden_test_mower_2_enable_schedule',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -308,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -322,13 +336,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[switch.test_mower_2_enable_schedule-state]
+# name: test_switch_snapshot[switch.garden_test_mower_2_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 2 Enable schedule',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_2_enable_schedule',
+    'entity_id': 'switch.garden_test_mower_2_enable_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

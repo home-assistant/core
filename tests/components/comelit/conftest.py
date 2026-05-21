@@ -46,8 +46,11 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
     ):
         bridge = mock_comelit_serial_bridge.return_value
         bridge.get_all_devices.return_value = deepcopy(BRIDGE_DEVICE_QUERY)
+        bridge.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
+        bridge.vedo_enabled.return_value = True
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
+        bridge.base_url = f"http://{BRIDGE_HOST}:{BRIDGE_PORT}"
         bridge.device_pin = BRIDGE_PIN
         yield bridge
 
@@ -84,6 +87,7 @@ def mock_vedo() -> Generator[AsyncMock]:
         vedo.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
         vedo.host = VEDO_HOST
         vedo.port = VEDO_PORT
+        vedo.base_url = f"http://{VEDO_HOST}:{VEDO_PORT}"
         vedo.device_pin = VEDO_PIN
         vedo.type = VEDO
         yield vedo

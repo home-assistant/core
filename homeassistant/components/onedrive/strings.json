@@ -9,6 +9,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -21,9 +22,11 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "error": {
-      "folder_already_in_use": "Folder already used for backups from another Home Assistant instance",
       "folder_creation_error": "Failed to create folder",
       "folder_rename_error": "Failed to rename folder"
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
       "folder_name": {
@@ -87,8 +90,14 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
+    "connection_error": {
+      "message": "[%key:component::onedrive::config::abort::connection_error%]"
+    },
     "create_folder_error": {
       "message": "Failed to create folder: {message}"
+    },
+    "delete_error": {
+      "message": "Failed to delete from OneDrive: {paths}"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
@@ -99,11 +108,11 @@
     "file_too_large": {
       "message": "`{filename}` is too large ({size} > {limit})"
     },
-    "filename_does_not_exist": {
-      "message": "`{filename}` does not exist"
+    "filenames_do_not_exist": {
+      "message": "The following files do not exist: {filenames}"
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
+    "invalid_destination_path": {
+      "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"
     },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
@@ -142,25 +151,40 @@
     }
   },
   "services": {
+    "delete": {
+      "description": "Deletes one or more files from OneDrive.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the OneDrive you want to delete from.",
+          "name": "Config entry ID"
+        },
+        "destination_path": {
+          "description": "One or more paths to files inside the OneDrive app folder (Apps/Home Assistant) to delete.",
+          "example": "[\"photos/snapshots/image.jpg\", \"photos/snapshots/image2.jpg\"]",
+          "name": "Destination paths"
+        }
+      },
+      "name": "Delete files"
+    },
     "upload": {
-      "description": "Uploads files to OneDrive.",
+      "description": "Uploads one or more files to OneDrive.",
       "fields": {
         "config_entry_id": {
           "description": "The config entry representing the OneDrive you want to upload to.",
           "name": "Config entry ID"
         },
         "destination_folder": {
-          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "description": "Folder inside the OneDrive app folder (Apps/Home Assistant) you want to upload the files to. Will be created if it does not exist.",
           "example": "photos/snapshots",
           "name": "Destination folder"
         },
         "filename": {
-          "description": "Path to the file to upload.",
+          "description": "One or more paths to files to upload.",
           "example": "{example_image_path}",
-          "name": "Filename"
+          "name": "Filenames"
         }
       },
-      "name": "Upload file"
+      "name": "Upload files"
     }
   }
 }

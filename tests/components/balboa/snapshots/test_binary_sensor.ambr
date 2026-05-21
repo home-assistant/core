@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.fakespa_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.fakespa_filter_cycle_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.fakespa_filter_cycle_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,

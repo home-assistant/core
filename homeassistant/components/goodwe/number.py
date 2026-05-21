@@ -1,7 +1,5 @@
 """GoodWe PV inverter numeric settings entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
@@ -98,7 +96,7 @@ async def async_setup_entry(
     for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
             current_value = await description.getter(inverter)
-        except (InverterError, ValueError):
+        except InverterError, ValueError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue

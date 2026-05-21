@@ -1,11 +1,12 @@
 """Test the Home Assistant Yellow config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import YellowOptions
 import pytest
+from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.hassio import (
     DOMAIN as HASSIO_DOMAIN,
@@ -376,7 +377,8 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=RADIO_DEVICE,
                     firmware_type=ApplicationType.SPINEL,
@@ -418,9 +420,16 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         "firmware_version": fw_version,
     }
 
-    # Verify async_flash_silabs_firmware was called with Yellow's reset method
-    assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["yellow"]
+    assert flash_mock.mock_calls == [
+        call(
+            hass=hass,
+            device=RADIO_DEVICE,
+            fw_data=ANY,
+            flasher_cls=YellowFlasher,
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            progress_callback=ANY,
+        )
+    ]
 
 
 @pytest.mark.usefixtures("addon_installed")

@@ -1,7 +1,5 @@
 """The Nmap Tracker integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -39,14 +37,18 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
-# Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
+type NmapTrackerConfigEntry = ConfigEntry[NmapDeviceScanner]
+
+# Some version of nmap will fail with
+# 'Assertion failed: htn.toclock_running == true
+# (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS: Final = 16
 
 
 def short_hostname(hostname: str) -> str:
     """Return the first part of the hostname."""
-    return hostname.split(".")[0]
+    return hostname.split(".", maxsplit=1)[0]
 
 
 def human_readable_name(hostname: str, vendor: str, mac_address: str) -> str:
@@ -85,23 +87,25 @@ class NmapTrackedDevices:
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
-    scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
+    scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
+    entry.runtime_data = scanner
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: NmapTrackerConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         _async_untrack_devices(hass, entry)
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -143,6 +147,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
     remove_mac_addresses = [
         mac_address
@@ -254,7 +260,7 @@ class NmapDeviceScanner:
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
-        """Build the command line and strip out last results that do not need to be updated."""
+        """Build the options and strip out last results that don't need updating."""
         options = self._options
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

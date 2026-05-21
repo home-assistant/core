@@ -1,9 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
 
-from __future__ import annotations
-
 from contextlib import suppress
-from functools import partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import sys
@@ -21,25 +18,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, instance_id
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.service_info.zeroconf import (
-    ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
-    ZeroconfServiceInfo as _ZeroconfServiceInfo,
-)
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
-from .const import DOMAIN, ZEROCONF_TYPE
+from .const import DATA_DISCOVERY, DATA_INSTANCE, DOMAIN, ZEROCONF_TYPE
 from .discovery import (  # noqa: F401
-    DATA_DISCOVERY,
     ZeroconfDiscovery,
     build_homekit_model_lookups,
     info_from_service,
@@ -62,13 +48,6 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-_DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
-    _ATTR_PROPERTIES_ID,
-    "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
-    "2026.2",
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -85,20 +64,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_DEPRECATED_ZeroconfServiceInfo = DeprecatedConstant(
-    _ZeroconfServiceInfo,
-    "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
-    "2026.2",
-)
 
-
-@bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Get or create the shared HaZeroconf instance."""
     return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
-@bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Get or create the shared HaAsyncZeroconf instance."""
     return _async_get_instance(hass)
@@ -115,8 +86,8 @@ def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
 
 
 def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    if DOMAIN in hass.data:
-        return cast(HaAsyncZeroconf, hass.data[DOMAIN])
+    if DATA_INSTANCE in hass.data:
+        return hass.data[DATA_INSTANCE]
 
     zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
@@ -130,7 +101,7 @@ def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     # Wait to the close event to shutdown zeroconf to give
     # integrations time to send a good bye message
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
-    hass.data[DOMAIN] = aio_zc
+    hass.data[DATA_INSTANCE] = aio_zc
 
     return aio_zc
 
@@ -311,11 +282,3 @@ async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo
         port=hass.http.server_port,
         properties=params,
     )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

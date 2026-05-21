@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiovodafone import exceptions
-from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.api import VodafoneStationCommonApi, VodafoneStationDevice
 from aiovodafone.models import init_device_class
 from yarl import URL
 
@@ -33,6 +33,7 @@ from .const import (
     SCAN_INTERVAL,
 )
 from .helpers import cleanup_device_tracker
+from .utils import async_client_session
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -54,29 +55,22 @@ class UpdateCoordinatorDataType:
 
     devices: dict[str, VodafoneStationDeviceInfo]
     sensors: dict[str, Any]
+    wifi: dict[str, Any]
 
 
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
     config_entry: VodafoneConfigEntry
+    api: VodafoneStationCommonApi
+    _session: ClientSession
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: VodafoneConfigEntry,
-        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
-
-        data = config_entry.data
-
-        self.api = init_device_class(
-            URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
-            data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
-            data,
-            session,
-        )
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry.unique_id
@@ -84,7 +78,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=f"{DOMAIN}-{data[CONF_HOST]}-coordinator",
+            name=f"{DOMAIN}-{config_entry.data[CONF_HOST]}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
         )
@@ -134,10 +128,15 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
 
         try:
-            await self.api.login()
+            if not self._session.cookie_jar.filter_cookies(self.api.base_url):
+                _LOGGER.debug(
+                    "Session cookies missing for host %s, re-login",
+                    self.api.base_url.host,
+                )
+                await self.api.login()
             raw_data_devices = await self.api.get_devices_data()
             data_sensors = await self.api.get_sensor_data()
-            await self.api.logout()
+            data_wifi = await self.api.get_wifi_data()
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -150,6 +149,12 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             exceptions.GenericLoginError,
             JSONDecodeError,
         ) as err:
+            if isinstance(err, JSONDecodeError):
+                # Plain html response (usually occurs after
+                # a firmware update), requiring session
+                # reinitialization
+                _LOGGER.info("Stale session detected, reinitializing API session")
+                await self.initialize_api()
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -178,7 +183,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         self.previous_devices = current_devices
 
-        return UpdateCoordinatorDataType(data_devices, data_sensors)
+        return UpdateCoordinatorDataType(data_devices, data_sensors, data_wifi)
 
     @property
     def signal_device_new(self) -> str:
@@ -204,3 +209,15 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             sw_version=sensors_data["sys_firmware_version"],
             serial_number=self.serial_number,
         )
+
+    async def initialize_api(self) -> None:
+        """Init API session."""
+        data = self.config_entry.data
+        session = await async_client_session(self.hass)
+        self.api = init_device_class(
+            URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
+            data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
+            data,
+            session,
+        )
+        self._session = session

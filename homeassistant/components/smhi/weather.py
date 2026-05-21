@@ -1,7 +1,5 @@
 """Support for the Swedish weather institute weather service."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, Final
 
@@ -52,6 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import sun
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
 from .coordinator import SMHIConfigEntry
@@ -96,7 +95,7 @@ async def async_setup_entry(
         location[CONF_LOCATION][CONF_LONGITUDE],
         coordinator=coordinator,
     )
-    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(config_entry.title)
+    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(slugify(config_entry.title))
 
     async_add_entities([entity])
 

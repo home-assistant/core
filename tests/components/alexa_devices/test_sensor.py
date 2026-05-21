@@ -3,12 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDeviceSensor
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion

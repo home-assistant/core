@@ -1,7 +1,5 @@
 """Base class for Wyoming providers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from wyoming.client import AsyncTcpClient
@@ -126,7 +124,7 @@ async def load_wyoming_info(
 
                 if wyoming_info is not None:
                     break  # for
-        except (TimeoutError, OSError, WyomingError):
+        except TimeoutError, OSError, WyomingError:
             # Sleep and try again
             await asyncio.sleep(retry_wait)
 

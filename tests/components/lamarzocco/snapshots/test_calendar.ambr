@@ -85,8 +85,9 @@
 # ---
 # name: test_calendar_events[entry.GS012345_auto_on_off_schedule_axfz5bj]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -104,6 +105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off schedule (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -120,8 +122,9 @@
 # ---
 # name: test_calendar_events[entry.GS012345_auto_on_off_schedule_os2oswx]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -139,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off schedule (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,

@@ -1,7 +1,5 @@
 """Support for Xiaomi Aqara sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
@@ -25,7 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
+from . import XiaomiAqaraConfigEntry
+from .const import BATTERY_MODELS, POWER_MODELS
 from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +61,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
         native_unit_of_measurement="μm",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_power": SensorEntityDescription(
@@ -87,12 +84,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XiaomiAqaraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiSensor | XiaomiBatterySensor] = []
-    gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
+    gateway = config_entry.runtime_data
     for device in gateway.devices["sensor"]:
         if device["model"] == "sensor_ht":
             entities.append(
@@ -125,7 +122,7 @@ async def async_setup_entry(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ("vibration",):
+        elif device["model"] == "vibration":
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -173,7 +170,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         name: str,
         data_key: str,
         xiaomi_hub: XiaomiGateway,
-        config_entry: ConfigEntry,
+        config_entry: XiaomiAqaraConfigEntry,
     ) -> None:
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
@@ -190,7 +187,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         value = float(value)
         if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ("illumination",):
+        elif self._data_key == "illumination":
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False

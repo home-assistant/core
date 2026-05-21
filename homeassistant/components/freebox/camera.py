@@ -1,19 +1,16 @@
 """Support for Freebox cameras."""
 
-from __future__ import annotations
-
-import logging
 from typing import Any
 
-from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, CONF_INPUT
-from homeassistant.components.ffmpeg.camera import (  # pylint: disable=hass-component-root-import
-    DEFAULT_ARGUMENTS,
-    FFmpegCamera,
-)
-from homeassistant.const import CONF_NAME
+from aiohttp import web
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG
+
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager, async_get_image
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -21,7 +18,7 @@ from .const import ATTR_DETECTION, FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter
 
-_LOGGER = logging.getLogger(__name__)
+_FFMPEG_ARGUMENTS = "-pred 1"
 
 
 async def async_setup_entry(
@@ -65,31 +62,60 @@ def add_entities(
         async_add_entities(new_tracked, True)
 
 
-class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
+class FreeboxCamera(FreeboxHomeEntity, Camera):
     """Representation of a Freebox camera."""
+
+    _attr_name = None
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
         """Initialize a camera."""
-
         super().__init__(router, node)
-        device_info = {
-            CONF_NAME: node["label"].strip(),
-            CONF_INPUT: node["props"]["Stream"],
-            CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
-        }
-        FFmpegCamera.__init__(self, hass, device_info)
+        Camera.__init__(self)
 
-        self._supported_features = (
-            CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
-        )
+        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._input: str = node["props"]["Stream"]
 
         self._command_motion_detection = self.get_command_id(
             node["type"]["endpoints"], "slot", ATTR_DETECTION
         )
         self._attr_extra_state_attributes = {}
         self.update_node(node)
+
+    async def stream_source(self) -> str:
+        """Return the stream source."""
+        return self._input.split(" ")[-1]
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image response from the camera."""
+        return await async_get_image(
+            self.hass,
+            self._input,
+            output_format=IMAGE_JPEG,
+            extra_cmd=_FFMPEG_ARGUMENTS,
+        )
+
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse:
+        """Generate an HTTP MJPEG stream from the camera."""
+        stream = CameraMjpeg(self._ffmpeg.binary)
+        await stream.open_camera(self._input, extra_cmd=_FFMPEG_ARGUMENTS)
+
+        try:
+            stream_reader = await stream.get_reader()
+            return await async_aiohttp_proxy_stream(
+                self.hass,
+                request,
+                stream_reader,
+                self._ffmpeg.ffmpeg_stream_content_type,
+            )
+        finally:
+            await stream.close()
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
@@ -104,25 +130,17 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])
-        self.async_write_ha_state()
+        await super().async_update_signal()
 
     def update_node(self, node: dict[str, Any]) -> None:
         """Update params."""
-        self._name = node["label"].strip()
+        self._attr_is_streaming = node["status"] == "active"
 
-        # Get status
-        if self._node["status"] == "active":
-            self._attr_is_streaming = True
-        else:
-            self._attr_is_streaming = False
-
-        # Parse all endpoints values
         for endpoint in filter(
-            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
+            lambda x: x["ep_type"] == "signal", node["show_endpoints"]
         ):
             self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
 
-        # Get motion detection status
         self._attr_motion_detection_enabled = self._attr_extra_state_attributes[
             ATTR_DETECTION
         ]

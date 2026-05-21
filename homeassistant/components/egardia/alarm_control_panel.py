@@ -1,9 +1,8 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
 
-from __future__ import annotations
-
 import logging
 
+from pythonegardia.egardiadevice import EgardiaDevice
 import requests
 
 from homeassistant.components.alarm_control_panel import (
@@ -11,6 +10,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -47,10 +47,10 @@ def setup_platform(
     if discovery_info is None:
         return
     device = EgardiaAlarm(
-        discovery_info["name"],
+        discovery_info[CONF_NAME],
         hass.data[EGARDIA_DEVICE],
         discovery_info[CONF_REPORT_SERVER_ENABLED],
-        discovery_info.get(CONF_REPORT_SERVER_CODES),
+        discovery_info[CONF_REPORT_SERVER_CODES],
         discovery_info[CONF_REPORT_SERVER_PORT],
     )
 
@@ -67,8 +67,13 @@ class EgardiaAlarm(AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
-    ):
+        self,
+        name: str,
+        egardiasystem: EgardiaDevice,
+        rs_enabled: bool,
+        rs_codes: dict[str, list[str]],
+        rs_port: int,
+    ) -> None:
         """Initialize the Egardia alarm."""
         self._attr_name = name
         self._egardiasystem = egardiasystem
@@ -85,9 +90,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
     @property
     def should_poll(self) -> bool:
         """Poll if no report server is enabled."""
-        if not self._rs_enabled:
-            return True
-        return False
+        return not self._rs_enabled
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""
@@ -129,6 +132,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending disarm command: %s",
@@ -139,6 +143,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending arm home command: %s",
@@ -149,6 +154,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
                 "Egardia device exception occurred when sending arm away command: %s",

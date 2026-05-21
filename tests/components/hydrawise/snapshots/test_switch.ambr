@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_switches[switch.zone_one_automatic_watering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic watering',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_all_switches[switch.zone_one_manual_watering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual watering',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -101,8 +105,9 @@
 # ---
 # name: test_all_switches[switch.zone_two_automatic_watering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic watering',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -151,8 +157,9 @@
 # ---
 # name: test_all_switches[switch.zone_two_manual_watering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual watering',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,

@@ -17,8 +17,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config0-entity_ids0-messages0].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -38,6 +39,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT11 Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -103,8 +105,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config1-entity_ids1-messages1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -122,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Speed Act',
     'options': dict({
     }),
     'original_device_class': None,
@@ -151,8 +155,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config1-entity_ids1-messages1].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Dir Card',
     'options': dict({
     }),
     'original_device_class': None,
@@ -256,8 +262,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -277,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -408,8 +416,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -429,6 +438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -464,8 +474,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].5
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -485,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -520,8 +532,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config2-entity_ids2-messages2].7
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -541,6 +554,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -608,8 +622,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config3-entity_ids3-messages3].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -629,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -661,8 +677,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config3-entity_ids3-messages3].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -680,6 +697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Id',
     'options': dict({
     }),
     'original_device_class': None,
@@ -770,8 +788,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config4-entity_ids4-messages4].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -791,6 +810,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -858,8 +878,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config5-entity_ids5-messages5].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -879,6 +900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 0',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -914,8 +936,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config5-entity_ids5-messages5].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -935,6 +958,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1034,8 +1058,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config6-entity_ids6-messages6].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1055,6 +1080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1090,8 +1116,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config6-entity_ids6-messages6].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1111,6 +1138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1210,8 +1238,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config7-entity_ids7-messages7].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1231,6 +1260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1298,8 +1328,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config7-entity_ids7-messages7].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1319,6 +1350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1354,8 +1386,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config7-entity_ids7-messages7].5
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1375,6 +1408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Illuminance3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1471,8 +1505,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config8-entity_ids8-messages8].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1492,6 +1527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1623,8 +1659,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config8-entity_ids8-messages8].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1644,6 +1681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1679,8 +1717,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config8-entity_ids8-messages8].5
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1700,6 +1739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1735,8 +1775,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config8-entity_ids8-messages8].7
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1756,6 +1797,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1820,8 +1862,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1839,6 +1882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR1 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1950,8 +1994,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1969,6 +2014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR2 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1999,8 +2045,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].5
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2020,6 +2067,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR3 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2050,8 +2098,9 @@
 # ---
 # name: test_controlling_state_via_mqtt[sensor_config9-entity_ids9-messages9].7
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2071,6 +2120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR4 Unknown',
     'options': dict({
     }),
     'original_device_class': None,

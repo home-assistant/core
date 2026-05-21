@@ -1,6 +1,4 @@
-"""Creates HomeWizard Energy switch entities."""
-
-from __future__ import annotations
+"""Creates HomeWizard switch entities."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass

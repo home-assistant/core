@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_notify_platform[notify.test_user_party_chat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Party chat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_notify_platform[notify.test_user_private_message_test_partymember_displayname-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Private message: test-partymember-displayname',
     'options': dict({
     }),
     'original_device_class': None,

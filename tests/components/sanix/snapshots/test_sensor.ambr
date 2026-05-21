@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.sanix_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.sanix_device_number-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -73,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device number',
     'options': dict({
     }),
     'original_device_class': None,
@@ -102,8 +106,9 @@
 # ---
 # name: test_all_entities[sensor.sanix_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -123,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -158,8 +164,9 @@
 # ---
 # name: test_all_entities[sensor.sanix_filled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -179,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,8 +218,9 @@
 # ---
 # name: test_all_entities[sensor.sanix_service_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -229,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -259,8 +269,9 @@
 # ---
 # name: test_all_entities[sensor.sanix_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -278,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,

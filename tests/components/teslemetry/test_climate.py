@@ -321,12 +321,14 @@ async def test_select_streaming(
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
                 Signal.INSIDE_TEMP: 26,
-                Signal.HVAC_AC_ENABLED: True,
+                Signal.HVAC_POWER: "HvacPowerStateOn",
                 Signal.CLIMATE_KEEPER_MODE: "ClimateKeeperModeOn",
                 Signal.RIGHT_HAND_DRIVE: True,
                 Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
                 Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21,
-                Signal.CABIN_OVERHEAT_PROTECTION_MODE: "CabinOverheatProtectionModeStateOn",
+                Signal.CABIN_OVERHEAT_PROTECTION_MODE: (
+                    "CabinOverheatProtectionModeStateOn"
+                ),
                 Signal.CABIN_OVERHEAT_PROTECTION_TEMPERATURE_LIMIT: 35,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",

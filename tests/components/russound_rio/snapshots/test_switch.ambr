@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_all_entities[switch.backyard_loudness-entry]
+# name: test_all_entities[switch.backyard_backyard_loudness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.backyard_loudness',
+    'entity_id': 'switch.backyard_backyard_loudness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,23 +36,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.backyard_loudness-state]
+# name: test_all_entities[switch.backyard_backyard_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Backyard Loudness',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.backyard_loudness',
+    'entity_id': 'switch.backyard_backyard_loudness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[switch.bedroom_loudness-entry]
+# name: test_all_entities[switch.bedroom_bedroom_loudness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -60,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.bedroom_loudness',
+    'entity_id': 'switch.bedroom_bedroom_loudness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,13 +86,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.bedroom_loudness-state]
+# name: test_all_entities[switch.bedroom_bedroom_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom Loudness',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.bedroom_loudness',
+    'entity_id': 'switch.bedroom_bedroom_loudness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -97,8 +101,9 @@
 # ---
 # name: test_all_entities[switch.kitchen_loudness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -143,10 +149,11 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[switch.living_room_loudness-entry]
+# name: test_all_entities[switch.living_room_living_room_loudness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -156,7 +163,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.living_room_loudness',
+    'entity_id': 'switch.living_room_living_room_loudness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loudness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,13 +186,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[switch.living_room_loudness-state]
+# name: test_all_entities[switch.living_room_living_room_loudness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Loudness',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.living_room_loudness',
+    'entity_id': 'switch.living_room_living_room_loudness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,5 @@
 """Support for switches."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aiocomelit import ComelitSerialBridgeObject
@@ -82,7 +80,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        return (
+        return bool(
             self.coordinator.data[self._device.type][self._device.index].status
             == STATE_ON
         )

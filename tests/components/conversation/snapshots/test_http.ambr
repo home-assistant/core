@@ -11,6 +11,7 @@
           'bn',
           'ca',
           'cs',
+          'cy',
           'da',
           'de',
           'de-CH',
@@ -27,6 +28,7 @@
           'hi',
           'hr',
           'hu',
+          'hy',
           'id',
           'is',
           'it',
@@ -43,6 +45,7 @@
           'nb',
           'ne',
           'nl',
+          'pa',
           'pl',
           'pt',
           'pt-BR',
@@ -282,8 +285,6 @@
             'type': 'entity',
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -312,8 +313,6 @@
             'name': 'kitchen',
             'type': 'entity',
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -464,7 +463,6 @@
             'value': 'my cool light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -489,7 +487,6 @@
             'value': 'my cool light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOff',
         }),
@@ -519,7 +516,6 @@
             'value': 'light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -555,7 +551,6 @@
             'value': 'on',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassGetState',
         }),
@@ -590,7 +585,6 @@
           }),
         }),
         'file': 'en/beer.yaml',
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'OrderBeer',
         }),
@@ -631,7 +625,6 @@
             'value': 'test light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
@@ -663,7 +656,6 @@
             'value': 'test light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),

@@ -1,7 +1,5 @@
 """Support for the iZone HVAC."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Concatenate
@@ -154,14 +152,24 @@ class ControllerDevice(ClimateEntity):
             | ClimateEntityFeature.TURN_ON
         )
 
-        # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
-        # otherwise the unit determines which zone to use as target. See interface manual p. 8
-        # It appears some systems may have a different numbering system, so will trigger
-        # this if the control zone is > total zones.
+        # Typically, iZone will automatically set the controller's target
+        # temperature; but there are situations where Home Assistant should be
+        # allowed to set it:
+        #
+        # 1. The controller is in RAS mode (i.e., not in master/slave mode).
+        # 2. The controller is in master mode, but the control zone is set to
+        #    zone 13 (i.e., the master unit itself), or an invalid zone
+        #    (greater than the total number of zones). In this case, the
+        #    master unit is controlling the temperature directly.
+        # 3. Any of the zones do not have a temperature sensor
         if (
-            controller.ras_mode == "master"
-            and controller.zone_ctrl > controller.zones_total
-        ) or controller.ras_mode == "RAS":
+            controller.ras_mode == "RAS"
+            or (
+                controller.ras_mode == "master"
+                and controller.zone_ctrl > controller.zones_total
+            )
+            or any(zone.temp_current is None for zone in controller.zones)
+        ):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._state_to_pizone = {
@@ -333,7 +341,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_name(self):
-        """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the zone that currently controls the AC unit.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -344,7 +355,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_setpoint(self) -> float | None:
-        """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the temperature setpoint of the controlling zone.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -356,7 +370,10 @@ class ControllerDevice(ClimateEntity):
     @property
     @_return_on_connection_error()
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach (either from control zone or master unit)."""
+        """Return the temperature we try to reach.
+
+        Either from control zone or master unit.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self._controller.temp_setpoint
         return self.control_zone_setpoint
@@ -593,7 +610,7 @@ class ZoneDevice(ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self._zone.mode != Zone.Mode.CLOSE
 

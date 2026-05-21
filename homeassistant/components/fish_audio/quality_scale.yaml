@@ -1,0 +1,78 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities in this integration do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable:
+    status: exempt
+    comment: TTS platform has no state to mark unavailable.
+  action-exceptions: done
+  reauthentication-flow: todo
+  parallel-updates: done
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: todo
+  docs-configuration-parameters: todo
+
+  # Gold
+  entity-translations: todo
+  entity-device-class:
+    status: exempt
+    comment: No device class for TTS entities.
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: todo
+  discovery:
+    status: exempt
+    comment: No physical device to discover.
+  stale-devices:
+    status: exempt
+    comment: No physical device.
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: todo
+    comment: Could be useful if default voice disappears.
+  dynamic-devices:
+    status: exempt
+    comment: No physical device.
+  discovery-update-info:
+    status: exempt
+    comment: No physical device.
+  repair-issues: todo
+  docs-use-cases: done
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support devices.
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

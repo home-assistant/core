@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.fake_profile_dns_over_http_3_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -53,8 +55,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_http_3_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -74,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -105,8 +109,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_https_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -126,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -157,8 +163,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_https_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -178,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -209,8 +217,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_quic_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -230,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,8 +271,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_quic_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -282,6 +293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,8 +325,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_tls_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -334,6 +347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -365,8 +379,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_over_tls_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -386,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -417,8 +433,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -438,6 +455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -469,8 +487,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -490,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -521,8 +541,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries_blocked_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -542,6 +563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -573,8 +595,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dns_queries_relayed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -594,6 +617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries relayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -625,8 +649,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dnssec_not_validated_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -646,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC not validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -677,8 +703,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dnssec_validated_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -698,6 +725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -729,8 +757,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_dnssec_validated_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -750,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -781,8 +811,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_encrypted_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -802,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -833,8 +865,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_encrypted_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -854,6 +887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -885,8 +919,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_ipv4_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -906,6 +941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv4 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -937,8 +973,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_ipv6_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -958,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -989,8 +1027,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_ipv6_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1010,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1041,8 +1081,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_tcp_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1062,6 +1103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1093,8 +1135,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_tcp_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1114,6 +1157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1145,8 +1189,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_udp_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1166,6 +1211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1197,8 +1243,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_udp_queries_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1218,6 +1265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1249,8 +1297,9 @@
 # ---
 # name: test_sensor[sensor.fake_profile_unencrypted_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1270,6 +1319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unencrypted queries',
     'options': dict({
     }),
     'original_device_class': None,

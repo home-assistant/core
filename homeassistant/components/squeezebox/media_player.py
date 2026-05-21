@@ -1,7 +1,5 @@
 """Support for interfacing to the SqueezeBox API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import json
@@ -10,7 +8,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from lru import LRU
 from pysqueezebox import Server, async_discover
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -29,14 +26,12 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     discovery_flow,
-    entity_platform,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
@@ -75,16 +70,12 @@ from .util import safe_library_call
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
 
-SERVICE_CALL_METHOD = "call_method"
-SERVICE_CALL_QUERY = "call_query"
-
 ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -143,7 +134,8 @@ async def async_setup_entry(
         manufacturer = player.creator
         model_id = player.model_type
         sw_version = ""
-        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        # So we nicely merge with a server and a player
+        # linked by a MAC server is not all info lost
         if (
             server_device
             and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
@@ -179,29 +171,6 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
         )
-    )
-
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CALL_METHOD,
-        {
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_call_method",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CALL_QUERY,
-        {
-            vol.Required(ATTR_COMMAND): cv.string,
-            vol.Optional(ATTR_PARAMETERS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_call_query",
     )
 
     # Start server discovery task if not already running
@@ -322,9 +291,16 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+        self.coordinator.async_shutdown_dispatcher()
+
+        self.coordinator.config_entry.runtime_data.known_player_ids.discard(
             self.coordinator.player.player_id
         )
+
+        self.coordinator.config_entry.runtime_data.player_coordinators.pop(
+            self.coordinator.player.player_id, None
+        )
+        await super().async_will_remove_from_hass()
 
     @property
     def volume_level(self) -> float | None:
@@ -787,8 +763,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.
 
-        If the other player is a member of a sync group, it will leave the current sync group
-        without asking.
+        If the other player is a member of a sync group,
+        it will leave the current sync group without asking.
         """
         ent_reg = er.async_get(self.hass)
         for other_player_entity_id in group_members:
@@ -823,7 +799,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     def get_synthetic_id_and_cache_url(self, url: str) -> str:
         """Cache a thumbnail URL and return a synthetic ID.
 
-        This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
+        This enables us to proxy thumbnails for apps and
+        favorites, as those do not have IDs.
         """
         synthetic_id = f"s_{ulid_now()}"
 

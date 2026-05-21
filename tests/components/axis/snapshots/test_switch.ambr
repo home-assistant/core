@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_relay_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay 1',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_switches_with_port_management[port_management_payload0-api_discovery_items0][switch.home_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_switches_with_port_management[port_management_payload0-api_discovery_items0][switch.home_relay_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay 1',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,

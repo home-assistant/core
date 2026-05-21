@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_switch_entities[switch.unifi_access_evacuation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.unifi_access_evacuation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Evacuation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Evacuation',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'evacuation',
+    'unique_id': 'mock-unifi-access-entry-id-evacuation',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.unifi_access_evacuation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'UniFi Access Evacuation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_access_evacuation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities[switch.unifi_access_lockdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.unifi_access_lockdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lockdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lockdown',
+    'platform': 'unifi_access',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lockdown',
+    'unique_id': 'mock-unifi-access-entry-id-lockdown',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.unifi_access_lockdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'UniFi Access Lockdown',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.unifi_access_lockdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

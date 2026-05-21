@@ -47,6 +47,35 @@
       "extruder_temperature": {
         "name": "Extruder temperature"
       }
+    },
+    "sensor": {
+      "file_name": {
+        "name": "Current file"
+      },
+      "status": {
+        "name": "Current state",
+        "state": {
+          "cancelling": "Cancelling",
+          "connecting": "Connecting",
+          "detect_serial": "Detecting serial connection",
+          "error": "[%key:common::state::error%]",
+          "finishing": "Finishing",
+          "offline": "Offline",
+          "offline_after_error": "Offline after error",
+          "open_serial": "Opening serial connection",
+          "operational": "Operational",
+          "paused": "[%key:common::state::paused%]",
+          "pausing": "Pausing",
+          "printing": "Printing",
+          "printing_sd": "Printing from SD",
+          "printing_streaming": "Sending file to SD",
+          "resuming": "Resuming",
+          "starting": "Starting",
+          "starting_sd": "Starting print from SD",
+          "starting_streaming": "Starting to send file to SD",
+          "transferring_file": "Transferring file to SD"
+        }
+      }
     }
   },
   "exceptions": {

@@ -1,7 +1,5 @@
 """Provides an HTTP API for mobile_app."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
@@ -13,7 +11,12 @@ import voluptuous as vol
 from homeassistant.components import cloud
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -23,8 +26,6 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
@@ -68,8 +69,13 @@ class RegistrationsView(HomeAssistantView):
         hass = request.app[KEY_HASS]
 
         webhook_id = secrets.token_hex()
+        user = request["hass_user"]
 
-        if cloud.async_active_subscription(hass):
+        if (
+            not user.local_only
+            and cloud.async_active_subscription(hass)
+            and cloud.async_is_connected(hass)
+        ):
             data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(
                 hass, webhook_id, None
             )
@@ -79,7 +85,7 @@ class RegistrationsView(HomeAssistantView):
         if data[ATTR_SUPPORTS_ENCRYPTION]:
             data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
 
-        data[CONF_USER_ID] = request["hass_user"].id
+        data[CONF_USER_ID] = user.id
 
         # Fallback to DEVICE_ID if slug is empty.
         if not slugify(data[ATTR_DEVICE_NAME], separator=""):
@@ -92,7 +98,7 @@ class RegistrationsView(HomeAssistantView):
         )
 
         remote_ui_url = None
-        if cloud.async_active_subscription(hass):
+        if not user.local_only and cloud.async_active_subscription(hass):
             with suppress(cloud.CloudNotAvailable):
                 remote_ui_url = cloud.async_remote_ui_url(hass)
 

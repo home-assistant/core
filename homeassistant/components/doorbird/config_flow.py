@@ -1,7 +1,5 @@
 """Config flow for DoorBird integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
@@ -12,6 +10,7 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -54,6 +53,8 @@ def _schema_with_defaults(
         {
             vol.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(CONF_NAME, default=name): str,
         }
     )
@@ -115,7 +116,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This method performs the following verification steps:
         1. Ensures that the stored credentials work before updating the entry.
-        2. Verifies that the device at the discovered IP address has the expected MAC address.
+        2. Verifies that the device at the discovered IP
+           address has the expected MAC address.
         """
         info, errors = await self._async_validate_or_error(
             {
@@ -218,6 +220,9 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if existing_entry:
+            if existing_entry.source == SOURCE_IGNORE:
+                return self.async_abort(reason="already_configured")
+
             # Check if the host is actually changing
             if existing_entry.data.get(CONF_HOST) != host:
                 await self._async_verify_existing_device_for_discovery(

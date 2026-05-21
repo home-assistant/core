@@ -1,7 +1,5 @@
 """Switches for AVM Fritz!Box buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -14,11 +12,12 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import _is_tracked
@@ -44,6 +43,7 @@ BUTTONS: Final = [
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_firmware_update(),
+        entity_registry_enabled_default=False,
     ),
     FritzButtonDescription(
         key="reboot",
@@ -63,8 +63,63 @@ BUTTONS: Final = [
         translation_key="cleanup",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
+        entity_registry_enabled_default=False,
     ),
 ]
+
+
+def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
+    """Repair issue for cleanup button."""
+    entity_registry = er.async_get(hass)
+
+    if (
+        (
+            entity_button := entity_registry.async_get_entity_id(
+                "button", DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
+            )
+        )
+        and (entity_entry := entity_registry.async_get(entity_button))
+        and not entity_entry.disabled
+    ):
+        # Deprecate the 'cleanup' button: create a Repairs issue for users
+        ir.async_create_issue(
+            hass,
+            domain=DOMAIN,
+            issue_id="deprecated_cleanup_button",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_cleanup_button",
+            translation_placeholders={"removal_version": "2026.11.0"},
+            breaks_in_ha_version="2026.11.0",
+        )
+
+
+def repair_issue_firmware_update(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
+    """Repair issue for firmware update button."""
+    entity_registry = er.async_get(hass)
+
+    if (
+        (
+            entity_button := entity_registry.async_get_entity_id(
+                "button", DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
+            )
+        )
+        and (entity_entry := entity_registry.async_get(entity_button))
+        and not entity_entry.disabled
+    ):
+        # Deprecate the 'firmware update' button: create a Repairs issue for users
+        ir.async_create_issue(
+            hass,
+            domain=DOMAIN,
+            issue_id="deprecated_firmware_update_button",
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_firmware_update_button",
+            translation_placeholders={"removal_version": "2026.11.0"},
+            breaks_in_ha_version="2026.11.0",
+        )
 
 
 async def async_setup_entry(
@@ -82,6 +137,8 @@ async def async_setup_entry(
 
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
+        repair_issue_cleanup(hass, avm_wrapper)
+        repair_issue_firmware_update(hass, avm_wrapper)
         return
 
     data_fritz = hass.data[FRITZ_DATA_KEY]
@@ -99,6 +156,9 @@ async def async_setup_entry(
             hass, avm_wrapper.signal_device_new, async_update_avm_device
         )
     )
+
+    repair_issue_cleanup(hass, avm_wrapper)
+    repair_issue_firmware_update(hass, avm_wrapper)
 
 
 class FritzButton(ButtonEntity):
@@ -126,6 +186,24 @@ class FritzButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
+        if self.entity_description.key == "cleanup":
+            _LOGGER.warning(
+                "The 'cleanup' button is deprecated and will"
+                " be removed in Home Assistant Core"
+                " 2026.11.0. Please update your automations"
+                " and dashboards to remove any usage of"
+                " this button. The action is now performed"
+                " automatically at each data refresh",
+            )
+        elif self.entity_description.key == "firmware_update":
+            _LOGGER.warning(
+                "The 'firmware update' button is deprecated"
+                " and will be removed in Home Assistant"
+                " Core 2026.11.0. It has been superseded"
+                " by an update entity. Please update your"
+                " automations and dashboards to remove"
+                " any usage of this button",
+            )
         await self.entity_description.press_action(self.avm_wrapper)
 
 
@@ -138,9 +216,6 @@ def _async_wol_buttons_list(
     _LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
 
     new_wols: list[FritzBoxWOLButton] = []
-
-    if avm_wrapper.unique_id not in data_fritz.wol_buttons:
-        data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
 
     for mac, device in avm_wrapper.devices.items():
         if _is_tracked(mac, data_fritz.wol_buttons.values()):
@@ -164,13 +239,12 @@ def _async_wol_buttons_list(
 class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
     """Defines a FRITZ!Box Tools Wake On LAN button."""
 
-    _attr_icon = "mdi:lan-pending"
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "wake_on_lan"
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize Fritz!Box WOL button."""
         super().__init__(avm_wrapper, device)
-        self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 

@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_entities[climate.thermostat-entry]
+# name: test_entities[climate.room_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -28,7 +29,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.thermostat',
+    'entity_id': 'climate.room_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,6 +37,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,7 +52,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.thermostat-state]
+# name: test_entities[climate.room_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 180,
@@ -75,7 +77,7 @@
       'temperature': 200,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.thermostat',
+    'entity_id': 'climate.room_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

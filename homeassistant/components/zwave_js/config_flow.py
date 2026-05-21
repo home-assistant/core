@@ -1,7 +1,5 @@
 """Config flow for Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from contextlib import suppress
@@ -11,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
@@ -73,6 +70,7 @@ from .helpers import (
     CannotConnect,
     async_get_version_info,
     async_wait_for_driver_ready_event,
+    format_home_id_for_display,
 )
 from .models import ZwaveJSConfigEntry
 
@@ -159,30 +157,22 @@ async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
         raise InvalidInput("cannot_connect") from err
 
 
-def get_usb_ports() -> dict[str, str]:
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
-    ports = list_ports.comports()
     port_descriptions = {}
-    for port in ports:
+    for port in await usb.async_scan_serial_ports(hass):
         if (port.manufacturer, port.description) in IGNORED_USB_DEVICES:
             continue
 
-        vid: str | None = None
-        pid: str | None = None
-        if port.vid is not None and port.pid is not None:
-            usb_device = usb.usb_device_from_port(port)
-            vid = usb_device.vid
-            pid = usb_device.pid
-        dev_path = usb.get_serial_by_id(port.device)
         human_name = usb.human_readable_device_name(
-            dev_path,
+            port.device,
             port.serial_number,
             port.manufacturer,
             port.description,
-            vid,
-            pid,
+            port.vid if isinstance(port, usb.USBDevice) else None,
+            port.pid if isinstance(port, usb.USBDevice) else None,
         )
-        port_descriptions[dev_path] = human_name
+        port_descriptions[port.device] = human_name
 
     # Filter out "n/a" descriptions only if there are other ports available
     non_na_ports = {
@@ -192,12 +182,7 @@ def get_usb_ports() -> dict[str, str]:
     }
 
     # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
-
-
-async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
-    """Return a dict of USB ports and their friendly names."""
-    return await hass.async_add_executor_job(get_usb_ports)
+    return non_na_ports or port_descriptions
 
 
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -283,7 +268,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
-            # If we have updates to the add-on config, set them before starting the add-on.
+            # If we have updates to the add-on config,
+            # set them before starting the add-on.
             self._addon_config_updates = {}
             await self._async_set_addon_config(config_updates)
 
@@ -467,7 +453,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(home_id)
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
-        self.context.update({"title_placeholders": {CONF_NAME: home_id}})
+        home_id_display = format_home_id_for_display(int(home_id))
+        # Show home ID and network location in discovery notification
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "host": discovery_info.host,
+                    "port": str(discovery_info.port),
+                    "home_id": home_id_display,
+                }
+            }
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -479,10 +475,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.ws_address
         assert self.unique_id
+        home_id_display = format_home_id_for_display(int(self.unique_id))
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "home_id": self.unique_id,
+                "home_id": home_id_display,
                 CONF_URL: self.ws_address[5:],
             },
         )
@@ -1220,7 +1217,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Unload the config entry before stopping the add-on.
                 await self.hass.config_entries.async_unload(config_entry.entry_id)
                 addon_manager = get_addon_manager(self.hass)
-                _LOGGER.debug("Stopping Z-Wave JS add-on")
+                _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
@@ -1413,7 +1410,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="restore_failed",
             description_placeholders={
                 "file_path": str(self.backup_filepath),
-                "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
+                "file_url": (
+                    "data:application/octet-stream;base64,"
+                    f"{base64.b64encode(self.backup_data).decode('ascii')}"
+                ),
                 "file_name": self.backup_filepath.name,
             },
         )
@@ -1560,8 +1560,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
-            # We are not aborting if home ID configured here, we just want to make sure that it's set
-            # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+            # We are not aborting if home ID configured
+            # here, we just want to make sure that it's set
+            # We will update a USB based config entry
+            # automatically in
+            # `async_step_finish_addon_setup_user`
             await self.async_set_unique_id(
                 str(discovery_info.zwave_home_id), raise_on_progress=False
             )
@@ -1598,7 +1601,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             for addon_key, addon_val in self.original_addon_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
-        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
 
     async def _async_backup_network(self) -> None:

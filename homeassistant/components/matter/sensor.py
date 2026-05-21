@@ -1,7 +1,5 @@
 """Matter sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
@@ -23,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -48,8 +45,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 AIR_QUALITY_MAP = {
@@ -70,6 +68,17 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
+_tvoc = clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement
+CONCENTRATION_LEVEL_MAP = {
+    # enum with known Concentration Level values which we can translate
+    _tvoc.Enums.LevelValueEnum.kUnknown: None,
+    _tvoc.Enums.LevelValueEnum.kLow: "low",
+    _tvoc.Enums.LevelValueEnum.kMedium: "medium",
+    _tvoc.Enums.LevelValueEnum.kHigh: "high",
+    _tvoc.Enums.LevelValueEnum.kCritical: "critical",
+    _tvoc.Enums.LevelValueEnum.kUnknownEnumValue: None,
+}
+
 EVE_CLUSTER_WEATHER_MAP = {
     # enum with known Weather state values which we can translate
     1: "sunny",
@@ -86,43 +95,46 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
+_op_err = clusters.OperationalState.Enums.ErrorStateEnum
 OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
-    clusters.OperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
-    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
-    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
-    clusters.OperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+    _op_err.kNoError: "no_error",
+    _op_err.kUnableToStartOrResume: "unable_to_start_or_resume",
+    _op_err.kUnableToCompleteOperation: ("unable_to_complete_operation"),
+    _op_err.kCommandInvalidInState: "command_invalid_in_state",
 }
 
+_rvc_op = clusters.RvcOperationalState.Enums.OperationalStateEnum
 RVC_OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     **OPERATIONAL_STATE_MAP,
-    clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
-    clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
-    clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
+    _rvc_op.kSeekingCharger: "seeking_charger",
+    _rvc_op.kCharging: "charging",
+    _rvc_op.kDocked: "docked",
 }
 
+_rvc_err = clusters.RvcOperationalState.Enums.ErrorStateEnum
 RVC_OPERATIONAL_STATE_ERROR_MAP = {
     # enum with known Error state values which we can translate
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kFailedToFindChargingDock: "failed_to_find_charging_dock",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kStuck: "stuck",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinMissing: "dust_bin_missing",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinFull: "dust_bin_full",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankEmpty: "water_tank_empty",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankMissing: "water_tank_missing",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankLidOpen: "water_tank_lid_open",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kLowBattery: "low_battery",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCannotReachTargetArea: "cannot_reach_target_area",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankFull: "dirty_water_tank_full",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankMissing: "dirty_water_tank_missing",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
-    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
+    _rvc_err.kNoError: "no_error",
+    _rvc_err.kUnableToStartOrResume: "unable_to_start_or_resume",
+    _rvc_err.kUnableToCompleteOperation: ("unable_to_complete_operation"),
+    _rvc_err.kCommandInvalidInState: "command_invalid_in_state",
+    _rvc_err.kFailedToFindChargingDock: ("failed_to_find_charging_dock"),
+    _rvc_err.kStuck: "stuck",
+    _rvc_err.kDustBinMissing: "dust_bin_missing",
+    _rvc_err.kDustBinFull: "dust_bin_full",
+    _rvc_err.kWaterTankEmpty: "water_tank_empty",
+    _rvc_err.kWaterTankMissing: "water_tank_missing",
+    _rvc_err.kWaterTankLidOpen: "water_tank_lid_open",
+    _rvc_err.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
+    _rvc_err.kLowBattery: "low_battery",
+    _rvc_err.kCannotReachTargetArea: "cannot_reach_target_area",
+    _rvc_err.kDirtyWaterTankFull: "dirty_water_tank_full",
+    _rvc_err.kDirtyWaterTankMissing: "dirty_water_tank_missing",
+    _rvc_err.kWheelsJammed: "wheels_jammed",
+    _rvc_err.kBrushJammed: "brush_jammed",
+    _rvc_err.kNavigationSensorObscured: ("navigation_sensor_obscured"),
 }
 
 BOOST_STATE_MAP = {
@@ -150,7 +162,9 @@ ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
-    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: (
+        "power_adjust_active"
+    ),
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
 }
 
@@ -173,14 +187,15 @@ EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
 }
 
+_pump_ctrl = clusters.PumpConfigurationAndControl.Enums.ControlModeEnum
 PUMP_CONTROL_MODE_MAP = {
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_speed",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantPressure: "constant_pressure",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kProportionalPressure: "proportional_pressure",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantFlow: "constant_flow",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantTemperature: "constant_temperature",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kAutomatic: "automatic",
-    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
+    _pump_ctrl.kConstantSpeed: "constant_speed",
+    _pump_ctrl.kConstantPressure: "constant_pressure",
+    _pump_ctrl.kProportionalPressure: "proportional_pressure",
+    _pump_ctrl.kConstantFlow: "constant_flow",
+    _pump_ctrl.kConstantTemperature: "constant_temperature",
+    _pump_ctrl.kAutomatic: "automatic",
+    _pump_ctrl.kUnknownEnumValue: None,
 }
 
 MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
@@ -214,11 +229,11 @@ def matter_epoch_microseconds_to_utc(x: int | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
@@ -231,7 +246,8 @@ class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescrip
 class MatterListSensorEntityDescription(MatterSensorEntityDescription):
     """Describe Matter sensor entities from MatterListSensor."""
 
-    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
 
 
@@ -239,8 +255,10 @@ class MatterListSensorEntityDescription(MatterSensorEntityDescription):
 class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescription):
     """Describe Matter sensor entities from Matter OperationalState objects."""
 
-    # list attribute: the attribute descriptor to get the list of values (= list of structs)
-    # needs to be set for handling OperationalState not on the OperationalState cluster, but
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of structs)
+    # needs to be set for handling OperationalState not on the
+    # OperationalState cluster, but
     # on one of its derived clusters (e.g. RvcOperationalState)
     state_list_attribute: type[ClusterAttributeDescriptor] = (
         clusters.OperationalState.Attributes.OperationalStateList
@@ -269,7 +287,7 @@ class MatterSensor(MatterEntity, SensorEntity):
 
 
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
-    """Representation of a Matter sensor for Matter 1.0 draft ElectricalMeasurement cluster."""
+    """Matter sensor for 1.0 draft ElectricalMeasurement cluster."""
 
     entity_description: MatterSensorEntityDescription
 
@@ -442,6 +460,9 @@ DISCOVERY_SCHEMAS = [
             key="PowerSourceBatVoltage",
             translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            # Battery voltages are low-voltage diagnostics; use 2 decimals in volts
+            # to provide finer granularity than mains-level voltage sensors.
+            suggested_display_precision=2,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -496,8 +517,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatReplacementDescription",
             translation_key="battery_replacement_description",
-            native_unit_of_measurement=None,
-            device_class=None,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterSensor,
@@ -512,7 +531,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -540,7 +558,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -591,7 +608,6 @@ DISCOVERY_SCHEMAS = [
             key="EveWeatherWeatherTrend",
             translation_key="eve_weather_trend",
             device_class=SensorDeviceClass.ENUM,
-            native_unit_of_measurement=None,
             options=[x for x in EVE_CLUSTER_WEATHER_MAP.values() if x is not None],
             device_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
         ),
@@ -623,6 +639,21 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="TotalVolatileOrganicCompoundsSensorLevel",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="tvoc_level",
+            options=[x for x in CONCENTRATION_LEVEL_MAP.values() if x is not None],
+            device_to_ha=CONCENTRATION_LEVEL_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.LevelValue,
+        ),
+        featuremap_contains=clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Bitmaps.Feature.kLevelIndication,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -669,8 +700,6 @@ DISCOVERY_SCHEMAS = [
             key="AirQuality",
             translation_key="air_quality",
             device_class=SensorDeviceClass.ENUM,
-            state_class=None,
-            # convert to set first to remove the duplicate unknown value
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
             device_to_ha=lambda x: AIR_QUALITY_MAP[x],
         ),
@@ -694,8 +723,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="NitrogenDioxideSensor",
-            translation_key="nitrogen_dioxide",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -719,9 +748,21 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="RadonSensor",
+            native_unit_of_measurement=CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="radon_concentration",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="HepaFilterCondition",
             native_unit_of_measurement=PERCENTAGE,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="hepa_filter_condition",
         ),
@@ -733,7 +774,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ActivatedCarbonFilterCondition",
             native_unit_of_measurement=PERCENTAGE,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="activated_carbon_filter_condition",
         ),
@@ -747,7 +787,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ThirdRealityEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -764,7 +803,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ThirdRealityEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -781,7 +819,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="NeoEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -796,7 +833,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="NeoEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=1,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -838,8 +874,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="SwitchCurrentPosition",
-            native_unit_of_measurement=None,
-            device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="switch_current_position",
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -854,7 +888,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ElectricalPowerMeasurementWatt",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.MILLIWATT,
             suggested_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
@@ -880,6 +913,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentPower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -896,6 +930,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactivePower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -911,6 +946,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -928,6 +964,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSVoltage,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -945,6 +982,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -962,6 +1000,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -979,6 +1018,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -996,13 +1036,13 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="ElectricalEnergyMeasurementCumulativeEnergyImported",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
@@ -1011,6 +1051,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
@@ -1021,7 +1062,6 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalEnergyMeasurementCumulativeEnergyExported",
             translation_key="energy_exported",
             device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
@@ -1030,6 +1070,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
         ),
@@ -1039,7 +1080,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="ElectricalMeasurementActivePower",
             device_class=SensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1133,8 +1173,6 @@ DISCOVERY_SCHEMAS = [
             key="OperationalStateCountdownTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # Add countdown to current datetime to get the estimated end time
             device_to_ha=(
                 lambda x: dt_util.utcnow() + timedelta(seconds=x) if x > 0 else None
             ),
@@ -1492,8 +1530,6 @@ DISCOVERY_SCHEMAS = [
             key="ValveConfigurationAndControlAutoCloseTime",
             translation_key="auto_close_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # AutoCloseTime is defined as epoch-us in the spec
             device_to_ha=matter_epoch_microseconds_to_utc,
         ),
         entity_class=MatterSensor,
@@ -1508,8 +1544,6 @@ DISCOVERY_SCHEMAS = [
             key="ServiceAreaEstimatedEndTime",
             translation_key="estimated_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            state_class=None,
-            # EstimatedEndTime is defined as epoch-s (Matter 2000 epoch) in the spec
             device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,

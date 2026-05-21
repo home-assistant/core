@@ -1,0 +1,334 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "MT15/MT29",
+  "category": "hjjcy",
+  "product_id": "9f8pjxsmaqnk2tzr",
+  "product_name": "MT15/MT29",
+  "online": true,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2025-11-16T00:36:54+00:00",
+  "create_time": "2025-11-16T00:36:54+00:00",
+  "update_time": "2025-11-16T00:36:54+00:00",
+  "function": {
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    }
+  },
+  "status_range": {
+    "air_quality_index": {
+      "type": "Enum",
+      "value": {
+        "range": ["level_1", "level_2", "level_3"]
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "Ôäâ",
+        "min": -400,
+        "max": 2000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "humidity_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "co2_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "ppm",
+        "min": 0,
+        "max": 10000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ch2o_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "mg/m┬│",
+        "min": 0,
+        "max": 9999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "pm25_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "ug/m┬│",
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pm1": {
+      "type": "Integer",
+      "value": {
+        "unit": "ug/m┬│",
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "pm10": {
+      "type": "Integer",
+      "value": {
+        "unit": "ug/m┬│",
+        "min": 0,
+        "max": 999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "charge_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    }
+  },
+  "status": {
+    "air_quality_index": "level_1",
+    "temp_current": 27,
+    "humidity_value": 68,
+    "co2_value": 439,
+    "ch2o_value": 1,
+    "pm25_value": 11,
+    "pm1": 12,
+    "pm10": 15,
+    "battery_percentage": 100,
+    "charge_state": true,
+    "alarm_volume": "middle"
+  },
+  "set_up": true,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "air_quality_index",
+      "config_item": {
+        "statusFormat": {
+          "air_quality_index": "$"
+        },
+        "valueDesc": {
+          "range": ["level_1", "level_2", "level_3"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "2": {
+      "value_convert": "default",
+      "status_code": "temp_current",
+      "config_item": {
+        "statusFormat": {
+          "temp_current": "$"
+        },
+        "valueDesc": {
+          "unit": "Ôäâ",
+          "min": -400,
+          "max": 2000,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "3": {
+      "value_convert": "default",
+      "status_code": "humidity_value",
+      "config_item": {
+        "statusFormat": {
+          "humidity_value": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 1000,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "4": {
+      "value_convert": "default",
+      "status_code": "co2_value",
+      "config_item": {
+        "statusFormat": {
+          "co2_value": "$"
+        },
+        "valueDesc": {
+          "unit": "ppm",
+          "min": 0,
+          "max": 10000,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "5": {
+      "value_convert": "default",
+      "status_code": "ch2o_value",
+      "config_item": {
+        "statusFormat": {
+          "ch2o_value": "$"
+        },
+        "valueDesc": {
+          "unit": "mg/m┬│",
+          "min": 0,
+          "max": 9999,
+          "scale": 3,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "7": {
+      "value_convert": "default",
+      "status_code": "pm25_value",
+      "config_item": {
+        "statusFormat": {
+          "pm25_value": "$"
+        },
+        "valueDesc": {
+          "unit": "ug/m┬│",
+          "min": 0,
+          "max": 999,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "8": {
+      "value_convert": "default",
+      "status_code": "pm1",
+      "config_item": {
+        "statusFormat": {
+          "pm1": "$"
+        },
+        "valueDesc": {
+          "unit": "ug/m┬│",
+          "min": 0,
+          "max": 999,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "pm10",
+      "config_item": {
+        "statusFormat": {
+          "pm10": "$"
+        },
+        "valueDesc": {
+          "unit": "ug/m┬│",
+          "min": 0,
+          "max": 999,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "22": {
+      "value_convert": "default",
+      "status_code": "battery_percentage",
+      "config_item": {
+        "statusFormat": {
+          "battery_percentage": "$"
+        },
+        "valueDesc": {
+          "unit": "%",
+          "min": 0,
+          "max": 100,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "23": {
+      "value_convert": "default",
+      "status_code": "charge_state",
+      "config_item": {
+        "statusFormat": {
+          "charge_state": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    },
+    "28": {
+      "value_convert": "default",
+      "status_code": "alarm_volume",
+      "config_item": {
+        "statusFormat": {
+          "alarm_volume": "$"
+        },
+        "valueDesc": {
+          "range": ["low", "middle", "high", "mute"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "9f8pjxsmaqnk2tzr"
+      }
+    }
+  }
+}

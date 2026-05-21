@@ -1,7 +1,5 @@
 """Denon HEOS Media Player."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from contextlib import suppress
 import dataclasses
@@ -39,7 +37,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -554,7 +551,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Image url of current playing media."""
         # May be an empty string, if so, return None
         image_url = self._player.now_playing_media.image_url
-        return image_url if image_url else None
+        return image_url or None
 
     @property
     def media_title(self) -> str | None:
@@ -626,7 +623,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
-    ) -> BrowseMediaSource:
+    ) -> media_source.BrowseMediaSource | media_source.RootBrowseMediaSource:
         """Browse a media source item."""
         return await media_source.async_browse_media(
             self.hass,

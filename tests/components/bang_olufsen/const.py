@@ -1,11 +1,11 @@
 """Constants used for testing the bang_olufsen integration."""
 
 from ipaddress import IPv4Address, IPv6Address
-from unittest.mock import Mock
 
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
+    BatteryState,
     ListeningModeRef,
     OverlayPlayRequest,
     OverlayPlayRequestTextToSpeechTextToSpeech,
@@ -48,37 +48,54 @@ TEST_NAME = f"{TEST_MODEL_BALANCE}-{TEST_SERIAL_NUMBER}"
 TEST_FRIENDLY_NAME = "Living room Balance"
 TEST_TYPE_NUMBER = "1111"
 TEST_ITEM_NUMBER = "1111111"
-TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.beosound_balance_11111111"
+TEST_JID_1 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
+)
+TEST_MEDIA_PLAYER_ENTITY_ID = "media_player.living_room_balance"
 
 TEST_FRIENDLY_NAME_2 = "Laundry room Core"
 TEST_SERIAL_NUMBER_2 = "22222222"
 TEST_NAME_2 = f"{TEST_MODEL_CORE}-{TEST_SERIAL_NUMBER_2}"
-TEST_JID_2 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.beoconnect_core_22222222"
+TEST_JID_2 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_2}@products.bang-olufsen.com"
+)
+TEST_MEDIA_PLAYER_ENTITY_ID_2 = "media_player.laundry_room_core"
 TEST_HOST_2 = "192.168.0.2"
 
 TEST_FRIENDLY_NAME_3 = "Bedroom Premiere"
 TEST_SERIAL_NUMBER_3 = "33333333"
 TEST_NAME_3 = f"{TEST_MODEL_PREMIERE}-{TEST_SERIAL_NUMBER_3}"
-TEST_JID_3 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_3 = f"media_player.beosound_premiere_{TEST_SERIAL_NUMBER_3}"
+TEST_JID_3 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_3}@products.bang-olufsen.com"
+)
+TEST_MEDIA_PLAYER_ENTITY_ID_3 = "media_player.bedroom_premiere"
 TEST_HOST_3 = "192.168.0.3"
 
 TEST_FRIENDLY_NAME_4 = "Lounge room A5"
 TEST_SERIAL_NUMBER_4 = "44444444"
 TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
-TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
-TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_a5_{TEST_SERIAL_NUMBER_4}"
+TEST_JID_4 = (
+    f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}"
+    f".{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
+)
+TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.lounge_room_a5"
 TEST_HOST_4 = "192.168.0.4"
+TEST_BATTERY_SENSOR_ENTITY_ID = "sensor.lounge_room_a5_battery"
+TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = "binary_sensor.lounge_room_a5_charging"
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
 TEST_REMOTE_SERIAL_PAIRED = f"{TEST_REMOTE_SERIAL}_{TEST_SERIAL_NUMBER}"
 TEST_REMOTE_SW_VERSION = "1.0.0"
 
-TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_11111111_control_play"
+TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID = (
+    "sensor.beoremote_one_55555555_11111111_battery"
+)
+TEST_BUTTON_EVENT_ENTITY_ID = "event.living_room_balance_play_pause"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -92,27 +109,27 @@ TEST_DATA_CREATE_ENTRY = {
     CONF_HOST: TEST_HOST,
     CONF_MODEL: TEST_MODEL_BALANCE,
     CONF_BEOLINK_JID: TEST_JID_1,
-    CONF_NAME: TEST_NAME,
+    CONF_NAME: TEST_FRIENDLY_NAME,
 }
 TEST_DATA_CREATE_ENTRY_2 = {
     CONF_HOST: TEST_HOST_2,
     CONF_MODEL: TEST_MODEL_CORE,
     CONF_BEOLINK_JID: TEST_JID_2,
-    CONF_NAME: TEST_NAME_2,
+    CONF_NAME: TEST_FRIENDLY_NAME_2,
 }
 
 TEST_DATA_CREATE_ENTRY_3 = {
     CONF_HOST: TEST_HOST_3,
     CONF_MODEL: TEST_MODEL_PREMIERE,
     CONF_BEOLINK_JID: TEST_JID_3,
-    CONF_NAME: TEST_NAME_3,
+    CONF_NAME: TEST_FRIENDLY_NAME_3,
 }
 
 TEST_DATA_CREATE_ENTRY_4 = {
     CONF_HOST: TEST_HOST_4,
     CONF_MODEL: TEST_MODEL_A5,
     CONF_BEOLINK_JID: TEST_JID_4,
-    CONF_NAME: TEST_NAME_4,
+    CONF_NAME: TEST_FRIENDLY_NAME_4,
 }
 
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(
@@ -238,11 +255,7 @@ TEST_DEEZER_TRACK = PlayQueueItem(
 TEST_DEEZER_INVALID_FLOW = ApiException(
     status=400,
     reason="Bad Request",
-    http_resp=Mock(
-        status=400,
-        reason="Bad Request",
-        data='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
-    ),
+    body='{"message": "Couldn\'t start user flow for me"}',  # codespell:ignore
 )
 TEST_SOUND_MODE = 123
 TEST_SOUND_MODE_2 = 234
@@ -255,3 +268,10 @@ TEST_SOUND_MODES = [
     TEST_ACTIVE_SOUND_MODE_NAME_2,
     f"{TEST_SOUND_MODE_NAME} 2 (345)",
 ]
+TEST_BATTERY = BatteryState(
+    battery_level=5,
+    is_charging=False,
+    remaining_charging_time_minutes=0,
+    remaining_playing_time_minutes=0,
+    state="BatteryVeryLow",
+)

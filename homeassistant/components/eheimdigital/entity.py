@@ -30,14 +30,15 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         """Initialize a EHEIM Digital entity."""
         super().__init__(coordinator)
         if TYPE_CHECKING:
-            # At this point at least one device is found and so there is always a main device set
+            # At this point at least one device is found
+            # and so there is always a main device set
             assert isinstance(coordinator.hub.main, EheimDigitalDevice)
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
             name=device.name,
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="EHEIM",
-            model=device.device_type.model_name,
+            model=device.model_name,
             identifiers={(DOMAIN, device.mac_address)},
             suggested_area=device.aquarium_name,
             sw_version=device.sw_version,
@@ -59,9 +60,9 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
 def exception_handler[_EntityT: EheimDigitalEntity[EheimDigitalDevice], **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate AirGradient calls to handle exceptions.
+    """Decorate eheimdigital calls to handle exceptions.
 
-    A decorator that wraps the passed in function, catches AirGradient errors.
+    A decorator that wraps the passed in function, catches eheimdigital errors.
     """
 
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:

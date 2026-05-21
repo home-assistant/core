@@ -1,13 +1,18 @@
 """Test the UniFi Protect event platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 import pytest
-from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjectType
+from uiprotect.data import (
+    AiPort,
+    Camera,
+    Event,
+    EventType,
+    ModelType,
+    SmartDetectObjectType,
+)
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
@@ -959,7 +964,8 @@ async def test_vehicle_detection_multiple_thumbnails(
 
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
 
-    # Create event with multiple vehicle thumbnails - best should be highest confidence LPR
+    # Create event with multiple vehicle thumbnails
+    # best should be highest confidence LPR
     event = Event(
         model=ModelType.EVENT,
         id="test_multi_thumbnail_id",
@@ -1590,3 +1596,16 @@ async def test_vehicle_detection_no_refire_same_data(
     assert len(events) == 1
 
     unsub()
+
+
+async def test_aiport_no_event_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that AI Port devices do not create camera-specific event entities."""
+    await init_entry(hass, ufp, [aiport])
+
+    # AI Port should not create any camera-specific event entities
+    # (doorbell, motion, etc.)
+    assert_entity_counts(hass, Platform.EVENT, 0, 0)

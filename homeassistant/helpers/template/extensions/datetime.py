@@ -1,7 +1,5 @@
 """DateTime functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -145,7 +143,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 result = dt_util.as_local(result)
 
             return result.strftime(date_format)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_custom", value)
@@ -155,7 +153,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to local date/time."""
         try:
             return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_local", value)
@@ -165,7 +163,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to UTC date/time."""
         try:
             return dt_util.utc_from_timestamp(value).isoformat()
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_utc", value)
@@ -175,13 +173,13 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter and function which tries to convert value to timestamp."""
         try:
             return dt_util.as_timestamp(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             if default is _SENTINEL:
                 raise_no_default("as_timestamp", value)
             return default
 
     def as_datetime(self, value: Any, default: Any = _SENTINEL) -> Any:
-        """Filter and to convert a time string or UNIX timestamp to datetime object."""
+        """Filter to convert a time string or UNIX timestamp to datetime object."""
         # Return datetime.datetime object without changes
         if type(value) is datetime:
             return value
@@ -192,11 +190,11 @@ class DateTimeExtension(BaseTemplateExtension):
             # Check for a valid UNIX timestamp string, int or float
             timestamp = float(value)
             return dt_util.utc_from_timestamp(timestamp)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # Try to parse datetime string to datetime object
             try:
                 return dt_util.parse_datetime(value, raise_on_error=True)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 if default is _SENTINEL:
                     # Return None on string input
                     # to ensure backwards compatibility with HA Core 2024.1 and before.
@@ -213,7 +211,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Parse a time string to datetime."""
         try:
             return datetime.strptime(string, fmt)
-        except (ValueError, AttributeError, TypeError):
+        except ValueError, AttributeError, TypeError:
             if default is _SENTINEL:
                 raise_no_default("strptime", string)
             return default
@@ -267,8 +265,9 @@ class DateTimeExtension(BaseTemplateExtension):
 
         If the input are not a datetime object the input will be returned unmodified.
 
-        Note: This template function is deprecated in favor of `time_until`, but is still
-        supported so as not to break old templates.
+        Note: This template function is deprecated in favor
+        of `time_until`, but is still supported so as not to
+        break old templates.
         """
         if (render_info := render_info_cv.get()) is not None:
             render_info.has_time = True

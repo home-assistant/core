@@ -1,7 +1,5 @@
 """Config flow for MQTT."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -24,6 +22,7 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
+import paho.mqtt.client as mqtt
 import voluptuous as vol
 import yaml
 
@@ -92,6 +91,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_OPTIONS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
@@ -191,6 +191,7 @@ from .const import (
     CONF_DIRECTION_STATE_TOPIC,
     CONF_DIRECTION_VALUE_TEMPLATE,
     CONF_DISCOVERY_PREFIX,
+    CONF_DISCOVERY_QOS,
     CONF_EFFECT_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -235,7 +236,6 @@ from .const import (
     CONF_MODE_STATE_TOPIC,
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
-    CONF_OPTIONS,
     CONF_OSCILLATION_COMMAND_TEMPLATE,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
@@ -477,7 +477,7 @@ _CODE_VALIDATION_MODE = {
     "remote_code": REMOTE_CODE,
     "remote_code_text": REMOTE_CODE_TEXT,
 }
-EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
@@ -1022,7 +1022,7 @@ def validate_field(
         return
     try:
         user_input[field] = validator(user_input[field])
-    except (ValueError, vol.Error, vol.Invalid):
+    except ValueError, vol.Error, vol.Invalid:
         errors[field] = error
 
 
@@ -1133,11 +1133,13 @@ def validate_number_platform_config(config: dict[str, Any]) -> dict[str, str]:
         errors[CONF_MIN] = "max_below_min"
         errors[CONF_MAX] = "max_below_min"
 
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) == "None":
+        unit_of_measurement = None
+
     if (
         (device_class := config.get(CONF_DEVICE_CLASS)) is not None
         and device_class in NUMBER_DEVICE_CLASS_UNITS
-        and config.get(CONF_UNIT_OF_MEASUREMENT)
-        not in NUMBER_DEVICE_CLASS_UNITS[device_class]
+        and unit_of_measurement not in NUMBER_DEVICE_CLASS_UNITS[device_class]
     ):
         errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
 
@@ -1166,6 +1168,7 @@ def validate_sensor_platform_config(
     ):
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
+    unit_of_measurement: str | None = None
     if (
         device_class in DEVICE_CLASS_UNITS
         and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
@@ -1174,6 +1177,10 @@ def validate_sensor_platform_config(
         # Do not allow an empty unit of measurement in a subentry data flow
         errors[CONF_UNIT_OF_MEASUREMENT] = "uom_required_for_device_class"
         return errors
+
+    if unit_of_measurement == "None":
+        unit_of_measurement = None
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
 
     if (
         device_class is not None
@@ -1299,9 +1306,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=ALARM_CONTROL_PANEL_CODE_MODE,
             required=True,
             exclude_from_config=True,
-            default=lambda config: config[CONF_CODE].lower()
-            if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
-            else "local_code",
+            default=lambda config: (
+                config[CONF_CODE].lower()
+                if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
+                else "local_code"
+            ),
         ),
     },
     Platform.BINARY_SENSOR: {
@@ -1327,10 +1336,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "climate_feature_action": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1431,9 +1442,11 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=True,
             exclude_from_config=True,
             default=(
-                lambda config: "image_url"
-                if config.get(CONF_IMAGE_TOPIC) is None
-                else "image_data"
+                lambda config: (
+                    "image_url"
+                    if config.get(CONF_IMAGE_TOPIC) is None
+                    else "image_data"
+                )
             ),
         )
     },
@@ -1517,10 +1530,12 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=validate(cv.temperature_unit),
             required=True,
             exclude_from_reconfig=True,
-            default=lambda _: "C"
-            if async_get_hass().config.units.temperature_unit
-            is UnitOfTemperature.CELSIUS
-            else "F",
+            default=lambda _: (
+                "C"
+                if async_get_hass().config.units.temperature_unit
+                is UnitOfTemperature.CELSIUS
+                else "F"
+            ),
         ),
         "water_heater_feature_current_temperature": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3821,7 +3836,7 @@ def data_schema_from_fields(
         if not data_schema_element:
             # Do not show empty sections
             continue
-        # Collapse if values are changed or required fields need to be set
+        # Collapse if no values are changed and no required fields need to be set
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
@@ -3882,7 +3897,7 @@ def validate_user_input(
             merged_user_input[field] = (
                 validator(value) if validator is not None else value
             )
-        except (ValueError, vol.Error, vol.Invalid):
+        except ValueError, vol.Error, vol.Invalid:
             data_schema_field = data_schema_fields[field]
             errors[data_schema_field.section or field] = (
                 data_schema_field.error or "invalid_input"
@@ -4060,6 +4075,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             config: dict[str, Any] = {
                 CONF_BROKER: addon_discovery_config[CONF_HOST],
                 CONF_PORT: addon_discovery_config[CONF_PORT],
+                CONF_PROTOCOL: DEFAULT_PROTOCOL,
                 CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
                 CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
                 CONF_DISCOVERY: DEFAULT_DISCOVERY,
@@ -4288,6 +4304,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data: dict[str, Any] = self._hassio_discovery.copy()
             data[CONF_BROKER] = data.pop(CONF_HOST)
+            data[CONF_PROTOCOL] = DEFAULT_PROTOCOL
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
                 data,
@@ -4299,6 +4316,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_BROKER: data[CONF_BROKER],
                         CONF_PORT: data[CONF_PORT],
+                        CONF_PROTOCOL: DEFAULT_PROTOCOL,
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
@@ -4365,6 +4383,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "bad_discovery_prefix",
                 valid_publish_topic,
             )
+            options_config[CONF_DISCOVERY_QOS] = int(user_input[CONF_DISCOVERY_QOS])
             if "birth_topic" in user_input:
                 _validate(
                     CONF_BIRTH_MESSAGE,
@@ -4398,6 +4417,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         }
         discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery_qos = options_config.get(CONF_DISCOVERY_QOS, DEFAULT_QOS)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -4405,6 +4425,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)] = (
             PUBLISH_TOPIC_SELECTOR
         )
+        fields[vol.Optional("discovery_qos", default=discovery_qos)] = QOS_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -4525,7 +4546,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, data_schema: vol.Schema
     ) -> dict[str, Any]:
         """Get suggestions from device data based on the data schema."""
-        device_data = self._subentry_data["device"]
+        device_data = deepcopy(self._subentry_data["device"])
+        device_data.update(device_data.get("mqtt_settings", {}))
         return {
             field_key: self.get_suggested_values_from_device_data(value.schema)
             if isinstance(value, section)
@@ -4599,7 +4621,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if reconfig := (self._component_id is not None):
             component_data = self._subentry_data["components"][self._component_id]
             name: str | None = component_data.get(CONF_NAME)
-            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            platform_label = f"{component_data[CONF_PLATFORM]} "
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
@@ -4976,7 +4998,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             mqtt_yaml_config.append({platform: component_config})
 
@@ -5025,7 +5049,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["device"].get("mqtt_settings", {}).copy()
             )
             for field in EXCLUDE_FROM_CONFIG_IF_NONE:
-                if field in component_config and component_config[field] is None:
+                if field in component_config and (
+                    component_config[field] is None or component_config[field] == "None"
+                ):
                     component_config.pop(field)
             discovery_payload["cmps"][component_id] = component_config
 
@@ -5107,7 +5133,7 @@ def async_convert_to_pem(
             encryption_algorithm=NoEncryption(),
         )
         return pem_key_data.decode("utf-8")
-    except (TypeError, ValueError, SSLError):
+    except TypeError, ValueError, SSLError:
         _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
         return None
 
@@ -5132,7 +5158,7 @@ def _validate_pki_file(
     return True
 
 
-async def async_get_broker_settings(  # noqa: C901
+async def async_get_broker_settings(
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -5161,6 +5187,8 @@ async def async_get_broker_settings(  # noqa: C901
     ) -> bool:
         """Additional validation on broker settings for better error messages."""
 
+        if CONF_PROTOCOL not in validated_user_input:
+            validated_user_input[CONF_PROTOCOL] = DEFAULT_PROTOCOL
         # Get current certificate settings from config entry
         certificate: str | None = (
             "auto"
@@ -5256,15 +5284,11 @@ async def async_get_broker_settings(  # noqa: C901
             errors["base"] = error
             return False
 
-        if SET_CA_CERT in validated_user_input:
-            del validated_user_input[SET_CA_CERT]
-        if SET_CLIENT_CERT in validated_user_input:
-            del validated_user_input[SET_CLIENT_CERT]
+        validated_user_input.pop(SET_CA_CERT, None)
+        validated_user_input.pop(SET_CLIENT_CERT, None)
         if validated_user_input.get(CONF_TRANSPORT, TRANSPORT_TCP) == TRANSPORT_TCP:
-            if CONF_WS_PATH in validated_user_input:
-                del validated_user_input[CONF_WS_PATH]
-            if CONF_WS_HEADERS in validated_user_input:
-                del validated_user_input[CONF_WS_HEADERS]
+            validated_user_input.pop(CONF_WS_PATH, None)
+            validated_user_input.pop(CONF_WS_HEADERS, None)
             return True
         try:
             validated_user_input[CONF_WS_HEADERS] = json_loads(
@@ -5349,12 +5373,9 @@ async def async_get_broker_settings(  # noqa: C901
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
-    # show advanced options checkbox if requested and
-    # advanced options are enabled
-    # or when the defaults of advanced options are overridden
+    # show advanced options checkbox if no defaults
+    # of the advanced options are overridden
     if not advanced_broker_options:
-        if not flow.show_advanced_options:
-            return False
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
@@ -5460,10 +5481,6 @@ def try_connection(
     user_input: dict[str, Any],
 ) -> bool:
     """Test if we can connect to an MQTT broker."""
-    # We don't import on the top because some integrations
-    # should be able to optionally rely on MQTT.
-    import paho.mqtt.client as mqtt  # noqa: PLC0415
-
     mqtt_client_setup = MqttClientSetup(user_input)
     mqtt_client_setup.setup()
     client = mqtt_client_setup.client
@@ -5507,7 +5524,7 @@ def check_certicate_chain() -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.lock_1a2b_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_sensors[sensor.lock_1a2b_pullspring_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -110,8 +114,9 @@
 # ---
 # name: test_sensors[sensor.lock_2c3d_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -131,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -163,8 +169,9 @@
 # ---
 # name: test_sensors[sensor.lock_2c3d_pullspring_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -184,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

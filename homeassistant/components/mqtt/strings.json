@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
-      "addon_info_failed": "Failed get info for the {addon} add-on.",
-      "addon_install_failed": "Failed to install the {addon} add-on.",
-      "addon_start_failed": "Failed to start the {addon} add-on.",
+      "addon_connection_failed": "Failed to connect to the {addon} app. Check the app status and try again later.",
+      "addon_info_failed": "Failed get info for the {addon} app.",
+      "addon_install_failed": "Failed to install the {addon} app.",
+      "addon_start_failed": "Failed to start the {addon} app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -48,7 +48,7 @@
         "data_description": {
           "advanced_options": "Enable and select **Submit** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
-          "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+          "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
           "client_key": "The private key file that belongs to your client certificate.",
@@ -57,7 +57,7 @@
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "transport": "The transport to be used for the connection to your MQTT broker.",
@@ -68,11 +68,11 @@
         "description": "Please enter the connection information of your MQTT broker."
       },
       "hassio_confirm": {
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
-        "title": "MQTT broker via Home Assistant add-on"
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the {addon} app?",
+        "title": "MQTT broker via Home Assistant app"
       },
       "install_addon": {
-        "title": "Installing add-on"
+        "title": "Installing app"
       },
       "reauth_confirm": {
         "data": {
@@ -83,16 +83,16 @@
           "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
           "username": "[%key:component::mqtt::config::step::broker::data_description::username%]"
         },
-        "description": "The MQTT broker reported an authentication error. Please confirm the brokers correct username and password.",
+        "description": "The MQTT broker reported an authentication error. Please confirm the broker's correct username and password.",
         "title": "Re-authentication required with the MQTT broker"
       },
       "start_addon": {
-        "title": "Starting add-on"
+        "title": "Starting app"
       },
       "user": {
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
-          "addon": "Use the official {addon} add-on.",
+          "addon": "Use the official {addon} app.",
           "broker": "Manually enter the MQTT broker connection details"
         }
       }
@@ -162,7 +162,7 @@
             "component": "Entity"
           },
           "data_description": {
-            "component": "Select the entity you want to delete. Minimal one entity is required."
+            "component": "Select the entity you want to delete. At least one entity is required."
           },
           "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
           "title": "Delete entity"
@@ -1085,19 +1085,28 @@
   },
   "exceptions": {
     "addon_start_failed": {
-      "message": "Failed to correctly start {addon} add-on."
+      "message": "Failed to correctly start {addon} app."
     },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
-    "invalid_platform_config": {
-      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    "invalid_platform_config_message": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. Message: {message}"
     },
     "invalid_publish_topic": {
       "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
     },
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
+    },
+    "mqtt_max_subscription_id_reached": {
+      "message": "MQTT Subscription ID limit reached. Cannot generate more IDs to subscribe."
+    },
+    "mqtt_message_expiry_interval_not_supported": {
+      "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
+    },
+    "mqtt_not_enabled_cannot_subscribe": {
+      "message": "Cannot subscribe to topic \"{topic}\" because MQTT is not enabled, make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
@@ -1116,17 +1125,23 @@
     }
   },
   "issues": {
-    "deprecated_object_id": {
-      "description": "Entity {entity_id} uses the `object_id` option which is deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant.",
-      "title": "Deprecated option object_id used"
-    },
-    "deprecated_vacuum_battery_feature": {
-      "description": "Vacuum entity {entity_id} implements the battery feature which is deprecated. This will stop working in Home Assistant 2026.2. Implement a separate entity for the battery state instead. To fix the issue, remove the `battery` feature from the configured supported features, and restart Home Assistant.",
-      "title": "Deprecated battery feature used"
-    },
     "invalid_platform_config": {
-      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
+    },
+    "protocol_5_migration": {
+      "fix_flow": {
+        "abort": {
+          "mqtt_broker_migration_to_v5_failed": "Migrating the broker ({broker}) protocol version from {protocol} to 5 failed, and the migration has been aborted.\n\nYour broker may not support MQTT protocol version 5.\n\nPlease [reconfigure your MQTT broker settings]({url_mqtt_broker_configuration}) or upgrade your broker to support MQTT protocol version 5 to fix this issue."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant is migrating to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will try to migrate your MQTT broker configuration to use protocol version 5 to fix this issue.",
+            "title": "MQTT protocol change required"
+          }
+        }
+      },
+      "title": "Deprecated MQTT protocol {protocol} in use"
     },
     "subentry_migration_discovery": {
       "fix_flow": {
@@ -1149,6 +1164,10 @@
         }
       },
       "title": "MQTT device \"{name}\" subentry migration to YAML"
+    },
+    "yaml_setup_without_active_setup": {
+      "description": "Home Assistant detected manually configured MQTT items, but these items cannot be loaded because MQTT is not set up correctly. Make sure the MQTT broker is set up correctly, or remove the MQTT configuration from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "MQTT is not set up correctly"
     }
   },
   "options": {
@@ -1216,6 +1235,7 @@
           "birth_topic": "Birth message topic",
           "discovery": "Enable discovery",
           "discovery_prefix": "Discovery prefix",
+          "discovery_qos": "Discovery QoS",
           "will_enable": "Enable will message",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
@@ -1230,6 +1250,7 @@
           "birth_topic": "The MQTT topic where Home Assistant will publish a \"birth\" message.",
           "discovery": "Option to enable MQTT automatic discovery.",
           "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+          "discovery_qos": "The quality of service for discovery subscriptions to your MQTT broker.",
           "will_enable": "When set, Home Assistant will ask your broker to publish a \"will\" message when MQTT is stopped or when it loses the connection to your broker.",
           "will_payload": "The message your MQTT broker \"will\" publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the \"will\" message that is published by your MQTT broker.",
@@ -1536,6 +1557,10 @@
           "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
           "name": "Evaluate payload"
         },
+        "message_expiry_interval": {
+          "description": "Expires a publish message after the interval in case the device subscriber was temporarily offline, or the message was set as a retained message. Only supported with MQTT protocol version 5.0.",
+          "name": "Message Expiry Interval"
+        },
         "payload": {
           "description": "The payload to publish. Publishes an empty message if not provided.",
           "name": "Payload"
@@ -1553,7 +1578,12 @@
           "name": "Topic"
         }
       },
-      "name": "Publish"
+      "name": "Publish",
+      "sections": {
+        "publish_options": {
+          "name": "Publish options"
+        }
+      }
     },
     "reload": {
       "description": "Reloads MQTT entities from the YAML-configuration.",

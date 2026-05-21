@@ -1,14 +1,11 @@
 """Support for Neato Connected Vacuums."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
 
 from pybotvac import Robot
 from pybotvac.exceptions import NeatoRobotException
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -16,24 +13,12 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ACTION,
-    ALERTS,
-    ERRORS,
-    MODE,
-    NEATO_LOGIN,
-    NEATO_MAP_DATA,
-    NEATO_PERSISTENT_MAPS,
-    NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
-)
+from . import NeatoConfigEntry
+from .const import ACTION, ALERTS, ERRORS, MODE, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -52,23 +37,19 @@ ATTR_CLEAN_PAUSE_TIME = "clean_pause_time"
 ATTR_CLEAN_ERROR_TIME = "clean_error_time"
 ATTR_LAUNCHED_FROM = "launched_from"
 
-ATTR_NAVIGATION = "navigation"
-ATTR_CATEGORY = "category"
-ATTR_ZONE = "zone"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NeatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato vacuum with config entry."""
-    neato: NeatoHub = hass.data[NEATO_LOGIN]
-    mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
-    persistent_maps: dict[str, Any] | None = hass.data.get(NEATO_PERSISTENT_MAPS)
+    hub = entry.runtime_data
     dev = [
-        NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps)
-        for robot in hass.data[NEATO_ROBOTS]
+        NeatoConnectedVacuum(
+            hub, robot, hub.map_data or None, hub.persistent_maps or None
+        )
+        for robot in hub.robots
     ]
 
     if not dev:
@@ -76,20 +57,6 @@ async def async_setup_entry(
 
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
-
-    platform = entity_platform.async_get_current_platform()
-    assert platform is not None
-
-    platform.async_register_entity_service(
-        "custom_cleaning",
-        {
-            vol.Optional(ATTR_MODE, default=2): cv.positive_int,
-            vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
-            vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
-            vol.Optional(ATTR_ZONE): cv.string,
-        },
-        "neato_custom_cleaning",
-    )
 
 
 class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
@@ -308,6 +275,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     self.robot.start_cleaning()
                 elif self._state["state"] == 3:
                     self.robot.resume_cleaning()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato vacuum connection error for '%s': %s", self.entity_id, ex
@@ -317,6 +285,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
@@ -329,6 +298,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 self.robot.pause_cleaning()
             self._attr_activity = VacuumActivity.RETURNING
             self.robot.send_to_base()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
@@ -338,6 +308,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
@@ -347,6 +318,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
@@ -356,6 +328,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex

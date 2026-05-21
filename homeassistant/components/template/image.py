@@ -1,7 +1,5 @@
 """Support for image which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,8 +12,7 @@ from homeassistant.components.image import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -100,15 +97,23 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
-        self._url_template = config[CONF_URL]
         self._has_picture_template = CONF_PICTURE in config
 
-    def _handle_state(self, result: Any) -> None:
+        self.setup_template(CONF_URL, "_url", None, self._update_url)
+
+    def _update_url(self, result: Any) -> None:
+        if result is None:
+            self._attr_image_url = None
+            return
+
         self._attr_image_last_updated = dt_util.utcnow()
         self._cached_image = None
         self._attr_image_url = result
@@ -137,25 +142,11 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
 
-    @callback
-    def _update_url(self, result):
-        if isinstance(result, TemplateError):
-            self._attr_image_url = None
-            return
-        self._handle_state(result)
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        self.add_template_attribute("_url", self._url_template, None, self._update_url)
-        super()._async_setup_templates()
-
 
 class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
     """Image entity based on trigger data."""
 
     domain = IMAGE_DOMAIN
-    extra_template_keys = (CONF_URL,)
 
     def __init__(
         self,
@@ -174,9 +165,3 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
             return TriggerEntity.entity_picture.__get__(self)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
-
-    @callback
-    def _process_data(self) -> None:
-        """Process new data."""
-        super()._process_data()
-        self._handle_state(self._rendered.get(CONF_URL))

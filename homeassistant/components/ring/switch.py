@@ -36,13 +36,15 @@ IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k !=
 
 @dataclass(frozen=True, kw_only=True)
 class RingSwitchEntityDescription(
-    SwitchEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SwitchEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring switch entity."""
 
     exists_fn: Callable[[RingDeviceT], bool]
-    unique_id_fn: Callable[[Self, RingDeviceT], str] = (
-        lambda self, device: f"{device.device_api_id}-{self.key}"
+    unique_id_fn: Callable[[Self, RingDeviceT], str] = lambda self, device: (
+        f"{device.device_api_id}-{self.key}"
     )
     is_on_fn: Callable[[RingDeviceT], bool]
     turn_on_fn: Callable[[RingDeviceT], Coroutine[Any, Any, None]]
@@ -64,8 +66,10 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
     RingSwitchEntityDescription[RingDoorBell](
         key="in_home_chime",
         translation_key="in_home_chime",
-        exists_fn=lambda device: device.family == "doorbots"
-        and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
+        exists_fn=lambda device: (
+            device.family == "doorbots"
+            and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT
+        ),
         is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
         turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(

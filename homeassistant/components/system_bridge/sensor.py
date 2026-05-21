@@ -1,7 +1,5 @@
 """Support for System Bridge sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -17,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
     PERCENTAGE,
@@ -33,8 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
@@ -364,11 +360,11 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Bridge sensor based on a config entry."""
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
@@ -390,9 +386,9 @@ async def async_setup_entry(
                     suggested_display_precision=2,
                     icon="mdi:harddisk",
                     value=(
-                        lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk)
+                        lambda data, dk=index_device, pk=index_partition: (
+                            partition_usage(data, dk, pk)
+                        )
                     ),
                 ),
                 entry.data[CONF_PORT],

@@ -133,8 +133,9 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
         value_fn=lambda config: _get_value(
             config.co2_automatic_baseline_calibration_days, ABC_DAYS
         ),
-        set_value_fn=lambda client,
-        value: client.set_co2_automatic_baseline_calibration(int(value)),
+        set_value_fn=lambda client, value: (
+            client.set_co2_automatic_baseline_calibration(int(value))
+        ),
     ),
 )
 
