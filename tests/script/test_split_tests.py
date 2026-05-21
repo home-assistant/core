@@ -108,6 +108,28 @@ def test_walk_test_tree_handles_single_file(tmp_path: Path) -> None:
     assert split_tests._walk_test_tree(file) == ([file], [])
 
 
+def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
+    """A single-file root cannot validate conftest drift, so caching is disabled.
+
+    _walk_test_tree returns no conftests for a file root, which would make
+    the conftest_hash a constant — letting a stale entry survive a real
+    conftest change.  Better to bypass the cache than mis-cache silently.
+    """
+    cache_path = tmp_path / "cache.json"
+    file = tmp_path / "test_solo.py"
+    file.write_text("def test_x(): pass\n")
+
+    with (
+        patch.object(split_tests, "_collect_tests_uncached") as uncached,
+        patch.object(split_tests, "_collect_tests_cached") as cached,
+    ):
+        split_tests.collect_tests(file, cache_path)
+
+    uncached.assert_called_once_with(file)
+    cached.assert_not_called()
+    assert not cache_path.exists()
+
+
 def test_cache_roundtrip(tmp_path: Path) -> None:
     """A cache survives save → load when the conftest hash matches."""
     cache_path = tmp_path / "cache.json"

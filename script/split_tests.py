@@ -332,8 +332,10 @@ class _Cache:
                     },
                 },
                 indent=2,
+                ensure_ascii=False,
             )
-            + "\n"
+            + "\n",
+            encoding="utf-8",
         )
 
 
@@ -385,19 +387,49 @@ def _parse_collect_output(stdout: str) -> dict[Path, int]:
     return counts
 
 
-def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
-    """Collect all tests, using an on-disk cache when available."""
-    all_test_files, conftests = _walk_test_tree(path)
-    conftest_hash = _compute_conftest_hash(path, conftests)
-    cache = (
-        _Cache.load(cache_path, conftest_hash)
-        if cache_path is not None
-        else _Cache.empty(conftest_hash)
-    )
+def _run_pytest_collect(paths: list[Path]) -> dict[Path, int]:
+    """Run pytest --collect-only across ``paths`` and parse the output."""
+    counts: dict[Path, int] = {}
+    for stdout, stderr, returncode in _run_collect_batches(paths):
+        if returncode != 0:
+            print("Failed to collect tests:")
+            print(stderr)
+            print(stdout)
+            sys.exit(1)
+        try:
+            counts.update(_parse_collect_output(stdout))
+        except ValueError as err:
+            print(err)
+            sys.exit(1)
+    return counts
 
+
+def _collect_tests_uncached(path: Path) -> TestFolder:
+    """Collect tests by handing pytest the top-level directories.
+
+    Skips the tree walk and per-file hashing; used when no cache file is
+    requested so the script behaves like the pre-cache implementation.
+    """
+    batch_paths = _enumerate_batch_paths(path)
+    if not batch_paths:
+        print(f"No eligible test paths found under {path}")
+        sys.exit(1)
+
+    folder = TestFolder(path)
+    for file_path, total_tests in _run_pytest_collect(batch_paths).items():
+        folder.add_test_file(TestFile(total_tests, file_path))
+    return folder
+
+
+def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
+    """Collect tests using an on-disk cache for incremental updates."""
+    all_test_files, conftests = _walk_test_tree(path)
     if not all_test_files:
         print(f"No eligible test paths found under {path}")
         sys.exit(1)
+
+    conftest_hash = _compute_conftest_hash(path, conftests)
+    cache = _Cache.load(cache_path, conftest_hash)
 
     cached_counts, missing = _resolve_from_cache(all_test_files, cache, path)
     print(
@@ -415,18 +447,7 @@ def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
             collect_paths = _enumerate_batch_paths(path)
         else:
             collect_paths = missing
-        results = _run_collect_batches(collect_paths)
-        for stdout, stderr, returncode in results:
-            if returncode != 0:
-                print("Failed to collect tests:")
-                print(stderr)
-                print(stdout)
-                sys.exit(1)
-            try:
-                new_counts.update(_parse_collect_output(stdout))
-            except ValueError as err:
-                print(err)
-                sys.exit(1)
+        new_counts = _run_pytest_collect(collect_paths)
 
     counts: dict[Path, int] = {**cached_counts, **new_counts}
 
@@ -440,27 +461,40 @@ def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
             continue
         folder.add_test_file(TestFile(total_tests, file_path))
 
-    if cache_path is not None:
-        # Rebuild the cache from scratch on every run so deleted files are
-        # dropped and re-collected files get a refreshed hash.
-        missing_set = set(missing)
-        updated_entries: dict[str, _CacheEntry] = {}
-        for file in all_test_files:
-            if file in counts:
-                count = counts[file]
-            elif file in missing_set:
-                # We asked pytest about this file and got no count back,
-                # so it has no collectible tests; cache it as 0 to avoid
-                # repeating the work next run.
-                count = 0
-            else:
-                continue
-            updated_entries[str(file.relative_to(path))] = _CacheEntry(
-                hash=_hash_file(file), count=count
-            )
-        _Cache(conftest_hash=conftest_hash, entries=updated_entries).save(cache_path)
+    # Rebuild the cache from scratch on every run so deleted files are
+    # dropped and re-collected files get a refreshed hash.
+    missing_set = set(missing)
+    updated_entries: dict[str, _CacheEntry] = {}
+    for file in all_test_files:
+        if file in counts:
+            count = counts[file]
+        elif file in missing_set:
+            # We asked pytest about this file and got no count back,
+            # so it has no collectible tests; cache it as 0 to avoid
+            # repeating the work next run.
+            count = 0
+        else:
+            continue
+        updated_entries[str(file.relative_to(path))] = _CacheEntry(
+            hash=_hash_file(file), count=count
+        )
+    _Cache(conftest_hash=conftest_hash, entries=updated_entries).save(cache_path)
 
     return folder
+
+
+def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
+    """Collect all tests, using an on-disk cache when ``cache_path`` is set."""
+    if cache_path is None:
+        return _collect_tests_uncached(path)
+    if path.is_file():
+        # The cache keys on conftest_hash, but a single file root has no
+        # ancestor conftests to walk and the hash would always be empty,
+        # which would let stale counts survive conftest edits.  Skip the
+        # cache for the file-root case rather than silently mis-caching.
+        print(f"--cache ignored: {path} is a single file")
+        return _collect_tests_uncached(path)
+    return _collect_tests_cached(path, cache_path)
 
 
 def main() -> None:
