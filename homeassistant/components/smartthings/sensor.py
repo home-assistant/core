@@ -396,7 +396,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -449,7 +449,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -567,7 +567,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.GAS_METER_TIME,
                 translation_key="gas_meter_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
         Attribute.GAS_METER_VOLUME: [
@@ -728,7 +728,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "cavity-01",
                 component_translation_key={
                     "cavity-01": "oven_completion_time_cavity_01",
@@ -1198,7 +1198,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
