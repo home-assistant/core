@@ -67,13 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=entry.domain,
             translation_key="connect_timeout",
-            translation_placeholders={"error": str(err)},
         ) from err
     except (ConnectionError, OSError) as err:
         raise ConfigEntryNotReady(
             translation_domain=entry.domain,
             translation_key="connect_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
 
     if client_status != RequestStatus.SUCCESS:

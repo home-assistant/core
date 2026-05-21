@@ -52,13 +52,11 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
             raise UpdateFailed(
                 translation_domain=self.config_entry.domain,
                 translation_key="update_timeout",
-                translation_placeholders={"error": str(err)},
             ) from err
         except (ConnectionError, OSError) as err:
             raise UpdateFailed(
                 translation_domain=self.config_entry.domain,
                 translation_key="update_connect_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         if status != RequestStatus.SUCCESS:
