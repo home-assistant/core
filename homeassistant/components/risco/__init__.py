@@ -194,7 +194,11 @@ async def _async_setup_cloud_entry(
     entry.async_on_unload(risco.close)
     entry.async_on_unload(risco.add_state_handler(_state))
     entry.async_on_unload(risco.add_error_handler(_error))
-    await risco.subscribe_states()
+    try:
+        await risco.subscribe_states()
+    except (CannotConnectError, UnauthorizedError, OperationError) as error:
+        await risco.close()
+        raise ConfigEntryNotReady from error
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
