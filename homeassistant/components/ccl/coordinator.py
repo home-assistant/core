@@ -40,6 +40,7 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
         )
 
         self.device = device
+        self.last_update_time: float | None = None
 
     async def _async_update_data(self) -> dict[str, CCLSensor]:
         _LOGGER.debug(
@@ -47,13 +48,13 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             self.device.device_id,
             time.monotonic(),
         )
-        if self.device.last_update_time is None:
+        if self.last_update_time is None:
             _LOGGER.debug(
                 "No data received yet from device(%s), returning empty data",
                 self.device.device_id,
             )
             return {}
-        if time.monotonic() - self.device.last_update_time >= _CHECKING_INTERVAL:
+        if time.monotonic() - self.last_update_time >= _CHECKING_INTERVAL:
             raise UpdateFailed("Device timed out or is not responding")
         try:
             return self.device.get_sensors()

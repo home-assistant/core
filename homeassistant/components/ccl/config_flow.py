@@ -1,6 +1,7 @@
 """Config flow for CCL Electronics."""
 
 import asyncio
+import contextlib
 import logging
 from typing import Any
 from urllib.parse import urlsplit
@@ -102,18 +103,36 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             # timed out while waiting for the device to send an update.
             try:
                 await self.task_one
+            except AssertionError:
+                _LOGGER.error(
+                    "Unknown error occurred for webhook ID %s during config flow",
+                    self.webhook_id,
+                )
+                self.task_one = None
+                webhook.async_unregister(self.hass, self.webhook_id)
+                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
+                self.data["abort_reason"] = "unknown"
+                return self.async_show_progress_done(next_step_id="finish")
             except TimeoutError:
-                _LOGGER.error("Timed out waiting for device update during config flow")
+                _LOGGER.error(
+                    "Device with webhook ID %s timed out waiting for update during config flow",
+                    self.webhook_id,
+                )
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
                 self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
-                return self.async_abort(reason="connect_timeout")
+                self.data["abort_reason"] = "connect_timeout"
+                return self.async_show_progress_done(next_step_id="finish")
             except AbortFlow:
-                _LOGGER.debug("Device already configured during config flow")
+                _LOGGER.debug(
+                    "Device with webhook ID %s already configured during config flow",
+                    self.webhook_id,
+                )
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
                 self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
-                return self.async_abort(reason="already_configured")
+                self.data["abort_reason"] = "already_configured"
+                return self.async_show_progress_done(next_step_id="finish")
 
         if uncompleted_task:
             return self.async_show_progress(
@@ -133,6 +152,11 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the final step."""
+        # If an abort reason was set during progress, abort now.
+        abort_reason = self.data.pop("abort_reason", None)
+        if abort_reason is not None:
+            return self.async_abort(reason=abort_reason)
+
         return self.async_create_entry(
             title="CCL Weather Station",
             data={
@@ -154,4 +178,5 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Remove the device from the global devices dict
         if CONF_WEBHOOK_ID in self.data:
-            self.hass.data[KEY_DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
+            with contextlib.suppress(KeyError):
+                self.hass.data[KEY_DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
