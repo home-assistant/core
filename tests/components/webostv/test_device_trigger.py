@@ -134,17 +134,15 @@ async def test_invalid_trigger_raises(
 @pytest.mark.parametrize(
     ("domain", "entry_state", "expected_translation_key"),
     [
-        pytest.param(
+        (
             DOMAIN,
             ConfigEntryState.NOT_LOADED,
             "device_config_entry_not_loaded",
-            id="not_loaded",
         ),
-        pytest.param(
+        (
             "fake",
             ConfigEntryState.LOADED,
             "device_not_valid",
-            id="wrong_domain",
         ),
     ],
 )
