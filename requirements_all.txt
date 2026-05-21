@@ -267,7 +267,7 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.ghost
-aioghost==0.4.0
+aioghost==0.4.16
 
 # homeassistant.components.github
 aiogithubapi==26.0.0
@@ -373,9 +373,6 @@ aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==3.3.0
-
-# homeassistant.components.pvpc_hourly_pricing
-aiopvpc==4.3.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -950,6 +947,9 @@ epson-projector==0.6.0
 
 # homeassistant.components.eq3btsmart
 eq3btsmart==2.3.0
+
+# homeassistant.components.pvpc_hourly_pricing
+esios_api==4.4.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
@@ -2677,7 +2677,7 @@ python-open-router==0.3.3
 python-opendata-transport==0.5.0
 
 # homeassistant.components.openevse
-python-openevse-http==0.2.5
+python-openevse-http==0.3.4
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
