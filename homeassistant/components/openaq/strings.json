@@ -65,6 +65,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed while fetching OpenAQ data"
+    },
     "unable_to_fetch": {
       "message": "Unable to fetch data from OpenAQ"
     }
