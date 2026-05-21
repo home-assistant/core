@@ -193,7 +193,6 @@ DRYER_CYCLES = [
 ]
 
 
-
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
     state = {}
@@ -208,7 +207,11 @@ def _normalize_cycle_value(value: Any) -> str | None:
     if not value:
         return None
     value_str = str(value)
-    return value_str.split("_")[-1].lower() if "_" in value_str else value_str.lower()
+    return (
+        value_str.rsplit("_", maxsplit=1)[-1].lower()
+        if "_" in value_str
+        else value_str.lower()
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1213,7 +1216,6 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
-                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_machine_state",
                 },
@@ -1243,7 +1245,6 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: JOB_STATE_MAP.get(value, value),
-                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_job_state",
                 },
@@ -1255,7 +1256,6 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
-                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
                 },
@@ -1336,10 +1336,10 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    "samsungce.washerCycle": {
-        "washerCycle": [
+    Capability.SAMSUNG_CE_WASHER_CYCLE: {
+        Attribute.WASHER_CYCLE: [
             SmartThingsSensorEntityDescription(
-                key="washerCycle",
+                key=Attribute.WASHER_CYCLE,
                 translation_key="washer_cycle",
                 icon="mdi:washing-machine",
                 options=WASHER_CYCLES,
@@ -1349,10 +1349,10 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    "samsungce.dryerCycle": {
-        "dryerCycle": [
+    Capability.SAMSUNG_CE_DRYER_CYCLE: {
+        Attribute.DRYER_CYCLE: [
             SmartThingsSensorEntityDescription(
-                key="dryerCycle",
+                key=Attribute.DRYER_CYCLE,
                 translation_key="dryer_cycle",
                 icon="mdi:tumble-dryer",
                 options=DRYER_CYCLES,
@@ -1362,47 +1362,47 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    "samsungce.washerOperatingState": {
-        "progress": [
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
             SmartThingsSensorEntityDescription(
-                key="progress",
+                key=Attribute.PROGRESS,
                 translation_key="washer_progress",
                 icon="mdi:washing-machine",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=PERCENTAGE,
             )
         ],
-        "remainingTime": [
+        Attribute.REMAINING_TIME: [
             SmartThingsSensorEntityDescription(
-                key="remainingTime",
+                key=Attribute.REMAINING_TIME,
                 translation_key="washer_remaining_time",
                 icon="mdi:timer-sand",
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.DURATION,
                 native_unit_of_measurement=UnitOfTime.MINUTES,
             )
-        ]
+        ],
     },
-    "samsungce.dryerOperatingState": {
-        "progress": [
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
             SmartThingsSensorEntityDescription(
-                key="progress",
+                key=Attribute.PROGRESS,
                 translation_key="dryer_progress",
                 icon="mdi:tumble-dryer",
                 state_class=SensorStateClass.MEASUREMENT,
                 native_unit_of_measurement=PERCENTAGE,
             )
         ],
-        "remainingTime": [
+        Attribute.REMAINING_TIME: [
             SmartThingsSensorEntityDescription(
-                key="remainingTime",
+                key=Attribute.REMAINING_TIME,
                 translation_key="dryer_remaining_time",
                 icon="mdi:timer-sand",
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.DURATION,
                 native_unit_of_measurement=UnitOfTime.MINUTES,
             )
-        ]
+        ],
     },
 }
 
