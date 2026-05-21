@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     MISSING_MANUFACTURER_DATA_SERVICE_INFO,
     MISSING_PRODUCT_SERVICE_INFO,
-    MISSING_SERVICE_SERVICE_INFO,
+    SMART_WATER_CONTROL_SERVICE_INFO,
     UNSUPPORTED_GROUP_SERVICE_INFO,
     WATER_TIMER_SERVICE_INFO,
     WATER_TIMER_UNNAMED_SERVICE_INFO,
@@ -126,7 +126,6 @@ async def test_no_valid_devices(
     """Test no valid candidates."""
 
     inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, MISSING_SERVICE_SERVICE_INFO)
     inject_bluetooth_service_info(hass, UNSUPPORTED_GROUP_SERVICE_INFO)
 
     result = await hass.config_entries.flow.async_init(
@@ -134,6 +133,27 @@ async def test_no_valid_devices(
     )
     assert result.get("type") == "abort"
     assert result.get("reason") == "no_devices_found"
+
+
+async def test_smart_water_control_manual_flow(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Smart Water Control devices (G-19033/19034) advertise no service UUIDs.
+
+    The manual ``Add Integration → Gardena Bluetooth`` flow must still
+    accept them via the manufacturer-data fallback in ``_is_supported``.
+    """
+    inject_bluetooth_service_info(hass, SMART_WATER_CONTROL_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # Form is shown with the device as a candidate (would be 'abort' / 'no_devices_found'
+    # before the fix because the device advertises no service_uuids).
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
 
 async def test_timeout_manufacturer_data(

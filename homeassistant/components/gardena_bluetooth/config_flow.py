@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from gardena_bluetooth.client import Client
-from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation, ScanService
+from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound, CommunicationFailure
 from gardena_bluetooth.parse import ManufacturerData, ProductType
 from gardena_bluetooth.scan import async_get_manufacturer_data
@@ -34,12 +34,16 @@ _SUPPORTED_PRODUCT_TYPES = {
 
 
 def _is_supported(discovery_info: BluetoothServiceInfo):
-    """Check if device is supported."""
-    if ScanService not in discovery_info.service_uuids:
-        return False
+    """Check if device is supported.
 
+    Accepts any device carrying Gardena manufacturer data (company id 0x0426).
+    The legacy 01889-20 family also advertised the ScanService UUID
+    98bd0001-..., but newer Smart Water Control devices (G-19033, G-19034,
+    G-19050) advertise only manufacturer data with no service UUIDs, so the
+    UUID is no longer a reliable filter.
+    """
     if discovery_info.manufacturer_data.get(ManufacturerData.company) is None:
-        _LOGGER.debug("Missing manufacturer data: %s", discovery_info)
+        _LOGGER.debug("Missing Gardena manufacturer data: %s", discovery_info)
         return False
     return True
 
