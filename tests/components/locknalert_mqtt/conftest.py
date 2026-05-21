@@ -14,7 +14,7 @@ from homeassistant.components.locknalert_mqtt.models import (
     MessageCallbackType,
     ReceiveMessage,
 )
-from homeassistant.components.locknalert_mqtt.util import EnsureJobAfterCooldown
+from aiolocknalert.util import EnsureJobAfterCooldown
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +81,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.rc = 0
 
     with patch(
-        "homeassistant.components.locknalert_mqtt.client.AsyncMQTTClient"
+        "aiolocknalert.client.AsyncMQTTClient"
     ) as mock_client:
 
         @callback
@@ -161,7 +161,7 @@ def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
             task_done.set()
 
     with patch(
-        "homeassistant.components.locknalert_mqtt.client.EnsureJobAfterCooldown",
+        "aiolocknalert.client.EnsureJobAfterCooldown",
         MockDebouncer,
     ):
         yield task_done
@@ -248,14 +248,14 @@ async def setup_with_birth_msg_client_mock(
     birth = asyncio.Event()
     with (
         patch(
-            "homeassistant.components.locknalert_mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN",
+            "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN",
             0.0,
         ),
         patch(
-            "homeassistant.components.locknalert_mqtt.client.DISCOVERY_COOLDOWN", 0.0
+            "aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0
         ),
         patch(
-            "homeassistant.components.locknalert_mqtt.client.SUBSCRIBE_COOLDOWN", 0.0
+            "aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0
         ),
     ):
         entry = MockConfigEntry(

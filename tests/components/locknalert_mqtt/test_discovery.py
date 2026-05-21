@@ -2437,12 +2437,12 @@ async def test_complex_discovery_topic_prefix(
     ].discovery_already_discovered
 
 
-@patch("homeassistant.components.locknalert_mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0)
 @patch(
-    "homeassistant.components.locknalert_mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
+    "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
 )
-@patch("homeassistant.components.locknalert_mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
-@patch("homeassistant.components.locknalert_mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 @pytest.mark.parametrize(
     "reason", ["single_instance_allowed", "already_configured", "some_abort_error"]
 )
@@ -2512,12 +2512,12 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         assert len(flow_calls) == 2
 
 
-@patch("homeassistant.components.locknalert_mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0)
 @patch(
-    "homeassistant.components.locknalert_mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
+    "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
 )
-@patch("homeassistant.components.locknalert_mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
-@patch("homeassistant.components.locknalert_mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("aiolocknalert.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_flow_starts_once(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,

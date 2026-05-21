@@ -91,7 +91,7 @@ async def test_setup_entry_fails_if_broker_unreachable(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.locknalert_mqtt.client.AsyncMQTTClient"
+        "aiolocknalert.client.AsyncMQTTClient"
     ) as mock_client:
         mock_client.return_value.connect.side_effect = OSError("unreachable")
         # Integration uses early exit — setup should not raise
