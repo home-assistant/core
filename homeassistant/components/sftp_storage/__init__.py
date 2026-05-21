@@ -10,17 +10,14 @@ from pathlib import Path
 
 from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
 from .client import BackupAgentClient
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     LOGGER,
