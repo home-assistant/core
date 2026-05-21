@@ -115,6 +115,7 @@ def setup_service(hass: HomeAssistant) -> None:
             "notifications": entry.runtime_data.notifications_coordinator.notifications  # type: ignore[dict-item]
         }
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_LIST_NOTIFICATIONS,

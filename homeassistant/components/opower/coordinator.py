@@ -88,10 +88,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         def _dummy_listener() -> None:
             pass
 
-        # Force the coordinator to periodically update by registering at least one listener.
-        # Needed when the _async_update_data below returns {} for utilities that don't provide
-        # forecast, which results to no sensors added, no registered listeners, and thus
-        # _async_update_data not periodically getting called which is needed for _insert_statistics.
+        # Force the coordinator to periodically update by
+        # registering at least one listener.
+        # Needed when the _async_update_data below returns {}
+        # for utilities that don't provide forecast, which results
+        # to no sensors added, no registered listeners, and thus
+        # _async_update_data not periodically getting called which
+        # is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
     async def _async_update_data(
@@ -108,6 +111,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(f"Error during login: {err}") from err
 
         try:
@@ -244,7 +248,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     },
                 )
                 if migrated:
-                    # Skip update to avoid working on old data since the migration is done
+                    # Skip update to avoid working on old data since
+                    # the migration is done
                     # asynchronously. Update the statistics in the next refresh in 12h.
                     _LOGGER.debug(
                         "Statistics migration completed. Skipping update for now"
@@ -393,7 +398,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             utility_account_id: The account ID (for issue_id).
             migration_map: Map from source statistic ID to target statistic ID
                            (e.g., {cost_id: compensation_id}).
-            metadata_map: Map of all statistic IDs (source and target) to their metadata.
+            metadata_map: Map of all statistic IDs (source and target)
+                         to their metadata.
 
         """
         if not migration_map:

@@ -65,6 +65,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             translation_placeholders={"error": repr(err)},
         ) from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise InvalidAuth(
             translation_domain=DOMAIN,
             translation_key="cannot_authenticate",
@@ -92,6 +93,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Comelit."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

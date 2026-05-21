@@ -1090,8 +1090,8 @@
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
-    "invalid_platform_config": {
-      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    "invalid_platform_config_message": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. Message: {message}"
     },
     "invalid_publish_topic": {
       "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
@@ -1099,8 +1099,14 @@
     "mqtt_broker_error": {
       "message": "Error talking to MQTT: {error_message}."
     },
+    "mqtt_max_subscription_id_reached": {
+      "message": "MQTT Subscription ID limit reached. Cannot generate more IDs to subscribe."
+    },
     "mqtt_message_expiry_interval_not_supported": {
       "message": "Publishing to topic {topic} with a Message Expiry Interval is not supported for protocol version {protocol}."
+    },
+    "mqtt_not_enabled_cannot_subscribe": {
+      "message": "Cannot subscribe to topic \"{topic}\" because MQTT is not enabled, make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
@@ -1229,6 +1235,7 @@
           "birth_topic": "Birth message topic",
           "discovery": "Enable discovery",
           "discovery_prefix": "Discovery prefix",
+          "discovery_qos": "Discovery QoS",
           "will_enable": "Enable will message",
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
@@ -1243,6 +1250,7 @@
           "birth_topic": "The MQTT topic where Home Assistant will publish a \"birth\" message.",
           "discovery": "Option to enable MQTT automatic discovery.",
           "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+          "discovery_qos": "The quality of service for discovery subscriptions to your MQTT broker.",
           "will_enable": "When set, Home Assistant will ask your broker to publish a \"will\" message when MQTT is stopped or when it loses the connection to your broker.",
           "will_payload": "The message your MQTT broker \"will\" publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the \"will\" message that is published by your MQTT broker.",
@@ -1570,7 +1578,12 @@
           "name": "Topic"
         }
       },
-      "name": "Publish"
+      "name": "Publish",
+      "sections": {
+        "publish_options": {
+          "name": "Publish options"
+        }
+      }
     },
     "reload": {
       "description": "Reloads MQTT entities from the YAML-configuration.",

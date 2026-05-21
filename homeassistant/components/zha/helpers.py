@@ -107,6 +107,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
     Platform,
@@ -134,7 +135,6 @@ from .const import (
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
-    ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_NEIGHBORS,
     ATTR_NWK,
@@ -929,8 +929,9 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove entity registry entries for group entities when the groups are removed from HA."""
-        # first we collect the potential unique ids for entities that could be created from this group
+        """Remove entity registry entries for removed group entities."""
+        # first we collect the potential unique ids for
+        # entities that could be created from this group
         possible_entity_unique_ids = [
             f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
@@ -1249,9 +1250,12 @@ def async_add_entities(
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
-        # broad exception to prevent a single entity from preventing an entire platform from loading
-        # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
-        # alternative is adding try/catch to each entity class __init__ method with a specific exception
+        # broad exception to prevent a single entity from
+        # preventing an entire platform from loading.
+        # this can potentially be caused by a misbehaving
+        # device or a bad quirk. Not ideal but the
+        # alternative is adding try/catch to each entity
+        # class __init__ method with a specific exception
         except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data
@@ -1261,19 +1265,6 @@ def async_add_entities(
         if not entity.enabled:
             entity.entity_data.entity.disable()
     entities.clear()
-
-
-def _clean_serial_port_path(path: str) -> str:
-    """Clean the serial port path, applying corrections where necessary."""
-
-    if path.startswith("socket://"):
-        path = path.strip()
-
-    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
-    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
-        path = path.replace("[", "").replace("]", "")
-
-    return path
 
 
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
@@ -1313,18 +1304,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # ensure that we have the necessary HA configuration data
     assert ha_zha_data.config_entry is not None
     assert ha_zha_data.yaml_config is not None
-
-    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
-    # This will be removed in 2023.11.0
-    path = ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-    cleaned_path = _clean_serial_port_path(path)
-
-    if path != cleaned_path:
-        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
-        ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
-        hass.config_entries.async_update_entry(
-            ha_zha_data.config_entry, data=ha_zha_data.config_entry.data
-        )
 
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library

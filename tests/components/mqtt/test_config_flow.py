@@ -21,6 +21,7 @@ from homeassistant.components.mqtt.config_flow import (
     PWD_NOT_CHANGED,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
+from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS
 from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
@@ -445,7 +446,7 @@ async def test_user_v5_connection_works(
 
     result = await hass.config_entries.flow.async_init(
         "mqtt",
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -1111,6 +1112,7 @@ async def test_option_flow(
             user_input={
                 mqtt.CONF_DISCOVERY: True,
                 "discovery_prefix": "homeassistant",
+                "discovery_qos": 2,
                 "birth_enable": True,
                 "birth_topic": "ha_state/online",
                 "birth_payload": "online",
@@ -1132,6 +1134,7 @@ async def test_option_flow(
         }
         assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
+            CONF_DISCOVERY_QOS: 2,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
@@ -1390,6 +1393,7 @@ async def test_disable_birth_will(
         user_input={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+            CONF_DISCOVERY_QOS: 0,
             "birth_enable": False,
             "birth_topic": "ha_state/online",
             "birth_payload": "online",
@@ -1407,11 +1411,13 @@ async def test_disable_birth_will(
         "birth_message": {},
         "discovery": True,
         "discovery_prefix": "homeassistant",
+        "discovery_qos": 0,
         "will_message": {},
     }
     assert config_entry.data == {mqtt.CONF_BROKER: "test-broker", CONF_PORT: 1234}
     assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
+        CONF_DISCOVERY_QOS: 0,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
         mqtt.CONF_WILL_MESSAGE: {},
@@ -1507,6 +1513,7 @@ async def test_option_flow_default_suggested_values(
         },
         options={
             mqtt.CONF_DISCOVERY: True,
+            CONF_DISCOVERY_QOS: 1,
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
                 mqtt.ATTR_PAYLOAD: "online",
@@ -1528,6 +1535,7 @@ async def test_option_flow_default_suggested_values(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
+        "discovery_qos": 1,
         "birth_qos": 1,
         "birth_retain": True,
         "will_qos": 2,
@@ -1708,7 +1716,7 @@ async def test_step_reauth(
 async def test_step_hassio_reauth(
     hass: HomeAssistant, mock_try_connection: MagicMock, addon_info: AsyncMock
 ) -> None:
-    """Test that the reauth step works in case the Mosquitto broker add-on was re-installed."""
+    """Test reauth step works when Mosquitto add-on was re-installed."""
 
     # Set up entry data based on the discovery data, but with a stale password
     entry_data = {
@@ -2043,7 +2051,8 @@ async def test_try_connection_with_advanced_parameters(
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    # check if the username and password was set from config flow and not from configuration.yaml
+    # check if the username and password was set from config flow
+    # and not from configuration.yaml
     assert mock_try_connection_success.username_pw_set.mock_calls[0][1] == (
         "us3r",
         "p4ss",
@@ -2174,7 +2183,8 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_WS_PATH]
     assert result["data_schema"].schema[mqtt.CONF_WS_HEADERS]
 
-    # third iteration, advanced settings with client cert and key set and bad json payload
+    # third iteration, advanced settings with client cert and key
+    # set and bad json payload
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -2190,7 +2200,9 @@ async def test_setup_with_advanced_settings(
             mqtt.CONF_TLS_INSECURE: True,
             mqtt.CONF_TRANSPORT: "websockets",
             mqtt.CONF_WS_PATH: "/custom_path/",
-            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2"',
+            mqtt.CONF_WS_HEADERS: (
+                '{"header_1": "content_header_1", "header_2": "content_header_2"'
+            ),
         },
     )
 
@@ -2215,7 +2227,9 @@ async def test_setup_with_advanced_settings(
             mqtt.CONF_TLS_INSECURE: True,
             mqtt.CONF_TRANSPORT: "websockets",
             mqtt.CONF_WS_PATH: "/custom_path/",
-            mqtt.CONF_WS_HEADERS: '{"header_1": "content_header_1", "header_2": "content_header_2"}',
+            mqtt.CONF_WS_HEADERS: (
+                '{"header_1": "content_header_1", "header_2": "content_header_2"}'
+            ),
         },
     )
 
@@ -2836,11 +2850,15 @@ async def test_migrate_of_incompatible_config_entry(
                     "temperature_low_command_topic": "temperature-low-command-topic",
                     "temperature_low_command_template": "{{ value }}",
                     "temperature_low_state_topic": "temperature-low-state-topic",
-                    "temperature_low_state_template": "{{ value_json.temperature_low }}",
+                    "temperature_low_state_template": (
+                        "{{ value_json.temperature_low }}"
+                    ),
                     "temperature_high_command_topic": "temperature-high-command-topic",
                     "temperature_high_command_template": "{{ value }}",
                     "temperature_high_state_topic": "temperature-high-state-topic",
-                    "temperature_high_state_template": "{{ value_json.temperature_high }}",
+                    "temperature_high_state_template": (
+                        "{{ value_json.temperature_high }}"
+                    ),
                     "min_temp": 8,
                     "max_temp": 28,
                     "precision": "0.1",
@@ -2934,7 +2952,9 @@ async def test_migrate_of_incompatible_config_entry(
                     "target_humidity_command_topic": "target-humidity-command-topic",
                     "target_humidity_command_template": "{{ value }}",
                     "target_humidity_state_topic": "target-humidity-state-topic",
-                    "target_humidity_state_template": "{{ value_json.target_humidity }}",
+                    "target_humidity_state_template": (
+                        "{{ value_json.target_humidity }}"
+                    ),
                     "min_humidity": 20,
                     "max_humidity": 80,
                 },
@@ -2974,10 +2994,16 @@ async def test_migrate_of_incompatible_config_entry(
                 },
                 # swing horizontal mode
                 "climate_swing_horizontal_mode_settings": {
-                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
+                    "swing_horizontal_mode_command_topic": (
+                        "swing-horizontal-mode-command-topic"
+                    ),
                     "swing_horizontal_mode_command_template": "{{ value }}",
-                    "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
-                    "swing_horizontal_mode_state_template": "{{ value_json.swing_horizontal_mode }}",
+                    "swing_horizontal_mode_state_topic": (
+                        "swing-horizontal-mode-state-topic"
+                    ),
+                    "swing_horizontal_mode_state_template": (
+                        "{{ value_json.swing_horizontal_mode }}"
+                    ),
                     "swing_horizontal_modes": ["off", "on"],
                 },
             },
@@ -3060,13 +3086,17 @@ async def test_migrate_of_incompatible_config_entry(
                 (
                     {"value_template": "{{ json_value.state }}"},
                     {
-                        "value_template": "cover_value_template_must_be_used_with_state_topic"
+                        "value_template": (
+                            "cover_value_template_must_be_used_with_state_topic"
+                        )
                     },
                 ),
                 (
                     {"cover_position_settings": {"set_position_topic": "test-topic"}},
                     {
-                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                        "cover_position_settings": (
+                            "cover_get_and_set_position_must_be_set_together"
+                        )
                     },
                 ),
                 (
@@ -3076,7 +3106,11 @@ async def test_migrate_of_incompatible_config_entry(
                         }
                     },
                     {
-                        "cover_position_settings": "cover_set_position_template_must_be_used_with_set_position_topic"
+                        "cover_position_settings": (
+                            "cover_set_position_template"
+                            "_must_be_used_with"
+                            "_set_position_topic"
+                        )
                     },
                 ),
                 (
@@ -3086,19 +3120,29 @@ async def test_migrate_of_incompatible_config_entry(
                         }
                     },
                     {
-                        "cover_position_settings": "cover_get_position_template_must_be_used_with_get_position_topic"
+                        "cover_position_settings": (
+                            "cover_get_position_template"
+                            "_must_be_used_with"
+                            "_get_position_topic"
+                        )
                     },
                 ),
                 (
                     {"cover_position_settings": {"set_position_topic": "{{ value }}"}},
                     {
-                        "cover_position_settings": "cover_get_and_set_position_must_be_set_together"
+                        "cover_position_settings": (
+                            "cover_get_and_set_position_must_be_set_together"
+                        )
                     },
                 ),
                 (
                     {"cover_tilt_settings": {"tilt_command_template": "{{ value }}"}},
                     {
-                        "cover_tilt_settings": "cover_tilt_command_template_must_be_used_with_tilt_command_topic"
+                        "cover_tilt_settings": (
+                            "cover_tilt_command_template"
+                            "_must_be_used_with"
+                            "_tilt_command_topic"
+                        )
                     },
                 ),
                 (
@@ -3108,7 +3152,11 @@ async def test_migrate_of_incompatible_config_entry(
                         }
                     },
                     {
-                        "cover_tilt_settings": "cover_tilt_status_template_must_be_used_with_tilt_status_topic"
+                        "cover_tilt_settings": (
+                            "cover_tilt_status_template"
+                            "_must_be_used_with"
+                            "_tilt_status_topic"
+                        )
                     },
                 ),
             ),
@@ -3237,7 +3285,9 @@ async def test_migrate_of_incompatible_config_entry(
                         },
                     },
                     {
-                        "fan_preset_mode_settings": "fan_preset_mode_reset_in_preset_modes_list",
+                        "fan_preset_mode_settings": (
+                            "fan_preset_mode_reset_in_preset_modes_list"
+                        ),
                     },
                 ),
                 (
@@ -3260,7 +3310,9 @@ async def test_migrate_of_incompatible_config_entry(
                         },
                     },
                     {
-                        "fan_speed_settings": "fan_speed_range_max_must_be_greater_than_speed_range_min",
+                        "fan_speed_settings": (
+                            "fan_speed_range_max_must_be_greater_than_speed_range_min"
+                        ),
                     },
                 ),
             ),
@@ -4466,11 +4518,15 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                     "temperature_low_command_topic": "temperature-low-command-topic",
                     "temperature_low_command_template": "{{ value }}",
                     "temperature_low_state_topic": "temperature-low-state-topic",
-                    "temperature_low_state_template": "{{ value_json.temperature_low }}",
+                    "temperature_low_state_template": (
+                        "{{ value_json.temperature_low }}"
+                    ),
                     "temperature_high_command_topic": "temperature-high-command-topic",
                     "temperature_high_command_template": "{{ value }}",
                     "temperature_high_state_topic": "temperature-high-state-topic",
-                    "temperature_high_state_template": "{{ value_json.temperature_high }}",
+                    "temperature_high_state_template": (
+                        "{{ value_json.temperature_high }}"
+                    ),
                     "min_temp": 8,
                     "max_temp": 28,
                     "precision": "0.1",
@@ -4514,11 +4570,15 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                     "temperature_low_command_topic": "temperature-low-command-topic",
                     "temperature_low_command_template": "{{ value }}",
                     "temperature_low_state_topic": "temperature-low-state-topic",
-                    "temperature_low_state_template": "{{ value_json.temperature_low }}",
+                    "temperature_low_state_template": (
+                        "{{ value_json.temperature_low }}"
+                    ),
                     "temperature_high_command_topic": "temperature-high-command-topic",
                     "temperature_high_command_template": "{{ value }}",
                     "temperature_high_state_topic": "temperature-high-state-topic",
-                    "temperature_high_state_template": "{{ value_json.temperature_high }}",
+                    "temperature_high_state_template": (
+                        "{{ value_json.temperature_high }}"
+                    ),
                     "min_temp": 8,
                     "max_temp": 28,
                     "precision": "0.1",
@@ -5102,6 +5162,43 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device"
 
+    # Check suggested values
+    base_schema_key_descriptions = {
+        key: key.description for key, value in result["data_schema"].schema.items()
+    }
+    assert base_schema_key_descriptions == {
+        "name": {"suggested_value": "Milk notifier"},
+        "model": {"suggested_value": "Model XL"},
+        "model_id": {"suggested_value": "mn002"},
+        "manufacturer": {"suggested_value": "Milk Masters"},
+        "configuration_url": {"suggested_value": "https://example.com"},
+        "advanced_settings": None,
+        "mqtt_settings": None,
+    }
+
+    advanced_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["advanced_settings"]
+        .schema.schema.items()
+    }
+    assert advanced_settings_key_descriptions == {
+        "sw_version": {"suggested_value": "1.0"},
+        "hw_version": {"suggested_value": "2.1 rev a"},
+    }
+    assert result["data_schema"].schema["advanced_settings"].options == {
+        "collapsed": False
+    }
+
+    mqtt_settings_key_descriptions = {
+        key: key.description
+        for key, value in result["data_schema"]
+        .schema["mqtt_settings"]
+        .schema.schema.items()
+    }
+    assert mqtt_settings_key_descriptions == {"qos": {"suggested_value": 2}}
+    assert result["data_schema"].schema["mqtt_settings"].options == {"collapsed": False}
+
     # Update the device details
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -5348,7 +5445,7 @@ async def test_subentry_configflow_section_feature(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test the subentry ConfigFlow sections are hidden when they have no configurable options."""
+    """Test subentry sections are hidden with no configurable options."""
     await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 

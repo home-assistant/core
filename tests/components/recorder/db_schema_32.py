@@ -403,10 +403,13 @@ class States(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f"<recorder.States(id={self.state_id},"
+            f" entity_id='{self.entity_id}',"
             f" state='{self.state}', event_id='{self.event_id}',"
-            f" last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}',"
-            f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
+            f" last_updated="
+            f"'{self.last_updated.isoformat(sep=' ', timespec='seconds')}',"
+            f" old_state_id={self.old_state_id},"
+            f" attributes_id={self.attributes_id})>"
         )
 
     @staticmethod

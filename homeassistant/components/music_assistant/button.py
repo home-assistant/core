@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
-    """Representation of a Button entity to favorite the currently playing item on a player."""
+    """Representation of a Button entity to favorite the current item."""
 
     entity_description = ButtonEntityDescription(
         key="favorite_now_playing",

@@ -342,7 +342,7 @@ class ESPHomeManager:
         call_id: int,
         response_template: str | None = None,
     ) -> None:
-        """Handle service call that expects a response and send response back to ESPHome."""
+        """Handle service call with response and send it back to ESPHome."""
         try:
             # Call the service with response capture enabled
             action_response = await self.hass.services.async_call(
@@ -364,6 +364,7 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise HomeAssistantError(
                         f"Error rendering response template: {ex}"
                     ) from ex

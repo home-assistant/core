@@ -353,7 +353,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
     @hass_callback
     def async_check_scanning_mode(self, scanner: HaScanner) -> None:
-        """Check if the scanner is running in passive mode when active mode is requested."""
+        """Check if scanner is in passive mode when active is requested."""
         passive_mode_issue_id = f"bluetooth_adapter_passive_mode_{scanner.source}"
 
         # Check if scanner is NOT in passive mode when active mode was requested
