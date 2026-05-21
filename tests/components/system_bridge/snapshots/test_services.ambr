@@ -59,7 +59,7 @@
     'data': dict({
     }),
     'id': 'test',
-    'message': 'Shuttdown',
+    'message': 'Shutdown',
     'module': None,
     'subtype': None,
     'type': <EventType.POWER_SHUTDOWN: 'POWER_SHUTDOWN'>,
