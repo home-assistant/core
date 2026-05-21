@@ -114,6 +114,9 @@
     "process_not_found": {
       "message": "Could not find process with ID {id}."
     },
+    "send_message_failed": {
+      "message": "Sending message to {title} ({host}) failed due to a connection error"
+    },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
     },
