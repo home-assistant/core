@@ -16,10 +16,13 @@ HEADER = "## Check requirements"
 
 # Column / bullet labels per check kind, in display order.
 _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
+    (CheckKind.VULNERABILITIES, "No Advisories"),
+    (CheckKind.YANKED, "Not Yanked"),
     (CheckKind.REPO_PUBLIC, "Repo Public"),
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
     (CheckKind.PR_LINK, "PR Link"),
+    (CheckKind.ASYNC_BLOCKING, "Async Safe"),
 )
 
 _ICONS: dict[CheckStatus, str] = {
