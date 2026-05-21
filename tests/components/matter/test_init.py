@@ -848,11 +848,11 @@ async def test_ble_proxy_connect_failure_does_not_block_setup(
     mock_ble_proxy.disconnect.assert_not_awaited()
 
 
+@pytest.mark.usefixtures("ble_proxy_connect_timeout")
 async def test_ble_proxy_connect_timeout_does_not_block_setup(
     hass: HomeAssistant,
     matter_client: MagicMock,
     mock_ble_proxy: MagicMock,
-    ble_proxy_connect_timeout: int,
 ) -> None:
     """Setup succeeds with ble_proxy=None when proxy connect times out."""
     matter_client.server_info.ble_proxy_enabled = True

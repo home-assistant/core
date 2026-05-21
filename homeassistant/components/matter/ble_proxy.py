@@ -23,6 +23,7 @@ from matter_ble_proxy import (
 )
 
 from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
     async_ble_device_from_address,
     async_register_callback,
 )
@@ -47,8 +48,6 @@ class HaBluetoothScanSource(BleScanSource):
         self, callback_fn: Callable[[AdvertisementData], None]
     ) -> None:
         """Register an advertisement callback with HA's bluetooth component."""
-        from habluetooth import BluetoothScanningMode  # noqa: PLC0415
-
         if self._cancel is not None:
             return
 
