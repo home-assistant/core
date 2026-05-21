@@ -1,10 +1,5 @@
 """Tests for virtual remote helper functions."""
 
-from __future__ import annotations
-
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -25,6 +20,8 @@ from homeassistant.components.virtual_remote.helpers import (
     remotes_with_commands,
     unique_remote_id,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 def test_available_infrared_entities(hass: HomeAssistant) -> None:
@@ -75,7 +72,9 @@ def test_infrared_entity_field_defaults() -> None:
     """Test selector field defaults."""
     available = {"infrared.valid": {"value": "infrared.valid", "label": "Valid"}}
 
-    assert infrared_entity_field("infrared.valid", available).default() == "infrared.valid"
+    assert (
+        infrared_entity_field("infrared.valid", available).default() == "infrared.valid"
+    )
     assert infrared_entity_field("infrared.missing", available).default() is None
     assert (
         infrared_entity_field_with_current(

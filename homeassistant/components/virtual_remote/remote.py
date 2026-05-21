@@ -337,8 +337,7 @@ class InfraredRemoteEntity(RemoteEntity):
         has_entity_name: bool,
         translation_domain: str = DOMAIN,
         missing_infrared_issue_handler: MissingInfraredEntityIssueHandler | None = None,
-        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler
-        | None = None,
+        restored_infrared_issue_handler: RestoredInfraredEntityIssueHandler | None = None,
     ) -> None:
         """Initialize the virtual remote."""
         self._remote_id = remote_id
@@ -372,7 +371,6 @@ class InfraredRemoteEntity(RemoteEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
-        self._update_missing_infrared_repair_issue()
 
         @callback
         def _handle_infrared_state_change(event: Any) -> None:
@@ -387,6 +385,7 @@ class InfraredRemoteEntity(RemoteEntity):
                 _handle_infrared_state_change,
             )
         )
+        self._update_missing_infrared_repair_issue()
 
     async def async_update(self) -> None:
         """Update repair state for the linked infrared entity."""

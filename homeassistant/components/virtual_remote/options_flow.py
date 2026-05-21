@@ -349,10 +349,7 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
                 errors[COMMAND_DATA] = "command_data_required"
 
             commands = dict(remote.get(CONF_REMOTE_COMMANDS, {}))
-            if (
-                not errors
-                and find_command_key(commands, command_name) is not None
-            ):
+            if not errors and find_command_key(commands, command_name) is not None:
                 errors[COMMAND_NAME] = "command_name_exists"
 
             if not errors:

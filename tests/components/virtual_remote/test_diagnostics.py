@@ -1,9 +1,5 @@
 """Tests for Virtual Remote diagnostics."""
 
-from __future__ import annotations
-
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -15,6 +11,7 @@ from homeassistant.components.virtual_remote.const import (
 from homeassistant.components.virtual_remote.diagnostics import (
     async_get_config_entry_diagnostics,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +52,9 @@ async def test_diagnostics(
 
     assert diagnostics["entry"]["unique_id"] == "**REDACTED**"
     assert diagnostics["entry"]["data"]["unique_id"] == "**REDACTED**"
-    assert diagnostics["entry"]["options"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] == [
+    assert diagnostics["entry"]["options"][CONF_VIRTUAL_REMOTES][0][
+        CONF_REMOTE_COMMANDS
+    ] == [
         "MUTE",
         "POWER",
     ]

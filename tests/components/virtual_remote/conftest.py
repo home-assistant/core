@@ -1,14 +1,9 @@
 """Fixtures for the Virtual Remote integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
@@ -18,9 +13,10 @@ from homeassistant.components.virtual_remote.const import (
     CONF_VIRTUAL_REMOTES,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
 
 INFRARED_ENTITY_ID = "infrared.test_ir"
 REMOTE_ID = "living_room_tv"

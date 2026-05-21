@@ -1,7 +1,5 @@
 """Tests for virtual remote command parsing."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.virtual_remote.command import (
@@ -16,10 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 def _timings(command) -> list[tuple[int, int]]:
     """Return command timings as tuples."""
-    return [
-        (timing.high_us, timing.low_us)
-        for timing in command.get_raw_timings()
-    ]
+    return [(timing.high_us, timing.low_us) for timing in command.get_raw_timings()]
 
 
 def test_raw_timing_dataclass() -> None:
@@ -34,14 +29,41 @@ def test_raw_timing_dataclass() -> None:
     [
         ("9000,4500,560,560", {}, 38000, [(9000, 4500), (560, 560)]),
         ("38000:9000,4500,560,560", {}, 38000, [(9000, 4500), (560, 560)]),
-        ("9000 4500 560 560", {"carrier_frequency": 40000}, 40000, [(9000, 4500), (560, 560)]),
-        ("[9000, 4500, 560, 560]", {"modulation": 36000}, 36000, [(9000, 4500), (560, 560)]),
-        ('{"timings": [9000, 4500, 560, 560]}', {"modulation": 36000}, 36000, [(9000, 4500), (560, 560)]),
-        ('{"carrier_frequency": 56000, "timings": [9000, 4500, 560, 560]}', {}, 56000, [(9000, 4500), (560, 560)]),
-        ('{"modulation": 57000, "timings": [9000, 4500, 560, 560]}', {}, 57000, [(9000, 4500), (560, 560)]),
+        (
+            "9000 4500 560 560",
+            {"carrier_frequency": 40000},
+            40000,
+            [(9000, 4500), (560, 560)],
+        ),
+        (
+            "[9000, 4500, 560, 560]",
+            {"modulation": 36000},
+            36000,
+            [(9000, 4500), (560, 560)],
+        ),
+        (
+            '{"timings": [9000, 4500, 560, 560]}',
+            {"modulation": 36000},
+            36000,
+            [(9000, 4500), (560, 560)],
+        ),
+        (
+            '{"carrier_frequency": 56000, "timings": [9000, 4500, 560, 560]}',
+            {},
+            56000,
+            [(9000, 4500), (560, 560)],
+        ),
+        (
+            '{"modulation": 57000, "timings": [9000, 4500, 560, 560]}',
+            {},
+            57000,
+            [(9000, 4500), (560, 560)],
+        ),
     ],
 )
-def test_parse_valid_commands(payload: str, kwargs: dict, modulation: int, timings: list[tuple[int, int]]) -> None:
+def test_parse_valid_commands(
+    payload: str, kwargs: dict, modulation: int, timings: list[tuple[int, int]]
+) -> None:
     """Test valid command payloads."""
     command = parse_remote_command(payload, kwargs)
     assert command.modulation == modulation
@@ -65,7 +87,7 @@ def test_parse_pronto_command() -> None:
         "[9000, 0]",
         "[9000, -1]",
         "[9000, 4500, 560]",
-        "[9000, \"bad\"]",
+        '[9000, "bad"]',
         '{"timings": "bad"}',
         '{"timings": [9000, 4500], "modulation": "bad"}',
         "{bad",
@@ -94,7 +116,9 @@ def test_parse_invalid_commands_raise_home_assistant_error(payload: str) -> None
         ("bad:9000,4500", "Command modulation must be an integer"),
     ],
 )
-def test_validate_remote_command_payload_raises_command_parse_error(payload: str, message: str) -> None:
+def test_validate_remote_command_payload_raises_command_parse_error(
+    payload: str, message: str
+) -> None:
     """Test options-flow validator preserves parser errors."""
     with pytest.raises(CommandParseError, match=message):
         validate_remote_command_payload(payload)
@@ -109,7 +133,9 @@ def test_validate_remote_command_payload_raises_command_parse_error(payload: str
         (38000, [1, 0], "timings must be greater than zero"),
     ],
 )
-def test_validate_raw_command(modulation: int, timings: list[int], message: str) -> None:
+def test_validate_raw_command(
+    modulation: int, timings: list[int], message: str
+) -> None:
     """Test raw command field validation."""
     with pytest.raises(CommandParseError, match=message):
         validate_raw_command(modulation, timings)

@@ -1,14 +1,10 @@
 """Tests for the Virtual Remote config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_ID,
@@ -16,10 +12,11 @@ from homeassistant.components.virtual_remote.const import (
     CONF_VIRTUAL_REMOTES,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .conftest import INFRARED_ENTITY_ID
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow_no_infrared_entities(hass: HomeAssistant) -> None:
@@ -128,7 +125,10 @@ async def test_reconfigure_success(
     """Test reconfiguring the first remote."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
     )
     assert result["type"] is config_entries.FlowResultType.FORM
 
@@ -147,7 +147,9 @@ async def test_reconfigure_success(
 
     assert result["type"] is config_entries.FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_NAME] == "Bedroom TV"
+    assert (
+        config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_NAME] == "Bedroom TV"
+    )
     assert len(mock_reload.mock_calls) == 1
 
 
@@ -158,7 +160,10 @@ async def test_reconfigure_validation_errors(
     """Test reconfigure validation errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -191,7 +196,10 @@ async def test_reconfigure_no_remotes(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
     )
 
     assert result["type"] is config_entries.FlowResultType.ABORT

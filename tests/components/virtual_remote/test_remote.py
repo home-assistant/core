@@ -1,17 +1,9 @@
 """Tests for virtual remote entities."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
@@ -34,10 +26,15 @@ from homeassistant.components.virtual_remote.remote import (
     configured_remote_definitions,
     remote_unique_id,
 )
-
-from tests.common import MockConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .conftest import INFRARED_ENTITY_ID, RAW_COMMAND, REMOTE_ID, REMOTE_NAME
+
+from tests.common import MockConfigEntry
 
 
 def _device_info_factory(
@@ -91,9 +88,10 @@ def test_remote_unique_id() -> None:
 
 def test_configured_remote_definitions(config_entry: MockConfigEntry) -> None:
     """Test configured remote definition helper."""
-    assert configured_remote_definitions(config_entry) == config_entry.options[
-        CONF_VIRTUAL_REMOTES
-    ]
+    assert (
+        configured_remote_definitions(config_entry)
+        == config_entry.options[CONF_VIRTUAL_REMOTES]
+    )
 
     config_entry.options[CONF_VIRTUAL_REMOTES] = "bad"
     assert configured_remote_definitions(config_entry) == []
@@ -329,7 +327,9 @@ async def test_send_command_named_raw_repeat_and_delay(
             "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
             AsyncMock(),
         ) as mock_send,
-        patch("homeassistant.components.virtual_remote.remote.asyncio.sleep", AsyncMock()) as mock_sleep,
+        patch(
+            "homeassistant.components.virtual_remote.remote.asyncio.sleep", AsyncMock()
+        ) as mock_sleep,
     ):
         await entity.async_send_command(
             ["power", RAW_COMMAND],
@@ -459,12 +459,14 @@ async def test_send_failure_wrapped(
     """Test unexpected infrared send errors are wrapped."""
     entity = _make_entity(hass, commands={"POWER": RAW_COMMAND})
 
-    with patch(
-        "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
-        AsyncMock(side_effect=RuntimeError("boom")),
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(side_effect=RuntimeError("boom")),
+        ),
+        pytest.raises(HomeAssistantError) as err,
     ):
-        with pytest.raises(HomeAssistantError) as err:
-            await entity.async_send_command(["POWER"])
+        await entity.async_send_command(["POWER"])
 
     assert err.value.translation_key == "remote_send_failed"
     assert err.value.translation_placeholders == {"error": "boom"}

@@ -1,12 +1,12 @@
 """Tests for Virtual Remote integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
+from homeassistant.components.virtual_remote import (
+    async_setup_entry,
+    async_unload_entry,
+)
 from homeassistant.core import HomeAssistant
-
-from homeassistant.components.virtual_remote import async_setup_entry, async_unload_entry
 
 from tests.common import MockConfigEntry
 

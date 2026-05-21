@@ -1,12 +1,8 @@
 """Tests for the Virtual Remote options flow."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -27,10 +23,11 @@ from homeassistant.components.virtual_remote.options_flow import (
     SOURCE_REMOVE_REMOTE,
     VirtualRemoteOptionsFlow,
 )
-
-from tests.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .conftest import INFRARED_ENTITY_ID, RAW_COMMAND
+
+from tests.common import MockConfigEntry
 
 
 async def _init_options_flow(
@@ -61,7 +58,9 @@ async def test_options_menu(hass: HomeAssistant, config_entry: MockConfigEntry) 
     ]
 
 
-async def test_options_menu_only_add_without_remotes(hass: HomeAssistant, infrared_entity: str) -> None:
+async def test_options_menu_only_add_without_remotes(
+    hass: HomeAssistant, infrared_entity: str
+) -> None:
     """Test menu with no configured remotes."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -76,7 +75,9 @@ async def test_options_menu_only_add_without_remotes(hass: HomeAssistant, infrar
     assert result["menu_options"] == [SOURCE_ADD_REMOTE]
 
 
-async def test_add_remote_success(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_add_remote_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test adding a remote."""
     result = await _init_options_flow(hass, config_entry, SOURCE_ADD_REMOTE)
     assert result["type"] is config_entries.FlowResultType.FORM
@@ -153,7 +154,9 @@ async def test_add_remote_no_infrared_entities(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_available_infrared_entities"
 
 
-async def test_edit_remote_success(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_edit_remote_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test editing a remote."""
     result = await _init_options_flow(hass, config_entry, SOURCE_EDIT_REMOTE)
     result = await hass.config_entries.options.async_configure(
@@ -180,7 +183,9 @@ async def test_edit_remote_with_stale_current_entity(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test editing preserves stale current entity as allowed default."""
-    config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_INFRARED_ENTITY_ID] = "infrared.stale"
+    config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_INFRARED_ENTITY_ID] = (
+        "infrared.stale"
+    )
 
     result = await _init_options_flow(hass, config_entry, SOURCE_EDIT_REMOTE)
     result = await hass.config_entries.options.async_configure(
@@ -202,7 +207,9 @@ async def test_edit_remote_with_stale_current_entity(
     )
 
 
-async def test_remove_remote(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_remove_remote(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test removing a remote."""
     result = await _init_options_flow(hass, config_entry, SOURCE_REMOVE_REMOTE)
     result = await hass.config_entries.options.async_configure(
@@ -214,7 +221,9 @@ async def test_remove_remote(hass: HomeAssistant, config_entry: MockConfigEntry)
     assert result["data"][CONF_VIRTUAL_REMOTES] == []
 
 
-async def test_remote_steps_abort_without_remotes(hass: HomeAssistant, infrared_entity: str) -> None:
+async def test_remote_steps_abort_without_remotes(
+    hass: HomeAssistant, infrared_entity: str
+) -> None:
     """Test remote steps abort without configured remotes."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -232,7 +241,9 @@ async def test_remote_steps_abort_without_remotes(hass: HomeAssistant, infrared_
             assert result["reason"] == "no_virtual_remotes"
 
 
-async def test_manage_commands_menu(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_manage_commands_menu(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test manage commands menu."""
     result = await _init_options_flow(hass, config_entry, SOURCE_MANAGE_COMMANDS)
 
@@ -244,7 +255,9 @@ async def test_manage_commands_menu(hass: HomeAssistant, config_entry: MockConfi
     ]
 
 
-async def test_add_command_success(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_add_command_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test adding a command."""
     config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {}
     result = await _init_options_flow(hass, config_entry, SOURCE_MANAGE_COMMANDS)
@@ -271,9 +284,18 @@ async def test_add_command_success(hass: HomeAssistant, config_entry: MockConfig
 @pytest.mark.parametrize(
     ("user_input", "errors"),
     [
-        ({COMMAND_NAME: "", COMMAND_DATA: RAW_COMMAND}, {COMMAND_NAME: "command_name_required"}),
-        ({COMMAND_NAME: "POWER_ON", COMMAND_DATA: ""}, {COMMAND_DATA: "command_data_required"}),
-        ({COMMAND_NAME: "POWER_ON", COMMAND_DATA: RAW_COMMAND}, {COMMAND_NAME: "command_name_exists"}),
+        (
+            {COMMAND_NAME: "", COMMAND_DATA: RAW_COMMAND},
+            {COMMAND_NAME: "command_name_required"},
+        ),
+        (
+            {COMMAND_NAME: "POWER_ON", COMMAND_DATA: ""},
+            {COMMAND_DATA: "command_data_required"},
+        ),
+        (
+            {COMMAND_NAME: "POWER_ON", COMMAND_DATA: RAW_COMMAND},
+            {COMMAND_NAME: "command_name_exists"},
+        ),
         ({COMMAND_NAME: "NEW", COMMAND_DATA: "bad"}, {COMMAND_DATA: "invalid_command"}),
     ],
 )
@@ -294,7 +316,9 @@ async def test_add_command_errors(
     assert result["errors"] == errors
 
 
-async def test_edit_command_success(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_edit_command_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test editing a command."""
     result = await _init_options_flow(hass, config_entry, SOURCE_MANAGE_COMMANDS)
     result = await hass.config_entries.options.async_configure(
@@ -320,7 +344,9 @@ async def test_edit_command_success(hass: HomeAssistant, config_entry: MockConfi
     assert commands["NEW_POWER"] == RAW_COMMAND
 
 
-async def test_remove_command_success(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_remove_command_success(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test removing a command."""
     result = await _init_options_flow(hass, config_entry, SOURCE_MANAGE_COMMANDS)
     result = await hass.config_entries.options.async_configure(
@@ -337,10 +363,14 @@ async def test_remove_command_success(hass: HomeAssistant, config_entry: MockCon
     )
 
     assert result["type"] is config_entries.FlowResultType.CREATE_ENTRY
-    assert "POWER_ON" not in result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS]
+    assert (
+        "POWER_ON" not in result["data"][CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS]
+    )
 
 
-async def test_remove_last_command_removes_commands_key(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_remove_last_command_removes_commands_key(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test removing the last command removes the commands key."""
     config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {
         "POWER_ON": RAW_COMMAND
@@ -365,12 +395,12 @@ async def test_command_steps_abort_when_no_commands(
     flow = VirtualRemoteOptionsFlow(config_entry)
     flow.hass = hass
 
-    assert (
-        await flow.async_step_select_remote_for_command_edit()
-    )["reason"] == "no_remote_commands"
-    assert (
-        await flow.async_step_select_remote_for_command_removal()
-    )["reason"] == "no_remote_commands"
+    assert (await flow.async_step_select_remote_for_command_edit())[
+        "reason"
+    ] == "no_remote_commands"
+    assert (await flow.async_step_select_remote_for_command_removal())[
+        "reason"
+    ] == "no_remote_commands"
 
 
 async def test_direct_step_fallbacks_and_missing_selected_remote(
@@ -382,16 +412,32 @@ async def test_direct_step_fallbacks_and_missing_selected_remote(
     flow.hass = hass
 
     assert (await flow.async_step_edit_remote())["step_id"] == "select_remote_for_edit"
-    assert (await flow.async_step_add_command())["step_id"] == "select_remote_for_command"
-    assert (
-        await flow.async_step_select_command_for_edit()
-    )["step_id"] == "select_remote_for_command_edit"
-    assert (
-        await flow.async_step_remove_command()
-    )["step_id"] == "select_remote_for_command_removal"
+    assert (await flow.async_step_add_command())[
+        "step_id"
+    ] == "select_remote_for_command"
+    assert (await flow.async_step_select_command_for_edit())[
+        "step_id"
+    ] == "select_remote_for_command_edit"
+    assert (await flow.async_step_remove_command())[
+        "step_id"
+    ] == "select_remote_for_command_removal"
 
     flow._selected_remote_id = "missing"
-    assert (await flow.async_step_edit_remote({CONF_REMOTE_NAME: "A", CONF_INFRARED_ENTITY_ID: INFRARED_ENTITY_ID}))["reason"] == "remote_not_found"
-    assert (await flow.async_step_add_command({COMMAND_NAME: "A", COMMAND_DATA: RAW_COMMAND}))["reason"] == "remote_not_found"
-    assert (await flow.async_step_edit_command({COMMAND_NAME: "A", COMMAND_DATA: RAW_COMMAND}))["reason"] == "remote_not_found"
-    assert (await flow.async_step_remove_command({COMMAND_NAME: "A"}))["reason"] == "remote_not_found"
+    assert (
+        await flow.async_step_edit_remote(
+            {CONF_REMOTE_NAME: "A", CONF_INFRARED_ENTITY_ID: INFRARED_ENTITY_ID}
+        )
+    )["reason"] == "remote_not_found"
+    assert (
+        await flow.async_step_add_command(
+            {COMMAND_NAME: "A", COMMAND_DATA: RAW_COMMAND}
+        )
+    )["reason"] == "remote_not_found"
+    assert (
+        await flow.async_step_edit_command(
+            {COMMAND_NAME: "A", COMMAND_DATA: RAW_COMMAND}
+        )
+    )["reason"] == "remote_not_found"
+    assert (await flow.async_step_remove_command({COMMAND_NAME: "A"}))[
+        "reason"
+    ] == "remote_not_found"
