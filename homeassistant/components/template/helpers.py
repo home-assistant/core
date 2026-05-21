@@ -166,12 +166,16 @@ def async_create_platform_template_not_supported_issue(
     hass: HomeAssistant, domain: str
 ):
     """Create a platform: template not supported issue."""
+    learn_more_url = (
+        "https://www.home-assistant.io/integrations/template/"
+        f"#{slugify(domain, separator='-')}"
+    )
     async_create_platform_config_not_supported_issue(
         hass,
         DOMAIN,
         domain,
         yaml_config_under_integration_supported=True,
-        learn_more_url=f"https://www.home-assistant.io/integrations/template/#{slugify(domain, separator='-')}",
+        learn_more_url=learn_more_url,
         logger=_LOGGER,
     )
 
