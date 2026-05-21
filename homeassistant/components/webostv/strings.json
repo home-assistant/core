@@ -46,6 +46,9 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Pairing failed, make sure to accept the pairing request on your TV."
+    },
     "communication_error": {
       "message": "Communication error while calling {func} for device {name}: {error}"
     },
