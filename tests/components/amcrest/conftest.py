@@ -1,6 +1,6 @@
 """Common fixtures for the Amcrest tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -23,8 +23,20 @@ TEST_SERIAL = "12345"
 TEST_CONFIG_ENTRY_TITLE = f"Amcrest {TEST_SERIAL}"
 
 
+class _AsyncPropertyValue:
+    """Instance attribute that can be awaited like an Amcrest API property."""
+
+    def __init__(self, coro_func: Callable[[], Coroutine[Any, Any, Any]]) -> None:
+        """Initialize with a coroutine factory."""
+        self._coro_func = coro_func
+
+    def __await__(self) -> Any:
+        """Return a fresh coroutine on each await."""
+        return self._coro_func().__await__()
+
+
 def mock_async_property(
-    api: MagicMock,
+    api: Any,
     name: str,
     *,
     return_value: Any = None,
@@ -39,7 +51,7 @@ def mock_async_property(
             raise side_effect
         return return_value
 
-    setattr(type(api), name, property(lambda self: _get_value()))
+    setattr(api, name, _AsyncPropertyValue(_get_value))
 
 
 def setup_mock_amcrest_checker(mock_class: MagicMock) -> MagicMock:
