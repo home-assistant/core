@@ -5,8 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast
 
-from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
-from pyprusalink.types_legacy import LegacyPrinterStatus
+from pyprusalink.types import (
+    JobFilePrint,
+    JobInfo,
+    PrinterInfo,
+    PrinterState,
+    PrinterStatus,
+)
+from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,99 +36,16 @@ from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
 
-def _has_active_job(data: JobInfo | None) -> JobInfo | None:
-    """Return job payload if there is an active job, otherwise None."""
-    if data is None or data.get("state") == PrinterState.IDLE.value:
-        return None
-    return data
-
-
-def _job_progress(data: JobInfo | None) -> float | None:
-    """Return job progress or None if no active job is running."""
-    if (active_job := _has_active_job(data)) is None:
-        return None
-    # Required JobInfo fields are intentionally accessed directly so upstream
-    # contract violations fail fast instead of being silently masked.
-    return active_job["progress"]
-
-
-def _job_filename(data: JobInfo | None) -> str | None:
-    """Return job filename.
-
-    Return None if there is no active job or the active job has no file metadata.
-    """
-    if (active_job := _has_active_job(data)) is None:
-        return None
-    file_data = active_job["file"]
-    if file_data is None:
-        return None
-    return file_data["display_name"]
-
-
-def _make_stable_job_start() -> Callable[[JobInfo | None], datetime | None]:
-    """Return a per-entity stable job-start value function."""
-    stable_job_start = ignore_variance(
-        lambda printing_seconds: utcnow() - timedelta(seconds=printing_seconds),
-        timedelta(minutes=2),
-    )
-
-    def _value_fn(data: JobInfo | None) -> datetime | None:
-        if (active_job := _has_active_job(data)) is None:
-            return None
-        return stable_job_start(active_job["time_printing"])
-
-    return _value_fn
-
-
-def _make_stable_job_finish() -> Callable[[JobInfo | None], datetime | None]:
-    """Return a per-entity stable job-finish value function."""
-    stable_job_finish = ignore_variance(
-        lambda remaining_seconds: utcnow() + timedelta(seconds=remaining_seconds),
-        timedelta(minutes=2),
-    )
-
-    def _value_fn(data: JobInfo | None) -> datetime | None:
-        if (active_job := _has_active_job(data)) is None:
-            return None
-        time_remaining = active_job["time_remaining"]
-        if time_remaining is None:
-            return None
-        return stable_job_finish(time_remaining)
-
-    return _value_fn
-
-
-def _legacy_material(data: LegacyPrinterStatus) -> str | None:
-    """Return material name or None when legacy telemetry is missing."""
-    telemetry = data.get("telemetry")
-    if telemetry is None:
-        return None
-    return telemetry["material"]
-
-
-def _always_available(_: object) -> bool:
-    """Keep entities available while coordinator is connected."""
-    return True
-
-
 @dataclass(frozen=True, kw_only=True)
 class PrusaLinkSensorEntityDescription[
-    T: PrinterStatus | LegacyPrinterStatus | JobInfo | None | PrinterInfo
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 ](
     SensorEntityDescription,
     PrusaLinkEntityDescription,
 ):
     """Describes PrusaLink sensor entity."""
 
-    value_fn: Callable[[T], datetime | StateType] | None = None
-    value_fn_factory: Callable[[], Callable[[T], datetime | StateType]] | None = None
-
-    def __post_init__(self) -> None:
-        """Ensure exactly one value callable source is configured."""
-        if (self.value_fn is None) == (self.value_fn_factory is None):
-            raise ValueError(
-                "Exactly one of value_fn or value_fn_factory must be provided"
-            )
+    value_fn: Callable[[T], datetime | StateType]
 
 
 SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
@@ -232,39 +155,67 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
             key="printer.telemetry.material",
             translation_key="material",
-            value_fn=_legacy_material,
+            # `available_fn` guarantees `telemetry` is not None at this
+            # point; the inner cast narrows the Optional for the index.
+            value_fn=lambda data: cast(
+                str, cast(LegacyPrinterTelemetry, data["telemetry"])["material"]
+            ),
             available_fn=lambda data: data.get("telemetry") is not None,
         ),
     ),
     "job": (
-        PrusaLinkSensorEntityDescription[JobInfo | None](
+        PrusaLinkSensorEntityDescription[JobInfo](
             key="job.progress",
             translation_key="progress",
             native_unit_of_measurement=PERCENTAGE,
-            value_fn=_job_progress,
-            # Job sensors stay available when idle/no-job so `None` values are
-            # represented as `unknown` instead of `unavailable`.
-            available_fn=_always_available,
+            value_fn=lambda data: cast(float, data["progress"]),
+            available_fn=lambda data: (
+                data.get("progress") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
-        PrusaLinkSensorEntityDescription[JobInfo | None](
+        PrusaLinkSensorEntityDescription[JobInfo](
             key="job.filename",
             translation_key="filename",
-            value_fn=_job_filename,
-            available_fn=_always_available,
+            # `available_fn` guarantees `file` is not None at this point;
+            # the inner cast narrows the Optional for the index.
+            value_fn=lambda data: cast(
+                str, cast(JobFilePrint, data["file"])["display_name"]
+            ),
+            available_fn=lambda data: (
+                data.get("file") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
-        PrusaLinkSensorEntityDescription[JobInfo | None](
+        PrusaLinkSensorEntityDescription[JobInfo](
             key="job.start",
             translation_key="print_start",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn_factory=_make_stable_job_start,
-            available_fn=_always_available,
+            value_fn=ignore_variance(
+                lambda data: utcnow() - timedelta(seconds=data["time_printing"]),
+                timedelta(minutes=2),
+            ),
+            available_fn=lambda data: (
+                data.get("time_printing") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
-        PrusaLinkSensorEntityDescription[JobInfo | None](
+        PrusaLinkSensorEntityDescription[JobInfo](
             key="job.finish",
             translation_key="print_finish",
             device_class=SensorDeviceClass.TIMESTAMP,
-            value_fn_factory=_make_stable_job_finish,
-            available_fn=_always_available,
+            # `available_fn` guarantees `time_remaining` is not None at this
+            # point; the cast narrows the Optional for `timedelta`.
+            value_fn=ignore_variance(
+                lambda data: (
+                    utcnow() + timedelta(seconds=cast(int, data["time_remaining"]))
+                ),
+                timedelta(minutes=2),
+            ),
+            available_fn=lambda data: (
+                data.get("time_remaining") is not None
+                and data.get("state") != PrinterState.IDLE.value
+            ),
         ),
     ),
     "info": (
@@ -324,23 +275,8 @@ class PrusaLinkSensorEntity(PrusaLinkEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-        # Some sensors need a fresh callable per entity to avoid shared state
-        # across multiple entries (e.g., variance cache for timestamps).
-        if description.value_fn_factory is not None:
-            self._value_fn = cast(
-                Callable[[object], datetime | StateType],
-                description.value_fn_factory(),
-            )
-        elif description.value_fn is not None:
-            self._value_fn = cast(
-                Callable[[object], datetime | StateType], description.value_fn
-            )
-        else:
-            raise ValueError(
-                f"Missing value callable for sensor description: {description.key}"
-            )
 
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-        return self._value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)

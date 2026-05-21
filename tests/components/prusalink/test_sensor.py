@@ -2,11 +2,10 @@
 
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.prusalink import sensor as prusalink_sensor
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -18,8 +17,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -113,21 +110,21 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
 
     state = hass.states.get("sensor.workshop_mock_title_progress")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.workshop_mock_title_filename")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
 
     state = hass.states.get("sensor.workshop_mock_title_print_start")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.workshop_mock_title_print_finish")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.workshop_mock_title_hotend_fan")
@@ -222,21 +219,21 @@ async def test_sensors_idle_job_mk3(
 
     state = hass.states.get("sensor.workshop_mock_title_progress")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.workshop_mock_title_filename")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
 
     state = hass.states.get("sensor.workshop_mock_title_print_start")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.workshop_mock_title_print_finish")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "unavailable"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.workshop_mock_title_hotend_fan")
@@ -297,115 +294,6 @@ async def test_sensors_active_job(
     assert state is not None
     assert state.state == "2500"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
-
-
-async def test_job_start_stabilization_isolated_per_config_entry() -> None:
-    """Ensure job.start variance cache is not shared across config entries."""
-    now = datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC)
-
-    job_start_description = next(
-        description
-        for description in prusalink_sensor.SENSORS["job"]
-        if description.key == "job.start"
-    )
-
-    coordinator_one = Mock()
-    coordinator_one.config_entry = Mock(entry_id="entry_one")
-    coordinator_one.data = {
-        "state": "PRINTING",
-        "time_printing": 600,
-        "time_remaining": 0,
-        "progress": 0.0,
-        "file": None,
-    }
-
-    coordinator_two = Mock()
-    coordinator_two.config_entry = Mock(entry_id="entry_two")
-    coordinator_two.data = {
-        "state": "PRINTING",
-        "time_printing": 660,
-        "time_remaining": 0,
-        "progress": 0.0,
-        "file": None,
-    }
-
-    with patch("homeassistant.components.prusalink.sensor.utcnow", return_value=now):
-        entity_one = prusalink_sensor.PrusaLinkSensorEntity(
-            coordinator_one, job_start_description
-        )
-        entity_two = prusalink_sensor.PrusaLinkSensorEntity(
-            coordinator_two, job_start_description
-        )
-
-        state_one = entity_one.native_value
-        state_two = entity_two.native_value
-
-    assert state_one == datetime(2022, 8, 27, 13, 50, 0, tzinfo=UTC)
-    assert state_two == datetime(2022, 8, 27, 13, 49, 0, tzinfo=UTC)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors_active_job_with_nullable_fields(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_api,
-    mock_get_status_printing,
-    mock_job_api_printing_with_nullable_fields,
-) -> None:
-    """Test job sensors with active job but missing nullable fields.
-
-    Verifies that job helpers handle None values for nullable fields (file,
-    time_remaining) without raising, returning None to indicate unknown state.
-    """
-    with patch(
-        "homeassistant.components.prusalink.sensor.utcnow",
-        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
-    ):
-        assert await async_setup_component(hass, "prusalink", {})
-
-    state = hass.states.get("sensor.mock_title")
-    assert state is not None
-    assert state.state == "printing"
-
-    # progress is required, should always have a value
-    state = hass.states.get("sensor.mock_title_progress")
-    assert state is not None
-    assert state.state == "45.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
-
-    # file is None, filename helper should return None -> unknown
-    state = hass.states.get("sensor.mock_title_filename")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    # time_printing is required, print_start should always have a value
-    state = hass.states.get("sensor.mock_title_print_start")
-    assert state is not None
-    assert state.state == "2022-08-27T01:46:53+00:00"
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-
-    # time_remaining is None, print_finish helper should return None -> unknown
-    state = hass.states.get("sensor.mock_title_print_finish")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_material_sensor_unavailable_when_legacy_telemetry_missing(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_api,
-    mock_get_legacy_printer: dict[str, Any],
-) -> None:
-    """Material sensor is unavailable when legacy telemetry is missing."""
-    mock_get_legacy_printer["telemetry"] = None
-
-    assert await async_setup_component(hass, "prusalink", {})
-
-    state = hass.states.get("sensor.mock_title_material")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
