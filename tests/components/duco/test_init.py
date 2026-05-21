@@ -1,5 +1,6 @@
 """Tests for the Duco integration setup."""
 
+from dataclasses import replace
 from unittest.mock import ANY, AsyncMock, patch
 
 from duco_connectivity import (
@@ -8,15 +9,19 @@ from duco_connectivity import (
     DucoConnectionError,
     DucoError,
     DucoResponseError,
+    InfoGroup,
+    InfoZone,
+    InfoZonesOverview,
     LanInfo,
     Node,
 )
 import pytest
 
+from homeassistant.components.duco.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS
 
@@ -156,6 +161,104 @@ async def test_setup_entry_unsupported_board_without_info_endpoint(
     assert mock_config_entry.error_reason_translation_placeholders is None
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_devices_registered_with_expected_metadata(
+    device_registry: dr.DeviceRegistry,
+    mock_board_info: BoardInfo,
+) -> None:
+    """Test that the Duco box and node devices expose the expected metadata."""
+    box_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_1")}
+    )
+    assert box_device is not None
+    assert box_device.configuration_url == f"http://{TEST_HOST}"
+    assert box_device.connections == {(dr.CONNECTION_NETWORK_MAC, TEST_MAC)}
+    assert box_device.manufacturer == "Duco"
+    assert box_device.model == mock_board_info.box_name
+    assert box_device.model_id == mock_board_info.box_sub_type_name
+    assert box_device.name == "Living"
+    assert box_device.serial_number == mock_board_info.serial_board_box
+    assert box_device.sw_version == mock_board_info.software_version
+    assert box_device.via_device_id is None
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert (
+        child_device.configuration_url
+        == f"http://{TEST_HOST}/nodeconfig.html?node=2&zone=1&group=1"
+    )
+    assert child_device.connections == set()
+    assert child_device.manufacturer == "Duco"
+    assert child_device.model == "UCCO2"
+    assert child_device.name == "Office CO2"
+    assert child_device.via_device_id == box_device.id
+
+    unmatched_child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_50")}
+    )
+    assert unmatched_child_device is not None
+    assert unmatched_child_device.configuration_url is None
+
+
+async def test_box_device_name_falls_back_to_box_name_when_node_name_empty(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that an unnamed box node uses the board box name as device name."""
+    mock_duco_client.async_get_nodes.return_value = [
+        replace(
+            mock_nodes[0],
+            general=replace(mock_nodes[0].general, name=""),
+        ),
+        *mock_nodes[1:],
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    box_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_1")}
+    )
+    assert box_device is not None
+    assert box_device.name == "SILENT_CONNECT"
+
+
+async def test_child_device_visit_link_omitted_for_ambiguous_zone_matches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_zones_info: InfoZonesOverview,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that child devices get no visit link when multiple matches exist."""
+    mock_duco_client.async_get_zones_info.return_value = InfoZonesOverview(
+        zones=[
+            *mock_zones_info.zones,
+            InfoZone(
+                zone_id=2,
+                name="Second zone",
+                groups=[InfoGroup(group_id=2, nodes=[2])],
+            ),
+        ]
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert child_device.configuration_url is None
+
+
 async def test_unload_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -206,6 +309,7 @@ async def test_setup_entry_creates_http_client(
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_zones_info: InfoZonesOverview,
 ) -> None:
     """Test that setup creates the Duco client with the provided host."""
     with patch(
@@ -217,6 +321,9 @@ async def test_setup_entry_creates_http_client(
         )
         mock_client_class.return_value.async_get_lan_info.return_value = mock_lan_info
         mock_client_class.return_value.async_get_nodes.return_value = mock_nodes
+        mock_client_class.return_value.async_get_zones_info.return_value = (
+            mock_zones_info
+        )
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]

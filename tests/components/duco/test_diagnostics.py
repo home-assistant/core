@@ -120,7 +120,9 @@ async def test_diagnostics_without_optional_api_metadata(
 ) -> None:
     """Test diagnostics when optional API metadata is absent."""
     mock_duco_client.async_get_api_info.return_value = ApiInfo(
-        api_version=mock_duco_client.async_get_api_info.return_value.api_version
+        public_api_version=(
+            mock_duco_client.async_get_api_info.return_value.public_api_version
+        )
     )
 
     diagnostics = await get_diagnostics_for_config_entry(
@@ -129,6 +131,6 @@ async def test_diagnostics_without_optional_api_metadata(
 
     assert diagnostics["api_info"] == {
         "public_api_version": str(
-            mock_duco_client.async_get_api_info.return_value.api_version
+            mock_duco_client.async_get_api_info.return_value.public_api_version
         )
     }
