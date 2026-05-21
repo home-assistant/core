@@ -470,7 +470,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._selected_tunnel = await request_description(
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
-                        local_ip=_local,
+                        local_ip=_local_ip,
                         route_back=user_input[CONF_KNX_ROUTE_BACK],
                     )
                 except CommunicationError:
