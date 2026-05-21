@@ -61,7 +61,7 @@ CHARGER_PROPERTIES = (
 )
 
 
-def _to_json_safe(val: Any) -> Any:
+def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any:
     """Coerce value to be JSON-serializable.
 
     Top-level callables on the charger object are skipped entirely in the main
@@ -71,16 +71,48 @@ def _to_json_safe(val: Any) -> Any:
     """
     if isinstance(val, (str, int, float, bool)) or val is None:
         return val
+
+    if depth > 20:
+        return f"<Depth limit exceeded: {type(val).__name__}>"
+
+    if seen is None:
+        seen = set()
+
+    val_id = id(val)
+    if val_id in seen:
+        return f"<Circular reference detected: {type(val).__name__}>"
+
     if isinstance(val, (datetime, date)):
         return val.isoformat()
     if isinstance(val, Enum):
         return val.value
     if isinstance(val, (set, frozenset)):
-        return [_to_json_safe(v) for v in sorted(val, key=str)]
+        seen.add(val_id)
+        try:
+            return [_to_json_safe(v, seen, depth + 1) for v in sorted(val, key=str)]
+        finally:
+            seen.remove(val_id)
     if isinstance(val, (list, tuple)):
-        return [_to_json_safe(v) for v in val]
+        seen.add(val_id)
+        try:
+            return [_to_json_safe(v, seen, depth + 1) for v in val]
+        finally:
+            seen.remove(val_id)
     if isinstance(val, dict):
-        return {str(k): _to_json_safe(val[k]) for k in sorted(val, key=str)}
+        seen.add(val_id)
+        try:
+            res = {}
+            for k in sorted(val, key=str):
+                if isinstance(k, str):
+                    key_str = k
+                elif isinstance(k, Enum):
+                    key_str = f"{type(k).__name__}.{k.name}"
+                else:
+                    key_str = f"<{type(k).__name__}: {k}>"
+                res[key_str] = _to_json_safe(val[k], seen, depth + 1)
+            return res
+        finally:
+            seen.remove(val_id)
     if callable(val):
         return None
     return f"<{type(val).__name__} object>"

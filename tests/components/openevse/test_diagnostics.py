@@ -93,6 +93,9 @@ async def test_entry_diagnostics_exceptions(
                 "service_level",
                 "uptime",
                 "wifi_firmware",
+                "openevse_firmware",
+                "wifi_signal",
+                "freeram",
             }
             # Copy all mock attributes except the overridden ones
             for key, val in original_charger.__dict__.items():
@@ -139,6 +142,30 @@ async def test_entry_diagnostics_exceptions(
         def wifi_firmware(self) -> Any:
             return lambda: "callable_value"
 
+        @property
+        def openevse_firmware(self) -> list[Any]:
+            cyclic: list[Any] = []
+            cyclic.append(cyclic)
+            return cyclic
+
+        @property
+        def wifi_signal(self) -> list[Any]:
+            nested: list[Any] = []
+            curr = nested
+            for _ in range(22):
+                new_list: list[Any] = []
+                curr.append(new_list)
+                curr = new_list
+            return nested
+
+        @property
+        def freeram(self) -> dict[Any, Any]:
+            return {
+                "simple": "val",
+                123: "int_key",
+                MockEnum.TEST: "enum_key",
+            }
+
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -180,3 +207,25 @@ async def test_entry_diagnostics_exceptions(
 
     # wifi_firmware should be omitted because it is callable
     assert "wifi_firmware" not in diagnostics["charger"]
+
+    # wifi_signal has a deeply nested list exceeding the limit
+    expected_wifi_signal: list[Any] = []
+    curr = expected_wifi_signal
+    for _ in range(20):
+        new_list = []
+        curr.append(new_list)
+        curr = new_list
+    curr.append("<Depth limit exceeded: list>")
+    assert diagnostics["charger"]["wifi_signal"] == expected_wifi_signal
+
+    # freeram key types and deterministic serialization
+    assert diagnostics["charger"]["freeram"] == {
+        "<int: 123>": "int_key",
+        "MockEnum.TEST": "enum_key",
+        "simple": "val",
+    }
+
+    # openevse_firmware contains circular reference
+    assert diagnostics["charger"]["openevse_firmware"] == [
+        "<Circular reference detected: list>"
+    ]
