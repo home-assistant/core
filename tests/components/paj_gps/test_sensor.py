@@ -9,7 +9,7 @@ from pajgps_api.models.trackpoint import TrackPoint
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -55,4 +55,4 @@ async def test_speed_none_when_missing(
 
     state = hass.states.get("sensor.device_1_speed")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
