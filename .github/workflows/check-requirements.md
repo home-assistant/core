@@ -206,7 +206,7 @@ library is fine — integrations wrap its calls in an executor.
 
 Fetch `pyproject.toml` / `setup.py` / `setup.cfg` / `README*` at the
 tag matching `new_version` (try `v{version}`, `{version}`,
-`release-{version}` — at most two attempts). Use the `repos` MCP for
+`release-{version}` — at most three attempts). Use the `repos` MCP for
 github.com, `web-fetch` otherwise.
 
 If sync-only (no `async def` in public modules; no
