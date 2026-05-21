@@ -1,7 +1,5 @@
 """Fixtures and helpers for the evohome tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Callable
 from datetime import timedelta, timezone
 from http import HTTPMethod
@@ -161,7 +159,8 @@ async def setup_evohome(
     dt_util.set_default_time_zone(timezone(timedelta(minutes=utc_offset)))
 
     with (
-        # patch("homeassistant.components.evohome.ec1.EvohomeClient", return_value=None),
+        # patch("homeassistant.components.evohome.ec1.EvohomeClient",
+        #       return_value=None),
         patch("homeassistant.components.evohome.ec2.EvohomeClient") as mock_client,
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",

@@ -1,7 +1,5 @@
 """Support for Firmata light output."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

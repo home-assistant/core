@@ -1,7 +1,5 @@
 """The WebDAV integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiowebdav2.client import Client
@@ -50,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
 
     # Ensure the backup directory exists
     if not await async_ensure_path_exists(client, path):
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_access_or_create_backup_path",

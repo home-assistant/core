@@ -1,7 +1,5 @@
 """Data update coordinator for the PoolDose integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -52,18 +50,27 @@ class PooldoseCoordinator(DataUpdateCoordinator[StructuredValuesDict]):
             status, instant_values = await self.client.instant_values_structured()
         except TimeoutError as err:
             raise UpdateFailed(
-                f"Timeout fetching data from PoolDose device: {err}"
+                translation_domain=self.config_entry.domain,
+                translation_key="update_timeout",
             ) from err
         except (ConnectionError, OSError) as err:
             raise UpdateFailed(
-                f"Failed to connect to PoolDose device while fetching data: {err}"
+                translation_domain=self.config_entry.domain,
+                translation_key="update_connect_failed",
             ) from err
 
         if status != RequestStatus.SUCCESS:
-            raise UpdateFailed(f"API returned status: {status}")
+            raise UpdateFailed(
+                translation_domain=self.config_entry.domain,
+                translation_key="api_status_error",
+                translation_placeholders={"status": str(status.value)},
+            )
 
         if not instant_values:
-            raise UpdateFailed("No data received from API")
+            raise UpdateFailed(
+                translation_domain=self.config_entry.domain,
+                translation_key="no_data_received",
+            )
 
         _LOGGER.debug("Instant values structured: %s", instant_values)
         return instant_values

@@ -1,7 +1,5 @@
 """Support for System Bridge sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -655,7 +653,7 @@ class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
             description.key,
         )
         self.entity_description = description
-        if description.name != UNDEFINED:
+        if description.name is not UNDEFINED:
             self._attr_has_entity_name = False
 
     @property

@@ -1,7 +1,5 @@
 """The Gardena Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bleak.backends.device import BLEDevice
@@ -77,7 +75,7 @@ async def async_setup_entry(
 
     mfg_data = await async_get_manufacturer_data({address})
     product_type = mfg_data[address].product_type
-    if product_type == ProductType.UNKNOWN:
+    if product_type is ProductType.UNKNOWN:
         raise ConfigEntryNotReady("Unable to find product type")
 
     client = Client(get_connection(hass, address), product_type)

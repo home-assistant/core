@@ -1,7 +1,5 @@
 """Support for exposing regular REST commands as services."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -202,8 +200,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         )
 
                     if not service.return_response:
-                        # always read the response to avoid closing the connection
-                        # before the server has finished sending it, while avoiding excessive memory usage
+                        # always read the response to avoid closing
+                        # the connection before the server has
+                        # finished sending it, while avoiding
+                        # excessive memory usage
                         async for _ in response.content.iter_chunked(1024):
                             pass
 

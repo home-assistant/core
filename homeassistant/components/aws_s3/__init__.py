@@ -1,7 +1,5 @@
 """The AWS S3 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -53,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
                 translation_key="invalid_bucket_name",
             ) from err
     except ValueError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_endpoint_url",

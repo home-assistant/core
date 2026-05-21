@@ -1,7 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import CancelledError
 from collections.abc import Callable, Generator
@@ -17,7 +15,6 @@ from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
-import serial
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -848,7 +845,7 @@ async def async_setup_entry(
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except serial.SerialException, OSError:
+            except OSError:
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")

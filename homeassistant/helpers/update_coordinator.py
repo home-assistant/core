@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
@@ -199,7 +197,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
         for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+            try:
+                update_callback()
+            except Exception:
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
@@ -335,8 +340,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
             raise ConfigEntryError(
-                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
-                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
+                "`async_config_entry_first_refresh` called when"
+                f" config entry state is"
+                f" {self.config_entry.state},"
+                " but should only be called in state"
+                f" {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
@@ -433,7 +441,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
-        except (OAuth2TokenRequestError,) as err:
+        except OAuth2TokenRequestError as err:
             self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
                 # Non-recoverable error

@@ -1,7 +1,5 @@
 """Allow users to set and activate scenes."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping, ValuesView
 import logging
 from typing import Any, NamedTuple, cast
@@ -185,6 +183,7 @@ async def async_setup_platform(
         """Reload the scene config."""
         try:
             config = await conf_util.async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return

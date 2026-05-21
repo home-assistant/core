@@ -1,7 +1,5 @@
 """Provide diagnostics for Matter."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
@@ -9,11 +7,10 @@ from chip.clusters import Objects
 from matter_server.common.helpers.util import dataclass_to_dict, parse_attribute_path
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .helpers import get_matter, get_node_from_device_entry
+from .helpers import MatterConfigEntry, get_matter, get_node_from_device_entry
 
 ATTRIBUTES_TO_REDACT = {Objects.BasicInformation.Attributes.Location}
 
@@ -41,7 +38,7 @@ def remove_serialization_type(data: dict[str, Any]) -> dict[str, Any]:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     matter = get_matter(hass)
@@ -54,7 +51,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     matter = get_matter(hass)

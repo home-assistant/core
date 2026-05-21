@@ -273,8 +273,7 @@ async def test_profiles_update_on_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify updated profile options
     state = hass.states.get("select.test_computer_profile")
@@ -311,8 +310,7 @@ async def test_select_becomes_unavailable_when_profiles_removed(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify select entity becomes unavailable
     state = hass.states.get("select.test_computer_profile")
@@ -360,8 +358,7 @@ async def test_current_option_cleared_when_device_state_changes(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify current option is cleared because device state changed
     state = hass.states.get("select.test_computer_profile")
@@ -409,8 +406,7 @@ async def test_current_option_cleared_when_colors_change(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify current option is cleared because device colors changed
     state = hass.states.get("select.test_computer_profile")

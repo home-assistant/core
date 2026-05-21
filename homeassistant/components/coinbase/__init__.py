@@ -1,7 +1,5 @@
 """The Coinbase integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -65,7 +63,8 @@ def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
         raise ConfigEntryAuthFailed(
             "Your Coinbase API key appears to be for the deprecated v2 API. "
             "Please reconfigure with a new API key created for the v3 API. "
-            "Visit https://www.coinbase.com/developer-platform to create new credentials."
+            "Visit https://www.coinbase.com/developer-platform"
+            " to create new credentials."
         )
 
     client = RESTClient(

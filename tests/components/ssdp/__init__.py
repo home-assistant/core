@@ -1,7 +1,5 @@
 """Tests for the SSDP integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from async_upnp_client.ssdp import udn_from_headers

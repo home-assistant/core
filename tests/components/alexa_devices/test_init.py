@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -109,7 +109,7 @@ async def test_migrate_entry(
             CONF_PASSWORD: TEST_PASSWORD,
             **(extra_data),
         },
-        unique_id=TEST_USERNAME,
+        unique_id=TEST_USER_ID,
         version=1,
         minor_version=minor_version,
     )
@@ -121,3 +121,21 @@ async def test_migrate_entry(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 3
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+async def test_migrate_future_version_returns_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration failure for downgraded future config entry version."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        entry_id=mock_config_entry.entry_id,
+        version=2,
+        minor_version=0,
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR

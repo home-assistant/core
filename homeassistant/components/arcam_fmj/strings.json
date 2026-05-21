@@ -5,6 +5,12 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "connection_refused": "Host refused connection",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
     "flow_title": "{host}",
     "step": {
       "confirm": {
@@ -138,6 +144,20 @@
       "incoming_video_vertical_resolution": {
         "name": "Incoming video vertical resolution"
       }
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Connection failed to the device."
+    },
+    "unsupported_media": {
+      "message": "Unsupported media: {media}."
+    },
+    "unsupported_sound_mode": {
+      "message": "Unsupported sound mode: {sound_mode}."
+    },
+    "unsupported_source": {
+      "message": "Unsupported source: {source}."
     }
   }
 }

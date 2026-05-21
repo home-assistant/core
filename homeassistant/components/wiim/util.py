@@ -1,7 +1,5 @@
 """Utility helpers for the WiiM integration."""
 
-from __future__ import annotations
-
 from urllib.parse import urlparse
 
 from homeassistant.core import HomeAssistant
