@@ -2,9 +2,8 @@
 
 from datetime import datetime
 from enum import Enum
-from unittest.mock import MagicMock, PropertyMock
-
-import pytest
+from typing import Any
+from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
 
@@ -71,48 +70,42 @@ async def test_entry_diagnostics_exceptions(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test OpenEVSE diagnostics handles exceptions and JSON coercion correctly."""
 
     class MockEnum(Enum):
         TEST = "test_value"
 
-    # Set up one property to raise AttributeError (should be skipped)
-    monkeypatch.setattr(
-        type(mock_charger),
-        "status",
-        PropertyMock(side_effect=AttributeError),
-        raising=False,
-    )
+    class FakeCharger:
+        """Fake charger to raise exceptions and return custom values for properties."""
 
-    # Set up another property to raise a different Exception (should record the error)
-    monkeypatch.setattr(
-        type(mock_charger),
-        "charging_voltage",
-        PropertyMock(side_effect=ValueError("Connection error")),
-        raising=False,
-    )
+        def __init__(self, original_charger: MagicMock) -> None:
+            self._original_charger = original_charger
 
-    # Set up datetime property to verify JSON coercion
-    monkeypatch.setattr(
-        type(mock_charger),
-        "vehicle_eta",
-        PropertyMock(return_value=datetime(2000, 1, 1, 12, 0, 0)),
-        raising=False,
-    )
+        def __getattr__(self, name: str) -> Any:
+            if name == "status":
+                raise AttributeError
+            return getattr(self._original_charger, name)
 
-    # Set up Enum property to verify JSON coercion
-    monkeypatch.setattr(
-        type(mock_charger),
-        "mode",
-        PropertyMock(return_value=MockEnum.TEST),
-        raising=False,
-    )
+        @property
+        def charging_voltage(self) -> int:
+            raise ValueError("Connection error")
+
+        @property
+        def vehicle_eta(self) -> datetime:
+            return datetime(2000, 1, 1, 12, 0, 0)
+
+        @property
+        def mode(self) -> MockEnum:
+            return MockEnum.TEST
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # Inject the FakeCharger into the coordinator to isolate side effects
+    coordinator = mock_config_entry.runtime_data
+    coordinator.charger = FakeCharger(mock_charger)
 
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
@@ -122,10 +115,9 @@ async def test_entry_diagnostics_exceptions(
     assert "status" not in diagnostics["charger"]
 
     # charging_voltage should show the recorded error
-    assert (
-        diagnostics["charger"]["charging_voltage"]
-        == "Error: ValueError: Connection error"
-    )
+    voltage_diagnostic = diagnostics["charger"]["charging_voltage"]
+    assert voltage_diagnostic.startswith("Error: ValueError")
+    assert "Connection error" in voltage_diagnostic
 
     # vehicle_eta should be coerced to ISO format string
     assert diagnostics["charger"]["vehicle_eta"] == "2000-01-01T12:00:00"

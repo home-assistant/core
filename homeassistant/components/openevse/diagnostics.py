@@ -79,7 +79,7 @@ def _to_json_safe(val: Any) -> Any:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: OpenEVSEConfigEntry
+    _hass: HomeAssistant, config_entry: OpenEVSEConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = config_entry.runtime_data
