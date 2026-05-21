@@ -106,7 +106,7 @@ async def async_setup_entry(
                 SwitcherSensorEntity(coordinator, description)
                 for description in HEATER_SENSORS
             )
-        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+        elif coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in THERMOSTAT_SENSORS

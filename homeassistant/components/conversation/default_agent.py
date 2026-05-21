@@ -1582,26 +1582,26 @@ def _get_match_error_response(
 
         return ErrorKey.DUPLICATE_ENTITIES, {"entity": result.no_match_name}
 
-    if reason == intent.MatchFailedReason.INVALID_AREA:
+    if reason is intent.MatchFailedReason.INVALID_AREA:
         # Invalid area name
         return ErrorKey.NO_AREA, {"area": result.no_match_name}
 
-    if reason == intent.MatchFailedReason.INVALID_FLOOR:
+    if reason is intent.MatchFailedReason.INVALID_FLOOR:
         # Invalid floor name
         return ErrorKey.NO_FLOOR, {"floor": result.no_match_name}
 
-    if reason == intent.MatchFailedReason.FEATURE:
+    if reason is intent.MatchFailedReason.FEATURE:
         # Feature not supported by entity
         return ErrorKey.FEATURE_NOT_SUPPORTED, {}
 
-    if reason == intent.MatchFailedReason.STATE:
+    if reason is intent.MatchFailedReason.STATE:
         # Entity is not in correct state
         assert constraints.states
         state = next(iter(constraints.states))
 
         return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
 
-    if reason == intent.MatchFailedReason.ASSISTANT:
+    if reason is intent.MatchFailedReason.ASSISTANT:
         # Not exposed
         if constraints.name:
             if constraints.area_name:

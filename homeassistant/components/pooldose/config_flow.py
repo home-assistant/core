@@ -45,15 +45,15 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         client_status = await client.connect()
         if client_status is RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
-        if client_status == RequestStatus.PARAMS_FETCH_FAILED:
+        if client_status is RequestStatus.PARAMS_FETCH_FAILED:
             return None, None, {"base": "params_fetch_failed"}
-        if client_status != RequestStatus.SUCCESS:
+        if client_status is not RequestStatus.SUCCESS:
             return None, None, {"base": "cannot_connect"}
 
         api_status, api_versions = client.check_apiversion_supported()
         if api_status is RequestStatus.NO_DATA:
             return None, None, {"base": "api_not_set"}
-        if api_status == RequestStatus.API_VERSION_UNSUPPORTED:
+        if api_status is RequestStatus.API_VERSION_UNSUPPORTED:
             return None, api_versions, {"base": "api_not_supported"}
 
         device_info = client.device_info

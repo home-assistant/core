@@ -444,9 +444,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if service.pairing is PairingRequirement.Unsupported:
             _LOGGER.debug("%s does not support pairing", self.protocol)
             return await self.async_pair_next_protocol()
-        if service.pairing == PairingRequirement.Disabled:
+        if service.pairing is PairingRequirement.Disabled:
             return await self.async_step_protocol_disabled()
-        if service.pairing == PairingRequirement.NotNeeded:
+        if service.pairing is PairingRequirement.NotNeeded:
             _LOGGER.debug("%s does not require pairing", self.protocol)
             self.credentials[self.protocol.value] = None
             return await self.async_pair_next_protocol()

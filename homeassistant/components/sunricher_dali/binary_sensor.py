@@ -82,7 +82,7 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
         if motion_state is MotionState.MOTION:
             self._attr_is_on = True
             self.schedule_update_ha_state()
-        elif motion_state == MotionState.NO_MOTION:
+        elif motion_state is MotionState.NO_MOTION:
             self._attr_is_on = False
             self.schedule_update_ha_state()
 

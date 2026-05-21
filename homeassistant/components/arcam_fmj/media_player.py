@@ -265,7 +265,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         source = self._state.get_source()
         if source is SourceCodes.DAB:
             value = self._state.get_dab_station()
-        elif source == SourceCodes.FM:
+        elif source is SourceCodes.FM:
             value = self._state.get_rds_information()
         else:
             value = None

@@ -291,7 +291,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
         if addon_info.state is AddonState.RUNNING:
             return await self.async_step_finish_addon_setup()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         return await self.async_step_install_addon()

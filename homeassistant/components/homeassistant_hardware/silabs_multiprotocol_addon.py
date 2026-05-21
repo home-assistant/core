@@ -694,7 +694,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_flasher_addon()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_configure_flasher_addon()
 
         # If the addon is already installed and running, fail

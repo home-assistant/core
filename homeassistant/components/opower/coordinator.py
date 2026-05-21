@@ -573,7 +573,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
-        if account.read_resolution == ReadResolution.DAY:
+        if account.read_resolution is ReadResolution.DAY:
             return cost_reads
 
         if start_time is None:

@@ -387,7 +387,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             FlowResultType.EXTERNAL_STEP,
             FlowResultType.SHOW_PROGRESS,
         ):
-            if cur_step["type"] == FlowResultType.EXTERNAL_STEP and result[
+            if cur_step["type"] is FlowResultType.EXTERNAL_STEP and result[
                 "type"
             ] not in (
                 FlowResultType.EXTERNAL_STEP,
@@ -397,7 +397,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     "External step can only transition to "
                     "external step or external step done."
                 )
-            if cur_step["type"] == FlowResultType.SHOW_PROGRESS and result[
+            if cur_step["type"] is FlowResultType.SHOW_PROGRESS and result[
                 "type"
             ] not in (
                 FlowResultType.SHOW_PROGRESS,

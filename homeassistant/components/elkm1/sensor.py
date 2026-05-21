@@ -307,7 +307,7 @@ class ElkZone(ElkSensor):
         """Return the unit of measurement."""
         if self._element.definition is ZoneType.TEMPERATURE:
             return self._temperature_unit
-        if self._element.definition == ZoneType.ANALOG_ZONE:
+        if self._element.definition is ZoneType.ANALOG_ZONE:
             return UnitOfElectricPotential.VOLT
         return None
 
@@ -316,7 +316,7 @@ class ElkZone(ElkSensor):
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
-        elif self._element.definition == ZoneType.ANALOG_ZONE:
+        elif self._element.definition is ZoneType.ANALOG_ZONE:
             self._attr_native_value = f"{self._element.voltage}"
         else:
             self._attr_native_value = pretty_const(self._element.logical_status.name)

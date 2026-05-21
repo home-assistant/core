@@ -281,7 +281,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -290,7 +290,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):
@@ -785,7 +785,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if play_mode is PlayMode.VENDOR_DEFINED:
             return None
 
-        if play_mode == PlayMode.REPEAT_ONE:
+        if play_mode is PlayMode.REPEAT_ONE:
             return RepeatMode.ONE
 
         if play_mode in (PlayMode.REPEAT_ALL, PlayMode.RANDOM):

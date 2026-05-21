@@ -164,7 +164,7 @@ class SnoozFan(FanEntity, RestoreEntity):
 
         if result.status is SnoozCommandResultStatus.SUCCESSFUL:
             self._async_write_state_changed()
-        elif result.status != SnoozCommandResultStatus.CANCELLED:
+        elif result.status is not SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(
                 f"Command {command} failed with status {result.status.name} after"
                 f" {result.duration}"

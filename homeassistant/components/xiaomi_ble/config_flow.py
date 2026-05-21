@@ -111,7 +111,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
             return await self.async_step_get_encryption_key_4_5_choose_method()
         return await self.async_step_bluetooth_confirm()
 
@@ -299,7 +299,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery.device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
                 return await self.async_step_get_encryption_key_legacy()
 
-            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+            if discovery.device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
                 return await self.async_step_get_encryption_key_4_5_choose_method()
 
             return self._async_get_or_create_entry()
@@ -341,7 +341,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
             return await self.async_step_get_encryption_key_4_5_choose_method()
 
         # Otherwise there wasn't actually encryption so abort
