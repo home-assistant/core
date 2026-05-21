@@ -136,6 +136,32 @@
         },
         "title": "Template cover"
       },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "latitude": "Defines a template to get the latitude of the device tracker. Value values are numbers between `-90` and `90`.",
+          "longitude": "Defines a template to get the longitude of the device tracker. Value values are numbers between `-180` and `180`.",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template device tracker"
+      },
       "event": {
         "data": {
           "device_class": "[%key:component::template::common::device_class%]",
@@ -651,7 +677,6 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
-
       "cover": {
         "data": {
           "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
@@ -670,6 +695,30 @@
           "set_cover_position": "[%key:component::template::config::step::cover::data_description::set_cover_position%]",
           "state": "[%key:component::template::config::step::cover::data_description::state%]",
           "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data::longitude%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data_description::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data_description::longitude%]"
         },
         "sections": {
           "advanced_options": {
