@@ -457,6 +457,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             except vol.Invalid, XKNXException:
                 errors[CONF_HOST] = "invalid_ip_address"
 
+            _local_ip = None
             if _local := (user_input.get(CONF_KNX_LOCAL_IP) or None):
                 try:
                     _local_ip = await xknx_validate_ip(_local)
