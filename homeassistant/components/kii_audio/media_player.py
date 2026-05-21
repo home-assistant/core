@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
+from .const import KII_CONTROL_PRODUCT_ID, MAX_VOLUME, MIN_VOLUME, VOLUME_STEP
 from .coordinator import KiiAudioConfigEntry, KiiAudioCoordinator
 from .entity import zone_device_info
 
@@ -236,6 +236,7 @@ class KiiAudioZoneMediaPlayer(
         if not isinstance(devices, list):
             return False
         return any(
-            isinstance(device, dict) and device.get("productId") == 5
+            isinstance(device, dict)
+            and device.get("productId") == KII_CONTROL_PRODUCT_ID
             for device in devices
         )

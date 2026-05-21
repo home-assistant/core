@@ -225,3 +225,37 @@ async def test_setup_entry_removes_entry_with_mismatched_system_id(
         await hass.async_block_till_done()
 
     mock_remove.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_setup_entry_migrates_missing_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup migrates entries that do not have a unique ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kii Audio",
+        data={CONF_HOST: "192.0.2.1", CONF_SYSTEM_ID: SYSTEM_ID},
+        unique_id=None,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_wait_ready",
+            new=_async_wait_ready,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == SYSTEM_ID

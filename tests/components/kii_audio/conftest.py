@@ -6,6 +6,8 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.kii_audio.const import KII_CONTROL_PRODUCT_ID
+
 SYSTEM_ID = "system-id"
 ZONE_ID = "zone-id"
 
@@ -17,7 +19,11 @@ def make_zone(
     source: str = "analog",
 ) -> dict[str, Any]:
     """Return a sample Kii zone payload."""
-    devices = [{"deviceId": "control", "productId": 5}] if has_kii_control else []
+    devices = (
+        [{"deviceId": "control", "productId": KII_CONTROL_PRODUCT_ID}]
+        if has_kii_control
+        else []
+    )
     return {
         "zoneId": ZONE_ID,
         "settings": {

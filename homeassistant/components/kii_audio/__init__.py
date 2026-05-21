@@ -16,8 +16,11 @@ type KiiAudioConfigEntry = ConfigEntry[KiiAudioCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> bool:
     """Set up Kii Audio from a config entry."""
     if (system_id := entry.data.get(CONF_SYSTEM_ID)) and entry.unique_id != system_id:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return True
+        if entry.unique_id is None:
+            hass.config_entries.async_update_entry(entry, unique_id=system_id)
+        else:
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            return True
 
     if CONF_PORT in entry.data:
         hass.config_entries.async_update_entry(
