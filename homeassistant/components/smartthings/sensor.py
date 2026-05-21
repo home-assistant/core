@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -37,7 +38,6 @@ from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
-
 
 THERMOSTAT_CAPABILITIES = {
     Capability.TEMPERATURE_MEASUREMENT,
@@ -201,6 +201,14 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
         if (value := status.get(attribute)) is not None:
             state[f"power_consumption_{attribute}"] = value
     return state
+
+
+def _normalize_cycle_value(value: Any) -> str | None:
+    """Normalize washer/dryer cycle names."""
+    if not value:
+        return None
+    value_str = str(value)
+    return value_str.split("_")[-1].lower() if "_" in value_str else value_str.lower()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1335,7 +1343,9 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_cycle",
                 icon="mdi:washing-machine",
                 options=WASHER_CYCLES,
+                options_attribute=Attribute.SUPPORTED_CYCLES,
                 device_class=SensorDeviceClass.ENUM,
+                value_fn=_normalize_cycle_value,
             )
         ]
     },
@@ -1346,7 +1356,9 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="dryer_cycle",
                 icon="mdi:tumble-dryer",
                 options=DRYER_CYCLES,
+                options_attribute=Attribute.SUPPORTED_CYCLES,
                 device_class=SensorDeviceClass.ENUM,
+                value_fn=_normalize_cycle_value,
             )
         ]
     },
@@ -1366,7 +1378,8 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_remaining_time",
                 icon="mdi:timer-sand",
                 state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement="min",
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
             )
         ]
     },
@@ -1386,7 +1399,8 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="dryer_remaining_time",
                 icon="mdi:timer-sand",
                 state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement="min",
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
             )
         ]
     },
@@ -1536,10 +1550,6 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def native_value(self) -> str | float | datetime | int | None:
         """Return the state of the sensor."""
         res = self.get_attribute_value(self.capability, self._attribute)
-        if self.capability in ("samsungce.washerCycle", "samsungce.dryerCycle"):
-            if not res:
-                return None
-            return res.split("_")[-1].lower() if "_" in res else res.lower()
         if options_map := self.entity_description.options_map:
             return options_map.get(res)
         value = self.entity_description.value_fn(res)
@@ -1577,13 +1587,45 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def options(self) -> list[str] | None:
         """Return the options for this sensor."""
         if self.entity_description.options_attribute:
-            if (
-                options := self.get_attribute_value(
-                    self.capability, self.entity_description.options_attribute
-                )
-            ) is None:
-                return []
-            if options_map := self.entity_description.options_map:
-                return [options_map[option] for option in options]
-            return [option.lower() for option in options]
-        return super().options
+            options_val = self.get_attribute_value(
+                self.capability, self.entity_description.options_attribute
+            )
+            if options_val is not None:
+                options_list = []
+                for option in options_val:
+                    if isinstance(option, dict):
+                        opt_str = option.get("cycle")
+                    else:
+                        opt_str = option
+                    if opt_str is not None:
+                        opt_str = str(opt_str)
+                        if options_map := self.entity_description.options_map:
+                            opt_str = options_map.get(opt_str, opt_str)
+                        options_list.append(opt_str.lower())
+
+                # Guard against rejection: append current state if not present
+                if (current_value := self.native_value) is not None:
+                    current_value_str = str(current_value)
+                    if current_value_str not in options_list:
+                        options_list.append(current_value_str)
+                return options_list
+
+            # Fall back to static options in description if attribute is missing/None
+            if (static_options := super().options) is not None:
+                options_list = list(static_options)
+                if (current_value := self.native_value) is not None:
+                    current_value_str = str(current_value)
+                    if current_value_str not in options_list:
+                        options_list.append(current_value_str)
+                return options_list
+            return []
+
+        if (static_options := super().options) is not None:
+            options_list = list(static_options)
+            if (current_value := self.native_value) is not None:
+                current_value_str = str(current_value)
+                if current_value_str not in options_list:
+                    options_list.append(current_value_str)
+            return options_list
+
+        return None
