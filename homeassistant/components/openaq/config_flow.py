@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,13 +43,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_LOCATION_ID,
-    CONF_RADIUS,
-    DOMAIN,
-    MAX_RADIUS,
-    SUBENTRY_TYPE_LOCATION,
-)
+from .const import CONF_LOCATION_ID, DOMAIN, MAX_RADIUS, SUBENTRY_TYPE_LOCATION
 from .coordinator import async_create_openaq_client, normalize_parameter
 from .sensor import SENSOR_DESCRIPTIONS
 
