@@ -21,6 +21,7 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicHdrMode,
     RecordingMode,
     Sensor,
     Viewer,
@@ -206,6 +207,18 @@ async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
         await obj.ptz_patrol_start_public(slot=slot)
 
 
+_HDR_MODE_MAP = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
+async def _set_hdr_mode(obj: Camera, mode: str) -> None:
+    """Set HDR mode via the public API."""
+    await obj.set_hdr_mode_public(_HDR_MODE_MAP[mode])
+
+
 PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
     key=_KEY_PTZ_PATROL,
     translation_key="ptz_patrol",
@@ -258,14 +271,14 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="hdr_mode",
         translation_key="hdr_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
-        ufp_set_method="set_hdr_mode",
+        ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
 )
