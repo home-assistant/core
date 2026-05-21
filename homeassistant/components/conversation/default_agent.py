@@ -1447,7 +1447,7 @@ class DefaultAgent(ConversationEntity):
 
         response = await self._async_process_intent_result(result, user_input, chat_log)
         if (
-            response.response_type is intent.IntentResponseType.ERROR
+            response.response_type == intent.IntentResponseType.ERROR
             and response.error_code
             not in (
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
