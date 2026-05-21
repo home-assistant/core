@@ -84,6 +84,7 @@ async def _async_handle_upload(call: ServiceCall) -> ServiceResponse:
 
     scopes = config_entry.data["token"]["scope"].split(" ")
     if UPLOAD_SCOPE not in scopes:
+        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="missing_upload_permission",

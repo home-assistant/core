@@ -9,13 +9,13 @@ from homeassistant.components.radio_frequency import (
     RadioFrequencyTransmitterConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import CONF_CODE, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .commands import COMMAND_LIGHT
-from .const import CONF_CODE, CONF_TRANSMITTER
+from .const import CONF_TRANSMITTER
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1

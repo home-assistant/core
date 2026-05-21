@@ -10,6 +10,7 @@ from homeassistant.components.radio_frequency import (
     RadioFrequencyTransmitterConsumerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -19,7 +20,7 @@ from homeassistant.util.percentage import (
 )
 
 from .commands import COMMAND_MINUS, COMMAND_PLUS
-from .const import CONF_CODE, CONF_TRANSMITTER, SPEED_COUNT
+from .const import CONF_TRANSMITTER, SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1

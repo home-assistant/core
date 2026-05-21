@@ -142,8 +142,8 @@ async def test_energy_usage_today(
     )
     assert state.state == "2"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy market price - Usage Hours priced equal or lower than current - today"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy market price"
+        " - Usage Hours priced equal or lower than current - today"
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -258,8 +258,8 @@ async def test_energy_return_today(
     )
     assert state.state == "23"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy market price - Return Hours priced equal or higher than current - today"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy market price"
+        " - Return Hours priced equal or higher than current - today"
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 

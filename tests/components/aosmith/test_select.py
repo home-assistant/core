@@ -64,7 +64,7 @@ async def test_set_hot_water_plus_level(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_water_heater_hot_water_plus_level",
+            ATTR_ENTITY_ID: "select.basement_my_water_heater_hot_water_plus_level",
             ATTR_OPTION: hass_level,
         },
     )
