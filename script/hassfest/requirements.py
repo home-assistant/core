@@ -203,7 +203,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
-    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
