@@ -44,9 +44,13 @@ async def test_entities(
         assert entity_entry.device_id == device_entry.id
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "expected_code"),
-    [
+@pytest.mark.usefixtures("init_integration")
+async def test_button_press_sends_correct_code(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test pressing each button sends the correct IR code."""
+    test_cases = [
         ("button.samsung_tv_power", SamsungTVCode.POWER),
         ("button.samsung_tv_power_on", SamsungTVCode.POWER_ON),
         ("button.samsung_tv_power_off", SamsungTVCode.POWER_OFF),
@@ -88,25 +92,25 @@ async def test_entities(
         ("button.samsung_tv_tv", SamsungTVCode.TV),
         ("button.samsung_tv_ad_subtitle", SamsungTVCode.AD_SUBTITLE),
         ("button.samsung_tv_e_manual", SamsungTVCode.E_MANUAL),
-    ],
-)
-@pytest.mark.usefixtures("init_integration")
-async def test_button_press_sends_correct_code(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    entity_id: str,
-    expected_code: SamsungTVCode,
-) -> None:
-    """Test pressing a button sends the correct IR code."""
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    ]
 
-    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
-    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
+    for entity_id, expected_code in test_cases:
+        mock_infrared_emitter_entity.send_command_calls.clear()
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        assert len(mock_infrared_emitter_entity.send_command_calls) == 1, (
+            f"Expected exactly 1 command for {entity_id}"
+        )
+        assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code, (
+            f"Expected {expected_code} for {entity_id}, "
+            f"got {mock_infrared_emitter_entity.send_command_calls[0]}"
+        )
 
 
 @pytest.mark.usefixtures("init_integration")
