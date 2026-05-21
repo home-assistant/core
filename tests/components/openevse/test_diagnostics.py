@@ -98,7 +98,7 @@ async def test_entry_diagnostics_exceptions(
     monkeypatch.setattr(
         type(mock_charger),
         "vehicle_eta",
-        PropertyMock(return_value=datetime(2026, 5, 21, 12, 0, 0)),
+        PropertyMock(return_value=datetime(2000, 1, 1, 12, 0, 0)),
         raising=False,
     )
 
@@ -128,7 +128,7 @@ async def test_entry_diagnostics_exceptions(
     )
 
     # vehicle_eta should be coerced to ISO format string
-    assert diagnostics["charger"]["vehicle_eta"] == "2026-05-21T12:00:00"
+    assert diagnostics["charger"]["vehicle_eta"] == "2000-01-01T12:00:00"
 
     # mode should be coerced to Enum raw value
     assert diagnostics["charger"]["mode"] == "test_value"

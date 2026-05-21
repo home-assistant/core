@@ -12,7 +12,7 @@ from .coordinator import OpenEVSEConfigEntry
 
 REDACT_CONFIG_DATA = {CONF_PASSWORD, CONF_USERNAME}
 
-CHARGER_PROPERTIES = [
+CHARGER_PROPERTIES = (
     "status",
     "vehicle",
     "mode",
@@ -58,7 +58,7 @@ CHARGER_PROPERTIES = [
     "freeram",
     "wifi_firmware",
     "openevse_firmware",
-]
+)
 
 
 def _to_json_safe(val: Any) -> Any:
@@ -69,10 +69,12 @@ def _to_json_safe(val: Any) -> Any:
         return val.isoformat()
     if isinstance(val, Enum):
         return val.value
-    if isinstance(val, (list, tuple, set)):
+    if isinstance(val, (set, frozenset)):
+        return [_to_json_safe(v) for v in sorted(val, key=str)]
+    if isinstance(val, (list, tuple)):
         return [_to_json_safe(v) for v in val]
     if isinstance(val, dict):
-        return {k: _to_json_safe(v) for k, v in val.items()}
+        return {str(k): _to_json_safe(v) for k, v in val.items()}
     return str(val)
 
 
