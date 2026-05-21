@@ -191,16 +191,16 @@ class AveaLight(LightEntity):
 
     def __init__(self, light: avea.Bulb, entry: AveaConfigEntry) -> None:
         """Initialize an AveaLight."""
-        assert entry.unique_id is not None
+        unique_id = entry.unique_id or entry.data[CONF_ADDRESS]
         self._light = light
-        self._attr_unique_id = entry.unique_id
+        self._attr_unique_id = unique_id
         self._attr_name = entry.title
         self._attr_brightness = light.brightness
         self._last_brightness = 255
         self._device_info_updated = False
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            identifiers={(DOMAIN, entry.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             name=entry.title,
             model=MODEL,
         )
@@ -221,7 +221,9 @@ class AveaLight(LightEntity):
         if serial_number := _read_device_info_value(self._light.get_serial_number):
             device_info["serial_number"] = serial_number
 
-        self._device_info_updated = True
+        self._device_info_updated = bool(
+            manufacturer or hardware_revision or firmware_version or serial_number
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
