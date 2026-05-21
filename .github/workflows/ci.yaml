@@ -917,12 +917,23 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
+      - name: Restore pytest test counts cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: pytest_test_counts.json
+          key: >-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
+            steps.python.outputs.python-version }}-${{ github.sha }}
+          restore-keys: |
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
         run: |
           . venv/bin/activate
-          python -m script.split_tests ${TEST_GROUP_COUNT} tests
+          python -m script.split_tests \
+            --cache pytest_test_counts.json \
+            ${TEST_GROUP_COUNT} tests
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
