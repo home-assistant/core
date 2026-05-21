@@ -64,20 +64,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     try:
         client_status = await client.connect()
     except TimeoutError as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
-            f"Timeout connecting to PoolDose device: {err}"
+            translation_domain=entry.domain,
+            translation_key="connect_timeout",
         ) from err
     except (ConnectionError, OSError) as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
-            f"Failed to connect to PoolDose device: {err}"
+            translation_domain=entry.domain,
+            translation_key="connect_failed",
         ) from err
 
-    if client_status is not RequestStatus.SUCCESS:
-        # pylint: disable-next=home-assistant-exception-not-translated
+    if client_status != RequestStatus.SUCCESS:
         raise ConfigEntryNotReady(
-            f"Failed to create PoolDose client while initialization: {client_status}"
+            translation_domain=entry.domain,
+            translation_key="client_init_failed",
+            translation_placeholders={"status": str(client_status.value)},
         )
 
     # Create coordinator and perform first refresh
