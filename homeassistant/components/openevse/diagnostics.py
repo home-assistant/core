@@ -76,7 +76,9 @@ def _to_json_safe(val: Any) -> Any:
         return [_to_json_safe(v) for v in val]
     if isinstance(val, dict):
         return {str(k): _to_json_safe(v) for k, v in val.items()}
-    return str(val)
+    if callable(val):
+        return None
+    return f"<{type(val).__name__} object>"
 
 
 async def async_get_config_entry_diagnostics(
@@ -88,6 +90,9 @@ async def async_get_config_entry_diagnostics(
 
     charger_data: dict[str, Any] = {}
     for prop in CHARGER_PROPERTIES:
+        # Check if the attribute exists on the object without triggering descriptors,
+        # property getters, or dynamic __getattr__ lookup (which can trigger side effects
+        # or auto-create MagicMock attributes in tests).
         try:
             inspect.getattr_static(charger, prop)
         except AttributeError:

@@ -120,8 +120,8 @@ async def test_entry_diagnostics_exceptions(
             return frozenset({"override"})
 
         @property
-        def ota_update(self) -> tuple[str, ...]:
-            return ("v1.0", "v2.0")
+        def ota_update(self) -> tuple[Any, ...]:
+            return ("v1.0", lambda: "nested_callable")
 
         @property
         def service_level(self) -> dict[MockEnum, str]:
@@ -151,7 +151,7 @@ async def test_entry_diagnostics_exceptions(
         hass, hass_client, mock_config_entry
     )
 
-    # status should be omitted due to AttributeError
+    # status should be omitted because the attribute is not present
     assert "status" not in diagnostics["charger"]
 
     # charging_voltage should show the recorded error type only
@@ -169,14 +169,14 @@ async def test_entry_diagnostics_exceptions(
     # manual_override should be sorted and coerced to list
     assert diagnostics["charger"]["manual_override"] == ["override"]
 
-    # ota_update should be coerced to list
-    assert diagnostics["charger"]["ota_update"] == ["v1.0", "v2.0"]
+    # ota_update should be coerced to list, with callable elements coerced to None
+    assert diagnostics["charger"]["ota_update"] == ["v1.0", None]
 
     # service_level should have keys coerced to str
     assert diagnostics["charger"]["service_level"] == {"MockEnum.TEST": "level_2"}
 
-    # uptime should fallback to string representation
-    assert diagnostics["charger"]["uptime"] == "custom_str"
+    # uptime should fallback to type name representation
+    assert diagnostics["charger"]["uptime"] == "<CustomObj object>"
 
     # wifi_firmware should be omitted because it is callable
     assert "wifi_firmware" not in diagnostics["charger"]
