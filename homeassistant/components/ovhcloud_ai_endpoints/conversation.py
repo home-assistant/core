@@ -19,12 +19,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    for subentry_id, subentry in config_entry.subentries.items():
-        if subentry.subentry_type != "conversation":
-            continue
+
+    for subentry in config_entry.get_subentries_of_type("conversation"):
         async_add_entities(
             [OVHcloudAIEndpointsConversationEntity(config_entry, subentry)],
-            config_subentry_id=subentry_id,
+            config_subentry_id=subentry.subentry_id,
         )
 
 
