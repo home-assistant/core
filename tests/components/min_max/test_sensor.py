@@ -45,7 +45,7 @@ SUM_VALUE = sum(VALUES)
 async def test_deprecation_warning(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the min sensor with a default name."""
+    """Test deprecation issue."""
     config = {
         "sensor": [
             {
