@@ -12,7 +12,7 @@ from pyprusalink.types import (
     PrinterState,
     PrinterStatus,
 )
-from pyprusalink.types_legacy import LegacyPrinterStatus
+from pyprusalink.types_legacy import LegacyPrinterStatus, LegacyPrinterTelemetry
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -155,7 +155,10 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[LegacyPrinterStatus](
             key="printer.telemetry.material",
             translation_key="material",
-            value_fn=lambda data: cast(str, data["telemetry"]["material"]),
+            value_fn=lambda data: cast(
+                str, cast(LegacyPrinterTelemetry, data["telemetry"])["material"]
+            ),
+            available_fn=lambda data: data.get("telemetry") is not None,
         ),
     ),
     "job": (
