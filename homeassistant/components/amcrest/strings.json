@@ -22,6 +22,11 @@
       }
     }
   },
+  "exceptions": {
+    "no_serial_number": {
+      "message": "Could not determine the camera serial number."
+    }
+  },
   "services": {
     "disable_audio": {
       "description": "Disables audio stream.",
