@@ -68,10 +68,8 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      The inverter uses a locally administered MAC address (not tied to a
-      registered IEEE OUI), so DHCP-based discovery is not feasible. The device
-      does not advertise via mDNS, SSDP, or any other discovery protocol.
-      Manual host entry is the only viable setup path.
+      Same rationale as discovery: the device uses a locally administered MAC
+      address and does not advertise via any network discovery protocol.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
