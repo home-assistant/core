@@ -21,7 +21,7 @@ async def test_setup_unload(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the integration is set up and torn down cleanly."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -37,7 +37,7 @@ async def test_setup_cannot_connect(
     """Test that a connection error surfaces a setup retry."""
     mock_openai_client.chat.completions.create.side_effect = OpenAIError("boom")
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -53,7 +53,7 @@ async def test_dynamic_subentry_creates_entity_and_device(
         domain=DOMAIN,
         data={CONF_API_KEY: "bla"},
     )
-    await setup_integration(hass, entry)
+    await setup_integration(hass, entry, mock_openai_client)
     assert entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 

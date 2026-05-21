@@ -138,7 +138,7 @@ async def test_create_conversation_agent(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation agent subentry."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
@@ -180,7 +180,7 @@ async def test_create_conversation_agent_no_control(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation agent without LLM API control."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
@@ -219,7 +219,7 @@ async def test_subentry_exceptions(
     reason: str,
 ) -> None:
     """Test the subentry flow aborts when the API call fails."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.models.list.side_effect = exception
 

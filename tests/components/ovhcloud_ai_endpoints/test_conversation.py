@@ -43,7 +43,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entity registry snapshot for conversation entities."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -56,7 +56,7 @@ async def test_default_prompt(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test that the default prompt works."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
     result = await conversation.async_converse(
         hass,
         "hello",
@@ -81,7 +81,7 @@ async def test_thinking_tags_extracted(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """``<think>…</think>`` markup must be extracted into thinking_content."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -130,7 +130,7 @@ async def test_thinking_only_response(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """A response containing only ``<think>…</think>`` should leave content as None."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -203,7 +203,7 @@ async def test_reasoning_field_extracted(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Reasoning text in ``message.reasoning`` must populate thinking_content."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=_completion_with_extras(
@@ -232,7 +232,7 @@ async def test_reasoning_content_field_extracted(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Reasoning text in ``message.reasoning_content`` must populate thinking_content."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=_completion_with_extras(
@@ -261,7 +261,7 @@ async def test_reasoning_priority_over_think_tags(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """``message.reasoning`` wins over inline ``<think>`` markup in content."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=_completion_with_extras(
@@ -292,7 +292,7 @@ async def test_empty_api_response(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """An empty choices response should yield an error conversation result."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -326,7 +326,7 @@ async def test_function_call(
     mock_openai_client: AsyncMock,
 ) -> None:
     """Test tool calling end-to-end with the conversation entity."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_chat_log.async_add_user_content(
         conversation.UserContent(content="What time is it?")
@@ -446,7 +446,7 @@ async def test_openai_error(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """An OpenAIError from the SDK should surface an error conversation result."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, mock_openai_client)
 
     mock_openai_client.chat.completions.create.side_effect = OpenAIError("boom")
 

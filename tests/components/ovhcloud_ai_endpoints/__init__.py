@@ -1,20 +1,24 @@
 """Tests for the OVHcloud AI Endpoints integration."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def setup_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    client = getattr(config_entry, "runtime_data", None)
-    if client is not None:
-        client.chat.completions.create.reset_mock()
+    mock_openai_client.chat.completions.create.reset_mock()
 
 
 def get_subentry_id(mock_config_entry: MockConfigEntry, subentry_type: str) -> str:
