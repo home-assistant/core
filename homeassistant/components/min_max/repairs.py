@@ -23,7 +23,7 @@ from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
 
 class MigrateToGroupSensorFlow(RepairsFlow):
-    """Handler for an issue fixing flow."""
+    """Repair flow to migrate Min/Max helper to Group sensor."""
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Create flow."""

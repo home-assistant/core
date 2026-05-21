@@ -14,7 +14,7 @@
     "migrate_to_group_sensor": {
       "fix_flow": {
         "abort": {
-          "entity_not_found": "Entity could not be found, please restart repairing the issue.",
+          "entity_not_found": "Entity could not be found as it has been removed, aborting the repair.",
           "entity_update_failed": "Failed to update the entity to a Group sensor, please manually remove the obsolete entity.",
           "unload_failed": "Failed to unload the Min/Max helper, please restart repairing the issue."
         },
@@ -28,7 +28,7 @@
       "title": "Min/Max helper has been deprecated"
     },
     "yaml_deprecated": {
-      "description": "The Min/Max helper has been deprecated and you should use Group sensors instead.\n\nReplace your Min/Max YAML configuration with this converted configuration:\n{yaml_config}\n\nOnce you have replaced your YAML configuration, restart Home Assistant to use the Group helper instead.\n\nThe Group helper has more configuration possibilities. Refer to the documentation by clicking Learn More.",
+      "description": "The Min/Max helper has been deprecated and you should use Group sensors instead.\n\nReplace your Min/Max YAML configuration with this converted configuration:\n{yaml_config}\n\n**Note:**\n- `precision` is not supported in Group sensor, you need to update your entity options after migrating.\n- Group sensor supports setting `ignore_non_numeric` which defaults to `False` after migrating, change this to `True` to ignore input entities with invalid values.\n\nOnce you have replaced your YAML configuration, restart Home Assistant to use the Group helper instead.\n\nThe Group helper has more configuration possibilities. Refer to the documentation by clicking Learn More.",
       "title": "[%key:component::min_max::issues::migrate_to_group_sensor::title%]"
     }
   },
