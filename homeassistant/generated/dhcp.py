@@ -350,6 +350,22 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "indevolt",
+        "macaddress": "1C784B*",
+    },
+    {
+        "domain": "indevolt",
+        "macaddress": "34EAE7*",
+    },
+    {
+        "domain": "indevolt",
+        "macaddress": "7C3E82*",
+    },
+    {
+        "domain": "indevolt",
+        "registered_devices": True,
+    },
+    {
         "domain": "insteon",
         "macaddress": "000EF3*",
     },
