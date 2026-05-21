@@ -27,6 +27,8 @@ def parse_mosque_data(dict_mosques):
     uuid_servers = []
     CALC_METHODS = []
 
+    _LOGGER.debug("Parsing mosque data: %s", dict_mosques)
+
     if dict_mosques is not None:
         for mosque in dict_mosques:
             proximity_str = ""
@@ -35,6 +37,9 @@ def parse_mosque_data(dict_mosques):
                 distance = distance / 1000
                 distance = round(distance, 2)
                 proximity_str = " (" + str(distance) + "km)"
+            elif "localisation" in mosque:
+                proximity_str = " ( " + mosque["localisation"] + " )"
+
             name_servers.extend([mosque["label"] + proximity_str])
             uuid_servers.extend([mosque["uuid"]])
             CALC_METHODS.extend([mosque["label"]])
@@ -204,7 +209,7 @@ def add_minutes_to_time(time_str, minutes_str):
 
     # Extract minutes from the input string
     if not minutes_str.startswith("+") or not minutes_str[1:].isdigit():
-        raise ValueError("Invalid minutes format, expected '+xx'")
+        raise ValueError(f"Invalid minutes format, expected '+xx' got '{minutes_str}'")
 
     try:
         minutes_to_add = int(minutes_str[1:])  # Extract the integer part
