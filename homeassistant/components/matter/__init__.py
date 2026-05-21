@@ -2,9 +2,9 @@
 
 import asyncio
 from functools import cache
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit, urlunsplit
 
-from matter_ble_proxy import MatterBleProxy
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
@@ -32,7 +32,6 @@ from homeassistant.helpers.typing import ConfigType
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
 from .api import async_register_api
-from .ble_proxy import create_matter_ble_proxy
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
@@ -45,8 +44,12 @@ from .helpers import (
 from .models import MatterDeviceInfo
 from .services import async_setup_services
 
+if TYPE_CHECKING:
+    from matter_ble_proxy import MatterBleProxy
+
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+BLE_PROXY_CONNECT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -165,18 +168,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
     # Gate on `ble_proxy_enabled`, not `bluetooth_enabled`: the latter is also true
     # when the server uses a local BLE adapter, where no `/ble` endpoint exists.
+    # Importing `.ble_proxy` lazily here avoids pulling `matter_ble_proxy` + `bleak`
+    # into every Matter setup when the server has BLE proxy disabled.
     server_info = matter_client.server_info
     if server_info and getattr(server_info, "ble_proxy_enabled", False):
+        from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
+
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
         LOGGER.info("Matter server reports BLE available, connecting BLE proxy")
         ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
         try:
-            await ble_proxy.connect()
-        except ConnectionError:
+            async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
+                await ble_proxy.connect()
+        except (TimeoutError, ConnectionError, OSError):
             LOGGER.warning(
                 "Failed to connect BLE proxy - BLE commissioning may not work",
                 exc_info=True,
             )
+            ble_proxy = None
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error connecting BLE proxy")
             ble_proxy = None
         else:
             entry.async_on_unload(ble_proxy.disconnect)
