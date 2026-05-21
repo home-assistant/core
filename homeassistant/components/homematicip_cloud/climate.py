@@ -74,6 +74,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     basically enabled in the hmip app.
     """
 
+    _attr_has_entity_name = False
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )

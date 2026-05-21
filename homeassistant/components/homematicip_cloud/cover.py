@@ -320,6 +320,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
 class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP cover shutter group."""
 
+    _attr_has_entity_name = False
     _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(self, hap: HomematicipHAP, device, post: str = "ShutterGroup") -> None:

@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "cloud_connection": {
+        "name": "Cloud connection"
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {

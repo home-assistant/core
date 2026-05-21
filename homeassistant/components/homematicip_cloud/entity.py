@@ -74,6 +74,7 @@ GROUP_ATTRIBUTES = {
 class HomematicipGenericEntity(Entity):
     """Representation of the HomematicIP generic entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -112,6 +113,14 @@ class HomematicipGenericEntity(Entity):
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
 
+        # Compute entity name based on has_entity_name mode.
+        if not self._attr_has_entity_name:
+            # Legacy mode (groups, special entities): compose the full name
+            # including device/group label and home prefix.
+            self._attr_name = self._compute_legacy_name()
+        else:
+            self._setup_entity_name()
+
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
@@ -120,6 +129,14 @@ class HomematicipGenericEntity(Entity):
             device_id = str(self._device.id)
             home_id = str(self._device.homeId)
 
+            # Include the home name in the device name so that the
+            # previous "{home} {device}" naming is preserved after
+            # switching to has_entity_name=True.
+            device_name = self._device.label
+            home_name = getattr(self._home, "name", None)
+            if device_name and home_name:
+                device_name = f"{home_name} {device_name}"
+
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
@@ -127,7 +144,7 @@ class HomematicipGenericEntity(Entity):
                 },
                 manufacturer=self._device.oem,
                 model=self._device.modelType,
-                name=self._device.label,
+                name=device_name,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
                 via_device=(DOMAIN, home_id),
@@ -200,37 +217,92 @@ class HomematicipGenericEntity(Entity):
             self.async_remove(force_remove=True), eager_start=False
         )
 
-    @property
-    def name(self) -> str:
-        """Return the name of the generic entity."""
+    def _compute_legacy_name(self) -> str:
+        """Compute the full legacy name for entities without has_entity_name.
 
-        name = ""
-        # Try to get a label from a channel.
-        functional_channels = getattr(self._device, "functionalChannels", None)
-        if functional_channels and self.functional_channel:
-            if self._is_multi_channel:
-                label = getattr(self.functional_channel, "label", None)
-                if label:
-                    name = str(label)
-            elif len(functional_channels) > 1:
-                label = getattr(functional_channels[1], "label", None)
-                if label:
-                    name = str(label)
-
-        # Use device label, if name is not defined by channel label.
-        if not name:
-            name = self._device.label or ""
-            if self._post:
-                name = f"{name} {self._post}"
-            elif self._is_multi_channel:
-                name = f"{name} Channel{self.get_channel_index()}"
-
-        # Add a prefix to the name if the homematic ip home has a name.
+        Used by group entities and other special cases where has_entity_name
+        is False. Includes device/group label, post suffix, and home prefix.
+        """
+        name = self._device.label or ""
+        if self._post:
+            name = f"{name} {self._post}" if name else self._post
         home_name = getattr(self._home, "name", None)
         if name and home_name:
             name = f"{home_name} {name}"
-
         return name
+
+    def _setup_entity_name(self) -> None:
+        """Set up entity naming for has_entity_name mode.
+
+        With has_entity_name=True, HA composes the full friendly name as
+        "{device_name} {entity_name}". This method sets the appropriate
+        naming attributes.
+
+        For multi-channel entities, channel labels provide _attr_name (dynamic).
+        For entities with _post, _attr_name is derived from the post suffix,
+        with the first letter capitalized for display consistency.
+        For primary entities, HA uses device_class as the name.
+        """
+        # Multi-channel entities: use channel label as entity name.
+        if self._is_multi_channel and self.functional_channel:
+            label = getattr(self.functional_channel, "label", None)
+            if label:
+                label_str = str(label)
+                device_label = self._device.label or ""
+                # Strip device name prefix from channel label to avoid
+                # duplication when HA composes "{device_name} {entity_name}".
+                # E.g., device "Licht Flur" + channel "Licht Flur 5" -> "5".
+                if device_label and label_str.startswith(device_label):
+                    stripped = label_str[len(device_label) :].strip()
+                    if stripped:
+                        self._attr_name = stripped
+                    # Otherwise channel label equals device label (modulo
+                    # whitespace); leave _attr_name unset so HA composes just
+                    # the device name without duplicating it.
+                    return
+                self._attr_name = label_str
+                return
+            # Fallback: use post suffix or generic channel name.
+            if self._post:
+                self._attr_name = self._post[0].upper() + self._post[1:]
+            else:
+                self._attr_name = f"Channel{self.get_channel_index()}"
+            return
+
+        # Entities with a post suffix: use it as the entity name,
+        # capitalizing the first letter for display consistency.
+        if self._post:
+            self._attr_name = self._post[0].upper() + self._post[1:]
+            return
+
+        # Non-multi-channel entities on devices with multiple channels:
+        # use the first functional channel's label as name context.
+        # This preserves names like "Treppe CH" for single-function entities
+        # on multi-channel devices (e.g., HmIP-BSL switch channel).
+        functional_channels = getattr(self._device, "functionalChannels", None)
+        if functional_channels and len(functional_channels) > 1:
+            ch1 = (
+                functional_channels.get(1)
+                if isinstance(functional_channels, dict)
+                else functional_channels[1]
+            )
+            label = getattr(ch1, "label", None) if ch1 else None
+            if label:
+                label_str = str(label)
+                device_label = self._device.label or ""
+                # Strip device name prefix to avoid duplication.
+                if device_label and label_str.startswith(device_label):
+                    stripped = label_str[len(device_label) :].strip()
+                    if stripped:
+                        self._attr_name = stripped
+                    # Otherwise channel label equals device label (modulo
+                    # whitespace); leave _attr_name unset.
+                    return
+                self._attr_name = label_str
+                return
+
+        # Primary entity on device: leave unset so HA derives name from
+        # device_class or translation_key.
 
     @property
     def available(self) -> bool:
