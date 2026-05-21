@@ -48,7 +48,8 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
 
         # Extract the channel number from the nested data structure.
         # The raw data looks like: "channels": [{"Output": 1}].
-        # 1. appliance["channels"][0]: Get the first dictionary in the list -> {"Output": 1}.
+        # 1. Use the first channel entry, prefer the "Output" field when present,
+        #    and fall back to the first available value for older payload shapes.
         # 2. .values(): Get the dictionary's values -> dict_values([1]).
         # 3. list(...)[0]: Convert to a list and get the first element -> 1.
 
