@@ -15,7 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UptimeRobotConfigEntry) 
     """Set up UptimeRobot from a config entry."""
     key: str = entry.data[CONF_API_KEY]
     if key.startswith(("ur", "m")):
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="api_key_wrong_type",
