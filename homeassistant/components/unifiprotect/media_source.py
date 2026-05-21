@@ -107,7 +107,9 @@ def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
 def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
     msg = f"Unexpected identifier: {identifier}"
     if err is None:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BrowseError(msg)
+    # pylint: disable-next=home-assistant-exception-not-translated
     raise BrowseError(msg) from err
 
 
@@ -377,6 +379,7 @@ class ProtectMediaSource(MediaSource):
             _bad_identifier(f"{data.api.bootstrap.nvr.id}:{subtype}:{event_id}", err)
 
         if event.start is None or event.end is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BrowseError("Event is still ongoing")
 
         return await self._build_event(data, event, thumbnail_only)
@@ -787,6 +790,7 @@ class ProtectMediaSource(MediaSource):
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
             if camera is None:
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise BrowseError(f"Unknown Camera ID: {camera_id}")
             name = camera.name or camera.market_name or camera.type
             is_doorbell = camera.feature_flags.is_doorbell

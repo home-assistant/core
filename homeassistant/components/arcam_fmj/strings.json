@@ -5,6 +5,12 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "connection_refused": "Host refused connection",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
     "flow_title": "{host}",
     "step": {
       "confirm": {

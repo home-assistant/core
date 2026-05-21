@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
 
@@ -20,6 +21,12 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._discovered_host: str | None = None
+        self._discovered_device_data: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -81,6 +88,55 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry.data,
             ),
             errors=errors,
+        )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery — probe the device to confirm it is an Indevolt device."""
+        host = discovery_info.ip
+
+        try:
+            device_data = await self._async_get_device_data(host)
+        except OSError, ClientError, KeyError:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host}, reload_on_update=True
+        )
+
+        self.context["title_placeholders"] = {"model": device_data[CONF_MODEL]}
+        self._discovered_host = host
+        self._discovered_device_data = device_data
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm DHCP discovery by user."""
+        assert self._discovered_host is not None
+        assert self._discovered_device_data is not None
+
+        # Attempt to setup from user input
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"INDEVOLT {self._discovered_device_data[CONF_MODEL]}",
+                data={
+                    CONF_HOST: self._discovered_host,
+                    **self._discovered_device_data,
+                },
+            )
+
+        # Retrieve user confirmation
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                CONF_HOST: self._discovered_host,
+                CONF_MODEL: self._discovered_device_data[CONF_MODEL],
+            },
         )
 
     async def _async_validate_input(
