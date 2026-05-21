@@ -1,5 +1,4 @@
 """Fixtures for cloud tests."""
-# DNM: cache bust test — touch this conftest to drift conftest_hash.
 
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from pathlib import Path
