@@ -51,3 +51,13 @@ def zone_device_info(
         model=zone_model(zone),
         name=zone_name(zone) or zone_id,
     )
+
+
+def get_path(target: dict[str, Any], path: str) -> Any:
+    """Get a dotted path from a nested dictionary."""
+    current: Any = target
+    for part in path.split("."):
+        if not isinstance(current, dict):
+            return None
+        current = current.get(part)
+    return current

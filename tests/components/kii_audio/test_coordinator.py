@@ -49,3 +49,16 @@ def test_connection_available_does_not_mark_update_error() -> None:
     coordinator._handle_connection_state(True)
 
     assert errors == []
+
+
+def test_connection_available_after_error_marks_coordinator_available() -> None:
+    """Test connected callbacks clear an existing update error."""
+    coordinator = _coordinator()
+    coordinator.data = {"systemName": "Kii System", "zones": []}
+    coordinator.last_update_success = False
+    updates: list[dict[str, object]] = []
+    coordinator.async_set_updated_data = updates.append  # type: ignore[method-assign]
+
+    coordinator._handle_connection_state(True)
+
+    assert updates == [{"systemName": "Kii System", "zones": []}]

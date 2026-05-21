@@ -80,7 +80,11 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _handle_connection_state(self, connected: bool) -> None:
         """Handle WebSocket connection state changes."""
-        if connected or not self._ready.is_set():
+        if connected:
+            if (data := getattr(self, "data", None)) is not None:
+                self.async_set_updated_data(data)
+            return
+        if not self._ready.is_set():
             return
         self.async_set_update_error(KiiAudioError("WebSocket disconnected"))
 

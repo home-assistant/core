@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_SYSTEM_ID
 from .coordinator import KiiAudioCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 type KiiAudioConfigEntry = ConfigEntry[KiiAudioCoordinator]
 
@@ -51,5 +51,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) ->
         return True
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.async_stop()
+    if unload_ok:
+        await entry.runtime_data.async_stop()
     return unload_ok

@@ -21,7 +21,7 @@ def _decode_property(value: Any) -> str | None:
     if value is None:
         return None
     if isinstance(value, bytes):
-        return value.decode()
+        return value.decode(errors="replace")
     if isinstance(value, str):
         return value
     return str(value)

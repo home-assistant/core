@@ -19,37 +19,5 @@
         "title": "Kii Audio"
       }
     }
-  },
-  "entity": {
-    "number": {
-      "bass": {
-        "name": "Bass"
-      },
-      "treble": {
-        "name": "Treble"
-      }
-    },
-    "select": {
-      "analog_input_sensitivity": {
-        "name": "Analogue Input Sensitivity",
-        "state": {
-          "high": "High",
-          "low": "Low"
-        }
-      },
-      "latency": {
-        "name": "Latency",
-        "state": {
-          "match_kii_three": "Match Kii Three",
-          "minimum": "Minimum",
-          "optimum": "Optimum"
-        }
-      }
-    },
-    "switch": {
-      "tone_control": {
-        "name": "Tone Control"
-      }
-    }
   }
 }

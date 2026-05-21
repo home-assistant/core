@@ -150,3 +150,46 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     mock_stop.assert_awaited_once()
+
+
+async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test failed platform unload keeps the coordinator running."""
+    entry = _mock_config_entry()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_wait_ready",
+            new=_async_wait_ready,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            new=AsyncMock(return_value=False),
+        ),
+        patch(
+            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_stop",
+            new=AsyncMock(),
+        ) as mock_stop,
+    ):
+        assert not await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    mock_stop.assert_not_awaited()

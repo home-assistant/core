@@ -45,6 +45,19 @@ def _zeroconf_info(data: dict[str, object]) -> ZeroconfServiceInfo:
     )
 
 
+def _zeroconf_info_with_raw_data(data: bytes) -> ZeroconfServiceInfo:
+    """Return Kii Audio zeroconf discovery info with raw data bytes."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(HOST),
+        ip_addresses=[ip_address(HOST)],
+        hostname="kii.local.",
+        name="Kii._kii._tcp.local.",
+        port=80,
+        properties={"data": data},
+        type="_kii._tcp.local.",
+    )
+
+
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the manual config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -127,3 +140,15 @@ async def test_zeroconf_flow_rejects_legacy_backend(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_backend"
+
+
+async def test_zeroconf_flow_rejects_invalid_bytes(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts when bytes are not valid JSON."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_zeroconf_info_with_raw_data(b"\xff\xfe"),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
