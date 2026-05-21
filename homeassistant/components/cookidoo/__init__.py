@@ -53,7 +53,8 @@ async def async_migrate_entry(
         cookidoo = await cookidoo_from_config_entry(hass, config_entry)
 
         try:
-            auth_data = await cookidoo.login()
+            await cookidoo.login()
+            user_info = await cookidoo.get_user_info()
         except (CookidooRequestException, CookidooAuthException) as e:
             _LOGGER.error(
                 "Could not migrate config config_entry: %s",
@@ -61,7 +62,7 @@ async def async_migrate_entry(
             )
             return False
 
-        unique_id = auth_data.sub
+        unique_id = user_info.id
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
@@ -83,7 +84,47 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=auth_data.sub, minor_version=2
+            config_entry, unique_id=user_info.id, minor_version=3
+        )
+
+    if config_entry.version == 1 and config_entry.minor_version == 2:
+        # Migrate unique_id from old CIAM sub to community profile id
+        cookidoo = await cookidoo_from_config_entry(hass, config_entry)
+
+        try:
+            await cookidoo.login()
+            user_info = await cookidoo.get_user_info()
+        except (CookidooRequestException, CookidooAuthException) as e:
+            _LOGGER.error(
+                "Could not migrate config config_entry: %s",
+                str(e),
+            )
+            return False
+
+        old_unique_id = config_entry.unique_id
+        new_unique_id = user_info.id
+
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        device_entries = dr.async_entries_for_config_entry(
+            device_registry, config_entry_id=config_entry.entry_id
+        )
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry_id=config_entry.entry_id
+        )
+        for dev in device_entries:
+            device_registry.async_update_device(
+                dev.id, new_identifiers={(DOMAIN, new_unique_id)}
+            )
+        for ent in entity_entries:
+            if ent.unique_id and old_unique_id:
+                entity_registry.async_update_entity(
+                    ent.entity_id,
+                    new_unique_id=ent.unique_id.replace(old_unique_id, new_unique_id),
+                )
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=3
         )
 
     _LOGGER.debug(

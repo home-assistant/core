@@ -88,8 +88,8 @@ async def test_config_entry_not_ready(
     ("exception", "status"),
     [
         (None, ConfigEntryState.LOADED),
-        (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
-        (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
+        (CookidooRequestException(), ConfigEntryState.SETUP_RETRY),
+        (CookidooAuthException(), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_config_entry_not_ready_auth_error(
@@ -99,10 +99,9 @@ async def test_config_entry_not_ready_auth_error(
     exception: Exception | None,
     status: ConfigEntryState,
 ) -> None:
-    """Test config entry not ready from authentication error."""
-
+    """Test config entry recovery when data fetch hits an auth error."""
     mock_cookidoo_client.get_ingredient_items.side_effect = CookidooAuthException
-    mock_cookidoo_client.refresh_token.side_effect = exception
+    mock_cookidoo_client.login.side_effect = [None, exception] if exception else None
 
     cookidoo_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
@@ -135,7 +134,8 @@ OLD_ENTRY_ID = "OLD_OLD_ENTRY_ID"
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
         ),
-        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID),
+        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, "old_ciam_sub_uuid"),
+        (1, 3, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID),
     ],
 )
 async def test_migration_from(
@@ -160,31 +160,32 @@ async def test_migration_from(
         entry_id=OLD_ENTRY_ID,
     )
     config_entry.add_to_hass(hass)
+    entity_prefix = unique_id or OLD_ENTRY_ID
 
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, OLD_ENTRY_ID)},
+        identifiers={(DOMAIN, entity_prefix)},
         entry_type=dr.DeviceEntryType.SERVICE,
     )
     entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="todo",
-        unique_id=f"{OLD_ENTRY_ID}_ingredients",
+        unique_id=f"{entity_prefix}_ingredients",
         device_id=device.id,
     )
     entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="todo",
-        unique_id=f"{OLD_ENTRY_ID}_additional_items",
+        unique_id=f"{entity_prefix}_additional_items",
         device_id=device.id,
     )
     entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="button",
-        unique_id=f"{OLD_ENTRY_ID}_todo_clear",
+        unique_id=f"{entity_prefix}_todo_clear",
         device_id=device.id,
     )
 
@@ -194,7 +195,7 @@ async def test_migration_from(
 
     # Check change in config entry and verify most recent version
     assert config_entry.version == 1
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert config_entry.unique_id == TEST_UUID
 
     assert entity_registry.async_is_registered(
@@ -247,6 +248,20 @@ async def test_migration_from(
             1,
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
+            CookidooAuthException,
+        ),
+        (
+            1,
+            2,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            "old_ciam_sub_uuid",
+            CookidooRequestException,
+        ),
+        (
+            1,
+            2,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            "old_ciam_sub_uuid",
             CookidooAuthException,
         ),
     ],

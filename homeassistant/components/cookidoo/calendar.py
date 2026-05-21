@@ -74,7 +74,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 week_day
             )
         except CookidooAuthException:
-            await self.coordinator.cookidoo.refresh_token()
+            await self.coordinator.cookidoo.login()
             return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
                 week_day
             )

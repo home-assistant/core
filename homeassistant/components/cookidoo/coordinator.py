@@ -87,7 +87,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             )
         except CookidooAuthException:
             try:
-                await self.cookidoo.refresh_token()
+                await self.cookidoo.login()
             except CookidooAuthException as exc:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
