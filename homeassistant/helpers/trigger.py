@@ -1117,6 +1117,7 @@ class TriggerConfig:
     key: str  # The key used to identify the trigger, e.g. "zwave.event"
     target: dict[str, Any] | None = None
     options: dict[str, Any] | None = None
+    variables: TemplateVarsType = None
 
 
 class TriggerActionRunner(Protocol):
@@ -1476,6 +1477,7 @@ async def _async_attach_trigger_cls(
             key=trigger_key,
             target=conf.get(CONF_TARGET),
             options=conf.get(CONF_OPTIONS),
+            variables=trigger_info["variables"],
         ),
     )
     return await trigger.async_attach_action(action, action_payload_builder)
