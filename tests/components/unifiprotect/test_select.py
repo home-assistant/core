@@ -454,7 +454,7 @@ async def test_select_set_option_camera_doorbell_custom(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",
@@ -480,9 +480,14 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
-    ) as mock_method:
+    with (
+        patch_ufp_method(
+            doorbell, "set_lcd_message_public", new_callable=AsyncMock
+        ) as mock_public,
+        patch_ufp_method(
+            doorbell, "set_lcd_text", new_callable=AsyncMock
+        ) as mock_legacy,
+    ):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -493,7 +498,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
+        mock_public.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
 
         await hass.services.async_call(
             "select",
@@ -505,7 +510,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_with(None)
+        mock_legacy.assert_called_once_with(None)
 
 
 async def test_select_set_option_camera_doorbell_default(
