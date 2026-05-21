@@ -3,8 +3,8 @@
 import logging
 from typing import TYPE_CHECKING
 
+from aioamazondevices.const.todo import LIST_TYPE_SHOP
 from aioamazondevices.implementation.todo import is_item_complete
-from aioamazondevices.structures import ListType
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import EntityDescription
 from .const import DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
-from .utils import alexa_api_call
 
 if TYPE_CHECKING:
     from aioamazondevices.structures import ListInfo, ListItem
@@ -80,7 +79,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         self._attr_name = alexa_list.name
 
         self._attr_translation_key = (
-            "shop" if alexa_list.list_type == ListType.SHOP else "todo"
+            "shop" if alexa_list.list_type == LIST_TYPE_SHOP else "todo"
         )
 
         super().__init__(
@@ -112,7 +111,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             for item in todo_items
         ]
 
-    @alexa_api_call
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list.
 
@@ -141,7 +139,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             self._list.name,
         )
 
-    @alexa_api_call
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the to-do list.
 
@@ -188,7 +185,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 existing_item.version,
             )
 
-    @alexa_api_call
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list.
 
@@ -226,7 +222,13 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 },
             )
 
-        if is_item_complete(existing_item) != (item.status == TodoItemStatus.COMPLETED):
+        # Check what has changed
+        has_completed_changed = is_item_complete(existing_item) != (
+            item.status == TodoItemStatus.COMPLETED
+        )
+        has_summary_changed = existing_item.name != item.summary
+
+        if has_completed_changed:
             # Update the checked status
             _LOGGER.debug(
                 "Updating item %s with checked status %s", item.uid, item.status
@@ -245,11 +247,18 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 item.status,
             )
 
-        if existing_item.name != item.summary:
+        if has_summary_changed:
             # Name has changed, update it
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
+
+            if has_completed_changed:
+                # Both has changed -> Item version increases, otherwise rejected by API
+                version = existing_item.version + 1
+            else:
+                version = existing_item.version
+
             await self._coordinator.api.rename_todo_list_item(
-                self._list.id, item.uid, item.summary, existing_item.version
+                self._list.id, item.uid, item.summary, version
             )
             _LOGGER.debug(
                 "Successfully updated item %s with new name %s", item.uid, item.summary
