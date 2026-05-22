@@ -38,7 +38,7 @@
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "update_error": {
-      "message": "Error communicating with the Yoto API: {error}"
+      "message": "Error communicating with Yoto: {error}"
     }
   }
 }
