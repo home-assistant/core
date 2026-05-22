@@ -16,6 +16,9 @@ from homeassistant.components.mawaqit.const import (
     CONF_TYPE_SEARCH_COORDINATES,
     CONF_TYPE_SEARCH_KEYWORD,
     DOMAIN,
+    KEYWORD_SEARCH_NEXT_PAGE,
+    KEYWORD_SEARCH_PAGE_SIZE,
+    KEYWORD_SEARCH_PREV_PAGE,
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
 )
@@ -768,6 +771,111 @@ async def test_async_step_keyword_search_with_keyword_same_keyword(
 
         assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert "data" in result and result["data"][CONF_UUID] == mosque_uuid
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_next_page(
+    hass: HomeAssistant,
+) -> None:
+    """Test that selecting next page increments the page and re-fetches."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    flow.previous_keyword_search = "test"
+    flow.keyword_page = 1
+
+    full_page_mosques = [
+        {
+            "uuid": f"uuid-{i}",
+            "name": f"Mosque{i}",
+            "label": f"Mosque{i}-label",
+            "proximity": 1000 * i,
+        }
+        for i in range(KEYWORD_SEARCH_PAGE_SIZE)
+    ]
+
+    with patch(
+        "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+        return_value=full_page_mosques,
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "test", CONF_UUID: KEYWORD_SEARCH_NEXT_PAGE}
+        )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+    assert flow.keyword_page == 2
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_prev_page(
+    hass: HomeAssistant,
+    mock_mosques: list[dict],
+) -> None:
+    """Test that selecting previous page decrements the page and re-fetches."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    with (
+        patch.object(flow, "previous_keyword_search", "test"),
+        patch.object(flow, "keyword_page", 2),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "test", CONF_UUID: KEYWORD_SEARCH_PREV_PAGE}
+        )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+    assert flow.keyword_page == 1
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_next_page_no_mosque_found_steps_back(
+    hass: HomeAssistant,
+) -> None:
+    """Test that NoMosqueFound on page > 1 decrements the page back."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    flow.previous_keyword_search = "test"
+    flow.keyword_page = 2
+
+    with patch(
+        "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+        side_effect=NoMosqueFound,
+    ):
+        result = await flow.async_step_keyword_search(user_input={CONF_SEARCH: "test"})
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+    assert flow.keyword_page == 1  # stepped back
+    errors = result.get("errors")
+    assert errors is not None and errors["base"] == NO_MOSQUE_FOUND_KEYWORD
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_next_page_empty_results_steps_back(
+    hass: HomeAssistant,
+) -> None:
+    """Test that empty results on page > 1 decrements the page back."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    flow.previous_keyword_search = "test"
+    flow.keyword_page = 2
+
+    with patch(
+        "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+        return_value=[],
+    ):
+        result = await flow.async_step_keyword_search(user_input={CONF_SEARCH: "test"})
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+    assert flow.keyword_page == 1  # stepped back
+    errors = result.get("errors")
+    assert errors is not None and errors["base"] == NO_MOSQUE_FOUND_KEYWORD
 
 
 # ----- MOSQUES COORDINATES FORM ----- #

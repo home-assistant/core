@@ -22,6 +22,9 @@ from .const import (
     CONF_TYPE_SEARCH_TRANSLATION_KEY,
     CONF_UUID,
     DOMAIN,
+    KEYWORD_SEARCH_NEXT_PAGE,
+    KEYWORD_SEARCH_PAGE_SIZE,
+    KEYWORD_SEARCH_PREV_PAGE,
     MAWAQIT_URL,
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
@@ -38,6 +41,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.previous_keyword_search: str = ""
         self.mosques: list[dict] = []
         self.token: str | None = None
+        # keyword search pagination
+        self.keyword_page: int = 1
+        self.keyword_has_next: bool = False
+        self.current_keyword: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -210,91 +217,121 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_keyword_search(
         self, user_input=None
     ) -> config_entries.ConfigFlowResult:
-        """Handle the keyword search."""
+        """Handle the keyword search, with paginated results."""
         errors = {}
-        option = {
-            vol.Required(CONF_SEARCH): str,
-        }
+        option = {vol.Required(CONF_SEARCH): str}
 
-        if user_input is not None:
-            if CONF_SEARCH in user_input:
-                keyword = user_input[CONF_SEARCH]
+        if user_input is not None and CONF_SEARCH in user_input:
+            keyword = user_input[CONF_SEARCH]
+            selected_uuid = user_input.get(CONF_UUID)
 
-                if keyword == self.previous_keyword_search:
-                    if (mosque_uuid := user_input.get(CONF_UUID)) is not None:
-                        title, data_entry = utils.save_mosque(
-                            mosque_uuid,
-                            self.mosques,
-                            mawaqit_token=self.token,
-                        )
-                        return self.async_create_entry(title=title, data=data_entry)
-                else:
-                    self.previous_keyword_search = keyword
+            # Handle pagination sentinels
+            if selected_uuid == KEYWORD_SEARCH_NEXT_PAGE:
+                self.keyword_page += 1
+                selected_uuid = None  # fall through to re-fetch
+            elif selected_uuid == KEYWORD_SEARCH_PREV_PAGE:
+                self.keyword_page = max(1, self.keyword_page - 1)
+                selected_uuid = None  # fall through to re-fetch
 
-                try:
-                    mosques_found_keyword = (
-                        await mawaqit_wrapper.all_mosques_by_keyword(
-                            search_keyword=keyword, token=self.token
-                        )
-                    )
-
-                    self.mosques = mosques_found_keyword or []
-
-                except NoMosqueFound:
-                    errors["base"] = NO_MOSQUE_FOUND_KEYWORD
-                    return self.async_show_form(
-                        step_id="keyword_search",
-                        data_schema=self.add_suggested_values_to_schema(
-                            vol.Schema(option), {CONF_SEARCH: user_input[CONF_SEARCH]}
-                        ),
-                        errors=errors,
-                    )
-                except (
-                    BadCredentialsException,
-                    ClientConnectorError,
-                    ConnectionError,
-                    TimeoutError,
-                ):
-                    errors["base"] = CANNOT_CONNECT_TO_SERVER
-                    return self.async_show_form(
-                        step_id="keyword_search",
-                        data_schema=self.add_suggested_values_to_schema(
-                            vol.Schema(option), {CONF_SEARCH: user_input[CONF_SEARCH]}
-                        ),
-                        errors=errors,
-                    )
-
-                name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
-                    self.mosques
+            # Mosque selected: save and exit
+            if selected_uuid is not None and keyword == self.previous_keyword_search:
+                title, data_entry = utils.save_mosque(
+                    selected_uuid,
+                    self.mosques,
+                    mawaqit_token=self.token,
                 )
+                return self.async_create_entry(title=title, data=data_entry)
 
-                if not name_servers:
-                    errors["base"] = NO_MOSQUE_FOUND_KEYWORD
-                    return self.async_show_form(
-                        step_id="keyword_search",
-                        data_schema=self.add_suggested_values_to_schema(
-                            vol.Schema(option),
-                            {CONF_SEARCH: user_input[CONF_SEARCH]},
-                        ),
-                        errors=errors,
-                    )
+            # New keyword: reset to page 1
+            if keyword != self.previous_keyword_search:
+                self.keyword_page = 1
 
+            self.previous_keyword_search = keyword
+
+            # Fetch the page
+            try:
+                mosques_found = await mawaqit_wrapper.all_mosques_by_keyword(
+                    search_keyword=keyword,
+                    page=self.keyword_page,
+                    token=self.token,
+                )
+                self.mosques = mosques_found or []
+            except NoMosqueFound:
+                # If we navigated past the last real page, step back silently
+                if self.keyword_page > 1:
+                    self.keyword_page -= 1
+                errors["base"] = NO_MOSQUE_FOUND_KEYWORD
                 return self.async_show_form(
                     step_id="keyword_search",
                     data_schema=self.add_suggested_values_to_schema(
-                        vol.Schema(
-                            {
-                                **option,
-                                vol.Required(
-                                    CONF_UUID,
-                                    default=name_servers[0],
-                                ): vol.In(name_servers),
-                            }
-                        ),
-                        {CONF_SEARCH: user_input[CONF_SEARCH]},
+                        vol.Schema(option), {CONF_SEARCH: keyword}
                     ),
                     errors=errors,
                 )
+            except (
+                BadCredentialsException,
+                ClientConnectorError,
+                ConnectionError,
+                TimeoutError,
+            ):
+                errors["base"] = CANNOT_CONNECT_TO_SERVER
+                return self.async_show_form(
+                    step_id="keyword_search",
+                    data_schema=self.add_suggested_values_to_schema(
+                        vol.Schema(option), {CONF_SEARCH: keyword}
+                    ),
+                    errors=errors,
+                )
+
+            name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
+                self.mosques
+            )
+
+            if not name_servers:
+                if self.keyword_page > 1:
+                    self.keyword_page -= 1
+                errors["base"] = NO_MOSQUE_FOUND_KEYWORD
+                return self.async_show_form(
+                    step_id="keyword_search",
+                    data_schema=self.add_suggested_values_to_schema(
+                        vol.Schema(option), {CONF_SEARCH: keyword}
+                    ),
+                    errors=errors,
+                )
+
+            # Build navigation-aware option list
+            self.keyword_has_next = len(self.mosques) >= KEYWORD_SEARCH_PAGE_SIZE
+
+            # Build a {value: label} dict so nav sentinels get human-readable labels
+            nav_options: dict[str, str] = {}
+            if self.keyword_page > 1:
+                nav_options[KEYWORD_SEARCH_PREV_PAGE] = (
+                    f"← Previous page (page {self.keyword_page - 1})"
+                )
+
+            nav_options.update({name: name for name in name_servers})
+
+            if self.keyword_has_next:
+                nav_options[KEYWORD_SEARCH_NEXT_PAGE] = (
+                    f"→ Next page (page {self.keyword_page + 1})"
+                )
+
+            return self.async_show_form(
+                step_id="keyword_search",
+                data_schema=self.add_suggested_values_to_schema(
+                    vol.Schema(
+                        {
+                            **option,
+                            vol.Required(CONF_UUID, default=name_servers[0]): vol.In(
+                                nav_options
+                            ),
+                        }
+                    ),
+                    {CONF_SEARCH: keyword},
+                ),
+                errors=errors,
+                description_placeholders={"page": str(self.keyword_page)},
+            )
 
         return self.async_show_form(
             step_id="keyword_search",

@@ -80,6 +80,7 @@ async def all_mosques_neighborhood(
 
 async def all_mosques_by_keyword(
     search_keyword,
+    page: int = 1,
     username: str | None = None,
     password: str | None = None,
     token: str | None = None,
@@ -95,7 +96,7 @@ async def all_mosques_by_keyword(
         await client.get_api_token()
 
         if search_keyword is not None:
-            return await client.fetch_mosques_by_keyword(search_keyword)
+            return await client.fetch_mosques_by_keyword(search_keyword, page=page)
         return []
     finally:
         if client is not None:

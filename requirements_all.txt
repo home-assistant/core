@@ -1519,7 +1519,7 @@ matrix-nio==0.25.2
 matter-python-client==0.6.0
 
 # homeassistant.components.mawaqit
-mawaqit==1.0.9
+mawaqit==1.0.10
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3

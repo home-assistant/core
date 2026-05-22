@@ -31,3 +31,9 @@ WRONG_CREDENTIAL = "wrong_credential"
 
 PRAYER_NAMES = ["fajr", "shuruq", "dhuhr", "asr", "maghrib", "isha"]
 PRAYER_NAMES_IQAMA = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
+
+
+# Keyword search pagination
+KEYWORD_SEARCH_PAGE_SIZE = 10
+KEYWORD_SEARCH_PREV_PAGE = "prev_page"
+KEYWORD_SEARCH_NEXT_PAGE = "next_page"

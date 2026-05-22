@@ -21,7 +21,8 @@
       },
       "keyword_search": {
         "data": {
-          "Keyword": "Search"
+          "Keyword": "Search",
+          "uuid": "Select a mosque (page {page})"
         },
         "description": "Search for a mosque by entering a keyword:",
         "title": "Search for your mosque"
