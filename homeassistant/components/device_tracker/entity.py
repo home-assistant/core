@@ -1,6 +1,7 @@
 """Provide functionality to keep track of devices."""
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Any, final
 
 from propcache.api import cached_property
@@ -22,6 +23,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     State,
+    async_get_hass_or_none,
     callback,
 )
 from homeassistant.helpers import (
@@ -37,6 +39,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -51,6 +54,8 @@ from .const import (
     LOGGER,
     SourceType,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
 
@@ -164,11 +169,31 @@ class BaseTrackerEntity(Entity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_source_type: SourceType
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if "battery_level" in cls.__dict__:
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
+            _LOGGER.warning(
+                (
+                    "%s::%s is overriding the deprecated battery_level method on "
+                    "an instance of TrackerEntity, this will be unsupported from "
+                    "Home Assistant 2027.6, please %s"
+                ),
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
+
     @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
         Percentage from 0-100.
+
+        The property is deprecated and will be removed in Home Assistant 2027.6.
         """
         return None
 
