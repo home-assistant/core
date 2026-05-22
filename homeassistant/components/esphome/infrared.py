@@ -2,8 +2,9 @@
 
 import functools
 import logging
+from typing import TYPE_CHECKING
 
-from aioesphomeapi import EntityState, InfraredCapability, InfraredInfo
+from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
 from aioesphomeapi.client import InfraredRFReceiveEventModel
 
 from homeassistant.components.infrared import (
@@ -19,6 +20,7 @@ from .entity import (
     convert_api_error_ha_error,
     platform_async_setup_entry,
 )
+from .entry_data import RuntimeEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,17 +104,26 @@ class EsphomeInfraredReceiverEntity(_EsphomeInfraredEntity, InfraredReceiverEnti
         self._handle_received_signal(InfraredReceivedSignal(timings=event.timings))
 
 
-def _infrared_entity_type_factory(info: InfraredInfo) -> type[_EsphomeInfraredEntity]:
-    """Pick the right entity class based on the InfraredInfo capabilities."""
-    if info.capabilities & InfraredCapability.RECEIVER:
-        return EsphomeInfraredReceiverEntity
-    return EsphomeInfraredEmitterEntity
+def _make_infrared_entity(
+    entry_data: RuntimeEntryData,
+    info: EntityInfo,
+    state_type: type[EntityState],
+) -> _EsphomeInfraredEntity:
+    """Build the right infrared entity based on the InfraredInfo capabilities."""
+    if TYPE_CHECKING:
+        assert isinstance(info, InfraredInfo)
+    cls = (
+        EsphomeInfraredReceiverEntity
+        if info.capabilities & InfraredCapability.RECEIVER
+        else EsphomeInfraredEmitterEntity
+    )
+    return cls(entry_data, info, state_type)
 
 
 async_setup_entry = functools.partial(
     platform_async_setup_entry,
     info_type=InfraredInfo,
-    entity_type=_infrared_entity_type_factory,
+    entity_type=_make_infrared_entity,
     state_type=EntityState,
     info_filter=lambda info: bool(
         info.capabilities
