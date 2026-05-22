@@ -331,7 +331,9 @@ def test_collect_tests_hashes_each_file_once(tree: Path) -> None:
         counts[path] = counts.get(path, 0) + 1
         return real_hash(path)
 
+    # Pin the threshold so the tiny tree stays on the file-level path.
     with (
+        patch.object(split_tests, "_DIR_LEVEL_MISS_RATIO", 1.0),
         patch.object(split_tests, "_hash_file", side_effect=counting_hash),
         patch.object(
             split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
@@ -365,9 +367,12 @@ def test_collect_tests_cold_cache_collects_only_missing(tree: Path) -> None:
 
     _prime_cache(cache_path, tree, hits={alpha_one: 1})
 
-    with patch.object(
-        split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
-    ) as run_batches:
+    with (
+        patch.object(split_tests, "_DIR_LEVEL_MISS_RATIO", 1.0),
+        patch.object(
+            split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
+        ) as run_batches,
+    ):
         folder = split_tests.collect_tests(tree, cache_path)
 
     assert run_batches.call_count == 1
@@ -382,6 +387,24 @@ def test_collect_tests_cold_cache_collects_only_missing(tree: Path) -> None:
         str(alpha_two.relative_to(tree)),
         str(beta_x.relative_to(tree)),
     }
+
+
+def test_collect_tests_falls_back_to_dirs_when_misses_dominate(tree: Path) -> None:
+    """Heavy misses should switch back to dir-level invocation."""
+    cache_path = tree / "cache.json"
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    _prime_cache(cache_path, tree, hits={alpha_one: 1})
+    # 1 hit / 3 total = 33% miss, above the 30% default threshold; this
+    # also covers the new-directory PR case (mostly-new test files).
+
+    with patch.object(
+        split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
+    ) as run_batches:
+        split_tests.collect_tests(tree, cache_path)
+
+    # We expect the dir-level batch paths, not the individual miss files.
+    requested = set(run_batches.call_args.args[0])
+    assert requested == set(split_tests._enumerate_batch_paths(tree))
 
 
 def test_collect_tests_caches_files_with_no_collected_tests(tree: Path) -> None:
@@ -401,10 +424,13 @@ def test_collect_tests_caches_files_with_no_collected_tests(tree: Path) -> None:
     # rather than individual file paths.
     _prime_cache(cache_path, tree, hits={alpha_one: 1})
 
-    with patch.object(
-        split_tests,
-        "_run_collect_batches",
-        side_effect=_echo_one_test_each(skip={alpha_two}),
+    with (
+        patch.object(split_tests, "_DIR_LEVEL_MISS_RATIO", 1.0),
+        patch.object(
+            split_tests,
+            "_run_collect_batches",
+            side_effect=_echo_one_test_each(skip={alpha_two}),
+        ),
     ):
         split_tests.collect_tests(tree, cache_path)
 
@@ -435,8 +461,11 @@ def test_collect_tests_drops_deleted_files_from_cache(tree: Path) -> None:
         extra_entries={ghost_rel: split_tests._CacheEntry(hash="dead", count=42)},
     )
 
-    with patch.object(
-        split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
+    with (
+        patch.object(split_tests, "_DIR_LEVEL_MISS_RATIO", 1.0),
+        patch.object(
+            split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
+        ),
     ):
         split_tests.collect_tests(tree, cache_path)
 

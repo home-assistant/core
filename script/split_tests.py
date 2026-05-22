@@ -21,6 +21,12 @@ _FAN_OUT_DIRS: Final = frozenset({"components"})
 # caches are ignored rather than misread.
 _CACHE_VERSION: Final = 2
 
+# Fall back from file-level to directory-level pytest collection when
+# misses make up more than this fraction of the tree; past that point
+# the per-file argv overhead pytest pays outweighs the cost of letting
+# it re-walk dirs and re-collect the hits.
+_DIR_LEVEL_MISS_RATIO: Final = 0.3
+
 
 class Bucket:
     """Class to hold bucket."""
@@ -424,6 +430,10 @@ def _run_pytest_collect(paths: list[Path]) -> dict[Path, int]:
             print(stderr)
             print(stdout)
             sys.exit(1)
+        # Surface stderr from successful runs too; pytest puts deprecation
+        # and import warnings here that would otherwise vanish.
+        if stderr.strip():
+            sys.stderr.write(stderr)
         try:
             counts.update(_parse_collect_output(stdout))
         except ValueError as err:
@@ -482,10 +492,14 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
 
     new_counts: dict[Path, int] = {}
     if miss_hashes:
-        # Cold cache: hand pytest the top-level dirs (much faster than
-        # 5000+ individual file paths).  Once any hit exists, collect
-        # only the diff at file granularity.
-        collect_paths = _enumerate_batch_paths(path) if not hits else list(miss_hashes)
+        # File-level collection saves work when the diff is small.  But
+        # when many files miss (eg a PR adding a new integration with
+        # hundreds of new files) the per-file argv overhead dominates
+        # and dir-level wins, so fall back past _DIR_LEVEL_MISS_RATIO.
+        if not hits or len(miss_hashes) > len(all_test_files) * _DIR_LEVEL_MISS_RATIO:
+            collect_paths = _enumerate_batch_paths(path)
+        else:
+            collect_paths = list(miss_hashes)
         new_counts = _run_pytest_collect(collect_paths)
 
     # One pass over all files: hits keep their entry, misses build a
