@@ -294,6 +294,97 @@ async def test_invitation_confirm_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_invitation_confirm_aborts_if_already_configured_from_invitation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test abort before set_new_password when system_id from invitation is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.parse_invitation",
+            return_value={
+                "cloud_host": "cloud.example.com",
+                "system_path": "/sys/1",
+                "email": "u@example.com",
+                "token": "tok",
+                "system_id": "SYS1",
+            },
+        ),
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.resolve_instance_host",
+            return_value="instance.example.com",
+        ),
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.set_new_password",
+        ) as mock_set_password,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "invitation"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"invite_url": "https://invite.example.com"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "https://instance.example.com",
+                CONF_USERNAME: "u@example.com",
+                CONF_PASSWORD: "ValidP4ss!",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_set_password.assert_not_called()
+
+
+async def test_invitation_confirm_aborts_if_already_configured_from_api(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_glutz_client: AsyncMock,
+) -> None:
+    """Test abort after set_new_password when system_id from API is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.parse_invitation",
+            return_value={
+                "cloud_host": "cloud.example.com",
+                "system_path": "/sys/1",
+                "email": "u@example.com",
+                "token": "tok",
+            },
+        ),
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.resolve_instance_host",
+            return_value="instance.example.com",
+        ),
+        patch(
+            "homeassistant.components.glutz_eaccess.config_flow.set_new_password",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "invitation"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"invite_url": "https://invite.example.com"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "https://instance.example.com",
+                CONF_USERNAME: "u@example.com",
+                CONF_PASSWORD: "ValidP4ss!",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_invitation_confirm_without_invitation_aborts(
     hass: HomeAssistant,
 ) -> None:
