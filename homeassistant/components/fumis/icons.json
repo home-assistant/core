@@ -2,7 +2,7 @@
   "entity": {
     "button": {
       "sync_clock": {
-        "default": "mdi:clock-sync"
+        "default": "mdi:clock-check"
       }
     },
     "number": {

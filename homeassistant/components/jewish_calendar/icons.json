@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "erev_shabbat_hag": { "default": "mdi:candle-light" },
+      "erev_shabbat_hag": { "default": "mdi:candle" },
       "issur_melacha_in_effect": { "default": "mdi:power-plug-off" },
       "motzei_shabbat_hag": { "default": "mdi:fire" }
     },

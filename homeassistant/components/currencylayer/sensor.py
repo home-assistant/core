@@ -61,7 +61,7 @@ class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
     _attr_attribution = "Data provided by currencylayer.com"
-    _attr_icon = "mdi:currency"
+    _attr_icon = "mdi:currency-usd"
 
     def __init__(self, rest: CurrencylayerData, base: str, quote: str) -> None:
         """Initialize the sensor."""
