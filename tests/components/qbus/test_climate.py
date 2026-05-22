@@ -60,7 +60,7 @@ _TOPIC_CLIMATE_STATE = "cloudapp/QBUSMQTTGW/UL1/UL20/state"
 _TOPIC_CLIMATE_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL20/setState"
 _TOPIC_GET_STATE = "cloudapp/QBUSMQTTGW/getState"
 
-_CLIMATE_ENTITY_ID = "climate.living_th"
+_CLIMATE_ENTITY_ID = "climate.living_living_th"
 
 
 async def test_climate(
