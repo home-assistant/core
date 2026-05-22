@@ -5383,6 +5383,160 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-startIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Pool House Identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool House Start identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_stop_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.pool_house_stop_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Stop identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-stopIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.pool_house_stop_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool House Stop identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.pool_house_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.reading_nook_living_room_shutter_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5582,6 +5736,367 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reading_nook_living_room_shutter_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.siren_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Identify',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/2733989-startIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Siren Identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.siren_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_ring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.siren_ring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ring',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Ring',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/2733989-ring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_ring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren Ring',
+      'icon': 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.siren_ring',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_start_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.siren_start_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Start identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/2733989-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_start_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren Start identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.siren_start_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_stop_identify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.siren_stop_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stop identify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:human-greeting-variant',
+    'original_name': 'Stop identify',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/2733989-stopIdentify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.siren_stop_identify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren Stop identify',
+      'icon': 'mdi:human-greeting-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.siren_stop_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_bip-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_bip',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bip',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Bip',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-bip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_bip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'External Siren Bip',
+      'icon': 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_bip',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_fast_bip_sequence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_fast_bip_sequence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fast bip sequence',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Fast bip sequence',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-fastBipSequence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_fast_bip_sequence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'External Siren Fast bip sequence',
+      'icon': 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_fast_bip_sequence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_ring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.willow_house_external_siren_ring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ring',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell-ring',
+    'original_name': 'Ring',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-ring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][button.willow_house_external_siren_ring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'External Siren Ring',
+      'icon': 'mdi:bell-ring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.willow_house_external_siren_ring',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

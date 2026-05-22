@@ -93,9 +93,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "HomekitStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "homekit:StackComponent",
         "type": "PROTOCOL_GATEWAY"
@@ -177,10 +175,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online"
-            ],
+            "values": ["offline", "online"],
             "qualifiedName": "core:ConnectivityState"
           },
           {
@@ -203,28 +198,19 @@
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ],
+            "values": ["pressed", "stop"],
             "qualifiedName": "internal:Button1State"
           },
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ],
+            "values": ["pressed", "stop"],
             "qualifiedName": "internal:Button2State"
           },
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ],
+            "values": ["pressed", "stop"],
             "qualifiedName": "internal:Button3State"
           },
           {
@@ -234,9 +220,7 @@
         ],
         "dataProperties": [],
         "widgetName": "Pod",
-        "uiProfiles": [
-          "UpdatableComponent"
-        ],
+        "uiProfiles": ["UpdatableComponent"],
         "uiClass": "Pod",
         "qualifiedName": "internal:PodV3Component",
         "type": "ACTUATOR"
@@ -309,9 +293,7 @@
         ],
         "dataProperties": [],
         "widgetName": "Wifi",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "Wifi",
         "qualifiedName": "internal:WifiComponent",
         "type": "ACTUATOR"
@@ -467,12 +449,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -489,10 +466,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -505,10 +479,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -521,9 +492,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -613,10 +582,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "off state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -796,12 +762,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -818,10 +779,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -834,10 +792,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -850,9 +805,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -942,10 +895,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "off state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -1044,9 +994,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "IOStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "io:StackComponent",
         "type": "PROTOCOL_GATEWAY"
@@ -1062,7 +1010,7 @@
     {
       "creationTime": 1664285439000,
       "lastUpdateTime": 1664285439000,
-      "label": "** ** **'*\u00e9**",
+      "label": "** ** **'*é**",
       "deviceURL": "io://1234-5678-1202/12068164",
       "shortcut": false,
       "controllableName": "io:RollerShutterVeluxIOComponent",
@@ -1180,12 +1128,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "medium",
-              "low",
-              "critical"
-            ],
+            "values": ["good", "medium", "low", "critical"],
             "qualifiedName": "core:BatteryDiscreteLevelState"
           },
           {
@@ -1199,12 +1142,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1217,10 +1155,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -1237,10 +1172,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1456,12 +1388,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1470,10 +1397,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -1486,10 +1410,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1512,10 +1433,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "frostprotection",
-              "off"
-            ],
+            "values": ["frostprotection", "off"],
             "qualifiedName": "io:LastTargetHeatingLevelState"
           },
           {
@@ -1591,14 +1509,9 @@
           }
         ],
         "widgetName": "AtlanticElectricalHeater",
-        "uiProfiles": [
-          "StatefulHeatingLevel",
-          "HeatingLevel"
-        ],
+        "uiProfiles": ["StatefulHeatingLevel", "HeatingLevel"],
         "uiClass": "HeatingSystem",
-        "uiClassifiers": [
-          "emitter"
-        ],
+        "uiClassifiers": ["emitter"],
         "qualifiedName": "io:AtlanticElectricalHeaterIOComponent",
         "type": "ACTUATOR"
       },
@@ -1806,12 +1719,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "medium",
-              "low",
-              "critical"
-            ],
+            "values": ["good", "medium", "low", "critical"],
             "qualifiedName": "core:BatteryDiscreteLevelState"
           },
           {
@@ -1825,12 +1733,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1843,10 +1746,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -1863,10 +1763,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1987,7 +1884,7 @@
     {
       "creationTime": 1692087646000,
       "lastUpdateTime": 1692087646000,
-      "label": "** **\u00e8**",
+      "label": "** **è**",
       "deviceURL": "io://1234-5678-1202/1366372",
       "shortcut": false,
       "controllableName": "io:MicroModuleRollerShutterSomfyIOComponent",
@@ -2134,12 +2031,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2160,10 +2052,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -2180,10 +2069,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2246,7 +2132,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** **\u00e8**"
+          "value": "** **è**"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2454,12 +2340,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2476,10 +2357,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -2492,10 +2370,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2508,9 +2383,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -2600,10 +2473,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "last operation state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -2660,7 +2530,7 @@
     {
       "creationTime": 1664292280000,
       "lastUpdateTime": 1664292280000,
-      "label": "** **\u00e9**",
+      "label": "** **é**",
       "deviceURL": "io://1234-5678-1202/15989438",
       "shortcut": false,
       "controllableName": "io:TemperatureIOSystemSensor",
@@ -2674,22 +2544,12 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "full",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["full", "low", "normal", "verylow"],
             "qualifiedName": "core:BatteryState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2702,20 +2562,12 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2725,9 +2577,7 @@
         ],
         "dataProperties": [],
         "widgetName": "TemperatureSensor",
-        "uiProfiles": [
-          "Temperature"
-        ],
+        "uiProfiles": ["Temperature"],
         "uiClass": "TemperatureSensor",
         "qualifiedName": "io:TemperatureIOSystemSensor",
         "type": "SENSOR"
@@ -2797,7 +2647,7 @@
     {
       "creationTime": 1691594762000,
       "lastUpdateTime": 1691594762000,
-      "label": "**\u00e8** **\u00e9** **",
+      "label": "**è** **é** **",
       "deviceURL": "io://1234-5678-1202/16645450",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -2920,12 +2770,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2942,10 +2787,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -2958,10 +2800,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2974,9 +2813,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -3066,10 +2903,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "off state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -3221,12 +3055,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3235,10 +3064,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -3251,10 +3077,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3277,10 +3100,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "frostprotection",
-              "off"
-            ],
+            "values": ["frostprotection", "off"],
             "qualifiedName": "io:LastTargetHeatingLevelState"
           },
           {
@@ -3356,14 +3176,9 @@
           }
         ],
         "widgetName": "AtlanticElectricalHeater",
-        "uiProfiles": [
-          "StatefulHeatingLevel",
-          "HeatingLevel"
-        ],
+        "uiProfiles": ["StatefulHeatingLevel", "HeatingLevel"],
         "uiClass": "HeatingSystem",
-        "uiClassifiers": [
-          "emitter"
-        ],
+        "uiClassifiers": ["emitter"],
         "qualifiedName": "io:AtlanticElectricalHeaterIOComponent",
         "type": "ACTUATOR"
       },
@@ -3453,7 +3268,7 @@
     {
       "creationTime": 1664451060000,
       "lastUpdateTime": 1664451060000,
-      "label": "** *\u00e0* **",
+      "label": "** *à* **",
       "deviceURL": "io://1234-5678-1202/5732904",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -3576,12 +3391,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3598,10 +3408,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -3614,10 +3421,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3630,9 +3434,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -3689,7 +3491,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** *\u00e0* **"
+          "value": "** *à* **"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3722,10 +3524,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "last operation state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -3796,12 +3595,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3818,28 +3612,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "CumulativeElectricPowerConsumptionSensor",
-        "uiProfiles": [
-          "ElectricEnergyConsumption"
-        ],
+        "uiProfiles": ["ElectricEnergyConsumption"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:TotalElectricalEnergyConsumptionIOSystemSensor",
         "type": "SENSOR"
@@ -3927,18 +3711,12 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:DerogationOnOffState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3948,9 +3726,7 @@
         ],
         "dataProperties": [],
         "widgetName": "AtlanticMultiMeterElectricHeatPump",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:EnergyConsumptionSensorsHeatPumpComponent",
         "type": "ACTUATOR"
@@ -4024,12 +3800,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4050,28 +3821,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "CumulativeElectricPowerConsumptionSensor",
-        "uiProfiles": [
-          "ElectricEnergyConsumption"
-        ],
+        "uiProfiles": ["ElectricEnergyConsumption"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:HeatingElectricalEnergyConsumptionSensor",
         "type": "SENSOR"
@@ -4193,12 +3954,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4219,28 +3975,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "CumulativeElectricPowerConsumptionSensor",
-        "uiProfiles": [
-          "ElectricEnergyConsumption"
-        ],
+        "uiProfiles": ["ElectricEnergyConsumption"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:DHWElectricalEnergyConsumptionSensor",
         "type": "SENSOR"
@@ -4362,12 +4108,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4388,28 +4129,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "CumulativeElectricPowerConsumptionSensor",
-        "uiProfiles": [
-          "ElectricEnergyConsumption"
-        ],
+        "uiProfiles": ["ElectricEnergyConsumption"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:PlugsElectricalEnergyConsumptionSensor",
         "type": "SENSOR"
@@ -4531,12 +4262,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4557,28 +4283,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "CumulativeElectricPowerConsumptionSensor",
-        "uiProfiles": [
-          "ElectricEnergyConsumption"
-        ],
+        "uiProfiles": ["ElectricEnergyConsumption"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:OtherElectricalEnergyConsumptionSensor",
         "type": "SENSOR"
@@ -4672,34 +4388,23 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "io:AllowForceHeatingState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "io:ForceHeatingState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DomesticHotWaterTank",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "WaterHeatingSystem",
         "qualifiedName": "io:DomesticHotWaterTankComponent",
         "type": "ACTUATOR"
@@ -4771,18 +4476,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "AtlanticMultiMeterElectricSensor",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:ElectricityMeterComponent",
         "type": "ACTUATOR"
@@ -4838,10 +4538,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -4851,9 +4548,7 @@
         ],
         "dataProperties": [],
         "widgetName": "AtlanticMultiMeterElectricConfiguration",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ElectricitySensor",
         "qualifiedName": "io:EnergyConsumptionSensorsConfigurationComponent",
         "type": "ACTUATOR"
@@ -5004,12 +4699,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -5026,10 +4716,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -5042,10 +4729,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -5058,9 +4742,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -5150,10 +4832,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "off state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -5328,12 +5007,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "medium",
-              "low",
-              "critical"
-            ],
+            "values": ["good", "medium", "low", "critical"],
             "qualifiedName": "core:BatteryDiscreteLevelState"
           },
           {
@@ -5347,12 +5021,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -5365,10 +5034,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -5385,10 +5051,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -5519,7 +5182,7 @@
     {
       "creationTime": 1691592012000,
       "lastUpdateTime": 1691592012000,
-      "label": "**\u00e8** **\u00e9** **\u00e8**",
+      "label": "**è** **é** **è**",
       "deviceURL": "io://1234-5678-1202/7969046",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -5642,12 +5305,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -5664,10 +5322,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -5680,10 +5335,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -5696,9 +5348,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -5755,7 +5405,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**\u00e8** **\u00e9**"
+          "value": "**è** **é**"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -5788,10 +5438,7 @@
           "type": 11,
           "value": {
             "recovered_state_after_power_cut": "off state",
-            "wired_input_type": [
-              "fixed switch",
-              "fixed switch"
-            ],
+            "wired_input_type": ["fixed switch", "fixed switch"],
             "timeout_timer_value": 0,
             "current_position": 51200
           }
@@ -5848,7 +5495,7 @@
     {
       "creationTime": 1664290463000,
       "lastUpdateTime": 1664290463000,
-      "label": "**\u00e9**",
+      "label": "**é**",
       "deviceURL": "io://1234-5678-1202/9288104",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -5971,12 +5618,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -5993,10 +5635,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -6009,10 +5648,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -6025,9 +5661,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -6084,7 +5718,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**\u00e9**"
+          "value": "**é**"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -6324,12 +5958,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -6350,10 +5979,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -6370,10 +5996,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -6644,12 +6267,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -6666,10 +6284,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -6682,10 +6297,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -6698,9 +6310,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "onOffLight"
-            ],
+            "values": ["onOffLight"],
             "qualifiedName": "io:PictoState"
           },
           {
@@ -6884,11 +6494,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online",
-              "uninstalled"
-            ],
+            "values": ["offline", "online", "uninstalled"],
             "qualifiedName": "core:CloudDeviceStatusState"
           },
           {
@@ -6897,27 +6503,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "opened"
-            ],
+            "values": ["closed", "opened"],
             "qualifiedName": "myfox:ShutterStatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MyFoxSecurityCamera",
-        "uiProfiles": [
-          "OpenCloseCameraShutter",
-          "BasicOpenClose"
-        ],
+        "uiProfiles": ["OpenCloseCameraShutter", "BasicOpenClose"],
         "uiClass": "Camera",
         "qualifiedName": "myfox:SomfyProtectSecurityCameraController",
         "type": "ACTUATOR"
@@ -6950,7 +6547,7 @@
     {
       "creationTime": 1696347978000,
       "lastUpdateTime": 1696347978000,
-      "label": "**\u00e9** **",
+      "label": "**é** **",
       "deviceURL": "myfox://SOMFY_PROTECT-1234567890ABCDEF/NmZSuim2Wwcttk9NB56B1kdql30fDmDY#2",
       "shortcut": false,
       "controllableName": "myfox:LightController",
@@ -6980,18 +6577,12 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
@@ -7063,11 +6654,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online",
-              "uninstalled"
-            ],
+            "values": ["offline", "online", "uninstalled"],
             "qualifiedName": "core:CloudDeviceStatusState"
           },
           {
@@ -7076,35 +6663,23 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "down",
-              "up"
-            ],
+            "values": ["down", "up"],
             "qualifiedName": "core:PowerSupplyUpDownState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "opened"
-            ],
+            "values": ["closed", "opened"],
             "qualifiedName": "myfox:ShutterStatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MyFoxSecurityCamera",
-        "uiProfiles": [
-          "OpenCloseCameraShutter",
-          "BasicOpenClose"
-        ],
+        "uiProfiles": ["OpenCloseCameraShutter", "BasicOpenClose"],
         "uiClass": "Camera",
         "qualifiedName": "myfox:SomfyOnePlusCameraController",
         "type": "ACTUATOR"
@@ -7179,19 +6754,12 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online",
-              "uninstalled"
-            ],
+            "values": ["offline", "online", "uninstalled"],
             "qualifiedName": "core:CloudDeviceStatusState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "detected",
-              "notDetected"
-            ],
+            "values": ["detected", "notDetected"],
             "qualifiedName": "core:IntrusionState"
           },
           {
@@ -7200,19 +6768,12 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "armed",
-              "disarmed",
-              "partial"
-            ],
+            "values": ["armed", "disarmed", "partial"],
             "qualifiedName": "myfox:AlarmStatusState"
           },
           {
@@ -7222,10 +6783,7 @@
         ],
         "dataProperties": [],
         "widgetName": "MyFoxAlarmController",
-        "uiProfiles": [
-          "Alarm",
-          "IntrusionDetector"
-        ],
+        "uiProfiles": ["Alarm", "IntrusionDetector"],
         "uiClass": "Alarm",
         "qualifiedName": "myfox:SomfyProtectAlarmController",
         "type": "ACTUATOR"
@@ -7297,10 +6855,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -7353,18 +6908,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -7434,10 +6984,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -7450,18 +6997,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -7539,10 +7081,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -7555,18 +7094,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -7640,10 +7174,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -7656,18 +7187,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -7770,10 +7296,7 @@
           }
         ],
         "widgetName": "OpenCloseSlidingGate",
-        "uiProfiles": [
-          "OpenCloseGateOpener",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
         "uiClass": "Gate",
         "qualifiedName": "rts:SlidingGateOpenerRTSComponent",
         "type": "ACTUATOR"
@@ -7796,7 +7319,7 @@
     {
       "creationTime": 1664287569000,
       "lastUpdateTime": 1664287569000,
-      "label": "** ** **\u00e9**",
+      "label": "** ** **é**",
       "deviceURL": "rts://1234-5678-1202/16730725",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
@@ -7851,10 +7374,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -7877,7 +7397,7 @@
     {
       "creationTime": 1664286491000,
       "lastUpdateTime": 1664286491000,
-      "label": "** ** **\u00e9*",
+      "label": "** ** **é*",
       "deviceURL": "rts://1234-5678-1202/16733942",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
@@ -7932,10 +7452,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -8013,10 +7530,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -8094,10 +7608,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -8175,10 +7686,7 @@
           }
         ],
         "widgetName": "UpDownRollerShutter",
-        "uiProfiles": [
-          "OpenCloseShutter",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
         "uiClass": "RollerShutter",
         "qualifiedName": "rts:RollerShutterRTSComponent",
         "type": "ACTUATOR"
@@ -8201,7 +7709,7 @@
     {
       "creationTime": 1664452234000,
       "lastUpdateTime": 1664452234000,
-      "label": "** **\u00e9*",
+      "label": "** **é*",
       "deviceURL": "somfythermostat://SOMFY_THERMOSTAT-1234/174613454759#1",
       "shortcut": false,
       "controllableName": "somfythermostat:SomfyThermostatThermostatComponent",
@@ -8243,10 +7751,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -8259,10 +7764,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "active",
-              "inactive"
-            ],
+            "values": ["active", "inactive"],
             "qualifiedName": "core:DerogationActivationState"
           },
           {
@@ -8279,10 +7781,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8312,11 +7811,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "date",
-              "furtherNotice",
-              "nextMode"
-            ],
+            "values": ["date", "furtherNotice", "nextMode"],
             "qualifiedName": "somfythermostat:DerogationTypeState"
           },
           {
@@ -8355,13 +7850,9 @@
         ],
         "dataProperties": [],
         "widgetName": "SomfyThermostat",
-        "uiProfiles": [
-          "ThermostatTargetReader"
-        ],
+        "uiProfiles": ["ThermostatTargetReader"],
         "uiClass": "HeatingSystem",
-        "uiClassifiers": [
-          "generator"
-        ],
+        "uiClassifiers": ["generator"],
         "qualifiedName": "somfythermostat:SomfyThermostatThermostatComponent",
         "type": "ACTUATOR"
       },
@@ -8463,7 +7954,7 @@
     {
       "creationTime": 1664452234000,
       "lastUpdateTime": 1664452234000,
-      "label": "** **\u00e9*",
+      "label": "** **é*",
       "deviceURL": "somfythermostat://SOMFY_THERMOSTAT-1234/174613454759#2",
       "shortcut": false,
       "controllableName": "somfythermostat:SomfyThermostatTemperatureSensor",
@@ -8477,18 +7968,12 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8498,9 +7983,7 @@
         ],
         "dataProperties": [],
         "widgetName": "TemperatureSensor",
-        "uiProfiles": [
-          "Temperature"
-        ],
+        "uiProfiles": ["Temperature"],
         "uiClass": "TemperatureSensor",
         "qualifiedName": "somfythermostat:SomfyThermostatTemperatureSensor",
         "type": "SENSOR"
@@ -8540,7 +8023,7 @@
     {
       "creationTime": 1664452234000,
       "lastUpdateTime": 1664452234000,
-      "label": "** **\u00e9*",
+      "label": "** **é*",
       "deviceURL": "somfythermostat://SOMFY_THERMOSTAT-1234/174613454759#3",
       "shortcut": false,
       "controllableName": "somfythermostat:SomfyThermostatHumiditySensor",
@@ -8554,10 +8037,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -8566,18 +8046,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "RelativeHumiditySensor",
-        "uiProfiles": [
-          "RelativeHumidity"
-        ],
+        "uiProfiles": ["RelativeHumidity"],
         "uiClass": "HumiditySensor",
         "qualifiedName": "somfythermostat:SomfyThermostatHumiditySensor",
         "type": "SENSOR"
@@ -8643,10 +8118,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8664,9 +8136,7 @@
         ],
         "dataProperties": [],
         "widgetName": "ZigbeeNetwork",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "NetworkComponent",
         "qualifiedName": "zigbee:ZigbeeNetworkNode",
         "type": "INFRASTRUCTURE_COMPONENT"
@@ -8742,12 +8212,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -8769,9 +8234,7 @@
         ],
         "dataProperties": [],
         "widgetName": "ZigbeeStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "zigbee:StackV3Component",
         "type": "PROTOCOL_GATEWAY"
@@ -8850,12 +8313,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -8877,9 +8335,7 @@
         ],
         "dataProperties": [],
         "widgetName": "ZigbeeStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "zigbee:StackV3Component",
         "type": "PROTOCOL_GATEWAY"
@@ -8938,10 +8394,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8959,9 +8412,7 @@
         ],
         "dataProperties": [],
         "widgetName": "ZigbeeNetwork",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "NetworkComponent",
         "qualifiedName": "zigbee:ZigbeeNetworkNode",
         "type": "INFRASTRUCTURE_COMPONENT"
@@ -9070,12 +8521,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -9108,10 +8554,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -9170,9 +8613,7 @@
           }
         ],
         "widgetName": "TemperatureSensor",
-        "uiProfiles": [
-          "Temperature"
-        ],
+        "uiProfiles": ["Temperature"],
         "uiClass": "TemperatureSensor",
         "qualifiedName": "zigbee:TemperatureSensorComponent",
         "type": "SENSOR"
@@ -9249,9 +8690,7 @@
         {
           "name": "zigbee:InputClusters",
           "type": 10,
-          "value": [
-            "identify"
-          ]
+          "value": ["identify"]
         },
         {
           "name": "core:MacAddress",
@@ -9313,12 +8752,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -9355,10 +8789,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -9413,9 +8844,7 @@
           }
         ],
         "widgetName": "RelativeHumiditySensor",
-        "uiProfiles": [
-          "RelativeHumidity"
-        ],
+        "uiProfiles": ["RelativeHumidity"],
         "uiClass": "HumiditySensor",
         "qualifiedName": "zigbee:RelativeHumidityComponent",
         "type": "SENSOR"
@@ -9492,9 +8921,7 @@
         {
           "name": "zigbee:InputClusters",
           "type": 10,
-          "value": [
-            "identify"
-          ]
+          "value": ["identify"]
         },
         {
           "name": "core:MacAddress",
@@ -9527,9 +8954,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "ZigbeeStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "zigbee:TransceiverV3_0Component",
         "type": "PROTOCOL_GATEWAY"
@@ -9545,10 +8970,10 @@
   ],
   "zones": [],
   "resellerDelegationType": "NEVER",
-  "metadata": "{\"version\":1,\"thermal_comfort\":{\"facades\":[{\"facade_id\":2,\"facade_name\":\"Fa\u00e7ade ouest\"},{\"facade_id\":1,\"facade_name\":\"Fa\u00e7ade sud\"},{\"facade_id\":3,\"facade_name\":\"Fa\u00e7ade est\"}],\"active_season\":\"winter\"}}",
+  "metadata": "{\"version\":1,\"thermal_comfort\":{\"facades\":[{\"facade_id\":2,\"facade_name\":\"Façade ouest\"},{\"facade_id\":1,\"facade_name\":\"Façade sud\"},{\"facade_id\":3,\"facade_name\":\"Façade est\"}],\"active_season\":\"winter\"}}",
   "disconnectionConfiguration": {
     "notificationTitle": "Alerte",
-    "notificationText": "Votre box Somfy est d\u00e9connect\u00e9e",
+    "notificationText": "Votre box Somfy est déconnectée",
     "targetPushSubscriptions": [
       "00000067-0000-0000-0000-000000000000",
       "00000068-0000-0000-0000-000000000000",
@@ -9604,7 +9029,7 @@
       {
         "creationTime": 1664286426000,
         "lastUpdateTime": 1664286426000,
-        "label": "** *\u00e0* **",
+        "label": "** *à* **",
         "type": 3,
         "metadata": "{\"color\":\"#008CB9\"}",
         "oid": "00000022-0000-0000-0000-000000000000",
@@ -9613,7 +9038,7 @@
       {
         "creationTime": 1664359827000,
         "lastUpdateTime": 1664359827000,
-        "label": "**\u00e9**",
+        "label": "**é**",
         "type": 0,
         "metadata": "{\"color\":\"#485C74\"}",
         "oid": "00000019-0000-0000-0000-000000000000",
@@ -9622,7 +9047,7 @@
       {
         "creationTime": 1664287637000,
         "lastUpdateTime": 1664287637000,
-        "label": "** ** **\u00e9**",
+        "label": "** ** **é**",
         "type": 5,
         "metadata": "{\"color\":\"#7DE2BE\"}",
         "oid": "00000051-0000-0000-0000-000000000000",
@@ -9640,7 +9065,7 @@
       {
         "creationTime": 1664290534000,
         "lastUpdateTime": 1664290534000,
-        "label": "**\u00e9**",
+        "label": "**é**",
         "type": 34,
         "metadata": "{\"color\":\"#FAB800\"}",
         "oid": "00000017-0000-0000-0000-000000000000",

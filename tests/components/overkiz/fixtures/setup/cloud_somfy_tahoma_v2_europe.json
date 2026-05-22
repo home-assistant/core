@@ -64,9 +64,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "GenericCamera",
-        "uiProfiles": [
-          "PictureCamera"
-        ],
+        "uiProfiles": ["PictureCamera"],
         "uiClass": "Camera",
         "qualifiedName": "camera:GenericCameraComponent",
         "type": "ACTUATOR"
@@ -96,9 +94,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "HomekitStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "homekit:StackComponent",
         "type": "PROTOCOL_GATEWAY"
@@ -208,42 +204,23 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "partial1",
-              "partial2",
-              "total"
-            ],
+            "values": ["off", "partial1", "partial2", "total"],
             "qualifiedName": "internal:CurrentAlarmModeState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "detected",
-              "notDetected",
-              "pending",
-              "sos"
-            ],
+            "values": ["detected", "notDetected", "pending", "sos"],
             "qualifiedName": "internal:IntrusionDetectedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "partial1",
-              "partial2",
-              "sos",
-              "total"
-            ],
+            "values": ["off", "partial1", "partial2", "sos", "total"],
             "qualifiedName": "internal:TargetAlarmModeState"
           }
         ],
         "dataProperties": [],
         "widgetName": "TSKAlarmController",
-        "uiProfiles": [
-          "Alarm",
-          "Switchable"
-        ],
+        "uiProfiles": ["Alarm", "Switchable"],
         "uiClass": "Alarm",
         "qualifiedName": "internal:TSKAlarmComponent",
         "type": "ACTUATOR"
@@ -345,10 +322,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online"
-            ],
+            "values": ["offline", "online"],
             "qualifiedName": "core:ConnectivityState"
           },
           {
@@ -357,10 +331,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ],
+            "values": ["pressed", "stop"],
             "qualifiedName": "core:CyclicButtonState"
           },
           {
@@ -382,9 +353,7 @@
         ],
         "dataProperties": [],
         "widgetName": "Pod",
-        "uiProfiles": [
-          "UpdatableComponent"
-        ],
+        "uiProfiles": ["UpdatableComponent"],
         "uiClass": "Pod",
         "qualifiedName": "internal:PodV2Component",
         "type": "ACTUATOR"
@@ -538,12 +507,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -556,11 +520,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "unknown"
-            ],
+            "values": ["closed", "open", "unknown"],
             "qualifiedName": "core:OpenClosedUnknownState"
           },
           {
@@ -573,10 +533,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -720,11 +677,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "unknown"
-            ],
+            "values": ["closed", "open", "unknown"],
             "qualifiedName": "core:OpenClosedUnknownState"
           }
         ],
@@ -894,12 +847,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -912,10 +860,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -924,10 +869,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -944,10 +886,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1233,12 +1172,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1251,10 +1185,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -1263,10 +1194,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -1283,10 +1211,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1572,12 +1497,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1590,10 +1510,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -1602,10 +1519,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -1622,10 +1536,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -1911,12 +1822,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -1929,10 +1835,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -1941,10 +1844,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -1961,10 +1861,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2194,12 +2091,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2208,10 +2100,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -2224,10 +2113,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2372,9 +2258,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "IOStack",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "io:StackComponent",
         "type": "PROTOCOL_GATEWAY"
@@ -2520,12 +2404,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2538,10 +2417,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -2550,10 +2426,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -2570,10 +2443,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2815,12 +2685,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -2837,10 +2702,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -2884,9 +2746,7 @@
           }
         ],
         "widgetName": "StatefulAlarmController",
-        "uiProfiles": [
-          "Alarm"
-        ],
+        "uiProfiles": ["Alarm"],
         "uiClass": "Alarm",
         "qualifiedName": "io:AlarmIOComponent",
         "type": "ACTUATOR"
@@ -3076,12 +2936,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3094,10 +2949,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -3106,10 +2958,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -3126,10 +2975,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3391,12 +3237,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3409,11 +3250,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "unknown"
-            ],
+            "values": ["closed", "open", "unknown"],
             "qualifiedName": "core:OpenClosedUnknownState"
           },
           {
@@ -3426,10 +3263,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3617,12 +3451,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3631,10 +3460,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -3647,10 +3473,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -3883,12 +3706,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -3901,10 +3719,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -3913,10 +3728,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -3933,10 +3745,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -4222,12 +4031,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4240,10 +4044,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -4252,10 +4053,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -4272,10 +4070,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -4561,12 +4356,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4579,10 +4369,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -4591,10 +4378,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -4611,10 +4395,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -4844,12 +4625,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -4858,10 +4634,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "qualifiedName": "core:OnOffState"
           },
           {
@@ -4874,10 +4647,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -5115,12 +4885,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -5133,10 +4898,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
@@ -5145,10 +4907,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -5165,10 +4924,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -5379,9 +5135,7 @@
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -5430,10 +5184,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -5443,9 +5194,7 @@
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -5519,10 +5268,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -5532,9 +5278,7 @@
         ],
         "dataProperties": [],
         "widgetName": "DynamicBridge",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "ProtocolGateway",
         "qualifiedName": "ogp:Bridge",
         "type": "ACTUATOR"
@@ -5586,7 +5330,7 @@
     {
       "creationTime": 1501225111000,
       "lastUpdateTime": 1501225111000,
-      "label": "T\u00e9l\u00e9commande Salon",
+      "label": "Télécommande Salon",
       "deviceURL": "rtds://1234-1234-6233/124768",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5620,9 +5364,7 @@
         ],
         "dataProperties": [],
         "widgetName": "AlarmRemoteController",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "RemoteController",
         "qualifiedName": "rtds:RTDSRemoteControllerComponent",
         "type": "REMOTE_CONTROLLER"
@@ -5660,7 +5402,7 @@
     {
       "creationTime": 1501225074000,
       "lastUpdateTime": 1501225074000,
-      "label": "T\u00e9l\u00e9commande Bureau",
+      "label": "Télécommande Bureau",
       "deviceURL": "rtds://1234-1234-6233/169771",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5694,9 +5436,7 @@
         ],
         "dataProperties": [],
         "widgetName": "AlarmRemoteController",
-        "uiProfiles": [
-          "Specific"
-        ],
+        "uiProfiles": ["Specific"],
         "uiClass": "RemoteController",
         "qualifiedName": "rtds:RTDSRemoteControllerComponent",
         "type": "REMOTE_CONTROLLER"
@@ -5744,28 +5484,18 @@
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "noPersonInside",
-              "personInside"
-            ],
+            "values": ["noPersonInside", "personInside"],
             "qualifiedName": "core:OccupancyState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MotionSensor",
-        "uiProfiles": [
-          "OccupancyDetector"
-        ],
+        "uiProfiles": ["OccupancyDetector"],
         "uiClass": "OccupancySensor",
         "qualifiedName": "rtds:RTDSMotionSensor",
         "type": "SENSOR"
@@ -5795,7 +5525,7 @@
     {
       "creationTime": 1501224970000,
       "lastUpdateTime": 1501224970000,
-      "label": "Entr\u00e9e",
+      "label": "Entrée",
       "deviceURL": "rtds://1234-1234-6233/246258",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5805,28 +5535,18 @@
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "noPersonInside",
-              "personInside"
-            ],
+            "values": ["noPersonInside", "personInside"],
             "qualifiedName": "core:OccupancyState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MotionSensor",
-        "uiProfiles": [
-          "OccupancyDetector"
-        ],
+        "uiProfiles": ["OccupancyDetector"],
         "uiClass": "OccupancySensor",
         "qualifiedName": "rtds:RTDSMotionSensor",
         "type": "SENSOR"
@@ -5866,28 +5586,18 @@
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "noPersonInside",
-              "personInside"
-            ],
+            "values": ["noPersonInside", "personInside"],
             "qualifiedName": "core:OccupancyState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MotionSensor",
-        "uiProfiles": [
-          "OccupancyDetector"
-        ],
+        "uiProfiles": ["OccupancyDetector"],
         "uiClass": "OccupancySensor",
         "qualifiedName": "rtds:RTDSMotionSensor",
         "type": "SENSOR"
@@ -5917,7 +5627,7 @@
     {
       "creationTime": 1501224830000,
       "lastUpdateTime": 1501224830000,
-      "label": "Fen\u00eatre Garage",
+      "label": "Fenêtre Garage",
       "deviceURL": "rtds://1234-1234-6233/394765",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5926,29 +5636,18 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:ContactState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           }
         ],
         "dataProperties": [],
         "widgetName": "ContactSensor",
-        "uiProfiles": [
-          "DoorContactSensor",
-          "ContactDetector"
-        ],
+        "uiProfiles": ["DoorContactSensor", "ContactDetector"],
         "uiClass": "ContactSensor",
         "qualifiedName": "rtds:RTDSContactSensor",
         "type": "SENSOR"
@@ -5987,29 +5686,18 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:ContactState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           }
         ],
         "dataProperties": [],
         "widgetName": "ContactSensor",
-        "uiProfiles": [
-          "DoorContactSensor",
-          "ContactDetector"
-        ],
+        "uiProfiles": ["DoorContactSensor", "ContactDetector"],
         "uiClass": "ContactSensor",
         "qualifiedName": "rtds:RTDSContactSensor",
         "type": "SENSOR"
@@ -6039,7 +5727,7 @@
     {
       "creationTime": 1501225017000,
       "lastUpdateTime": 1501225017000,
-      "label": "D\u00e9tecteur Fum\u00e9e",
+      "label": "Détecteur Fumée",
       "deviceURL": "rtds://1234-1234-6233/711548",
       "shortcut": false,
       "controllableName": "rtds:RTDSSmokeSensor",
@@ -6048,29 +5736,19 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "dead",
-              "lowBattery",
-              "maintenanceRequired",
-              "noDefect"
-            ],
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
             "qualifiedName": "core:SensorDefectState"
           },
           {
             "eventBased": true,
             "type": "DiscreteState",
-            "values": [
-              "detected",
-              "notDetected"
-            ],
+            "values": ["detected", "notDetected"],
             "qualifiedName": "core:SmokeState"
           }
         ],
         "dataProperties": [],
         "widgetName": "SmokeSensor",
-        "uiProfiles": [
-          "SmokeDetector"
-        ],
+        "uiProfiles": ["SmokeDetector"],
         "uiClass": "SmokeSensor",
         "qualifiedName": "rtds:RTDSSmokeSensor",
         "type": "SENSOR"
@@ -6206,23 +5884,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosPlayOneComponent",
         "type": "ACTUATOR"
@@ -6376,23 +6044,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosPlayOneComponent",
         "type": "ACTUATOR"
@@ -6546,23 +6204,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosOneComponent",
         "type": "ACTUATOR"
@@ -6716,23 +6364,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosSubComponent",
         "type": "ACTUATOR"
@@ -6886,23 +6524,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosPlayFiveComponent",
         "type": "ACTUATOR"
@@ -7051,23 +6679,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosPlayBaseComponent",
         "type": "ACTUATOR"
@@ -7221,23 +6839,13 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "forward",
-              "pause",
-              "playing",
-              "rewind",
-              "stop"
-            ],
+            "values": ["forward", "pause", "playing", "rewind", "stop"],
             "qualifiedName": "core:PlayState"
           }
         ],
         "dataProperties": [],
         "widgetName": "MediaRenderer",
-        "uiProfiles": [
-          "StoppableMusicPlayer",
-          "MusicPlayer",
-          "VolumeControl"
-        ],
+        "uiProfiles": ["StoppableMusicPlayer", "MusicPlayer", "VolumeControl"],
         "uiClass": "MusicPlayer",
         "qualifiedName": "upnpcontrol:SonosPlayOneComponent",
         "type": "ACTUATOR"
@@ -7375,12 +6983,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -7389,10 +6992,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -7405,10 +7005,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -7644,12 +7241,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -7666,12 +7258,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "pedestrian",
-              "unknown"
-            ],
+            "values": ["closed", "open", "pedestrian", "unknown"],
             "qualifiedName": "core:OpenClosedPedestrianState"
           },
           {
@@ -7688,10 +7275,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -7735,10 +7319,7 @@
           }
         ],
         "widgetName": "DiscreteGateWithPedestrianPosition",
-        "uiProfiles": [
-          "OpenCloseGateOpener",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
         "uiClass": "Gate",
         "qualifiedName": "io:DiscreteGateOpenerIOComponent",
         "type": "ACTUATOR"
@@ -7877,10 +7458,7 @@
         "states": [],
         "dataProperties": [],
         "widgetName": "OpenCloseGate4T",
-        "uiProfiles": [
-          "CyclicGateOpener",
-          "Cyclic"
-        ],
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
         "uiClass": "Gate",
         "qualifiedName": "rts:GateOpenerRTS4TComponent",
         "type": "ACTUATOR"
@@ -7917,10 +7495,7 @@
           }
         ],
         "widgetName": "UpDownGarageDoor4T",
-        "uiProfiles": [
-          "CyclicGarageOpener",
-          "Cyclic"
-        ],
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
         "uiClass": "GarageDoor",
         "qualifiedName": "rts:GarageDoor4TRTSComponent",
         "type": "ACTUATOR"
@@ -7972,12 +7547,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -7986,12 +7556,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "pedestrian",
-              "unknown"
-            ],
+            "values": ["closed", "open", "pedestrian", "unknown"],
             "qualifiedName": "core:OpenClosedPedestrianState"
           },
           {
@@ -8004,19 +7569,13 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "SlidingDiscreteGateWithPedestrianPosition",
-        "uiProfiles": [
-          "OpenCloseGateOpener",
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
         "uiClass": "Gate",
         "qualifiedName": "io:SlidingDiscreteGateOpenerIOComponent",
         "type": "ACTUATOR"
@@ -8106,25 +7665,17 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "widgetName": "DynamicGarageDoor",
-        "uiProfiles": [
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenClose"],
         "uiClass": "GarageDoor",
         "qualifiedName": "io:DynamicGarageDoorComponent",
         "type": "ACTUATOR"
@@ -8185,34 +7736,22 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "widgetName": "DynamicGarageDoor",
-        "uiProfiles": [
-          "StatefulOpenClose",
-          "OpenClose"
-        ],
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
         "uiClass": "GarageDoor",
         "qualifiedName": "ogp:GarageDoor",
         "type": "ACTUATOR"
@@ -8319,12 +7858,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -8341,10 +7875,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8388,10 +7919,7 @@
           }
         ],
         "widgetName": "CyclicGarageDoor",
-        "uiProfiles": [
-          "CyclicGarageOpener",
-          "Cyclic"
-        ],
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
         "uiClass": "GarageDoor",
         "qualifiedName": "io:CyclicGarageOpenerIOComponent",
         "type": "ACTUATOR"
@@ -8525,12 +8053,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
           {
@@ -8547,10 +8070,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -8594,10 +8114,7 @@
           }
         ],
         "widgetName": "CyclicSwingingGateOpener",
-        "uiProfiles": [
-          "CyclicGateOpener",
-          "Cyclic"
-        ],
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
         "uiClass": "Gate",
         "qualifiedName": "io:CyclicSwingingGateOpenerIOComponent",
         "type": "ACTUATOR"
@@ -8684,26 +8201,17 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open",
-              "partial"
-            ],
+            "values": ["closed", "open", "partial"],
             "qualifiedName": "core:OpenClosedPartialState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "widgetName": "PositionableGarageDoorWithPartialPosition",
-        "uiProfiles": [
-          "OpenClose"
-        ],
+        "uiProfiles": ["OpenClose"],
         "uiClass": "GarageDoor",
         "qualifiedName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
         "type": "ACTUATOR"
@@ -8768,10 +8276,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -8780,27 +8285,18 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
         "dataProperties": [],
         "widgetName": "DynamicGate",
-        "uiProfiles": [
-          "StatefulOpenClose",
-          "OpenClose"
-        ],
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
         "uiClass": "Gate",
         "qualifiedName": "ogp:Gate",
         "type": "ACTUATOR"
@@ -8876,10 +8372,7 @@
         "states": [
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -8888,18 +8381,12 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           }
         ],
@@ -8993,26 +8480,17 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "false",
-              "true"
-            ],
+            "values": ["false", "true"],
             "qualifiedName": "core:MovingState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -9134,10 +8612,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:AvailabilityState"
           },
           {
@@ -9193,10 +8668,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "closed",
-              "open"
-            ],
+            "values": ["closed", "open"],
             "qualifiedName": "core:OpenClosedState"
           },
           {
@@ -9217,10 +8689,7 @@
           },
           {
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "qualifiedName": "core:StatusState"
           },
           {
@@ -9318,48 +8787,32 @@
             {
               "id": "6",
               "type": "favorite1",
-              "features": [
-                "tiltPosition",
-                "openClosePosition"
-              ]
+              "features": ["tiltPosition", "openClosePosition"]
             },
             {
               "id": "4",
               "type": "favorite1",
-              "features": [
-                "tiltPosition",
-                "openClosePosition"
-              ]
+              "features": ["tiltPosition", "openClosePosition"]
             },
             {
               "id": "1",
               "type": "favorite1",
-              "features": [
-                "openClosePosition"
-              ]
+              "features": ["openClosePosition"]
             },
             {
               "id": "2",
               "type": "favorite1",
-              "features": [
-                "tiltPosition"
-              ]
+              "features": ["tiltPosition"]
             },
             {
               "id": "3",
               "type": "favorite1",
-              "features": [
-                "openClosePosition",
-                "tiltPosition"
-              ]
+              "features": ["openClosePosition", "tiltPosition"]
             },
             {
               "id": "5",
               "type": "favorite1",
-              "features": [
-                "openClosePosition",
-                "tiltPosition"
-              ]
+              "features": ["openClosePosition", "tiltPosition"]
             }
           ]
         },
@@ -9762,12 +9215,7 @@
         ],
         "states": [
           {
-            "values": [
-              "good",
-              "low",
-              "normal",
-              "verylow"
-            ],
+            "values": ["good", "low", "normal", "verylow"],
             "type": "DiscreteState",
             "qualifiedName": "core:DiscreteRSSILevelState"
           },
@@ -9776,10 +9224,7 @@
             "qualifiedName": "core:NameState"
           },
           {
-            "values": [
-              "off",
-              "on"
-            ],
+            "values": ["off", "on"],
             "type": "DiscreteState",
             "qualifiedName": "core:OnOffState"
           },
@@ -9792,10 +9237,7 @@
             "qualifiedName": "core:RSSILevelState"
           },
           {
-            "values": [
-              "available",
-              "unavailable"
-            ],
+            "values": ["available", "unavailable"],
             "type": "DiscreteState",
             "qualifiedName": "core:StatusState"
           },
