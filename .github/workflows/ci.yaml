@@ -923,9 +923,10 @@ jobs:
           path: pytest_test_counts.json
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
-            steps.python.outputs.python-version }}-${{ github.sha }}
+            steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}-${{ github.sha }}
           restore-keys: |
-            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}

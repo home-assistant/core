@@ -101,13 +101,6 @@ def test_walk_test_tree_skips_hidden_and_dunder_dirs(tmp_path: Path) -> None:
     assert {p.name for p in test_files} == {"test_real.py"}
 
 
-def test_walk_test_tree_handles_single_file(tmp_path: Path) -> None:
-    """Passing a single test file returns just that file."""
-    file = tmp_path / "test_solo.py"
-    file.write_text("def test_x(): pass\n")
-    assert split_tests._walk_test_tree(file) == ([file], [])
-
-
 def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
     """A single-file root cannot validate conftest drift, so caching is disabled.
 
@@ -209,11 +202,12 @@ def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
     alpha_two = tree / "components" / "alpha" / "test_two.py"
     beta_x = tree / "components" / "beta" / "test_x.py"
 
+    alpha_one_hash = split_tests._hash_file(alpha_one)
     cache = split_tests._Cache(
         conftest_hash="dummy",
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
+                hash=alpha_one_hash, count=1
             ),
             str(alpha_two.relative_to(tree)): split_tests._CacheEntry(
                 hash="stale", count=99
@@ -221,10 +215,10 @@ def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
         },
     )
 
-    cached, missing = split_tests._resolve_from_cache(
+    hits, missing = split_tests._resolve_from_cache(
         [alpha_one, alpha_two, beta_x], cache, tree
     )
-    assert cached == {alpha_one: 1}
+    assert hits == {alpha_one: split_tests._CacheEntry(hash=alpha_one_hash, count=1)}
     assert set(missing) == {alpha_two, beta_x}
 
 

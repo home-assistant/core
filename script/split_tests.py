@@ -188,9 +188,10 @@ def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
 def _iter_eligible_children(path: Path) -> list[Path]:
     """Return immediate children of ``path`` that pytest should collect.
 
-    Filters out hidden/dunder entries, non-``test_*.py`` files (so helper
-    modules like ``conftest.py`` and ``common.py`` are not passed as
-    explicit collection targets), and pycache-style directories.
+    Skips entries whose name starts with ``.`` or ``_`` (hidden dirs,
+    ``__pycache__``, private helpers), and non-``test_*.py`` files (so
+    helper modules like ``conftest.py`` and ``common.py`` are not passed
+    as explicit collection targets).
     """
     children: list[Path] = []
     for entry in sorted(path.iterdir()):
@@ -229,14 +230,11 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     """Walk ``root`` once and return (test files, conftest files).
 
     Uses ``os.walk`` rather than ``Path.rglob`` because it's ~2x faster on
-    a 5000-file tree, and we prune hidden/dunder subdirectories instead of
-    visiting them.  Doing both walks in one pass keeps total tree I/O down.
+    a 5000-file tree, and subdirectories whose names start with ``.`` or
+    ``_`` are pruned instead of visited (hidden dirs, ``__pycache__``,
+    private helpers).  Doing both walks in one pass keeps total tree I/O
+    down.
     """
-    if root.is_file():
-        if root.name.startswith("test_") and root.suffix == ".py":
-            return [root], []
-        return [], []
-
     test_files: list[Path] = []
     conftests: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):
@@ -343,25 +341,23 @@ def _resolve_from_cache(
     test_files: list[Path],
     cache: _Cache,
     root: Path,
-) -> tuple[dict[Path, int], list[Path]]:
-    """Split ``test_files`` into ``(cached_counts, needs_collection)``.
+) -> tuple[dict[Path, _CacheEntry], list[Path]]:
+    """Split ``test_files`` into ``(cached_entries, needs_collection)``.
 
     A file is served from cache when its content hash matches what we
-    previously stored; otherwise it is queued for re-collection.
+    previously stored; otherwise it is queued for re-collection.  Hits
+    return the full ``_CacheEntry`` so callers can reuse the verified
+    hash when rewriting the cache instead of re-reading the file.
     """
-    cached: dict[Path, int] = {}
+    hits: dict[Path, _CacheEntry] = {}
     misses: list[Path] = []
     for file in test_files:
-        key = str(file.relative_to(root))
-        entry = cache.entries.get(key)
-        if entry is None:
+        entry = cache.entries.get(str(file.relative_to(root)))
+        if entry is not None and entry.hash == _hash_file(file):
+            hits[file] = entry
+        else:
             misses.append(file)
-            continue
-        if entry.hash != _hash_file(file):
-            misses.append(file)
-            continue
-        cached[file] = entry.count
-    return cached, misses
+    return hits, misses
 
 
 def _run_collect_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
@@ -404,6 +400,28 @@ def _run_pytest_collect(paths: list[Path]) -> dict[Path, int]:
     return counts
 
 
+def _build_folder(root: Path, counts: dict[Path, int]) -> TestFolder:
+    """Build a ``TestFolder`` from a flat ``{path: count}`` mapping.
+
+    Files reported with zero tests are skipped so they don't enter
+    bucketing (helper modules named ``test_*.py`` with no test functions
+    look like test files to the walker but pytest returns nothing for
+    them).
+    """
+    folder = TestFolder(root)
+    for file_path, count in counts.items():
+        if count:
+            folder.add_test_file(TestFile(count, file_path))
+    return folder
+
+
+def _exit_if_empty(paths: list[Path], root: Path) -> None:
+    """Exit with a clear message when no eligible test paths were found."""
+    if not paths:
+        print(f"No eligible test paths found under {root}")
+        sys.exit(1)
+
+
 def _collect_tests_uncached(path: Path) -> TestFolder:
     """Collect tests by handing pytest the top-level directories.
 
@@ -411,30 +429,21 @@ def _collect_tests_uncached(path: Path) -> TestFolder:
     requested so the script behaves like the pre-cache implementation.
     """
     batch_paths = _enumerate_batch_paths(path)
-    if not batch_paths:
-        print(f"No eligible test paths found under {path}")
-        sys.exit(1)
-
-    folder = TestFolder(path)
-    for file_path, total_tests in _run_pytest_collect(batch_paths).items():
-        folder.add_test_file(TestFile(total_tests, file_path))
-    return folder
+    _exit_if_empty(batch_paths, path)
+    return _build_folder(path, _run_pytest_collect(batch_paths))
 
 
 def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     """Collect tests using an on-disk cache for incremental updates."""
     all_test_files, conftests = _walk_test_tree(path)
-    if not all_test_files:
-        print(f"No eligible test paths found under {path}")
-        sys.exit(1)
+    _exit_if_empty(all_test_files, path)
 
     conftest_hash = _compute_conftest_hash(path, conftests)
     cache = _Cache.load(cache_path, conftest_hash)
 
-    cached_counts, missing = _resolve_from_cache(all_test_files, cache, path)
+    hits, missing = _resolve_from_cache(all_test_files, cache, path)
     print(
-        f"Cache: {len(cached_counts)} hits / {len(missing)} misses"
-        f" / {len(all_test_files)} total"
+        f"Cache: {len(hits)} hits / {len(missing)} misses / {len(all_test_files)} total"
     )
 
     new_counts: dict[Path, int] = {}
@@ -443,44 +452,24 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
         # instead of 5000+ individual file paths: pytest walks dirs much
         # faster than it resolves each file argument.  Once any cache hits
         # exist, use file-level collection so we only re-collect the diff.
-        if not cached_counts:
-            collect_paths = _enumerate_batch_paths(path)
-        else:
-            collect_paths = missing
+        collect_paths = _enumerate_batch_paths(path) if not hits else missing
         new_counts = _run_pytest_collect(collect_paths)
 
-    counts: dict[Path, int] = {**cached_counts, **new_counts}
-
-    folder = TestFolder(path)
-    for file_path, total_tests in counts.items():
-        if total_tests == 0:
-            # Files with no collected tests (eg helper modules named
-            # test_init.py with no test functions) shouldn't enter
-            # bucketing, but we still cache them below as count=0 so
-            # they don't get re-collected next run.
-            continue
-        folder.add_test_file(TestFile(total_tests, file_path))
-
-    # Rebuild the cache from scratch on every run so deleted files are
-    # dropped and re-collected files get a refreshed hash.
-    missing_set = set(missing)
-    updated_entries: dict[str, _CacheEntry] = {}
-    for file in all_test_files:
-        if file in counts:
-            count = counts[file]
-        elif file in missing_set:
-            # We asked pytest about this file and got no count back,
-            # so it has no collectible tests; cache it as 0 to avoid
-            # repeating the work next run.
-            count = 0
-        else:
-            continue
-        updated_entries[str(file.relative_to(path))] = _CacheEntry(
-            hash=_hash_file(file), count=count
+    # Reuse the hash already verified during resolve for hits; only hash
+    # files we actually re-collected.  Files in ``missing`` that pytest
+    # returned no count for are stored as 0 so we stop re-collecting them.
+    entries: dict[str, _CacheEntry] = {
+        str(file.relative_to(path)): entry for file, entry in hits.items()
+    }
+    for file in missing:
+        entries[str(file.relative_to(path))] = _CacheEntry(
+            hash=_hash_file(file), count=new_counts.get(file, 0)
         )
-    _Cache(conftest_hash=conftest_hash, entries=updated_entries).save(cache_path)
+    _Cache(conftest_hash=conftest_hash, entries=entries).save(cache_path)
 
-    return folder
+    counts: dict[Path, int] = {file: entry.count for file, entry in hits.items()}
+    counts.update(new_counts)
+    return _build_folder(path, counts)
 
 
 def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
