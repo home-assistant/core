@@ -15,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import (
     SMART_DUAL_WATER_CONTROL_SERVICE_INFO,
@@ -134,7 +135,7 @@ async def test_valvex_switching(
     hass: HomeAssistant,
     mock_client: Mock,
     mock_valvex_chars: dict[str, bytes],
-    service_info,
+    service_info: BluetoothServiceInfo,
     service: type[ValveX],
 ) -> None:
     """Open/close on the new Smart Water Control family calls start/stop_watering."""

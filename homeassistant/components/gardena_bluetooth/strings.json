@@ -28,14 +28,14 @@
       "sensor_connected_state": {
         "name": "Sensor connection"
       },
-      "valve_connected_state": {
-        "name": "Valve connection"
-      },
       "valve_available_valve_1": {
         "name": "Valve 1 available"
       },
       "valve_available_valve_2": {
         "name": "Valve 2 available"
+      },
+      "valve_connected_state": {
+        "name": "Valve connection"
       }
     },
     "button": {
@@ -44,14 +44,14 @@
       }
     },
     "number": {
-      "manual_watering_time": {
-        "name": "Manual watering time"
-      },
       "manual_watering_duration_valve_1": {
         "name": "Valve 1 manual watering time"
       },
       "manual_watering_duration_valve_2": {
         "name": "Valve 2 manual watering time"
+      },
+      "manual_watering_time": {
+        "name": "Manual watering time"
       },
       "rain_pause": {
         "name": "Rain pause"
@@ -188,20 +188,20 @@
         "name": "Valve 2"
       }
     },
-    "valve": {
-      "valve_1": {
-        "name": "Valve 1"
-      },
-      "valve_2": {
-        "name": "Valve 2"
-      }
-    },
     "text": {
       "contour_name": {
         "name": "Contour {number}"
       },
       "position_name": {
         "name": "Position {number}"
+      }
+    },
+    "valve": {
+      "valve_1": {
+        "name": "Valve 1"
+      },
+      "valve_2": {
+        "name": "Valve 2"
       }
     }
   }

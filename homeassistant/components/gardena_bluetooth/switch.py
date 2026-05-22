@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothEntity
 
+FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,14 +29,9 @@ async def async_setup_entry(
     ):
         entities.append(GardenaBluetoothValveSwitch(coordinator))
 
-    for service in (Valve1, Valve2):
-        required = {
-            service.state.unique_id,
-            service.start_watering.unique_id,
-            service.stop_watering.unique_id,
-        }
-        if required.issubset(coordinator.characteristics):
-            entities.append(GardenaBluetoothValveXSwitch(coordinator, service))
+    for entity_cls in (GardenaBluetoothValve1Switch, GardenaBluetoothValve2Switch):
+        if entity_cls.characteristics.issubset(coordinator.characteristics):
+            entities.append(entity_cls(coordinator))
 
     async_add_entities(entities)
 
@@ -83,29 +80,30 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
 
 
 class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
-    """Switch alias for the Smart Water Control family (Valve1/Valve2)."""
+    """Base switch alias for the Smart Water Control family (Valve1/Valve2)."""
+
+    _service: type[ValveX]
+    characteristics: set[str]
+
+    _attr_is_on: bool | None = None
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
         coordinator: GardenaBluetoothCoordinator,
-        service: type[ValveX],
     ) -> None:
         """Initialize the switch."""
         super().__init__(
             coordinator,
             {
-                service.state.uuid,
-                service.manual_watering_duration.uuid,
-                service.available.uuid,
+                self._service.state.uuid,
+                self._service.manual_watering_duration.uuid,
+                self._service.available.uuid,
             },
         )
-        self._service = service
-        self._attr_unique_id = f"{coordinator.address}-{service.state.unique_id}-switch"
-        self._attr_translation_key = (
-            "state_valve_2" if service is Valve2 else "state_valve_1"
+        self._attr_unique_id = (
+            f"{coordinator.address}-{self._service.state.unique_id}-switch"
         )
-        self._attr_is_on = None
-        self._attr_entity_registry_enabled_default = False
 
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(self._service.state)
@@ -114,7 +112,8 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on for the configured manual watering duration."""
         duration = (
-            self.coordinator.get_cached(self._service.manual_watering_duration) or 1800
+            self.coordinator.get_cached(self._service.manual_watering_duration)
+            or FALLBACK_WATERING_TIME_IN_SECONDS
         )
         await self.coordinator.client.start_watering(self._service, duration)
         self._attr_is_on = True
@@ -127,3 +126,27 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
         await self.coordinator.async_refresh()
+
+
+class GardenaBluetoothValve1Switch(GardenaBluetoothValveXSwitch):
+    """Valve1 switch (G-19033 wc_single, valve 1 of G-19034 wc_dual)."""
+
+    _service = Valve1
+    _attr_translation_key = "state_valve_1"
+    characteristics = {
+        Valve1.state.unique_id,
+        Valve1.start_watering.unique_id,
+        Valve1.stop_watering.unique_id,
+    }
+
+
+class GardenaBluetoothValve2Switch(GardenaBluetoothValveXSwitch):
+    """Valve2 switch (G-19034 wc_dual second valve)."""
+
+    _service = Valve2
+    _attr_translation_key = "state_valve_2"
+    characteristics = {
+        Valve2.state.unique_id,
+        Valve2.start_watering.unique_id,
+        Valve2.stop_watering.unique_id,
+    }
