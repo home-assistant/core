@@ -651,9 +651,6 @@ class ReolinkHost:
         if self._api.baichuan.privacy_mode():
             return  # API is shutdown, no need to subscribe
 
-        if self._api.is_battery:
-            return  # Battery cameras do not support ONVIF subscriptions
-
         try:
             if (
                 self._onvif_push_supported
