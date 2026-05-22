@@ -84,7 +84,7 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(token_manager.get_user_id())
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates={
@@ -95,33 +95,6 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self._show_form(step_id="reauth_confirm", errors=errors)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
-
-        if user_input:
-            try:
-                token_manager = await _authenticate_user(user_input)
-            except InvalidCredentialsException, BadCredentialsException:
-                errors["base"] = "invalid_auth"
-            except FailedConnectionException:
-                errors["base"] = "cannot_connect"
-            else:
-                await self.async_set_unique_id(token_manager.get_user_id())
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data_updates={
-                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
-                        CONF_REFRESH_TOKEN: user_input[CONF_REFRESH_TOKEN],
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                    },
-                )
-
-        return self._show_form(step_id="reconfigure", errors=errors)
 
     def _show_form(self, step_id: str, errors: dict[str, str]) -> ConfigFlowResult:
         return self.async_show_form(
