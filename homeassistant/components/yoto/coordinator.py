@@ -8,7 +8,7 @@ from yoto_api import Token, YotoClient, YotoError, YotoPlayer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
@@ -93,7 +93,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
         try:
             await self._session.async_ensure_token_valid()
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",

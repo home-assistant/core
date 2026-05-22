@@ -4,7 +4,7 @@ import aiohttp
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YotoConfigEntry) -> bool
 
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientError as err:
+    except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
         raise ConfigEntryNotReady from err
 
     coordinator = YotoDataUpdateCoordinator(hass, entry, session)

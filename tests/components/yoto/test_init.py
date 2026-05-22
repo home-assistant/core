@@ -1,15 +1,20 @@
 """Tests for the Yoto integration setup."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yoto_api import YotoAPIError, YotoError
 
-from homeassistant.components.yoto.const import SCAN_INTERVAL, STATUS_PUSH_INTERVAL
+from homeassistant.components.yoto.const import (
+    DOMAIN,
+    SCAN_INTERVAL,
+    STATUS_PUSH_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -138,14 +143,22 @@ async def test_setup_retries_when_implementation_missing(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_retries_on_token_refresh_network_error(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        aiohttp.ClientError("boom"),
+        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+    ],
+)
+async def test_setup_retries_on_token_validation_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
-    """A network error while validating the token defers setup."""
+    """A failure refreshing the OAuth token defers setup."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=aiohttp.ClientError("boom"),
+        side_effect=side_effect,
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -178,17 +191,25 @@ async def test_setup_succeeds_without_card_library(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        aiohttp.ClientError("boom"),
+        OAuth2TokenRequestError(request_info=Mock(), domain=DOMAIN),
+    ],
+)
 @pytest.mark.usefixtures("mock_yoto_client")
-async def test_periodic_poll_fails_on_network_error(
+async def test_periodic_poll_fails_on_token_validation_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
 ) -> None:
-    """A network error during periodic refresh marks the coordinator failed."""
+    """A failure refreshing the OAuth token marks the coordinator failed."""
     await setup_integration(hass, mock_config_entry)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=aiohttp.ClientError("boom"),
+        side_effect=side_effect,
     ):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
