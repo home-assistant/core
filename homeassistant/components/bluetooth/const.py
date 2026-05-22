@@ -39,3 +39,10 @@ START_TIMEOUT = 15
 # are not present
 LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS = 120
 BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS = 5
+
+# Defaults used when an ACTIVE-mode async_register_callback is made without
+# explicit scan_interval / scan_duration values. The integration is expected
+# to declare its actual cadence; these defaults exist so unmigrated callers
+# still get on-demand active windows instead of continuous active scanning.
+DEFAULT_ACTIVE_SCAN_INTERVAL: Final = 120.0  # 2 minutes
+DEFAULT_ACTIVE_SCAN_DURATION: Final = 10.0

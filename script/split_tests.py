@@ -85,7 +85,7 @@ class BucketHolder:
         if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
 
-    def create_ouput_file(self) -> None:
+    def create_output_file(self) -> None:
         """Create output file."""
         with Path("pytest_buckets.txt").open("w", encoding="utf-8") as file:
             for idx, bucket in enumerate(self._buckets):
@@ -250,16 +250,42 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     return test_files, conftests
 
 
+def _find_ancestor_conftests(root: Path) -> list[Path]:
+    """Return ancestor ``conftest.py`` files that pytest would still apply.
+
+    Pytest walks up from each test file looking for conftests; when
+    ``root`` is a subtree (eg ``tests/components``) the conftests above
+    it (eg ``tests/conftest.py``) still affect parametrization, so they
+    must contribute to the invalidation hash too.  Stops at the first
+    ancestor without a ``conftest.py``.
+    """
+    ancestors: list[Path] = []
+    current = root.resolve().parent
+    while True:
+        conftest = current / "conftest.py"
+        if not conftest.is_file():
+            break
+        ancestors.append(conftest)
+        if current == current.parent:
+            break
+        current = current.parent
+    return ancestors
+
+
 def _compute_conftest_hash(root: Path, conftests: list[Path]) -> str:
-    """Return a hash that changes whenever any conftest.py under ``root`` changes.
+    """Return a hash that changes whenever any conftest in ``conftests`` changes.
 
     Any change to a conftest invalidates the entire test-count cache.  This is
     coarse but safe: conftests can change fixture parametrization in ways the
     cache cannot otherwise detect, so we just re-collect everything.
+
+    Paths are encoded with ``os.path.relpath`` so the hash stays stable
+    across machines and also covers ancestor conftests above ``root``
+    (whose ``relative_to(root)`` would fail).
     """
     digest = hashlib.sha256()
     for conftest in conftests:
-        digest.update(str(conftest.relative_to(root)).encode())
+        digest.update(os.path.relpath(conftest, root).encode())
         digest.update(b"\0")
         digest.update(conftest.read_bytes())
         digest.update(b"\0")
@@ -438,7 +464,10 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     all_test_files, conftests = _walk_test_tree(path)
     _exit_if_empty(all_test_files, path)
 
-    conftest_hash = _compute_conftest_hash(path, conftests)
+    # Include ancestor conftests so a subtree run (eg tests/components)
+    # still invalidates when tests/conftest.py changes.
+    all_conftests = _find_ancestor_conftests(path) + conftests
+    conftest_hash = _compute_conftest_hash(path, all_conftests)
     cache = _Cache.load(cache_path, conftest_hash)
 
     hits, missing = _resolve_from_cache(all_test_files, cache, path)
@@ -528,7 +557,7 @@ def main() -> None:
     print(f"Total tests: {tests.total_tests}")
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
-    bucket_holder.create_ouput_file()
+    bucket_holder.create_output_file()
 
 
 if __name__ == "__main__":

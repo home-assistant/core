@@ -918,7 +918,8 @@ jobs:
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore pytest test counts cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        id: cache-pytest-counts
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json
           key: >-
@@ -935,6 +936,19 @@ jobs:
           python -m script.split_tests \
             --cache pytest_test_counts.json \
             ${TEST_GROUP_COUNT} tests
+      - name: Save pytest test counts cache
+        # Only the canonical dev push writes the cache, otherwise every PR
+        # build would create a new entry and the actions/cache quota fills
+        # up with near-duplicate snapshots.  PRs and feature branches still
+        # restore from dev's most recent cache via restore-keys.
+        if: |
+          github.event_name == 'push'
+          && github.ref == 'refs/heads/dev'
+          && steps.cache-pytest-counts.outputs.cache-hit != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: pytest_test_counts.json
+          key: ${{ steps.cache-pytest-counts.outputs.cache-primary-key }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

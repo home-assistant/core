@@ -80,6 +80,38 @@ def test_compute_conftest_hash_stable_for_non_conftest_changes(tree: Path) -> No
     assert before == after
 
 
+def test_find_ancestor_conftests_walks_up_until_gap(tmp_path: Path) -> None:
+    """Ancestor conftests are collected up to the first dir without one."""
+    nested = tmp_path / "a" / "b" / "c"
+    nested.mkdir(parents=True)
+    # No conftest in tmp_path → walk stops there.
+    (tmp_path / "a" / "conftest.py").write_text("# a\n")
+    (tmp_path / "a" / "b" / "conftest.py").write_text("# b\n")
+
+    ancestors = split_tests._find_ancestor_conftests(nested)
+    assert [p.relative_to(tmp_path).as_posix() for p in ancestors] == [
+        "a/b/conftest.py",
+        "a/conftest.py",
+    ]
+
+
+def test_compute_conftest_hash_changes_on_ancestor_change(tmp_path: Path) -> None:
+    """An ancestor conftest edit must invalidate a subtree run's cache."""
+    (tmp_path / "conftest.py").write_text("# parent\n")
+    subtree = tmp_path / "components"
+    subtree.mkdir()
+    (subtree / "test_x.py").write_text("def test_x(): pass\n")
+
+    def _hash() -> str:
+        _, descendant = split_tests._walk_test_tree(subtree)
+        ancestors = split_tests._find_ancestor_conftests(subtree)
+        return split_tests._compute_conftest_hash(subtree, ancestors + descendant)
+
+    before = _hash()
+    (tmp_path / "conftest.py").write_text("# parent changed\n")
+    assert _hash() != before
+
+
 def test_walk_test_tree_finds_tests_and_conftests(tree: Path) -> None:
     """The walker returns test files and conftest files but no helpers."""
     test_files, conftests = split_tests._walk_test_tree(tree)
