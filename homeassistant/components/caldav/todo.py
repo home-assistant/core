@@ -60,7 +60,7 @@ async def async_setup_entry(
     )
 
 
-def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
+def _todo_item(resource: caldav.calendarobjectresource.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
     if (
         not hasattr(resource.instance, "vtodo")
@@ -100,7 +100,7 @@ class WebDavTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
+    def __init__(self, calendar: caldav.collection.Calendar, config_entry_id: str) -> None:
         """Initialize WebDavTodoListEntity."""
         self._calendar = calendar
         self._attr_name = (calendar.name or "Unknown").capitalize()
