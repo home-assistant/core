@@ -309,15 +309,21 @@ def _file_fixture_hash(
     test_file: Path,
     root: Path,
     fixtures_by_dir: dict[Path, list[Path]],
+    blob_cache: dict[Path, bytes] | None = None,
+    dir_cache: dict[Path, str] | None = None,
 ) -> str:
     """Hash every ``.py`` fixture on the test file's ancestor path.
 
     Catches conftests and helper modules (``common.py`` etc.) at any
     level so parametrize imports from shared helpers invalidate
-    descendants, while sibling subtrees stay warm.
+    descendants, while sibling subtrees stay warm.  Pass shared
+    ``blob_cache``/``dir_cache`` dicts to memoize across many files.
     """
+    test_dir = test_file.parent.resolve()
+    if dir_cache is not None and (cached := dir_cache.get(test_dir)) is not None:
+        return cached
     relevant: list[Path] = []
-    current = test_file.parent.resolve()
+    current = test_dir
     while True:
         relevant.extend(fixtures_by_dir.get(current, ()))
         parent = current.parent
@@ -325,14 +331,24 @@ def _file_fixture_hash(
             break
         current = parent
     relevant.sort()
-    # relpath keeps the hash machine-stable across ancestor paths.
     digest = hashlib.sha256()
     for fixture in relevant:
-        digest.update(os.path.relpath(fixture, root).encode())
-        digest.update(b"\0")
-        digest.update(fixture.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
+        blob = blob_cache.get(fixture) if blob_cache is not None else None
+        if blob is None:
+            # relpath keeps the hash machine-stable across ancestor paths.
+            blob = (
+                os.path.relpath(fixture, root).encode()
+                + b"\0"
+                + fixture.read_bytes()
+                + b"\0"
+            )
+            if blob_cache is not None:
+                blob_cache[fixture] = blob
+        digest.update(blob)
+    result = digest.hexdigest()
+    if dir_cache is not None:
+        dir_cache[test_dir] = result
+    return result
 
 
 @dataclass
@@ -423,12 +439,18 @@ def _resolve_entries(
 
     Hits reuse the stored entry; misses get fresh hashes with a
     count=0 placeholder for the caller to fill in after pytest runs.
+    Shared caches memoize fixture blobs and per-dir hashes so each
+    fixture file is read once and each unique dir hashed once.
     """
+    blob_cache: dict[Path, bytes] = {}
+    dir_cache: dict[Path, str] = {}
     entries: dict[Path, _CacheEntry] = {}
     misses: list[Path] = []
     for file in test_files:
         file_hash = _hash_file(file)
-        fixture_hash = _file_fixture_hash(file, root, fixtures_by_dir)
+        fixture_hash = _file_fixture_hash(
+            file, root, fixtures_by_dir, blob_cache, dir_cache
+        )
         cached = cache.entries.get(str(file.relative_to(root)))
         if (
             cached is not None
