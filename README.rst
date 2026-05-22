@@ -24,9 +24,9 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://www.home-assistant.io/join-chat/
-.. |screenshot-states| image:: .github/assets/screenshot-states.png
+.. |screenshot-states| image:: ./.github/assets/screenshot-states.png
    :target: https://demo.home-assistant.io
-.. |screenshot-integrations| image:: .github/assets/screenshot-integrations.png
+.. |screenshot-integrations| image:: ./.github/assets/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/
 .. |ohf-logo| image:: https://www.openhomefoundation.org/badges/home-assistant.png
    :alt: Home Assistant - A project from the Open Home Foundation
