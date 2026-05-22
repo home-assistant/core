@@ -499,21 +499,19 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
         collect_paths = _enumerate_batch_paths(path) if not hits else list(miss_hashes)
         new_counts = _run_pytest_collect(collect_paths)
 
-    # Reuse hashes computed during resolve: hits carry the stored hash,
-    # misses carry the just-computed one, so each file is read once.
-    # Files in misses that pytest returned no count for are stored as 0
-    # so we stop re-collecting them on the next run.
-    entries: dict[str, _CacheEntry] = {
-        str(file.relative_to(path)): entry for file, entry in hits.items()
-    }
-    for file, file_hash in miss_hashes.items():
-        entries[str(file.relative_to(path))] = _CacheEntry(
-            hash=file_hash, count=new_counts.get(file, 0)
-        )
+    # Walk the full set of test files once and decide each file's entry:
+    # hits keep their stored entry (and verified hash), misses build a
+    # fresh entry from the resolve-time hash plus the freshly collected
+    # count.  Files in misses that pytest returned no count for are
+    # stored as 0 so they stop re-collecting on the next run.
+    entries: dict[str, _CacheEntry] = {}
+    counts: dict[Path, int] = {}
+    for file in all_test_files:
+        if (entry := hits.get(file)) is None:
+            entry = _CacheEntry(hash=miss_hashes[file], count=new_counts.get(file, 0))
+        entries[str(file.relative_to(path))] = entry
+        counts[file] = entry.count
     _Cache(invalidation_hash=invalidation_hash, entries=entries).save(cache_path)
-
-    counts: dict[Path, int] = {file: entry.count for file, entry in hits.items()}
-    counts.update(new_counts)
     return _build_folder(path, counts)
 
 

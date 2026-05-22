@@ -1,5 +1,6 @@
 """Tests for the split_tests cache logic."""
 
+from collections.abc import Callable
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -61,6 +62,50 @@ def _invalidation_hash_for(tree: Path) -> str:
     """Compute the invalidation hash for ``tree`` (helper for the tests below)."""
     _, fixtures = split_tests._walk_test_tree(tree)
     return split_tests._compute_invalidation_hash(tree, fixtures)
+
+
+def _prime_cache(
+    cache_path: Path,
+    tree: Path,
+    hits: dict[Path, int] | None = None,
+    extra_entries: dict[str, split_tests._CacheEntry] | None = None,
+) -> None:
+    """Save a cache for ``tree`` keyed on real file hashes.
+
+    ``hits`` maps an on-disk test file to its cached count; the helper
+    computes the file's real hash so the cache will resolve as a hit on
+    next run.  ``extra_entries`` lets a test inject entries whose path
+    does not exist on disk (e.g. ghost files).
+    """
+    entries: dict[str, split_tests._CacheEntry] = {
+        str(file.relative_to(tree)): split_tests._CacheEntry(
+            hash=split_tests._hash_file(file), count=count
+        )
+        for file, count in (hits or {}).items()
+    }
+    if extra_entries:
+        entries.update(extra_entries)
+    split_tests._Cache(
+        invalidation_hash=_invalidation_hash_for(tree),
+        entries=entries,
+    ).save(cache_path)
+
+
+def _echo_one_test_each(
+    skip: set[Path] | None = None,
+) -> Callable[[list[Path]], list[tuple[str, str, int]]]:
+    """Build a fake ``_run_collect_batches`` that returns 1 test per path.
+
+    Any path in ``skip`` is silently omitted from the output (simulating
+    pytest finding no tests under it).
+    """
+    skip = skip or set()
+
+    def fake(paths: list[Path]) -> list[tuple[str, str, int]]:
+        emitted = [p for p in paths if p not in skip]
+        return [("\n".join(f"{p}: 1" for p in emitted) + "\n", "", 0)]
+
+    return fake
 
 
 def test_compute_invalidation_hash_changes_when_conftest_changes(tree: Path) -> None:
@@ -284,16 +329,8 @@ def test_collect_tests_hashes_each_file_once(tree: Path) -> None:
     """
     cache_path = tree / "cache.json"
     alpha_one = tree / "components" / "alpha" / "test_one.py"
-    # Prime the cache with a hit so we exercise both the hit path and
-    # the file-level (not directory-level) miss path together.
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries={
-            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
-            ),
-        },
-    ).save(cache_path)
+    # Prime with one hit so we exercise the file-level (not directory-level) miss path.
+    _prime_cache(cache_path, tree, hits={alpha_one: 1})
 
     real_hash = split_tests._hash_file
     counts: dict[Path, int] = {}
@@ -302,12 +339,11 @@ def test_collect_tests_hashes_each_file_once(tree: Path) -> None:
         counts[path] = counts.get(path, 0) + 1
         return real_hash(path)
 
-    def fake_run_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
-        return [("\n".join(f"{p}: 1" for p in paths) + "\n", "", 0)]
-
     with (
         patch.object(split_tests, "_hash_file", side_effect=counting_hash),
-        patch.object(split_tests, "_run_collect_batches", side_effect=fake_run_batches),
+        patch.object(
+            split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
+        ),
     ):
         split_tests.collect_tests(tree, cache_path)
 
@@ -320,20 +356,7 @@ def test_collect_tests_warm_cache_skips_pytest(tree: Path) -> None:
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     alpha_two = tree / "components" / "alpha" / "test_two.py"
     beta_x = tree / "components" / "beta" / "test_x.py"
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries={
-            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
-            ),
-            str(alpha_two.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_two), count=2
-            ),
-            str(beta_x.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(beta_x), count=3
-            ),
-        },
-    ).save(cache_path)
+    _prime_cache(cache_path, tree, hits={alpha_one: 1, alpha_two: 2, beta_x: 3})
 
     with patch.object(split_tests, "_run_collect_batches") as run_batches:
         folder = split_tests.collect_tests(tree, cache_path)
@@ -348,28 +371,10 @@ def test_collect_tests_cold_cache_collects_only_missing(tree: Path) -> None:
     alpha_two = tree / "components" / "alpha" / "test_two.py"
     beta_x = tree / "components" / "beta" / "test_x.py"
 
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries={
-            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
-            ),
-        },
-    ).save(cache_path)
-
-    def fake_run_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
-        # Re-collected files emit one fake test each so we can verify which
-        # ones the batched runner was asked for.
-        return [
-            (
-                "\n".join(f"{p}: 1" for p in paths) + "\n",
-                "",
-                0,
-            )
-        ]
+    _prime_cache(cache_path, tree, hits={alpha_one: 1})
 
     with patch.object(
-        split_tests, "_run_collect_batches", side_effect=fake_run_batches
+        split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
     ) as run_batches:
         folder = split_tests.collect_tests(tree, cache_path)
 
@@ -402,22 +407,12 @@ def test_collect_tests_caches_files_with_no_collected_tests(tree: Path) -> None:
     # Prime the cache with one hit so collect_tests takes the file-level
     # diff path; the cold-cache path hands pytest top-level directories
     # rather than individual file paths.
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries={
-            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
-            ),
-        },
-    ).save(cache_path)
-
-    def fake_run_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
-        # Pretend pytest didn't see alpha_two at all.
-        emitted = [p for p in paths if p != alpha_two]
-        return [("\n".join(f"{p}: 1" for p in emitted) + "\n", "", 0)]
+    _prime_cache(cache_path, tree, hits={alpha_one: 1})
 
     with patch.object(
-        split_tests, "_run_collect_batches", side_effect=fake_run_batches
+        split_tests,
+        "_run_collect_batches",
+        side_effect=_echo_one_test_each(skip={alpha_two}),
     ):
         split_tests.collect_tests(tree, cache_path)
 
@@ -441,27 +436,15 @@ def test_collect_tests_drops_deleted_files_from_cache(tree: Path) -> None:
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     ghost_rel = "components/alpha/test_ghost.py"
 
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries={
-            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=split_tests._hash_file(alpha_one), count=1
-            ),
-            ghost_rel: split_tests._CacheEntry(hash="dead", count=42),
-        },
-    ).save(cache_path)
-
-    def fake_run_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
-        return [
-            (
-                "\n".join(f"{p}: 1" for p in paths) + "\n",
-                "",
-                0,
-            )
-        ]
+    _prime_cache(
+        cache_path,
+        tree,
+        hits={alpha_one: 1},
+        extra_entries={ghost_rel: split_tests._CacheEntry(hash="dead", count=42)},
+    )
 
     with patch.object(
-        split_tests, "_run_collect_batches", side_effect=fake_run_batches
+        split_tests, "_run_collect_batches", side_effect=_echo_one_test_each()
     ):
         split_tests.collect_tests(tree, cache_path)
 
