@@ -798,7 +798,7 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'homewizard',
@@ -813,7 +813,7 @@
 # name: test_sensors[HWE-BAT-entity_ids10][sensor.device_uptime:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Device Uptime',
     }),
     'context': <ANY>,

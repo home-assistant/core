@@ -35,7 +35,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
-from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
@@ -65,13 +64,6 @@ def to_percentage(value: float | None) -> float | None:
     """Convert 0..1 value to percentage when value is not None."""
     return value * 100 if value is not None else None
 
-
-def uptime_to_datetime(value: int) -> datetime:
-    """Convert seconds to datetime timestamp."""
-    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
-
-
-uptime_to_stable_datetime = ignore_variance(uptime_to_datetime, timedelta(minutes=5))
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
@@ -643,7 +635,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
@@ -651,7 +643,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         ),
         value_fn=(
             lambda data: (
-                uptime_to_stable_datetime(data.system.uptime_s)
+                utcnow() - timedelta(seconds=data.system.uptime_s)
                 if data.system is not None and data.system.uptime_s is not None
                 else None
             )
