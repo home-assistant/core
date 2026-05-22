@@ -16,4 +16,4 @@ class AnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        return self.async_create_entry(title="Analytics", data=user_input or {})
+        return self.async_create_entry(title="Analytics", data={})
