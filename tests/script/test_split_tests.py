@@ -166,13 +166,15 @@ def test_find_ancestor_conftests_walks_through_gaps(tmp_path: Path) -> None:
     (tmp_path / "a" / "conftest.py").write_text("# a\n")
     (tmp_path / "a" / "b" / "c" / "conftest.py").write_text("# c\n")
 
-    ancestors = split_tests._find_ancestor_conftests(nested)
-    found = {p.relative_to(tmp_path).as_posix() for p in ancestors}
-    assert {"a/c/conftest.py", "a/conftest.py"} & found == {"a/conftest.py"}
-    # The c-level conftest is not an ancestor of ``nested`` (it IS ``nested``);
-    # ``nested.parent`` is ``a/b``, so the walk starts there.  ``a/conftest.py``
-    # must be found despite the missing conftest in ``a/b``.
+    found = {
+        p.relative_to(tmp_path).as_posix()
+        for p in split_tests._find_ancestor_conftests(nested)
+    }
+    # The walk starts at ``nested.parent`` (a/b), so a/b/c/conftest.py is
+    # not an ancestor.  a/conftest.py must be found despite a/b having no
+    # conftest of its own.
     assert "a/conftest.py" in found
+    assert "a/b/c/conftest.py" not in found
 
 
 def test_file_fixture_hash_picks_up_ancestor_conftest_across_gap(
@@ -504,7 +506,7 @@ def test_collect_tests_falls_back_to_dirs_when_misses_dominate(tree: Path) -> No
     cache_path = tree / "cache.json"
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     _prime_cache(cache_path, tree, hits={alpha_one: 1})
-    # 1 hit / 3 total = 33% miss, above the 30% default threshold; this
+    # 2 misses / 3 total = 67% miss, above the 30% default threshold; this
     # also covers the new-directory PR case (mostly-new test files).
 
     with patch.object(

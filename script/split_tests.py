@@ -370,24 +370,20 @@ class _Cache:
     entries: dict[str, _CacheEntry]
 
     @classmethod
-    def empty(cls) -> _Cache:
-        """Return a new empty cache."""
-        return cls(entries={})
-
-    @classmethod
     def load(cls, path: Path) -> _Cache:
         """Load cache; any drift (missing, bad, version, malformed) returns empty."""
         try:
             raw = json.loads(path.read_bytes())
         except OSError, ValueError:
-            return cls.empty()
-        if not isinstance(raw, dict) or raw.get("version") != _CACHE_VERSION:
-            return cls.empty()
-        files = raw.get("files")
-        if not isinstance(files, dict):
-            return cls.empty()
+            raw = None
+        if not (
+            isinstance(raw, dict)
+            and raw.get("version") == _CACHE_VERSION
+            and isinstance(raw.get("files"), dict)
+        ):
+            return cls(entries={})
         entries: dict[str, _CacheEntry] = {}
-        for key, value in files.items():
+        for key, value in raw["files"].items():
             if not isinstance(value, dict):
                 continue
             hash_value = value.get("hash")
