@@ -179,13 +179,13 @@ async def _client_listen(
     try:
         await matter_client.start_listening(init_ready)
     except MatterError as err:
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
 
     if not hass.is_stopping:
@@ -293,14 +293,14 @@ async def _async_ensure_addon_running(
 
     addon_state = addon_info.state
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_info.options,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_start_addon(catch_error=True)
         raise ConfigEntryNotReady
 

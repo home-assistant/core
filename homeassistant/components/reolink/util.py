@@ -51,7 +51,7 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")
-        and config_entry.state == config_entries.ConfigEntryState.LOADED
+        and config_entry.state is config_entries.ConfigEntryState.LOADED
         and config_entry.runtime_data.device_coordinator.last_update_success
     )
 
