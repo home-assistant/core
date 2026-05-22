@@ -2,6 +2,7 @@
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -53,6 +54,69 @@ async def test_hardware_info(
             {
                 "board": None,
                 "config_entries": [config_entry.entry_id],
+                "dongle": {
+                    "vid": "303A",
+                    "pid": "4001",
+                    "serial_number": "80B54EEFAE18",
+                    "manufacturer": "Nabu Casa",
+                    "description": "ZBT-2",
+                },
+                "name": "Home Assistant Connect ZBT-2",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1",
+            }
+        ]
+    }
+
+
+async def test_hardware_info_ignored_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
+) -> None:
+    """Test ignored discovery entries don't crash hardware info.
+
+    Regression test for https://github.com/home-assistant/core/issues/170270
+    """
+    assert await async_setup_component(hass, USB_DOMAIN, {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
+    # Setup the normal entry so the hardware platform is loaded
+    normal_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-2",
+        unique_id="normal_1",
+        version=1,
+        minor_version=1,
+    )
+    normal_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(normal_entry.entry_id)
+
+    # Setup an ignored config entry without USB data
+    ignored_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-2",
+        unique_id="ignored_1",
+        version=1,
+        minor_version=2,
+        source="ignore",
+    )
+    ignored_entry.add_to_hass(hass)
+    assert ignored_entry.state is ConfigEntryState.NOT_LOADED
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "hardware/info"})
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["success"]
+    assert msg["result"] == {
+        "hardware": [
+            {
+                "board": None,
+                "config_entries": [normal_entry.entry_id],
                 "dongle": {
                     "vid": "303A",
                     "pid": "4001",
