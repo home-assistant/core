@@ -105,19 +105,16 @@ async def _async_set_profile(call: ServiceCall) -> None:
             I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
         )
     except ValloxApiException as err:
-        if duration is None or duration == PROFILE_DURATION_INDEFINITE:
-            translation_key = "failed_to_set_profile"
-            translation_placeholders = {"profile": profile_key}
-        else:
+        placeholders = {"profile": profile_key}
+        if duration is not None and duration != PROFILE_DURATION_INDEFINITE:
+            placeholders["duration"] = str(duration)
             translation_key = "failed_to_set_profile_for_duration"
-            translation_placeholders = {
-                "profile": profile_key,
-                "duration": str(duration),
-            }
+        else:
+            translation_key = "failed_to_set_profile"
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
+            translation_placeholders=placeholders,
         ) from err
     else:
         await coordinator.async_request_refresh()

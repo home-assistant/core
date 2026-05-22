@@ -111,7 +111,6 @@ async def test_set_profile_fan_speed_error(
     expected_profile: str,
 ) -> None:
     """Test error handling when setting fan speed fails."""
-    # Act
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -126,7 +125,6 @@ async def test_set_profile_fan_speed_error(
                 blocking=True,
             )
 
-        # Assert
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == "failed_to_set_fan_speed_for_profile"
         assert exc_info.value.translation_placeholders == {
@@ -156,7 +154,6 @@ async def test_set_profile_error(
     expected_key: str,
 ) -> None:
     """Test error handling when setting profile fails."""
-    # Act
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -175,7 +172,6 @@ async def test_set_profile_error(
                 blocking=True,
             )
 
-        # Assert
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == expected_key
 
