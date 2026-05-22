@@ -146,3 +146,24 @@ async def test_ssdp_udn_as_list(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_FRIENDLY_NAME
     assert result2["data"] == {CONF_HOST: MOCK_SSDP_LOCATION}
+
+
+async def test_ssdp_udn_as_empty_list(hass: HomeAssistant) -> None:
+    """Test SSDP discovery when UDN is an empty list."""
+    empty_udn_discovery = SsdpServiceInfo(
+        ssdp_usn="usn",
+        ssdp_st="st",
+        ssdp_location=MOCK_SSDP_LOCATION,
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: MOCK_FRIENDLY_NAME,
+            ATTR_UPNP_UDN: [],
+        },
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=empty_udn_discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "incomplete_discovery"

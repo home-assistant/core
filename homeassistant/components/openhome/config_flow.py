@@ -39,6 +39,8 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         udn = discovery_info.upnp[ATTR_UPNP_UDN]
         if isinstance(udn, list):
+            if not udn:
+                return self.async_abort(reason="incomplete_discovery")
             udn = udn[0]
 
         _LOGGER.debug("async_step_ssdp: setting unique id %s", udn)
