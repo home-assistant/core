@@ -1641,6 +1641,108 @@ async def test_register_callback_by_address(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
+async def test_register_callback_with_scan_interval_registers_active_scan(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """scan_interval + address forwards to habluetooth's active-scan scheduler."""
+    mock_bt: list[Any] = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        manager = bluetooth.api._get_manager(hass)
+        sched = manager._auto_scheduler
+        address = "44:44:33:11:23:45"
+
+        def _cb(_si: BluetoothServiceInfo, _ch: BluetoothChange) -> None:
+            return None
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _cb,
+            {"address": address},
+            BluetoothScanningMode.ACTIVE,
+            scan_interval=300.0,
+            scan_duration=5.0,
+        )
+        assert address in sched._requests_by_address
+        request = next(iter(sched._requests_by_address[address]))
+        assert request.scan_interval == 300.0
+        assert request.scan_duration == 5.0
+        cancel()
+        assert address not in sched._requests_by_address
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_register_callback_passive_mode_skips_active_scan(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """PASSIVE mode never registers an active-scan request, even with cadence."""
+    mock_bt: list[Any] = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        manager = bluetooth.api._get_manager(hass)
+        sched = manager._auto_scheduler
+
+        def _cb(_si: BluetoothServiceInfo, _ch: BluetoothChange) -> None:
+            return None
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _cb,
+            {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.PASSIVE,
+            scan_interval=300.0,
+        )
+        assert sched._requests_by_address == {}
+        cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_register_callback_without_address_skips_active_scan(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+) -> None:
+    """A scan_interval without an address in the matcher is a no-op for the scheduler."""
+    mock_bt: list[Any] = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        manager = bluetooth.api._get_manager(hass)
+        sched = manager._auto_scheduler
+
+        def _cb(_si: BluetoothServiceInfo, _ch: BluetoothChange) -> None:
+            return None
+
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _cb,
+            {SERVICE_UUID: "cba20d00-224d-11e6-9fb8-0002a5d5c51b"},
+            BluetoothScanningMode.ACTIVE,
+            scan_interval=300.0,
+        )
+        assert sched._requests_by_address == {}
+        cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_register_callback_by_address_connectable_only(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
