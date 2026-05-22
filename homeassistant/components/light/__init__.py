@@ -241,7 +241,7 @@ def preprocess_turn_on_alternatives(
 
     if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+            params[ATTR_RGB_COLOR] = tuple(color_util.color_name_to_rgb(color_name))
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
@@ -464,12 +464,6 @@ def process_turn_on_params(  # noqa: C901
             params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                 *xy_color
             )
-
-    # Ensure rgb_color is a plain tuple. preprocess_turn_on_alternatives may have set it
-    # from color_name_to_rgb, which returns a RGBColor NamedTuple and runs after the
-    # service schema coercion (vol.Coerce(tuple)) that would otherwise normalise it.
-    if ATTR_RGB_COLOR in params:
-        params[ATTR_RGB_COLOR] = tuple(params[ATTR_RGB_COLOR])
 
     # If white is set to True, set it to the light's brightness
     # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
