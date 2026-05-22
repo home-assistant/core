@@ -64,8 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
                 options={CONF_KEEP_MAIN_LIGHT: True} | entry.options,
             )
 
-    unsub = coordinator.async_add_listener(_async_check_keep_main_light)
-    entry.async_on_unload(unsub)
+    entry.async_on_unload(coordinator.async_add_listener(_async_check_keep_main_light))
     _async_check_keep_main_light()
 
     # Set up all platforms for this device/entry.
