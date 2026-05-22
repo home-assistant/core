@@ -61,6 +61,7 @@ class BucketHolder:
     def split_tests(self, test_folder: TestFolder) -> None:
         """Place atomic units via best-fit; oversized ones go to the smallest bucket."""
         digits = len(str(test_folder.total_tests))
+        by_load = attrgetter("total_tests")
         units = sorted(self._atomic_units(test_folder), key=itemgetter(0), reverse=True)
         for size, items in units:
             for item in items:
@@ -71,7 +72,6 @@ class BucketHolder:
                 for b in self._buckets
                 if b.total_tests + size <= self._tests_per_bucket
             ]
-            by_load = attrgetter("total_tests")
             bucket = max(fits, key=by_load) if fits else min(self._buckets, key=by_load)
             for item in items:
                 bucket.add(item)
