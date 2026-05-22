@@ -31,12 +31,12 @@ def test_all() -> None:
         ("TrackerEntityDescription", TrackerEntityDescription),
     ],
 )
-def test_deprecated_aliases(
+def test_deprecated_config_entry_aliases(
     caplog: pytest.LogCaptureFixture,
     alias_name: str,
     replacement: Any,
 ) -> None:
-    """Test deprecated format constants."""
+    """Test deprecated config_entry aliases."""
     import_and_test_deprecated_alias(
         caplog, config_entry, alias_name, replacement, "2027.6"
     )
