@@ -188,10 +188,9 @@ def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
 def _iter_eligible_children(path: Path) -> list[Path]:
     """Return immediate children of ``path`` that pytest should collect.
 
-    Skips entries whose name starts with ``.`` or ``_`` (hidden dirs,
-    ``__pycache__``, private helpers), and non-``test_*.py`` files (so
-    helper modules like ``conftest.py`` and ``common.py`` are not passed
-    as explicit collection targets).
+    Skips ``.``/``_`` prefixed names (hidden, ``__pycache__``, private)
+    and any ``.py`` that isn't a ``test_*.py`` (so ``conftest.py``,
+    ``common.py``, etc. are not handed to pytest as collection targets).
     """
     children: list[Path] = []
     for entry in sorted(path.iterdir()):
@@ -229,19 +228,15 @@ def _hash_file(path: Path) -> str:
 def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     """Walk ``root`` once and return (test files, fixture files).
 
-    Test files are the ``test_*.py`` modules that pytest will collect.
-    Fixture files are every other ``.py`` under ``root`` — ``conftest.py``
-    plus helper modules like ``common.py``.  Helpers go into the
-    invalidation hash because they often hold the ``VALUES`` lists that
-    test files import for ``@pytest.mark.parametrize``: editing one
-    changes a test's collected count even though the test file itself is
-    untouched.
+    Fixtures are every non-``test_*.py`` Python file: conftests and
+    helpers like ``common.py``.  Helpers participate in the invalidation
+    hash because tests often import their ``VALUES`` lists for
+    ``@pytest.mark.parametrize``, so an edit there shifts a test's
+    collected count without touching the test file itself.
 
-    Uses ``os.walk`` rather than ``Path.rglob`` because it's ~2x faster on
-    a 5000-file tree, and subdirectories whose names start with ``.`` or
-    ``_`` are pruned instead of visited (hidden dirs, ``__pycache__``,
-    private helpers).  Doing both walks in one pass keeps total tree I/O
-    down.
+    Uses ``os.walk`` (not ``Path.rglob``) for ~2x speed on a 5000-file
+    tree, and prunes ``.``/``_`` prefixed subdirs instead of visiting
+    them.
     """
     test_files: list[Path] = []
     fixtures: list[Path] = []
@@ -263,11 +258,10 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
 def _find_ancestor_conftests(root: Path) -> list[Path]:
     """Return ancestor ``conftest.py`` files that pytest would still apply.
 
-    Pytest walks up from each test file looking for conftests; when
-    ``root`` is a subtree (eg ``tests/components``) the conftests above
-    it (eg ``tests/conftest.py``) still affect parametrization, so they
-    must contribute to the invalidation hash too.  Stops at the first
-    ancestor without a ``conftest.py``.
+    For a subtree run (eg ``tests/components``), conftests above ``root``
+    (eg ``tests/conftest.py``) still affect parametrization, so they
+    must feed the invalidation hash.  Stops at the first ancestor with
+    no ``conftest.py``.
     """
     ancestors: list[Path] = []
     current = root.resolve().parent
@@ -283,17 +277,12 @@ def _find_ancestor_conftests(root: Path) -> list[Path]:
 
 
 def _compute_invalidation_hash(root: Path, fixtures: list[Path]) -> str:
-    """Return a hash that changes whenever any file in ``fixtures`` changes.
+    """Return a hash that changes whenever any ``fixtures`` file changes.
 
-    Any change to a fixture file (conftests, helper modules like
-    ``common.py``, ancestor conftests) invalidates the entire test-count
-    cache.  This is coarse but safe: any of these can shift fixture
-    parametrization in ways the cache cannot otherwise detect, so we
-    just re-collect everything.
-
-    Paths are encoded with ``os.path.relpath`` so the hash stays stable
-    across machines and also covers ancestor conftests above ``root``
-    (whose ``relative_to(root)`` would fail).
+    Coarse but safe: any of these can shift parametrization in ways we
+    can't otherwise detect, so a change forces a full re-collect.
+    ``os.path.relpath`` is used so ancestor conftests (above ``root``)
+    encode cleanly and the hash stays machine-stable.
     """
     digest = hashlib.sha256()
     for fixture in fixtures:
@@ -326,11 +315,10 @@ class _Cache:
 
     @classmethod
     def load(cls, path: Path, current_invalidation_hash: str) -> _Cache:
-        """Load cache from ``path`` and invalidate it on schema/fixture drift.
+        """Load cache from ``path``, returning an empty cache on any drift.
 
-        Any failure (missing file, bad JSON, version drift, fixture drift)
-        returns an empty cache so the script just falls back to a full
-        collection.  This is the self-healing path.
+        Missing file, bad JSON, version drift, fixture drift, malformed
+        entries: all degrade to a full re-collect.  Self-healing.
         """
         try:
             raw = json.loads(path.read_bytes())
@@ -382,11 +370,9 @@ def _resolve_from_cache(
 ) -> tuple[dict[Path, _CacheEntry], dict[Path, str]]:
     """Split ``test_files`` into ``(cached_entries, miss_hashes)``.
 
-    A file is served from cache when its content hash matches what we
-    previously stored; otherwise it is queued for re-collection.  Each
-    file is hashed exactly once: hits carry the stored hash forward,
-    misses carry the just-computed hash so the rebuild step doesn't
-    re-read the same bytes a second time.
+    Each file is hashed exactly once: hits carry the stored entry
+    forward, misses carry the just-computed hash so the rebuild step
+    doesn't re-read the same bytes.
     """
     hits: dict[Path, _CacheEntry] = {}
     miss_hashes: dict[Path, str] = {}
@@ -443,10 +429,8 @@ def _run_pytest_collect(paths: list[Path]) -> dict[Path, int]:
 def _build_folder(root: Path, counts: dict[Path, int]) -> TestFolder:
     """Build a ``TestFolder`` from a flat ``{path: count}`` mapping.
 
-    Files reported with zero tests are skipped so they don't enter
-    bucketing (helper modules named ``test_*.py`` with no test functions
-    look like test files to the walker but pytest returns nothing for
-    them).
+    Zero-count files are skipped: a ``test_*.py`` with no test functions
+    looks like a test file to the walker but pytest reports nothing.
     """
     folder = TestFolder(root)
     for file_path, count in counts.items():
@@ -465,8 +449,8 @@ def _exit_if_empty(paths: list[Path], root: Path) -> None:
 def _collect_tests_uncached(path: Path) -> TestFolder:
     """Collect tests by handing pytest the top-level directories.
 
-    Skips the tree walk and per-file hashing; used when no cache file is
-    requested so the script behaves like the pre-cache implementation.
+    Skips the tree walk and per-file hashing, matching the pre-cache
+    behavior when ``--cache`` isn't passed.
     """
     batch_paths = _enumerate_batch_paths(path)
     _exit_if_empty(batch_paths, path)
@@ -478,8 +462,8 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     all_test_files, fixtures = _walk_test_tree(path)
     _exit_if_empty(all_test_files, path)
 
-    # Include ancestor conftests so a subtree run (eg tests/components)
-    # still invalidates when tests/conftest.py changes.
+    # Ancestor conftests apply to subtree runs (eg tests/components must
+    # still invalidate on tests/conftest.py changes).
     all_fixtures = _find_ancestor_conftests(path) + fixtures
     invalidation_hash = _compute_invalidation_hash(path, all_fixtures)
     cache = _Cache.load(cache_path, invalidation_hash)
@@ -492,18 +476,15 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
 
     new_counts: dict[Path, int] = {}
     if miss_hashes:
-        # On a full cold-cache run, hand pytest the top-level directories
-        # instead of 5000+ individual file paths: pytest walks dirs much
-        # faster than it resolves each file argument.  Once any cache hits
-        # exist, use file-level collection so we only re-collect the diff.
+        # Cold cache: hand pytest the top-level dirs (much faster than
+        # 5000+ individual file paths).  Once any hit exists, collect
+        # only the diff at file granularity.
         collect_paths = _enumerate_batch_paths(path) if not hits else list(miss_hashes)
         new_counts = _run_pytest_collect(collect_paths)
 
-    # Walk the full set of test files once and decide each file's entry:
-    # hits keep their stored entry (and verified hash), misses build a
-    # fresh entry from the resolve-time hash plus the freshly collected
-    # count.  Files in misses that pytest returned no count for are
-    # stored as 0 so they stop re-collecting on the next run.
+    # One pass over all files: hits keep their entry, misses build a
+    # fresh one from the resolve-time hash and collected count (0 if
+    # pytest returned nothing, so we stop re-collecting next run).
     entries: dict[str, _CacheEntry] = {}
     counts: dict[Path, int] = {}
     for file in all_test_files:
@@ -520,10 +501,9 @@ def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
     if cache_path is None:
         return _collect_tests_uncached(path)
     if path.is_file():
-        # The cache keys on conftest_hash, but a single file root has no
-        # ancestor conftests to walk and the hash would always be empty,
-        # which would let stale counts survive conftest edits.  Skip the
-        # cache for the file-root case rather than silently mis-caching.
+        # A single-file root has no fixture tree to hash, so the
+        # invalidation key would be constant and stale counts could
+        # survive conftest edits.  Bypass the cache instead.
         print(f"--cache ignored: {path} is a single file")
         return _collect_tests_uncached(path)
     return _collect_tests_cached(path, cache_path)

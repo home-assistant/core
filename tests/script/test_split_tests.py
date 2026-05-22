@@ -12,12 +12,7 @@ from script import split_tests
 
 @pytest.fixture
 def tree(tmp_path: Path) -> Path:
-    """Build a small test tree on disk.
-
-    Returns the root path containing one root conftest, two integrations,
-    and a ``common.py`` helper that participates in cache invalidation
-    but is not a pytest collection target.
-    """
+    """Build a tree: root conftest, two integrations, a ``common.py`` helper."""
     (tmp_path / "conftest.py").write_text("# tests/conftest.py\n")
     (tmp_path / "common.py").write_text("# helper module\n")
 
@@ -72,10 +67,9 @@ def _prime_cache(
 ) -> None:
     """Save a cache for ``tree`` keyed on real file hashes.
 
-    ``hits`` maps an on-disk test file to its cached count; the helper
-    computes the file's real hash so the cache will resolve as a hit on
-    next run.  ``extra_entries`` lets a test inject entries whose path
-    does not exist on disk (e.g. ghost files).
+    ``hits`` maps file → cached count (hashed for real, so the next
+    run resolves as a hit).  ``extra_entries`` injects raw entries
+    whose path may not exist on disk (eg ghost files).
     """
     entries: dict[str, split_tests._CacheEntry] = {
         str(file.relative_to(tree)): split_tests._CacheEntry(
@@ -94,11 +88,7 @@ def _prime_cache(
 def _echo_one_test_each(
     skip: set[Path] | None = None,
 ) -> Callable[[list[Path]], list[tuple[str, str, int]]]:
-    """Build a fake ``_run_collect_batches`` that returns 1 test per path.
-
-    Any path in ``skip`` is silently omitted from the output (simulating
-    pytest finding no tests under it).
-    """
+    """Fake ``_run_collect_batches``: 1 test per path; ``skip`` paths drop out."""
     skip = skip or set()
 
     def fake(paths: list[Path]) -> list[tuple[str, str, int]]:
@@ -117,13 +107,7 @@ def test_compute_invalidation_hash_changes_when_conftest_changes(tree: Path) -> 
 
 
 def test_compute_invalidation_hash_changes_when_helper_changes(tree: Path) -> None:
-    """Editing a non-conftest helper (eg common.py imported for parametrize) busts the cache.
-
-    Test files often import VALUES from common.py for
-    @pytest.mark.parametrize; a change there shifts collected counts
-    even though no test file or conftest was touched, so it has to
-    participate in the invalidation hash.
-    """
+    """Editing a non-conftest helper (eg common.py used by parametrize) busts cache."""
     before = _invalidation_hash_for(tree)
     (tree / "common.py").write_text("# helper changed\n")
     after = _invalidation_hash_for(tree)
@@ -198,11 +182,10 @@ def test_walk_test_tree_skips_hidden_and_dunder_dirs(tmp_path: Path) -> None:
 
 
 def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
-    """A single-file root cannot validate conftest drift, so caching is disabled.
+    """Single-file root bypasses caching.
 
-    _walk_test_tree returns no conftests for a file root, which would make
-    the invalidation_hash a constant — letting a stale entry survive a real
-    conftest change.  Better to bypass the cache than mis-cache silently.
+    Otherwise the invalidation hash would be constant and stale counts
+    could survive conftest edits.
     """
     cache_path = tmp_path / "cache.json"
     file = tmp_path / "test_solo.py"
