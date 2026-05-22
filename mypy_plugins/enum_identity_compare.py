@@ -61,12 +61,8 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
     - ``Instance``: the direct case, e.g. ``source: SourceCodes``.
     - ``LiteralType``: a single literal enum member, e.g. ``Literal[E.A]``.
       Peeled to its enum-class ``fallback``.
-    - ``UnionType``: e.g. mypy's negative narrowing of ``elif source ==
-      SourceCodes.FM`` after a preceding ``is SourceCodes.DAB`` check
-      produces a union of literal members. The whole union is treated as
-      the enum class only if every variant resolves to the same class.
-      ``None``/``Any``/non-enum variants disqualify the union, preserving
-      parity with ``Enum | None`` (which has always been skipped).
+    - ``UnionType``: if all variants resolve to the same enum class, that
+      class is passed on.
 
     Returns ``None`` for:
     - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)

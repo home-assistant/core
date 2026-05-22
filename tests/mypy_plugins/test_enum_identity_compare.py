@@ -2,8 +2,7 @@
 
 Each test snippet is run through mypy's API with the plugin enabled.
 Tests assert the number of ``ha-enum-identity-compare`` errors emitted
-and the relevant message content; the framework-allowlist tests also
-pin the exact reported line number.
+and the relevant message content (operator pair and enum class name).
 
 The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
 subclasses (where ``__eq__`` is identity-based) plus a small allowlist
@@ -31,6 +30,7 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
     """
     src = tmp_path / "case.py"
     src.write_text(textwrap.dedent(code))
+    cache = tmp_path / "mypy_cache"
     config = tmp_path / "mypy.ini"
     config_body = (
         "[mypy]\n"
@@ -51,7 +51,7 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
         stdout, _stderr, _rc = mypy_api.run(  # pylint: disable=c-extension-no-member
             [
                 "--no-incremental",
-                "--cache-dir=/dev/null",
+                f"--cache-dir={cache}",
                 "--config-file",
                 str(config),
                 str(src),
