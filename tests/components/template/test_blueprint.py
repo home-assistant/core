@@ -532,18 +532,18 @@ async def test_domain_blueprint(hass: HomeAssistant) -> None:
     ("blueprint_patch", "error"),
     [
         (
-            patch_invalid_blueprint_with_multiple_platforms,
-            "more than one platform defined per blueprint",
-        ),
-        (
             patch_invalid_blueprint_with_multiple_entities,
             "more than one sensor entity defined in blueprint",
+        ),
+        (
+            patch_invalid_blueprint_with_multiple_platforms,
+            "more than one platform defined per blueprint",
         ),
     ],
 )
 async def test_invalid_blueprint(
     hass: HomeAssistant,
-    blueprint_patch: Callable[[], Iterator[None]],
+    blueprint_patch: Callable[[], contextlib.AbstractContextManager[None]],
     error: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
