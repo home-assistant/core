@@ -65,11 +65,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             translation_placeholders={"error": repr(err)},
         ) from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise InvalidAuth(
             translation_domain=DOMAIN,
             translation_key="cannot_authenticate",
-            translation_placeholders={"error": repr(err)},
         ) from err
     finally:
         await api.logout()
