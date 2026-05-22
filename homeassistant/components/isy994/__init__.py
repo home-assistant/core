@@ -237,6 +237,8 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove ISY config entry from a device."""
+    if not hasattr(config_entry, "runtime_data"):
+        return True
     return not device_entry.identifiers.intersection(
         (DOMAIN, unique_id) for unique_id in config_entry.runtime_data.devices
     )
