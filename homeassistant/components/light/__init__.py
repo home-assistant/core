@@ -465,6 +465,12 @@ def process_turn_on_params(  # noqa: C901
                 *xy_color
             )
 
+    # Ensure rgb_color is a plain tuple. preprocess_turn_on_alternatives may have set it
+    # from color_name_to_rgb, which returns a RGBColor NamedTuple and runs after the
+    # service schema coercion (vol.Coerce(tuple)) that would otherwise normalise it.
+    if ATTR_RGB_COLOR in params:
+        params[ATTR_RGB_COLOR] = tuple(params[ATTR_RGB_COLOR])
+
     # If white is set to True, set it to the light's brightness
     # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
     # integer.
