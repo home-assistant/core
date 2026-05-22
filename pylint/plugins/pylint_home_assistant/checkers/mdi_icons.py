@@ -16,7 +16,7 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.generated.mdi_icons import MDI_ICONS
 from pylint_home_assistant.helpers.icons import collect_mdi_icons, load_icons
-from pylint_home_assistant.helpers.module_info import is_integration_module
+from pylint_home_assistant.helpers.module_info import parse_module
 
 # Matches strings that look like intentional icon name attempts
 # (letters, digits, hyphens, underscores). Rejects format templates
@@ -57,16 +57,15 @@ class MdiIconsChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Check icons.json and track integration context."""
-        self._in_integration = is_integration_module(node.name)
-        if not self._in_integration:
+        parsed = parse_module(node.name)
+        self._in_integration = parsed is not None
+        if parsed is None:
             return
 
         # Only check icons.json once per integration
-        parts = node.name.split(".")
-        domain = parts[2] if len(parts) > 2 else ""
-        if domain in self._checked_icons_json:
+        if parsed.domain in self._checked_icons_json:
             return
-        self._checked_icons_json.add(domain)
+        self._checked_icons_json.add(parsed.domain)
 
         icons_data = load_icons(node)
         if icons_data is None:
