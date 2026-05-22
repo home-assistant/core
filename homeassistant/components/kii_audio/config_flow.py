@@ -1,30 +1,30 @@
 """Config flow for the Kii Audio integration."""
 
+import asyncio
 import json
 import logging
 from typing import Any
 
+from aiokii import KiiAudioClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_SYSTEM_ID, DOMAIN
+from .const import CONF_SYSTEM_ID, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _decode_property(value: Any) -> str | None:
-    """Decode a zeroconf TXT property."""
-    if value is None:
-        return None
-    if isinstance(value, bytes):
-        return value.decode(errors="replace")
-    if isinstance(value, str):
-        return value
-    return str(value)
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_SYSTEM_ID): str,
+    }
+)
 
 
 def _supports_plain_websocket_backend(data: dict[str, Any]) -> bool:
@@ -42,39 +42,71 @@ def _supports_plain_websocket_backend(data: dict[str, Any]) -> bool:
     return False
 
 
-class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Kii Audio."""
+async def _async_get_system_info(hass: HomeAssistant, host: str) -> dict[str, Any]:
+    """Fetch system information from a Kii Audio system."""
+    system_info: dict[str, Any] = {}
+    ready = asyncio.Event()
+    client = KiiAudioClient(async_get_clientsession(hass), host)
 
-    VERSION = 1
+    def _handle_event(event: str, payload: dict[str, Any]) -> None:
+        """Handle validation client events."""
+        if event == "pushSystemInfo":
+            system_info.update(payload)
+            ready.set()
+
+    client.add_listener(_handle_event)
+    await client.start()
+    try:
+        async with asyncio.timeout(10):
+            await ready.wait()
+    except TimeoutError as err:
+        raise CannotConnect from err
+    finally:
+        await client.stop()
+
+    return system_info
+
+
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate the user input allows us to connect."""
+    system_info = await _async_get_system_info(hass, data[CONF_HOST])
+    system_id = system_info.get("systemId")
+    if isinstance(system_id, str) and system_id != data[CONF_SYSTEM_ID]:
+        raise InvalidSystemId
+
+
+class KiiAudioConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Kii Audio."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle manual setup."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            system_id = user_input[CONF_SYSTEM_ID]
-            await self.async_set_unique_id(system_id)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-            return self.async_create_entry(
-                title="Kii Audio",
-                data={
-                    CONF_HOST: host,
-                    CONF_SYSTEM_ID: system_id,
-                },
-            )
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_SYSTEM_ID): str,
-            }
-        )
+            try:
+                await _validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidSystemId:
+                errors["base"] = "invalid_system_id"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(user_input[CONF_SYSTEM_ID])
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+                return self.async_create_entry(
+                    title=DEFAULT_NAME,
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=schema,
-            errors={},
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
     async def async_step_zeroconf(
@@ -83,8 +115,8 @@ class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         _LOGGER.debug("Kii Audio device found via zeroconf: %s", discovery_info)
 
-        raw_data = _decode_property(discovery_info.properties.get("data"))
-        if raw_data is None:
+        raw_data = discovery_info.properties.get("data")
+        if not isinstance(raw_data, str):
             _LOGGER.debug(
                 "Ignoring Kii Audio zeroconf discovery without data property: %s",
                 discovery_info,
@@ -128,10 +160,18 @@ class KiiAudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title="Kii Audio",
+            title=DEFAULT_NAME,
             data={
                 CONF_HOST: host,
                 CONF_DEVICE_ID: device_id,
                 CONF_SYSTEM_ID: system_id,
             },
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidSystemId(HomeAssistantError):
+    """Error to indicate the provided system ID does not match."""

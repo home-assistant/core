@@ -16,7 +16,7 @@ from .coordinator import KiiAudioConfigEntry, KiiAudioCoordinator
 from .entity import zone_device_info
 
 SOURCE_NAMES = {
-    "analog": "Analogue",
+    "analog": "Analog",
     "digital": "Digital (Auto)",
     "digital_auto": "Digital (Auto)",
     "digital_xlr": "Digital (XLR)",
@@ -90,6 +90,7 @@ class KiiAudioZoneMediaPlayer(
     """Representation of a Kii Audio zone."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = SUPPORTED_FEATURES
     _attr_volume_step = VOLUME_STEP / (MAX_VOLUME - MIN_VOLUME)
 

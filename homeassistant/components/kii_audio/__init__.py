@@ -15,25 +15,12 @@ type KiiAudioConfigEntry = ConfigEntry[KiiAudioCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> bool:
     """Set up Kii Audio from a config entry."""
-    if (system_id := entry.data.get(CONF_SYSTEM_ID)) and entry.unique_id != system_id:
-        if entry.unique_id is None:
-            hass.config_entries.async_update_entry(entry, unique_id=system_id)
-        else:
-            await hass.config_entries.async_remove(entry.entry_id)
-            return True
-
-    if CONF_PORT in entry.data:
-        hass.config_entries.async_update_entry(
-            entry,
-            data={key: val for key, val in entry.data.items() if key != CONF_PORT},
-        )
-
     coordinator = KiiAudioCoordinator(hass, entry)
-    await coordinator.async_start()
+    await coordinator.client.start()
     try:
         await coordinator.async_wait_ready()
     except TimeoutError as err:
-        await coordinator.async_stop()
+        await coordinator.client.stop()
         raise ConfigEntryNotReady(
             "Timed out waiting for Kii Audio system info"
         ) from err
@@ -50,11 +37,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> bool:
     """Unload a Kii Audio config entry."""
-    coordinator = getattr(entry, "runtime_data", None)
-    if coordinator is None:
-        return True
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await coordinator.async_stop()
+        await entry.runtime_data.client.stop()
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: KiiAudioConfigEntry) -> bool:
+    """Migrate old config entries."""
+    data = dict(entry.data)
+    data.pop(CONF_PORT, None)
+    system_id = data.get(CONF_SYSTEM_ID)
+
+    if data != entry.data or (entry.unique_id is None and isinstance(system_id, str)):
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            unique_id=system_id if isinstance(system_id, str) else entry.unique_id,
+        )
+
+    return True

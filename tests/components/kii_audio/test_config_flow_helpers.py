@@ -3,17 +3,8 @@
 import pytest
 
 from homeassistant.components.kii_audio.config_flow import (
-    _decode_property,
     _supports_plain_websocket_backend,
 )
-
-
-def test_decode_property() -> None:
-    """Test decoding zeroconf TXT properties."""
-    assert _decode_property(None) is None
-    assert _decode_property(b"hello") == "hello"
-    assert _decode_property("hello") == "hello"
-    assert _decode_property(123) == "123"
 
 
 @pytest.mark.parametrize("version", [2, 2.0, "2", "2.1"])

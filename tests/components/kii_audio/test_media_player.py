@@ -21,7 +21,7 @@ def test_media_player_reports_zone_state(coordinator: FakeCoordinator) -> None:
     assert entity.state.value == "on"
     assert entity.volume_level == 0.5
     assert entity.is_volume_muted is False
-    assert entity.source == "Analogue"
+    assert entity.source == "Analog"
 
 
 def test_media_player_uses_zone_device_info(coordinator: FakeCoordinator) -> None:
@@ -58,7 +58,7 @@ def test_media_player_selectable_sources_without_kii_control() -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, zone)
 
     assert entity.source_list == [
-        "Analogue",
+        "Analog",
         "Digital (Auto)",
         "Digital (XLR)",
         "Digital (KiiLink)",
@@ -77,7 +77,7 @@ def test_media_player_selectable_sources_with_kii_control() -> None:
         "Optical",
         "USB",
         "Bluetooth",
-        "Analogue",
+        "Analog",
         "Digital (XLR)",
         "Dante",
     ]
@@ -246,7 +246,7 @@ def test_media_player_handles_missing_zone() -> None:
     coordinator.data["zones"] = []
 
     assert entity.source_list == [
-        "Analogue",
+        "Analog",
         "Digital (Auto)",
         "Digital (XLR)",
         "Digital (KiiLink)",
@@ -263,7 +263,7 @@ def test_media_player_handles_invalid_kiilink_data() -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, zone)
 
     assert entity.source_list == [
-        "Analogue",
+        "Analog",
         "Digital (Auto)",
         "Digital (XLR)",
         "Digital (KiiLink)",
@@ -275,7 +275,7 @@ def test_media_player_handles_invalid_kiilink_data() -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, zone)
 
     assert entity.source_list == [
-        "Analogue",
+        "Analog",
         "Digital (Auto)",
         "Digital (XLR)",
         "Digital (KiiLink)",

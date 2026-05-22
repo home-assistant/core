@@ -42,18 +42,10 @@ class KiiAudioCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=DOMAIN,
         )
 
-    async def async_start(self) -> None:
-        """Start listening for pushed updates."""
-        await self.client.start()
-
     async def async_wait_ready(self) -> None:
         """Wait for initial system information from the WebSocket."""
         async with asyncio.timeout(10):
             await self._ready.wait()
-
-    async def async_stop(self) -> None:
-        """Stop listening for pushed updates."""
-        await self.client.stop()
 
     async def async_set_zone_setting(
         self, zone_id: str, setting: str, value: Any

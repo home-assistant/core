@@ -70,16 +70,12 @@ async def test_coordinator_client_methods_delegate_to_client() -> None:
     coordinator = _coordinator()
     coordinator.client = AsyncMock()
 
-    await coordinator.async_start()
-    await coordinator.async_stop()
     await coordinator.async_set_zone_setting("zone-id", "setting.path", "value")
     await coordinator.async_set_zone_volume("zone-id", -42.0)
     await coordinator.async_set_zone_mute("zone-id", True)
     await coordinator.async_set_zone_power("zone-id", False)
     await coordinator.async_set_zone_source("zone-id", "digital_auto")
 
-    coordinator.client.start.assert_awaited_once_with()
-    coordinator.client.stop.assert_awaited_once_with()
     assert coordinator.client.set_zone_setting.await_args_list == [
         call("zone-id", "setting.path", "value"),
         call("zone-id", "audio.volume", -42.0),

@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.kii_audio import async_unload_entry
+from homeassistant.components.kii_audio import async_migrate_entry
 from homeassistant.components.kii_audio.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -38,7 +38,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.start",
             new=AsyncMock(),
         ),
         patch(
@@ -59,33 +59,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     mock_forward_setups.assert_awaited_once()
 
 
-async def test_setup_entry_removes_stale_port(hass: HomeAssistant) -> None:
-    """Test stale port data is removed during setup."""
-    entry = _mock_config_entry(**{CONF_PORT: 9000})
-    entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
-            new=AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_wait_ready",
-            new=_async_wait_ready,
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            new=AsyncMock(),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert CONF_PORT not in entry.data
-
-
 async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
     """Test setup retries when initial system information is unavailable."""
     entry = _mock_config_entry()
@@ -93,7 +66,7 @@ async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.start",
             new=AsyncMock(),
         ),
         patch(
@@ -101,7 +74,7 @@ async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
             new=AsyncMock(side_effect=TimeoutError),
         ),
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_stop",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.stop",
             new=AsyncMock(),
         ) as mock_stop,
     ):
@@ -119,7 +92,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.start",
             new=AsyncMock(),
         ),
         patch(
@@ -142,7 +115,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             new=AsyncMock(return_value=True),
         ),
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_stop",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.stop",
             new=AsyncMock(),
         ) as mock_stop,
     ):
@@ -162,7 +135,7 @@ async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails
 
     with (
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.start",
             new=AsyncMock(),
         ),
         patch(
@@ -185,7 +158,7 @@ async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails
             new=AsyncMock(return_value=False),
         ),
         patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_stop",
+            "homeassistant.components.kii_audio.coordinator.KiiAudioClient.stop",
             new=AsyncMock(),
         ) as mock_stop,
     ):
@@ -196,40 +169,18 @@ async def test_unload_entry_keeps_coordinator_running_when_platform_unload_fails
     mock_stop.assert_not_awaited()
 
 
-async def test_unload_entry_without_runtime_data(hass: HomeAssistant) -> None:
-    """Test unloading before runtime data is available is a no-op."""
-    entry = _mock_config_entry()
-    entry.runtime_data = None  # type: ignore[assignment]
-
-    assert await async_unload_entry(hass, entry)
-
-
-async def test_setup_entry_removes_entry_with_mismatched_system_id(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup removes stale entries with mismatched unique IDs."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Kii Audio",
-        data={CONF_HOST: "192.0.2.1", CONF_SYSTEM_ID: SYSTEM_ID},
-        unique_id="old-system-id",
-    )
+async def test_migrate_entry_removes_stale_port(hass: HomeAssistant) -> None:
+    """Test migration removes stale port data."""
+    entry = _mock_config_entry(**{CONF_PORT: 9000})
     entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.config_entries,
-        "async_remove",
-        new=AsyncMock(),
-    ) as mock_remove:
-        await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_migrate_entry(hass, entry)
 
-    mock_remove.assert_awaited_once_with(entry.entry_id)
+    assert CONF_PORT not in entry.data
 
 
-async def test_setup_entry_migrates_missing_unique_id(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup migrates entries that do not have a unique ID."""
+async def test_migrate_entry_sets_missing_unique_id(hass: HomeAssistant) -> None:
+    """Test migration sets missing unique IDs from system ID."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Kii Audio",
@@ -238,23 +189,6 @@ async def test_setup_entry_migrates_missing_unique_id(
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_start",
-            new=AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.kii_audio.coordinator.KiiAudioCoordinator.async_wait_ready",
-            new=_async_wait_ready,
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            new=AsyncMock(),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await async_migrate_entry(hass, entry)
 
-    assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == SYSTEM_ID

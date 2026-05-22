@@ -5,6 +5,11 @@
       "invalid_discovery_info": "The discovered Kii Audio device did not provide valid discovery information.",
       "unsupported_backend": "This Kii Audio system uses a legacy backend that is not supported by this integration."
     },
+    "error": {
+      "cannot_connect": "Failed to connect.",
+      "invalid_system_id": "The Kii Audio system ID does not match the connected system.",
+      "unknown": "Unexpected error"
+    },
     "step": {
       "user": {
         "data": {

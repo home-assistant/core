@@ -1,6 +1,7 @@
 """Constants for the Kii Audio integration."""
 
 DOMAIN = "kii_audio"
+DEFAULT_NAME = "Kii Audio"
 
 CONF_SYSTEM_ID = "system_id"
 

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.kii_audio.config_flow import CannotConnect
 from homeassistant.components.kii_audio.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
@@ -30,6 +31,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         new=AsyncMock(return_value=True),
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture(autouse=True)
+def mock_get_system_info() -> Generator[AsyncMock]:
+    """Mock fetching Kii Audio system info for manual setup."""
+    with patch(
+        "homeassistant.components.kii_audio.config_flow._async_get_system_info",
+        new=AsyncMock(return_value={"systemId": SYSTEM_ID, "systemName": "Kii System"}),
+    ) as mock_get_info:
+        yield mock_get_info
 
 
 def _zeroconf_info(data: dict[str, object]) -> ZeroconfServiceInfo:
@@ -210,3 +221,39 @@ async def test_zeroconf_flow_uses_discovery_host_when_payload_ip_is_empty(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == HOST
+
+
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant, mock_get_system_info: AsyncMock
+) -> None:
+    """Test the manual flow handles connection failures."""
+    mock_get_system_info.side_effect = CannotConnect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_SYSTEM_ID: SYSTEM_ID},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_rejects_mismatched_system_id(
+    hass: HomeAssistant, mock_get_system_info: AsyncMock
+) -> None:
+    """Test the manual flow rejects a mismatched system ID."""
+    mock_get_system_info.return_value = {"systemId": "other-system-id"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_SYSTEM_ID: SYSTEM_ID},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_system_id"}
