@@ -11,14 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTime
+from homeassistant.const import PRESSURE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     HEART_RATE,
     HRV,
-    PRESSURE,
     RESPIRATORY_RATE,
     SLEEP_DURATION,
     SLEEP_NUMBER,
