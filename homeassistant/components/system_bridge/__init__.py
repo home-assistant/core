@@ -281,8 +281,9 @@ async def async_migrate_entry(
 
             ent_reg.async_update_entity(
                 entity_entry.entity_id,
-                new_unique_id=entity_entry.unique_id.replace(
-                    system.hostname, config_entry.unique_id
+                new_unique_id=(
+                    config_entry.unique_id
+                    + entity_entry.unique_id[len(system.hostname) :]
                 ),
             )
 
