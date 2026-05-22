@@ -48,8 +48,7 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: Yoto is a cloud integration with no local discovery.
-  discovery: done
+    comment: The integration supports DHCP discovery, but does not implement separate discovery update handling.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
