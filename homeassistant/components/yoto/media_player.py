@@ -75,10 +75,13 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         self._attr_unique_id = player.id
 
     @property
+    def available(self) -> bool:
+        """Return whether the player is reachable through the Yoto cloud."""
+        return super().available and bool(self.player.status.is_online)
+
+    @property
     def state(self) -> MediaPlayerState:
         """Return the playback state."""
-        if self.player.status.is_online is False:
-            return MediaPlayerState.OFF
         return PLAYBACK_STATE_MAP.get(
             self.player.last_event.playback_status, MediaPlayerState.IDLE
         )

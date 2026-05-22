@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_VOLUME_SET,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -202,12 +202,12 @@ async def test_play_media_card_only(
     )
 
 
-async def test_state_off_when_offline(
+async def test_state_unavailable_when_offline(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """When the player reports offline the state is OFF."""
+    """When the player reports offline the entity is unavailable."""
     player = next(iter(mock_yoto_client.players.values()))
     player.status.is_online = False
 
@@ -215,7 +215,7 @@ async def test_state_off_when_offline(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_no_card_metadata_when_card_id_missing(
