@@ -1,4 +1,4 @@
-"""Tests for the System Bridge sensor platform."""
+"""Tests for the System Bridge update platform."""
 
 from collections.abc import Generator
 from unittest.mock import patch
@@ -27,7 +27,7 @@ def update_only() -> Generator[None]:
 @pytest.mark.usefixtures(
     "mock_version", "mock_websocket_client", "entity_registry_enabled_by_default"
 )
-async def test_sensor_platform(
+async def test_update_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,

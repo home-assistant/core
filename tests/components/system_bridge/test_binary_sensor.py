@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.fixture(autouse=True)
 def binary_sensor_only() -> Generator[None]:
-    """Enable only the sensor platform."""
+    """Enable only the binary sensor platform."""
     with patch(
         "homeassistant.components.system_bridge.PLATFORMS",
         [Platform.BINARY_SENSOR],
