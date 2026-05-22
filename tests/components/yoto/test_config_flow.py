@@ -7,10 +7,11 @@ import jwt
 import pytest
 
 from homeassistant.components.yoto.const import DOMAIN, YOTO_AUDIENCE, YOTO_SCOPES
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import ACCESS_TOKEN, USER_ID
 
@@ -97,6 +98,51 @@ async def test_full_flow(
     assert result["result"].unique_id == USER_ID
     assert result["data"]["auth_implementation"] == DOMAIN
     assert result["data"]["token"]["access_token"] == ACCESS_TOKEN
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
+async def test_dhcp_discovery_starts_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A Yoto found on the LAN starts the OAuth flow."""
+    discovery = DhcpServiceInfo(
+        ip="10.0.0.42",
+        hostname="yoto-player",
+        macaddress="6825dd39c3fc",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=discovery
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _complete_callback(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == USER_ID
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_dhcp_discovery_skipped_when_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """DHCP discovery is a no-op when the integration is already set up."""
+    mock_config_entry.add_to_hass(hass)
+    discovery = DhcpServiceInfo(
+        ip="10.0.0.42",
+        hostname="yoto-player",
+        macaddress="6825dd39c3fc",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=discovery
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
