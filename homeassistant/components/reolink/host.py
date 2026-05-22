@@ -827,7 +827,7 @@ class ReolinkHost:
             return
 
         try:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 await self._api.get_motion_state_all_ch()
         except ReolinkError as err:
             if not self._fast_poll_error:
@@ -839,7 +839,7 @@ class ReolinkHost:
                 )
             self._fast_poll_error = True
         else:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 self._fast_poll_error = False
         finally:
             # schedule next poll
