@@ -84,7 +84,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         if (
             data.batteries is not None
             and data.system is not None
-            and data.batteries.mode == str(Batteries.Mode.TO_FULL)
+            and data.batteries.mode == str(Batteries.Mode.PREDICTIVE)
             and data.system.cloud_enabled is False
         ):
             async_create_issue(

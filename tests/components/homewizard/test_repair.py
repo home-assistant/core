@@ -94,7 +94,7 @@ async def test_repair_acquires_token(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_repair_created_for_cloud_disabled_to_full_mode(
+async def test_repair_created_for_cloud_disabled_predictive_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
@@ -102,7 +102,7 @@ async def test_repair_created_for_cloud_disabled_to_full_mode(
 ) -> None:
     """Test repair issue is created for incompatible cloud and battery mode."""
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = False
-    mock_homewizardenergy.combined.return_value.batteries.mode = "to_full"
+    mock_homewizardenergy.combined.return_value.batteries.mode = "predictive"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -122,7 +122,7 @@ async def test_repair_auto_resolves_when_cloud_is_re_enabled(
 ) -> None:
     """Test repair issue is auto-resolved when compatibility is restored."""
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = False
-    mock_homewizardenergy.combined.return_value.batteries.mode = "to_full"
+    mock_homewizardenergy.combined.return_value.batteries.mode = "predictive"
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -152,7 +152,7 @@ async def test_repair_confirm_enables_cloud_connection(
 
     combined_data = mock_homewizardenergy.combined.return_value
     combined_data.system.cloud_enabled = False
-    combined_data.batteries.mode = "to_full"
+    combined_data.batteries.mode = "predictive"
 
     def _set_cloud_enabled(*, cloud_enabled: bool) -> None:
         combined_data.system.cloud_enabled = cloud_enabled
