@@ -120,6 +120,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DurationSelector,
+    DurationSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -227,6 +229,7 @@ from .const import (
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX,
     CONF_MAX_KELVIN,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_MIN,
     CONF_MIN_KELVIN,
     CONF_MODE_COMMAND_TEMPLATE,
@@ -3719,6 +3722,11 @@ MQTT_DEVICE_PLATFORM_FIELDS = {
         required=False,
         validator=int,
         default=DEFAULT_QOS,
+        section="mqtt_settings",
+    ),
+    CONF_MESSAGE_EXPIRY_INTERVAL: PlatformField(
+        selector=DurationSelector(DurationSelectorConfig(enable_day=True)),
+        required=False,
         section="mqtt_settings",
     ),
 }
