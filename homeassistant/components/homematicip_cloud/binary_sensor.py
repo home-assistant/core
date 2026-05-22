@@ -1,6 +1,7 @@
 """Support for HomematicIP Cloud binary sensor."""
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -326,7 +327,11 @@ class HomematicipSimpleBinarySensor[_DeviceT: Device](
         )
         self.entity_description = description
         # Let entity_description/device_class naming drive the final name.
-        if hasattr(self, "_attr_name"):
+        # HA's name resolution checks hasattr(self, "_attr_name") and returns
+        # whatever value (including None) is found, so we must unset the
+        # attribute rather than assign None. suppress() guards against a
+        # future subclass that only declares _attr_name at class level.
+        with suppress(AttributeError):
             del self._attr_name
 
     @property
