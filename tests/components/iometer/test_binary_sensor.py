@@ -103,7 +103,7 @@ async def test_attachment_status_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_attachment_status_sensors_unkown(
+async def test_attachment_status_sensors_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iometer_client: AsyncMock,
