@@ -175,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
 
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
-        LOGGER.info("Matter server reports BLE available, connecting BLE proxy")
+        LOGGER.debug("Matter server reports BLE available, connecting BLE proxy")
         ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
         try:
             async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):

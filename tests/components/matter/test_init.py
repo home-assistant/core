@@ -62,22 +62,18 @@ def mock_ble_proxy_fixture() -> Generator[MagicMock]:
 
     The real submodule pulls in `bluetooth` (and its dep tree); for unit tests
     we replace it via sys.modules so the lazy `from .ble_proxy import ...` inside
-    async_setup_entry resolves to our stub.
+    async_setup_entry resolves to our stub without importing the real module.
     """
     proxy = MagicMock()
     proxy.connect = AsyncMock()
     proxy.disconnect = AsyncMock()
     fake_module = types.ModuleType("homeassistant.components.matter.ble_proxy")
     fake_module.create_matter_ble_proxy = MagicMock(return_value=proxy)
-    original = sys.modules.get("homeassistant.components.matter.ble_proxy")
-    sys.modules["homeassistant.components.matter.ble_proxy"] = fake_module
-    try:
+    with patch.dict(
+        sys.modules,
+        {"homeassistant.components.matter.ble_proxy": fake_module},
+    ):
         yield proxy
-    finally:
-        if original is None:
-            sys.modules.pop("homeassistant.components.matter.ble_proxy", None)
-        else:
-            sys.modules["homeassistant.components.matter.ble_proxy"] = original
 
 
 @pytest.fixture(name="listen_ready_timeout")
