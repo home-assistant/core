@@ -267,12 +267,21 @@ def test_cache_load_drops_malformed_entries(tmp_path: Path) -> None:
                     "bad_count.py": {"hash": "h2", "count": "three"},
                     "missing_hash.py": {"count": 4},
                     "not_dict.py": 5,
+                    # bool is an int subclass; reject so True isn't read as 1.
+                    "bool_count.py": {"hash": "h3", "count": True},
                 },
             }
         )
     )
     cache = split_tests._Cache.load(path, "abc")
     assert set(cache.entries) == {"good.py"}
+
+
+def test_cache_save_creates_parent_dir(tmp_path: Path) -> None:
+    """Save mkdirs missing parent dirs so ``--cache foo/bar.json`` works."""
+    cache_path = tmp_path / "nested" / "subdir" / "cache.json"
+    split_tests._Cache(invalidation_hash="x", entries={}).save(cache_path)
+    assert cache_path.is_file()
 
 
 def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:

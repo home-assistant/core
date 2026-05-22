@@ -333,18 +333,24 @@ class _Cache:
             return cls.empty(current_invalidation_hash)
         entries: dict[str, _CacheEntry] = {}
         for key, value in files.items():
-            if (
-                not isinstance(value, dict)
-                or not isinstance(value.get("hash"), str)
-                or not isinstance(value.get("count"), int)
-            ):
-                # Skip malformed entries instead of discarding the whole cache.
+            if not isinstance(value, dict):
                 continue
-            entries[key] = _CacheEntry(hash=value["hash"], count=value["count"])
+            hash_value = value.get("hash")
+            count = value.get("count")
+            # bool is an int subclass; reject it so {"count": true} doesn't
+            # silently parse as count=1.
+            if (
+                not isinstance(hash_value, str)
+                or not isinstance(count, int)
+                or isinstance(count, bool)
+            ):
+                continue
+            entries[key] = _CacheEntry(hash=hash_value, count=count)
         return cls(invalidation_hash=current_invalidation_hash, entries=entries)
 
     def save(self, path: Path) -> None:
-        """Write the cache to ``path``."""
+        """Write the cache to ``path``, creating parent dirs as needed."""
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             json.dumps(
                 {
