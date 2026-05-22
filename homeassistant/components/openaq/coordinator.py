@@ -8,8 +8,7 @@ from types import MappingProxyType
 from typing import Any, cast
 
 import httpx
-from openaq import ApiKeyMissingError, AsyncOpenAQ, ForbiddenError, NotAuthorizedError
-from openaq.shared.exceptions import APIError, OpenAQError
+from openaq import AsyncOpenAQ
 from openaq.shared.responses import (
     Coordinates,
     Latest,
@@ -30,11 +29,15 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location as location_util
 
-from .const import CONF_LOCATION_ID, DOMAIN, LOGGER
+from .const import (
+    CONF_LOCATION_ID,
+    DOMAIN,
+    LOGGER,
+    OPENAQ_AUTH_EXCEPTIONS,
+    OPENAQ_UPDATE_EXCEPTIONS,
+)
 
 UPDATE_INTERVAL = timedelta(minutes=10)
-AUTH_EXCEPTIONS = (ApiKeyMissingError, ForbiddenError, NotAuthorizedError)
-API_EXCEPTIONS = (APIError, OpenAQError, httpx.HTTPError)
 
 OPENAQ_UNIT_ALIASES = {
     "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -124,7 +127,7 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     return parameter.name.lower().replace(".", "").replace("_", "")
 
 
-def _as_float(value: float | int | None) -> float | None:
+def _as_float(value: float | None) -> float | None:
     """Return value as a float when it is a numeric sensor value."""
     if isinstance(value, (float, int)):
         return float(value)
@@ -185,6 +188,25 @@ def normalize_latest_measurements(
     return MappingProxyType(measurements)
 
 
+def _first_exception(exc: BaseException) -> BaseException:
+    """Return the first nested exception."""
+    if isinstance(exc, BaseExceptionGroup):
+        return _first_exception(exc.exceptions[0])
+    return exc
+
+
+def _exception_group_cause(
+    err: ExceptionGroup, exception_types: tuple[type[Exception], ...] | None = None
+) -> BaseException:
+    """Return the exception to chain from an exception group."""
+    if (
+        exception_types is not None
+        and (subgroup := err.subgroup(exception_types)) is not None
+    ):
+        return _first_exception(subgroup)
+    return _first_exception(err)
+
+
 class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
     """Coordinator for fetching OpenAQ location data."""
 
@@ -215,53 +237,55 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         """Fetch data from OpenAQ."""
         location: Location
         sensors: Sequence[Sensor]
-        try:
-            if self._location is None or self._sensors is None:
-                try:
-                    async with asyncio.TaskGroup() as tg:
-                        location_task = tg.create_task(
-                            self.client.locations.get(self.location_id)
-                        )
-                        latest_task = tg.create_task(
-                            self.client.locations.latest(self.location_id)
-                        )
-                        sensors_task = tg.create_task(
-                            self.client.locations.sensors(self.location_id)
-                        )
-                except ExceptionGroup as err:
-                    if err.subgroup(AUTH_EXCEPTIONS) is not None:
-                        raise UpdateFailed(
-                            translation_domain=DOMAIN,
-                            translation_key="authentication_failed",
-                        ) from err
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="unable_to_fetch",
-                    ) from err
-                location_response = location_task.result()
-                latest_response = latest_task.result()
-                sensors_response = sensors_task.result()
-                if not location_response.results:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="unable_to_fetch",
+        if self._location is None or self._sensors is None:
+            try:
+                async with asyncio.TaskGroup() as tg:
+                    location_task = tg.create_task(
+                        self.client.locations.get(self.location_id)
                     )
-                self._location = location_response.results[0]
-                self._sensors = sensors_response.results
-            else:
-                location = self._location
-                sensors = self._sensors
+                    latest_task = tg.create_task(
+                        self.client.locations.latest(self.location_id)
+                    )
+                    sensors_task = tg.create_task(
+                        self.client.locations.sensors(self.location_id)
+                    )
+            except ExceptionGroup as err:
+                if err.subgroup(OPENAQ_AUTH_EXCEPTIONS) is not None:
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_failed",
+                    ) from _exception_group_cause(err, OPENAQ_AUTH_EXCEPTIONS)
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_fetch",
+                ) from _exception_group_cause(err)
+            location_response = location_task.result()
+            latest_response = latest_task.result()
+            sensors_response = sensors_task.result()
+            if not location_response.results:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_fetch",
+                )
+            self._location = location_response.results[0]
+            self._sensors = sensors_response.results
+            location = self._location
+            sensors = self._sensors
+        else:
+            location = self._location
+            sensors = self._sensors
+            try:
                 latest_response = await self.client.locations.latest(self.location_id)
-        except AUTH_EXCEPTIONS as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from err
-        except API_EXCEPTIONS as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_fetch",
-            ) from err
+            except OPENAQ_AUTH_EXCEPTIONS as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
+            except OPENAQ_UPDATE_EXCEPTIONS as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_fetch",
+                ) from err
 
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(
