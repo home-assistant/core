@@ -1,34 +1,54 @@
 rules:
   # Bronze
-  action-setup: todo
-  appropriate-polling: todo
-  brands: todo
-  common-modules: todo
-  config-flow-test-coverage: todo
-  config-flow: todo
-  dependency-transparency: todo
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
-  entity-event-setup: todo
-  entity-unique-id: todo
-  has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any actions.
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: TODO
+  common-modules:
+    status: exempt
+    comment: Single platform integration, no shared modules needed.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: TODO
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  docs-high-level-description:
+    status: exempt
+    comment: TODO
+  docs-installation-instructions:
+    status: exempt
+    comment: TODO
+  docs-removal-instructions:
+    status: exempt
+    comment: TODO
+  entity-event-setup:
+    status: exempt
+    comment: This integration uses polling via DataUpdateCoordinator, not push.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable: todo
-  integration-owner: todo
+  integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
