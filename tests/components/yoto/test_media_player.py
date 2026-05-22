@@ -31,13 +31,14 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "media_player.nursery_yoto"
 
+pytestmark = pytest.mark.usefixtures("setup_credentials")
 
+
+@pytest.mark.usefixtures("mock_token_hex")
 async def test_entity_state(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
-    mock_token_hex: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -62,7 +63,6 @@ async def test_playback_commands(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     service: str,
     method: str,
 ) -> None:
@@ -83,7 +83,6 @@ async def test_set_volume(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """Volume is forwarded as an integer 0-100."""
     await setup_integration(hass, mock_config_entry)
@@ -102,7 +101,6 @@ async def test_play_media_with_full_id(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """play_media parses the structured media id."""
     await setup_integration(hass, mock_config_entry)
@@ -131,7 +129,6 @@ async def test_seek(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """Seek delegates to the client with the integer position."""
     await setup_integration(hass, mock_config_entry)
@@ -159,7 +156,6 @@ async def test_play_media_invalid(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     media_id: str,
 ) -> None:
     """An empty card id, missing card id, malformed seconds, or extra segment is rejected."""
@@ -182,7 +178,6 @@ async def test_play_media_card_only(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """play_media defaults missing fields to None."""
     await setup_integration(hass, mock_config_entry)
@@ -211,7 +206,6 @@ async def test_state_off_when_offline(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """When the player reports offline the state is OFF."""
     player = next(iter(mock_yoto_client.players.values()))
@@ -228,7 +222,6 @@ async def test_no_card_metadata_when_card_id_missing(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """Card metadata properties return None when no card is active."""
     player = next(iter(mock_yoto_client.players.values()))
@@ -247,7 +240,6 @@ async def test_state_idle_before_first_event(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """A freshly-online player with no playback event yet reports IDLE."""
     player = next(iter(mock_yoto_client.players.values()))
@@ -264,7 +256,6 @@ async def test_command_error_raises(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """Yoto command failures surface as HomeAssistantError."""
     await setup_integration(hass, mock_config_entry)

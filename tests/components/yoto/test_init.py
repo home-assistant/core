@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from yoto_api import AuthenticationError, YotoAPIError, YotoError
 
 from homeassistant.components.yoto.const import (
@@ -21,12 +22,13 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+pytestmark = pytest.mark.usefixtures("setup_credentials")
+
 
 async def test_setup_unload(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """The integration loads and unloads cleanly."""
     await setup_integration(hass, mock_config_entry)
@@ -42,7 +44,6 @@ async def test_setup_triggers_reauth_on_auth_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """An authentication error during refresh triggers reauth."""
     mock_yoto_client.refresh.side_effect = AuthenticationError("denied")
@@ -61,7 +62,6 @@ async def test_setup_retries_on_api_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """A non-auth API failure surfaces as a setup retry."""
     mock_yoto_client.refresh.side_effect = YotoAPIError("boom")
@@ -74,7 +74,6 @@ async def test_mqtt_event_dispatches_update(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """An MQTT event published by the broker pushes fresh data to listeners."""
     await setup_integration(hass, mock_config_entry)
@@ -96,7 +95,6 @@ async def test_status_push_tick(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The status-push timer publishes a request every 60 s."""
@@ -115,7 +113,6 @@ async def test_status_push_skipped_when_mqtt_disconnected(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The status-push timer is a no-op while MQTT is reconnecting."""
@@ -134,7 +131,6 @@ async def test_periodic_poll_refreshes_players(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The coordinator refreshes the player list on every tick."""
@@ -152,7 +148,6 @@ async def test_periodic_poll_triggers_reauth_on_auth_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """An auth failure mid-session triggers reauth."""
@@ -173,7 +168,6 @@ async def test_periodic_poll_triggers_reauth_on_auth_failure(
 async def test_setup_retries_when_implementation_missing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """Missing OAuth2 implementation defers setup as not-ready."""
     with patch(
@@ -188,7 +182,6 @@ async def test_setup_retries_when_implementation_missing(
 async def test_setup_retries_on_token_refresh_network_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """A network error while validating the token defers setup."""
     with patch(
@@ -204,7 +197,6 @@ async def test_setup_retries_when_mqtt_unavailable(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """MQTT connect failure surfaces as a setup retry."""
     mock_yoto_client.connect_events.side_effect = YotoError("mqtt down")
@@ -218,7 +210,6 @@ async def test_setup_succeeds_without_card_library(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
 ) -> None:
     """A library load failure doesn't block setup; titles and artwork stay empty."""
     mock_yoto_client.update_library.side_effect = YotoError("library down")
@@ -232,7 +223,6 @@ async def test_periodic_poll_fails_on_network_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """A network error during periodic refresh marks the coordinator failed."""
@@ -253,7 +243,6 @@ async def test_periodic_poll_fails_on_api_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    setup_credentials: None,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """A non-auth API error during periodic refresh marks the coordinator failed."""
