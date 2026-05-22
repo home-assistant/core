@@ -134,26 +134,22 @@ async def test_set_profile_fan_speed_error(
 
 
 @pytest.mark.parametrize(
-    ("profile", "duration", "expected_key"),
+    ("profile", "duration"),
     [
-        ("home", None, "failed_to_set_profile"),
-        ("home", PROFILE_DURATION_INDEFINITE, "failed_to_set_profile"),
-        ("home", 15, "failed_to_set_profile_for_duration"),
-        ("boost", None, "failed_to_set_profile"),
-        ("boost", PROFILE_DURATION_INDEFINITE, "failed_to_set_profile"),
-        ("boost", 20, "failed_to_set_profile_for_duration"),
-        ("fireplace", 10, "failed_to_set_profile_for_duration"),
-        ("extra", None, "failed_to_set_profile"),
+        ("home", None),
+        ("home", PROFILE_DURATION_INDEFINITE),
+        ("boost", None),
+        ("boost", PROFILE_DURATION_INDEFINITE),
+        ("extra", None),
     ],
 )
-async def test_set_profile_error(
+async def test_set_profile_without_duration_error(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
     profile: str,
     duration: int | None,
-    expected_key: str,
 ) -> None:
-    """Test error handling when setting profile fails."""
+    """Test error handling when setting profile without duration fails."""
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -173,12 +169,44 @@ async def test_set_profile_error(
             )
 
         assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == expected_key
+        assert exc_info.value.translation_key == "failed_to_set_profile"
+        assert exc_info.value.translation_placeholders == {"profile": profile}
 
-        if expected_key == "failed_to_set_profile_for_duration":
-            assert exc_info.value.translation_placeholders == {
-                "profile": profile,
-                "duration": str(duration),
-            }
-        else:
-            assert exc_info.value.translation_placeholders == {"profile": profile}
+
+@pytest.mark.parametrize(
+    ("profile", "duration"),
+    [
+        ("home", 15),
+        ("boost", 20),
+        ("fireplace", 10),
+    ],
+)
+async def test_set_profile_with_duration_error(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    profile: str,
+    duration: int | None,
+) -> None:
+    """Test error handling when setting profile with duration fails."""
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch_set_profile() as set_profile:
+        set_profile.side_effect = ValloxApiException("API error")
+
+        service_data = {ATTR_PROFILE: profile} | ({ATTR_DURATION: duration})
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                DOMAIN,
+                ValloxService.SET_PROFILE,
+                service_data=service_data,
+                blocking=True,
+            )
+
+        assert exc_info.value.translation_domain == DOMAIN
+        assert exc_info.value.translation_key == "failed_to_set_profile_for_duration"
+        assert exc_info.value.translation_placeholders == {
+            "profile": profile,
+            "duration": str(duration),
+        }
