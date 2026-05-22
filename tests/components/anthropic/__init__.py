@@ -36,6 +36,7 @@ from anthropic.types import (
     ThinkingTypes,
     ToolSearchToolResultBlock,
     ToolUseBlock,
+    WebFetchToolResultBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
     WebSearchToolResultError,
@@ -47,8 +48,48 @@ from anthropic.types.text_editor_code_execution_tool_result_block import (
 from anthropic.types.tool_search_tool_result_block import (
     Content as ToolSearchToolResultBlockContent,
 )
+from anthropic.types.web_fetch_tool_result_block import (
+    Content as WebFetchToolResultBlockContent,
+)
 
 model_list = [
+    ModelInfo(
+        id="claude-opus-4-7",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=True),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=True),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=CapabilitySupport(supported=True),
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=True),
+                    enabled=CapabilitySupport(supported=False),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2026, 4, 14, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4.7",
+        max_input_tokens=1000000,
+        max_tokens=128000,
+        type="model",
+    ),
     ModelInfo(
         id="claude-sonnet-4-6",
         capabilities=ModelCapabilities(
@@ -67,6 +108,7 @@ model_list = [
                 max=CapabilitySupport(supported=True),
                 medium=CapabilitySupport(supported=True),
                 supported=True,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -103,6 +145,7 @@ model_list = [
                 max=CapabilitySupport(supported=True),
                 medium=CapabilitySupport(supported=True),
                 supported=True,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -139,6 +182,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=True),
                 supported=True,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -175,6 +219,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=False),
                 supported=False,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -211,6 +256,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=False),
                 supported=False,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -247,6 +293,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=False),
                 supported=False,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -283,6 +330,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=False),
                 supported=False,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -319,6 +367,7 @@ model_list = [
                 max=CapabilitySupport(supported=False),
                 medium=CapabilitySupport(supported=False),
                 supported=False,
+                xhigh=None,
             ),
             image_input=CapabilitySupport(supported=True),
             pdf_input=CapabilitySupport(supported=True),
@@ -335,42 +384,6 @@ model_list = [
         display_name="Claude Sonnet 4",
         max_input_tokens=1000000,
         max_tokens=64000,
-        type="model",
-    ),
-    ModelInfo(
-        id="claude-3-haiku-20240307",
-        capabilities=ModelCapabilities(
-            batch=CapabilitySupport(supported=True),
-            citations=CapabilitySupport(supported=False),
-            code_execution=CapabilitySupport(supported=False),
-            context_management=ContextManagementCapability(
-                clear_thinking_20251015=CapabilitySupport(supported=False),
-                clear_tool_uses_20250919=CapabilitySupport(supported=False),
-                compact_20260112=CapabilitySupport(supported=False),
-                supported=False,
-            ),
-            effort=EffortCapability(
-                high=CapabilitySupport(supported=False),
-                low=CapabilitySupport(supported=False),
-                max=CapabilitySupport(supported=False),
-                medium=CapabilitySupport(supported=False),
-                supported=False,
-            ),
-            image_input=CapabilitySupport(supported=True),
-            pdf_input=CapabilitySupport(supported=False),
-            structured_outputs=CapabilitySupport(supported=False),
-            thinking=ThinkingCapability(
-                supported=False,
-                types=ThinkingTypes(
-                    adaptive=CapabilitySupport(supported=False),
-                    enabled=CapabilitySupport(supported=False),
-                ),
-            ),
-        ),
-        created_at=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.UTC),
-        display_name="Claude Haiku 3",
-        max_input_tokens=200000,
-        max_tokens=4096,
         type="model",
     ),
 ]
@@ -627,6 +640,31 @@ def create_tool_search_result_block(
                 type="tool_search_tool_result",
                 tool_use_id=id,
                 content=results,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_fetch_result_block(
+    index: int,
+    id: str,
+    results: WebFetchToolResultBlockContent,
+    caller: Caller | None = None,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for web fetch results."""
+    if caller is None:
+        caller = DirectCaller(type="direct")
+
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=WebFetchToolResultBlock(
+                type="web_fetch_tool_result",
+                tool_use_id=id,
+                content=results,
+                caller=caller,
             ),
             index=index,
         ),

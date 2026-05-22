@@ -27,13 +27,13 @@ from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -46,7 +46,7 @@ from homeassistant.components.anthropic.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -171,7 +171,11 @@ async def test_creating_conversation_subentry_not_loaded(
         (APITimeoutError(request=None), "timeout_connect"),
         (
             BadRequestError(
-                message="Your credit balance is too low to access the Claude API. Please go to Plans & Billing to upgrade or purchase credits.",
+                message=(
+                    "Your credit balance is too low to access"
+                    " the Claude API. Please go to Plans &"
+                    " Billing to upgrade or purchase credits."
+                ),
                 response=Response(
                     status_code=400,
                     request=Request(method="POST", url=URL()),
@@ -276,10 +280,7 @@ async def test_subentry_options_thinking_budget_more_than_max(
     # Configure advanced step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
-        {
-            "chat_model": "claude-sonnet-4-5",
-            "temperature": 1,
-        },
+        {"chat_model": "claude-sonnet-4-5"},
     )
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
@@ -390,11 +391,12 @@ async def test_subentry_web_search_user_location(
         "prompt_caching": "prompt",
         "recommended": False,
         "region": "California",
-        "temperature": 1.0,
         "thinking_budget": 1024,
         "timezone": "America/Los_Angeles",
         "tool_search": False,
         "user_location": True,
+        "web_fetch": False,
+        "web_fetch_max_uses": 5,
         "web_search": True,
         "web_search_max_uses": 5,
         "code_execution": False,
@@ -558,6 +560,8 @@ async def test_invalid_model(
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "prompt",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: True,
+                CONF_WEB_FETCH_MAX_USES: 6,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_MAX_USES: 4,
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -574,10 +578,11 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-haiku-4-5",
-                    CONF_TEMPERATURE: 1.0,
                     CONF_PROMPT_CACHING: "off",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 7,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -588,10 +593,11 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "off",
-                CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 7,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -606,6 +612,8 @@ async def test_invalid_model(
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT_CACHING: "off",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -619,10 +627,11 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                    CONF_TEMPERATURE: 1.0,
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 8,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -635,11 +644,12 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "automatic",
-                CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 8,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -653,6 +663,8 @@ async def test_invalid_model(
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "automatic",
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -666,28 +678,30 @@ async def test_invalid_model(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-opus-4-6",
-                    CONF_TEMPERATURE: 1.0,
+                    CONF_CHAT_MODEL: "claude-opus-4-7",
                     CONF_PROMPT_CACHING: "prompt",
                 },
                 {
+                    CONF_WEB_FETCH: False,
+                    CONF_WEB_FETCH_MAX_USES: 9,
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_MAX_USES: 10,
                     CONF_WEB_SEARCH_USER_LOCATION: False,
                     CONF_TOOL_SEARCH: False,
                     CONF_CODE_EXECUTION: True,
-                    CONF_THINKING_EFFORT: "medium",
+                    CONF_THINKING_EFFORT: "xhigh",
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "prompt",
-                CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_CHAT_MODEL: "claude-opus-4-7",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
-                CONF_THINKING_EFFORT: "medium",
+                CONF_THINKING_EFFORT: "xhigh",
                 CONF_TOOL_SEARCH: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 9,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -706,8 +720,7 @@ async def test_invalid_model(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-haiku-20240307",
-                    CONF_TEMPERATURE: 0.3,
+                    CONF_CHAT_MODEL: "claude-haiku-4-5",
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
@@ -716,9 +729,15 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "automatic",
-                CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: "claude-3-haiku-20240307",
+                CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5,
+                CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
+                CONF_CODE_EXECUTION: False,
             },
         ),
         (  # Test switching from custom to recommended options
@@ -726,11 +745,12 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "off",
-                CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_TOOL_SEARCH: True,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -888,7 +908,6 @@ async def test_creating_ai_task_subentry_advanced(
         result["flow_id"],
         {
             CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_TEMPERATURE: 0.5,
         },
     )
 
@@ -910,8 +929,9 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
         CONF_MAX_TOKENS: 1200,
-        CONF_TEMPERATURE: 0.5,
         CONF_TOOL_SEARCH: False,
+        CONF_WEB_FETCH: False,
+        CONF_WEB_FETCH_MAX_USES: 5,
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
         CONF_WEB_SEARCH_USER_LOCATION: False,

@@ -1,7 +1,5 @@
 """Config flow for Samsung TV."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 import socket
@@ -444,7 +442,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
         self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             # If its loaded it already has a reload listener in place
             # and we do not want to trigger multiple reloads
             self.hass.async_create_task(

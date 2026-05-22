@@ -28,12 +28,19 @@ def is_valid_zone(zone: evo.Zone) -> bool:
     )
 
 
-class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
-    """Base for any evohome-compatible entity (controller, DHW, zone).
+def unique_zone_id(evo_device: evo.Zone) -> str:
+    """Return a unique identifier for a zone-based entity.
 
-    This includes the controller, (1 to 12) heating zones and (optionally) a
-    DHW controller.
+    Some systems assign the zone the same ID as its parent TCS; in that case
+    we append 'z' so the zone entity doesn't collide with the controller entity.
     """
+    if evo_device.id == evo_device.tcs.id:
+        return f"{evo_device.id}z"
+    return evo_device.id
+
+
+class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
+    """Base for Evohome's Climate & WaterHeater entities."""
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
@@ -86,6 +93,7 @@ class EvoChild(EvoEntity):
         """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(coordinator, evo_device)
 
+        self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
         self._schedule: list[DayOfWeekDhwT] | None = None

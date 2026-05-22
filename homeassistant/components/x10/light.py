@@ -1,7 +1,5 @@
 """Support for X10 lights."""
 
-from __future__ import annotations
-
 import logging
 from subprocess import STDOUT, CalledProcessError, check_output
 from typing import Any
@@ -83,7 +81,8 @@ class X10Light(LightEntity):
         """Instruct the light to turn on."""
         old_brightness = self._attr_brightness
         if old_brightness == 0:
-            # Dim down from max if applicable, also avoids a "dim" command if an "on" is more appropriate
+            # Dim down from max if applicable, also avoids
+            # a "dim" command if an "on" is more appropriate
             old_brightness = 255
         self._attr_brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         brightness_diff = self.normalize_x10_brightness(

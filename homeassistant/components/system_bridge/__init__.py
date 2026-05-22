@@ -1,7 +1,5 @@
 """The System Bridge integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import asdict
 import logging
@@ -217,12 +215,9 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    # Set up all platforms except notify
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Set up notify platform
+    # Set up legacy notify platform
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -348,6 +343,7 @@ async def async_setup_entry(
         )
         return asdict(response)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PROCESS_BY_ID,
@@ -361,6 +357,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PROCESSES_BY_NAME,
@@ -374,6 +371,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_PATH,
@@ -387,6 +385,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_POWER_COMMAND,
@@ -400,6 +399,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_URL,
@@ -413,6 +413,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_KEYPRESS,
@@ -429,6 +430,7 @@ async def async_setup_entry(
         },
     )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_TEXT,
@@ -452,9 +454,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         coordinator = entry.runtime_data
 

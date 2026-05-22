@@ -1,7 +1,5 @@
 """Light platform support for yeelight."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -39,7 +37,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
-from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
@@ -51,11 +49,8 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CONFIG_ENTRIES,
-    DATA_CUSTOM_EFFECTS,
-    DATA_DEVICE,
+    DATA_CUSTOM_EFFECTS_KEY,
     DATA_UPDATED,
-    DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
 )
@@ -220,7 +215,9 @@ def _transitions_config_parser(transitions):
 
 
 @callback
-def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
+def _parse_custom_effects(
+    effects_config: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
@@ -278,13 +275,13 @@ def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YeelightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
-    custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
+    custom_effects = _parse_custom_effects(hass.data[DATA_CUSTOM_EFFECTS_KEY])
 
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
+    device = config_entry.runtime_data
     _LOGGER.debug("Adding %s", device.name)
 
     nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)
@@ -598,6 +595,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Set the music mode on or off."""
         try:
             await self._async_set_music_mode(music_mode)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError as ex:
             _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
 

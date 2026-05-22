@@ -1,7 +1,5 @@
 """Data coordinators for the ring integration."""
 
-from __future__ import annotations
-
 from asyncio import TaskGroup
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass

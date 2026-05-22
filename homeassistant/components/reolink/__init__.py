@@ -1,7 +1,5 @@
 """Reolink integration for HomeAssistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
@@ -77,6 +75,7 @@ async def async_setup_entry(
         await host.async_init()
     except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed(err) from err
     except (
         ReolinkException,
@@ -498,7 +497,8 @@ def migrate_entity_ids(
             id_parts = entity.unique_id.split("_", 2)
             if len(id_parts) < 3:
                 _LOGGER.warning(
-                    "Reolink channel %s entity has unexpected unique_id format %s, with device id %s",
+                    "Reolink channel %s entity has unexpected"
+                    " unique_id format %s, with device id %s",
                     ch,
                     entity.unique_id,
                     entity.device_id,

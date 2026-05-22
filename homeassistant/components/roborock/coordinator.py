@@ -1,11 +1,9 @@
 """Roborock Coordinator."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -163,6 +161,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
         except RoborockException as err:
             _LOGGER.debug("Failed to get maps: %s", err)
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
@@ -357,10 +356,9 @@ async def _refresh_traits(traits: list[Any]) -> None:
             ) from ex
 
 
-_V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)
-
-
-class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]]):
+class RoborockDataUpdateCoordinatorA01[
+    _V: RoborockDyadDataProtocol | RoborockZeoProtocol
+](DataUpdateCoordinator[dict[_V, StateType]]):
     """Class to manage fetching data from the API for A01 devices."""
 
     config_entry: RoborockConfigEntry
@@ -550,6 +548,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.WIND,
             RoborockB01Props.WATER,
             RoborockB01Props.MODE,
+            RoborockB01Props.CLEAN_PATH_PREFERENCE,
             RoborockB01Props.QUANTITY,
         ]
 

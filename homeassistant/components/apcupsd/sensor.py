@@ -1,7 +1,5 @@
 """Support for APCUPSd sensors."""
 
-from __future__ import annotations
-
 import logging
 
 import dateutil
@@ -475,13 +473,16 @@ async def async_setup_entry(
 
     entities = []
 
-    # "laststest" is a special sensor that only appears when the APC UPS daemon has done a
-    # periodical (or manual) self test since last daemon restart. It might not be available
-    # when we set up the integration, and we do not know if it would ever be available. Here we
-    # add it anyway and mark it as unknown initially.
+    # "laststest" is a special sensor that only appears when
+    # the APC UPS daemon has done a periodical (or manual) self
+    # test since last daemon restart. It might not be available
+    # when we set up the integration, and we do not know if it
+    # would ever be available. Here we add it anyway and mark it
+    # as unknown initially.
     #
-    # We also sort the resources to ensure the order of entities created is deterministic since
-    # "APCMODEL" and "MODEL" resources map to the same "Model" name.
+    # We also sort the resources to ensure the order of entities
+    # created is deterministic since "APCMODEL" and "MODEL"
+    # resources map to the same "Model" name.
     for resource in sorted(available_resources | {LAST_S_TEST}):
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
@@ -529,9 +530,11 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
         key = self.entity_description.key.upper()
-        # For most sensors the key will always be available for each refresh. However, some sensors
-        # (e.g., "laststest") will only appear after certain event occurs (e.g., a self test is
-        # performed) and may disappear again after certain event. So we mark the state as "unknown"
+        # For most sensors the key will always be available for
+        # each refresh. However, some sensors (e.g., "laststest")
+        # will only appear after certain event occurs (e.g., a
+        # self test is performed) and may disappear again after
+        # certain event. So we mark the state as "unknown"
         # when it becomes unknown after such events.
         if key not in self.coordinator.data:
             self._attr_native_value = None
@@ -540,7 +543,8 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         data = self.coordinator.data[key]
 
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            # The date could be "N/A" for certain fields (e.g., XOFFBATT), indicating there is no value yet.
+            # The date could be "N/A" for certain fields
+            # (e.g., XOFFBATT), indicating there is no value yet.
             if data == "N/A":
                 self._attr_native_value = None
                 return
@@ -548,7 +552,8 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
             try:
                 self._attr_native_value = dateutil.parser.parse(data)
             except dateutil.parser.ParserError, OverflowError:
-                # If parsing fails we should mark it as unknown, with a log for further debugging.
+                # If parsing fails we should mark it as unknown,
+                # with a log for further debugging.
                 _LOGGER.warning('Failed to parse date for %s: "%s"', key, data)
                 self._attr_native_value = None
             return
@@ -580,7 +585,8 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         entity_registry = er.async_get(self.hass)
         items = [
             f"- [{entry.name or entry.original_name or entity_id}]"
-            f"(/config/{integration}/edit/{entry.unique_id or entity_id.split('.', 1)[-1]})"
+            f"(/config/{integration}/edit/"
+            f"{entry.unique_id or entity_id.split('.', 1)[-1]})"
             for integration, entities in (
                 ("automation", automations),
                 ("script", scripts),

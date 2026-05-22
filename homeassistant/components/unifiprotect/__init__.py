@@ -1,7 +1,5 @@
 """UniFi Protect Platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -86,7 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     except NotAuthorized as err:
         data_service.auth_retries += 1
         if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="entry_auth_failed",
+            ) from err
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
@@ -157,6 +158,13 @@ async def _async_setup_entry(
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
+
+    # Prime the public bootstrap. The devices websocket subscription was already
+    # registered in async_setup() per library docs (subscribe first, then prime).
+    try:
+        await data_service.api.update_public()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
 
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()

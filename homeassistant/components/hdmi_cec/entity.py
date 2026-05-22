@@ -1,7 +1,5 @@
 """Support for HDMI CEC."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.core import callback
@@ -54,7 +52,11 @@ class CecEntity(Entity):
         elif self._device.osd_name is None:
             self._attr_name = f"{self._device.type_name} {self._logical_address}"
         else:
-            self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
+            self._attr_name = (
+                f"{self._device.type_name}"
+                f" {self._logical_address}"
+                f" ({self._device.osd_name})"
+            )
 
     @callback
     def _hdmi_cec_unavailable(self, callback_event):

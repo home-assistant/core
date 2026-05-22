@@ -1,7 +1,5 @@
 """Module to coordinate llm tools."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
@@ -73,18 +71,35 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
-DYNAMIC_CONTEXT_PROMPT = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+DYNAMIC_CONTEXT_PROMPT = (
+    "You ARE equipped to answer questions about the"
+    " current state of\n"
+    "the home using the `GetLiveContext` tool."
+    " This is a primary function."
+    " Do not state you lack the\n"
+    "functionality if the question requires live data.\n"
+    "If the user asks about device existence/type"
+    ' (e.g., "Do I have lights in the bedroom?"):'
+    " Answer\n"
+    "from the static context below.\n"
+    "If the user asks about the CURRENT state, value,"
+    ' or mode (e.g., "Is the lock locked?",\n'
+    '"Is the fan on?",'
+    ' "What mode is the thermostat in?",'
+    ' "What is the temperature outside?"):\n'
+    "    1.  Recognize this requires live data.\n"
+    "    2.  You MUST call `GetLiveContext`."
+    " This tool will provide the needed real-time"
+    " information (like temperature from the local"
+    " weather, lock status, etc.).\n"
+    "    3.  Use the tool's response** to answer the"
+    " user accurately"
+    ' (e.g., "The temperature outside is'
+    ' [value from tool].").\n'
+    "For general knowledge questions not about the"
+    " home: Answer truthfully from internal"
+    " knowledge.\n"
+)
 
 
 @callback
@@ -513,7 +528,11 @@ class AssistAPI(API):
                     if area.floor_id:
                         floor = floor_reg.async_get_floor(area.floor_id)
 
-            extra = "and all generic commands like 'turn on the lights' should target this area."
+            extra = (
+                "and all generic commands like"
+                " 'turn on the lights' should target"
+                " this area."
+            )
 
         if floor and area:
             prompt.append(f"You are in area {area.name} (floor {floor.name}) {extra}")
@@ -522,7 +541,8 @@ class AssistAPI(API):
         else:
             prompt.append(
                 "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area, unless there is only one device of that type."
+                "ask user to specify an area, unless there"
+                " is only one device of that type."
             )
 
         if not llm_context.device_id or not async_device_supports_timers(
@@ -543,7 +563,8 @@ class AssistAPI(API):
 
         if exposed_entities and exposed_entities["entities"]:
             prompt.append(
-                "Static Context: An overview of the areas and the devices in this smart home:"
+                "Static Context: An overview of the areas"
+                " and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
@@ -1107,7 +1128,9 @@ class TodoGetItemsTool(Tool):
     name = "todo_get_items"
     description = (
         "Query a to-do list to find out what items are on it. "
-        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Use this to answer questions like "
+        "'What's on my task list?' or "
+        "'Read my grocery list'. "
         "Filters items by status (needs_action, completed, all)."
     )
 
@@ -1118,7 +1141,11 @@ class TodoGetItemsTool(Tool):
                 vol.Required("todo_list"): vol.In(todo_lists),
                 vol.Optional(
                     "status",
-                    description="Filter returned items by status, by default returns incomplete items",
+                    description=(
+                        "Filter returned items by status,"
+                        " by default returns incomplete"
+                        " items"
+                    ),
                     default="needs_action",
                 ): vol.In(["needs_action", "completed", "all"]),
             }
@@ -1160,6 +1187,26 @@ class TodoGetItemsTool(Tool):
         return {"success": True, "result": items}
 
 
+def _live_context_match_error(
+    match_result: intent.MatchTargetsResult,
+    name_filter: str | None,
+    area_filter: str | None,
+    domain_filter: list[str] | None,
+) -> str:
+    """Build an actionable error message for a failed GetLiveContext match."""
+    reason = match_result.no_match_reason
+    if reason is intent.MatchFailedReason.INVALID_AREA:
+        return f"Area '{match_result.no_match_name}' does not exist"
+    if reason is intent.MatchFailedReason.NAME:
+        return f"No exposed entities matched name '{name_filter}'"
+    if reason is intent.MatchFailedReason.AREA:
+        return f"No exposed entities found in area '{area_filter}'"
+    if reason is intent.MatchFailedReason.DOMAIN:
+        domains = ", ".join(domain_filter) if domain_filter else ""
+        return f"No exposed entities found in domain(s): {domains}"
+    return "No entities matched the provided filter"
+
+
 class GetLiveContextTool(Tool):
     """Tool for getting the current state of exposed entities.
 
@@ -1170,10 +1217,41 @@ class GetLiveContextTool(Tool):
 
     name = "GetLiveContext"
     description = (
-        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
+        "Provides real-time information about the"
+        " CURRENT state, value, or mode of devices,"
+        " sensors, entities, or areas. "
         "Use this tool for: "
-        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
+        "1. Answering questions about current"
+        " conditions (e.g., 'Is the light on?'). "
+        "2. As the first step in conditional actions"
+        " (e.g., 'If the weather is rainy, turn off"
+        " sprinklers' requires checking the weather"
+        " first). "
+        "You may filter for devices by name, domain,"
+        " and area, including combining those"
+        " filters. "
+        "Prefer filtering by domain when searching"
+        " for multiple devices of the same type."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "name",
+                description="Filter entities by name or alias (case-insensitive).",
+            ): cv.string,
+            vol.Optional(
+                "domain",
+                description=(
+                    "Filter entities by domain"
+                    " (e.g. 'light', 'sensor')."
+                    " Accepts a single domain or a list."
+                ),
+            ): vol.Any(cv.string, [cv.string]),
+            vol.Optional(
+                "area",
+                description="Filter entities by area name or alias (case-insensitive).",
+            ): cv.string,
+        }
     )
 
     async def async_call(
@@ -1188,12 +1266,63 @@ class GetLiveContextTool(Tool):
             # exposed if no assistant is configured.
             return {"success": False, "error": "No assistant configured"}
 
+        args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        name_filter = args.get("name")
+        area_filter = args.get("area")
+        domain_filter = args.get("domain")
+
+        if isinstance(domain_filter, str):
+            domain_filter = [domain_filter]
+
+        if domain_filter is not None:
+            domain_filter = [
+                normalized_domain
+                for domain in domain_filter
+                if (normalized_domain := domain.strip().lower())
+            ]
+
+        if name_filter or area_filter or domain_filter:
+            exposed_states = [
+                state
+                for entity_id in exposed_entities["entities"]
+                if (state := hass.states.get(entity_id)) is not None
+            ]
+            match_result = intent.async_match_targets(
+                hass,
+                intent.MatchTargetsConstraints(
+                    name=name_filter,
+                    area_name=area_filter,
+                    domains=domain_filter,
+                ),
+                states=exposed_states,
+            )
+
+            if not match_result.is_match:
+                return {
+                    "success": False,
+                    "error": _live_context_match_error(
+                        match_result, name_filter, area_filter, domain_filter
+                    ),
+                }
+
+            matched_ids = {state.entity_id for state in match_result.states}
+            entities = [
+                info
+                for entity_id, info in exposed_entities["entities"].items()
+                if entity_id in matched_ids
+            ]
+        else:
+            entities = list(exposed_entities["entities"].values())
+
         prompt = [
-            "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
+            "Live Context: An overview of the areas"
+            " and the devices in this smart home:",
+            yaml_util.dump(entities),
         ]
         return {
             "success": True,

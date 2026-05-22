@@ -139,7 +139,7 @@ async def async_setup_entry(
 
 
 class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set time options on a Roborock vacuum."""
 
     entity_description: RoborockTimeDescription
 

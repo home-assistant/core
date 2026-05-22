@@ -130,6 +130,33 @@ async def test_update_coordinator_all_error(
             assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.freeze_time("2025-05-31T10:00:00+00:00")
+async def test_coordinator_location_auth_exception(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test coordinator setup when location returns VolvoAuthException."""
+    configure_mock(
+        mock_api.async_get_location, side_effect=VolvoAuthException(403, "Forbidden")
+    )
+    assert await setup_integration()
+
+    # Verify no reauthentication flow is started
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert not flows
+
+    # Verify integration loads without location entity
+    device_tracker_states = hass.states.async_all(domain_filter="device_tracker")
+    assert len(device_tracker_states) == 0
+
+    # Verify other entities still work
+    sensor_id = "sensor.volvo_xc40_odometer"
+    state = hass.states.get(sensor_id)
+    assert state.state == "30000"
+
+
 def _mock_api_failure(mock_api: VolvoCarsApi) -> AsyncMock:
     """Mock the Volvo API so that it raises an exception for all calls."""
 

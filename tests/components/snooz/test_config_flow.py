@@ -1,7 +1,5 @@
 """Test the Snooz config flow."""
 
-from __future__ import annotations
-
 from asyncio import Event, sleep
 from unittest.mock import patch
 
@@ -37,7 +35,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth with a device that's not in pairing mode, but enters pairing mode to complete setup."""
+    """Test discovery with a device not in pairing mode that enters it."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -52,7 +50,7 @@ async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
 
 
 async def test_async_step_bluetooth_retries_pairing(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth with a device that's not in pairing mode, times out waiting, but eventually complete setup."""
+    """Test discovery retries pairing after timeout and completes setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -111,7 +109,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
 async def test_async_step_user_with_found_devices_waits_to_pair(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found that require pairing mode."""
+    """Test setup from service info cache with devices requiring pairing."""
     with patch(
         "homeassistant.components.snooz.config_flow.async_discovered_service_info",
         return_value=[SNOOZ_SERVICE_INFO_NOT_PAIRING],
@@ -129,7 +127,7 @@ async def test_async_step_user_with_found_devices_waits_to_pair(
 async def test_async_step_user_with_found_devices_retries_pairing(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found that require pairing mode, times out, then completes."""
+    """Test setup from service info cache retries pairing then completes."""
     with patch(
         "homeassistant.components.snooz.config_flow.async_discovered_service_info",
         return_value=[SNOOZ_SERVICE_INFO_NOT_PAIRING],

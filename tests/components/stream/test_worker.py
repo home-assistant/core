@@ -20,9 +20,10 @@ import logging
 import math
 from pathlib import Path
 import threading
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import av
+from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
 import numpy as np
 import pytest
 
@@ -44,6 +45,7 @@ from homeassistant.components.stream.core import Orientation, StreamSettings
 from homeassistant.components.stream.exceptions import StreamClientError
 from homeassistant.components.stream.worker import (
     StreamEndedError,
+    StreamMuxer,
     StreamState,
     StreamWorkerError,
     stream_worker,
@@ -176,7 +178,10 @@ class PacketSequence:
             size = 3
 
             def __str__(self) -> str:
-                return f"FakePacket<stream={self.stream}, pts={self.pts}, key={self.is_keyframe}>"
+                return (
+                    f"FakePacket<stream={self.stream},"
+                    f" pts={self.pts}, key={self.is_keyframe}>"
+                )
 
         return FakePacket()
 
@@ -219,7 +224,7 @@ class FakePyAvBuffer:
         self.video_packets = []
         self.memory_file: io.BytesIO | None = None
 
-    def add_stream_from_template(self, template):
+    def add_stream_from_template(self, template, **kwargs):
         """Create an output buffer that captures packets for test to examine."""
 
         class FakeAvOutputStream:
@@ -310,7 +315,7 @@ async def async_decode_stream(
     py_av: MockPyAv | None = None,
     stream_settings: StreamSettings | None = None,
 ) -> FakePyAvBuffer:
-    """Start a stream worker that decodes incoming stream packets into output segments."""
+    """Start a stream worker that decodes packets into segments."""
     stream = Stream(
         hass,
         STREAM_SOURCE,
@@ -334,8 +339,9 @@ async def async_decode_stream(
         try:
             run_worker(hass, stream, STREAM_SOURCE, stream_settings)
         except StreamEndedError:
-            # Tests only use a limited number of packets, then the worker exits as expected. In
-            # production, stream ending would be unexpected.
+            # Tests only use a limited number of packets, then the
+            # worker exits as expected. In production, stream ending
+            # would be unexpected.
             pass
         finally:
             # Wait for all packets to be flushed even when exceptions are thrown
@@ -412,6 +418,7 @@ async def test_skip_out_of_order_packet(hass: HomeAssistant) -> None:
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if out_of_order_index % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
         longer_segment_index = int((out_of_order_index - 1) * SEGMENTS_PER_PACKET)
@@ -707,7 +714,8 @@ async def test_stream_stopped_while_decoding(hass: HomeAssistant) -> None:
         worker_wake.set()
         await stream.stop()
 
-    # Stream is still considered available when the worker was still active and asked to stop
+    # Stream is still considered available when the worker was still
+    # active and asked to stop
     assert stream.available
 
 
@@ -724,8 +732,8 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
         dynamic_stream_settings(),
     )
     stream.add_provider(HLS_PROVIDER)
-    # Note that retries are disabled by default in tests, however the stream is "restarted" when
-    # the stream source is updated.
+    # Note that retries are disabled by default in tests, however
+    # the stream is "restarted" when the stream source is updated.
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -914,8 +922,9 @@ async def test_has_keyframe(
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                # Our test video has keyframes every second. Use smaller parts so we have more
-                # part boundaries to better test keyframe logic.
+                # Our test video has keyframes every second. Use
+                # smaller parts so we have more part boundaries to
+                # better test keyframe logic.
                 CONF_PART_DURATION: 0.25,
             }
         },
@@ -1089,3 +1098,41 @@ async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> N
                 0
             ][0]
         ).all()
+
+
+def test_add_stream_from_template_happy_path() -> None:
+    """Test add_stream_from_template returns stream directly on success."""
+    template = MagicMock(spec=av.VideoStream)
+    expected_stream = MagicMock(spec=av.VideoStream)
+    container = MagicMock()
+    container.add_stream_from_template.return_value = expected_stream
+
+    result = StreamMuxer._add_stream_from_template(container, template)
+
+    assert result is expected_stream
+    container.add_stream_from_template.assert_called_once_with(template)
+
+
+def test_add_stream_from_template_decoder_only_fallback() -> None:
+    """Test decoder-only codecs fall back to opaque=True.
+
+    When a video stream uses a decoder-only codec like libdav1d (AV1),
+    add_stream_from_template raises UnknownCodecError because no matching
+    encoder exists. The worker retries with opaque=True to bypass the
+    encoder lookup.
+    """
+    template = MagicMock(spec=av.VideoStream)
+    expected_stream = MagicMock(spec=av.VideoStream)
+    container = MagicMock()
+    container.add_stream_from_template.side_effect = [
+        UnknownCodecError("libdav1d"),
+        expected_stream,
+    ]
+
+    result = StreamMuxer._add_stream_from_template(container, template)
+
+    assert result is expected_stream
+    assert container.add_stream_from_template.call_args_list == [
+        ((template,), {}),
+        ((template,), {"opaque": True}),
+    ]

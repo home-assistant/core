@@ -1,7 +1,5 @@
 """Voluptuous schemas for the KNX integration."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections import OrderedDict
 from datetime import timedelta
@@ -150,8 +148,10 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
 
 def _sensor_attribute_sub_validator(config: dict) -> dict:
-    """Validate that state_class is compatible with device_class and unit_of_measurement."""
-    transcoder: type[DPTBase] = DPTBase.parse_transcoder(config[CONF_TYPE])  # type: ignore[assignment]  # already checked in sensor_type_validator
+    """Validate state_class, device_class and unit compatibility."""
+    transcoder: type[DPTBase] = DPTBase.parse_transcoder(  # type: ignore[assignment]
+        config[CONF_TYPE]
+    )
     dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
     return validate_sensor_attributes(dpt_metadata, config)
 
