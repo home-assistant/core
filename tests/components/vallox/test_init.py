@@ -149,7 +149,7 @@ async def test_set_profile_without_duration_error(
     profile: str,
     duration: int | None,
 ) -> None:
-    """Test error handling when setting profile without duration fails."""
+    """Test error handling when setting profile with no/indefinite duration fails."""
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
