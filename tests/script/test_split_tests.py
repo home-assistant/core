@@ -53,10 +53,13 @@ def test_enumerate_batch_paths_for_single_file(tmp_path: Path) -> None:
     assert split_tests._enumerate_batch_paths(file) == [file]
 
 
-def _invalidation_hash_for(tree: Path) -> str:
-    """Compute the invalidation hash for ``tree`` (helper for the tests below)."""
+def _fixture_hash_for(tree: Path, file: Path) -> str:
+    """Compute the fixture scope hash for ``file`` rooted at ``tree``."""
     _, fixtures = split_tests._walk_test_tree(tree)
-    return split_tests._compute_invalidation_hash(tree, fixtures)
+    fixtures_by_dir = split_tests._index_fixtures_by_dir(
+        split_tests._find_ancestor_conftests(tree) + fixtures
+    )
+    return split_tests._file_fixture_hash(file, tree, fixtures_by_dir)
 
 
 def _prime_cache(
@@ -65,7 +68,7 @@ def _prime_cache(
     hits: dict[Path, int] | None = None,
     extra_entries: dict[str, split_tests._CacheEntry] | None = None,
 ) -> None:
-    """Save a cache for ``tree`` keyed on real file hashes.
+    """Save a cache for ``tree`` keyed on real file and fixture hashes.
 
     ``hits`` maps file → cached count (hashed for real, so the next
     run resolves as a hit).  ``extra_entries`` injects raw entries
@@ -73,16 +76,15 @@ def _prime_cache(
     """
     entries: dict[str, split_tests._CacheEntry] = {
         str(file.relative_to(tree)): split_tests._CacheEntry(
-            hash=split_tests._hash_file(file), count=count
+            hash=split_tests._hash_file(file),
+            fixture_hash=_fixture_hash_for(tree, file),
+            count=count,
         )
         for file, count in (hits or {}).items()
     }
     if extra_entries:
         entries.update(extra_entries)
-    split_tests._Cache(
-        invalidation_hash=_invalidation_hash_for(tree),
-        entries=entries,
-    ).save(cache_path)
+    split_tests._Cache(entries=entries).save(cache_path)
 
 
 def _echo_one_test_each(
@@ -98,29 +100,44 @@ def _echo_one_test_each(
     return fake
 
 
-def test_compute_invalidation_hash_changes_when_conftest_changes(tree: Path) -> None:
-    """Editing any conftest changes the global cache key."""
-    before = _invalidation_hash_for(tree)
+def test_file_fixture_hash_changes_when_ancestor_conftest_changes(tree: Path) -> None:
+    """A conftest edit in the file's ancestor chain busts that file's hash."""
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    before = _fixture_hash_for(tree, alpha_one)
+    # Same-dir conftest is an ancestor of alpha_one.
     (tree / "components" / "alpha" / "conftest.py").write_text("# changed\n")
-    after = _invalidation_hash_for(tree)
+    after = _fixture_hash_for(tree, alpha_one)
     assert before != after
 
 
-def test_compute_invalidation_hash_changes_when_helper_changes(tree: Path) -> None:
-    """Editing a non-conftest helper (eg common.py used by parametrize) busts cache."""
-    before = _invalidation_hash_for(tree)
-    (tree / "common.py").write_text("# helper changed\n")
-    after = _invalidation_hash_for(tree)
+def test_file_fixture_hash_changes_when_same_dir_helper_changes(tree: Path) -> None:
+    """A non-conftest helper in the same dir busts the file's hash."""
+    alpha_dir = tree / "components" / "alpha"
+    (alpha_dir / "common.py").write_text("# helper v1\n")
+    alpha_one = alpha_dir / "test_one.py"
+    before = _fixture_hash_for(tree, alpha_one)
+    (alpha_dir / "common.py").write_text("# helper v2\n")
+    after = _fixture_hash_for(tree, alpha_one)
     assert before != after
 
 
-def test_compute_invalidation_hash_stable_for_test_changes(tree: Path) -> None:
-    """Test-file edits do not invalidate the global cache key."""
-    before = _invalidation_hash_for(tree)
-    (tree / "components" / "alpha" / "test_one.py").write_text(
-        "def test_a():\n    pass\n\ndef test_c():\n    pass\n"
-    )
-    after = _invalidation_hash_for(tree)
+def test_file_fixture_hash_isolated_from_sibling_dir(tree: Path) -> None:
+    """A helper change in a sibling dir leaves this file's hash alone."""
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    before = _fixture_hash_for(tree, alpha_one)
+    # common.py at tree root is NOT in alpha_one's same-dir scope, so it
+    # shouldn't affect alpha_one's fixture hash.
+    (tree / "common.py").write_text("# unrelated change\n")
+    after = _fixture_hash_for(tree, alpha_one)
+    assert before == after
+
+
+def test_file_fixture_hash_stable_for_test_changes(tree: Path) -> None:
+    """Test-file edits do not invalidate the file's fixture hash."""
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    before = _fixture_hash_for(tree, alpha_one)
+    alpha_one.write_text("def test_a():\n    pass\n\ndef test_c():\n    pass\n")
+    after = _fixture_hash_for(tree, alpha_one)
     assert before == after
 
 
@@ -139,21 +156,18 @@ def test_find_ancestor_conftests_walks_up_until_gap(tmp_path: Path) -> None:
     ]
 
 
-def test_compute_invalidation_hash_changes_on_ancestor_change(tmp_path: Path) -> None:
-    """An ancestor conftest edit must invalidate a subtree run's cache."""
+def test_file_fixture_hash_includes_ancestor_above_root(tmp_path: Path) -> None:
+    """An ancestor conftest above root must still scope a subtree file."""
     (tmp_path / "conftest.py").write_text("# parent\n")
     subtree = tmp_path / "components"
     subtree.mkdir()
-    (subtree / "test_x.py").write_text("def test_x(): pass\n")
+    test_file = subtree / "test_x.py"
+    test_file.write_text("def test_x(): pass\n")
 
-    def _hash() -> str:
-        _, descendant = split_tests._walk_test_tree(subtree)
-        ancestors = split_tests._find_ancestor_conftests(subtree)
-        return split_tests._compute_invalidation_hash(subtree, ancestors + descendant)
-
-    before = _hash()
+    before = _fixture_hash_for(subtree, test_file)
     (tmp_path / "conftest.py").write_text("# parent changed\n")
-    assert _hash() != before
+    after = _fixture_hash_for(subtree, test_file)
+    assert before != after
 
 
 def test_walk_test_tree_separates_tests_from_fixtures(tree: Path) -> None:
@@ -203,54 +217,39 @@ def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
 
 
 def test_cache_roundtrip(tmp_path: Path) -> None:
-    """A cache survives save → load when the conftest hash matches."""
+    """A cache survives save → load."""
     cache_path = tmp_path / "cache.json"
     cache = split_tests._Cache(
-        invalidation_hash="abc",
-        entries={"tests/alpha/test_a.py": split_tests._CacheEntry(hash="h1", count=5)},
+        entries={
+            "tests/alpha/test_a.py": split_tests._CacheEntry(
+                hash="h1", fixture_hash="f1", count=5
+            )
+        },
     )
     cache.save(cache_path)
-    loaded = split_tests._Cache.load(cache_path, "abc")
+    loaded = split_tests._Cache.load(cache_path)
     assert loaded.entries == cache.entries
-    assert loaded.invalidation_hash == "abc"
 
 
 def test_cache_load_missing_returns_empty(tmp_path: Path) -> None:
     """A missing cache file degrades gracefully to an empty cache."""
-    cache = split_tests._Cache.load(tmp_path / "missing.json", "abc")
+    cache = split_tests._Cache.load(tmp_path / "missing.json")
     assert cache.entries == {}
-    assert cache.invalidation_hash == "abc"
 
 
 def test_cache_load_invalid_json_returns_empty(tmp_path: Path) -> None:
     """Corrupt JSON is treated as a cache miss instead of crashing."""
     path = tmp_path / "broken.json"
     path.write_text("{not json")
-    cache = split_tests._Cache.load(path, "abc")
+    cache = split_tests._Cache.load(path)
     assert cache.entries == {}
 
 
 def test_cache_load_wrong_version_returns_empty(tmp_path: Path) -> None:
     """An older cache schema is discarded rather than misread."""
     path = tmp_path / "old.json"
-    path.write_text(json.dumps({"version": 0, "invalidation_hash": "abc", "files": {}}))
-    cache = split_tests._Cache.load(path, "abc")
-    assert cache.entries == {}
-
-
-def test_cache_load_conftest_drift_returns_empty(tmp_path: Path) -> None:
-    """A conftest change invalidates the entire cached set."""
-    path = tmp_path / "cache.json"
-    path.write_text(
-        json.dumps(
-            {
-                "version": split_tests._CACHE_VERSION,
-                "invalidation_hash": "old",
-                "files": {"test_a.py": {"hash": "h1", "count": 3}},
-            }
-        )
-    )
-    cache = split_tests._Cache.load(path, "new")
+    path.write_text(json.dumps({"version": 0, "files": {}}))
+    cache = split_tests._Cache.load(path)
     assert cache.entries == {}
 
 
@@ -261,57 +260,145 @@ def test_cache_load_drops_malformed_entries(tmp_path: Path) -> None:
         json.dumps(
             {
                 "version": split_tests._CACHE_VERSION,
-                "invalidation_hash": "abc",
                 "files": {
-                    "good.py": {"hash": "h1", "count": 3},
-                    "bad_count.py": {"hash": "h2", "count": "three"},
-                    "missing_hash.py": {"count": 4},
+                    "good.py": {"hash": "h1", "fixture_hash": "f1", "count": 3},
+                    "bad_count.py": {
+                        "hash": "h2",
+                        "fixture_hash": "f2",
+                        "count": "three",
+                    },
+                    "missing_hash.py": {"fixture_hash": "f3", "count": 4},
+                    "missing_fixture_hash.py": {"hash": "h4", "count": 4},
                     "not_dict.py": 5,
                     # bool is an int subclass; reject so True isn't read as 1.
-                    "bool_count.py": {"hash": "h3", "count": True},
-                    "negative_count.py": {"hash": "h4", "count": -1},
+                    "bool_count.py": {
+                        "hash": "h5",
+                        "fixture_hash": "f5",
+                        "count": True,
+                    },
+                    "negative_count.py": {
+                        "hash": "h6",
+                        "fixture_hash": "f6",
+                        "count": -1,
+                    },
                 },
             }
         )
     )
-    cache = split_tests._Cache.load(path, "abc")
+    cache = split_tests._Cache.load(path)
     assert set(cache.entries) == {"good.py"}
 
 
 def test_cache_save_creates_parent_dir(tmp_path: Path) -> None:
     """Save mkdirs missing parent dirs so ``--cache foo/bar.json`` works."""
     cache_path = tmp_path / "nested" / "subdir" / "cache.json"
-    split_tests._Cache(invalidation_hash="x", entries={}).save(cache_path)
+    split_tests._Cache(entries={}).save(cache_path)
     assert cache_path.is_file()
 
 
 def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
-    """Files with matching hashes are hits; edited or new files are misses."""
+    """Files with matching content + fixture hashes are hits."""
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     alpha_two = tree / "components" / "alpha" / "test_two.py"
     beta_x = tree / "components" / "beta" / "test_x.py"
 
     alpha_one_hash = split_tests._hash_file(alpha_one)
+    alpha_one_fixture = _fixture_hash_for(tree, alpha_one)
     cache = split_tests._Cache(
-        invalidation_hash="dummy",
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
-                hash=alpha_one_hash, count=1
+                hash=alpha_one_hash, fixture_hash=alpha_one_fixture, count=1
             ),
             str(alpha_two.relative_to(tree)): split_tests._CacheEntry(
-                hash="stale", count=99
+                hash="stale", fixture_hash=alpha_one_fixture, count=99
             ),
         },
     )
 
-    hits, miss_hashes = split_tests._resolve_from_cache(
-        [alpha_one, alpha_two, beta_x], cache, tree
+    _, fixtures = split_tests._walk_test_tree(tree)
+    fixtures_by_dir = split_tests._index_fixtures_by_dir(
+        split_tests._find_ancestor_conftests(tree) + fixtures
     )
-    assert hits == {alpha_one: split_tests._CacheEntry(hash=alpha_one_hash, count=1)}
-    assert miss_hashes == {
-        alpha_two: split_tests._hash_file(alpha_two),
-        beta_x: split_tests._hash_file(beta_x),
+    hits, miss_hashes = split_tests._resolve_from_cache(
+        [alpha_one, alpha_two, beta_x], cache, tree, fixtures_by_dir
+    )
+    assert hits == {
+        alpha_one: split_tests._CacheEntry(
+            hash=alpha_one_hash, fixture_hash=alpha_one_fixture, count=1
+        )
     }
+    assert miss_hashes == {
+        alpha_two: (
+            split_tests._hash_file(alpha_two),
+            _fixture_hash_for(tree, alpha_two),
+        ),
+        beta_x: (
+            split_tests._hash_file(beta_x),
+            _fixture_hash_for(tree, beta_x),
+        ),
+    }
+
+
+def test_resolve_from_cache_misses_on_fixture_drift(tree: Path) -> None:
+    """A file with unchanged content but changed scope counts as a miss."""
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    cache = split_tests._Cache(
+        entries={
+            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
+                hash=split_tests._hash_file(alpha_one),
+                fixture_hash="stale-fixture-hash",
+                count=1,
+            ),
+        },
+    )
+    _, fixtures = split_tests._walk_test_tree(tree)
+    fixtures_by_dir = split_tests._index_fixtures_by_dir(
+        split_tests._find_ancestor_conftests(tree) + fixtures
+    )
+    hits, miss_hashes = split_tests._resolve_from_cache(
+        [alpha_one], cache, tree, fixtures_by_dir
+    )
+    assert hits == {}
+    assert alpha_one in miss_hashes
+
+
+def test_resolve_from_cache_isolates_unrelated_dirs(tree: Path) -> None:
+    """Editing a helper in one dir leaves files in other dirs as hits."""
+    alpha_dir = tree / "components" / "alpha"
+    beta_dir = tree / "components" / "beta"
+    # Helpers per dir, so a change in alpha doesn't bust beta.
+    (alpha_dir / "common.py").write_text("# alpha helper v1\n")
+    (beta_dir / "common.py").write_text("# beta helper v1\n")
+    alpha_one = alpha_dir / "test_one.py"
+    beta_x = beta_dir / "test_x.py"
+
+    # Snapshot cache entries with the v1 fixture state.
+    cache = split_tests._Cache(
+        entries={
+            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
+                hash=split_tests._hash_file(alpha_one),
+                fixture_hash=_fixture_hash_for(tree, alpha_one),
+                count=1,
+            ),
+            str(beta_x.relative_to(tree)): split_tests._CacheEntry(
+                hash=split_tests._hash_file(beta_x),
+                fixture_hash=_fixture_hash_for(tree, beta_x),
+                count=2,
+            ),
+        },
+    )
+
+    # Now bust beta's helper; alpha's scope is unchanged, beta's isn't.
+    (beta_dir / "common.py").write_text("# beta helper v2\n")
+    _, fixtures = split_tests._walk_test_tree(tree)
+    fixtures_by_dir = split_tests._index_fixtures_by_dir(
+        split_tests._find_ancestor_conftests(tree) + fixtures
+    )
+    hits, miss_hashes = split_tests._resolve_from_cache(
+        [alpha_one, beta_x], cache, tree, fixtures_by_dir
+    )
+    assert alpha_one in hits
+    assert beta_x in miss_hashes
 
 
 def test_collect_tests_hashes_each_file_once(tree: Path) -> None:
@@ -459,7 +546,11 @@ def test_collect_tests_drops_deleted_files_from_cache(tree: Path) -> None:
         cache_path,
         tree,
         hits={alpha_one: 1},
-        extra_entries={ghost_rel: split_tests._CacheEntry(hash="dead", count=42)},
+        extra_entries={
+            ghost_rel: split_tests._CacheEntry(
+                hash="dead", fixture_hash="dead", count=42
+            )
+        },
     )
 
     with (

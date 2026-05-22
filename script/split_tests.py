@@ -19,7 +19,7 @@ _FAN_OUT_DIRS: Final = frozenset({"components"})
 
 # Cache file format version; bump on any incompatible schema change so old
 # caches are ignored rather than misread.
-_CACHE_VERSION: Final = 2
+_CACHE_VERSION: Final = 3
 
 # Fall back from file-level to directory-level pytest collection when
 # misses make up more than this fraction of the tree; past that point
@@ -282,16 +282,14 @@ def _find_ancestor_conftests(root: Path) -> list[Path]:
     return ancestors
 
 
-def _compute_invalidation_hash(root: Path, fixtures: list[Path]) -> str:
-    """Return a hash that changes whenever any ``fixtures`` file changes.
+def _hash_paths(root: Path, paths: list[Path]) -> str:
+    """Return a hash that changes whenever any of ``paths`` changes.
 
-    Coarse but safe: any of these can shift parametrization in ways we
-    can't otherwise detect, so a change forces a full re-collect.
-    ``os.path.relpath`` is used so ancestor conftests (above ``root``)
+    ``os.path.relpath`` is used so ancestor paths (above ``root``)
     encode cleanly and the hash stays machine-stable.
     """
     digest = hashlib.sha256()
-    for fixture in fixtures:
+    for fixture in paths:
         digest.update(os.path.relpath(fixture, root).encode())
         digest.update(b"\0")
         digest.update(fixture.read_bytes())
@@ -299,62 +297,107 @@ def _compute_invalidation_hash(root: Path, fixtures: list[Path]) -> str:
     return digest.hexdigest()
 
 
+def _index_fixtures_by_dir(fixtures: list[Path]) -> dict[Path, list[Path]]:
+    """Bucket fixture files by resolved parent directory."""
+    by_dir: dict[Path, list[Path]] = {}
+    for fixture in fixtures:
+        by_dir.setdefault(fixture.parent.resolve(), []).append(fixture)
+    return by_dir
+
+
+def _file_fixture_hash(
+    test_file: Path,
+    root: Path,
+    fixtures_by_dir: dict[Path, list[Path]],
+) -> str:
+    """Return a hash of fixtures relevant to ``test_file``.
+
+    Pytest applies a ``conftest.py`` from any ancestor directory of the
+    test file; helper modules (non-conftest ``.py``) typically affect
+    only tests in their same directory via ``@pytest.mark.parametrize``
+    imports.  Scoping the invalidation this way keeps the cache warm
+    across changes elsewhere in the tree (eg merging dev) while still
+    busting entries whose own scope actually shifted.
+    """
+    relevant: list[Path] = []
+    test_dir = test_file.parent.resolve()
+    # Walk up from test_dir, collecting any conftest.py we find.
+    current = test_dir
+    while True:
+        relevant.extend(
+            f for f in fixtures_by_dir.get(current, ()) if f.name == "conftest.py"
+        )
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+    # Same-dir non-conftest helpers (eg common.py imported for parametrize).
+    relevant.extend(
+        f for f in fixtures_by_dir.get(test_dir, ()) if f.name != "conftest.py"
+    )
+    relevant.sort()
+    return _hash_paths(root, relevant)
+
+
 @dataclass
 class _CacheEntry:
-    """Cached test count for a single file."""
+    """Cached test count plus its scope hash for a single file."""
 
     hash: str
+    fixture_hash: str
     count: int
 
 
 @dataclass
 class _Cache:
-    """Mapping of test file path → cached entry, plus invalidation key."""
+    """Mapping of test file path → cached entry."""
 
-    invalidation_hash: str
     entries: dict[str, _CacheEntry]
 
     @classmethod
-    def empty(cls, invalidation_hash: str = "") -> _Cache:
+    def empty(cls) -> _Cache:
         """Return a new empty cache."""
-        return cls(invalidation_hash=invalidation_hash, entries={})
+        return cls(entries={})
 
     @classmethod
-    def load(cls, path: Path, current_invalidation_hash: str) -> _Cache:
-        """Load cache from ``path``, returning an empty cache on any drift.
+    def load(cls, path: Path) -> _Cache:
+        """Load cache from ``path``, returning empty on any drift.
 
-        Missing file, bad JSON, version drift, fixture drift, malformed
-        entries: all degrade to a full re-collect.  Self-healing.
+        Missing file, bad JSON, version drift, malformed entries: all
+        degrade to a full re-collect.  Per-file fixture-scope drift is
+        handled later by ``_resolve_from_cache``.
         """
         try:
             raw = json.loads(path.read_bytes())
         except OSError, ValueError:
-            return cls.empty(current_invalidation_hash)
+            return cls.empty()
         if not isinstance(raw, dict) or raw.get("version") != _CACHE_VERSION:
-            return cls.empty(current_invalidation_hash)
-        if raw.get("invalidation_hash") != current_invalidation_hash:
-            return cls.empty(current_invalidation_hash)
+            return cls.empty()
         files = raw.get("files")
         if not isinstance(files, dict):
-            return cls.empty(current_invalidation_hash)
+            return cls.empty()
         entries: dict[str, _CacheEntry] = {}
         for key, value in files.items():
             if not isinstance(value, dict):
                 continue
             hash_value = value.get("hash")
+            fixture_hash = value.get("fixture_hash")
             count = value.get("count")
             # bool is an int subclass; reject it so {"count": true} doesn't
             # silently parse as count=1.  Reject negatives too — a corrupted
             # cache shouldn't be able to feed bucket sizing a bogus weight.
             if (
                 not isinstance(hash_value, str)
+                or not isinstance(fixture_hash, str)
                 or not isinstance(count, int)
                 or isinstance(count, bool)
                 or count < 0
             ):
                 continue
-            entries[key] = _CacheEntry(hash=hash_value, count=count)
-        return cls(invalidation_hash=current_invalidation_hash, entries=entries)
+            entries[key] = _CacheEntry(
+                hash=hash_value, fixture_hash=fixture_hash, count=count
+            )
+        return cls(entries=entries)
 
     def save(self, path: Path) -> None:
         """Write the cache to ``path``, creating parent dirs as needed."""
@@ -363,9 +406,12 @@ class _Cache:
             json.dumps(
                 {
                     "version": _CACHE_VERSION,
-                    "invalidation_hash": self.invalidation_hash,
                     "files": {
-                        key: {"hash": entry.hash, "count": entry.count}
+                        key: {
+                            "hash": entry.hash,
+                            "fixture_hash": entry.fixture_hash,
+                            "count": entry.count,
+                        }
                         for key, entry in sorted(self.entries.items())
                     },
                 },
@@ -381,22 +427,29 @@ def _resolve_from_cache(
     test_files: list[Path],
     cache: _Cache,
     root: Path,
-) -> tuple[dict[Path, _CacheEntry], dict[Path, str]]:
+    fixtures_by_dir: dict[Path, list[Path]],
+) -> tuple[dict[Path, _CacheEntry], dict[Path, tuple[str, str]]]:
     """Split ``test_files`` into ``(cached_entries, miss_hashes)``.
 
     Each file is hashed exactly once: hits carry the stored entry
-    forward, misses carry the just-computed hash so the rebuild step
-    doesn't re-read the same bytes.
+    forward, misses carry the just-computed (content, fixture) hash
+    pair so the rebuild step doesn't re-read the same bytes.  A file
+    misses if either its own bytes changed or its fixture scope did.
     """
     hits: dict[Path, _CacheEntry] = {}
-    miss_hashes: dict[Path, str] = {}
+    miss_hashes: dict[Path, tuple[str, str]] = {}
     for file in test_files:
         file_hash = _hash_file(file)
+        fixture_hash = _file_fixture_hash(file, root, fixtures_by_dir)
         entry = cache.entries.get(str(file.relative_to(root)))
-        if entry is not None and entry.hash == file_hash:
+        if (
+            entry is not None
+            and entry.hash == file_hash
+            and entry.fixture_hash == fixture_hash
+        ):
             hits[file] = entry
         else:
-            miss_hashes[file] = file_hash
+            miss_hashes[file] = (file_hash, fixture_hash)
     return hits, miss_hashes
 
 
@@ -482,11 +535,12 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
 
     # Ancestor conftests apply to subtree runs (eg tests/components must
     # still invalidate on tests/conftest.py changes).
-    all_fixtures = _find_ancestor_conftests(path) + fixtures
-    invalidation_hash = _compute_invalidation_hash(path, all_fixtures)
-    cache = _Cache.load(cache_path, invalidation_hash)
+    fixtures_by_dir = _index_fixtures_by_dir(_find_ancestor_conftests(path) + fixtures)
+    cache = _Cache.load(cache_path)
 
-    hits, miss_hashes = _resolve_from_cache(all_test_files, cache, path)
+    hits, miss_hashes = _resolve_from_cache(
+        all_test_files, cache, path, fixtures_by_dir
+    )
     print(
         f"Cache: {len(hits)} hits / {len(miss_hashes)} misses"
         f" / {len(all_test_files)} total"
@@ -505,16 +559,21 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
         new_counts = _run_pytest_collect(collect_paths)
 
     # One pass over all files: hits keep their entry, misses build a
-    # fresh one from the resolve-time hash and collected count (0 if
+    # fresh one from the resolve-time hashes and collected count (0 if
     # pytest returned nothing, so we stop re-collecting next run).
     entries: dict[str, _CacheEntry] = {}
     counts: dict[Path, int] = {}
     for file in all_test_files:
         if (entry := hits.get(file)) is None:
-            entry = _CacheEntry(hash=miss_hashes[file], count=new_counts.get(file, 0))
+            file_hash, fixture_hash = miss_hashes[file]
+            entry = _CacheEntry(
+                hash=file_hash,
+                fixture_hash=fixture_hash,
+                count=new_counts.get(file, 0),
+            )
         entries[str(file.relative_to(path))] = entry
         counts[file] = entry.count
-    _Cache(invalidation_hash=invalidation_hash, entries=entries).save(cache_path)
+    _Cache(entries=entries).save(cache_path)
     return _build_folder(path, counts)
 
 
