@@ -103,12 +103,12 @@ async def test_full_flow(
 @pytest.mark.usefixtures(
     "current_request_with_host", "setup_credentials", "mock_setup_entry"
 )
-async def test_dhcp_discovery_starts_flow(
+async def test_dhcp_discovery_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A Yoto found on the LAN starts the OAuth flow."""
+    """A Yoto player found on the LAN walks through OAuth to a new entry."""
     discovery = DhcpServiceInfo(
         ip="10.0.0.42",
         hostname="yoto-player",
@@ -117,6 +117,10 @@ async def test_dhcp_discovery_starts_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=discovery
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
     await _complete_callback(hass, result, hass_client_no_auth, aioclient_mock)
@@ -124,25 +128,6 @@ async def test_dhcp_discovery_starts_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_ID
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_dhcp_discovery_skipped_when_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """DHCP discovery is a no-op when the integration is already set up."""
-    mock_config_entry.add_to_hass(hass)
-    discovery = DhcpServiceInfo(
-        ip="10.0.0.42",
-        hostname="yoto-player",
-        macaddress="6825dd39c3fc",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=discovery
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
