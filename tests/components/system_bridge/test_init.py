@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,6 +13,23 @@ from homeassistant.core import HomeAssistant
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_entry_setup_unload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test integration setup and unload."""
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
