@@ -33,6 +33,7 @@ async def test_door_bell_event(
     assert ha_state.state == STATE_UNKNOWN
 
     ch.fire_channel_event(channel_event)
+    await hass.async_block_till_done()
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state != STATE_UNKNOWN
@@ -62,6 +63,7 @@ async def test_door_bell_event_wrong_event_type(
     assert ha_state.state == STATE_UNKNOWN
 
     ch.fire_channel_event(channel_event)
+    await hass.async_block_till_done()
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNKNOWN
@@ -70,9 +72,9 @@ async def test_door_bell_event_wrong_event_type(
 @pytest.mark.parametrize(
     ("raw_event", "expected_state"),
     [
-        ("KEY_PRESS_SHORT", "short_press"),
-        ("KEY_PRESS_LONG_START", "long_press_start"),
-        ("KEY_PRESS_LONG_STOP", "long_press_stop"),
+        ("KEY_PRESS_SHORT", "short_release"),
+        ("KEY_PRESS_LONG_START", "long_press"),
+        ("KEY_PRESS_LONG_STOP", "long_release"),
     ],
 )
 async def test_wrc6_button_event(
@@ -99,6 +101,7 @@ async def test_wrc6_button_event(
     ch.fire_channel_event(
         ChannelEvent(channelEventType=raw_event, channelIndex=3, deviceId=ch.device.id)
     )
+    await hass.async_block_till_done()
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes["event_type"] == expected_state
@@ -126,15 +129,17 @@ async def test_wrc6_button_ignores_repeating_long(
             channelEventType="KEY_PRESS_SHORT", channelIndex=3, deviceId=ch.device.id
         )
     )
+    await hass.async_block_till_done()
     state_after_short = hass.states.get(entity_id)
     assert state_after_short.state != STATE_UNKNOWN
-    assert state_after_short.attributes["event_type"] == "short_press"
+    assert state_after_short.attributes["event_type"] == "short_release"
 
     ch.fire_channel_event(
         ChannelEvent(
             channelEventType="KEY_PRESS_LONG", channelIndex=3, deviceId=ch.device.id
         )
     )
+    await hass.async_block_till_done()
     state_after_long = hass.states.get(entity_id)
     assert state_after_long.state == state_after_short.state
-    assert state_after_long.attributes["event_type"] == "short_press"
+    assert state_after_long.attributes["event_type"] == "short_release"

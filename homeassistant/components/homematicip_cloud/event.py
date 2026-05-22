@@ -1,7 +1,6 @@
 """Support for HomematicIP Cloud events."""
 
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 
 from homematicip.base.channel_event import ChannelEvent
@@ -39,15 +38,20 @@ EVENT_DESCRIPTIONS: tuple[HmipEventEntityDescription, ...] = (
         event_type_map={"DOOR_BELL_SENSOR_EVENT": "ring"},
         channel_selector_fn=lambda channel: channel.channelRole == "DOOR_BELL_INPUT",
     ),
+    # Button event types follow the standard names proposed in
+    # home-assistant/architecture#1377: short_release, long_press,
+    # long_release. HmIP doesn't expose a separate press-down ("initial_press")
+    # event for short presses; KEY_PRESS_LONG_START is mapped to long_press
+    # (no separate initial_press fires for the hold sequence either).
     HmipEventEntityDescription(
         key="button",
         translation_key="button",
         device_class=EventDeviceClass.BUTTON,
-        event_types=["short_press", "long_press_start", "long_press_stop"],
+        event_types=["short_release", "long_press", "long_release"],
         event_type_map={
-            "KEY_PRESS_SHORT": "short_press",
-            "KEY_PRESS_LONG_START": "long_press_start",
-            "KEY_PRESS_LONG_STOP": "long_press_stop",
+            "KEY_PRESS_SHORT": "short_release",
+            "KEY_PRESS_LONG_START": "long_press",
+            "KEY_PRESS_LONG_STOP": "long_release",
         },
         channel_selector_fn=lambda channel: (
             channel.functionalChannelType == FunctionalChannelType.SINGLE_KEY_CHANNEL
@@ -94,20 +98,10 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
             channel_real_index=channel.index if description.is_multi_channel else None,
             is_multi_channel=description.is_multi_channel,
             feature_id=description.key,
+            use_description_name=description.is_multi_channel,
         )
         self.entity_description = description
         if description.is_multi_channel:
-            # The base class fills _attr_name from the channel label, falling
-            # back to "Channel{N}". For button events we want the translated
-            # "Button {channel}" name, so drop _attr_name to let HA resolve
-            # the name from translation_key + placeholders instead. HA's
-            # resolution checks hasattr and returns whatever it finds, so
-            # the attribute must be unset (= None would surface as the
-            # literal name). suppress() guards against a future class-level
-            # _attr_name override that would make hasattr True without an
-            # instance value to delete.
-            with suppress(AttributeError):
-                del self._attr_name
             self._attr_translation_placeholders = {"channel": str(channel.index)}
 
     async def async_added_to_hass(self) -> None:
@@ -120,8 +114,10 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
     @callback
     def _async_handle_event(self, *args, **kwargs) -> None:
         """Handle the event fired by the functional channel."""
-        raised_channel_event = self._get_channel_event_from_args(*args)
-        public_event = self.entity_description.event_type_map.get(raised_channel_event)
+        raw_channel_event_type = self._get_channel_event_from_args(*args)
+        public_event = self.entity_description.event_type_map.get(
+            raw_channel_event_type
+        )
         if public_event is None:
             return
         self._trigger_event(event_type=public_event)

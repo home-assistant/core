@@ -48,9 +48,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "long_press_start": "Long press start",
-              "long_press_stop": "Long press stop",
-              "short_press": "Short press"
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "short_release": "Short release"
             }
           }
         }
