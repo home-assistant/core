@@ -119,7 +119,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "expected_error"),
     [
-        (Exception, "unknown"),
+        (Exception("boom"), "unknown"),
         (None, "cannot_connect"),
     ],
 )
@@ -127,7 +127,7 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
 async def test_async_step_user_errors(
     hass: HomeAssistant,
     mock_pairing: tuple[MagicMock, MagicMock],
-    raise_error: type[Exception] | None,
+    raise_error: Exception | None,
     expected_error: str,
 ) -> None:
     """Test errors during user pairing."""
@@ -226,14 +226,14 @@ async def test_async_step_bluetooth(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "error_text"),
     [
-        (Exception, "unknown"),
+        (Exception("boom"), "unknown"),
         (None, "cannot_connect"),
     ],
 )
 async def test_async_step_bluetooth_errors(
     hass: HomeAssistant,
     mock_pairing: tuple[MagicMock, MagicMock],
-    raise_error: type[Exception] | None,
+    raise_error: Exception | None,
     error_text: str,
 ) -> None:
     """Test Bluetooth discovery confirm error handling."""

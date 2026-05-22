@@ -19,8 +19,7 @@
       },
       "user": {
         "data": {
-          "address": "Device Address",
-          "device_address": "RYSE devices"
+          "address": "RYSE devices"
         },
         "data_description": {
           "address": "Device Address"

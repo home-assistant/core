@@ -1,5 +1,6 @@
 """Support for RYSE Smart Shades via BLE."""
 
+import contextlib
 import logging
 from typing import Any
 
@@ -90,23 +91,30 @@ class RyseCoverEntity(CoverEntity):
             self._attr_is_closed = self._device.is_closed(position)
             _LOGGER.debug("Updated cover position: %02X", position)
 
-        self.async_write_ha_state()
+        self._write_state()
 
     # ------------------------------------------------------
     #   Commands
     # ------------------------------------------------------
+
+    def _write_state(self) -> None:
+        """Write HA state if hass is available."""
+        with contextlib.suppress(RuntimeError):
+            self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shade."""
         await self._device.send_open()
         _LOGGER.debug("Change position to open")
         self._attr_is_closed = False
+        self._write_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the shade."""
         await self._device.send_close()
         _LOGGER.debug("Change position to close")
         self._attr_is_closed = True
+        self._write_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the shade to a specific position."""
@@ -114,6 +122,8 @@ class RyseCoverEntity(CoverEntity):
         await self._device.send_set_position(position)
         _LOGGER.debug("Change position to a specific position")
         self._attr_is_closed = self._device.is_closed(position)
+        self._current_position = position
+        self._write_state()
 
     # ------------------------------------------------------
     #   State refresh
@@ -121,20 +131,20 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_update(self) -> None:
         """Fetch the current state and position from the device."""
-        if not self._device.client or not self._device.client.is_connected:
-            paired = await self._device.pair()
-            if not paired:
-                if self._attr_available:
-                    _LOGGER.debug("Failed to pair with device, skipping update")
-                self._attr_available = False
-                return
-            self._attr_available = True
-        else:
+        try:
+            if not self._device.client or not self._device.client.is_connected:
+                paired = await self._device.pair()
+                if not paired:
+                    if self._attr_available:
+                        _LOGGER.debug("Failed to pair with device, skipping update")
+                    self._attr_available = False
+                    return
+
             self._attr_available = True
 
-        try:
             if self._current_position is None:
                 await self._device.send_get_position()
+
         except (TimeoutError, OSError) as err:
             _LOGGER.error("BLE communication error while reading device data: %s", err)
             self._attr_available = False

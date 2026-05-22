@@ -1,5 +1,6 @@
 """Test RYSE Cover entity behavior."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -97,11 +98,6 @@ async def test_current_cover_position_invalid(
     pos = entity.current_cover_position
     assert pos is None
     assert "Invalid position" in caplog.text
-
-
-# ============================================================================
-#                   NEW TESTS ADDED TO FIX CODECOV FAILURES
-# ============================================================================
 
 
 async def test_async_update_connected_triggers_available_and_get_position(
@@ -232,6 +228,7 @@ async def test_async_update_pairing_failure_log_debug(
     entity._attr_available = True
     mock_device.client = None
     mock_device.pair = AsyncMock(return_value=False)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.ryse.cover")
 
     await entity.async_update()
     assert entity.available is False
@@ -248,6 +245,7 @@ async def test_async_update_pairing_failure_no_log_debug(
     entity._attr_available = False
     mock_device.client = None
     mock_device.pair = AsyncMock(return_value=False)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.ryse.cover")
 
     await entity.async_update()
     assert entity.available is False
