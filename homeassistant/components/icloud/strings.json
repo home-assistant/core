@@ -83,7 +83,7 @@
           "name": "Message"
         },
         "number": {
-          "description": "The phone number to call in lost mode (must contain country code).",
+          "description": "The phone number to call in lost mode. Must contain country code.",
           "name": "Number"
         }
       },
@@ -107,7 +107,7 @@
       "description": "Asks for a state update of all devices linked to an Apple Account.",
       "fields": {
         "account": {
-          "description": "Your Apple Account username (email).",
+          "description": "Your Apple Account username/email.",
           "name": "Account"
         }
       },

@@ -441,7 +441,7 @@ aiounifi==90
 aiousbwatcher==1.1.2
 
 # homeassistant.components.vlc_telnet
-aiovlc==0.5.1
+aiovlc==0.7.0
 
 # homeassistant.components.vodafone_station
 aiovodafone==3.2.0
@@ -2210,7 +2210,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.4.1
+pyicloud==2.5.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
