@@ -298,7 +298,6 @@ async def test_remove_config_entry_device(
     assert result is False
 
 
-@pytest.mark.usefixtures("mock_victron_hub_library")
 async def test_hub_uses_default_update_frequency(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -315,7 +314,6 @@ async def test_hub_uses_default_update_frequency(
     assert call_kwargs["update_frequency_seconds"] == DEFAULT_UPDATE_FREQUENCY_SECONDS
 
 
-@pytest.mark.usefixtures("mock_victron_hub_library")
 async def test_hub_uses_configured_update_frequency(
     hass: HomeAssistant,
     mock_victron_hub_library: MagicMock,
@@ -341,7 +339,6 @@ async def test_hub_uses_configured_update_frequency(
     assert call_kwargs["update_frequency_seconds"] == 60
 
 
-@pytest.mark.usefixtures("mock_victron_hub_library")
 async def test_options_update_triggers_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
