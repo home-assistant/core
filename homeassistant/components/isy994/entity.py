@@ -181,7 +181,9 @@ class ISYProgramEntity(ISYEntity):
     _status: Program
     _node: Program
 
-    def __init__(self, name: str, status: Program, actions: Program | None = None) -> None:
+    def __init__(
+        self, name: str, status: Program, actions: Program | None = None
+    ) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._attr_name = name
