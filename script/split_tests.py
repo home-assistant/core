@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 import hashlib
 import json
 from math import ceil
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 import os
 from pathlib import Path
 import subprocess
@@ -61,9 +61,7 @@ class BucketHolder:
     def split_tests(self, test_folder: TestFolder) -> None:
         """Place atomic units via best-fit; oversized ones go to the smallest bucket."""
         digits = len(str(test_folder.total_tests))
-        units = sorted(
-            self._atomic_units(test_folder), key=lambda u: u[0], reverse=True
-        )
+        units = sorted(self._atomic_units(test_folder), key=itemgetter(0), reverse=True)
         for size, items in units:
             for item in items:
                 tag = " (same bucket)" if item is not items[0] else ""
