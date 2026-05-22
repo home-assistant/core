@@ -4,6 +4,7 @@ import asyncio
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import SUBENTRY_TYPE_LOCATION
 from .coordinator import (
