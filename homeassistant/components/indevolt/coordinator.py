@@ -17,6 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -39,6 +40,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
+    mac_address: str | None
     serial_number: str
     device_model: str
     generation: int
@@ -70,12 +72,17 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             config_data = await self.api.get_config()
         except (ClientError, OSError) as err:
-            raise ConfigEntryNotReady(f"Device config retrieval failed: {err}") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Cache device information
         device_data = config_data.get("device", {})
-
         self.firmware_version = device_data.get("fw")
+        raw_mac = device_data.get("mac")
+        self.mac_address = format_mac(raw_mac) if raw_mac else None
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw JSON data from the device."""
@@ -84,7 +91,11 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.fetch_data(sensor_keys)
         except (ClientError, OSError) as err:
-            raise UpdateFailed(f"Device update failed: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_push_data(self, sensor_key: str, value: Any) -> bool:
         """Push/write data values to given key on the device."""

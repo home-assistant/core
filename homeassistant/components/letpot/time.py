@@ -82,7 +82,11 @@ class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEnt
         """Initialize LetPot time entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
     def native_value(self) -> time | None:

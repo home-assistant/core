@@ -29,6 +29,7 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
@@ -254,7 +255,8 @@ class ScriptIntentHandler(intent.IntentHandler):
             else:
                 action_res = await action.async_run(slots, intent_obj.context)
 
-                # if the action returns a response, make it available to the speech/reprompt templates below
+                # if the action returns a response, make it
+                # available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
                     slots["action_response"] = action_res.service_response
 

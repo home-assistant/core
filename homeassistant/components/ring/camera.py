@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):
+class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Base class for event entity description."""
 
     exists_fn: Callable[[RingDoorBell], bool]

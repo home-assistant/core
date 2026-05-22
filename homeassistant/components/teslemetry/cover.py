@@ -326,7 +326,8 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    # In the future this could be extended to add aftermarket close support through a option flow
+    # In the future this could be extended to add
+    # aftermarket close support through an option flow
 
 
 class TeslemetryVehiclePollingFrontTrunkEntity(

@@ -183,7 +183,8 @@ async def test_adam_restore_state_climate(
     assert (state := hass.states.get("climate.living_room"))
     assert state.state == "heat"
 
-    # Verify a HomeAssistantError is raised setting a schedule with last_active_schedule = None
+    # Verify a HomeAssistantError is raised setting a schedule
+    # with last_active_schedule = None
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -381,7 +382,8 @@ async def test_adam_3_climate_entity_attributes(
             HVACMode.HEAT,
             HVACMode.COOL,
         ]
-        # Test setting regulation_mode to cooling, from off, ignoring the restored previous_action_mode
+        # Test setting regulation_mode to cooling, from off,
+        # ignoring the restored previous_action_mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
