@@ -922,10 +922,15 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json
+          # Restore-keys only; the primary key is content-addressed and
+          # only known after split_tests.py writes the file below, so the
+          # restore-side primary key is intentionally a sentinel that
+          # never matches.  Restore-keys pick the most recent prefix
+          # match, falling back from this branch's last save to dev's.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-${{ github.sha }}
+            needs.info.outputs.python_cache_key }}-restore-sentinel
           restore-keys: |
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
       - name: Run split_tests.py
@@ -936,16 +941,24 @@ jobs:
           python -m script.split_tests \
             --cache pytest_test_counts.json \
             ${TEST_GROUP_COUNT} tests
+      - name: Hash pytest test counts cache
+        id: cache-pytest-counts-hash
+        run: |
+          echo "hash=$(sha256sum pytest_test_counts.json | cut -d' ' -f1)" \
+            >> "$GITHUB_OUTPUT"
       - name: Save pytest test counts cache
-        # Save whenever the primary key missed; GH scopes caches per-branch,
-        # so PR-branch saves stay isolated to that PR (and get cleaned up
-        # when it closes), while dev pushes seed the cache other branches
-        # restore from via restore-keys.
-        if: steps.cache-pytest-counts.outputs.cache-hit != 'true'
+        # Content-addressed key: identical cache content always lands on
+        # the same entry, so re-running the same commit (or any commit
+        # whose tests resolve to the same buckets) is a save no-op.  New
+        # entries only appear when the bucket inputs actually change.
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json
-          key: ${{ steps.cache-pytest-counts.outputs.cache-primary-key }}
+          key: >-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
+            steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}-${{
+            steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -269,6 +269,7 @@ def test_cache_load_drops_malformed_entries(tmp_path: Path) -> None:
                     "not_dict.py": 5,
                     # bool is an int subclass; reject so True isn't read as 1.
                     "bool_count.py": {"hash": "h3", "count": True},
+                    "negative_count.py": {"hash": "h4", "count": -1},
                 },
             }
         )

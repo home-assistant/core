@@ -344,11 +344,13 @@ class _Cache:
             hash_value = value.get("hash")
             count = value.get("count")
             # bool is an int subclass; reject it so {"count": true} doesn't
-            # silently parse as count=1.
+            # silently parse as count=1.  Reject negatives too — a corrupted
+            # cache shouldn't be able to feed bucket sizing a bogus weight.
             if (
                 not isinstance(hash_value, str)
                 or not isinstance(count, int)
                 or isinstance(count, bool)
+                or count < 0
             ):
                 continue
             entries[key] = _CacheEntry(hash=hash_value, count=count)
