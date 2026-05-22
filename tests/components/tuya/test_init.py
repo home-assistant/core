@@ -352,6 +352,10 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
         details = await async_load_json_object_fixture(
             hass, f"{device_code}.json", DOMAIN
         )
+        expected_code = f"{details['category']}_{details['product_id']}"
+        assert device_code == expected_code, (
+            f"Device code {device_code} does not match expected {expected_code}"
+        )
         for key in EXCLUDE_KEYS:
             assert key not in details, (
                 f"Please remove data[`'{key}']` from {device_code}.json"

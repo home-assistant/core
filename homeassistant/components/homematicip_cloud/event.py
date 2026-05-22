@@ -89,37 +89,21 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
         super().__init__(
             hap,
             device,
-            post=None if description.is_multi_channel else description.key,
             channel=channel.index,
             channel_real_index=channel.index if description.is_multi_channel else None,
             is_multi_channel=description.is_multi_channel,
             feature_id=description.key,
         )
         self.entity_description = description
-        # Multi-channel events (e.g. WRC keypad buttons) are new entities
-        # with no migration concerns, so opt them into has_entity_name and
-        # let HA resolve the localized name via translation_key+placeholder.
-        # The legacy single-channel path (doorbell) keeps the integration's
-        # composed name property until the integration-wide has_entity_name
-        # migration lands.
         if description.is_multi_channel:
-            self._attr_has_entity_name = True
+            # The base class fills _attr_name from the channel label, falling
+            # back to "Channel{N}". For button events we want the translated
+            # "Button {channel}" name, so drop _attr_name to let HA resolve
+            # the name from translation_key + placeholders instead. Use del
+            # rather than = None because HA's name resolution checks hasattr.
+            if hasattr(self, "_attr_name"):
+                del self._attr_name
             self._attr_translation_placeholders = {"channel": str(channel.index)}
-
-    @property
-    def name(self) -> str:
-        """Return the entity name.
-
-        For multi-channel events, skip HmIP's legacy name composition and
-        fall through to HA's standard name property, which resolves the
-        name from ``translation_key`` + ``translation_placeholders`` when
-        ``has_entity_name`` is set. For single-channel events (doorbell),
-        keep the base class's composed name.
-        """
-        if self.entity_description.is_multi_channel:
-            resolved = super(HomematicipGenericEntity, self).name
-            return resolved if isinstance(resolved, str) else ""
-        return super().name
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
