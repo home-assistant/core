@@ -2,8 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import sys
-import types
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
@@ -58,20 +56,13 @@ def ble_proxy_connect_timeout_fixture() -> Generator[int]:
 
 @pytest.fixture(name="mock_ble_proxy")
 def mock_ble_proxy_fixture() -> Generator[MagicMock]:
-    """Stub the lazily-imported ble_proxy submodule with a fake create function.
-
-    The real submodule pulls in `bluetooth` (and its dep tree); for unit tests
-    we replace it via sys.modules so the lazy `from .ble_proxy import ...` inside
-    async_setup_entry resolves to our stub without importing the real module.
-    """
+    """Stub the BLE proxy created inside async_setup_entry."""
     proxy = MagicMock()
     proxy.connect = AsyncMock()
     proxy.disconnect = AsyncMock()
-    fake_module = types.ModuleType("homeassistant.components.matter.ble_proxy")
-    fake_module.create_matter_ble_proxy = MagicMock(return_value=proxy)
-    with patch.dict(
-        sys.modules,
-        {"homeassistant.components.matter.ble_proxy": fake_module},
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
     ):
         yield proxy
 
