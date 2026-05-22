@@ -122,10 +122,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
     async def _async_status_push_tick(self, _now: datetime) -> None:
         """Ask each player to push a fresh status snapshot over MQTT."""
-        # The response arrives via the on_update callback, which already
-        # triggers async_set_updated_data — nothing to await here.
         if not self.client.is_mqtt_connected:
             return
+        # Fire-and-forget: the data/status response lands via the on_update
+        # callback later, which already triggers async_set_updated_data.
         for device_id in list(self.client.players):
             await self.client.request_status_push(device_id)
 
