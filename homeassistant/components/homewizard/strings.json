@@ -186,12 +186,12 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "Smart charge strategy is enabled for your battery group, but cloud connection is disabled. These settings are not compatible.\n\nSelect **Submit** to enable cloud connection.",
+            "description": "Smart charging strategy is enabled for your battery group, but cloud connection is disabled. These settings are not compatible, as smart charging requires cloud connectivity.\n\nSelect **Submit** to enable cloud connection.",
             "title": "[%key:component::homewizard::issues::battery_mode_cloud_disabled::title%]"
           }
         }
       },
-      "title": "Enable cloud connection for smart charge strategy"
+      "title": "Enable cloud connection for smart charging strategy"
     },
     "migrate_to_v2_api": {
       "fix_flow": {
