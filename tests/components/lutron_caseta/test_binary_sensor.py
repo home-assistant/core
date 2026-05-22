@@ -1,9 +1,10 @@
 """Tests for the Lutron Caseta binary sensors."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pylutron_caseta import BridgeResponseError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.lutron_caseta.binary_sensor import SCAN_INTERVAL
@@ -114,3 +115,32 @@ async def test_battery_sensor_updates_on_schedule(
     assert unknown_state is not None
     assert unknown_state.state == STATE_UNKNOWN
     assert instance.get_battery_status.await_count == 3
+
+
+async def test_battery_sensor_handles_bridge_response_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test battery sensor handles BridgeResponseError gracefully.
+
+    Regression test for https://github.com/home-assistant/core/issues/169965
+    """
+    instance = MockBridge()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    mock_response = MagicMock()
+    mock_response.Header.StatusCode = "404 NotFound"
+    instance.get_battery_status = AsyncMock(
+        side_effect=BridgeResponseError(mock_response)
+    )
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "binary_sensor.basement_bedroom_basement_bedroom_left_shade_battery"
+    )
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
