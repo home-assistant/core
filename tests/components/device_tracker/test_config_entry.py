@@ -599,6 +599,7 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_IN_ZONES: [],
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -608,6 +609,12 @@ async def test_base_scanner_entity_state(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.state == STATE_HOME
+    # No zone.home in the test state machine, so only the canonical home
+    # entity_id is reported.
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_IN_ZONES: ["zone.home"],
+    }
 
     base_scanner_entity.set_connected(None)
     await hass.async_block_till_done()
@@ -615,6 +622,98 @@ async def test_base_scanner_entity_state(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.state == STATE_UNKNOWN
+    # is_connected is None -> empty in_zones (always reported).
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_IN_ZONES: [],
+    }
+
+
+@pytest.mark.parametrize(
+    ("zones", "expected_in_zones"),
+    [
+        pytest.param(
+            [("zone.home", 50.0, 60.0, 100)],
+            ["zone.home"],
+            id="home_only",
+        ),
+        pytest.param(
+            [
+                ("zone.home", 50.0, 60.0, 100),
+                ("zone.neighborhood", 50.0, 60.0, 500),
+            ],
+            ["zone.home", "zone.neighborhood"],
+            id="strictly_containing_zone",
+        ),
+        pytest.param(
+            [
+                ("zone.home", 50.0, 60.0, 100),
+                ("zone.huge", 50.0, 60.0, 10000),
+                ("zone.medium", 50.0, 60.0, 500),
+            ],
+            ["zone.home", "zone.medium", "zone.huge"],
+            id="multiple_containing_zones_sorted_by_radius",
+        ),
+        pytest.param(
+            [
+                ("zone.home", 50.0, 60.0, 100),
+                ("zone.tiny", 50.0, 60.0, 50),
+            ],
+            ["zone.home"],
+            id="zone_smaller_than_home_excluded",
+        ),
+        pytest.param(
+            [
+                ("zone.home", 50.0, 60.0, 100),
+                ("zone.equal", 50.0, 60.0, 100),
+            ],
+            # Same center and radius as home: included under the <= predicate.
+            # zone.home stays first because the strict-result zone.home entry
+            # is filtered out, and zone.equal is the next entry.
+            ["zone.home", "zone.equal"],
+            id="zone_equal_to_home_included",
+        ),
+        pytest.param(
+            [
+                ("zone.home", 50.0, 60.0, 100),
+                # Offset by enough that the home zone is not fully inside
+                # the other zone (~750m + 100 > 500).
+                ("zone.faraway", 51.0, 61.0, 500),
+            ],
+            ["zone.home"],
+            id="offset_zone_excluded",
+        ),
+    ],
+)
+async def test_base_scanner_entity_in_zones_when_connected(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+    zones: list[tuple[str, float, float, int]],
+    expected_in_zones: list[str],
+) -> None:
+    """Test in_zones content for a connected BaseScannerEntity across zone setups."""
+    base_scanner_entity._connected = True
+
+    for entity, latitude, longitude, radius in zones:
+        hass.states.async_set(
+            entity,
+            "0",
+            {ATTR_LATITUDE: latitude, ATTR_LONGITUDE: longitude, ATTR_RADIUS: radius},
+        )
+    await hass.async_block_till_done()
+
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_IN_ZONES: expected_in_zones,
+    }
 
 
 @pytest.mark.parametrize(
@@ -648,6 +747,7 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_IN_ZONES: [],
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
