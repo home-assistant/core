@@ -31,9 +31,6 @@
     "command_failed": {
       "message": "Yoto command failed: {error}"
     },
-    "invalid_media_id": {
-      "message": "Could not parse media id {media_id}. Expected a card id, optionally followed by +chapter+track+seconds."
-    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },

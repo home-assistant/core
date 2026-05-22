@@ -17,12 +17,11 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
     SERVICE_VOLUME_SET,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -97,34 +96,6 @@ async def test_set_volume(
     mock_yoto_client.set_volume.assert_called_once_with("player-test", 50)
 
 
-async def test_play_media_with_full_id(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """play_media parses the structured media id."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            "media_content_type": "music",
-            "media_content_id": "card-test+02+02-INT+30",
-        },
-        blocking=True,
-    )
-
-    mock_yoto_client.play_card.assert_called_once_with(
-        "player-test",
-        card_id="card-test",
-        seconds_in=30,
-        chapter_key="02",
-        track_key="02-INT",
-    )
-
-
 async def test_seek(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -141,65 +112,6 @@ async def test_seek(
     )
 
     mock_yoto_client.seek.assert_called_once_with("player-test", 30)
-
-
-@pytest.mark.parametrize(
-    "media_id",
-    [
-        "",
-        "+02+02-INT+30",
-        "card-test+02+02-INT+abc",
-        "card-test+02+02-INT+30+extra",
-    ],
-)
-async def test_play_media_invalid(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    media_id: str,
-) -> None:
-    """An empty card id, missing card id, malformed seconds, or extra segment is rejected."""
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                "media_content_type": "music",
-                "media_content_id": media_id,
-            },
-            blocking=True,
-        )
-
-
-async def test_play_media_card_only(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """play_media defaults missing fields to None."""
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            "media_content_type": "music",
-            "media_content_id": "card-test",
-        },
-        blocking=True,
-    )
-
-    mock_yoto_client.play_card.assert_called_once_with(
-        "player-test",
-        card_id="card-test",
-        seconds_in=None,
-        chapter_key=None,
-        track_key=None,
-    )
 
 
 async def test_state_unavailable_when_offline(

@@ -11,10 +11,9 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -57,7 +56,6 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.STOP
-        | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
@@ -171,63 +169,15 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Skip to the previous track on the active card."""
         await self._async_run(self.coordinator.client.previous_track, self._player_id)
 
-    async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
-        """Play a Yoto card by id.
-
-        ``media_id`` accepts either a bare card id or
-        ``"<card_id>+<chapter_key>+<track_key>+<seconds_in>"``. Extra fields
-        are optional and may be left empty.
-        """
-        card_id, chapter_key, track_key, seconds_in = _parse_media_id(media_id)
-        await self._async_run(
-            self.coordinator.client.play_card,
-            self._player_id,
-            card_id=card_id,
-            seconds_in=seconds_in,
-            chapter_key=chapter_key,
-            track_key=track_key,
-        )
-
     async def _async_run(
-        self,
-        func: Callable[..., Awaitable[Any]],
-        /,
-        *args: Any,
-        **kwargs: Any,
+        self, func: Callable[..., Awaitable[Any]], /, *args: Any
     ) -> None:
         """Await a Yoto command and surface failures as HA errors."""
         try:
-            await func(*args, **kwargs)
+            await func(*args)
         except YotoError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-
-def _parse_media_id(media_id: str) -> tuple[str, str | None, str | None, int | None]:
-    """Split a Yoto play_media id into its components."""
-    parts = media_id.split("+")
-    if not parts[0] or len(parts) > 4:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_media_id",
-            translation_placeholders={"media_id": media_id},
-        )
-    parts.extend([""] * (4 - len(parts)))
-    card_id, chapter_key, track_key, seconds_raw = parts[:4]
-    if seconds_raw:
-        try:
-            seconds_in: int | None = int(seconds_raw)
-        except ValueError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_media_id",
-                translation_placeholders={"media_id": media_id},
-            ) from err
-    else:
-        seconds_in = None
-    return card_id, chapter_key or None, track_key or None, seconds_in
