@@ -87,9 +87,9 @@ class MdiIconsChecker(BaseChecker):
 
         icon_name = node.value[4:]  # Strip "mdi:" prefix
 
-        # Only check names that look like valid icon names (lowercase
-        # alphanumeric with hyphens). This skips f-string fragments,
-        # format templates, partial names, and other dynamic patterns.
+        # Only check names that look like intentional icon name attempts.
+        # This skips f-string fragments, format templates (%s, {}),
+        # partial names, and other dynamic patterns.
         if not _LOOKS_LIKE_ICON_NAME.match(icon_name):
             return
 

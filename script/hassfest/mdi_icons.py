@@ -66,5 +66,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate MDI icons file."""
+    if "mdi_icons_content" not in config.cache:
+        return
     target_path = config.root / _TARGET
     target_path.write_text(config.cache["mdi_icons_content"])
