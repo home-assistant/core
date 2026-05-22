@@ -1516,7 +1516,7 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
-matter-python-client==0.6.0
+matter-python-client==0.7.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2641,7 +2641,7 @@ python-google-weather-api==0.0.6
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.0.1
+python-homewizard-energy==10.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2871,7 +2871,7 @@ renault-api==0.5.10
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.19.1
+reolink-aio==0.20.0
 
 # homeassistant.components.radio_frequency
 rf-protocols==3.2.0
