@@ -229,16 +229,15 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                             self.client.locations.sensors(self.location_id)
                         )
                 except ExceptionGroup as err:
-                    first_exception = err.exceptions[0]
-                    if isinstance(first_exception, AUTH_EXCEPTIONS):
+                    if err.subgroup(AUTH_EXCEPTIONS) is not None:
                         raise UpdateFailed(
                             translation_domain=DOMAIN,
                             translation_key="authentication_failed",
-                        ) from first_exception
+                        ) from err
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
                         translation_key="unable_to_fetch",
-                    ) from first_exception
+                    ) from err
                 location_response = location_task.result()
                 latest_response = latest_task.result()
                 sensors_response = sensors_task.result()
