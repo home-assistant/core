@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -49,8 +49,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
     """Set up WLED from a config entry."""
-    entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
-    await entry.runtime_data.async_config_entry_first_refresh()
+    coordinator = WLEDDataUpdateCoordinator(hass, entry=entry)
+    entry.runtime_data = coordinator
+    await coordinator.async_config_entry_first_refresh()
+
+    @callback
+    def _async_check_keep_main_light() -> None:
+        """Persist keep_main_light=True if multiple segments detected."""
+        if len(coordinator.segment_ids) > 1 and not entry.options.get(
+            CONF_KEEP_MAIN_LIGHT
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                options={CONF_KEEP_MAIN_LIGHT: True} | entry.options,
+            )
+
+    unsub = coordinator.async_add_listener(_async_check_keep_main_light)
+    entry.async_on_unload(unsub)
+    _async_check_keep_main_light()
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -129,14 +145,6 @@ async def async_migrate_entry(
                 unique_id=normalized_mac_address,
                 version=1,
                 minor_version=2,
-            )
-        if config_entry.minor_version < 3:
-            # 1.3: Keep existing behavior for users upgrading — new installs default to True.
-            hass.config_entries.async_update_entry(
-                config_entry,
-                options={CONF_KEEP_MAIN_LIGHT: False} | config_entry.options,
-                version=1,
-                minor_version=3,
             )
 
     _LOGGER.debug(
