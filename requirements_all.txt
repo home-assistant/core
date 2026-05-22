@@ -233,7 +233,7 @@ aiocomelit==2.0.3
 aiodhcpwatcher==1.2.1
 
 # homeassistant.components.dhcp
-aiodiscover==3.2.0
+aiodiscover==3.2.3
 
 # homeassistant.components.dnsip
 aiodns==4.0.4
@@ -794,7 +794,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.0
+dbus-fast==5.0.3
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1183,7 +1183,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.8.0
+guntamatic==1.9.0
 
 # homeassistant.components.profiler
 guppy3==3.1.6
@@ -1210,7 +1210,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.1.0
+habluetooth==6.2.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1923,7 +1923,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.9.0
+py-opendisplay==7.2.3
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -3224,7 +3224,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==10.4.1
+uiprotect==10.5.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
