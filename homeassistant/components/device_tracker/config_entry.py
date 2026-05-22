@@ -37,7 +37,7 @@ _DEPRECATED_SourceType = DeprecatedAlias(
     _SourceType, "homeassistant.components.device_tracker.const.SourceType", "2027.6"
 )
 
-# These can be removed if no deprecated constant are in this module anymore
+# These can be removed if no deprecated aliases are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
 __dir__ = partial(
     dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
