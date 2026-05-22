@@ -124,7 +124,7 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     return parameter.name.lower().replace(".", "").replace("_", "")
 
 
-def _as_float(value: float | None) -> float | None:
+def _as_float(value: float | int | None) -> float | None:
     """Return value as a float when it is a numeric sensor value."""
     if isinstance(value, (float, int)):
         return float(value)
