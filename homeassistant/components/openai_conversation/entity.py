@@ -595,8 +595,8 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
 
-                if "reasoning" not in model_args:
-                    # Reasoning models handle this correctly with just a prompt
+                if not model_args["model"].startswith("o"):
+                    # o-series models handle this correctly with just a prompt
                     remove_citations = True
 
             tools.append(web_search)
