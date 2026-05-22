@@ -118,6 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
+    create_insteon_device(hass, devices.modem, entry.entry_id)
+
     await hass.config_entries.async_forward_entry_setups(entry, INSTEON_PLATFORMS)
 
     for address in devices:
@@ -130,8 +132,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
     async_setup_services(hass)
-
-    create_insteon_device(hass, devices.modem, entry.entry_id)
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"
