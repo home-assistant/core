@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import UTC, datetime
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import jwt
 import pytest
@@ -93,34 +93,12 @@ def mock_token_hex() -> Generator[MagicMock]:
 def mock_yoto_client() -> Generator[MagicMock]:
     """Patch YotoClient used by the runtime to a configurable mock."""
     with patch(
-        "homeassistant.components.yoto.coordinator.YotoClient",
+        "homeassistant.components.yoto.coordinator.YotoClient", autospec=True
     ) as client_class:
-        client = MagicMock()
-        client_class.return_value = client
-
+        client = client_class.return_value
         client.players = {PLAYER_ID: _build_player()}
         client.library = {CARD_ID: _build_card()}
         client.token = MagicMock(refresh_token="mock-refresh-token")
-
-        # All YotoClient methods we call are async.
-        for name in (
-            "refresh",
-            "update_player_status",
-            "update_library",
-            "connect_events",
-            "disconnect_events",
-            "request_status_push",
-            "resume",
-            "pause",
-            "stop",
-            "set_volume",
-            "seek",
-            "next_track",
-            "previous_track",
-            "play_card",
-        ):
-            setattr(client, name, AsyncMock())
-
         yield client
 
 

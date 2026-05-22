@@ -3,12 +3,12 @@
 from datetime import datetime
 
 import aiohttp
-from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
+from yoto_api import Token, YotoClient, YotoError, YotoPlayer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
@@ -57,11 +57,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Set up the coordinator."""
         try:
             await self.client.refresh()
-        except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-            ) from err
         except YotoError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -109,11 +104,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
         try:
             await self.client.refresh()
-        except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-            ) from err
         except YotoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

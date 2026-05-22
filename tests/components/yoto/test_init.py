@@ -5,14 +5,10 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from yoto_api import AuthenticationError, YotoAPIError, YotoError
+from yoto_api import YotoAPIError, YotoError
 
-from homeassistant.components.yoto.const import (
-    DOMAIN,
-    SCAN_INTERVAL,
-    STATUS_PUSH_INTERVAL,
-)
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.components.yoto.const import SCAN_INTERVAL, STATUS_PUSH_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -40,24 +36,6 @@ async def test_setup_unload(
     mock_yoto_client.disconnect_events.assert_called_once()
 
 
-async def test_setup_triggers_reauth_on_auth_failure(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """An authentication error during refresh triggers reauth."""
-    mock_yoto_client.refresh.side_effect = AuthenticationError("denied")
-
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    assert any(
-        flow["context"].get("source") == SOURCE_REAUTH
-        and flow["context"].get("entry_id") == mock_config_entry.entry_id
-        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    )
-
-
 async def test_setup_retries_on_api_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -70,25 +48,27 @@ async def test_setup_retries_on_api_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_mqtt_event_dispatches_update(
+async def test_mqtt_event_updates_entity(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """An MQTT event published by the broker pushes fresh data to listeners."""
+    """An MQTT event published by the broker refreshes the entity state."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data is mock_yoto_client.players
+    state_before = hass.states.get("media_player.nursery_yoto")
+    assert state_before is not None
 
-    received: list[dict | None] = []
-    coordinator.async_add_listener(lambda: received.append(coordinator.data))
-
-    # connect_events(device_ids, on_update, on_disconnect) — pull the callback out
-    callback = mock_yoto_client.connect_events.call_args.args[1]
-    callback(next(iter(mock_yoto_client.players.values())))
+    # connect_events(device_ids, on_update) — invoke the registered on_update callback
+    on_update = mock_yoto_client.connect_events.call_args.args[1]
+    player = next(iter(mock_yoto_client.players.values()))
+    player.last_event.volume = 12
+    on_update(player)
     await hass.async_block_till_done()
 
-    assert received == [mock_yoto_client.players]
+    state_after = hass.states.get("media_player.nursery_yoto")
+    assert state_after is not None
+    assert state_after.attributes["volume_level"] == 12 / 16
+    assert state_after.last_updated > state_before.last_updated
 
 
 async def test_status_push_tick(
@@ -142,27 +122,6 @@ async def test_periodic_poll_refreshes_players(
     await hass.async_block_till_done()
 
     mock_yoto_client.refresh.assert_called_once()
-
-
-async def test_periodic_poll_triggers_reauth_on_auth_failure(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """An auth failure mid-session triggers reauth."""
-    await setup_integration(hass, mock_config_entry)
-    mock_yoto_client.refresh.side_effect = AuthenticationError("denied")
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert any(
-        flow["context"].get("source") == SOURCE_REAUTH
-        and flow["context"].get("entry_id") == mock_config_entry.entry_id
-        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    )
 
 
 async def test_setup_retries_when_implementation_missing(
