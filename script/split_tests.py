@@ -220,7 +220,12 @@ def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
 
 
 def _iter_eligible_children(path: Path) -> list[Path]:
-    """Return immediate ``test_*.py`` and dirs; skip ``.``/``_`` prefixed names."""
+    """Return immediate children of ``path`` that pytest should collect.
+
+    Filters out hidden/dunder entries, non-``test_*.py`` files (so helper
+    modules like ``conftest.py`` and ``common.py`` are not passed as
+    explicit collection targets), and pycache-style directories.
+    """
     children: list[Path] = []
     for entry in sorted(path.iterdir()):
         if entry.name.startswith((".", "_")):
@@ -231,7 +236,12 @@ def _iter_eligible_children(path: Path) -> list[Path]:
 
 
 def _enumerate_batch_paths(path: Path) -> list[Path]:
-    """Collection targets: one level deep, ``_FAN_OUT_DIRS`` expanded two levels."""
+    """Return the child paths to run pytest --collect-only over.
+
+    Files are returned as-is.  Directories are expanded one level deep, with
+    a second level of expansion for entries named in ``_FAN_OUT_DIRS`` so the
+    enormous ``tests/components`` tree fans out into per-integration paths.
+    """
     if path.is_file():
         return [path]
 
