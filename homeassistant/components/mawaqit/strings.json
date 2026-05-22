@@ -11,14 +11,6 @@
       "wrong_credential": "Wrong login or password, please retry."
     },
     "step": {
-      "keep_or_reset": {
-        "data": {
-          "choice": "You can either choose to keep the existing configuration or to reset it:",
-          "keep": "Keep the existing configuration",
-          "reset": "Reset to configure a new mosque"
-        },
-        "title": "Another instance of MAWAQIT is already configured"
-      },
       "keyword_search": {
         "data": {
           "Keyword": "Search",
@@ -39,15 +31,6 @@
           "search_method_choice": "Choose the search method:"
         },
         "title": "Choose the method to find your mosque"
-      },
-      "select_server": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "server": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::email%]"
-        },
-        "description": "Multiple mosques available, select one:",
-        "title": "Select your favourite mosque"
       },
       "user": {
         "data": {
