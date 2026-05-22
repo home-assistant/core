@@ -8,7 +8,6 @@ from victron_mqtt import AuthenticationError, CannotConnectError
 from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
-    CONF_MODEL,
     CONF_SERIAL,
     CONF_UPDATE_FREQUENCY,
     DOMAIN,
@@ -16,6 +15,7 @@ from homeassistant.components.victron_gx.const import (
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,

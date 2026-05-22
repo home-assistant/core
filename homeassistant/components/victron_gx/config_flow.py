@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -23,7 +24,6 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_INSTALLATION_ID,
-    CONF_MODEL,
     CONF_SERIAL,
     CONF_UPDATE_FREQUENCY,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,

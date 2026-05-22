@@ -19,6 +19,7 @@ from victron_mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -31,7 +32,6 @@ from homeassistant.helpers.redact import async_redact_data
 
 from .const import (
     CONF_INSTALLATION_ID,
-    CONF_MODEL,
     CONF_SERIAL,
     CONF_UPDATE_FREQUENCY,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
@@ -176,7 +176,7 @@ class Hub:
                     metric.short_id: {
                         "name": metric.name,
                         "value": "**REDACTED**"
-                        if metric.metric_type == MetricType.LOCATION
+                        if metric.metric_type is MetricType.LOCATION
                         else metric.value
                         if not isinstance(metric.value, VictronEnum)
                         else metric.value.id,

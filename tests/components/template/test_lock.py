@@ -40,7 +40,6 @@ TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
 TEST_LOCK = TemplatePlatformSetup(
     lock.DOMAIN,
-    None,
     "test_template_lock",
     make_test_trigger(
         TEST_AVAILABILITY_ENTITY_ID,
