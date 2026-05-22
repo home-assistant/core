@@ -491,7 +491,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_API_ENDPOINT
         ]
         if (
-            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            self._get_reconfigure_entry().state is ConfigEntryState.LOADED
             and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
             and existing_api_endpoint == DEFAULT_API_ENDPOINT
         ):
@@ -596,7 +596,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(
                 reason="entry_not_loaded",
                 description_placeholders={"telegram_bot": self._get_entry().title},

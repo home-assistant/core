@@ -42,7 +42,7 @@ async def test_auth_error_handling(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
     await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_connection_error_handling(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
     # Check new state
