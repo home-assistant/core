@@ -556,7 +556,7 @@ class SonosDiscoveryManager:
             return
         uid = uid[5:]
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             _LOGGER.debug(
                 "ssdp:byebye received from %s", info.upnp.get("friendlyName", uid)
             )
