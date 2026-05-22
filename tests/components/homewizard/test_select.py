@@ -112,6 +112,12 @@ async def test_select_entity_snapshots(
             Batteries.Mode.TO_FULL,
         ),
         ("HWE-P1", "select.device_battery_group_mode", "zero", Batteries.Mode.ZERO),
+        (
+            "HWE-P1-predictive",
+            "select.device_battery_group_mode",
+            "predictive",
+            Batteries.Mode.PREDICTIVE,
+        ),
     ],
 )
 async def test_select_set_option(
@@ -132,6 +138,13 @@ async def test_select_set_option(
         blocking=True,
     )
     mock_homewizardenergy.batteries.assert_called_with(mode=expected_mode)
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-P1-predictive"])
+async def test_select_predictive_mode_is_available(hass: HomeAssistant) -> None:
+    """Test that predictive mode is available when supported by the device."""
+    assert (state := hass.states.get("select.device_battery_group_mode"))
+    assert "predictive" in state.attributes["options"]
 
 
 @pytest.mark.parametrize(
