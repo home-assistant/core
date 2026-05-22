@@ -19,13 +19,12 @@ from homeassistant import config_entries
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_REGION,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
     DOMAIN,
     DRAWABLES,
 )
-from homeassistant.const import CONF_USERNAME, Platform
+from homeassistant.const import CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
