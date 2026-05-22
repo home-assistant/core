@@ -66,7 +66,7 @@ def get_matter_device_info(
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID,
+        unique_id=node.device_info.uniqueID or "",
         vendor_id=hex(node.device_info.vendorID),
         product_id=hex(node.device_info.productID),
     )

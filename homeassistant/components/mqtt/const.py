@@ -49,6 +49,7 @@ CONF_IMAGE_TOPIC = "image_topic"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
+CONF_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
