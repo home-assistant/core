@@ -74,7 +74,7 @@ async def async_setup_entry(
             options = RAMP_RATE_OPTIONS
         elif control == CMD_BACKLIGHT:
             options = BACKLIGHT_INDEX
-        elif uom := node.aux_properties[control].uom == UOM_INDEX:
+        elif (uom := node.aux_properties[control].uom) == UOM_INDEX:
             if options_dict := UOM_TO_STATES.get(uom):
                 options = list(options_dict.values())
 
