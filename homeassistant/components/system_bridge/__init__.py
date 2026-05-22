@@ -426,7 +426,7 @@ async def async_setup_entry(
         ),
         supports_response=SupportsResponse.ONLY,
         description_placeholders={
-            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+            "syntax_keys_documentation_url": "https://robotjs.dev/docs/syntax#keys"
         },
     )
 
@@ -454,9 +454,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         coordinator = entry.runtime_data
 
