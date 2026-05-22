@@ -96,6 +96,11 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
                 ) from exc
+            except CookidooRequestException as exc:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
+                ) from exc
             _LOGGER.debug(
                 "Authentication failed but re-authentication"
                 " was successful, trying again later"

@@ -62,7 +62,8 @@ async def async_migrate_entry(
             )
             return False
 
-        unique_id = user_info.id
+        new_unique_id = user_info.id
+        old_prefix = config_entry.entry_id
 
         device_registry = dr.async_get(hass)
         entity_registry = er.async_get(hass)
@@ -73,18 +74,20 @@ async def async_migrate_entry(
             entity_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_update_device(
-                dev.id, new_identifiers={(DOMAIN, unique_id)}
-            )
+            new_identifiers = {
+                (DOMAIN, new_unique_id) if domain == DOMAIN else (domain, identifier)
+                for domain, identifier in dev.identifiers
+            }
+            device_registry.async_update_device(dev.id, new_identifiers=new_identifiers)
         for ent in entity_entries:
-            assert ent.config_entry_id
-            entity_registry.async_update_entity(
-                ent.entity_id,
-                new_unique_id=ent.unique_id.replace(ent.config_entry_id, unique_id),
-            )
+            if ent.unique_id and ent.unique_id.startswith(f"{old_prefix}_"):
+                entity_registry.async_update_entity(
+                    ent.entity_id,
+                    new_unique_id=f"{new_unique_id}{ent.unique_id[len(old_prefix) :]}",
+                )
 
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=user_info.id, minor_version=3
+            config_entry, unique_id=new_unique_id, minor_version=3
         )
 
     if config_entry.version == 1 and config_entry.minor_version == 2:
@@ -113,14 +116,20 @@ async def async_migrate_entry(
             entity_registry, config_entry_id=config_entry.entry_id
         )
         for dev in device_entries:
-            device_registry.async_update_device(
-                dev.id, new_identifiers={(DOMAIN, new_unique_id)}
-            )
+            new_identifiers = {
+                (DOMAIN, new_unique_id) if domain == DOMAIN else (domain, identifier)
+                for domain, identifier in dev.identifiers
+            }
+            device_registry.async_update_device(dev.id, new_identifiers=new_identifiers)
         for ent in entity_entries:
-            if ent.unique_id and old_unique_id:
+            if (
+                ent.unique_id
+                and old_unique_id
+                and ent.unique_id.startswith(f"{old_unique_id}_")
+            ):
                 entity_registry.async_update_entity(
                     ent.entity_id,
-                    new_unique_id=ent.unique_id.replace(old_unique_id, new_unique_id),
+                    new_unique_id=f"{new_unique_id}{ent.unique_id[len(old_unique_id) :]}",
                 )
 
         hass.config_entries.async_update_entry(
