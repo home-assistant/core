@@ -113,9 +113,10 @@ class ISYNodeEntity(ISYEntity):
         """
         attrs = self._attrs
         node = self._node
-        # Insteon aux_properties are now their own sensors
-        # so we no longer need to add them to the attributes
-        if node.protocol != PROTO_INSTEON and hasattr(node, "aux_properties"):
+        # Insteon and Z-Wave aux_properties are their own sensor entities
+        if node.protocol not in (PROTO_INSTEON, PROTO_ZWAVE) and hasattr(
+            node, "aux_properties"
+        ):
             for name, value in self._node.aux_properties.items():
                 attr_name = COMMAND_FRIENDLY_NAME.get(name, name)
                 attrs[attr_name] = str(value.formatted).lower()
