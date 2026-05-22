@@ -1137,10 +1137,10 @@ END:VCALENDAR"""
     ("calendars"),
     [
         [
-            _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
-            _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
-            _mock_calendar("Calendar 3", supported_components=["VTODO"]),
-            _mock_calendar("Calendar 4", supported_components=[]),
+            _mock_calendar("Calendar_1", supported_components=["VEVENT"]),
+            _mock_calendar("Calendar_2", supported_components=["VEVENT", "VJOURNAL"]),
+            _mock_calendar("Calendar_3", supported_components=["VTODO"]),
+            _mock_calendar("Calendar_4", supported_components=[]),
         ]
     ],
 )
@@ -1195,10 +1195,10 @@ async def test_setup_config_entry(
     ("calendars"),
     [
         [
-            _mock_calendar("Calendar 1", supported_components=["VEVENT"]),
-            _mock_calendar("Calendar 2", supported_components=["VEVENT", "VJOURNAL"]),
-            _mock_calendar("Calendar 3", supported_components=["VTODO"]),
-            _mock_calendar("Calendar 4", supported_components=[]),
+            _mock_calendar("Calendar_1", supported_components=["VEVENT"]),
+            _mock_calendar("Calendar_2", supported_components=["VEVENT", "VJOURNAL"]),
+            _mock_calendar("Calendar_3", supported_components=["VTODO"]),
+            _mock_calendar("Calendar_4", supported_components=[]),
         ]
     ],
 )
