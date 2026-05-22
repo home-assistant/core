@@ -937,14 +937,11 @@ jobs:
             --cache pytest_test_counts.json \
             ${TEST_GROUP_COUNT} tests
       - name: Save pytest test counts cache
-        # Only the canonical dev push writes the cache, otherwise every PR
-        # build would create a new entry and the actions/cache quota fills
-        # up with near-duplicate snapshots.  PRs and feature branches still
-        # restore from dev's most recent cache via restore-keys.
-        if: |
-          github.event_name == 'push'
-          && github.ref == 'refs/heads/dev'
-          && steps.cache-pytest-counts.outputs.cache-hit != 'true'
+        # Save whenever the primary key missed; GH scopes caches per-branch,
+        # so PR-branch saves stay isolated to that PR (and get cleaned up
+        # when it closes), while dev pushes seed the cache other branches
+        # restore from via restore-keys.
+        if: steps.cache-pytest-counts.outputs.cache-hit != 'true'
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json
