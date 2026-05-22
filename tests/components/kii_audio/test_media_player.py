@@ -9,6 +9,7 @@ from homeassistant.components.kii_audio.media_player import (
     KiiAudioZoneMediaPlayer,
     async_setup_entry,
 )
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 
 from .conftest import ZONE_ID, FakeCoordinator, make_zone
 
@@ -18,6 +19,7 @@ def test_media_player_reports_zone_state(coordinator: FakeCoordinator) -> None:
     entity = KiiAudioZoneMediaPlayer(coordinator, coordinator.data["zones"][0])
 
     assert entity.name is None
+    assert entity.device_class is MediaPlayerDeviceClass.SPEAKER
     assert entity.state.value == "on"
     assert entity.volume_level == 0.5
     assert entity.is_volume_muted is False

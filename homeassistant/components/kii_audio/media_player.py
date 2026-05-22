@@ -3,6 +3,7 @@
 from typing import Any
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -89,6 +90,7 @@ class KiiAudioZoneMediaPlayer(
 ):
     """Representation of a Kii Audio zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = SUPPORTED_FEATURES
