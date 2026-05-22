@@ -5,16 +5,7 @@ import logging
 from math import inf
 from typing import Any
 
-import httpx
-from openaq import (
-    ApiKeyMissingError,
-    AsyncOpenAQ,
-    ForbiddenError,
-    HTTPRateLimitError,
-    NotAuthorizedError,
-    RateLimitError,
-)
-from openaq.shared.exceptions import APIError
+from openaq import AsyncOpenAQ
 from openaq.shared.responses import Location
 import voluptuous as vol
 
@@ -33,7 +24,6 @@ from homeassistant.const import (
     CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     LocationSelector,
     LocationSelectorConfig,
@@ -43,7 +33,15 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_LOCATION_ID, DOMAIN, MAX_RADIUS, SUBENTRY_TYPE_LOCATION
+from .const import (
+    CONF_LOCATION_ID,
+    DOMAIN,
+    MAX_RADIUS,
+    OPENAQ_API_EXCEPTIONS,
+    OPENAQ_AUTH_EXCEPTIONS,
+    OPENAQ_RATE_LIMIT_EXCEPTIONS,
+    SUBENTRY_TYPE_LOCATION,
+)
 from .coordinator import async_create_openaq_client, normalize_parameter
 from .sensor import SENSOR_DESCRIPTIONS
 
@@ -89,21 +87,6 @@ class OpenAQLocationFlowData:
 async def _get_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
     """Return an OpenAQ client."""
     return await async_create_openaq_client(hass, api_key)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    client = await _get_client(hass, data[CONF_API_KEY])
-    try:
-        await client.parameters.list(limit=1)
-    except (ApiKeyMissingError, ForbiddenError, NotAuthorizedError) as err:
-        raise InvalidAuth from err
-    except (HTTPRateLimitError, RateLimitError) as err:
-        raise RateLimited from err
-    except (APIError, httpx.HTTPError) as err:
-        raise CannotConnect from err
-    finally:
-        await client.close()
 
 
 def _location_title(location: Location) -> str:
@@ -197,13 +180,17 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                client = await _get_client(self.hass, user_input[CONF_API_KEY])
+                try:
+                    await client.parameters.list(limit=1)
+                finally:
+                    await client.close()
+            except OPENAQ_AUTH_EXCEPTIONS:
                 errors["base"] = "invalid_auth"
-            except RateLimited:
+            except OPENAQ_RATE_LIMIT_EXCEPTIONS:
                 errors["base"] = "rate_limited"
+            except OPENAQ_API_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -259,11 +246,11 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                         ):
                             continue
                         locations.setdefault(location_data.location_id, location_data)
-            except ApiKeyMissingError, ForbiddenError, NotAuthorizedError:
+            except OPENAQ_AUTH_EXCEPTIONS:
                 errors["base"] = "invalid_auth"
-            except HTTPRateLimitError, RateLimitError:
+            except OPENAQ_RATE_LIMIT_EXCEPTIONS:
                 errors["base"] = "rate_limited"
-            except APIError, httpx.HTTPError:
+            except OPENAQ_API_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -342,15 +329,3 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
             data={CONF_LOCATION_ID: location.location_id},
             unique_id=str(location.location_id),
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class RateLimited(HomeAssistantError):
-    """Error to indicate the API rate limit was exceeded."""
