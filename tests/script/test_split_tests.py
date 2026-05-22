@@ -56,9 +56,7 @@ def test_enumerate_batch_paths_for_single_file(tmp_path: Path) -> None:
 def _fixture_hash_for(tree: Path, file: Path) -> str:
     """Compute the fixture scope hash for ``file`` rooted at ``tree``."""
     _, fixtures = split_tests._walk_test_tree(tree)
-    fixtures_by_dir = split_tests._index_fixtures_by_dir(
-        split_tests._find_ancestor_conftests(tree) + fixtures
-    )
+    fixtures_by_dir = split_tests._build_fixtures_by_dir(tree, fixtures)
     return split_tests._file_fixture_hash(file, tree, fixtures_by_dir)
 
 
@@ -296,7 +294,20 @@ def test_cache_save_creates_parent_dir(tmp_path: Path) -> None:
     assert cache_path.is_file()
 
 
-def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
+def _resolve(
+    test_files: list[Path], cache: split_tests._Cache, tree: Path
+) -> tuple[dict[Path, split_tests._CacheEntry], list[Path]]:
+    """Run resolve_entries with a freshly indexed fixtures_by_dir."""
+    _, fixtures = split_tests._walk_test_tree(tree)
+    return split_tests._resolve_entries(
+        test_files,
+        cache,
+        tree,
+        split_tests._build_fixtures_by_dir(tree, fixtures),
+    )
+
+
+def test_resolve_entries_hits_and_misses(tree: Path) -> None:
     """Files with matching content + fixture hashes are hits."""
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     alpha_two = tree / "components" / "alpha" / "test_two.py"
@@ -314,32 +325,20 @@ def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
             ),
         },
     )
-
-    _, fixtures = split_tests._walk_test_tree(tree)
-    fixtures_by_dir = split_tests._index_fixtures_by_dir(
-        split_tests._find_ancestor_conftests(tree) + fixtures
+    entries, misses = _resolve([alpha_one, alpha_two, beta_x], cache, tree)
+    # Hit: cached entry passed through verbatim.
+    assert entries[alpha_one] == split_tests._CacheEntry(
+        hash=alpha_one_hash, fixture_hash=alpha_one_fixture, count=1
     )
-    hits, miss_hashes = split_tests._resolve_from_cache(
-        [alpha_one, alpha_two, beta_x], cache, tree, fixtures_by_dir
-    )
-    assert hits == {
-        alpha_one: split_tests._CacheEntry(
-            hash=alpha_one_hash, fixture_hash=alpha_one_fixture, count=1
-        )
-    }
-    assert miss_hashes == {
-        alpha_two: (
-            split_tests._hash_file(alpha_two),
-            _fixture_hash_for(tree, alpha_two),
-        ),
-        beta_x: (
-            split_tests._hash_file(beta_x),
-            _fixture_hash_for(tree, beta_x),
-        ),
-    }
+    # Misses: fresh hashes plus a count=0 placeholder.
+    assert set(misses) == {alpha_two, beta_x}
+    assert entries[alpha_two].count == 0
+    assert entries[alpha_two].hash == split_tests._hash_file(alpha_two)
+    assert entries[beta_x].count == 0
+    assert entries[beta_x].hash == split_tests._hash_file(beta_x)
 
 
-def test_resolve_from_cache_misses_on_fixture_drift(tree: Path) -> None:
+def test_resolve_entries_misses_on_fixture_drift(tree: Path) -> None:
     """A file with unchanged content but changed scope counts as a miss."""
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     cache = split_tests._Cache(
@@ -351,18 +350,11 @@ def test_resolve_from_cache_misses_on_fixture_drift(tree: Path) -> None:
             ),
         },
     )
-    _, fixtures = split_tests._walk_test_tree(tree)
-    fixtures_by_dir = split_tests._index_fixtures_by_dir(
-        split_tests._find_ancestor_conftests(tree) + fixtures
-    )
-    hits, miss_hashes = split_tests._resolve_from_cache(
-        [alpha_one], cache, tree, fixtures_by_dir
-    )
-    assert hits == {}
-    assert alpha_one in miss_hashes
+    _, misses = _resolve([alpha_one], cache, tree)
+    assert misses == [alpha_one]
 
 
-def test_resolve_from_cache_isolates_unrelated_dirs(tree: Path) -> None:
+def test_resolve_entries_isolates_unrelated_dirs(tree: Path) -> None:
     """Editing a helper in one dir leaves files in other dirs as hits."""
     alpha_dir = tree / "components" / "alpha"
     beta_dir = tree / "components" / "beta"
@@ -390,15 +382,8 @@ def test_resolve_from_cache_isolates_unrelated_dirs(tree: Path) -> None:
 
     # Now bust beta's helper; alpha's scope is unchanged, beta's isn't.
     (beta_dir / "common.py").write_text("# beta helper v2\n")
-    _, fixtures = split_tests._walk_test_tree(tree)
-    fixtures_by_dir = split_tests._index_fixtures_by_dir(
-        split_tests._find_ancestor_conftests(tree) + fixtures
-    )
-    hits, miss_hashes = split_tests._resolve_from_cache(
-        [alpha_one, beta_x], cache, tree, fixtures_by_dir
-    )
-    assert alpha_one in hits
-    assert beta_x in miss_hashes
+    _, misses = _resolve([alpha_one, beta_x], cache, tree)
+    assert misses == [beta_x]
 
 
 def test_collect_tests_hashes_each_file_once(tree: Path) -> None:

@@ -3,7 +3,7 @@
 
 import argparse
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import hashlib
 import json
 from math import ceil
@@ -282,25 +282,16 @@ def _find_ancestor_conftests(root: Path) -> list[Path]:
     return ancestors
 
 
-def _hash_paths(root: Path, paths: list[Path]) -> str:
-    """Return a hash that changes whenever any of ``paths`` changes.
+def _build_fixtures_by_dir(
+    root: Path, descendants: list[Path]
+) -> dict[Path, list[Path]]:
+    """Return ``{resolved_dir: [fixture files]}`` for ``root``.
 
-    ``os.path.relpath`` is used so ancestor paths (above ``root``)
-    encode cleanly and the hash stays machine-stable.
+    Combines descendant fixtures under ``root`` with ancestor conftests
+    above it — pytest still applies the latter on subtree runs.
     """
-    digest = hashlib.sha256()
-    for fixture in paths:
-        digest.update(os.path.relpath(fixture, root).encode())
-        digest.update(b"\0")
-        digest.update(fixture.read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
-
-
-def _index_fixtures_by_dir(fixtures: list[Path]) -> dict[Path, list[Path]]:
-    """Bucket fixture files by resolved parent directory."""
     by_dir: dict[Path, list[Path]] = {}
-    for fixture in fixtures:
+    for fixture in (*_find_ancestor_conftests(root), *descendants):
         by_dir.setdefault(fixture.parent.resolve(), []).append(fixture)
     return by_dir
 
@@ -321,7 +312,6 @@ def _file_fixture_hash(
     """
     relevant: list[Path] = []
     test_dir = test_file.parent.resolve()
-    # Walk up from test_dir, collecting any conftest.py we find.
     current = test_dir
     while True:
         relevant.extend(
@@ -336,7 +326,14 @@ def _file_fixture_hash(
         f for f in fixtures_by_dir.get(test_dir, ()) if f.name != "conftest.py"
     )
     relevant.sort()
-    return _hash_paths(root, relevant)
+    # os.path.relpath keeps the hash machine-stable and handles ancestors above root.
+    digest = hashlib.sha256()
+    for fixture in relevant:
+        digest.update(os.path.relpath(fixture, root).encode())
+        digest.update(b"\0")
+        digest.update(fixture.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
 
 
 @dataclass
@@ -423,34 +420,38 @@ class _Cache:
         )
 
 
-def _resolve_from_cache(
+def _resolve_entries(
     test_files: list[Path],
     cache: _Cache,
     root: Path,
     fixtures_by_dir: dict[Path, list[Path]],
-) -> tuple[dict[Path, _CacheEntry], dict[Path, tuple[str, str]]]:
-    """Split ``test_files`` into ``(cached_entries, miss_hashes)``.
+) -> tuple[dict[Path, _CacheEntry], list[Path]]:
+    """Build a fresh entry for every test file; return ``(entries, misses)``.
 
-    Each file is hashed exactly once: hits carry the stored entry
-    forward, misses carry the just-computed (content, fixture) hash
-    pair so the rebuild step doesn't re-read the same bytes.  A file
-    misses if either its own bytes changed or its fixture scope did.
+    Each file is hashed once.  Hits reuse the stored entry verbatim.
+    Misses get a fresh entry with the resolve-time hashes and a
+    count=0 placeholder for the caller to fill in after pytest runs.
+    A file misses if either its own bytes changed or its fixture
+    scope did.
     """
-    hits: dict[Path, _CacheEntry] = {}
-    miss_hashes: dict[Path, tuple[str, str]] = {}
+    entries: dict[Path, _CacheEntry] = {}
+    misses: list[Path] = []
     for file in test_files:
         file_hash = _hash_file(file)
         fixture_hash = _file_fixture_hash(file, root, fixtures_by_dir)
-        entry = cache.entries.get(str(file.relative_to(root)))
+        cached = cache.entries.get(str(file.relative_to(root)))
         if (
-            entry is not None
-            and entry.hash == file_hash
-            and entry.fixture_hash == fixture_hash
+            cached is not None
+            and cached.hash == file_hash
+            and cached.fixture_hash == fixture_hash
         ):
-            hits[file] = entry
+            entries[file] = cached
         else:
-            miss_hashes[file] = (file_hash, fixture_hash)
-    return hits, miss_hashes
+            entries[file] = _CacheEntry(
+                hash=file_hash, fixture_hash=fixture_hash, count=0
+            )
+            misses.append(file)
+    return entries, misses
 
 
 def _run_collect_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
@@ -533,48 +534,31 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     all_test_files, fixtures = _walk_test_tree(path)
     _exit_if_empty(all_test_files, path)
 
-    # Ancestor conftests apply to subtree runs (eg tests/components must
-    # still invalidate on tests/conftest.py changes).
-    fixtures_by_dir = _index_fixtures_by_dir(_find_ancestor_conftests(path) + fixtures)
+    fixtures_by_dir = _build_fixtures_by_dir(path, fixtures)
     cache = _Cache.load(cache_path)
+    entries, misses = _resolve_entries(all_test_files, cache, path, fixtures_by_dir)
+    hits = len(all_test_files) - len(misses)
+    print(f"Cache: {hits} hits / {len(misses)} misses / {len(all_test_files)} total")
 
-    hits, miss_hashes = _resolve_from_cache(
-        all_test_files, cache, path, fixtures_by_dir
-    )
-    print(
-        f"Cache: {len(hits)} hits / {len(miss_hashes)} misses"
-        f" / {len(all_test_files)} total"
-    )
-
-    new_counts: dict[Path, int] = {}
-    if miss_hashes:
+    if misses:
         # File-level collection saves work when the diff is small.  But
         # when many files miss (eg a PR adding a new integration with
         # hundreds of new files) the per-file argv overhead dominates
         # and dir-level wins, so fall back past _DIR_LEVEL_MISS_RATIO.
-        if not hits or len(miss_hashes) > len(all_test_files) * _DIR_LEVEL_MISS_RATIO:
+        if not hits or len(misses) > len(all_test_files) * _DIR_LEVEL_MISS_RATIO:
             collect_paths = _enumerate_batch_paths(path)
         else:
-            collect_paths = list(miss_hashes)
+            collect_paths = misses
         new_counts = _run_pytest_collect(collect_paths)
+        # Fill in miss placeholders; files pytest returned nothing for
+        # stay at count=0 so they aren't re-collected next run.
+        for file in misses:
+            entries[file] = replace(entries[file], count=new_counts.get(file, 0))
 
-    # One pass over all files: hits keep their entry, misses build a
-    # fresh one from the resolve-time hashes and collected count (0 if
-    # pytest returned nothing, so we stop re-collecting next run).
-    entries: dict[str, _CacheEntry] = {}
-    counts: dict[Path, int] = {}
-    for file in all_test_files:
-        if (entry := hits.get(file)) is None:
-            file_hash, fixture_hash = miss_hashes[file]
-            entry = _CacheEntry(
-                hash=file_hash,
-                fixture_hash=fixture_hash,
-                count=new_counts.get(file, 0),
-            )
-        entries[str(file.relative_to(path))] = entry
-        counts[file] = entry.count
-    _Cache(entries=entries).save(cache_path)
-    return _build_folder(path, counts)
+    _Cache(entries={str(f.relative_to(path)): e for f, e in entries.items()}).save(
+        cache_path
+    )
+    return _build_folder(path, {f: e.count for f, e in entries.items()})
 
 
 def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
