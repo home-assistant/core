@@ -89,6 +89,8 @@ def async_get_triggers(
 
     # Get Hue device id from device identifier
     hue_dev_id = get_hue_device_id(device_entry)
+    if hue_dev_id is None or hue_dev_id not in api.devices:
+        return []
     # extract triggers from all button resources of this Hue device
     triggers: list[dict[str, Any]] = []
     model_id = api.devices[hue_dev_id].product_data.product_name
