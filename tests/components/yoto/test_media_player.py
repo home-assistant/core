@@ -144,7 +144,7 @@ async def test_no_card_metadata_when_card_id_missing(
     assert state is not None
     assert "media_album_name" not in state.attributes
     assert "media_artist" not in state.attributes
-    assert "media_image_url" not in state.attributes
+    assert "entity_picture" not in state.attributes
 
 
 async def test_state_idle_before_first_event(
