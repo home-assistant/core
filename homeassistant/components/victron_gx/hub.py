@@ -170,7 +170,7 @@ class Hub:
                     metric.short_id: {
                         "name": metric.name,
                         "value": "**REDACTED**"
-                        if metric.metric_type == MetricType.LOCATION
+                        if metric.metric_type is MetricType.LOCATION
                         else metric.value
                         if not isinstance(metric.value, VictronEnum)
                         else metric.value.id,
