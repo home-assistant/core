@@ -37,11 +37,15 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("async_step_ssdp: Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
-        _LOGGER.debug(
-            "async_step_ssdp: setting unique id %s", discovery_info.upnp[ATTR_UPNP_UDN]
-        )
+        udn = discovery_info.upnp[ATTR_UPNP_UDN]
+        if isinstance(udn, list):
+            if not udn:
+                return self.async_abort(reason="incomplete_discovery")
+            udn = udn[0]
 
-        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
+        _LOGGER.debug("async_step_ssdp: setting unique id %s", udn)
+
+        await self.async_set_unique_id(udn)
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ssdp_location})
 
         _LOGGER.debug(
