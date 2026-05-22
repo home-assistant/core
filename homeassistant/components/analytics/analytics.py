@@ -299,12 +299,8 @@ class Analytics:
             self._data = AnalyticsData.from_dict(stored)
 
         if self.supervisor and not self.onboarded:
-            # This may raise HassioNotReadyError if Supervisor was unreachable
-            # during setup of the Supervisor integration. That will fail setup
-            # of this integration. However there is no better option at this time
-            # since we need to get the diagnostic setting from Supervisor to correctly
-            # setup this integration and we can't raise ConfigEntryNotReady to
-            # trigger a retry from async_setup.
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
             supervisor_info = hassio.get_supervisor_info(self._hass)
 
             # User have not configured analytics, get this setting from the supervisor
@@ -349,8 +345,7 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            # get_supervisor_info was called during setup so we can't get here
-            # if it raised. The others may raise HassioNotReadyError if only some
+            # The others may raise HassioNotReadyError if only some
             # data was successfully fetched from Supervisor
             supervisor_info = hassio.get_supervisor_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
@@ -629,6 +624,16 @@ class Analytics:
                 url,
                 err,
             )
+
+    @callback
+    def cancel_scheduled(self) -> None:
+        """Cancel all scheduled analytics tasks."""
+        if self._basic_scheduled is not None:
+            self._basic_scheduled()
+            self._basic_scheduled = None
+        if self._snapshot_scheduled is not None:
+            self._snapshot_scheduled()
+            self._snapshot_scheduled = None
 
     async def async_schedule(self) -> None:
         """Schedule analytics."""
