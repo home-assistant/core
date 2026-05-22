@@ -1,6 +1,6 @@
 """Test blueprints."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 import contextlib
 from os import PathLike
 import pathlib
@@ -70,7 +70,7 @@ def patch_blueprint(
 
 
 @contextlib.contextmanager
-def patch_invalid_blueprint() -> Iterator[None]:
+def patch_invalid_blueprint_with_multiple_platforms() -> Iterator[None]:
     """Patch blueprint returning an invalid one."""
 
     @callback
@@ -83,6 +83,35 @@ def patch_invalid_blueprint() -> Iterator[None]:
                 },
                 "binary_sensor": {},
                 "sensor": {},
+            },
+            expected_domain=self.domain,
+            path=path,
+            schema=BLUEPRINT_SCHEMA,
+        )
+
+    with patch(
+        "homeassistant.components.blueprint.models.DomainBlueprints._load_blueprint",
+        mock_load_blueprint,
+    ):
+        yield
+
+
+@contextlib.contextmanager
+def patch_invalid_blueprint_with_multiple_entities() -> Iterator[None]:
+    """Patch blueprint returning an invalid one."""
+
+    @callback
+    def mock_load_blueprint(self, path):
+        return Blueprint(
+            {
+                "blueprint": {
+                    "domain": "template",
+                    "name": "Invalid template blueprint",
+                },
+                "sensor": [
+                    {"name": "Sensor 1", "state": "{{ now() }}"},
+                    {"name": "Sensor 2", "state": "{{ now() }}"},
+                ],
             },
             expected_domain=self.domain,
             path=path,
@@ -314,7 +343,11 @@ async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> N
 
 @pytest.mark.parametrize(
     ("blueprint"),
-    ["test_event_sensor.yaml", "test_event_sensor_legacy_schema.yaml"],
+    [
+        "test_event_sensor.yaml",
+        "test_event_sensor_legacy_schema.yaml",
+        "test_event_sensor_legacy_schema_listed.yaml",
+    ],
 )
 async def test_trigger_event_sensor(
     hass: HomeAssistant,
@@ -495,12 +528,28 @@ async def test_domain_blueprint(hass: HomeAssistant) -> None:
     assert len(reload_handler_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("blueprint_patch", "error"),
+    [
+        (
+            patch_invalid_blueprint_with_multiple_platforms,
+            "more than one platform defined per blueprint",
+        ),
+        (
+            patch_invalid_blueprint_with_multiple_entities,
+            "more than one sensor entity defined in blueprint",
+        ),
+    ],
+)
 async def test_invalid_blueprint(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    blueprint_patch: Callable[[], Iterator[None]],
+    error: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an invalid blueprint definition."""
 
-    with patch_invalid_blueprint():
+    with blueprint_patch():
         assert await async_setup_component(
             hass,
             "template",
@@ -516,7 +565,7 @@ async def test_invalid_blueprint(
             },
         )
 
-    assert "more than one platform defined per blueprint" in caplog.text
+    assert error in caplog.text
     blueprints = await template.async_get_blueprints(hass).async_get_blueprints()
     assert "invalid.yaml" not in blueprints
 

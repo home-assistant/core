@@ -290,7 +290,17 @@ async def _async_resolve_template_config(
             platform = platforms.pop()
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
-                    config[platform][prop] = config.pop(prop)
+                    config_platform: list | dict = config[platform]
+                    if isinstance(config_platform, dict):
+                        config[platform][prop] = config.pop(prop)
+                        continue
+
+                    if len(config_platform) > 1:
+                        raise vol.Invalid(
+                            f"more than one {platform} entity defined in blueprint"
+                        )
+                    config_platform[0][prop] = config.pop(prop)
+
             # State based template entities remove CONF_VARIABLES because they pass
             # blueprint inputs to the template entities. Trigger based template entities
             # retain CONF_VARIABLES because the variables are always executed between
