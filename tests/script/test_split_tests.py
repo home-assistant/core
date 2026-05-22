@@ -157,24 +157,45 @@ def test_file_fixture_hash_stable_for_test_changes(tree: Path) -> None:
     assert before == after
 
 
-def test_find_ancestor_conftests_walks_through_gaps(tmp_path: Path) -> None:
-    """Ancestor conftests are collected even when intermediate dirs have no conftest."""
+def test_find_ancestor_fixtures_walks_through_gaps(tmp_path: Path) -> None:
+    """Ancestor conftests + helpers are collected across intermediate gaps."""
     nested = tmp_path / "a" / "b" / "c"
     nested.mkdir(parents=True)
-    # ``a/b`` has no conftest, but ``a`` and ``a/b/c`` do; pytest would still
-    # apply ``a/conftest.py``, so we must keep walking past the gap.
+    # ``a/b`` has no fixtures, but ``a`` has both a conftest and a helper.
     (tmp_path / "a" / "conftest.py").write_text("# a\n")
+    (tmp_path / "a" / "common.py").write_text("# a helper\n")
     (tmp_path / "a" / "b" / "c" / "conftest.py").write_text("# c\n")
 
     found = {
         p.relative_to(tmp_path).as_posix()
-        for p in split_tests._find_ancestor_conftests(nested)
+        for p in split_tests._find_ancestor_fixtures(nested)
     }
-    # The walk starts at ``nested.parent`` (a/b), so a/b/c/conftest.py is
-    # not an ancestor.  a/conftest.py must be found despite a/b having no
-    # conftest of its own.
+    # The walk starts at ``nested.parent`` (a/b); a/b/c/conftest.py is
+    # not an ancestor.  Both ``a/conftest.py`` and ``a/common.py`` must
+    # be found despite a/b having no fixtures of its own.
     assert "a/conftest.py" in found
+    assert "a/common.py" in found
     assert "a/b/c/conftest.py" not in found
+
+
+def test_file_fixture_hash_picks_up_ancestor_helper_above_root(
+    tmp_path: Path,
+) -> None:
+    """An ancestor non-conftest helper above root still busts descendant hashes.
+
+    A subtree run on ``components/`` must still invalidate when a shared
+    helper one level up (eg ``tests/components/common.py``) changes.
+    """
+    (tmp_path / "common.py").write_text("# v1\n")
+    subtree = tmp_path / "components"
+    subtree.mkdir()
+    test_file = subtree / "test_x.py"
+    test_file.write_text("def test_x(): pass\n")
+
+    before = _fixture_hash_for(subtree, test_file)
+    (tmp_path / "common.py").write_text("# v2\n")
+    after = _fixture_hash_for(subtree, test_file)
+    assert before != after
 
 
 def test_file_fixture_hash_picks_up_ancestor_conftest_across_gap(

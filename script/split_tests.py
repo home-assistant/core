@@ -280,30 +280,35 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     return test_files, fixtures
 
 
-def _find_ancestor_conftests(root: Path) -> list[Path]:
-    """Return every ``conftest.py`` above ``root`` up to the FS root.
+def _find_ancestor_fixtures(root: Path) -> list[Path]:
+    """Return every non-``test_*.py`` Python file above ``root`` up to FS root.
 
-    Pytest applies any conftest on the ancestor chain regardless of
-    intermediate gaps, so we keep walking past dirs without one.
+    Includes conftests and helper modules (eg ``common.py``); subtree
+    runs need both so shared ancestor helpers like
+    ``tests/components/common.py`` still invalidate descendants.  We
+    keep walking past dirs without a conftest because pytest applies
+    them through gaps.
     """
-    ancestors: list[Path] = []
+    fixtures: list[Path] = []
     current = root.resolve().parent
     while True:
-        conftest = current / "conftest.py"
-        if conftest.is_file():
-            ancestors.append(conftest)
+        fixtures.extend(
+            entry
+            for entry in current.glob("*.py")
+            if not entry.name.startswith("test_")
+        )
         if current == current.parent:
             break
         current = current.parent
-    return ancestors
+    return fixtures
 
 
 def _build_fixtures_by_dir(
     root: Path, descendants: list[Path]
 ) -> dict[Path, list[Path]]:
-    """Bucket descendants plus ancestor conftests by resolved parent dir."""
+    """Bucket descendants plus ancestor fixtures by resolved parent dir."""
     by_dir: dict[Path, list[Path]] = {}
-    for fixture in (*_find_ancestor_conftests(root), *descendants):
+    for fixture in (*_find_ancestor_fixtures(root), *descendants):
         by_dir.setdefault(fixture.parent.resolve(), []).append(fixture)
     return by_dir
 
