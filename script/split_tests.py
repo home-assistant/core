@@ -4,6 +4,7 @@
 import argparse
 from collections.abc import Iterator
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import suppress
 from dataclasses import dataclass, field, replace
 import hashlib
 import json
@@ -280,23 +281,32 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     return test_files, fixtures
 
 
+_PROJECT_ROOT_MARKERS: Final = frozenset(
+    {"pyproject.toml", "setup.py", "setup.cfg", "pytest.ini", "tox.ini"}
+)
+
+
 def _find_ancestor_fixtures(root: Path) -> list[Path]:
-    """Return every non-``test_*.py`` Python file above ``root`` up to FS root.
+    """Return non-``test_*.py`` Python files above ``root``, up to the project root.
 
     Includes conftests and helper modules (eg ``common.py``); subtree
     runs need both so shared ancestor helpers like
-    ``tests/components/common.py`` still invalidate descendants.  We
-    keep walking past dirs without a conftest because pytest applies
-    them through gaps.
+    ``tests/components/common.py`` still invalidate descendants.
+    Stops at the first ancestor containing a project-root marker so we
+    don't read unrelated ``.py`` files outside the repo or trip on
+    dirs we can't list.
     """
     fixtures: list[Path] = []
     current = root.resolve().parent
     while True:
-        fixtures.extend(
-            entry
-            for entry in current.glob("*.py")
-            if not entry.name.startswith("test_")
-        )
+        with suppress(OSError):
+            fixtures.extend(
+                entry
+                for entry in current.glob("*.py")
+                if not entry.name.startswith("test_")
+            )
+        if any((current / marker).exists() for marker in _PROJECT_ROOT_MARKERS):
+            break
         if current == current.parent:
             break
         current = current.parent

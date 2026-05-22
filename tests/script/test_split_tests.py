@@ -13,6 +13,8 @@ from script import split_tests
 @pytest.fixture
 def tree(tmp_path: Path) -> Path:
     """Build a tree: root conftest, two integrations, a ``common.py`` helper."""
+    # Bound the ancestor-fixture walk so it doesn't escape tmp_path.
+    (tmp_path / "pyproject.toml").write_text("")
     (tmp_path / "conftest.py").write_text("# tests/conftest.py\n")
     (tmp_path / "common.py").write_text("# helper module\n")
 
@@ -157,8 +159,25 @@ def test_file_fixture_hash_stable_for_test_changes(tree: Path) -> None:
     assert before == after
 
 
+def test_find_ancestor_fixtures_stops_at_project_root(tmp_path: Path) -> None:
+    """A project-root marker bounds the ancestor walk."""
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "pyproject.toml").write_text("")
+    (project / "common.py").write_text("# included\n")
+    nested = project / "tests" / "x"
+    nested.mkdir(parents=True)
+    # Above the project root: must NOT be picked up.
+    (tmp_path / "outside.py").write_text("# excluded\n")
+
+    found = {p.name for p in split_tests._find_ancestor_fixtures(nested)}
+    assert "common.py" in found
+    assert "outside.py" not in found
+
+
 def test_find_ancestor_fixtures_walks_through_gaps(tmp_path: Path) -> None:
     """Ancestor conftests + helpers are collected across intermediate gaps."""
+    (tmp_path / "pyproject.toml").write_text("")  # bound the walk
     nested = tmp_path / "a" / "b" / "c"
     nested.mkdir(parents=True)
     # ``a/b`` has no fixtures, but ``a`` has both a conftest and a helper.
@@ -186,6 +205,7 @@ def test_file_fixture_hash_picks_up_ancestor_helper_above_root(
     A subtree run on ``components/`` must still invalidate when a shared
     helper one level up (eg ``tests/components/common.py``) changes.
     """
+    (tmp_path / "pyproject.toml").write_text("")  # bound the walk
     (tmp_path / "common.py").write_text("# v1\n")
     subtree = tmp_path / "components"
     subtree.mkdir()
@@ -202,6 +222,7 @@ def test_file_fixture_hash_picks_up_ancestor_conftest_across_gap(
     tmp_path: Path,
 ) -> None:
     """An ancestor conftest across a gap still busts the descendant's hash."""
+    (tmp_path / "pyproject.toml").write_text("")  # bound the walk
     nested = tmp_path / "a" / "b"
     nested.mkdir(parents=True)
     (tmp_path / "a" / "conftest.py").write_text("# v1\n")
@@ -216,6 +237,7 @@ def test_file_fixture_hash_picks_up_ancestor_conftest_across_gap(
 
 def test_file_fixture_hash_includes_ancestor_above_root(tmp_path: Path) -> None:
     """An ancestor conftest above root must still scope a subtree file."""
+    (tmp_path / "pyproject.toml").write_text("")  # bound the walk
     (tmp_path / "conftest.py").write_text("# parent\n")
     subtree = tmp_path / "components"
     subtree.mkdir()
