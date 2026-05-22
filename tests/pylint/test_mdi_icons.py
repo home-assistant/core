@@ -17,7 +17,9 @@ from . import assert_no_messages
 def mdi_checker_fixture(linter: UnittestLinter) -> MdiIconsChecker:
     """Fixture to provide an MDI icons checker."""
     clear_icons_cache()
-    return MdiIconsChecker(linter)
+    checker = MdiIconsChecker(linter)
+    checker.open()
+    return checker
 
 
 def _make_integration(tmp_path: Path, icons: dict | None = None) -> Path:

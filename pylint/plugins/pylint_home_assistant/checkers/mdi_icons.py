@@ -49,6 +49,11 @@ class MdiIconsChecker(BaseChecker):
     options = ()
 
     _in_integration: bool
+    _checked_icons_json: set[str]
+
+    def open(self) -> None:
+        """Initialize per-run state."""
+        self._checked_icons_json = set()
 
     def visit_module(self, node: nodes.Module) -> None:
         """Check icons.json and track integration context."""
@@ -56,9 +61,12 @@ class MdiIconsChecker(BaseChecker):
         if not self._in_integration:
             return
 
-        # Only check icons.json once per integration (on __init__ module)
-        if not node.name.endswith(".__init__") and node.name.count(".") > 2:
+        # Only check icons.json once per integration
+        parts = node.name.split(".")
+        domain = parts[2] if len(parts) > 2 else ""
+        if domain in self._checked_icons_json:
             return
+        self._checked_icons_json.add(domain)
 
         icons_data = load_icons(node)
         if icons_data is None:
