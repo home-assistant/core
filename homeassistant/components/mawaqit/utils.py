@@ -189,6 +189,8 @@ def time_with_timezone(timezone, date, time) -> datetime | None:
 
 def _to_utc(timezone: str, day, time_str: str) -> datetime | None:
     """Localize a HH:MM time string on a given date and return it in UTC."""
+    if not time_str:
+        return None
     localized = time_with_timezone(timezone, day, time_str)
     if localized:
         return localized.astimezone(dt_util.UTC)
