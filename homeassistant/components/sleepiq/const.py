@@ -1,5 +1,4 @@
 """Define constants for the SleepIQ component."""
-"""Define constants for the SleepIQ component."""
 
 from homeassistant.const import PRESSURE
 
