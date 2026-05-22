@@ -453,6 +453,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
             if last_state.state == STATE_ON:
                 self._computed_state = True
 
+    @callback
     def _heartbeat_node_control_handler(self, event: NodeProperty) -> None:
         """Update the heartbeat timestamp when any ON/OFF event is sent.
 
