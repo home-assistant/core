@@ -266,11 +266,52 @@ def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
         },
     )
 
-    hits, missing = split_tests._resolve_from_cache(
+    hits, miss_hashes = split_tests._resolve_from_cache(
         [alpha_one, alpha_two, beta_x], cache, tree
     )
     assert hits == {alpha_one: split_tests._CacheEntry(hash=alpha_one_hash, count=1)}
-    assert set(missing) == {alpha_two, beta_x}
+    assert miss_hashes == {
+        alpha_two: split_tests._hash_file(alpha_two),
+        beta_x: split_tests._hash_file(beta_x),
+    }
+
+
+def test_collect_tests_hashes_each_file_once(tree: Path) -> None:
+    """Hits reuse the stored hash, misses reuse the resolve-time hash.
+
+    Guards against regressing the double-read on cache-miss rebuilds:
+    each test file should pass through _hash_file at most once per run.
+    """
+    cache_path = tree / "cache.json"
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    # Prime the cache with a hit so we exercise both the hit path and
+    # the file-level (not directory-level) miss path together.
+    split_tests._Cache(
+        invalidation_hash=_invalidation_hash_for(tree),
+        entries={
+            str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
+                hash=split_tests._hash_file(alpha_one), count=1
+            ),
+        },
+    ).save(cache_path)
+
+    real_hash = split_tests._hash_file
+    counts: dict[Path, int] = {}
+
+    def counting_hash(path: Path) -> str:
+        counts[path] = counts.get(path, 0) + 1
+        return real_hash(path)
+
+    def fake_run_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
+        return [("\n".join(f"{p}: 1" for p in paths) + "\n", "", 0)]
+
+    with (
+        patch.object(split_tests, "_hash_file", side_effect=counting_hash),
+        patch.object(split_tests, "_run_collect_batches", side_effect=fake_run_batches),
+    ):
+        split_tests.collect_tests(tree, cache_path)
+
+    assert all(n == 1 for n in counts.values()), counts
 
 
 def test_collect_tests_warm_cache_skips_pytest(tree: Path) -> None:

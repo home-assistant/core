@@ -379,23 +379,25 @@ def _resolve_from_cache(
     test_files: list[Path],
     cache: _Cache,
     root: Path,
-) -> tuple[dict[Path, _CacheEntry], list[Path]]:
-    """Split ``test_files`` into ``(cached_entries, needs_collection)``.
+) -> tuple[dict[Path, _CacheEntry], dict[Path, str]]:
+    """Split ``test_files`` into ``(cached_entries, miss_hashes)``.
 
     A file is served from cache when its content hash matches what we
-    previously stored; otherwise it is queued for re-collection.  Hits
-    return the full ``_CacheEntry`` so callers can reuse the verified
-    hash when rewriting the cache instead of re-reading the file.
+    previously stored; otherwise it is queued for re-collection.  Each
+    file is hashed exactly once: hits carry the stored hash forward,
+    misses carry the just-computed hash so the rebuild step doesn't
+    re-read the same bytes a second time.
     """
     hits: dict[Path, _CacheEntry] = {}
-    misses: list[Path] = []
+    miss_hashes: dict[Path, str] = {}
     for file in test_files:
+        file_hash = _hash_file(file)
         entry = cache.entries.get(str(file.relative_to(root)))
-        if entry is not None and entry.hash == _hash_file(file):
+        if entry is not None and entry.hash == file_hash:
             hits[file] = entry
         else:
-            misses.append(file)
-    return hits, misses
+            miss_hashes[file] = file_hash
+    return hits, miss_hashes
 
 
 def _run_collect_batches(paths: list[Path]) -> list[tuple[str, str, int]]:
@@ -482,29 +484,31 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     invalidation_hash = _compute_invalidation_hash(path, all_fixtures)
     cache = _Cache.load(cache_path, invalidation_hash)
 
-    hits, missing = _resolve_from_cache(all_test_files, cache, path)
+    hits, miss_hashes = _resolve_from_cache(all_test_files, cache, path)
     print(
-        f"Cache: {len(hits)} hits / {len(missing)} misses / {len(all_test_files)} total"
+        f"Cache: {len(hits)} hits / {len(miss_hashes)} misses"
+        f" / {len(all_test_files)} total"
     )
 
     new_counts: dict[Path, int] = {}
-    if missing:
+    if miss_hashes:
         # On a full cold-cache run, hand pytest the top-level directories
         # instead of 5000+ individual file paths: pytest walks dirs much
         # faster than it resolves each file argument.  Once any cache hits
         # exist, use file-level collection so we only re-collect the diff.
-        collect_paths = _enumerate_batch_paths(path) if not hits else missing
+        collect_paths = _enumerate_batch_paths(path) if not hits else list(miss_hashes)
         new_counts = _run_pytest_collect(collect_paths)
 
-    # Reuse the hash already verified during resolve for hits; only hash
-    # files we actually re-collected.  Files in ``missing`` that pytest
-    # returned no count for are stored as 0 so we stop re-collecting them.
+    # Reuse hashes computed during resolve: hits carry the stored hash,
+    # misses carry the just-computed one, so each file is read once.
+    # Files in misses that pytest returned no count for are stored as 0
+    # so we stop re-collecting them on the next run.
     entries: dict[str, _CacheEntry] = {
         str(file.relative_to(path)): entry for file, entry in hits.items()
     }
-    for file in missing:
+    for file, file_hash in miss_hashes.items():
         entries[str(file.relative_to(path))] = _CacheEntry(
-            hash=_hash_file(file), count=new_counts.get(file, 0)
+            hash=file_hash, count=new_counts.get(file, 0)
         )
     _Cache(invalidation_hash=invalidation_hash, entries=entries).save(cache_path)
 
