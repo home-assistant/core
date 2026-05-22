@@ -50,6 +50,7 @@ def device_fixtures() -> list[str]:
         "XT-LT200",
         "XT-PL50",
         "XT-PL100",
+        "XT-LK50",
     ]
 
 
