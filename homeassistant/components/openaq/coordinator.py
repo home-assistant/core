@@ -246,10 +246,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                         translation_domain=DOMAIN,
                         translation_key="unable_to_fetch",
                     )
-                location = location_response.results[0]
-                sensors = sensors_response.results
-                self._location = location
-                self._sensors = sensors
+                self._location = location_response.results[0]
+                self._sensors = sensors_response.results
             else:
                 location = self._location
                 sensors = self._sensors
