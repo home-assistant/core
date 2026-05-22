@@ -25,6 +25,6 @@ CONF_SERIAL = "serial"
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
-def _battery_mode_cloud_issue_id(entry_id: str) -> str:
+def battery_mode_cloud_issue_id(entry_id: str) -> str:
     """Build issue id for battery mode/cloud incompatibility."""
     return f"{ISSUE_BATTERY_MODE_CLOUD_DISABLED}_{entry_id}"

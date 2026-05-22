@@ -6,7 +6,7 @@ from homewizard_energy.errors import DisabledError
 
 from homeassistant.components.homewizard.const import (
     DOMAIN,
-    _battery_mode_cloud_issue_id,
+    battery_mode_cloud_issue_id,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
@@ -103,7 +103,7 @@ async def test_repair_created_for_cloud_disabled_predictive_mode(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_id = _battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.data.get("entry_id") == mock_config_entry.entry_id
@@ -123,7 +123,7 @@ async def test_repair_auto_resolves_when_cloud_is_re_enabled(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_id = _battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = True
@@ -158,7 +158,7 @@ async def test_repair_confirm_enables_cloud_connection(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    issue_id = _battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)

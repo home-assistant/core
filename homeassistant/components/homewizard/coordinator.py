@@ -19,7 +19,7 @@ from .const import (
     ISSUE_BATTERY_MODE_CLOUD_DISABLED,
     LOGGER,
     UPDATE_INTERVAL,
-    _battery_mode_cloud_issue_id,
+    battery_mode_cloud_issue_id,
 )
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
@@ -81,7 +81,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise ConfigEntryAuthFailed from ex
 
         self.api_disabled = False
-        issue_id = _battery_mode_cloud_issue_id(self.config_entry.entry_id)
+        issue_id = battery_mode_cloud_issue_id(self.config_entry.entry_id)
         if (
             data.batteries is not None
             and data.system is not None
