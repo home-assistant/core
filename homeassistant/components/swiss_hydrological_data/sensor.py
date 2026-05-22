@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
+from requests.exceptions import RequestException
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
@@ -139,7 +140,11 @@ class HydrologicalData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Get the latest data."""
-        self.data = SwissHydroData().get_station(self.station)
+        try:
+            self.data = SwissHydroData().get_station(self.station)
+        except RequestException:
+            _LOGGER.exception("Error retrieving data for station %s", self.station)
+            self.data = None
 
 
 class SwissHydrologicalDataSensor(SensorEntity):
