@@ -1048,7 +1048,10 @@
         "name": "Upper washer machine state",
         "state": {
           "pause": "[%key:common::state::paused%]",
+          "paused": "[%key:common::state::paused%]",
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
         }
       },

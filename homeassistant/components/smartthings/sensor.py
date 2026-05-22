@@ -142,7 +142,16 @@ STICK_CLEANER_STATUS = {
     "UVPaused": "uv_paused",
 }
 
-WASHER_OPTIONS = ["pause", "run", "stop"]
+DISHWASHER_MACHINE_STATE_OPTIONS = ["pause", "run", "stop"]
+WASHER_MACHINE_STATE_OPTIONS = [
+    "pause",
+    "paused",
+    "ready",
+    "run",
+    "running",
+    "stop",
+]
+
 
 WASHER_CYCLES = [
     "1c",
@@ -426,7 +435,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=WASHER_OPTIONS,
+                options=DISHWASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -474,7 +483,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dryer_machine_state",
-                options=WASHER_OPTIONS,
+                options=WASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -1214,8 +1223,9 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
-                options=WASHER_OPTIONS,
+                options=WASHER_MACHINE_STATE_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
+                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_machine_state",
                 },
@@ -1245,6 +1255,7 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: JOB_STATE_MAP.get(value, value),
+                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_job_state",
                 },
@@ -1256,6 +1267,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
+                component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
                 },
@@ -1594,38 +1606,43 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 options_list = []
                 for option in options_val:
                     if isinstance(option, dict):
-                        opt_str = option.get("cycle")
+                        opt_val = option.get("cycle")
                     else:
-                        opt_str = option
-                    if opt_str is not None:
-                        opt_str = str(opt_str)
+                        opt_val = option
+                    if opt_val is not None:
                         if options_map := self.entity_description.options_map:
-                            opt_str = options_map.get(opt_str, opt_str)
-                        options_list.append(opt_str.lower())
-
-                # Guard against rejection: append current state if not present
-                if (current_value := self.native_value) is not None:
-                    current_value_str = str(current_value)
-                    if current_value_str not in options_list:
-                        options_list.append(current_value_str)
-                return options_list
-
-            # Fall back to static options in description if attribute is missing/None
+                            opt_val = options_map.get(opt_val, opt_val)
+                        else:
+                            opt_val = self.entity_description.value_fn(opt_val)
+                        if self.entity_description.presentation_fn:
+                            opt_val = self.entity_description.presentation_fn(
+                                self.device.device.presentation_id, opt_val
+                            )
+                        if opt_val is not None:
+                            options_list.append(str(opt_val).lower())
+            else:
+                # Fall back to static options in description if attribute is missing/None
+                if (static_options := super().options) is not None:
+                    options_list = [str(opt).lower() for opt in static_options]
+                else:
+                    return []
+        else:
             if (static_options := super().options) is not None:
-                options_list = list(static_options)
-                if (current_value := self.native_value) is not None:
-                    current_value_str = str(current_value)
-                    if current_value_str not in options_list:
-                        options_list.append(current_value_str)
-                return options_list
-            return []
+                options_list = [str(opt).lower() for opt in static_options]
+            else:
+                return None
 
-        if (static_options := super().options) is not None:
-            options_list = list(static_options)
-            if (current_value := self.native_value) is not None:
-                current_value_str = str(current_value)
-                if current_value_str not in options_list:
-                    options_list.append(current_value_str)
-            return options_list
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        unique_options: list[str] = []
+        for opt in options_list:
+            if opt not in seen:
+                seen.add(opt)
+                unique_options.append(opt)
 
-        return None
+        if (current_value := self.native_value) is not None:
+            current_value_str = str(current_value).lower()
+            if current_value_str not in seen:
+                unique_options.append(current_value_str)
+
+        return unique_options

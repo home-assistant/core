@@ -501,3 +501,57 @@ def test_sensor_options_and_fallback() -> None:
         attribute=attribute,
     )
     assert sensor_std.options == ["static_1", "static_2", "unsupported_cycle"]
+
+
+def test_sensor_options_normalization_dict() -> None:
+    """Test option normalization (using value_fn), dictionary options and deduplication."""
+    mock_client = MagicMock()
+    mock_device = MagicMock()
+    mock_device.device.device_id = "test-device-id"
+    mock_device.device.presentation_id = "test-presentation-id"
+    mock_device.online = True
+
+    component = MAIN
+    capability = Capability.SAMSUNG_CE_WASHER_CYCLE
+    attribute = Attribute.WASHER_CYCLE
+    options_attribute = Attribute.SUPPORTED_CYCLES
+
+    # Setup the mock attribute status values
+    mock_attribute_status = MagicMock()
+    mock_attribute_status.value = "NORMAL_CYCLE"
+    mock_options_status = MagicMock()
+    mock_options_status.value = [
+        {"cycle": "NORMAL_CYCLE"},
+        {"cycle": "DELICATE_CYCLE"},
+        {"cycle": "Normal_Cycle"},
+    ]
+
+    mock_device.status = {
+        component: {
+            capability: {
+                attribute: mock_attribute_status,
+                options_attribute: mock_options_status,
+            }
+        }
+    }
+
+    desc = SmartThingsSensorEntityDescription(
+        key=attribute,
+        options_attribute=options_attribute,
+        value_fn=_normalize_cycle_value,
+    )
+    sensor = SmartThingsSensor(
+        client=mock_client,
+        device=mock_device,
+        entity_description=desc,
+        component=component,
+        capability=capability,
+        attribute=attribute,
+    )
+
+    assert sensor.options == ["cycle"]
+
+    # Test with mixed-case strings that normalize to different values
+    mock_options_status.value = ["Wash_Normal", "Wash_Delicate", "wash_normal"]
+    assert sensor.options == ["normal", "delicate", "cycle"]
+
