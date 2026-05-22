@@ -4,6 +4,7 @@ from homeassistant.components.konnected import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -48,3 +49,13 @@ async def test_konnected_repair_issue(
     assert config_entry_1.state is ConfigEntryState.NOT_LOADED
     assert config_entry_2.state is ConfigEntryState.NOT_LOADED
     assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
+
+
+async def test_konnected_yaml_repair_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is created when YAML configuration is present."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)

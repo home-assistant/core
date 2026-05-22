@@ -1,7 +1,7 @@
 {
   "issues": {
     "integration_removed": {
-      "description": "The Konnected.io (Legacy) integration relied on Konnected's deprecated firmware and has been removed from Home Assistant. Konnected recommends migrating to their ESPHome based firmware and the corresponding Home Assistant integration by following the guide at {kb_page_url}.\n\nTo resolve this issue, migrate your Konnected device(s) to the ESPHome based firmware, then remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Konnected.io (Legacy) integration entries]({entries}).",
+      "description": "The Konnected.io (Legacy) integration relied on Konnected's deprecated firmware and has been removed from Home Assistant. Konnected recommends migrating to their ESPHome based firmware and the corresponding Home Assistant integration by following the [migration guide]({kb_page_url}).\n\nTo resolve this issue, migrate your Konnected device(s) to the ESPHome based firmware, then remove any `konnected:` YAML configuration from your `configuration.yaml` file, and remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Konnected.io (Legacy) integration entries]({entries}).",
       "title": "The Konnected.io (Legacy) integration has been removed"
     }
   }
