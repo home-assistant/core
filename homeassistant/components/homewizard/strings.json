@@ -63,6 +63,7 @@
       "battery_group_mode": {
         "name": "Battery group charging strategy",
         "state": {
+          "predictive": "Smart charging",
           "standby": "Standby",
           "to_full": "One-time full charge",
           "zero": "Net zero",
