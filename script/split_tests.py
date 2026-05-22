@@ -281,14 +281,17 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
 
 
 def _find_ancestor_conftests(root: Path) -> list[Path]:
-    """Return ancestor conftests above ``root``, stopping at the first gap."""
+    """Return every ``conftest.py`` above ``root`` up to the FS root.
+
+    Pytest applies any conftest on the ancestor chain regardless of
+    intermediate gaps, so we keep walking past dirs without one.
+    """
     ancestors: list[Path] = []
     current = root.resolve().parent
     while True:
         conftest = current / "conftest.py"
-        if not conftest.is_file():
-            break
-        ancestors.append(conftest)
+        if conftest.is_file():
+            ancestors.append(conftest)
         if current == current.parent:
             break
         current = current.parent

@@ -157,19 +157,38 @@ def test_file_fixture_hash_stable_for_test_changes(tree: Path) -> None:
     assert before == after
 
 
-def test_find_ancestor_conftests_walks_up_until_gap(tmp_path: Path) -> None:
-    """Ancestor conftests are collected up to the first dir without one."""
+def test_find_ancestor_conftests_walks_through_gaps(tmp_path: Path) -> None:
+    """Ancestor conftests are collected even when intermediate dirs have no conftest."""
     nested = tmp_path / "a" / "b" / "c"
     nested.mkdir(parents=True)
-    # No conftest in tmp_path → walk stops there.
+    # ``a/b`` has no conftest, but ``a`` and ``a/b/c`` do; pytest would still
+    # apply ``a/conftest.py``, so we must keep walking past the gap.
     (tmp_path / "a" / "conftest.py").write_text("# a\n")
-    (tmp_path / "a" / "b" / "conftest.py").write_text("# b\n")
+    (tmp_path / "a" / "b" / "c" / "conftest.py").write_text("# c\n")
 
     ancestors = split_tests._find_ancestor_conftests(nested)
-    assert [p.relative_to(tmp_path).as_posix() for p in ancestors] == [
-        "a/b/conftest.py",
-        "a/conftest.py",
-    ]
+    found = {p.relative_to(tmp_path).as_posix() for p in ancestors}
+    assert {"a/c/conftest.py", "a/conftest.py"} & found == {"a/conftest.py"}
+    # The c-level conftest is not an ancestor of ``nested`` (it IS ``nested``);
+    # ``nested.parent`` is ``a/b``, so the walk starts there.  ``a/conftest.py``
+    # must be found despite the missing conftest in ``a/b``.
+    assert "a/conftest.py" in found
+
+
+def test_file_fixture_hash_picks_up_ancestor_conftest_across_gap(
+    tmp_path: Path,
+) -> None:
+    """An ancestor conftest across a gap still busts the descendant's hash."""
+    nested = tmp_path / "a" / "b"
+    nested.mkdir(parents=True)
+    (tmp_path / "a" / "conftest.py").write_text("# v1\n")
+    test_file = nested / "test_x.py"
+    test_file.write_text("def test_x(): pass\n")
+
+    before = _fixture_hash_for(nested, test_file)
+    (tmp_path / "a" / "conftest.py").write_text("# v2\n")
+    after = _fixture_hash_for(nested, test_file)
+    assert before != after
 
 
 def test_file_fixture_hash_includes_ancestor_above_root(tmp_path: Path) -> None:
