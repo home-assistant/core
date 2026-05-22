@@ -346,6 +346,7 @@ async def test_sensors(
         (
             "HWE-P1",
             [
+                "sensor.device_api_version",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -359,6 +360,7 @@ async def test_sensors(
         (
             "HWE-P1-unused-exports",
             [
+                "sensor.device_api_version",
                 "sensor.device_energy_export_tariff_1",
                 "sensor.device_energy_export_tariff_2",
                 "sensor.device_energy_export_tariff_3",
@@ -369,24 +371,28 @@ async def test_sensors(
         (
             "HWE-SKT-11",
             [
+                "sensor.device_api_version",
                 "sensor.device_wi_fi_strength",
             ],
         ),
         (
             "HWE-SKT-21",
             [
+                "sensor.device_api_version",
                 "sensor.device_wi_fi_strength",
             ],
         ),
         (
             "HWE-WTR",
             [
+                "sensor.device_api_version",
                 "sensor.device_wi_fi_strength",
             ],
         ),
         (
             "SDM230",
             [
+                "sensor.device_api_version",
                 "sensor.device_apparent_power",
                 "sensor.device_current",
                 "sensor.device_frequency",
@@ -399,6 +405,7 @@ async def test_sensors(
         (
             "SDM630",
             [
+                "sensor.device_api_version",
                 "sensor.device_apparent_power_phase_1",
                 "sensor.device_apparent_power_phase_2",
                 "sensor.device_apparent_power_phase_3",
@@ -424,6 +431,7 @@ async def test_sensors(
         (
             "HWE-KWH1",
             [
+                "sensor.device_api_version",
                 "sensor.device_apparent_power",
                 "sensor.device_current",
                 "sensor.device_frequency",
@@ -436,6 +444,7 @@ async def test_sensors(
         (
             "HWE-KWH3",
             [
+                "sensor.device_api_version",
                 "sensor.device_apparent_power_phase_1",
                 "sensor.device_apparent_power_phase_2",
                 "sensor.device_apparent_power_phase_3",
@@ -461,6 +470,7 @@ async def test_sensors(
         (
             "HWE-BAT",
             [
+                "sensor.device_api_version",
                 "sensor.device_current",
                 "sensor.device_frequency",
                 "sensor.device_uptime",
@@ -480,6 +490,23 @@ async def test_disabled_by_default_sensors(
         assert (entry := entity_registry.async_get(entity_id))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("device_fixture", ["HWE-P1"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_api_version_sensor_enabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test api_version sensor state when enabled."""
+    entity_id = "sensor.device_api_version"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == mock_homewizardenergy.combined.return_value.device.api_version
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is None
 
 
 @pytest.mark.parametrize("exception", [RequestError])
