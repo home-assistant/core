@@ -118,8 +118,8 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         return bool(self._node.status != 0)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn on command to ISY fan program."""
-        if not await self._actions.run_then():
+        """Send the turn off command to ISY fan program."""
+        if not await self._actions.run_else():
             _LOGGER.error("Unable to turn off the fan")
 
     async def async_turn_on(
@@ -128,6 +128,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send the turn off command to ISY fan program."""
-        if not await self._actions.run_else():
+        """Send the turn on command to ISY fan program."""
+        if not await self._actions.run_then():
             _LOGGER.error("Unable to turn on the fan")
