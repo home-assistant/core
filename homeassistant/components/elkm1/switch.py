@@ -78,4 +78,4 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the output."""
-        self._elk_set(ThermostatMode.EMERGENCY_HEAT)
+        self._elk_set(ThermostatMode.HEAT)
