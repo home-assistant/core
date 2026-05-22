@@ -19,7 +19,7 @@ _FAN_OUT_DIRS: Final = frozenset({"components"})
 
 # Cache file format version; bump on any incompatible schema change so old
 # caches are ignored rather than misread.
-_CACHE_VERSION: Final = 1
+_CACHE_VERSION: Final = 2
 
 
 class Bucket:
@@ -227,7 +227,15 @@ def _hash_file(path: Path) -> str:
 
 
 def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
-    """Walk ``root`` once and return (test files, conftest files).
+    """Walk ``root`` once and return (test files, fixture files).
+
+    Test files are the ``test_*.py`` modules that pytest will collect.
+    Fixture files are every other ``.py`` under ``root`` — ``conftest.py``
+    plus helper modules like ``common.py``.  Helpers go into the
+    invalidation hash because they often hold the ``VALUES`` lists that
+    test files import for ``@pytest.mark.parametrize``: editing one
+    changes a test's collected count even though the test file itself is
+    untouched.
 
     Uses ``os.walk`` rather than ``Path.rglob`` because it's ~2x faster on
     a 5000-file tree, and subdirectories whose names start with ``.`` or
@@ -236,18 +244,20 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     down.
     """
     test_files: list[Path] = []
-    conftests: list[Path] = []
+    fixtures: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if not d.startswith((".", "_"))]
         base = Path(dirpath)
         for name in filenames:
-            if name == "conftest.py":
-                conftests.append(base / name)
-            elif name.startswith("test_") and name.endswith(".py"):
+            if not name.endswith(".py"):
+                continue
+            if name.startswith("test_"):
                 test_files.append(base / name)
+            else:
+                fixtures.append(base / name)
     test_files.sort()
-    conftests.sort()
-    return test_files, conftests
+    fixtures.sort()
+    return test_files, fixtures
 
 
 def _find_ancestor_conftests(root: Path) -> list[Path]:
@@ -272,22 +282,24 @@ def _find_ancestor_conftests(root: Path) -> list[Path]:
     return ancestors
 
 
-def _compute_conftest_hash(root: Path, conftests: list[Path]) -> str:
-    """Return a hash that changes whenever any conftest in ``conftests`` changes.
+def _compute_invalidation_hash(root: Path, fixtures: list[Path]) -> str:
+    """Return a hash that changes whenever any file in ``fixtures`` changes.
 
-    Any change to a conftest invalidates the entire test-count cache.  This is
-    coarse but safe: conftests can change fixture parametrization in ways the
-    cache cannot otherwise detect, so we just re-collect everything.
+    Any change to a fixture file (conftests, helper modules like
+    ``common.py``, ancestor conftests) invalidates the entire test-count
+    cache.  This is coarse but safe: any of these can shift fixture
+    parametrization in ways the cache cannot otherwise detect, so we
+    just re-collect everything.
 
     Paths are encoded with ``os.path.relpath`` so the hash stays stable
     across machines and also covers ancestor conftests above ``root``
     (whose ``relative_to(root)`` would fail).
     """
     digest = hashlib.sha256()
-    for conftest in conftests:
-        digest.update(os.path.relpath(conftest, root).encode())
+    for fixture in fixtures:
+        digest.update(os.path.relpath(fixture, root).encode())
         digest.update(b"\0")
-        digest.update(conftest.read_bytes())
+        digest.update(fixture.read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
 
@@ -304,33 +316,33 @@ class _CacheEntry:
 class _Cache:
     """Mapping of test file path → cached entry, plus invalidation key."""
 
-    conftest_hash: str
+    invalidation_hash: str
     entries: dict[str, _CacheEntry]
 
     @classmethod
-    def empty(cls, conftest_hash: str = "") -> _Cache:
+    def empty(cls, invalidation_hash: str = "") -> _Cache:
         """Return a new empty cache."""
-        return cls(conftest_hash=conftest_hash, entries={})
+        return cls(invalidation_hash=invalidation_hash, entries={})
 
     @classmethod
-    def load(cls, path: Path, current_conftest_hash: str) -> _Cache:
-        """Load cache from ``path`` and invalidate it on schema/conftest drift.
+    def load(cls, path: Path, current_invalidation_hash: str) -> _Cache:
+        """Load cache from ``path`` and invalidate it on schema/fixture drift.
 
-        Any failure (missing file, bad JSON, version drift, conftest drift)
+        Any failure (missing file, bad JSON, version drift, fixture drift)
         returns an empty cache so the script just falls back to a full
         collection.  This is the self-healing path.
         """
         try:
             raw = json.loads(path.read_bytes())
         except OSError, ValueError:
-            return cls.empty(current_conftest_hash)
+            return cls.empty(current_invalidation_hash)
         if not isinstance(raw, dict) or raw.get("version") != _CACHE_VERSION:
-            return cls.empty(current_conftest_hash)
-        if raw.get("conftest_hash") != current_conftest_hash:
-            return cls.empty(current_conftest_hash)
+            return cls.empty(current_invalidation_hash)
+        if raw.get("invalidation_hash") != current_invalidation_hash:
+            return cls.empty(current_invalidation_hash)
         files = raw.get("files")
         if not isinstance(files, dict):
-            return cls.empty(current_conftest_hash)
+            return cls.empty(current_invalidation_hash)
         entries: dict[str, _CacheEntry] = {}
         for key, value in files.items():
             if (
@@ -341,7 +353,7 @@ class _Cache:
                 # Skip malformed entries instead of discarding the whole cache.
                 continue
             entries[key] = _CacheEntry(hash=value["hash"], count=value["count"])
-        return cls(conftest_hash=current_conftest_hash, entries=entries)
+        return cls(invalidation_hash=current_invalidation_hash, entries=entries)
 
     def save(self, path: Path) -> None:
         """Write the cache to ``path``."""
@@ -349,7 +361,7 @@ class _Cache:
             json.dumps(
                 {
                     "version": _CACHE_VERSION,
-                    "conftest_hash": self.conftest_hash,
+                    "invalidation_hash": self.invalidation_hash,
                     "files": {
                         key: {"hash": entry.hash, "count": entry.count}
                         for key, entry in sorted(self.entries.items())
@@ -461,14 +473,14 @@ def _collect_tests_uncached(path: Path) -> TestFolder:
 
 def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     """Collect tests using an on-disk cache for incremental updates."""
-    all_test_files, conftests = _walk_test_tree(path)
+    all_test_files, fixtures = _walk_test_tree(path)
     _exit_if_empty(all_test_files, path)
 
     # Include ancestor conftests so a subtree run (eg tests/components)
     # still invalidates when tests/conftest.py changes.
-    all_conftests = _find_ancestor_conftests(path) + conftests
-    conftest_hash = _compute_conftest_hash(path, all_conftests)
-    cache = _Cache.load(cache_path, conftest_hash)
+    all_fixtures = _find_ancestor_conftests(path) + fixtures
+    invalidation_hash = _compute_invalidation_hash(path, all_fixtures)
+    cache = _Cache.load(cache_path, invalidation_hash)
 
     hits, missing = _resolve_from_cache(all_test_files, cache, path)
     print(
@@ -494,7 +506,7 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
         entries[str(file.relative_to(path))] = _CacheEntry(
             hash=_hash_file(file), count=new_counts.get(file, 0)
         )
-    _Cache(conftest_hash=conftest_hash, entries=entries).save(cache_path)
+    _Cache(invalidation_hash=invalidation_hash, entries=entries).save(cache_path)
 
     counts: dict[Path, int] = {file: entry.count for file, entry in hits.items()}
     counts.update(new_counts)

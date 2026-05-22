@@ -13,8 +13,9 @@ from script import split_tests
 def tree(tmp_path: Path) -> Path:
     """Build a small test tree on disk.
 
-    Returns the root path containing one conftest, two integrations,
-    and an unrelated helper module that the splitter should ignore.
+    Returns the root path containing one root conftest, two integrations,
+    and a ``common.py`` helper that participates in cache invalidation
+    but is not a pytest collection target.
     """
     (tmp_path / "conftest.py").write_text("# tests/conftest.py\n")
     (tmp_path / "common.py").write_text("# helper module\n")
@@ -56,27 +57,41 @@ def test_enumerate_batch_paths_for_single_file(tmp_path: Path) -> None:
     assert split_tests._enumerate_batch_paths(file) == [file]
 
 
-def _conftest_hash_for(tree: Path) -> str:
-    """Compute the conftest hash for ``tree`` (helper for the tests below)."""
-    _, conftests = split_tests._walk_test_tree(tree)
-    return split_tests._compute_conftest_hash(tree, conftests)
+def _invalidation_hash_for(tree: Path) -> str:
+    """Compute the invalidation hash for ``tree`` (helper for the tests below)."""
+    _, fixtures = split_tests._walk_test_tree(tree)
+    return split_tests._compute_invalidation_hash(tree, fixtures)
 
 
-def test_compute_conftest_hash_changes_when_conftest_changes(tree: Path) -> None:
+def test_compute_invalidation_hash_changes_when_conftest_changes(tree: Path) -> None:
     """Editing any conftest changes the global cache key."""
-    before = _conftest_hash_for(tree)
+    before = _invalidation_hash_for(tree)
     (tree / "components" / "alpha" / "conftest.py").write_text("# changed\n")
-    after = _conftest_hash_for(tree)
+    after = _invalidation_hash_for(tree)
     assert before != after
 
 
-def test_compute_conftest_hash_stable_for_non_conftest_changes(tree: Path) -> None:
+def test_compute_invalidation_hash_changes_when_helper_changes(tree: Path) -> None:
+    """Editing a non-conftest helper (eg common.py imported for parametrize) busts the cache.
+
+    Test files often import VALUES from common.py for
+    @pytest.mark.parametrize; a change there shifts collected counts
+    even though no test file or conftest was touched, so it has to
+    participate in the invalidation hash.
+    """
+    before = _invalidation_hash_for(tree)
+    (tree / "common.py").write_text("# helper changed\n")
+    after = _invalidation_hash_for(tree)
+    assert before != after
+
+
+def test_compute_invalidation_hash_stable_for_test_changes(tree: Path) -> None:
     """Test-file edits do not invalidate the global cache key."""
-    before = _conftest_hash_for(tree)
+    before = _invalidation_hash_for(tree)
     (tree / "components" / "alpha" / "test_one.py").write_text(
         "def test_a():\n    pass\n\ndef test_c():\n    pass\n"
     )
-    after = _conftest_hash_for(tree)
+    after = _invalidation_hash_for(tree)
     assert before == after
 
 
@@ -95,7 +110,7 @@ def test_find_ancestor_conftests_walks_up_until_gap(tmp_path: Path) -> None:
     ]
 
 
-def test_compute_conftest_hash_changes_on_ancestor_change(tmp_path: Path) -> None:
+def test_compute_invalidation_hash_changes_on_ancestor_change(tmp_path: Path) -> None:
     """An ancestor conftest edit must invalidate a subtree run's cache."""
     (tmp_path / "conftest.py").write_text("# parent\n")
     subtree = tmp_path / "components"
@@ -105,20 +120,24 @@ def test_compute_conftest_hash_changes_on_ancestor_change(tmp_path: Path) -> Non
     def _hash() -> str:
         _, descendant = split_tests._walk_test_tree(subtree)
         ancestors = split_tests._find_ancestor_conftests(subtree)
-        return split_tests._compute_conftest_hash(subtree, ancestors + descendant)
+        return split_tests._compute_invalidation_hash(subtree, ancestors + descendant)
 
     before = _hash()
     (tmp_path / "conftest.py").write_text("# parent changed\n")
     assert _hash() != before
 
 
-def test_walk_test_tree_finds_tests_and_conftests(tree: Path) -> None:
-    """The walker returns test files and conftest files but no helpers."""
-    test_files, conftests = split_tests._walk_test_tree(tree)
+def test_walk_test_tree_separates_tests_from_fixtures(tree: Path) -> None:
+    """The walker returns test_*.py files and every other .py as fixtures."""
+    test_files, fixtures = split_tests._walk_test_tree(tree)
     test_names = {p.name for p in test_files}
-    conftest_paths = {p.relative_to(tree).as_posix() for p in conftests}
+    fixture_paths = {p.relative_to(tree).as_posix() for p in fixtures}
     assert test_names == {"test_one.py", "test_two.py", "test_x.py"}
-    assert conftest_paths == {"conftest.py", "components/alpha/conftest.py"}
+    assert fixture_paths == {
+        "conftest.py",
+        "common.py",
+        "components/alpha/conftest.py",
+    }
 
 
 def test_walk_test_tree_skips_hidden_and_dunder_dirs(tmp_path: Path) -> None:
@@ -137,7 +156,7 @@ def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
     """A single-file root cannot validate conftest drift, so caching is disabled.
 
     _walk_test_tree returns no conftests for a file root, which would make
-    the conftest_hash a constant — letting a stale entry survive a real
+    the invalidation_hash a constant — letting a stale entry survive a real
     conftest change.  Better to bypass the cache than mis-cache silently.
     """
     cache_path = tmp_path / "cache.json"
@@ -159,20 +178,20 @@ def test_cache_roundtrip(tmp_path: Path) -> None:
     """A cache survives save → load when the conftest hash matches."""
     cache_path = tmp_path / "cache.json"
     cache = split_tests._Cache(
-        conftest_hash="abc",
+        invalidation_hash="abc",
         entries={"tests/alpha/test_a.py": split_tests._CacheEntry(hash="h1", count=5)},
     )
     cache.save(cache_path)
     loaded = split_tests._Cache.load(cache_path, "abc")
     assert loaded.entries == cache.entries
-    assert loaded.conftest_hash == "abc"
+    assert loaded.invalidation_hash == "abc"
 
 
 def test_cache_load_missing_returns_empty(tmp_path: Path) -> None:
     """A missing cache file degrades gracefully to an empty cache."""
     cache = split_tests._Cache.load(tmp_path / "missing.json", "abc")
     assert cache.entries == {}
-    assert cache.conftest_hash == "abc"
+    assert cache.invalidation_hash == "abc"
 
 
 def test_cache_load_invalid_json_returns_empty(tmp_path: Path) -> None:
@@ -186,7 +205,7 @@ def test_cache_load_invalid_json_returns_empty(tmp_path: Path) -> None:
 def test_cache_load_wrong_version_returns_empty(tmp_path: Path) -> None:
     """An older cache schema is discarded rather than misread."""
     path = tmp_path / "old.json"
-    path.write_text(json.dumps({"version": 0, "conftest_hash": "abc", "files": {}}))
+    path.write_text(json.dumps({"version": 0, "invalidation_hash": "abc", "files": {}}))
     cache = split_tests._Cache.load(path, "abc")
     assert cache.entries == {}
 
@@ -198,7 +217,7 @@ def test_cache_load_conftest_drift_returns_empty(tmp_path: Path) -> None:
         json.dumps(
             {
                 "version": split_tests._CACHE_VERSION,
-                "conftest_hash": "old",
+                "invalidation_hash": "old",
                 "files": {"test_a.py": {"hash": "h1", "count": 3}},
             }
         )
@@ -214,7 +233,7 @@ def test_cache_load_drops_malformed_entries(tmp_path: Path) -> None:
         json.dumps(
             {
                 "version": split_tests._CACHE_VERSION,
-                "conftest_hash": "abc",
+                "invalidation_hash": "abc",
                 "files": {
                     "good.py": {"hash": "h1", "count": 3},
                     "bad_count.py": {"hash": "h2", "count": "three"},
@@ -236,7 +255,7 @@ def test_resolve_from_cache_hits_and_misses(tree: Path) -> None:
 
     alpha_one_hash = split_tests._hash_file(alpha_one)
     cache = split_tests._Cache(
-        conftest_hash="dummy",
+        invalidation_hash="dummy",
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
                 hash=alpha_one_hash, count=1
@@ -261,7 +280,7 @@ def test_collect_tests_warm_cache_skips_pytest(tree: Path) -> None:
     alpha_two = tree / "components" / "alpha" / "test_two.py"
     beta_x = tree / "components" / "beta" / "test_x.py"
     split_tests._Cache(
-        conftest_hash=_conftest_hash_for(tree),
+        invalidation_hash=_invalidation_hash_for(tree),
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
                 hash=split_tests._hash_file(alpha_one), count=1
@@ -289,7 +308,7 @@ def test_collect_tests_cold_cache_collects_only_missing(tree: Path) -> None:
     beta_x = tree / "components" / "beta" / "test_x.py"
 
     split_tests._Cache(
-        conftest_hash=_conftest_hash_for(tree),
+        invalidation_hash=_invalidation_hash_for(tree),
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
                 hash=split_tests._hash_file(alpha_one), count=1
@@ -343,7 +362,7 @@ def test_collect_tests_caches_files_with_no_collected_tests(tree: Path) -> None:
     # diff path; the cold-cache path hands pytest top-level directories
     # rather than individual file paths.
     split_tests._Cache(
-        conftest_hash=_conftest_hash_for(tree),
+        invalidation_hash=_invalidation_hash_for(tree),
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
                 hash=split_tests._hash_file(alpha_one), count=1
@@ -382,7 +401,7 @@ def test_collect_tests_drops_deleted_files_from_cache(tree: Path) -> None:
     ghost_rel = "components/alpha/test_ghost.py"
 
     split_tests._Cache(
-        conftest_hash=_conftest_hash_for(tree),
+        invalidation_hash=_invalidation_hash_for(tree),
         entries={
             str(alpha_one.relative_to(tree)): split_tests._CacheEntry(
                 hash=split_tests._hash_file(alpha_one), count=1
