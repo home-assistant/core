@@ -35,17 +35,6 @@ from .const import (
     TYPE_TCP,
 )
 
-TRANSPORT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
-            SelectSelectorConfig(
-                options=[TYPE_TCP, TYPE_SERIAL],
-                translation_key="connection_type",
-            )
-        ),
-    }
-)
-
 TCP_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -88,16 +77,10 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user — transport selection."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=TRANSPORT_SCHEMA,
-            )
-
-        self.data[CONF_TYPE] = user_input[CONF_TYPE]
-        if user_input[CONF_TYPE] == TYPE_TCP:
-            return await self.async_step_tcp()
-        return await self.async_step_serial()
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=[TYPE_TCP, TYPE_SERIAL],
+        )
 
     async def async_step_tcp(
         self, user_input: dict[str, Any] | None = None
@@ -113,6 +96,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+                self.data[CONF_TYPE] = TYPE_TCP
                 self.data[CONF_HOST] = host
                 self.data[CONF_PORT] = port
                 return await self.async_step_model()
@@ -137,6 +121,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._async_abort_entries_match({CONF_DEVICE: device})
+                self.data[CONF_TYPE] = TYPE_SERIAL
                 self.data[CONF_DEVICE] = device
                 return await self.async_step_model()
 

@@ -53,8 +53,9 @@
         "title": "TCP Connection"
       },
       "user": {
-        "data": {
-          "type": "Connection type"
+        "menu_options": {
+          "tcp": "TCP/IP",
+          "serial": "Serial"
         },
         "description": "Select how to connect to your Russound RNET device.",
         "title": "Connection Type"
@@ -249,12 +250,6 @@
     }
   },
   "selector": {
-    "connection_type": {
-      "options": {
-        "serial": "Serial",
-        "tcp": "TCP/IP"
-      }
-    },
     "model": {
       "options": {
         "aca-e5": "ACA-E5",

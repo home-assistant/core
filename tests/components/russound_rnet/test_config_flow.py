@@ -37,13 +37,13 @@ async def test_user_flow_tcp_creates_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     # Select TCP transport
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_TCP},
+        {"next_step_id": TYPE_TCP},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "tcp"
@@ -108,13 +108,13 @@ async def test_user_flow_serial_creates_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
     # Select Serial transport
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_SERIAL},
+        {"next_step_id": TYPE_SERIAL},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "serial"
@@ -181,7 +181,7 @@ async def test_tcp_flow_cannot_connect_then_recovers(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_TCP},
+        {"next_step_id": TYPE_TCP},
     )
     assert result["step_id"] == "tcp"
 
@@ -218,7 +218,7 @@ async def test_serial_flow_cannot_connect_then_recovers(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_SERIAL},
+        {"next_step_id": TYPE_SERIAL},
     )
     assert result["step_id"] == "serial"
 
@@ -256,7 +256,7 @@ async def test_tcp_flow_duplicate_aborts(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_TCP},
+        {"next_step_id": TYPE_TCP},
     )
     assert result["step_id"] == "tcp"
 
@@ -282,7 +282,7 @@ async def test_serial_flow_duplicate_aborts(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_SERIAL},
+        {"next_step_id": TYPE_SERIAL},
     )
     assert result["step_id"] == "serial"
 
@@ -365,7 +365,7 @@ async def test_empty_sources_and_zones_excluded(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_TCP},
+        {"next_step_id": TYPE_TCP},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -415,7 +415,7 @@ async def test_single_controller_model_skips_controllers_step(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TYPE: TYPE_TCP},
+        {"next_step_id": TYPE_TCP},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
