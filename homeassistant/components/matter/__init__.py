@@ -171,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # Importing `.ble_proxy` lazily here avoids pulling `matter_ble_proxy` + `bleak`
     # into every Matter setup when the server has BLE proxy disabled.
     server_info = matter_client.server_info
-    if server_info and getattr(server_info, "ble_proxy_enabled", False):
+    if server_info and server_info.ble_proxy_enabled:
         from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
 
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
