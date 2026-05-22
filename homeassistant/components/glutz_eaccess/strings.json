@@ -68,6 +68,12 @@
     "close_access_point_failed": {
       "message": "Failed to lock access point {access_point_id}."
     },
+    "coordinator_auth_error": {
+      "message": "Invalid credentials."
+    },
+    "coordinator_update_failed": {
+      "message": "Error communicating with the Glutz server: {error}"
+    },
     "hold_open_access_point_error": {
       "message": "Error holding open access point {access_point_id}."
     },
