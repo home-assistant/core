@@ -1734,9 +1734,9 @@ async def test_light_turn_on_rgb_color_is_plain_tuple(
     - rgb_color: RGBColor NamedTuple passed directly, converted by the schema.
     """
     entities = [
-        MockLight("Test_hs", STATE_ON, supported_color_modes=[light.ColorMode.HS]),
-        MockLight("Test_rgb", STATE_ON, supported_color_modes=[light.ColorMode.RGB]),
-        MockLight("Test_xy", STATE_ON, supported_color_modes=[light.ColorMode.XY]),
+        MockLight("Test_hs", STATE_ON, supported_color_modes={light.ColorMode.HS}),
+        MockLight("Test_rgb", STATE_ON, supported_color_modes={light.ColorMode.RGB}),
+        MockLight("Test_xy", STATE_ON, supported_color_modes={light.ColorMode.XY}),
         MockLight(
             "Test_all",
             STATE_ON,
@@ -1746,9 +1746,9 @@ async def test_light_turn_on_rgb_color_is_plain_tuple(
                 light.ColorMode.XY,
             },
         ),
-        MockLight("Test_rgbw", STATE_ON, supported_color_modes=[light.ColorMode.RGBW]),
+        MockLight("Test_rgbw", STATE_ON, supported_color_modes={light.ColorMode.RGBW}),
         MockLight(
-            "Test_rgbww", STATE_ON, supported_color_modes=[light.ColorMode.RGBWW]
+            "Test_rgbww", STATE_ON, supported_color_modes={light.ColorMode.RGBWW}
         ),
     ]
     setup_test_component_platform(hass, light.DOMAIN, entities)
