@@ -6,7 +6,7 @@ from homewizard_energy.errors import DisabledError
 
 from homeassistant.components.homewizard.const import (
     DOMAIN,
-    ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+    _battery_mode_cloud_issue_id,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
@@ -22,11 +22,6 @@ from tests.components.repairs import (
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator
-
-
-def _battery_mode_cloud_issue_id(entry_id: str) -> str:
-    """Create issue id for battery mode/cloud incompatibility."""
-    return f"{ISSUE_BATTERY_MODE_CLOUD_DISABLED}_{entry_id}"
 
 
 async def test_repair_acquires_token(

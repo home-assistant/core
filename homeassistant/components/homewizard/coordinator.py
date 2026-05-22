@@ -14,14 +14,15 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ISSUE_BATTERY_MODE_CLOUD_DISABLED, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+    LOGGER,
+    UPDATE_INTERVAL,
+    _battery_mode_cloud_issue_id,
+)
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
-
-
-def _battery_mode_cloud_issue_id(entry_id: str) -> str:
-    """Build issue id for battery mode/cloud incompatibility."""
-    return f"{ISSUE_BATTERY_MODE_CLOUD_DISABLED}_{entry_id}"
 
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
