@@ -30,6 +30,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
     api: HomeWizardEnergy
     api_disabled: bool = False
+    _battery_mode_cloud_issue_active: bool | None = None
 
     config_entry: HomeWizardConfigEntry
 
@@ -48,6 +49,35 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+
+    def _update_battery_mode_cloud_repair_issue(
+        self, data: DeviceResponseEntry
+    ) -> None:
+        """Update repair issue for incompatible battery mode and cloud state."""
+        battery_mode_cloud_issue_active = (
+            data.batteries is not None
+            and data.system is not None
+            and data.batteries.mode == str(Batteries.Mode.PREDICTIVE)
+            and data.system.cloud_enabled is False
+        )
+
+        if battery_mode_cloud_issue_active != self._battery_mode_cloud_issue_active:
+            issue_id = battery_mode_cloud_issue_id(self.config_entry.entry_id)
+            if battery_mode_cloud_issue_active:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=True,
+                    is_persistent=False,
+                    translation_key=ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+                    severity=IssueSeverity.WARNING,
+                    data={"entry_id": self.config_entry.entry_id},
+                )
+            else:
+                async_delete_issue(self.hass, DOMAIN, issue_id)
+
+        self._battery_mode_cloud_issue_active = battery_mode_cloud_issue_active
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
@@ -81,25 +111,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise ConfigEntryAuthFailed from ex
 
         self.api_disabled = False
-        issue_id = battery_mode_cloud_issue_id(self.config_entry.entry_id)
-        if (
-            data.batteries is not None
-            and data.system is not None
-            and data.batteries.mode == str(Batteries.Mode.PREDICTIVE)
-            and data.system.cloud_enabled is False
-        ):
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                issue_id,
-                is_fixable=True,
-                is_persistent=False,
-                translation_key=ISSUE_BATTERY_MODE_CLOUD_DISABLED,
-                severity=IssueSeverity.WARNING,
-                data={"entry_id": self.config_entry.entry_id},
-            )
-        else:
-            async_delete_issue(self.hass, DOMAIN, issue_id)
+        self._update_battery_mode_cloud_repair_issue(data)
 
         self.data = data
         return data

@@ -254,3 +254,49 @@ async def test_disablederror_reloads_integration(
     flow = flows[0]
     assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_battery_cloud_issue_updates_only_on_state_transition(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test battery/cloud issue is only created/deleted when condition changes."""
+    combined_data = mock_homewizardenergy.combined.return_value
+    combined_data.system.cloud_enabled = False
+    combined_data.batteries.mode = "predictive"
+
+    with (
+        patch(
+            "homeassistant.components.homewizard.coordinator.async_create_issue"
+        ) as mock_create_issue,
+        patch(
+            "homeassistant.components.homewizard.coordinator.async_delete_issue"
+        ) as mock_delete_issue,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_create_issue.call_count == 1
+        assert mock_delete_issue.call_count == 0
+
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+        assert mock_create_issue.call_count == 1
+        assert mock_delete_issue.call_count == 0
+
+        combined_data.system.cloud_enabled = True
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+        assert mock_create_issue.call_count == 1
+        assert mock_delete_issue.call_count == 1
+
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+        assert mock_create_issue.call_count == 1
+        assert mock_delete_issue.call_count == 1
