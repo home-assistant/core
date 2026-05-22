@@ -8,20 +8,20 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
-
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test sensors."""
-
     with patch(
         "homeassistant.components.zeversolar.PLATFORMS",
         [Platform.SENSOR],
     ):
-        entry = await init_integration(hass)
-
-        await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, init_integration.entry_id
+        )
