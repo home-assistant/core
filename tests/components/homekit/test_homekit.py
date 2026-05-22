@@ -2363,6 +2363,11 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         devices=[],
     )
 
+    # Unload while async_port_is_available is still patched so the hass fixture
+    # teardown does not block on the real port check loop in async_unload_entry.
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_homekit_start_in_accessory_mode(
