@@ -35,5 +35,10 @@
         "description": "Enter the URL of your Lunatone device.\nHome Assistant will use this address to connect to the device API."
       }
     }
+  },
+  "exceptions": {
+    "missing_device_info": {
+      "message": "Unable to read device information. Please verify the device's network connection."
+    }
   }
 }

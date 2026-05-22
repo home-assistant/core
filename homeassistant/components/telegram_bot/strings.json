@@ -367,8 +367,8 @@
       },
       "name": "Delete message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -425,8 +425,8 @@
       },
       "name": "Edit caption",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -472,8 +472,8 @@
       },
       "name": "Edit message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -535,8 +535,8 @@
       },
       "name": "Edit message media",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -569,8 +569,8 @@
       },
       "name": "Edit reply markup",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -592,8 +592,8 @@
       },
       "name": "Leave chat",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -671,8 +671,8 @@
       },
       "name": "Send animation",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -705,8 +705,8 @@
       },
       "name": "Send chat action",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -784,8 +784,8 @@
       },
       "name": "Send document",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -842,8 +842,8 @@
       },
       "name": "Send location",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -889,8 +889,8 @@
       },
       "name": "Send media group",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -952,8 +952,8 @@
       },
       "name": "Send message",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "Additional options"
         }
       }
     },
@@ -991,8 +991,8 @@
       },
       "name": "Send message draft",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -1070,8 +1070,8 @@
       },
       "name": "Send photo",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "URL options"
@@ -1128,8 +1128,8 @@
       },
       "name": "Send poll",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -1203,8 +1203,8 @@
       },
       "name": "Send sticker",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1285,8 +1285,8 @@
       },
       "name": "Send video",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1363,8 +1363,8 @@
       },
       "name": "Send voice",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1401,8 +1401,8 @@
       },
       "name": "Set message reaction",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     }

@@ -37,7 +37,7 @@ async def test_get_weather(hass: HomeAssistant) -> None:
     response = await intent.async_handle(
         hass, "test", weather_intent.INTENT_GET_WEATHER, {}
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     state = response.matched_states[0]
     assert state.entity_id == entity1.entity_id
@@ -50,7 +50,7 @@ async def test_get_weather(hass: HomeAssistant) -> None:
         {"name": {"value": "Weather 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     state = response.matched_states[0]
     assert state.entity_id == entity2.entity_id
@@ -67,7 +67,7 @@ async def test_get_weather(hass: HomeAssistant) -> None:
                 {"name": {"value": name}},
                 assistant=conversation.DOMAIN,
             )
-        assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+        assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
 
 async def test_get_weather_wrong_name(hass: HomeAssistant) -> None:
@@ -93,7 +93,7 @@ async def test_get_weather_wrong_name(hass: HomeAssistant) -> None:
             {"name": {"value": "not the right name"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.NAME
 
     # Empty name
     with pytest.raises(intent.InvalidSlotInfo):
@@ -121,4 +121,4 @@ async def test_get_weather_no_entities(hass: HomeAssistant) -> None:
             {},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.DOMAIN
