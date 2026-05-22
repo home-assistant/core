@@ -89,7 +89,6 @@ rules:
       becomes available in a future API version, a repair issue should be raised
       to prompt the user to recharge the lock.
   stale-devices: todo
-
   # Platinum
   async-dependency: done
   inject-websession: done
