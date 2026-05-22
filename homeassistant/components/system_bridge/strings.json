@@ -54,6 +54,9 @@
       "boot_time": {
         "name": "Boot time"
       },
+      "cpu_power_core": {
+        "name": "CPU core {cpu_id} power"
+      },
       "cpu_power_package": {
         "name": "CPU package power"
       },
@@ -66,8 +69,44 @@
       "cpu_voltage": {
         "name": "CPU voltage"
       },
+      "display_refresh_rate": {
+        "name": "Display {display_id} refresh rate"
+      },
+      "display_resolution_x": {
+        "name": "Display {display_id} resolution x"
+      },
+      "display_resolution_y": {
+        "name": "Display {display_id} resolution y"
+      },
       "displays_connected": {
         "name": "Displays connected"
+      },
+      "gpu_core_clock_speed": {
+        "name": "{gpu_name} clock speed"
+      },
+      "gpu_fan_speed": {
+        "name": "{gpu_name} fan speed"
+      },
+      "gpu_memory_clock_speed": {
+        "name": "{gpu_name} memory clock speed"
+      },
+      "gpu_memory_free": {
+        "name": "{gpu_name} memory free"
+      },
+      "gpu_memory_used": {
+        "name": "{gpu_name} memory used"
+      },
+      "gpu_memory_used_percentage": {
+        "name": "{gpu_name} memory used %"
+      },
+      "gpu_power_usage": {
+        "name": "{gpu_name} power usage"
+      },
+      "gpu_temperature": {
+        "name": "{gpu_name} temperature"
+      },
+      "gpu_usage_percentage": {
+        "name": "{gpu_name} usage %"
       },
       "kernel": {
         "name": "Kernel"
@@ -81,6 +120,9 @@
       "memory_used": {
         "name": "Memory used"
       },
+      "memory_used_percentage": {
+        "name": "Memory used %"
+      },
       "os": {
         "name": "Operating system"
       },
@@ -89,6 +131,12 @@
       },
       "processes": {
         "name": "Processes"
+      },
+      "processes_load_cpu": {
+        "name": "Load CPU {cpu_id}"
+      },
+      "space_used": {
+        "name": "{partition} space used"
       },
       "version": {
         "name": "Version"
