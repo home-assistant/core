@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_platform[update.hostname-entry]
+# name: test_update_platform[update.hostname-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_platform[update.hostname-state]
+# name: test_update_platform[update.hostname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
