@@ -83,10 +83,12 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
             async def check_task() -> None:
                 async def _wait_for_update() -> None:
-                    assert self.device is not None
+                    if self.device is None:
+                        raise AbortFlow("unknown")
                     while self.device.last_update_time is None:
                         await asyncio.sleep(1)
-                    assert self.device.device_id is not None
+                    if self.device.device_id is None:
+                        raise AbortFlow("unknown")
                     await self.async_set_unique_id(self.device.device_id)
                     self._abort_if_unique_id_configured()
 
@@ -103,35 +105,32 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             # timed out while waiting for the device to send an update.
             try:
                 await self.task_one
-            except AssertionError:
-                _LOGGER.error(
-                    "Unknown error occurred for webhook ID %s during config flow",
-                    self.webhook_id,
-                )
-                self.task_one = None
-                webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
-                self.data["abort_reason"] = "unknown"
-                return self.async_show_progress_done(next_step_id="finish")
             except TimeoutError:
-                _LOGGER.error(
-                    "Device with webhook ID %s timed out waiting for update during config flow",
-                    self.webhook_id,
-                )
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
                 self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 self.data["abort_reason"] = "connect_timeout"
-                return self.async_show_progress_done(next_step_id="finish")
-            except AbortFlow:
-                _LOGGER.debug(
-                    "Device with webhook ID %s already configured during config flow",
+                _LOGGER.error(
+                    "Device with webhook ID %s timed out waiting for update during config flow",
                     self.webhook_id,
                 )
+                return self.async_show_progress_done(next_step_id="finish")
+            except AbortFlow as err:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
                 self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
-                self.data["abort_reason"] = "already_configured"
+                if err.reason == "already_configured":
+                    self.data["abort_reason"] = "already_configured"
+                    _LOGGER.debug(
+                        "Device with webhook ID %s already configured during config flow",
+                        self.webhook_id,
+                    )
+                else:
+                    self.data["abort_reason"] = "unknown"
+                    _LOGGER.error(
+                        "Unknown error occurred for webhook ID %s during config flow",
+                        self.webhook_id,
+                    )
                 return self.async_show_progress_done(next_step_id="finish")
 
         if uncompleted_task:

@@ -43,8 +43,3 @@ class CCLEntity(CoordinatorEntity[CCLCoordinator]):
             manufacturer="CCL Electronics",
             sw_version=self._device.fw_ver,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return the availability."""
-        return super().available

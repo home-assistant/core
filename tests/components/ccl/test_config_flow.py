@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from aioccl.exception import CCLDeviceRegistrationException
 from aiohttp import web
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ccl import KEY_DEVICES
@@ -48,7 +49,7 @@ async def test_create_entry(
         webhook_url = async_generate_url(hass, WEBHOOK_ID)
         body = {"hello": "world"}
 
-        def handler_side_effect(request, devices_dict):
+        async def handler_side_effect(request, devices_dict):
             # Simulate the handler setting last_update_time
             device = devices_dict[WEBHOOK_ID]
             device.last_update_time = 123
@@ -205,7 +206,7 @@ async def test_timeout_error_task_one(
         assert result["reason"] == "connect_timeout"
 
 
-async def test_assertion_error_task_one_device_none(
+async def test_abort_flow_device_none(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     mock_ccl: MagicMock,
@@ -224,24 +225,16 @@ async def test_assertion_error_task_one_device_none(
             "homeassistant.components.ccl.config_flow.CCLDevice",
             return_value=None,
         ),
+        pytest.raises(AttributeError, match="passkey"),
     ):
-        # When CCLDevice returns None, registration will fail
-        # The flow should handle this appropriately
-        try:
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            # If we reach here, it should be an abort or error
-            assert result["type"] in (
-                FlowResultType.ABORT,
-                FlowResultType.SHOW_PROGRESS,
-            )
-        except AttributeError:
-            # Expected when device is None and registration is attempted
-            pass
+        # When CCLDevice returns None, registration will fail with an AttributeError
+        # from the aioccl register helper.
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
 
-async def test_assertion_error_task_one_device_id_none(
+async def test_abort_flow_device_id_none(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     mock_ccl: MagicMock,
@@ -270,8 +263,8 @@ async def test_assertion_error_task_one_device_id_none(
         webhook_url = async_generate_url(hass, WEBHOOK_ID)
         body = {"hello": "world"}
 
-        def handler_side_effect(request, devices_dict):
-            # Set last_update_time but leave device_id as None to trigger assertion
+        async def handler_side_effect(request, devices_dict):
+            # Set last_update_time but leave device_id as None
             device = devices_dict[WEBHOOK_ID]
             device.last_update_time = 123
             return web.Response(status=200)
@@ -287,7 +280,7 @@ async def test_assertion_error_task_one_device_id_none(
         # Wait for the background task to complete after webhook is posted
         await hass.async_block_till_done()
 
-        # After device updates, advance the flow; the assertion should cause abort
+        # After device updates, advance the flow
         if result["type"] is FlowResultType.SHOW_PROGRESS:
             flows = hass.config_entries.flow.async_progress()
             if any(f for f in flows if f["flow_id"] == flow_id):
@@ -332,7 +325,7 @@ async def test_abort_flow_already_configured(
             client = await hass_client_no_auth()
             webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
-            def handler_side_effect(request, devices_dict):
+            async def handler_side_effect(request, devices_dict):
                 device = devices_dict[WEBHOOK_ID]
                 device.last_update_time = 123
                 return web.Response(status=200)

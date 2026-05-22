@@ -48,9 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     # Create the device and register a webhook after restart, or fetch the existing device if it was already created during the config flow
-    device = hass.data.setdefault(KEY_DEVICES, {}).get(
-        webhook_id, CCLDevice(webhook_id)
-    )
+    devices = hass.data.setdefault(KEY_DEVICES, {})
+    device = devices.setdefault(webhook_id, CCLDevice(webhook_id))
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 
@@ -58,7 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
         await register_webhook(hass, entry.data[CONF_WEBHOOK_ID])
     except ValueError as err:
         _LOGGER.error("Failed to register webhook: %s", err)
-        raise ConfigEntryNotReady(f"Failed to register webhook: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_register_webhook",
+            translation_placeholders={"error": str(err)},
+        ) from err
     _LOGGER.debug("Webhook registered at hass: %s", webhook_id)
 
     @callback

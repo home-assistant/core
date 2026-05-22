@@ -72,7 +72,7 @@ async def test_webhook_post(
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
     body = {"Hello": "World"}
 
-    def handler_side_effect(request, devices_dict):
+    async def handler_side_effect(request, devices_dict):
         """Mock handler that validates content type and returns the expected response."""
         if request.content_type != "application/json":
             return web.Response(status=HTTPStatus.BAD_REQUEST)
