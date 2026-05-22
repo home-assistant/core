@@ -17,9 +17,9 @@ from vacuum_map_parser_base.config.drawable import Drawable
 from homeassistant import config_entries
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
-    CONF_CUSTOM_URL,
     CONF_ENTRY_CODE,
     CONF_REGION,
+    CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
     DOMAIN,
@@ -499,7 +499,7 @@ async def test_config_flow_with_custom_url(
             mock_client.base_url = future_base_url
 
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_CUSTOM_URL: custom_url}
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
             )
 
             mock_client_cls.assert_called_with(
@@ -560,7 +560,7 @@ async def test_config_flow_custom_url_failures(
                 side_effect=request_code_side_effect
             )
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_CUSTOM_URL: custom_url}
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
             )
             assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "custom_url"
@@ -577,7 +577,7 @@ async def test_config_flow_custom_url_failures(
             mock_client.base_url = future_base_url
 
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_CUSTOM_URL: custom_url}
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
             )
             assert result["type"] is FlowResultType.FORM
             assert result["step_id"] == "code"

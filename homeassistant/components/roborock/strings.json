@@ -27,12 +27,12 @@
       },
       "custom_url": {
         "data": {
-          "custom_url": "Custom server URL"
+          "roborock_server_url": "Roborock Server URL"
         },
         "data_description": {
-          "custom_url": "The URL of your custom server."
+          "roborock_server_url": "The URL of the Roborock server."
         },
-        "description": "Enter the URL of your custom server."
+        "description": "Enter the Roborock server URL to connect to."
       },
       "reauth_confirm": {
         "description": "The Roborock integration needs to re-authenticate your account",
@@ -773,7 +773,7 @@
       "options": {
         "auto": "Auto",
         "cn": "CN",
-        "custom": "Custom server",
+        "custom": "Manual",
         "eu": "EU",
         "ru": "RU",
         "us": "US"

@@ -40,9 +40,9 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
-    CONF_CUSTOM_URL,
     CONF_ENTRY_CODE,
     CONF_REGION,
+    CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_BACKGROUND,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
@@ -119,7 +119,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._client = RoborockApiClient(
                 self._username,
-                base_url=user_input[CONF_CUSTOM_URL],
+                base_url=user_input[CONF_ROBOROCK_SERVER_URL],
                 session=async_get_clientsession(self.hass),
             )
             errors = await self._request_code()
@@ -130,9 +130,10 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="custom_url",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_CUSTOM_URL): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.URL)
-                    ),
+                    vol.Required(
+                        CONF_ROBOROCK_SERVER_URL,
+                        default="https://usiot.roborock.com",
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
             errors=errors,
