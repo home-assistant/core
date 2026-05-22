@@ -35,9 +35,6 @@ class SwissHydrologicalDataConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             station_id: int = user_input[CONF_STATION]
 
-            await self.async_set_unique_id(str(station_id))
-            self._abort_if_unique_id_configured()
-
             try:
                 data = await self.hass.async_add_executor_job(
                     self._fetch_station, station_id
@@ -53,6 +50,8 @@ class SwissHydrologicalDataConfigFlow(ConfigFlow, domain=DOMAIN):
                 if data is None:
                     errors["base"] = "invalid_station"
                 else:
+                    await self.async_set_unique_id(str(station_id))
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=f"{data['water-body-name']} {data['name']}",
                         data={CONF_STATION: station_id},
@@ -68,9 +67,6 @@ class SwissHydrologicalDataConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import from configuration.yaml."""
         station_id: int = import_data[CONF_STATION]
 
-        await self.async_set_unique_id(str(station_id))
-        self._abort_if_unique_id_configured()
-
         try:
             data = await self.hass.async_add_executor_job(
                 self._fetch_station, station_id
@@ -83,6 +79,9 @@ class SwissHydrologicalDataConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if data is None:
             return self.async_abort(reason="invalid_station")
+
+        await self.async_set_unique_id(str(station_id))
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=f"{data['water-body-name']} {data['name']}",
