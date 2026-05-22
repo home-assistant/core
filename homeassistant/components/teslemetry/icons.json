@@ -497,7 +497,7 @@
         "default": "mdi:battery-clock"
       },
       "forward_collision_warning": {
-        "default": "mdi:car-crash",
+        "default": "mdi:car-emergency",
         "state": {
           "average": "mdi:alert-circle",
           "early": "mdi:alert-octagon",
@@ -634,7 +634,7 @@
         "default": "mdi:key"
       },
       "pedal_position": {
-        "default": "mdi:pedestal"
+        "default": "mdi:gauge"
       },
       "powershare_hours_left": {
         "default": "mdi:clock-time-eight-outline"
@@ -794,7 +794,7 @@
       "service": "mdi:calendar-plus"
     },
     "add_precondition_schedule": {
-      "service": "mdi:hvac-outline"
+      "service": "mdi:hvac"
     },
     "navigation_gps_request": {
       "service": "mdi:crosshairs-gps"
@@ -803,7 +803,7 @@
       "service": "mdi:calendar-minus"
     },
     "remove_precondition_schedule": {
-      "service": "mdi:hvac-off-outline"
+      "service": "mdi:hvac-off"
     },
     "set_scheduled_charging": {
       "service": "mdi:timeline-clock-outline"
