@@ -136,7 +136,7 @@ async def test_async_update_timeout_error(
     mock_device.client = MagicMock()
     mock_device.client.is_connected = True
 
-    mock_device.send_get_position = AsyncMock(side_effect=TimeoutError)
+    mock_device.send_get_position = AsyncMock(side_effect=TimeoutError())
 
     await entity.async_update()
 
