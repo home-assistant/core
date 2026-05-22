@@ -59,7 +59,7 @@ async def test_add_item(
     assert _get_shopping_data(hass).items[0]["name"] == "beer"  # name was trimmed
 
     # Response text is now handled by default conversation agent
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert_shopping_list_data(hass, snapshot)
 
 

@@ -149,7 +149,7 @@ async def test_polling_platform_init_failed(
         await hass.async_block_till_done()
 
     mock_get_me.assert_called_once()
-    assert mock_polling_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(

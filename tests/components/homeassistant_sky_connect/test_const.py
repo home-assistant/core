@@ -16,7 +16,7 @@ def test_hardware_variant(
     usb_product_name: str, expected_variant: HardwareVariant
 ) -> None:
     """Test hardware variant parsing."""
-    assert HardwareVariant.from_usb_product_name(usb_product_name) == expected_variant
+    assert HardwareVariant.from_usb_product_name(usb_product_name) is expected_variant
 
 
 def test_hardware_variant_invalid() -> None:

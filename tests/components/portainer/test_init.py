@@ -52,7 +52,7 @@ async def test_setup_exceptions(
     """Test the _async_setup."""
     mock_portainer_client.get_endpoints.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
 
 
 async def test_migrations(
@@ -232,7 +232,7 @@ async def test_migration_v4_to_v5_exceptions(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_registry(

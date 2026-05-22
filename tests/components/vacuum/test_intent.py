@@ -37,7 +37,7 @@ async def test_start(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -60,7 +60,7 @@ async def test_start_without_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -88,7 +88,7 @@ async def test_return_to_base(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -113,7 +113,7 @@ async def test_return_to_base_without_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -147,7 +147,7 @@ async def test_clean_area(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert set(calls[0].data["entity_id"]) == {vacuum_1, vacuum_2}
     assert calls[0].data["cleaning_area_id"] == [kitchen.id]
@@ -171,7 +171,7 @@ async def test_clean_area(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data == {
         "entity_id": [vacuum_1],
@@ -194,7 +194,7 @@ async def test_clean_area_no_matching_vacuum(hass: HomeAssistant) -> None:
             vacuum_intent.INTENT_VACUUM_CLEAN_AREA,
             {"area": {"value": "Kitchen"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.DOMAIN
 
     # Vacuum without CLEAN_AREA feature
     hass.states.async_set(
@@ -210,7 +210,7 @@ async def test_clean_area_no_matching_vacuum(hass: HomeAssistant) -> None:
             vacuum_intent.INTENT_VACUUM_CLEAN_AREA,
             {"area": {"value": "Kitchen"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.FEATURE
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.FEATURE
 
 
 async def test_clean_area_invalid_area(hass: HomeAssistant) -> None:
@@ -230,7 +230,7 @@ async def test_clean_area_invalid_area(hass: HomeAssistant) -> None:
             vacuum_intent.INTENT_VACUUM_CLEAN_AREA,
             {"area": {"value": "Nonexistent room"}},
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.INVALID_AREA
     assert err.value.result.no_match_name == "Nonexistent room"
 
 

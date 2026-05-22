@@ -74,7 +74,7 @@ async def test_error_handling(
             Context(),
             agent_id="conversation.google_ai_conversation",
         )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"] == ERROR_GETTING_RESPONSE
@@ -249,7 +249,7 @@ async def test_function_call(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "I've called the test function with the provided parameters."
@@ -356,7 +356,7 @@ async def test_google_search_tool_is_sent(
             agent_id=agent_id,
             device_id="test_device",
         )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "The last winner of the 2024 FIFA World Cup was Argentina."
@@ -406,7 +406,7 @@ async def test_blocked_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: SAFETY"
@@ -450,7 +450,7 @@ async def test_empty_response(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Unable to get response"
@@ -485,7 +485,7 @@ async def test_none_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: unknown"
@@ -514,7 +514,7 @@ async def test_converse_error(
         agent_id="conversation.google_ai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Error preparing LLM API"

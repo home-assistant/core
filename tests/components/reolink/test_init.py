@@ -133,7 +133,7 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
 
 
 async def test_firmware_error_twice(

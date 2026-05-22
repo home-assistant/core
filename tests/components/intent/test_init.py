@@ -591,7 +591,7 @@ async def test_get_state_intent(
     )
 
     # yes
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert result.matched_states and (
         result.matched_states[0].entity_id == bedroom_light.entity_id
     )
@@ -611,7 +611,7 @@ async def test_get_state_intent(
     )
 
     # no, it's on
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert not result.matched_states
     assert result.unmatched_states and (
         result.unmatched_states[0].entity_id == kitchen_light.entity_id
@@ -628,7 +628,7 @@ async def test_get_state_intent(
         },
     )
 
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert result.matched_states and (
         result.matched_states[0].entity_id == kitchen_sensor.entity_id
     )
@@ -648,7 +648,7 @@ async def test_get_state_intent(
     )
 
     # yes
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert result.matched_states and (
         result.matched_states[0].entity_id == problem_sensor.entity_id
     )
@@ -667,7 +667,7 @@ async def test_get_state_intent(
     )
 
     # yes, 2 of them
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(result.matched_states) == 2 and {
         state.entity_id for state in result.matched_states
     } == {problem_sensor.entity_id, moisture_sensor.entity_id}
@@ -686,7 +686,7 @@ async def test_get_state_intent(
     )
 
     # no
-    assert result.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert not result.matched_states and not result.unmatched_states
 
     # Test unknown area failure
@@ -754,7 +754,7 @@ async def test_stop_moving_valve(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == VALVE_DOMAIN
@@ -782,7 +782,7 @@ async def test_stop_moving_cover(hass: HomeAssistant, slots: dict[str, Any]) -> 
     response = await intent.async_handle(hass, "test", intent.INTENT_STOP_MOVING, slots)
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == COVER_DOMAIN
