@@ -229,7 +229,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             async with lock:
                 self._async_write_hidden_sources(entry)
         else:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "%s: persisting visibility without a lock — runtime_data is not "
                 "HomeKitEntryData; concurrent sibling accessories may race",
                 self.entity_id,
