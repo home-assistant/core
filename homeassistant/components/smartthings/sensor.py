@@ -1285,7 +1285,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.ENERGY_USAGE_DAY,
                 translation_key="water_usage_day",
                 device_class=SensorDeviceClass.WATER,
-                state_class=SensorStateClass.MEASUREMENT,
+                state_class=SensorStateClass.TOTAL_INCREASING,
                 native_unit_of_measurement=UnitOfVolume.GALLONS,
             )
         ],
