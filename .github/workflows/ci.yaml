@@ -922,11 +922,9 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json
-          # Restore-keys only; the primary key is content-addressed and
-          # only known after split_tests.py writes the file below, so the
-          # restore-side primary key is intentionally a sentinel that
-          # never matches.  Restore-keys pick the most recent prefix
-          # match, falling back from this branch's last save to dev's.
+          # Primary key is a sentinel; restore-keys pick the most recent
+          # prefix match since the real (content-addressed) key isn't
+          # known until split_tests.py runs below.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
@@ -947,11 +945,8 @@ jobs:
           echo "hash=$(sha256sum pytest_test_counts.json | cut -d' ' -f1)" \
             >> "$GITHUB_OUTPUT"
       - name: Save pytest test counts cache
-        # Content-addressed key: identical cache content always lands on
-        # the same entry, so new entries only appear when the bucket
-        # inputs actually change.  Skip the save entirely when the
-        # restored cache already has the same content hash, since
-        # uploading would be a no-op anyway.
+        # Content-addressed key: identical content reuses the same entry.
+        # Skip the save when the restore already matched that hash.
         if: >-
           !endsWith(
             steps.cache-pytest-counts.outputs.cache-matched-key,

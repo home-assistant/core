@@ -58,13 +58,7 @@ class BucketHolder:
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
     def split_tests(self, test_folder: TestFolder) -> None:
-        """Split tests into buckets via best-fit decreasing.
-
-        Each atomic unit (a folder that fits a bucket, or a sibling
-        group of files that must stay together for syrupy) is placed
-        in the tightest fitting bucket; units larger than a bucket
-        fall into the least loaded one.
-        """
+        """Place atomic units via best-fit; oversized ones go to the smallest bucket."""
         digits = len(str(test_folder.total_tests))
         units = sorted(
             self._atomic_units(test_folder), key=lambda u: u[0], reverse=True
@@ -92,14 +86,11 @@ class BucketHolder:
     def _atomic_units(
         self, folder: TestFolder
     ) -> Iterator[tuple[int, list[TestFolder | TestFile]]]:
-        """Yield ``(size, items)`` placement units rooted at ``folder``.
+        """Yield ``(size, items)`` placement units.
 
-        A folder that fits a bucket is one unit.  Otherwise it's
-        decomposed: same-dir files form one unit only when the folder
-        has syrupy snapshots (those tests must run in the same process
-        so unused snapshots can be detected); without snapshots, each
-        file is its own unit and can land in any bucket.  Sub-folders
-        recurse independently.
+        A folder that fits is one unit; otherwise same-dir files form
+        a unit only when the folder has syrupy snapshots, else each
+        file stands alone.  Sub-folders recurse independently.
         """
         if folder.total_tests <= self._tests_per_bucket:
             yield folder.total_tests, [folder]
@@ -209,12 +200,10 @@ class TestFolder:
 
 
 def _has_snapshots(folder_path: Path) -> bool:
-    """Return True when ``folder_path`` has syrupy ``.ambr`` snapshots.
+    """Return True when ``folder_path/snapshots`` holds ``.ambr`` files.
 
-    The ``snapshots`` subdirectory is the project convention.  Tests
-    that share snapshots must run in the same pytest invocation so
-    syrupy can detect unused entries; for folders without snapshots
-    same-dir files can split freely across buckets.
+    Same-dir tests must share a pytest run so syrupy can spot unused
+    snapshots; without snapshots that constraint doesn't apply.
     """
     return any((folder_path / "snapshots").glob("*.ambr"))
 
@@ -231,12 +220,7 @@ def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
 
 
 def _iter_eligible_children(path: Path) -> list[Path]:
-    """Return immediate children of ``path`` that pytest should collect.
-
-    Skips ``.``/``_`` prefixed names (hidden, ``__pycache__``, private)
-    and any ``.py`` that isn't a ``test_*.py`` (so ``conftest.py``,
-    ``common.py``, etc. are not handed to pytest as collection targets).
-    """
+    """Return immediate ``test_*.py`` and dirs; skip ``.``/``_`` prefixed names."""
     children: list[Path] = []
     for entry in sorted(path.iterdir()):
         if entry.name.startswith((".", "_")):
@@ -247,12 +231,7 @@ def _iter_eligible_children(path: Path) -> list[Path]:
 
 
 def _enumerate_batch_paths(path: Path) -> list[Path]:
-    """Return the child paths to run pytest --collect-only over.
-
-    Files are returned as-is.  Directories are expanded one level deep, with
-    a second level of expansion for entries named in ``_FAN_OUT_DIRS`` so the
-    enormous ``tests/components`` tree fans out into per-integration paths.
-    """
+    """Collection targets: one level deep, ``_FAN_OUT_DIRS`` expanded two levels."""
     if path.is_file():
         return [path]
 
@@ -273,15 +252,10 @@ def _hash_file(path: Path) -> str:
 def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     """Walk ``root`` once and return (test files, fixture files).
 
-    Fixtures are every non-``test_*.py`` Python file: conftests and
-    helpers like ``common.py``.  Helpers participate in the invalidation
-    hash because tests often import their ``VALUES`` lists for
-    ``@pytest.mark.parametrize``, so an edit there shifts a test's
-    collected count without touching the test file itself.
-
-    Uses ``os.walk`` (not ``Path.rglob``) for ~2x speed on a 5000-file
-    tree, and prunes ``.``/``_`` prefixed subdirs instead of visiting
-    them.
+    Fixtures are every non-``test_*.py`` ``.py``: conftests and helpers
+    like ``common.py`` that drive parametrize imports.  Uses ``os.walk``
+    (~2x faster than ``Path.rglob`` on this tree) and prunes ``.``/``_``
+    subdirs.
     """
     test_files: list[Path] = []
     fixtures: list[Path] = []
@@ -301,13 +275,7 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
 
 
 def _find_ancestor_conftests(root: Path) -> list[Path]:
-    """Return ancestor ``conftest.py`` files that pytest would still apply.
-
-    For a subtree run (eg ``tests/components``), conftests above ``root``
-    (eg ``tests/conftest.py``) still affect parametrization, so they
-    must feed the invalidation hash.  Stops at the first ancestor with
-    no ``conftest.py``.
-    """
+    """Return ancestor conftests above ``root``, stopping at the first gap."""
     ancestors: list[Path] = []
     current = root.resolve().parent
     while True:
@@ -324,11 +292,7 @@ def _find_ancestor_conftests(root: Path) -> list[Path]:
 def _build_fixtures_by_dir(
     root: Path, descendants: list[Path]
 ) -> dict[Path, list[Path]]:
-    """Return ``{resolved_dir: [fixture files]}`` for ``root``.
-
-    Combines descendant fixtures under ``root`` with ancestor conftests
-    above it — pytest still applies the latter on subtree runs.
-    """
+    """Bucket descendants plus ancestor conftests by resolved parent dir."""
     by_dir: dict[Path, list[Path]] = {}
     for fixture in (*_find_ancestor_conftests(root), *descendants):
         by_dir.setdefault(fixture.parent.resolve(), []).append(fixture)
@@ -340,13 +304,11 @@ def _file_fixture_hash(
     root: Path,
     fixtures_by_dir: dict[Path, list[Path]],
 ) -> str:
-    """Return a hash of fixtures relevant to ``test_file``.
+    """Hash every ``.py`` fixture on the test file's ancestor path.
 
-    The scope is every ``.py`` fixture (conftest.py and helper modules
-    like ``common.py``) on the test file's ancestor path.  This catches
-    parametrize imports from shared helpers at any level (eg
-    ``tests/components/common.py``) while still leaving sibling
-    subtrees warm.
+    Catches conftests and helper modules (``common.py`` etc.) at any
+    level so parametrize imports from shared helpers invalidate
+    descendants, while sibling subtrees stay warm.
     """
     relevant: list[Path] = []
     current = test_file.parent.resolve()
@@ -357,7 +319,7 @@ def _file_fixture_hash(
             break
         current = parent
     relevant.sort()
-    # os.path.relpath keeps the hash machine-stable and handles ancestors above root.
+    # relpath keeps the hash machine-stable across ancestor paths.
     digest = hashlib.sha256()
     for fixture in relevant:
         digest.update(os.path.relpath(fixture, root).encode())
@@ -389,12 +351,7 @@ class _Cache:
 
     @classmethod
     def load(cls, path: Path) -> _Cache:
-        """Load cache from ``path``, returning empty on any drift.
-
-        Missing file, bad JSON, version drift, malformed entries: all
-        degrade to a full re-collect.  Per-file fixture-scope drift is
-        handled later by ``_resolve_entries``.
-        """
+        """Load cache; any drift (missing, bad, version, malformed) returns empty."""
         try:
             raw = json.loads(path.read_bytes())
         except OSError, ValueError:
@@ -411,9 +368,8 @@ class _Cache:
             hash_value = value.get("hash")
             fixture_hash = value.get("fixture_hash")
             count = value.get("count")
-            # bool is an int subclass; reject it so {"count": true} doesn't
-            # silently parse as count=1.  Reject negatives too — a corrupted
-            # cache shouldn't be able to feed bucket sizing a bogus weight.
+            # bool is an int subclass; reject true/false and negatives so
+            # corrupted JSON can't feed bucket sizing a bogus weight.
             if (
                 not isinstance(hash_value, str)
                 or not isinstance(fixture_hash, str)
@@ -457,13 +413,10 @@ def _resolve_entries(
     root: Path,
     fixtures_by_dir: dict[Path, list[Path]],
 ) -> tuple[dict[Path, _CacheEntry], list[Path]]:
-    """Build a fresh entry for every test file; return ``(entries, misses)``.
+    """Build an entry for every file; return ``(entries, misses)``.
 
-    Each file is hashed once.  Hits reuse the stored entry verbatim.
-    Misses get a fresh entry with the resolve-time hashes and a
+    Hits reuse the stored entry; misses get fresh hashes with a
     count=0 placeholder for the caller to fill in after pytest runs.
-    A file misses if either its own bytes changed or its fixture
-    scope did.
     """
     entries: dict[Path, _CacheEntry] = {}
     misses: list[Path] = []
@@ -530,11 +483,7 @@ def _run_pytest_collect(paths: list[Path]) -> dict[Path, int]:
 
 
 def _build_folder(root: Path, counts: dict[Path, int]) -> TestFolder:
-    """Build a ``TestFolder`` from a flat ``{path: count}`` mapping.
-
-    Zero-count files are skipped: a ``test_*.py`` with no test functions
-    looks like a test file to the walker but pytest reports nothing.
-    """
+    """Build a ``TestFolder`` from ``{path: count}``; zero-count files are skipped."""
     folder = TestFolder(root)
     for file_path, count in counts.items():
         if count:
@@ -550,11 +499,7 @@ def _exit_if_empty(paths: list[Path], root: Path) -> None:
 
 
 def _collect_tests_uncached(path: Path) -> TestFolder:
-    """Collect tests by handing pytest the top-level directories.
-
-    Skips the tree walk and per-file hashing, matching the pre-cache
-    behavior when ``--cache`` isn't passed.
-    """
+    """Hand pytest the top-level dirs; the pre-cache path when ``--cache`` is unset."""
     batch_paths = _enumerate_batch_paths(path)
     _exit_if_empty(batch_paths, path)
     return _build_folder(path, _run_pytest_collect(batch_paths))
@@ -572,17 +517,15 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
     print(f"Cache: {hits} hits / {len(misses)} misses / {len(all_test_files)} total")
 
     if misses:
-        # File-level collection saves work when the diff is small.  But
-        # when many files miss (eg a PR adding a new integration with
-        # hundreds of new files) the per-file argv overhead dominates
-        # and dir-level wins, so fall back past _DIR_LEVEL_MISS_RATIO.
+        # Past _DIR_LEVEL_MISS_RATIO the per-file argv overhead beats
+        # re-walking the dirs, so fall back to dir-level collection.
         if not hits or len(misses) > len(all_test_files) * _DIR_LEVEL_MISS_RATIO:
             collect_paths = _enumerate_batch_paths(path)
         else:
             collect_paths = misses
         new_counts = _run_pytest_collect(collect_paths)
-        # Fill in miss placeholders; files pytest returned nothing for
-        # stay at count=0 so they aren't re-collected next run.
+        # Files pytest returned no count for stay at 0; cached so they
+        # aren't re-collected next run.
         for file in misses:
             entries[file] = replace(entries[file], count=new_counts.get(file, 0))
 
@@ -597,9 +540,7 @@ def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
     if cache_path is None:
         return _collect_tests_uncached(path)
     if path.is_file():
-        # A single-file root has no fixture tree to hash, so the
-        # invalidation key would be constant and stale counts could
-        # survive conftest edits.  Bypass the cache instead.
+        # No fixture tree to scope against; bypass cache to avoid stale hits.
         print(f"--cache ignored: {path} is a single file")
         return _collect_tests_uncached(path)
     return _collect_tests_cached(path, cache_path)
