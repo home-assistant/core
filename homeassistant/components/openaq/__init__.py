@@ -27,14 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
         )
 
     try:
-        try:
-            async with asyncio.TaskGroup() as tg:
-                for coordinator in coordinators.values():
-                    tg.create_task(coordinator.async_config_entry_first_refresh())
-        except ExceptionGroup as err:
-            raise err.exceptions[0] from err
-    except Exception:
+        async with asyncio.TaskGroup() as tg:
+            for coordinator in coordinators.values():
+                tg.create_task(coordinator.async_config_entry_first_refresh())
+    except ExceptionGroup as err:
         await client.close()
+        if (subgroup := err.subgroup(ConfigEntryNotReady)) is not None:
+            raise subgroup.exceptions[0] from err
         raise
 
     entry.runtime_data = OpenAQRuntimeData(client=client, coordinators=coordinators)
