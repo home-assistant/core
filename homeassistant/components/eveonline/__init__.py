@@ -1,0 +1,53 @@
+"""The Eve Online integration."""
+
+from eveonline import EveOnlineClient
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+
+from .api import AsyncConfigEntryAuth
+from .const import CONF_CHARACTER_ID, CONF_CHARACTER_NAME
+from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator
+
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -> bool:
+    """Set up Eve Online from a config entry."""
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            "OAuth2 implementation unavailable, check application credentials"
+        ) from err
+    auth = AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass),
+        OAuth2Session(hass, entry, implementation),
+    )
+    client = EveOnlineClient(auth=auth)
+
+    coordinator = EveOnlineCoordinator(
+        hass,
+        entry,
+        client,
+        entry.data[CONF_CHARACTER_ID],
+        entry.data[CONF_CHARACTER_NAME],
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
