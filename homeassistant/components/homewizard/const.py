@@ -6,6 +6,7 @@ import logging
 from homeassistant.const import Platform
 
 DOMAIN = "homewizard"
+ISSUE_BATTERY_MODE_CLOUD_DISABLED = "battery_mode_cloud_disabled"
 PLATFORMS = [
     Platform.BUTTON,
     Platform.NUMBER,

@@ -181,6 +181,17 @@
     }
   },
   "issues": {
+    "battery_mode_cloud_disabled": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "One-time full charge is enabled for your battery group, but cloud connection is disabled. These settings are not compatible.\n\nSelect **Submit** to enable cloud connection.",
+            "title": "[%key:component::homewizard::issues::battery_mode_cloud_disabled::title%]"
+          }
+        }
+      },
+      "title": "Enable cloud connection for one-time full charge"
+    },
     "migrate_to_v2_api": {
       "fix_flow": {
         "error": {

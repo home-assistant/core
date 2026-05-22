@@ -2,16 +2,26 @@
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
-from homewizard_energy.models import CombinedModels as DeviceResponseEntry
+from homewizard_energy.models import Batteries, CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, ISSUE_BATTERY_MODE_CLOUD_DISABLED, LOGGER, UPDATE_INTERVAL
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
+
+
+def _battery_mode_cloud_issue_id(entry_id: str) -> str:
+    """Build issue id for battery mode/cloud incompatibility."""
+    return f"{ISSUE_BATTERY_MODE_CLOUD_DISABLED}_{entry_id}"
 
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
@@ -70,6 +80,25 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise ConfigEntryAuthFailed from ex
 
         self.api_disabled = False
+        issue_id = _battery_mode_cloud_issue_id(self.config_entry.entry_id)
+        if (
+            data.batteries is not None
+            and data.system is not None
+            and data.batteries.mode == str(Batteries.Mode.TO_FULL)
+            and data.system.cloud_enabled is False
+        ):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=False,
+                translation_key=ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+                severity=IssueSeverity.ERROR,
+                data={"entry_id": self.config_entry.entry_id},
+            )
+        else:
+            async_delete_issue(self.hass, DOMAIN, issue_id)
 
         self.data = data
         return data
