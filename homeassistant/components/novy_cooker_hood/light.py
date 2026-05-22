@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
+from rf_protocols.commands.novy import NovyCookerHoodCommand
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -37,7 +37,7 @@ class NovyCookerHoodLight(NovyCookerHoodEntity, LightEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the light."""
         super().__init__(entry)
-        self._codes = get_codes_for_code(entry.data[CONF_CODE])
+        self._code = entry.data[CONF_CODE]
         self._attr_unique_id = entry.entry_id
 
     async def async_added_to_hass(self) -> None:
@@ -58,9 +58,9 @@ class NovyCookerHoodLight(NovyCookerHoodEntity, LightEntity, RestoreEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def _async_send_command(self, name: str) -> None:
-        """Load the named command and send it via the configured transmitter."""
-        command = await self._codes.async_load_command(name)
+    async def _async_send_command(self, key: str) -> None:
+        """Build the named command and send it via the configured transmitter."""
+        command = NovyCookerHoodCommand(channel=self._code, key=key)
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context
         )

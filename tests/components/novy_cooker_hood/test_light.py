@@ -1,7 +1,5 @@
 """Tests for the Novy Hood light platform."""
 
-from unittest.mock import MagicMock, call
-
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -28,7 +26,6 @@ ENTITY_ID = "light.novy_cooker_hood_light"
 
 async def test_turn_on_and_off_send_light_once_each(
     hass: HomeAssistant,
-    mock_get_codes: MagicMock,
     mock_rf_entity: MockRadioFrequencyEntity,
     init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
@@ -66,11 +63,11 @@ async def test_turn_on_and_off_send_light_once_each(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OFF
-    assert mock_get_codes.async_load_command.await_args_list == [
-        call(COMMAND_LIGHT),
-        call(COMMAND_LIGHT),
-    ]
     assert len(mock_rf_entity.send_command_calls) == 2
+    assert [c.command.key for c in mock_rf_entity.send_command_calls] == [
+        COMMAND_LIGHT,
+        COMMAND_LIGHT,
+    ]
 
 
 async def test_restore_state(

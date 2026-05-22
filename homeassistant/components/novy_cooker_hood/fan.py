@@ -1,9 +1,10 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
+import asyncio
 import math
 from typing import Any
 
-from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
+from rf_protocols.commands.novy import NovyCookerHoodCommand
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.components.radio_frequency import async_send_command
@@ -24,6 +25,9 @@ from .entity import NovyCookerHoodEntity
 PARALLEL_UPDATES = 1
 
 _SPEED_RANGE = (1, SPEED_COUNT)
+
+# Novy hood expects at least 150ms between RF commands
+_COMMAND_DELAY = 0.2
 
 
 async def async_setup_entry(
@@ -49,7 +53,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the fan."""
         super().__init__(entry)
-        self._codes = get_codes_for_code(entry.data[CONF_CODE])
+        self._code: int = entry.data[CONF_CODE]
         self._level = 0
         self._attr_unique_id = entry.entry_id
 
@@ -103,18 +107,16 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        plus = await self._codes.async_load_command(COMMAND_PLUS)
-        for _ in range(steps):
-            await self._async_send(plus)
+        plus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_PLUS)
+        await self._async_send_repeated(plus, steps)
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        minus = await self._codes.async_load_command(COMMAND_MINUS)
-        for _ in range(steps):
-            await self._async_send(minus)
+        minus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_MINUS)
+        await self._async_send_repeated(minus, steps)
         self._level = max(0, self._level - steps)
         self.async_write_ha_state()
 
@@ -127,17 +129,25 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
 
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
-        minus = await self._codes.async_load_command(COMMAND_MINUS)
-        for _ in range(SPEED_COUNT):
-            await self._async_send(minus)
+        minus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_MINUS)
+        await self._async_send_repeated(minus, SPEED_COUNT)
         if level > 0:
-            plus = await self._codes.async_load_command(COMMAND_PLUS)
-            for _ in range(level):
-                await self._async_send(plus)
+            await asyncio.sleep(_COMMAND_DELAY)
+            plus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_PLUS)
+            await self._async_send_repeated(plus, level)
         self._level = level
         self.async_write_ha_state()
 
-    async def _async_send(self, command: Any) -> None:
+    async def _async_send_repeated(
+        self, command: NovyCookerHoodCommand, count: int
+    ) -> None:
+        """Send the same RF command N times, pausing between presses."""
+        for i in range(count):
+            if i > 0:
+                await asyncio.sleep(_COMMAND_DELAY)
+            await self._async_send(command)
+
+    async def _async_send(self, command: NovyCookerHoodCommand) -> None:
         """Send a single RF command via the configured transmitter."""
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context

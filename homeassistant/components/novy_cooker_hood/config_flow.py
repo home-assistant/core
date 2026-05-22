@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from rf_protocols.codes.novy.cooker_hood import get_codes_for_code
+from rf_protocols.commands.novy import NovyCookerHoodCommand
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
@@ -128,10 +128,8 @@ class NovyCookerHoodConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Toggle the hood light on then off so it ends in its starting state."""
         assert self._transmitter_entity_id is not None
+        command = NovyCookerHoodCommand(channel=self._code, key=COMMAND_LIGHT)
         try:
-            command = await get_codes_for_code(self._code).async_load_command(
-                COMMAND_LIGHT
-            )
             await async_send_command(self.hass, self._transmitter_entity_id, command)
             await asyncio.sleep(_TOGGLE_GAP)
             await async_send_command(self.hass, self._transmitter_entity_id, command)
