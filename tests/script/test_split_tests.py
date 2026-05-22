@@ -120,14 +120,32 @@ def test_file_fixture_hash_changes_when_same_dir_helper_changes(tree: Path) -> N
 
 
 def test_file_fixture_hash_isolated_from_sibling_dir(tree: Path) -> None:
-    """A helper change in a sibling dir leaves this file's hash alone."""
+    """A helper change in a sibling subtree leaves this file's hash alone."""
     alpha_one = tree / "components" / "alpha" / "test_one.py"
     before = _fixture_hash_for(tree, alpha_one)
-    # common.py at tree root is NOT in alpha_one's same-dir scope, so it
-    # shouldn't affect alpha_one's fixture hash.
-    (tree / "common.py").write_text("# unrelated change\n")
+    # beta is a sibling of alpha (not an ancestor), so its helper edit
+    # must not affect alpha_one's fixture hash.
+    (tree / "components" / "beta" / "common.py").write_text("# beta v2\n")
     after = _fixture_hash_for(tree, alpha_one)
     assert before == after
+
+
+def test_file_fixture_hash_changes_when_ancestor_helper_changes(tree: Path) -> None:
+    """A helper edit anywhere on the ancestor path busts the file's hash.
+
+    Test files often import VALUES for ``@pytest.mark.parametrize`` from
+    shared helpers like ``tests/components/common.py``; any ancestor
+    ``.py`` change has to invalidate descendants so cached counts don't
+    drift after edits to those sources.
+    """
+    alpha_one = tree / "components" / "alpha" / "test_one.py"
+    # Seed a shared helper one level up from alpha.
+    components_common = tree / "components" / "common.py"
+    components_common.write_text("# helper v1\n")
+    before = _fixture_hash_for(tree, alpha_one)
+    components_common.write_text("# helper v2\n")
+    after = _fixture_hash_for(tree, alpha_one)
+    assert before != after
 
 
 def test_file_fixture_hash_stable_for_test_changes(tree: Path) -> None:
@@ -548,3 +566,49 @@ def test_collect_tests_drops_deleted_files_from_cache(tree: Path) -> None:
 
     saved = json.loads(cache_path.read_text())
     assert ghost_rel not in saved["files"]
+
+
+def _build_folder(tree: Path, counts: dict[Path, int]) -> split_tests.TestFolder:
+    """Build a TestFolder for ``tree`` populated with ``counts``."""
+    folder = split_tests.TestFolder(tree)
+    for path, n in counts.items():
+        folder.add_test_file(split_tests.TestFile(n, path))
+    return folder
+
+
+def test_split_tests_keeps_siblings_together_when_snapshots_present(
+    tmp_path: Path,
+) -> None:
+    """Same-dir files stay together when the folder has syrupy snapshots."""
+    one = tmp_path / "alpha" / "test_one.py"
+    two = tmp_path / "alpha" / "test_two.py"
+    one.parent.mkdir(parents=True)
+    one.touch()
+    two.touch()
+    # Add a snapshot so the syrupy constraint kicks in.
+    snapshots = tmp_path / "alpha" / "snapshots"
+    snapshots.mkdir()
+    (snapshots / "test_one.ambr").write_text("")
+
+    folder = _build_folder(tmp_path, {one: 60, two: 60})
+    holder = split_tests.BucketHolder(tests_per_bucket=50, bucket_count=3)
+    holder.split_tests(folder)
+    # Both files must end up in one bucket; the other two stay empty.
+    sizes = sorted(b.total_tests for b in holder._buckets)
+    assert sizes == [0, 0, 120]
+
+
+def test_split_tests_splits_siblings_when_no_snapshots(tmp_path: Path) -> None:
+    """Same-dir files split freely across buckets when no snapshots exist."""
+    one = tmp_path / "alpha" / "test_one.py"
+    two = tmp_path / "alpha" / "test_two.py"
+    one.parent.mkdir(parents=True)
+    one.touch()
+    two.touch()
+    # No snapshots dir → free to split.
+
+    folder = _build_folder(tmp_path, {one: 60, two: 60})
+    holder = split_tests.BucketHolder(tests_per_bucket=70, bucket_count=2)
+    holder.split_tests(folder)
+    sizes = sorted(b.total_tests for b in holder._buckets)
+    assert sizes == [60, 60]

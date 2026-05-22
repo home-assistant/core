@@ -948,9 +948,15 @@ jobs:
             >> "$GITHUB_OUTPUT"
       - name: Save pytest test counts cache
         # Content-addressed key: identical cache content always lands on
-        # the same entry, so re-running the same commit (or any commit
-        # whose tests resolve to the same buckets) is a save no-op.  New
-        # entries only appear when the bucket inputs actually change.
+        # the same entry, so new entries only appear when the bucket
+        # inputs actually change.  Skip the save entirely when the
+        # restored cache already has the same content hash, since
+        # uploading would be a no-op anyway.
+        if: >-
+          !endsWith(
+            steps.cache-pytest-counts.outputs.cache-matched-key,
+            steps.cache-pytest-counts-hash.outputs.hash
+          )
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: pytest_test_counts.json

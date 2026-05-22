@@ -2,6 +2,7 @@
 """Helper script to split test into n buckets."""
 
 import argparse
+from collections.abc import Iterator
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field, replace
 import hashlib
@@ -57,39 +58,66 @@ class BucketHolder:
         self._buckets: list[Bucket] = [Bucket() for _ in range(bucket_count)]
 
     def split_tests(self, test_folder: TestFolder) -> None:
-        """Split tests into buckets."""
+        """Split tests into buckets via best-fit decreasing.
+
+        Each atomic unit (a folder that fits a bucket, or a sibling
+        group of files that must stay together for syrupy) is placed
+        in the tightest fitting bucket; units larger than a bucket
+        fall into the least loaded one.
+        """
         digits = len(str(test_folder.total_tests))
-        sorted_tests = sorted(
-            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
+        units = sorted(
+            self._atomic_units(test_folder), key=lambda u: u[0], reverse=True
         )
-        for tests in sorted_tests:
-            if tests.added_to_bucket:
-                # Already added to bucket
-                continue
+        for size, items in units:
+            for item in items:
+                tag = " (same bucket)" if item is not items[0] else ""
+                print(f"{item.total_tests:>{digits}} tests in {item.path}{tag}")
+            fits = [
+                b
+                for b in self._buckets
+                if b.total_tests + size <= self._tests_per_bucket
+            ]
+            bucket = (
+                max(fits, key=lambda b: b.total_tests)
+                if fits
+                else min(self._buckets, key=lambda b: b.total_tests)
+            )
+            for item in items:
+                bucket.add(item)
 
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
-            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
-            is_file = isinstance(tests, TestFile)
-            if (
-                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
-            ) or is_file:
-                smallest_bucket.add(tests)
-                # Ensure all files from the same folder are in the same bucket
-                # to ensure that syrupy correctly identifies unused snapshots
-                if is_file:
-                    for other_test in tests.parent.children.values():
-                        if other_test is tests or isinstance(other_test, TestFolder):
-                            continue
-                        print(
-                            f"{other_test.total_tests:>{digits}}"
-                            f" tests in {other_test.path}"
-                            " (same bucket)"
-                        )
-                        smallest_bucket.add(other_test)
-
-        # verify that all tests are added to a bucket
         if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
+
+    def _atomic_units(
+        self, folder: TestFolder
+    ) -> Iterator[tuple[int, list[TestFolder | TestFile]]]:
+        """Yield ``(size, items)`` placement units rooted at ``folder``.
+
+        A folder that fits a bucket is one unit.  Otherwise it's
+        decomposed: same-dir files form one unit only when the folder
+        has syrupy snapshots (those tests must run in the same process
+        so unused snapshots can be detected); without snapshots, each
+        file is its own unit and can land in any bucket.  Sub-folders
+        recurse independently.
+        """
+        if folder.total_tests <= self._tests_per_bucket:
+            yield folder.total_tests, [folder]
+            return
+
+        sibling_files = [c for c in folder.children.values() if isinstance(c, TestFile)]
+        if sibling_files:
+            if _has_snapshots(folder.path):
+                yield (
+                    sum(f.total_tests for f in sibling_files),
+                    list(sibling_files),
+                )
+            else:
+                for file in sibling_files:
+                    yield file.total_tests, [file]
+        for child in folder.children.values():
+            if isinstance(child, TestFolder):
+                yield from self._atomic_units(child)
 
     def create_output_file(self) -> None:
         """Create output file."""
@@ -178,6 +206,17 @@ class TestFolder:
             else:
                 result.append(child)
         return result
+
+
+def _has_snapshots(folder_path: Path) -> bool:
+    """Return True when ``folder_path`` has syrupy ``.ambr`` snapshots.
+
+    The ``snapshots`` subdirectory is the project convention.  Tests
+    that share snapshots must run in the same pytest invocation so
+    syrupy can detect unused entries; for folders without snapshots
+    same-dir files can split freely across buckets.
+    """
+    return any((folder_path / "snapshots").glob("*.ambr"))
 
 
 def _collect_batch(paths: list[Path]) -> tuple[str, str, int]:
@@ -303,28 +342,20 @@ def _file_fixture_hash(
 ) -> str:
     """Return a hash of fixtures relevant to ``test_file``.
 
-    Pytest applies a ``conftest.py`` from any ancestor directory of the
-    test file; helper modules (non-conftest ``.py``) typically affect
-    only tests in their same directory via ``@pytest.mark.parametrize``
-    imports.  Scoping the invalidation this way keeps the cache warm
-    across changes elsewhere in the tree (eg merging dev) while still
-    busting entries whose own scope actually shifted.
+    The scope is every ``.py`` fixture (conftest.py and helper modules
+    like ``common.py``) on the test file's ancestor path.  This catches
+    parametrize imports from shared helpers at any level (eg
+    ``tests/components/common.py``) while still leaving sibling
+    subtrees warm.
     """
     relevant: list[Path] = []
-    test_dir = test_file.parent.resolve()
-    current = test_dir
+    current = test_file.parent.resolve()
     while True:
-        relevant.extend(
-            f for f in fixtures_by_dir.get(current, ()) if f.name == "conftest.py"
-        )
+        relevant.extend(fixtures_by_dir.get(current, ()))
         parent = current.parent
         if parent == current:
             break
         current = parent
-    # Same-dir non-conftest helpers (eg common.py imported for parametrize).
-    relevant.extend(
-        f for f in fixtures_by_dir.get(test_dir, ()) if f.name != "conftest.py"
-    )
     relevant.sort()
     # os.path.relpath keeps the hash machine-stable and handles ancestors above root.
     digest = hashlib.sha256()
@@ -362,7 +393,7 @@ class _Cache:
 
         Missing file, bad JSON, version drift, malformed entries: all
         degrade to a full re-collect.  Per-file fixture-scope drift is
-        handled later by ``_resolve_from_cache``.
+        handled later by ``_resolve_entries``.
         """
         try:
             raw = json.loads(path.read_bytes())
