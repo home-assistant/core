@@ -105,6 +105,9 @@
       "any_power_fail_count": {
         "name": "Power failures detected"
       },
+      "api_version": {
+        "name": "API version"
+      },
       "cycles": {
         "name": "Battery cycles"
       },

@@ -657,6 +657,16 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             )
         ),
     ),
+    HomeWizardSensorEntityDescription(
+        key="api_version",
+        translation_key="api_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.device is not None and data.device.api_version is not None
+        ),
+        value_fn=lambda data: data.device.api_version,
+    ),
 )
 
 

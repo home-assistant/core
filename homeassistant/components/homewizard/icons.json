@@ -15,6 +15,9 @@
       "any_power_fail_count": {
         "default": "mdi:transmission-tower-off"
       },
+      "api_version": {
+        "default": "mdi:api"
+      },
       "cycles": {
         "default": "mdi:battery-sync-outline"
       },
