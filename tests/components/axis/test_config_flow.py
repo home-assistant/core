@@ -374,10 +374,10 @@ async def test_discovery_flow(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: expected_title,
     }
 
-    assert result["data"][CONF_NAME] == "M1065-LW 0"
+    assert result["data"][CONF_NAME] == expected_title
 
 
 @pytest.mark.parametrize(

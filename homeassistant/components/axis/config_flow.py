@@ -139,28 +139,31 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_entry(self, serial: str) -> ConfigFlowResult:
         """Create entry for device.
 
-        Generate a name to be used as a prefix for device entities.
+        Use the discovered device name when available, otherwise generate a name
+        to be used as a prefix for device entities.
         """
         model = self.config[CONF_MODEL]
-        same_model = [
-            entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
-        ]
+        title_placeholders = self.context.get("title_placeholders")
 
-        name = model
-        for idx in range(len(same_model) + 1):
-            name = f"{model} {idx}"
-            if name not in same_model:
-                break
+        if title_placeholders is not None:
+            name = title_placeholders[CONF_NAME]
+            title = name
+        else:
+            same_model = [
+                entry.data[CONF_NAME]
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
+            ]
+
+            name = model
+            for idx in range(len(same_model) + 1):
+                name = f"{model} {idx}"
+                if name not in same_model:
+                    break
+
+            title = f"{model} - {serial}"
 
         self.config[CONF_NAME] = name
-
-        title_placeholders = self.context.get("title_placeholders")
-        if title_placeholders is not None:
-            title = title_placeholders[CONF_NAME] or f"{model} - {serial}"
-        else:
-            title = f"{model} - {serial}"
 
         return self.async_create_entry(title=title, data=self.config)
 
