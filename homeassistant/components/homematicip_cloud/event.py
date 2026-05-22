@@ -1,6 +1,7 @@
 """Support for HomematicIP Cloud events."""
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 
 from homematicip.base.channel_event import ChannelEvent
@@ -99,9 +100,13 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
             # The base class fills _attr_name from the channel label, falling
             # back to "Channel{N}". For button events we want the translated
             # "Button {channel}" name, so drop _attr_name to let HA resolve
-            # the name from translation_key + placeholders instead. Use del
-            # rather than = None because HA's name resolution checks hasattr.
-            if hasattr(self, "_attr_name"):
+            # the name from translation_key + placeholders instead. HA's
+            # resolution checks hasattr and returns whatever it finds, so
+            # the attribute must be unset (= None would surface as the
+            # literal name). suppress() guards against a future class-level
+            # _attr_name override that would make hasattr True without an
+            # instance value to delete.
+            with suppress(AttributeError):
                 del self._attr_name
             self._attr_translation_placeholders = {"channel": str(channel.index)}
 
