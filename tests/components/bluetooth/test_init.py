@@ -138,8 +138,10 @@ async def test_setup_and_stop_passive(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
-        "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+        "bluez": {
+            **scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+            "adapter": "hci0",
+        },
         "scanning_mode": "passive",
     }
 
@@ -188,7 +190,7 @@ async def test_setup_and_stop_old_bluez(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
+        "bluez": {"adapter": "hci0"},
         "scanning_mode": "active",
     }
 

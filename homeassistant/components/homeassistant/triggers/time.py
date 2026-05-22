@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_OFFSET,
     CONF_PLATFORM,
+    CONF_WEEKDAY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
@@ -37,8 +38,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-
-CONF_WEEKDAY = "weekday"
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
 _TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)

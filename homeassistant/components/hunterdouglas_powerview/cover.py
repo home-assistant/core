@@ -134,6 +134,11 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self._is_hard_wired
 
     @property
+    def available(self) -> bool:
+        """Return True if shade position data is available."""
+        return super().available and self.positions.primary is not None
+
+    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
