@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components import button
+from homeassistant.components.opengarage.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -21,6 +22,10 @@ async def test_buttons(
     entry = entity_registry.async_get("button.garage_abcdef_restart")
     assert entry
     assert entry.unique_id == "12345_restart"
+    assert (
+        entity_registry.async_get_entity_id(button.DOMAIN, DOMAIN, "12345_restart")
+        == "button.garage_abcdef_restart"
+    )
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
