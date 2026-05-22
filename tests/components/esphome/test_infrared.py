@@ -190,7 +190,7 @@ async def test_infrared_receiver_signal_dispatched(
     await hass.async_block_till_done()
 
     assert received_signals == [InfraredReceivedSignal(timings=timings)]
-    assert hass.states.get(ENTITY_ID).state is not STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
     # Test events with wrong key/device_id are ignored
     on_event(InfraredRFReceiveEventModel(key=99, device_id=0, timings=timings))
