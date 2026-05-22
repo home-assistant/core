@@ -116,7 +116,7 @@ async def _validate_auth(
 
 def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
     """Get a set of current hosts from the entry."""
-    hosts = set(entry.data[CONF_HOST])
+    hosts = {entry.data[CONF_HOST]}
     if hasattr(entry, "runtime_data"):
         hosts.update(
             player.ip_address
