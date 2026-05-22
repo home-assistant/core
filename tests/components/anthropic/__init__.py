@@ -1,8 +1,24 @@
 """Tests for the Anthropic integration."""
 
+import datetime
+from typing import Any
+
 from anthropic.types import (
+    BashCodeExecutionOutputBlock,
+    BashCodeExecutionResultBlock,
+    BashCodeExecutionToolResultBlock,
+    BashCodeExecutionToolResultError,
+    BashCodeExecutionToolResultErrorCode,
+    CapabilitySupport,
     CitationsDelta,
+    CodeExecutionToolResultBlock,
+    CodeExecutionToolResultBlockContent,
+    ContextManagementCapability,
+    DirectCaller,
+    EffortCapability,
     InputJSONDelta,
+    ModelCapabilities,
+    ModelInfo,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
@@ -13,12 +29,364 @@ from anthropic.types import (
     TextBlock,
     TextCitation,
     TextDelta,
+    TextEditorCodeExecutionToolResultBlock,
     ThinkingBlock,
+    ThinkingCapability,
     ThinkingDelta,
+    ThinkingTypes,
+    ToolSearchToolResultBlock,
     ToolUseBlock,
+    WebFetchToolResultBlock,
     WebSearchResultBlock,
     WebSearchToolResultBlock,
+    WebSearchToolResultError,
 )
+from anthropic.types.server_tool_use_block import Caller
+from anthropic.types.text_editor_code_execution_tool_result_block import (
+    Content as TextEditorCodeExecutionToolResultBlockContent,
+)
+from anthropic.types.tool_search_tool_result_block import (
+    Content as ToolSearchToolResultBlockContent,
+)
+from anthropic.types.web_fetch_tool_result_block import (
+    Content as WebFetchToolResultBlockContent,
+)
+
+model_list = [
+    ModelInfo(
+        id="claude-opus-4-7",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=True),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=True),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=CapabilitySupport(supported=True),
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=True),
+                    enabled=CapabilitySupport(supported=False),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2026, 4, 14, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4.7",
+        max_input_tokens=1000000,
+        max_tokens=128000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-sonnet-4-6",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=True),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=True),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=True),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2026, 2, 17, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Sonnet 4.6",
+        max_input_tokens=1000000,
+        max_tokens=128000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-opus-4-6",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=True),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=True),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=True),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2026, 2, 4, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4.6",
+        max_input_tokens=1000000,
+        max_tokens=128000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-opus-4-5-20251101",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=True),
+                low=CapabilitySupport(supported=True),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=True),
+                supported=True,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 11, 24, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4.5",
+        max_input_tokens=200000,
+        max_tokens=64000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-haiku-4-5-20251001",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=False),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=False),
+                low=CapabilitySupport(supported=False),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=False),
+                supported=False,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 10, 15, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Haiku 4.5",
+        max_input_tokens=200000,
+        max_tokens=64000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-sonnet-4-5-20250929",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=True),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=False),
+                low=CapabilitySupport(supported=False),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=False),
+                supported=False,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 9, 29, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Sonnet 4.5",
+        max_input_tokens=1000000,
+        max_tokens=64000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-opus-4-1-20250805",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=False),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=False),
+                low=CapabilitySupport(supported=False),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=False),
+                supported=False,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=True),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 8, 5, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4.1",
+        max_input_tokens=200000,
+        max_tokens=32000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-opus-4-20250514",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=False),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=False),
+                low=CapabilitySupport(supported=False),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=False),
+                supported=False,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=False),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 5, 22, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Opus 4",
+        max_input_tokens=200000,
+        max_tokens=32000,
+        type="model",
+    ),
+    ModelInfo(
+        id="claude-sonnet-4-20250514",
+        capabilities=ModelCapabilities(
+            batch=CapabilitySupport(supported=True),
+            citations=CapabilitySupport(supported=True),
+            code_execution=CapabilitySupport(supported=False),
+            context_management=ContextManagementCapability(
+                clear_thinking_20251015=CapabilitySupport(supported=True),
+                clear_tool_uses_20250919=CapabilitySupport(supported=True),
+                compact_20260112=CapabilitySupport(supported=False),
+                supported=True,
+            ),
+            effort=EffortCapability(
+                high=CapabilitySupport(supported=False),
+                low=CapabilitySupport(supported=False),
+                max=CapabilitySupport(supported=False),
+                medium=CapabilitySupport(supported=False),
+                supported=False,
+                xhigh=None,
+            ),
+            image_input=CapabilitySupport(supported=True),
+            pdf_input=CapabilitySupport(supported=True),
+            structured_outputs=CapabilitySupport(supported=False),
+            thinking=ThinkingCapability(
+                supported=True,
+                types=ThinkingTypes(
+                    adaptive=CapabilitySupport(supported=False),
+                    enabled=CapabilitySupport(supported=True),
+                ),
+            ),
+        ),
+        created_at=datetime.datetime(2025, 5, 22, 0, 0, tzinfo=datetime.UTC),
+        display_name="Claude Sonnet 4",
+        max_input_tokens=1000000,
+        max_tokens=64000,
+        type="model",
+    ),
+]
 
 
 def create_content_block(
@@ -128,39 +496,175 @@ def create_tool_use_block(
     ]
 
 
-def create_web_search_block(
-    index: int, id: str, query_parts: list[str]
+def create_server_tool_use_block(
+    index: int,
+    id: str,
+    name: str,
+    input_parts: list[str] | dict[str, Any],
+    caller: Caller | None = None,
 ) -> list[RawMessageStreamEvent]:
-    """Create a server tool use block for web search."""
+    """Create a server tool use block."""
+    if caller is None:
+        caller = DirectCaller(type="direct")
+
     return [
         RawContentBlockStartEvent(
             type="content_block_start",
             content_block=ServerToolUseBlock(
-                type="server_tool_use", id=id, input={}, name="web_search"
+                type="server_tool_use",
+                id=id,
+                input=input_parts if isinstance(input_parts, dict) else {},
+                name=name,
+                caller=caller,
             ),
             index=index,
         ),
         *[
             RawContentBlockDeltaEvent(
-                delta=InputJSONDelta(type="input_json_delta", partial_json=query_part),
+                delta=InputJSONDelta(type="input_json_delta", partial_json=input_part),
                 index=index,
                 type="content_block_delta",
             )
-            for query_part in query_parts
+            for input_part in (input_parts if isinstance(input_parts, list) else [])
         ],
         RawContentBlockStopEvent(index=index, type="content_block_stop"),
     ]
 
 
 def create_web_search_result_block(
-    index: int, id: str, results: list[WebSearchResultBlock]
+    index: int,
+    id: str,
+    results: list[WebSearchResultBlock] | WebSearchToolResultError,
+    caller: Caller | None = None,
 ) -> list[RawMessageStreamEvent]:
     """Create a server tool result block for web search results."""
+    if caller is None:
+        caller = DirectCaller(type="direct")
+
     return [
         RawContentBlockStartEvent(
             type="content_block_start",
             content_block=WebSearchToolResultBlock(
-                type="web_search_tool_result", tool_use_id=id, content=results
+                type="web_search_tool_result",
+                tool_use_id=id,
+                content=results,
+                caller=caller,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_code_execution_result_block(
+    index: int, id: str, content: CodeExecutionToolResultBlockContent
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for code execution results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=CodeExecutionToolResultBlock(
+                type="code_execution_tool_result", tool_use_id=id, content=content
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_bash_code_execution_result_block(
+    index: int,
+    id: str,
+    error_code: BashCodeExecutionToolResultErrorCode | None = None,
+    content: list[BashCodeExecutionOutputBlock] | None = None,
+    return_code: int = 0,
+    stderr: str = "",
+    stdout: str = "",
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for bash code execution results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=BashCodeExecutionToolResultBlock(
+                type="bash_code_execution_tool_result",
+                content=BashCodeExecutionToolResultError(
+                    type="bash_code_execution_tool_result_error",
+                    error_code=error_code,
+                )
+                if error_code is not None
+                else BashCodeExecutionResultBlock(
+                    type="bash_code_execution_result",
+                    content=content or [],
+                    return_code=return_code,
+                    stderr=stderr,
+                    stdout=stdout,
+                ),
+                tool_use_id=id,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_text_editor_code_execution_result_block(
+    index: int,
+    id: str,
+    content: TextEditorCodeExecutionToolResultBlockContent,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for text editor code execution results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=TextEditorCodeExecutionToolResultBlock(
+                type="text_editor_code_execution_tool_result",
+                content=content,
+                tool_use_id=id,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_tool_search_result_block(
+    index: int,
+    id: str,
+    results: ToolSearchToolResultBlockContent,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for tool search results."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ToolSearchToolResultBlock(
+                type="tool_search_tool_result",
+                tool_use_id=id,
+                content=results,
+            ),
+            index=index,
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_web_fetch_result_block(
+    index: int,
+    id: str,
+    results: WebFetchToolResultBlockContent,
+    caller: Caller | None = None,
+) -> list[RawMessageStreamEvent]:
+    """Create a server tool result block for web fetch results."""
+    if caller is None:
+        caller = DirectCaller(type="direct")
+
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=WebFetchToolResultBlock(
+                type="web_fetch_tool_result",
+                tool_use_id=id,
+                content=results,
+                caller=caller,
             ),
             index=index,
         ),

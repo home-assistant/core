@@ -1,7 +1,5 @@
 """Support for OneDrive backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
@@ -22,6 +20,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -82,6 +81,7 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
             self._entry.async_start_reauth(self._hass)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
@@ -90,12 +90,14 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation failed") from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
@@ -145,9 +147,16 @@ class OneDriveBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
+        expires_at = self._entry.data["token"]["expires_at"]
+        _LOGGER.debug(
+            "Starting backup upload, token expiry: %s (in %s seconds)",
+            expires_at,
+            expires_at - time(),
+        )
         backup_filename, metadata_filename = suggested_filenames(backup)
         file = FileInfo(
             backup_filename,
@@ -172,15 +181,20 @@ class OneDriveBackupAgent(BackupAgent):
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
                 smart_chunk_size=True,
+                progress_callback=lambda bytes_uploaded: on_progress(
+                    bytes_uploaded=bytes_uploaded
+                ),
             )
         except HashMismatchError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
 
-        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        # Store metadata in separate metadata file
+        # (just backup.as_dict(), no extra fields)
         metadata_content = json_dumps(backup.as_dict())
         try:
             await self._client.upload_file(
@@ -251,9 +265,24 @@ class OneDriveBackupAgent(BackupAgent):
             )
 
         items = await self._client.list_drive_items(self._folder_id)
+
+        # Build a set of backup filenames to check for orphaned metadata
+        backup_filenames = {
+            item.name for item in items if item.name and item.name.endswith(".tar")
+        }
+
         metadata_files: dict[str, AgentBackup] = {}
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
+                # Check if corresponding backup file exists
+                backup_filename = f"{item.name[: -len('.metadata.json')]}.tar"
+                if backup_filename not in backup_filenames:
+                    _LOGGER.warning(
+                        "Backup file %s not found for metadata %s",
+                        backup_filename,
+                        item.name,
+                    )
+                    continue
                 if metadata := await _download_metadata(item.id):
                     metadata_files[metadata.backup_id] = metadata
 
@@ -267,4 +296,5 @@ class OneDriveBackupAgent(BackupAgent):
         if backup := metadata_files.get(backup_id):
             return backup
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")

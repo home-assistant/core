@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My template',
-      'options': Wrapper([
+      'options': list([
         'off',
         'on',
         'auto',

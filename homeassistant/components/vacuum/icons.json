@@ -22,6 +22,9 @@
     }
   },
   "services": {
+    "clean_area": {
+      "service": "mdi:target-variant"
+    },
     "clean_spot": {
       "service": "mdi:target-variant"
     },

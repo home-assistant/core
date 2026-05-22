@@ -1,7 +1,5 @@
 """Config flow to configure esphome component."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Mapping
 import json
@@ -28,6 +26,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     FlowType,
@@ -157,7 +156,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 expected_mac = format_mac(self._reauth_entry.unique_id)
                 actual_mac = format_mac(self._device_mac)
                 if expected_mac != actual_mac:
-                    # Different device at the same IP - do not offer to remove encryption
+                    # Different device at the same IP -
+                    # do not offer to remove encryption
                     return self._async_abort_wrong_device(
                         self._reauth_entry, expected_mac, actual_mac
                     )
@@ -331,7 +331,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
             improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
             _LOGGER.debug(
-                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                "Notified Improv BLE of flow %s for BLE MAC %s"
+                " (derived from WiFi MAC %s)",
                 self.flow_id,
                 ble_mac,
                 mac_address,
@@ -362,6 +363,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if configured_host == host and (port is None or configured_port == port):
             # Don't probe to verify the mac is correct since
             # the host matches (and port matches if provided).
+            raise AbortFlow("already_configured")
+        # If the entry is loaded and the device is currently connected,
+        # don't update the host. This prevents transient mDNS announcements
+        # (e.g., during WiFi mesh roaming) from overwriting a working connection.
+        if entry.state is ConfigEntryState.LOADED and entry.runtime_data.available:
             raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
@@ -527,7 +533,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 unique_id=self.unique_id,
                 data=self._async_make_config_data(),
                 options={
-                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                    CONF_ALLOW_SERVICE_CALLS: (
+                        DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+                    ),
                 },
             )
         await self.hass.config_entries.async_remove(

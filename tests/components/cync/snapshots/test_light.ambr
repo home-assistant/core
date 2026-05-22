@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_entities[light.bedroom_lamp-entry]
+# name: test_entities[light.bedroom_bedroom_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -19,7 +20,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.bedroom_lamp',
+    'entity_id': 'light.bedroom_bedroom_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -42,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.bedroom_lamp-state]
+# name: test_entities[light.bedroom_bedroom_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 205,
@@ -71,17 +72,18 @@
       ),
     }),
     'context': <ANY>,
-    'entity_id': 'light.bedroom_lamp',
+    'entity_id': 'light.bedroom_bedroom_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[light.lamp_bulb_1-entry]
+# name: test_entities[light.office_lamp_bulb_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -98,7 +100,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lamp_bulb_1',
+    'entity_id': 'light.office_lamp_bulb_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,46 +123,37 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.lamp_bulb_1-state]
+# name: test_entities[light.office_lamp_bulb_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 230,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
+      'brightness': None,
+      'color_mode': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Lamp Bulb 1',
-      'hs_color': tuple(
-        215.0,
-        33.333,
-      ),
+      'hs_color': None,
       'max_color_temp_kelvin': 7000,
       'min_color_temp_kelvin': 2000,
-      'rgb_color': tuple(
-        120,
-        145,
-        180,
-      ),
+      'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.248,
-        0.27,
-      ),
+      'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lamp_bulb_1',
+    'entity_id': 'light.office_lamp_bulb_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
-# name: test_entities[light.lamp_bulb_2-entry]
+# name: test_entities[light.office_lamp_bulb_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -177,7 +170,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lamp_bulb_2',
+    'entity_id': 'light.office_lamp_bulb_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -200,7 +193,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.lamp_bulb_2-state]
+# name: test_entities[light.office_lamp_bulb_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Lamp Bulb 2',
@@ -213,7 +206,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lamp_bulb_2',
+    'entity_id': 'light.office_lamp_bulb_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

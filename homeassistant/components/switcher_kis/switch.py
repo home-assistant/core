@@ -1,7 +1,5 @@
 """Switcher integration Switch platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any, cast
 
@@ -77,10 +75,13 @@ async def async_setup_entry(
         """Add switch from Switcher device."""
         entities: list[SwitchEntity] = []
 
-        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category is DeviceCategory.POWER_PLUG:
             entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
-        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
-            entities.append(SwitcherWaterHeaterSwitchEntity(coordinator))
+        elif coordinator.data.device_type.category in [
+            DeviceCategory.WATER_HEATER,
+            DeviceCategory.HEATER,
+        ]:
+            entities.append(SwitcherHeaterSwitchEntity(coordinator))
         elif coordinator.data.device_type.category in (
             DeviceCategory.SHUTTER,
             DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
@@ -122,7 +123,7 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
             self.control_result = None
             return
 
-        self._attr_is_on = bool(self.coordinator.data.device_state == DeviceState.ON)
+        self._attr_is_on = bool(self.coordinator.data.device_state is DeviceState.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -143,8 +144,8 @@ class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
 
-class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
-    """Representation of a Switcher water heater switch entity."""
+class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
+    """Representation of a Switcher heater switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
@@ -187,7 +188,7 @@ class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
             return
 
         data = cast(SwitcherShutter, self.coordinator.data)
-        self._attr_is_on = bool(data.child_lock[self._cover_id] == ShutterChildLock.ON)
+        self._attr_is_on = bool(data.child_lock[self._cover_id] is ShutterChildLock.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

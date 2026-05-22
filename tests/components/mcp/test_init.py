@@ -4,7 +4,8 @@ import re
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
-from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
+from mcp import McpError
+from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
 import pytest
 import voluptuous as vol
 
@@ -12,6 +13,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .conftest import TEST_API_NAME
 
@@ -136,30 +140,44 @@ async def test_mcp_server_sse_transport_failure(
         "Connection error", [httpx.ConnectError("Connection failed")]
     )
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [
+        (
+            ExceptionGroup(
+                "Method not allowed",
+                [
+                    httpx.HTTPStatusError(
+                        "Method not allowed",
+                        request=None,
+                        response=httpx.Response(405),
+                    )
+                ],
+            ),
+        ),
+        (
+            ExceptionGroup(
+                "Some exception group",
+                [McpError(ErrorData(code=500, message="Session terminated"))],
+            )
+        ),
+    ],
+)
 async def test_mcp_client_fallback_to_sse_success(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_http_streamable_client: AsyncMock,
     mock_sse_client: AsyncMock,
     mock_mcp_client: Mock,
+    side_effect: Exception,
 ) -> None:
-    """Test mcp_client falls back to SSE on method not allowed error.
+    """Test mcp_client falls back to SSE on some errors.
 
     This exercises the backwards compatibility part of the MCP Transport
     specification.
     """
-    http_405 = httpx.HTTPStatusError(
-        "Method not allowed",
-        request=None,  # type: ignore[arg-type]
-        response=httpx.Response(405),
-    )
-    mock_http_streamable_client.side_effect = ExceptionGroup(
-        "Method not allowed", [http_405]
-    )
+    mock_http_streamable_client.side_effect = side_effect
 
     # Setup mocks for SSE fallback
     mock_sse_client.return_value.__aenter__.return_value = ("read", "write")
@@ -327,3 +345,19 @@ async def test_convert_tool_schema_fails(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: AsyncMock,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    with patch(
+        "homeassistant.components.mcp.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY

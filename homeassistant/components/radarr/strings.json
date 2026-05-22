@@ -46,14 +46,6 @@
       }
     }
   },
-  "exceptions": {
-    "integration_not_found": {
-      "message": "Config entry for integration \"{target}\" not found."
-    },
-    "not_loaded": {
-      "message": "Config entry \"{target}\" is not loaded."
-    }
-  },
   "options": {
     "step": {
       "init": {

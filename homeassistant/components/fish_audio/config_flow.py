@@ -1,7 +1,5 @@
 """Config flow for the Fish Audio integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -111,7 +109,7 @@ def get_model_selection_schema(
             ),
             vol.Required(
                 CONF_BACKEND,
-                default=options.get(CONF_BACKEND, "s1"),
+                default=options.get(CONF_BACKEND, "s2-pro"),
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=[
@@ -132,6 +130,8 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(
                 CONF_NAME,
                 default=options.get(CONF_NAME) or vol.UNDEFINED,
@@ -284,7 +284,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         entry = self._get_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         self.client = entry.runtime_data

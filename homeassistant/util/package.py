@@ -1,7 +1,5 @@
 """Helpers to install PyPi packages."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import cache
 from importlib.metadata import PackageNotFoundError, version
@@ -233,5 +231,5 @@ async def async_get_installed_packages() -> list[InstalledPackage]:
 
     try:
         return cast(list[InstalledPackage], json_loads_array(stdout.decode()))
-    except (*JSON_DECODE_EXCEPTIONS, ValueError):  # fmt: off
+    except (*JSON_DECODE_EXCEPTIONS, ValueError):
         return []

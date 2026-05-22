@@ -1,7 +1,5 @@
 """The tests for the Google Calendar component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime
 import http
@@ -11,6 +9,7 @@ from unittest.mock import Mock, patch
 import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -21,6 +20,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
@@ -448,6 +450,7 @@ async def test_add_event_date_in_x(
     end_timedelta: datetime.timedelta,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[[dict[str, Any]], Awaitable[None]],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
@@ -455,9 +458,13 @@ async def test_add_event_date_in_x(
     mock_events_list({})
     assert await component_setup()
 
-    now = datetime.datetime.now()
-    start_date = now + start_timedelta
-    end_date = now + end_timedelta
+    # Freeze at 2025-06-15 03:00 UTC which is 2025-06-14 21:00 in America/Regina
+    # (the test timezone). This ensures dt_util.now().date() returns June 14
+    # while a naive datetime.now().date() would return June 15 in UTC.
+    freezer.move_to("2025-06-15 03:00:00+00:00")
+    today = datetime.date(2025, 6, 14)
+    start_date = today + start_timedelta
+    end_date = today + end_timedelta
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -469,8 +476,8 @@ async def test_add_event_date_in_x(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": TEST_EVENT_SUMMARY,
         "description": TEST_EVENT_DESCRIPTION,
-        "start": {"date": start_date.date().isoformat()},
-        "end": {"date": end_date.date().isoformat()},
+        "start": {"date": start_date.isoformat()},
+        "end": {"date": end_date.isoformat()},
     }
 
 
@@ -902,3 +909,20 @@ async def test_remove_entry(
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

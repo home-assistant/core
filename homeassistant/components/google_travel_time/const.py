@@ -12,6 +12,7 @@ DOMAIN = "google_travel_time"
 ATTRIBUTION = "Powered by Google"
 
 CONF_DESTINATION = "destination"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
 CONF_AVOID = "avoid"
@@ -98,6 +99,7 @@ TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM = {
     "rail": TransitPreferences.TransitTravelMode.RAIL,
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
+TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
 TRAVEL_MODES_TO_GOOGLE_SDK_ENUM = {
     "driving": RouteTravelMode.DRIVE,
     "walking": RouteTravelMode.WALK,

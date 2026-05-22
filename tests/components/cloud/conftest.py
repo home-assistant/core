@@ -66,6 +66,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             certificate_status=None,
             instance_domain=None,
             is_connected=False,
+            latency_by_location={},
         )
         mock_cloud.auth = MagicMock(spec=CognitoAuth)
         mock_cloud.iot = MagicMock(

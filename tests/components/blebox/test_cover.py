@@ -51,11 +51,12 @@ def shutterbox_fixture():
         has_stop=True,
         has_tilt=True,
         is_slider=True,
+        is_position_inverted=True,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return (feature, "cover.shutterbox_position")
+    return (feature, "cover.my_shutter_shutterbox_position")
 
 
 @pytest.fixture(name="gatebox")
@@ -71,11 +72,12 @@ def gatebox_fixture():
         state=None,
         has_stop=False,
         is_slider=False,
+        is_position_inverted=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return (feature, "cover.gatebox_position")
+    return (feature, "cover.my_gatebox_gatebox_position")
 
 
 @pytest.fixture(name="gatecontroller")
@@ -91,11 +93,12 @@ def gate_fixture():
         state=None,
         has_stop=True,
         is_slider=True,
+        is_position_inverted=True,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return (feature, "cover.gatecontroller_position")
+    return (feature, "cover.my_gate_controller_gatecontroller_position")
 
 
 async def test_init_gatecontroller(
@@ -108,7 +111,7 @@ async def test_init_gatecontroller(
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "gateController-position"
+    assert state.name == "My gate controller gateController-position"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -139,7 +142,7 @@ async def test_init_shutterbox(
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "shutterBox-position"
+    assert state.name == "My shutter shutterBox-position"
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -170,7 +173,7 @@ async def test_init_gatebox(
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "gateBox-position"
+    assert state.name == "My gatebox gateBox-position"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -276,14 +279,16 @@ async def test_stop(feature, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == CoverState.OPEN
 
 
-@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_update(feature, hass: HomeAssistant) -> None:
-    """Test cover updating."""
+@pytest.mark.parametrize(
+    "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
+)
+async def test_update_inverted(feature, hass: HomeAssistant) -> None:
+    """Test cover position is inverted for shutterBox and gateController."""
 
     feature_mock, entity_id = feature
 
     def initial_update():
-        feature_mock.current = 29  # inverted
+        feature_mock.current = 29  # device: 29% closed = 71% open
         feature_mock.state = 2  # manually stopped
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
@@ -292,6 +297,24 @@ async def test_update(feature, hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_CURRENT_POSITION] == 71  # 100 - 29
+    assert state.state == CoverState.OPEN
+
+
+async def test_update_not_inverted(gatebox, hass: HomeAssistant) -> None:
+    """Test cover position is not inverted for gateBox."""
+
+    feature_mock, entity_id = gatebox
+
+    def initial_update():
+        feature_mock.current = 100  # fully open
+        feature_mock.state = 4  # open
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100
     assert state.state == CoverState.OPEN
 
 

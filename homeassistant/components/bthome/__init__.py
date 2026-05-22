@@ -1,7 +1,5 @@
 """The BTHome Bluetooth integration."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 
@@ -70,7 +68,8 @@ def _async_clear_encryption_downgrade_issue(
     """Clear the encryption downgrade repair issue."""
     ir.async_delete_issue(hass, DOMAIN, issue_id)
     _LOGGER.info(
-        "BTHome device %s is now sending encrypted data again. Resuming normal operation",
+        "BTHome device %s is now sending encrypted data again."
+        " Resuming normal operation",
         entry.title,
     )
 
@@ -81,7 +80,10 @@ def process_service_info(
     device_registry: DeviceRegistry,
     service_info: BluetoothServiceInfoBleak,
 ) -> SensorUpdate:
-    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    """Process a BluetoothServiceInfoBleak.
+
+    Runs side effects and returns sensor data.
+    """
     coordinator = entry.runtime_data
     data = coordinator.device_data
     issue_registry = ir.async_get(hass)
@@ -156,7 +158,10 @@ def process_service_info(
             )
 
     # If payload is encrypted and the bindkey is not verified then we need to reauth
-    if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
+    if (
+        data.encryption_scheme is not EncryptionScheme.NONE
+        and not data.bindkey_verified
+    ):
         entry.async_start_reauth(hass, data={"device": data})
 
     return update

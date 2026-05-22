@@ -25,6 +25,8 @@ async def async_setup_entry(
 class SmartThingsScene(Scene):
     """Define a SmartThings scene."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, scene: STScene, client: SmartThings) -> None:
         """Init the scene class."""
         self.client = client

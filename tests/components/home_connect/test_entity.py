@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfHomeAppliances,
     ArrayOfPrograms,
     Event,
     EventKey,
@@ -80,7 +79,9 @@ def platforms() -> list[str]:
             "Dishwasher",
             {
                 OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "switch.dishwasher_half_load",
-                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: "switch.dishwasher_silence_on_demand",
+                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: (
+                    "switch.dishwasher_silence_on_demand"
+                ),
                 OptionKey.DISHCARE_DISHWASHER_ECO_DRY: "switch.dishwasher_eco_dry",
             },
             [(STATE_ON, True), (STATE_OFF, False), (None, None)],
@@ -108,7 +109,7 @@ async def test_program_options_retrieval(
     option_without_default: tuple[OptionKey, str],
     option_without_constraints: tuple[OptionKey, str],
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    """Test options are retrieved at start and updated on programs."""
     original_get_all_programs_mock = client.get_all_programs.side_effect
     options_values = [
         Option(
@@ -223,7 +224,8 @@ async def test_program_options_retrieval(
     await hass.async_block_till_done()
 
     # Verify default values
-    # Every time the program is updated, the available options should use the default value if existing
+    # Every time the program is updated, the available options should use the default
+    # value if existing
     for entity_id, available in zip(
         option_entity_id.values(), options_availability_stage_2, strict=True
     ):
@@ -333,21 +335,8 @@ async def test_program_options_retrieval_after_appliance_connection(
     option_key: OptionKey,
     option_entity_id: str,
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
-    array_of_home_appliances = client.get_home_appliances.return_value
-
-    async def get_home_appliances_with_options_mock() -> ArrayOfHomeAppliances:
-        return ArrayOfHomeAppliances(
-            [
-                appliance
-                for appliance in array_of_home_appliances.homeappliances
-                if appliance.ha_id != appliance.ha_id
-            ]
-        )
-
-    client.get_home_appliances = AsyncMock(
-        side_effect=get_home_appliances_with_options_mock
-    )
+    """Test options are retrieved at start and updated on programs."""
+    appliance.connected = False
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,

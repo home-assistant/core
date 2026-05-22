@@ -141,6 +141,7 @@
           },
           "genres": { "name": "Genres" },
           "min_age": { "name": "Minimum age" },
+          "platform": { "name": "Platform" },
           "progress": { "name": "Progress" },
           "publisher": { "name": "Publisher" },
           "release_date": { "name": "Release date" },

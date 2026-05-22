@@ -19,6 +19,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
@@ -322,6 +324,84 @@ async def test_refresh_fail_unknown(
     assert "Unexpected error fetching test data" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [(OAuth2TokenRequestReauthError, ConfigEntryAuthFailed)],
+)
+async def test_oauth_token_request_refresh_errors(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors are mapped during refresh."""
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.update_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        # Raise on auth failed, needs to be set
+        await crd._async_refresh(raise_on_auth_failed=True)
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception"),
+    [
+        (OAuth2TokenRequestReauthError, ConfigEntryAuthFailed),
+        (OAuth2TokenRequestError, ConfigEntryNotReady),
+    ],
+)
+async def test_token_request_setup_errors(
+    hass: HomeAssistant,
+    exception: type[OAuth2TokenRequestError],
+    expected_exception: type[Exception],
+) -> None:
+    """Test OAuth2 token request errors raised from setup."""
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing, duh"
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+
+    # Patch the underlying request info to raise ClientResponseError
+    request_info = Mock()
+    request_info.real_url = "http://example.com/token"
+    request_info.method = "POST"
+    oauth_exception = exception(
+        request_info=request_info,
+        history=(),
+        status=400,
+        message="OAuth 2.0 token refresh failed",
+        domain="domain",
+    )
+
+    crd.setup_method = AsyncMock(side_effect=oauth_exception)
+
+    with pytest.raises(expected_exception) as err:
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+
+    # Check thoroughly the chain
+    assert isinstance(err.value, expected_exception)
+    assert isinstance(err.value.__cause__, exception)
+    assert isinstance(err.value.__cause__, OAuth2TokenRequestError)
+
+
 async def test_refresh_no_update_method(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
@@ -454,7 +534,7 @@ async def test_update_locks(
 
     # Add subscriber
     update_callback = Mock()
-    crd.async_add_listener(update_callback)
+    remove_callbacks = crd.async_add_listener(update_callback)
 
     assert crd.update_interval
 
@@ -497,6 +577,10 @@ async def test_update_locks(
 
     # Unblock queued update
     block.set()
+
+    # Remove callbacks to avoid lingering timers
+    remove_callbacks()
+    await crd.async_shutdown()
 
 
 async def test_refresh_recover(
@@ -677,7 +761,7 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test async_config_entry_first_refresh passes through ConfigEntryError & ConfigEntryAuthFailed.
+    """Test first refresh passes through ConfigEntryError and ConfigEntryAuthFailed.
 
     Verify we do not log the exception since it
     will be caught by config_entries.async_setup which will log it with
@@ -721,8 +805,13 @@ async def test_async_config_entry_first_refresh_invalid_state(
     crd.setup_method = AsyncMock()
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
-        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
+        match=(
+            "`async_config_entry_first_refresh` called when"
+            " config entry state is"
+            " ConfigEntryState.NOT_LOADED, but should only"
+            " be called in state"
+            " ConfigEntryState.SETUP_IN_PROGRESS"
+        ),
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -743,8 +832,13 @@ async def test_async_config_entry_first_refresh_invalid_state_in_integration(
 
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
-        "but should only be called in state ConfigEntryState.SETUP_IN_PROGRESS",
+        match=(
+            "`async_config_entry_first_refresh` called when"
+            " config entry state is"
+            " ConfigEntryState.NOT_LOADED, but should only"
+            " be called in state"
+            " ConfigEntryState.SETUP_IN_PROGRESS"
+        ),
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -814,7 +908,7 @@ async def test_async_set_update_error(
 async def test_only_callback_on_change_when_always_update_is_false(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test we do not callback listeners unless something has actually changed when always_update is false."""
+    """Test no callback unless data actually changed (always_update=False)."""
     update_callback = Mock()
     crd.always_update = False
     remove_callbacks = crd.async_add_listener(update_callback)
@@ -884,7 +978,7 @@ async def test_only_callback_on_change_when_always_update_is_false(
 async def test_always_callback_when_always_update_is_true(
     crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
-    """Test we callback listeners even though the data is the same when always_update is True."""
+    """Test we callback listeners even with same data (always_update=True)."""
     update_callback = Mock()
     remove_callbacks = crd.async_add_listener(update_callback)
     mocked_data = None
@@ -1249,3 +1343,36 @@ async def test_refresh_known_errors_retry_after(
 
     unsub()
     crd._unschedule_refresh()
+
+
+async def test_callbacks_does_not_stop_coordinator(
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_refresh for update coordinator."""
+
+    update_1 = Mock()
+    update_2 = Mock()
+
+    crd.async_add_listener(update_1)
+    crd.async_add_listener(update_2)
+    await crd.async_refresh()
+    assert update_1.call_count == 1
+    assert update_2.call_count == 1
+    assert crd.last_update_success is True
+
+    # Trigger exception in callback
+    update_1.side_effect = Exception("Failure in callback")
+    caplog.clear()
+    await crd.async_refresh()
+    assert any(
+        message.startswith("Unexpected error updating listener ")
+        for message in caplog.messages
+    )
+
+    # All callbacks should still have been called
+    assert update_1.call_count == 2
+    assert update_2.call_count == 2
+    assert crd.last_update_success is True
+
+    await crd.async_shutdown()

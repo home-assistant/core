@@ -12,7 +12,22 @@
               "in_progress": "In progress"
             }
           },
-          "failed_reason": { "name": "Failure reason" }
+          "failed_reason": {
+            "name": "Failure reason",
+            "state": {
+              "backup_agent_error": "Backup agent error",
+              "backup_agent_unreachable": "Backup agent unreachable",
+              "backup_manager_error": "Backup manager error",
+              "backup_not_found": "Backup not found",
+              "backup_reader_writer_error": "Backup reader/writer error",
+              "decrypt_on_download_not_supported": "Decrypt on download not supported",
+              "invalid_backup_filename": "Invalid backup filename",
+              "multiple_errors": "Multiple errors",
+              "password_incorrect": "Password incorrect",
+              "unknown_error": "Unknown error",
+              "upload_failed": "Upload failed"
+            }
+          }
         }
       }
     },
@@ -43,11 +58,11 @@
       "title": "The backup location {agent_id} is unavailable"
     },
     "automatic_backup_failed_addons": {
-      "description": "Add-ons {failed_addons} could not be included in automatic backup. Please check the Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured.",
-      "title": "Not all add-ons could be included in automatic backup"
+      "description": "Apps {failed_addons} could not be included in automatic backup. Please check the Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured.",
+      "title": "Not all apps could be included in automatic backup"
     },
     "automatic_backup_failed_agents_addons_folders": {
-      "description": "The automatic backup was created with errors:\n* Locations which the backup could not be uploaded to: {failed_agents}\n* Add-ons which could not be backed up: {failed_addons}\n* Folders which could not be backed up: {failed_folders}\n\nPlease check the Core and Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured.",
+      "description": "The automatic backup was created with errors:\n* Locations which the backup could not be uploaded to: {failed_agents}\n* Apps which could not be backed up: {failed_addons}\n* Folders which could not be backed up: {failed_folders}\n\nPlease check the Core and Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured.",
       "title": "Automatic backup was created with errors"
     },
     "automatic_backup_failed_create": {

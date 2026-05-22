@@ -1,7 +1,5 @@
 """Support for TPLink Omada device firmware updates."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tplink_omada_client.devices import OmadaListDevice
@@ -19,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .coordinator import OmadaFirmwareUpdateCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -86,7 +86,8 @@ class OmadaDeviceUpdate(
             raise HomeAssistantError("Firmware update request rejected") from ex
         except OmadaClientException as ex:
             raise HomeAssistantError(
-                "Unable to send Firmware update request. Check the controller is online."
+                "Unable to send Firmware update request."
+                " Check the controller is online."
             ) from ex
         finally:
             await self.coordinator.async_request_refresh()

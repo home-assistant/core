@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_change_api_5_to_6(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(api_version=5)
 
     # setu up a valid API version 5 config entry
@@ -52,7 +52,7 @@ async def test_change_api_5_to_6(
 
         # Now trigger the update
         with pytest.raises(homeassistant.exceptions.ConfigEntryAuthFailed):
-            await pihole_data.coordinator.update_method()
+            await pihole_data.coordinator._async_update_data()
         assert pihole_data.api.data == {
             "error": VERSION_6_RESPONSE_TO_5_ERROR,
             "took": 0.0001430511474609375,
@@ -70,7 +70,7 @@ async def test_change_api_5_to_6(
 async def test_app_password_changing(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )
@@ -111,7 +111,7 @@ async def test_app_password_changing(
 async def test_app_failed_fetch(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )

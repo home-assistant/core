@@ -1,6 +1,6 @@
 """Support for Iperf3 sensors."""
 
-from __future__ import annotations
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -36,7 +36,7 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
@@ -50,7 +50,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
         self._attr_name = f"{description.name} {iperf3_data.host}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_PROTOCOL: self._iperf3_data.protocol,

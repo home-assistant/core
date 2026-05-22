@@ -1,12 +1,11 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
+import datetime
 import mimetypes
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -173,11 +172,22 @@ def _format_tool(
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
-        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")
     if isinstance(value, list):
         return [_escape_decode(item) for item in value]
     if isinstance(value, dict):
         return {k: _escape_decode(v) for k, v in value.items()}
+    return value
+
+
+def _validate_tool_results(value: Any) -> Any:
+    """Recursively convert non-json-serializable types."""
+    if isinstance(value, (datetime.time, datetime.date)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_validate_tool_results(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _validate_tool_results(v) for k, v in value.items()}
     return value
 
 
@@ -187,7 +197,8 @@ def _create_google_tool_response_parts(
     """Create Google tool response parts."""
     return [
         Part.from_function_response(
-            name=tool_result.tool_name, response=tool_result.tool_result
+            name=tool_result.tool_name,
+            response=_validate_tool_results(tool_result.tool_result),
         )
         for tool_result in parts
     ]
@@ -325,6 +336,7 @@ def _convert_content(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
@@ -332,6 +344,19 @@ async def _transform_stream(
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
+
+            if (usage := response.usage_metadata) is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": usage.prompt_token_count,
+                            "cached_input_tokens": (
+                                usage.cached_content_token_count or 0
+                            ),
+                            "output_tokens": usage.candidates_token_count,
+                        }
+                    }
+                )
 
             if new_message:
                 if part_details:
@@ -343,7 +368,9 @@ async def _transform_stream(
                 thinking_content_index = 0
                 tool_call_index = 0
 
-            # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
+            # According to the API docs, this would mean no
+            # candidate is returned, so we can safely throw
+            # an error here.
             if response.prompt_feedback or not response.candidates:
                 reason = (
                     response.prompt_feedback.block_reason_message
@@ -351,7 +378,8 @@ async def _transform_stream(
                     else "unknown"
                 )
                 raise HomeAssistantError(
-                    f"The message got blocked due to content violations, reason: {reason}"
+                    "The message got blocked due to content"
+                    f" violations, reason: {reason}"
                 )
 
             candidate = response.candidates[0]
@@ -473,6 +501,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
         default_max_tokens: int | None = None,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -484,9 +513,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        # Using search grounding allows the model to retrieve information from the web,
-        # however, it may interfere with how the model decides to use some tools, or entities
-        # for example weather entity may be disregarded if the model chooses to Google it.
+        # Using search grounding allows the model to retrieve
+        # information from the web, however, it may interfere
+        # with how the model decides to use some tools, or
+        # entities for example weather entity may be
+        # disregarded if the model chooses to Google it.
         if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
@@ -522,8 +553,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 not isinstance(chat_content, conversation.ToolResultContent)
                 and chat_content.content == ""
             ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                # Skipping is not possible since the number of
+                # function calls need to match the number of
+                # function responses and skipping one would
+                # mean removing the other and hence this would
+                # prevent a proper chat log
                 chat_content = replace(chat_content, content=" ")
 
             if tool_results:
@@ -589,7 +623,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             )
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 chat_response_generator = await chat.send_message_stream(
                     message=chat_request
@@ -609,7 +643,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            _transform_stream(chat_response_generator),
+                            _transform_stream(chat_log, chat_response_generator),
                         )
                         if isinstance(content, conversation.ToolResultContent)
                     ]
@@ -720,9 +754,11 @@ async def async_prepare_files_for_prompt(
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
-        if uploaded_file.state == FileState.FAILED:
+        if uploaded_file.state is FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
+                f"File `{uploaded_file.name}` processing"
+                " failed, reason:"
+                f" {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)
@@ -730,7 +766,7 @@ async def async_prepare_files_for_prompt(
     tasks = [
         asyncio.create_task(wait_for_file_processing(part))
         for part in prompt_parts
-        if part.state != FileState.ACTIVE
+        if part.state is not FileState.ACTIVE
     ]
     async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
         await asyncio.gather(*tasks)

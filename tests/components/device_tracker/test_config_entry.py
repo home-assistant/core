@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -15,6 +16,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import (
     CONNECTED_DEVICE_REGISTERED,
+    BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
     TrackerEntity,
@@ -23,6 +25,7 @@ from homeassistant.components.zone import ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -240,6 +243,64 @@ def tracker_entity_fixture(
     return entity
 
 
+class MockBaseScannerEntity(BaseScannerEntity):
+    """Test base scanner entity."""
+
+    def __init__(
+        self,
+        connected: bool | None = False,
+        unique_id: str | None = None,
+    ) -> None:
+        """Initialize entity."""
+        self._connected = connected
+        self._unique_id = unique_id
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False for the test entity."""
+        return False
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type, eg gps or router, of the device."""
+        return SourceType.BLUETOOTH_LE
+
+    @property
+    def is_connected(self) -> bool | None:
+        """Return true if the device is connected to the network."""
+        return self._connected
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return hostname of the device."""
+        return self._unique_id
+
+    @callback
+    def set_connected(self, connected: bool | None) -> None:
+        """Set connected state."""
+        self._connected = connected
+        self.async_write_ha_state()
+
+
+@pytest.fixture(name="unique_id")
+def unique_id_fixture() -> str | None:
+    """Return the unique_id of the entity for the test."""
+    return None
+
+
+@pytest.fixture(name="base_scanner_entity")
+def base_scanner_entity_fixture(
+    entity_id: str,
+    unique_id: str | None,
+) -> MockBaseScannerEntity:
+    """Create a test base scanner entity."""
+    entity = MockBaseScannerEntity(
+        unique_id=unique_id,
+    )
+    entity.entity_id = entity_id
+    return entity
+
+
 class MockScannerEntity(ScannerEntity):
     """Test scanner entity."""
 
@@ -248,7 +309,7 @@ class MockScannerEntity(ScannerEntity):
         ip_address: str | None = None,
         mac_address: str | None = None,
         hostname: str | None = None,
-        connected: bool = False,
+        connected: bool | None = False,
         unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
@@ -284,7 +345,7 @@ class MockScannerEntity(ScannerEntity):
         return self._hostname
 
     @property
-    def is_connected(self) -> bool:
+    def is_connected(self) -> bool | None:
         """Return true if the device is connected to the network."""
         return self._connected
 
@@ -294,7 +355,7 @@ class MockScannerEntity(ScannerEntity):
         return self._unique_id or self._mac_address
 
     @callback
-    def set_connected(self, connected: bool) -> None:
+    def set_connected(self, connected: bool | None) -> None:
         """Set connected state."""
         self._connected = connected
         self.async_write_ha_state()
@@ -318,12 +379,6 @@ def hostname_fixture() -> str | None:
     return None
 
 
-@pytest.fixture(name="unique_id")
-def unique_id_fixture() -> str | None:
-    """Return the unique_id of the entity for the test."""
-    return None
-
-
 @pytest.fixture(name="scanner_entity")
 def scanner_entity_fixture(
     entity_id: str,
@@ -343,7 +398,49 @@ def scanner_entity_fixture(
     return entity
 
 
-async def test_load_unload_entry(
+async def test_load_unload_entry_base_scanner(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test loading and unloading a config entry with a device tracker entity."""
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+
+async def test_load_unload_entry_scanner(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    scanner_entity: MockScannerEntity,
+) -> None:
+    """Test loading and unloading a config entry with a device tracker entity."""
+    config_entry = await create_mock_platform(hass, config_entry, [scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    state = hass.states.get(entity_id)
+    assert not state
+
+
+async def test_load_unload_entry_tracker(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_id: str,
@@ -383,6 +480,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: [],
                 ATTR_LATITUDE: 1.0,
                 ATTR_LONGITUDE: 2.0,
             },
@@ -396,6 +494,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 50.0,
                 ATTR_LONGITUDE: 60.0,
             },
@@ -409,6 +508,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
                 ATTR_LATITUDE: -50.0,
                 ATTR_LONGITUDE: -60.0,
             },
@@ -421,6 +521,7 @@ async def test_load_unload_entry(
             "zen_zone",
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
             },
         ),
         (
@@ -429,7 +530,10 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
         (
             100,
@@ -437,7 +541,11 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_BATTERY_LEVEL: 100, ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_BATTERY_LEVEL: 100,
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
     ],
 )
@@ -462,6 +570,11 @@ async def test_tracker_entity_state(
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 300},
     )
+    hass.states.async_set(
+        "zone.other_zone_larger",
+        "0",
+        {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
+    )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.
     tracker_entity.async_write_ha_state()
@@ -470,6 +583,38 @@ async def test_tracker_entity_state(
     assert state
     assert state.state == expected_state
     assert state.attributes == expected_attributes
+
+
+async def test_base_scanner_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    base_scanner_entity: MockBaseScannerEntity,
+) -> None:
+    """Test BaseScannerEntity based device tracker."""
+    config_entry = await create_mock_platform(hass, config_entry, [base_scanner_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+    }
+    assert entity_state.state == STATE_NOT_HOME
+
+    base_scanner_entity.set_connected(True)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_HOME
+
+    base_scanner_entity.set_connected(None)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -506,6 +651,7 @@ async def test_scanner_entity_state(
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
+        ATTR_FRIENDLY_NAME: "Device from other integration",
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -515,6 +661,13 @@ async def test_scanner_entity_state(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.state == STATE_HOME
+
+    scanner_entity.set_connected(None)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == STATE_UNKNOWN
 
 
 def test_tracker_entity() -> None:
@@ -551,14 +704,26 @@ def test_tracker_entity() -> None:
     assert not test_entity.force_update
 
 
+def test_base_scanner_entity() -> None:
+    """Test coverage for base BaseScannerEntity entity class."""
+    entity = BaseScannerEntity()
+    with pytest.raises(NotImplementedError):
+        entity.source_type  # noqa: B018
+    with pytest.raises(NotImplementedError):
+        entity.is_connected  # noqa: B018
+    with pytest.raises(NotImplementedError):
+        entity.state  # noqa: B018
+    assert entity.battery_level is None
+
+
 def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
     assert entity.source_type is SourceType.ROUTER
     with pytest.raises(NotImplementedError):
-        assert entity.is_connected is None
+        entity.is_connected  # noqa: B018
     with pytest.raises(NotImplementedError):
-        assert entity.state == STATE_NOT_HOME
+        entity.state  # noqa: B018
     assert entity.battery_level is None
     assert entity.ip_address is None
     assert entity.mac_address is None
@@ -589,10 +754,10 @@ def test_base_tracker_entity() -> None:
     """Test coverage for base BaseTrackerEntity entity class."""
     entity = BaseTrackerEntity()
     with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+        entity.source_type  # noqa: B018
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
-        assert entity.state_attributes is None
+        entity.state_attributes  # noqa: B018
 
 
 @pytest.mark.parametrize(
@@ -788,6 +953,7 @@ async def test_entity_has_device_info(
             return dr.DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
                 identifiers={(TEST_DOMAIN, "device1")},
+                name="Test Device",
                 manufacturer="manufacturer",
                 model="model",
             )
@@ -804,8 +970,42 @@ async def test_entity_has_device_info(
     )  # should be enabled
     assert len(entity_registry.entities) == 1
     assert (
-        entity_registry.entities[
-            f"{DOMAIN}.{TEST_DOMAIN}_{TEST_MAC_ADDRESS.replace(':', '_').lower()}"
-        ].config_entry_id
+        entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
         == config_entry.entry_id
     )
+
+
+async def test_tracker_entity_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test unavailable tracker entity does not fail on bad latitude/longitude."""
+
+    class _MockTrackerEntity(MockTrackerEntity):
+        """Test tracker entity that starts with unavailable state."""
+
+        _attr_available = False
+
+        @property
+        def latitude(self) -> float | None:
+            """Return latitude value of the device."""
+            raise ValueError("Upstream error")
+
+        @property
+        def longitude(self) -> float | None:
+            """Return longitude value of the device."""
+            raise ValueError("Upstream error")
+
+    tracker_entity = _MockTrackerEntity()
+    tracker_entity.entity_id = entity_id
+
+    config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unavailable"
+    assert state.attributes == {}

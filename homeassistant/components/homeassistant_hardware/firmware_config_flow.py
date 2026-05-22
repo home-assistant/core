@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from enum import StrEnum
@@ -12,6 +10,7 @@ from aiohttp import ClientError
 from ha_silabs_firmware_client import FirmwareUpdateClient, ManifestMissing
 from universal_silabs_flasher.common import Version
 from universal_silabs_flasher.firmware import NabuCasaMetadata
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -39,7 +38,6 @@ from .util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
-    ResetTarget,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
     get_otbr_addon_manager,
@@ -81,8 +79,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
-    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
+    _flasher_cls: type[DeviceSpecificFlasher]
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
@@ -239,8 +236,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             # isn't strictly necessary for functionality.
             self._probed_firmware_info = await probe_silabs_firmware_info(
                 self._device,
-                bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
-                application_probe_methods=self.APPLICATION_PROBE_METHODS,
+                flasher_cls=self._flasher_cls,
             )
 
             firmware_install_required = self._probed_firmware_info is None or (
@@ -283,7 +279,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
                 if probed_fw_version >= fw_version:
                     _LOGGER.debug(
-                        "Not downgrading firmware, installed %s is newer than available %s",
+                        "Not downgrading firmware, installed %s"
+                        " is newer than available %s",
                         probed_fw_version,
                         fw_version,
                     )
@@ -311,9 +308,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 hass=self.hass,
                 device=self._device,
                 fw_data=fw_data,
+                flasher_cls=self._flasher_cls,
                 expected_installed_firmware_type=expected_installed_firmware_type,
-                bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
-                application_probe_methods=self.APPLICATION_PROBE_METHODS,
                 progress_callback=lambda offset, total: self.async_update_progress(
                     offset / total
                 ),
@@ -422,10 +418,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             await otbr_manager.async_stop_addon()
 
         return await self.async_step_start_otbr_addon()

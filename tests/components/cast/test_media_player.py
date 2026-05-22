@@ -1,7 +1,5 @@
 """The tests for the Cast Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import json
@@ -16,7 +14,10 @@ import pytest
 import yarl
 
 from homeassistant.components import media_player, tts
-from homeassistant.components.cast import media_player as cast
+from homeassistant.components.cast import (
+    CastRuntimeData,
+    media_player as cast_media_player,
+)
 from homeassistant.components.cast.const import (
     DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -68,7 +69,7 @@ def get_fake_chromecast(info: ChromecastInfo):
     mock = MagicMock(uuid=info.uuid)
     mock.app_id = None
     mock.media_controller.status = None
-    mock.is_idle = True
+    mock.ignore_cec = False
     return mock
 
 
@@ -486,22 +487,28 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData()
     info = get_fake_chromecast_info(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
-    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData()
+    added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is not None
     assert info.uuid in added_casts
 
     # Sending second time should not create new entity
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
@@ -888,7 +895,6 @@ async def test_entity_cast_status(
     assert not state.attributes.get("is_volume_muted")
 
     chromecast.app_id = "1234"
-    chromecast.is_idle = False
     cast_status = MagicMock()
     cast_status.volume_level = 0.5
     cast_status.volume_muted = False
@@ -1257,9 +1263,14 @@ async def test_entity_play_media_cast_invalid(
 
     # Play_media - media_type cast with unsupported app
     quick_play_mock.side_effect = NotImplementedError()
-    await common.async_play_media(hass, "cast", '{"app_name": "unknown"}', entity_id)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await common.async_play_media(
+            hass, "cast", '{"app_name": "unknown"}', entity_id
+        )
+    assert exc_info.value.translation_domain == "cast"
+    assert exc_info.value.translation_key == "app_not_supported"
+    assert exc_info.value.translation_placeholders == {"app_name": "unknown"}
     quick_play_mock.assert_called_once_with(ANY, "unknown", {})
-    assert "App unknown not supported" in caplog.text
 
 
 async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) -> None:
@@ -1601,7 +1612,6 @@ async def test_entity_media_states(
 
     # App id updated, but no media status
     chromecast.app_id = app_id
-    chromecast.is_idle = False
     cast_status = MagicMock()
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
@@ -1644,7 +1654,6 @@ async def test_entity_media_states(
 
     # App no longer running
     chromecast.app_id = pychromecast.IDLE_APP_ID
-    chromecast.is_idle = True
     cast_status = MagicMock()
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
@@ -1653,7 +1662,6 @@ async def test_entity_media_states(
 
     # No cast status
     chromecast.app_id = None
-    chromecast.is_idle = False
     cast_status_cb(None)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
@@ -1721,18 +1729,68 @@ async def test_entity_media_states_lovelace_app(
 
     chromecast.app_id = pychromecast.IDLE_APP_ID
     media_status.player_is_idle = False
-    chromecast.is_idle = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
     chromecast.app_id = None
-    chromecast.is_idle = False
+    cast_status_cb(None)
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
+
+
+async def test_entity_media_states_active_input(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test various entity media states when the lovelace app is active."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
+    cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    chromecast.app_id = "84912283"
+    cast_status = MagicMock()
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # Unknown input status
+    cast_status.is_active_input = None
+    cast_status_cb(cast_status)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "idle"
+
+    # Active input status
+    cast_status.is_active_input = True
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "idle"
+
+    # Inactive input status
+    cast_status.is_active_input = False
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    # Inactive input status, but ignored
+    chromecast.ignore_cec = True
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "idle"
 
 
 async def test_group_media_states(
@@ -2167,7 +2225,7 @@ async def test_cast_platform_browse_media(
                     media_class=MediaClass.APP,
                     media_content_id="",
                     media_content_type="spotify",
-                    thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                    thumbnail="/api/brands/integration/spotify/logo.png",
                     can_play=False,
                     can_expand=True,
                 )
@@ -2219,7 +2277,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
-        "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
+        "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
     assert expected_child in response["result"]["children"]
@@ -2385,3 +2443,40 @@ async def test_ha_cast(hass: HomeAssistant, ha_controller_mock) -> None:
     chromecast.unregister_handler.reset_mock()
     unregister_cb()
     chromecast.unregister_handler.assert_not_called()
+
+
+async def test_entity_media_states_active_app_reported_idle(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity state when app is active but device reports idle (fixes #160814)."""
+    entity_id = "media_player.speaker"
+    info = get_fake_chromecast_info()
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    # Connect the device
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    # Scenario: Custom App is running (e.g. DashCast), but device reports is_idle=True
+    chromecast.app_id = "84912283"  # Example Custom App ID
+
+    # Trigger a status update
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "idle"
+
+    # Scenario: Backdrop (Screensaver) is running. Should still be OFF.
+    chromecast.app_id = pychromecast.config.APP_BACKDROP
+
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"

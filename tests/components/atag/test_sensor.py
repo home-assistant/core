@@ -18,7 +18,7 @@ async def test_sensors(
     entry = await init_integration(hass, aioclient_mock)
 
     for item in SENSORS:
-        sensor_id = "_".join(f"sensor.{item}".lower().split())
+        sensor_id = "_".join(f"sensor.atag_thermostat_{item}".lower().split())
         assert entity_registry.async_is_registered(sensor_id)
         entry = entity_registry.async_get(sensor_id)
         assert entry.unique_id in [f"{UID}-{v}" for v in SENSORS.values()]

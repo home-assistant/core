@@ -1,12 +1,14 @@
 """Axis light platform tests."""
 
+import json
+import re
 from typing import Any
 from unittest.mock import patch
 
 from axis.models.api import CONTEXT
 import pytest
-import respx
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
@@ -23,6 +25,7 @@ from .conftest import ConfigEntryFactoryType, RtspEventMock
 from .const import DEFAULT_HOST, NAME
 
 from tests.common import snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
@@ -51,23 +54,54 @@ def light_control_items() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(autouse=True)
-def light_control_fixture(light_control_items: list[dict[str, Any]]) -> None:
+def light_control_fixture(
+    aioclient_mock: AiohttpClientMocker,
+    light_control_items: list[dict[str, Any]],
+) -> None:
     """Light control mock response."""
-    data = {
-        "apiVersion": "1.1",
-        "context": CONTEXT,
-        "method": "getLightInformation",
-        "data": {"items": light_control_items},
-    }
-    respx.post(
-        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
-        json={
-            "apiVersion": "1.1",
-            "context": CONTEXT,
-            "method": "getLightInformation",
-        },
-    ).respond(
-        json=data,
+
+    async def _light_control_response(
+        _method: str, url: URL, data: bytes | dict[str, Any] | None
+    ) -> AiohttpClientMockResponse:
+        payload: dict[str, Any]
+        if isinstance(data, bytes):
+            payload = json.loads(data)
+        elif isinstance(data, dict):
+            payload = data
+        else:
+            payload = {}
+
+        request_method = payload.get("method")
+
+        if request_method == "getCurrentIntensity":
+            response_data = {
+                "apiVersion": "1.1",
+                "context": "Axis library",
+                "method": "getCurrentIntensity",
+                "data": {"intensity": 100},
+            }
+        elif request_method == "getValidIntensity":
+            response_data = {
+                "apiVersion": "1.1",
+                "context": "Axis library",
+                "method": "getValidIntensity",
+                "data": {"ranges": [{"low": 0, "high": 150}]},
+            }
+        else:
+            response_data = {
+                "apiVersion": "1.1",
+                "context": CONTEXT,
+                "method": "getLightInformation",
+                "data": {"items": light_control_items},
+            }
+
+        return AiohttpClientMockResponse("post", url, json=response_data)
+
+    aioclient_mock.post(
+        re.compile(
+            rf"^https?://{re.escape(DEFAULT_HOST)}(?::\d+)?/axis-cgi/lightcontrol.cgi$"
+        ),
+        side_effect=_light_control_response,
     )
 
 
@@ -100,40 +134,6 @@ async def test_lights(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that lights are loaded properly."""
-    # Add light
-    respx.post(
-        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
-        json={
-            "apiVersion": "1.1",
-            "context": CONTEXT,
-            "method": "getCurrentIntensity",
-            "params": {"lightID": "led0"},
-        },
-    ).respond(
-        json={
-            "apiVersion": "1.1",
-            "context": "Axis library",
-            "method": "getCurrentIntensity",
-            "data": {"intensity": 100},
-        },
-    )
-    respx.post(
-        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
-        json={
-            "apiVersion": "1.1",
-            "context": CONTEXT,
-            "method": "getValidIntensity",
-            "params": {"lightID": "led0"},
-        },
-    ).respond(
-        json={
-            "apiVersion": "1.1",
-            "context": "Axis library",
-            "method": "getValidIntensity",
-            "data": {"ranges": [{"low": 0, "high": 150}]},
-        },
-    )
-
     with patch("homeassistant.components.axis.PLATFORMS", [Platform.LIGHT]):
         config_entry = await config_entry_factory()
 

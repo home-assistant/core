@@ -163,7 +163,7 @@ async def test_form_start_user(flow_at_user_step: ConfigFlowResult) -> None:
 
 
 async def test_form_start_account(flow_at_add_account_step: ConfigFlowResult) -> None:
-    """Start the form and check if you get the right id and schema for the additional account step."""
+    """Test the additional account step form id and schema."""
     assert flow_at_add_account_step["step_id"] == "add_account"
     assert flow_at_add_account_step["errors"] is None
     assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA

@@ -1,6 +1,20 @@
 {
   "components": {
     "pantry-01": {
+      "custom.fridgeMode": {
+        "fridgeModeValue": {
+          "value": null
+        },
+        "fridgeMode": {
+          "value": null
+        },
+        "supportedFullFridgeModes": {
+          "value": null
+        },
+        "supportedFridgeModes": {
+          "value": null
+        }
+      },
       "samsungce.fridgePantryInfo": {
         "name": {
           "value": null
@@ -9,7 +23,7 @@
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": [],
-          "timestamp": "2022-02-07T10:47:54.524Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         }
       },
       "samsungce.fridgePantryMode": {
@@ -22,6 +36,20 @@
       }
     },
     "pantry-02": {
+      "custom.fridgeMode": {
+        "fridgeModeValue": {
+          "value": null
+        },
+        "fridgeMode": {
+          "value": null
+        },
+        "supportedFullFridgeModes": {
+          "value": null
+        },
+        "supportedFridgeModes": {
+          "value": null
+        }
+      },
       "samsungce.fridgePantryInfo": {
         "name": {
           "value": null
@@ -30,7 +58,7 @@
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": [],
-          "timestamp": "2022-02-07T10:47:54.524Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         }
       },
       "samsungce.fridgePantryMode": {
@@ -43,16 +71,22 @@
       }
     },
     "icemaker": {
+      "samsungce.fridgeIcemakerInfo": {
+        "name": {
+          "value": "ICE_MAKER",
+          "timestamp": "2026-01-13T22:28:05.342Z"
+        }
+      },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": [],
-          "timestamp": "2024-10-12T13:55:04.008Z"
+          "timestamp": "2024-09-26T22:29:21.805Z"
         }
       },
       "switch": {
         "switch": {
-          "value": "off",
-          "timestamp": "2025-02-09T13:55:01.720Z"
+          "value": "on",
+          "timestamp": "2026-02-14T08:38:13.451Z"
         }
       }
     },
@@ -62,6 +96,9 @@
           "value": null
         },
         "fridgeMode": {
+          "value": null
+        },
+        "supportedFullFridgeModes": {
           "value": null
         },
         "supportedFridgeModes": {
@@ -76,13 +113,18 @@
       "samsungce.unavailableCapabilities": {
         "unavailableCommands": {
           "value": [],
-          "timestamp": "2024-11-08T04:14:59.899Z"
+          "timestamp": "2024-11-08T04:11:13.422Z"
         }
       },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": ["samsungce.freezerConvertMode", "custom.fridgeMode"],
-          "timestamp": "2024-11-12T08:23:59.944Z"
+          "timestamp": "2024-11-08T13:08:56.542Z"
+        }
+      },
+      "samsungce.fridgeZoneInfo": {
+        "name": {
+          "value": null
         }
       },
       "temperatureMeasurement": {
@@ -126,6 +168,9 @@
         "fridgeMode": {
           "value": null
         },
+        "supportedFullFridgeModes": {
+          "value": null
+        },
         "supportedFridgeModes": {
           "value": null
         }
@@ -133,19 +178,19 @@
       "contactSensor": {
         "contact": {
           "value": "closed",
-          "timestamp": "2025-02-09T16:26:21.425Z"
+          "timestamp": "2026-02-14T14:42:52.354Z"
         }
       },
       "samsungce.unavailableCapabilities": {
         "unavailableCommands": {
           "value": [],
-          "timestamp": "2024-11-08T04:14:59.899Z"
+          "timestamp": "2024-11-08T04:11:13.422Z"
         }
       },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": ["custom.fridgeMode"],
-          "timestamp": "2024-10-12T13:55:04.008Z"
+          "timestamp": "2024-09-26T22:29:21.805Z"
         }
       },
       "temperatureMeasurement": {
@@ -155,19 +200,19 @@
         "temperature": {
           "value": 37,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-02-02T23:48:51.492Z"
         }
       },
       "custom.thermostatSetpointControl": {
         "minimumSetpoint": {
           "value": 34,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "maximumSetpoint": {
           "value": 44,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "thermostatCoolingSetpoint": {
@@ -178,12 +223,12 @@
             "step": 1
           },
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "coolingSetpoint": {
           "value": 37,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       }
     },
@@ -195,6 +240,9 @@
         "fridgeMode": {
           "value": null
         },
+        "supportedFullFridgeModes": {
+          "value": null
+        },
         "supportedFridgeModes": {
           "value": null
         }
@@ -202,19 +250,19 @@
       "contactSensor": {
         "contact": {
           "value": "closed",
-          "timestamp": "2025-02-09T14:48:16.247Z"
+          "timestamp": "2026-02-14T14:42:09.828Z"
         }
       },
       "samsungce.unavailableCapabilities": {
         "unavailableCommands": {
           "value": [],
-          "timestamp": "2024-11-08T04:14:59.899Z"
+          "timestamp": "2024-11-08T04:11:13.422Z"
         }
       },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": ["custom.fridgeMode", "samsungce.freezerConvertMode"],
-          "timestamp": "2024-11-08T01:09:17.382Z"
+          "timestamp": "2024-11-08T01:25:04.838Z"
         }
       },
       "temperatureMeasurement": {
@@ -224,19 +272,19 @@
         "temperature": {
           "value": 0,
           "unit": "F",
-          "timestamp": "2025-01-23T04:42:18.178Z"
+          "timestamp": "2026-01-30T18:15:33.427Z"
         }
       },
       "custom.thermostatSetpointControl": {
         "minimumSetpoint": {
           "value": -8,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "maximumSetpoint": {
           "value": 5,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "samsungce.freezerConvertMode": {
@@ -255,12 +303,12 @@
             "step": 1
           },
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "coolingSetpoint": {
           "value": 0,
           "unit": "F",
-          "timestamp": "2025-01-19T21:07:55.764Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       }
     },
@@ -268,18 +316,19 @@
       "contactSensor": {
         "contact": {
           "value": "closed",
-          "timestamp": "2025-02-09T16:26:21.425Z"
+          "timestamp": "2026-02-14T14:42:52.354Z"
         }
       },
       "samsungce.dongleSoftwareInstallation": {
         "status": {
           "value": "completed",
-          "timestamp": "2022-02-07T10:47:54.524Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         }
       },
       "samsungce.deviceIdentification": {
         "micomAssayCode": {
-          "value": null
+          "value": "00134041",
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "modelName": {
           "value": null
@@ -290,19 +339,24 @@
         "serialNumberExtra": {
           "value": null
         },
-        "modelClassificationCode": {
+        "releaseCountry": {
           "value": null
+        },
+        "modelClassificationCode": {
+          "value": "00020232011511200100000030000000",
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "description": {
-          "value": null
+          "value": "TP2X_REF_20K",
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "releaseYear": {
-          "value": 20,
-          "timestamp": "2024-11-08T01:09:17.382Z"
+          "value": 21,
+          "timestamp": "2024-11-08T01:25:04.838Z"
         },
         "binaryId": {
           "value": "TP2X_REF_20K",
-          "timestamp": "2025-02-09T13:55:01.720Z"
+          "timestamp": "2026-02-14T08:38:13.351Z"
         }
       },
       "samsungce.quickControl": {
@@ -315,6 +369,9 @@
           "value": null
         },
         "fridgeMode": {
+          "value": null
+        },
+        "supportedFullFridgeModes": {
           "value": null
         },
         "supportedFridgeModes": {
@@ -330,64 +387,357 @@
         },
         "mnfv": {
           "value": "A-RFWW-TP2-21-COMMON_20220110",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnhw": {
           "value": "MediaTek",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "di": {
-          "value": "7db87911-7dce-1cf2-7119-b953432a2f09",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "value": "cef5af9b-7a3e-df50-5023-be27c11ae4c8",
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnsl": {
           "value": "http://www.samsung.com",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "dmv": {
           "value": "res.1.1.0,sh.1.1.0",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "n": {
           "value": "[refrigerator] Samsung",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnmo": {
-          "value": "TP2X_REF_20K|00115641|0004014D011411200103000020000000",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "value": "TP2X_REF_20K|00134041|00020232011511200100000030000000",
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "vid": {
           "value": "DA-REF-NORMAL-000001",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnmn": {
           "value": "Samsung Electronics",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnml": {
           "value": "http://www.samsung.com",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnpv": {
           "value": "DAWIT 2.0",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "mnos": {
           "value": "TizenRT 1.0 + IPv6",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "pi": {
-          "value": "7db87911-7dce-1cf2-7119-b953432a2f09",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "value": "cef5af9b-7a3e-df50-5023-be27c11ae4c8",
+          "timestamp": "2025-08-08T20:55:21.175Z"
         },
         "icv": {
           "value": "core.1.1.0",
-          "timestamp": "2024-12-21T22:04:22.037Z"
+          "timestamp": "2025-08-08T20:55:21.175Z"
         }
       },
       "samsungce.fridgeVacationMode": {
         "vacationMode": {
           "value": null
+        }
+      },
+      "samsungce.driverState": {
+        "driverState": {
+          "value": {
+            "device/0": [
+              {
+                "href": "/alarms/vs/0",
+                "rep": {}
+              },
+              {
+                "href": "/temperatures/vs/0",
+                "rep": {
+                  "x.com.samsung.da.items": [
+                    {
+                      "x.com.samsung.da.id": "0",
+                      "x.com.samsung.da.description": "Freezer",
+                      "x.com.samsung.da.desired": "2",
+                      "x.com.samsung.da.current": "2",
+                      "x.com.samsung.da.maximum": "5",
+                      "x.com.samsung.da.minimum": "-8",
+                      "x.com.samsung.da.unit": "Fahrenheit"
+                    },
+                    {
+                      "x.com.samsung.da.id": "1",
+                      "x.com.samsung.da.description": "Fridge",
+                      "x.com.samsung.da.desired": "37",
+                      "x.com.samsung.da.current": "37",
+                      "x.com.samsung.da.maximum": "44",
+                      "x.com.samsung.da.minimum": "34",
+                      "x.com.samsung.da.unit": "Fahrenheit"
+                    }
+                  ]
+                }
+              },
+              {
+                "href": "/temperature/current/freezer/0",
+                "rep": {
+                  "range": [-8.0, 5.0],
+                  "units": "F",
+                  "temperature": 2.0
+                }
+              },
+              {
+                "href": "/temperature/desired/freezer/0",
+                "rep": {
+                  "range": [-8.0, 5.0],
+                  "units": "F",
+                  "temperature": 2.0
+                }
+              },
+              {
+                "href": "/temperature/current/cooler/0",
+                "rep": {
+                  "range": [34.0, 44.0],
+                  "units": "F",
+                  "temperature": 37.0
+                }
+              },
+              {
+                "href": "/temperature/desired/cooler/0",
+                "rep": {
+                  "range": [34.0, 44.0],
+                  "units": "F",
+                  "temperature": 37.0
+                }
+              },
+              {
+                "href": "/diagnosis/vs/0",
+                "rep": {
+                  "x.com.samsung.da.diagnosisStart": "Ready"
+                }
+              },
+              {
+                "href": "/energy/consumption/vs/0",
+                "rep": {
+                  "x.com.samsung.da.cumulativeConsumption": "20353",
+                  "x.com.samsung.da.cumulativePower": "1444766",
+                  "x.com.samsung.da.cumulativeUnit": "Wh",
+                  "x.com.samsung.da.instantaneousPower": "78",
+                  "x.com.samsung.da.instantaneousPowerUnit": "W",
+                  "x.com.samsung.da.monthlyConsumption": "39800",
+                  "x.com.samsung.da.thismonthlyConsumption": "11768"
+                }
+              },
+              {
+                "href": "/mode/vs/0",
+                "rep": {
+                  "x.com.samsung.da.supportedModes": [
+                    "HOMECARE_WIZARD_V2",
+                    "ENERGY_REPORT_MODEL",
+                    "18K_REF_OUTDOOR_CONTROL_V2",
+                    "SUPPORT_SABBATH_CONTROL"
+                  ]
+                }
+              },
+              {
+                "href": "/mode/0",
+                "rep": {
+                  "supportedModes": [
+                    "HOMECARE_WIZARD_V2",
+                    "ENERGY_REPORT_MODEL",
+                    "18K_REF_OUTDOOR_CONTROL_V2",
+                    "SUPPORT_SABBATH_CONTROL"
+                  ]
+                }
+              },
+              {
+                "href": "/defrost/block/vs/0",
+                "rep": {
+                  "x.com.samsung.da.supportedModes": [
+                    "DEFROST_BLOCK_ON",
+                    "DEFROST_BLOCK_OFF"
+                  ],
+                  "x.com.samsung.da.modes": ["DEFROST_BLOCK_OFF"]
+                }
+              },
+              {
+                "href": "/sabbath/vs/0",
+                "rep": {
+                  "x.com.samsung.da.sabbathMode": "Off"
+                }
+              },
+              {
+                "href": "/realtimenotiforclient/vs/0",
+                "rep": {
+                  "x.com.samsung.da.timeforshortnoti": "0",
+                  "x.com.samsung.da.periodicnotisubscription": "true"
+                }
+              },
+              {
+                "href": "/information/vs/0",
+                "rep": {
+                  "x.com.samsung.da.modelNum": "TP2X_REF_20K|00134041|00020232011511200100000030000000",
+                  "x.com.samsung.da.description": "TP2X_REF_20K",
+                  "x.com.samsung.da.serialNum": "0BEF4BAT504767H",
+                  "x.com.samsung.da.otnDUID": "BDCGCEMP2S7FI",
+                  "x.com.samsung.da.items": [
+                    {
+                      "x.com.samsung.da.id": "0",
+                      "x.com.samsung.da.description": "WiFi Module",
+                      "x.com.samsung.da.type": "Software",
+                      "x.com.samsung.da.number": "02144A220110",
+                      "x.com.samsung.da.newVersionAvailable": "0"
+                    },
+                    {
+                      "x.com.samsung.da.id": "1",
+                      "x.com.samsung.da.description": "Micom",
+                      "x.com.samsung.da.type": "Firmware",
+                      "x.com.samsung.da.number": "22030712,FFFFFFFF",
+                      "x.com.samsung.da.newVersionAvailable": "0"
+                    }
+                  ]
+                }
+              },
+              {
+                "href": "/file/information/vs/0",
+                "rep": {
+                  "x.com.samsung.timeoffset": "-06:00",
+                  "x.com.samsung.supprtedtype": 1
+                }
+              },
+              {
+                "href": "/doors/vs/0",
+                "rep": {
+                  "x.com.samsung.da.items": [
+                    {
+                      "x.com.samsung.da.id": "0",
+                      "x.com.samsung.da.description": "Door",
+                      "x.com.samsung.da.openState": "Close"
+                    },
+                    {
+                      "x.com.samsung.da.id": "1",
+                      "x.com.samsung.da.description": "Door",
+                      "x.com.samsung.da.openState": "Close"
+                    }
+                  ]
+                }
+              },
+              {
+                "href": "/door/freezer/0",
+                "rep": {
+                  "openState": "Close"
+                }
+              },
+              {
+                "href": "/door/cooler/0",
+                "rep": {
+                  "openState": "Close"
+                }
+              },
+              {
+                "href": "/configuration/vs/0",
+                "rep": {
+                  "x.com.samsung.da.countryCode": "US",
+                  "x.com.samsung.da.region": ""
+                }
+              },
+              {
+                "href": "/defrost/delay/0",
+                "rep": {
+                  "value": false
+                }
+              },
+              {
+                "href": "/defrost/delay/vs/0",
+                "rep": {
+                  "x.com.samsung.da.delayDefrost": "Off"
+                }
+              },
+              {
+                "href": "/defrost/reservation/vs/0",
+                "rep": {
+                  "x.com.samsung.da.items": [
+                    {
+                      "x.com.samsung.da.id": "0",
+                      "x.com.samsung.da.description": "Summer Season",
+                      "x.com.samsung.da.startTime": "0000-05-01T15:00:00",
+                      "x.com.samsung.da.period": "04:00:00",
+                      "x.com.samsung.da.endTime": "0000-10-31T00:00:00"
+                    },
+                    {
+                      "x.com.samsung.da.id": "1",
+                      "x.com.samsung.da.description": "Winter Season",
+                      "x.com.samsung.da.startTime": "0000-11-01T06:00:00",
+                      "x.com.samsung.da.period": "04:00:00",
+                      "x.com.samsung.da.endTime": "0000-04-30T00:00:00"
+                    }
+                  ]
+                }
+              },
+              {
+                "href": "/icemaker/status/0",
+                "rep": {
+                  "status": "On"
+                }
+              },
+              {
+                "href": "/icemaker/status/vs/0",
+                "rep": {
+                  "x.com.samsung.da.iceMaker": "On"
+                }
+              },
+              {
+                "href": "/refrigeration/0",
+                "rep": {
+                  "defrost": false,
+                  "rapidFreeze": false,
+                  "rapidCool": false
+                }
+              },
+              {
+                "href": "/refrigeration/vs/0",
+                "rep": {
+                  "x.com.samsung.da.rapidFridge": "Off",
+                  "x.com.samsung.da.rapidFreezing": "Off"
+                }
+              },
+              {
+                "href": "/drlc/0",
+                "rep": {
+                  "DRLevel": 0,
+                  "override": false
+                }
+              },
+              {
+                "href": "/drlc/vs/0",
+                "rep": {
+                  "x.com.samsung.da.drlcLevel": "0",
+                  "x.com.samsung.da.override": "Off",
+                  "x.com.samsung.da.durationminutes": "0"
+                }
+              },
+              {
+                "href": "/otninformation/vs/0",
+                "rep": {
+                  "x.com.samsung.da.target": "Micom",
+                  "x.com.samsung.da.newVersionAvailable": "false"
+                }
+              },
+              {
+                "href": "/icemaker/one/vs/0",
+                "rep": {
+                  "x.com.samsung.da.iceMaker.name": "ICE_MAKER",
+                  "x.com.samsung.da.iceMaker.state": "On",
+                  "x.com.samsung.da.iceMaker.type": "toggle",
+                  "x.com.samsung.da.iceMaker.iceMakingStatus": "ICESTATUS_RUN",
+                  "x.com.samsung.da.iceType.desired": "NORMAL"
+                }
+              }
+            ]
+          },
+          "timestamp": "2026-02-13T22:29:45.844Z"
         }
       },
       "custom.disabledCapabilities": {
@@ -399,18 +749,17 @@
             "custom.deodorFilter",
             "samsungce.dongleSoftwareInstallation",
             "samsungce.quickControl",
-            "samsungce.deviceInfoPrivate",
-            "demandResponseLoadControl",
             "samsungce.fridgeVacationMode",
-            "sec.diagnosticsInformation"
+            "sec.diagnosticsInformation",
+            "demandResponseLoadControl"
           ],
-          "timestamp": "2025-02-09T13:55:01.720Z"
+          "timestamp": "2026-02-14T08:38:13.413Z"
         }
       },
       "samsungce.driverVersion": {
         "versionNumber": {
-          "value": 24100101,
-          "timestamp": "2024-11-08T04:14:59.025Z"
+          "value": 25080101,
+          "timestamp": "2026-02-12T09:56:15.470Z"
         }
       },
       "sec.diagnosticsInformation": {
@@ -458,11 +807,11 @@
           "value": {
             "state": "disabled"
           },
-          "timestamp": "2025-01-19T21:07:55.703Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "reportStatePeriod": {
           "value": "enabled",
-          "timestamp": "2025-01-19T21:07:55.703Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "thermostatCoolingSetpoint": {
@@ -482,7 +831,7 @@
             "cvroom",
             "onedoor"
           ],
-          "timestamp": "2024-11-08T01:09:17.382Z"
+          "timestamp": "2024-11-08T01:25:04.838Z"
         }
       },
       "demandResponseLoadControl": {
@@ -493,63 +842,71 @@
             "duration": 0,
             "override": false
           },
-          "timestamp": "2025-01-19T21:07:55.691Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "samsungce.sabbathMode": {
         "supportedActions": {
           "value": ["on", "off"],
-          "timestamp": "2025-01-19T21:07:55.799Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "status": {
           "value": "off",
-          "timestamp": "2025-01-19T21:07:55.799Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "powerConsumptionReport": {
         "powerConsumption": {
           "value": {
-            "energy": 1568087,
-            "deltaEnergy": 7,
-            "power": 6,
-            "powerEnergy": 13.555977778169844,
+            "energy": 1446085,
+            "deltaEnergy": 21,
+            "power": 74,
+            "powerEnergy": 20.573116664422884,
             "persistedEnergy": 0,
             "energySaved": 0,
-            "start": "2025-02-09T17:38:01Z",
-            "end": "2025-02-09T17:49:00Z"
+            "start": "2026-02-14T14:35:06Z",
+            "end": "2026-02-14T14:51:07Z"
           },
-          "timestamp": "2025-02-09T17:49:00.507Z"
+          "timestamp": "2026-02-14T14:51:07.863Z"
         }
       },
       "refresh": {},
       "execute": {
         "data": {
-          "value": {
-            "payload": {
-              "rt": ["x.com.samsung.da.rm.micomdata"],
-              "if": ["oic.if.baseline", "oic.if.a"],
-              "x.com.samsung.rm.micomdata": "D0C0022B00000000000DFE15051F5AA54400000000000000000000000000000000000000000000000001F04A00C5E0",
-              "x.com.samsung.rm.micomdataLength": 94
+          "value": null
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "02144A220110",
+              "description": "WiFi Module"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "22030712,FFFFFFFF",
+              "description": "Micom"
             }
-          },
-          "data": {
-            "href": "/rm/micomdata/vs/0"
-          },
-          "timestamp": "2023-07-19T05:25:39.852Z"
+          ],
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "refrigeration": {
         "defrost": {
           "value": "off",
-          "timestamp": "2025-01-19T21:07:55.772Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "rapidCooling": {
           "value": "off",
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "rapidFreezing": {
           "value": "off",
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "timestamp": "2026-01-21T23:20:21.048Z"
         }
       },
       "custom.deodorFilter": {
@@ -574,23 +931,23 @@
       },
       "samsungce.powerCool": {
         "activated": {
-          "value": true,
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "value": false,
+          "timestamp": "2026-01-13T22:29:09.026Z"
         }
       },
       "custom.energyType": {
         "energyType": {
           "value": "2.0",
-          "timestamp": "2022-02-07T10:47:54.524Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         },
         "energySavingSupport": {
           "value": false,
-          "timestamp": "2022-02-07T10:47:54.524Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         },
         "drMaxDuration": {
           "value": 1440,
           "unit": "min",
-          "timestamp": "2022-02-07T11:39:47.504Z"
+          "timestamp": "2022-07-16T15:22:25.083Z"
         },
         "energySavingLevel": {
           "value": null
@@ -609,28 +966,28 @@
         },
         "energySavingOperationSupport": {
           "value": false,
-          "timestamp": "2022-02-07T11:39:47.504Z"
+          "timestamp": "2022-07-16T15:22:25.083Z"
         }
       },
       "samsungce.softwareUpdate": {
         "targetModule": {
           "value": {},
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "timestamp": "2026-01-15T10:36:37.596Z"
         },
         "otnDUID": {
-          "value": "P7CNQWBWM3XBW",
-          "timestamp": "2025-01-19T21:07:55.744Z"
+          "value": "BDCGCEMP2S7FI",
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "lastUpdatedDate": {
           "value": null
         },
         "availableModules": {
           "value": [],
-          "timestamp": "2025-01-19T21:07:55.744Z"
+          "timestamp": "2026-01-15T10:36:37.711Z"
         },
         "newVersionAvailable": {
           "value": false,
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "timestamp": "2026-01-13T22:29:09.026Z"
         },
         "operatingState": {
           "value": null
@@ -642,7 +999,7 @@
       "samsungce.powerFreeze": {
         "activated": {
           "value": false,
-          "timestamp": "2025-01-19T21:07:55.725Z"
+          "timestamp": "2026-01-21T23:20:21.048Z"
         }
       },
       "custom.waterFilter": {
@@ -678,6 +1035,9 @@
         "fridgeMode": {
           "value": null
         },
+        "supportedFullFridgeModes": {
+          "value": null
+        },
         "supportedFridgeModes": {
           "value": null
         }
@@ -690,7 +1050,12 @@
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": ["temperatureMeasurement", "thermostatCoolingSetpoint"],
-          "timestamp": "2022-02-07T11:39:42.105Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
+        }
+      },
+      "samsungce.fridgeZoneInfo": {
+        "name": {
+          "value": null
         }
       },
       "temperatureMeasurement": {
@@ -711,10 +1076,15 @@
       }
     },
     "icemaker-02": {
+      "samsungce.fridgeIcemakerInfo": {
+        "name": {
+          "value": null
+        }
+      },
       "custom.disabledCapabilities": {
         "disabledCapabilities": {
           "value": [],
-          "timestamp": "2022-02-07T11:39:42.105Z"
+          "timestamp": "2022-07-16T15:22:24.391Z"
         }
       },
       "switch": {

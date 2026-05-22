@@ -56,6 +56,7 @@ def mock_api_device(
     mock_api_device.manufacture_info = mock_manfacture_info
 
     mock_api_device.brightness = 0
+    mock_api_device.is_closed = False
     mock_api_device.percentage = 0
 
     return mock_api_device

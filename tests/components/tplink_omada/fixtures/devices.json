@@ -35,7 +35,7 @@
     "memUtil": 20,
     "status": 14,
     "statusCategory": 1,
-    "needUpgrade": false,
+    "needUpgrade": true,
     "fwDownload": false
   }
 ]

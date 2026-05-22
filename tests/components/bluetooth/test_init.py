@@ -138,8 +138,10 @@ async def test_setup_and_stop_passive(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
-        "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+        "bluez": {
+            **scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+            "adapter": "hci0",
+        },
         "scanning_mode": "passive",
     }
 
@@ -188,7 +190,7 @@ async def test_setup_and_stop_old_bluez(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
+        "bluez": {"adapter": "hci0"},
         "scanning_mode": "active",
     }
 
@@ -363,7 +365,7 @@ async def test_no_race_during_manual_reload_in_retry_state(
 async def test_calling_async_discovered_devices_no_bluetooth(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
+    """Test we fail gracefully when there is no bluetooth."""
     mock_bt = []
     with (
         patch(
@@ -488,7 +490,7 @@ def _domains_from_mock_config_flow(mock_config_flow: Mock) -> list[str]:
 async def test_discovery_match_by_service_uuid_connectable(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test bluetooth discovery match by service_uuid and the ble device is connectable."""
+    """Test discovery match by service_uuid, connectable."""
     mock_bt = [
         {
             "domain": "switchbot",
@@ -540,7 +542,7 @@ async def test_discovery_match_by_service_uuid_connectable(
 async def test_discovery_match_by_service_uuid_not_connectable(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test bluetooth discovery match by service_uuid and the ble device is not connectable."""
+    """Test discovery match by service_uuid, not connectable."""
     mock_bt = [
         {
             "domain": "switchbot",
@@ -590,7 +592,7 @@ async def test_discovery_match_by_service_uuid_not_connectable(
 async def test_discovery_match_by_name_connectable_false(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test bluetooth discovery match by name and the integration will take non-connectable devices."""
+    """Test discovery match by name with non-connectable."""
     mock_bt = [
         {
             "domain": "qingping",
@@ -708,7 +710,7 @@ async def test_discovery_match_by_local_name(
 async def test_discovery_match_by_service_uuid_when_name_changes_from_mac(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test bluetooth discovery still matches when name changes from MAC address to real name."""
+    """Test discovery matches when name changes from MAC."""
     mock_bt = [
         {
             "domain": "improv_ble",
@@ -1128,7 +1130,7 @@ async def test_discovery_match_by_service_data_uuid_bthome(
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test bluetooth discovery matches twice for service_uuid and then manufacturer_id."""
+    """Test discovery matches for service_uuid then mfr_id."""
     mock_bt = [
         {
             "domain": "my_domain",
@@ -1283,7 +1285,8 @@ async def test_clear_address_from_match_history(
         # No new discovery should have been triggered
         assert len(mock_config_flow.mock_calls) == 1
 
-        # But when we inject new advertisement with different data, it should be discovered
+        # But when we inject new advertisement with
+        # different data, it should be discovered
         inject_advertisement(hass, switchbot_device, switchbot_adv_2)
         await hass.async_block_till_done()
 
@@ -1305,7 +1308,8 @@ async def test_async_discovered_device_api(
             return_value=mock_bt,
         ),
         patch(
-            "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+            # Must patch before we setup
+            "bleak.BleakScanner.discovered_devices_and_advertisement_data",
             {
                 "44:44:33:11:23:45": (
                     MagicMock(address="44:44:33:11:23:45"),
@@ -2497,7 +2501,8 @@ async def test_process_advertisements_ignore_bad_advertisement(
         )
     )
 
-    # The goal of this loop is to make sure that async_process_advertisements sees at least one
+    # The goal of this loop is to make sure that
+    # async_process_advertisements sees at least one
     # callback that returns False
     while not done.is_set():
         inject_advertisement(hass, device, adv)
@@ -2535,7 +2540,7 @@ async def test_process_advertisements_timeout(
 async def test_wrapped_instance_with_filter(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test consumers can use the wrapped instance with a filter as if it was normal BleakScanner."""
+    """Test wrapped instance with a filter works like BleakScanner."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
@@ -2608,7 +2613,7 @@ async def test_wrapped_instance_with_filter(
 async def test_wrapped_instance_with_service_uuids(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner."""
+    """Test wrapped instance with service_uuids list."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
@@ -2665,7 +2670,7 @@ async def test_wrapped_instance_with_service_uuids(
 async def test_wrapped_instance_with_service_uuids_with_coro_callback(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
 ) -> None:
-    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner.
+    """Test wrapped instance with service_uuids list.
 
     Verify that coro callbacks are supported.
     """
@@ -2921,7 +2926,8 @@ async def test_async_ble_device_from_address(
             return_value=mock_bt,
         ),
         patch(
-            "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+            # Must patch before we setup
+            "bleak.BleakScanner.discovered_devices_and_advertisement_data",
             {
                 "44:44:33:11:23:45": (
                     MagicMock(address="44:44:33:11:23:45"),

@@ -46,8 +46,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
 
-        This is the place to pre-process the data to lookup tables so entities can quickly look up their data.
-        :return: ProcessedCoordinatorData
+        Pre-process the data to lookup tables so entities
+        can quickly look up their data.
         """
 
         self._api.expire_cache()

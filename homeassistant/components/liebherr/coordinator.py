@@ -1,8 +1,6 @@
 """DataUpdateCoordinator for Liebherr integration."""
 
-from __future__ import annotations
-
-from datetime import timedelta
+from dataclasses import dataclass, field
 import logging
 
 from pyliebherrhomeapi import (
@@ -15,20 +13,23 @@ from pyliebherrhomeapi import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-
-type LiebherrConfigEntry = ConfigEntry[dict[str, LiebherrCoordinator]]
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=60)
+
+@dataclass
+class LiebherrData:
+    """Runtime data for the Liebherr integration."""
+
+    client: LiebherrClient
+    coordinators: dict[str, LiebherrCoordinator] = field(default_factory=dict)
+
+
+type LiebherrConfigEntry = ConfigEntry[LiebherrData]
 
 
 class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
@@ -57,8 +58,10 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         try:
             await self.client.get_device(self.device_id)
         except LiebherrAuthenticationError as err:
-            raise ConfigEntryError("Invalid API key") from err
+            # pylint: disable-next=home-assistant-exception-not-translated
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except LiebherrConnectionError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryNotReady(
                 f"Failed to connect to device {self.device_id}: {err}"
             ) from err
@@ -68,12 +71,15 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         try:
             return await self.client.get_device_state(self.device_id)
         except LiebherrAuthenticationError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ConfigEntryAuthFailed("API key is no longer valid") from err
         except LiebherrTimeoutError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Timeout communicating with device {self.device_id}"
             ) from err
         except LiebherrConnectionError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UpdateFailed(
                 f"Error communicating with device {self.device_id}"
             ) from err

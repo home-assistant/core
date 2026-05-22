@@ -1,5 +1,6 @@
 """Tests for the Entity Registry."""
 
+import asyncio
 from datetime import datetime, timedelta
 from functools import partial
 from typing import Any
@@ -18,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -33,6 +38,83 @@ from tests.common import (
 )
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
+
+
+@pytest.mark.parametrize(
+    ("aliases", "allow_empty", "expected"),
+    [
+        ([er.COMPUTED_NAME], True, ["My Device My Entity"]),
+        ([er.COMPUTED_NAME, "custom1"], True, ["My Device My Entity", "custom1"]),
+        (["custom1", "  custom2  "], True, ["custom1", "custom2"]),
+        ([], True, []),
+        ([], False, ["My Device My Entity"]),
+        ([er.COMPUTED_NAME], False, ["My Device My Entity"]),
+    ],
+)
+async def test_get_all_entity_aliases(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aliases: list[er.AliasEntry],
+    allow_empty: bool,
+    expected: list[str],
+) -> None:
+    """Test getting all names/aliases for an entity."""
+    mock_config = MockConfigEntry(domain="light")
+    mock_config.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="My Device",
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=mock_config,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="My Entity",
+    )
+    entry = entity_registry.async_update_entity(entry.entity_id, aliases=aliases)
+
+    assert er.async_get_entity_aliases(hass, entry, allow_empty=allow_empty) == (
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("prefix", "entity_name", "expected"),
+    [
+        (None, "Sensor", None),
+        ("My Device", None, None),
+        ("My Device", "My Device temperature", "Temperature"),
+        ("My Device", "My Device Temperature", "Temperature"),
+        ("My Device", "My Device", ""),
+        ("My Device", "My Device-temperature", "Temperature"),
+        ("My Device", "My Device:temperature", "Temperature"),
+        ("My Device", "My Device - Temperature", "Temperature"),
+        ("My Device", "MyDevice temperature", None),
+        ("My Device", "Completely Different", None),
+        ("My Device", "My Dev", None),
+        ("My Device", "My Dev Ice", None),
+        ("Sun", "Sunrise sensor", None),
+        ("Straße", "STRASSE sensor", "Sensor"),
+        ("STRASSE", "straße sensor", "Sensor"),
+        ("İstanbul", "i̇stanbul weather", "Weather"),
+        ("İstanbul", "istanbul weather", None),
+        ("As", "Aß value", None),
+    ],
+)
+def test_strip_prefix_from_entity_name(
+    prefix: str | None,
+    entity_name: str | None,
+    expected: str | None,
+) -> None:
+    """Test stripping device name prefix from entity name."""
+    assert er._async_strip_prefix_from_entity_name(entity_name, prefix) == expected
 
 
 async def test_get(entity_registry: er.EntityRegistry) -> None:
@@ -128,6 +210,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
+        aliases=[er.COMPUTED_NAME],
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
         config_subentry_id=config_subentry_id,
@@ -188,7 +271,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
@@ -244,7 +327,7 @@ def test_get_or_create_updates_data(
         entity_id="light.hue_5678",
         unique_id="5678",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         capabilities=None,
         config_entry_id=None,
@@ -359,7 +442,7 @@ async def test_loading_saving_data(
     )
     entity_registry.async_update_entity(
         orig_entry2.entity_id,
-        aliases={"initial_alias_1", "initial_alias_2"},
+        aliases=["initial_alias_1", "initial_alias_2"],
         area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
@@ -426,6 +509,49 @@ async def test_loading_saving_data(
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_entity_registry_loading_waits_for_device_registry(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test entity registry waits for device registry when loaded concurrently.
+
+    Both registries are loaded in parallel during bootstrap via asyncio.gather.
+    The entity registry accesses device registry during loading. This test delays
+    the device registry store load so entity registry attempts to load first.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "test.my_entity",
+                    "device_id": "some-device",
+                    "platform": "test_platform",
+                    "unique_id": "unique-1",
+                },
+            ]
+        },
+    }
+
+    original_load = dr.DeviceRegistryStore.async_load
+
+    async def delayed_load(self: dr.DeviceRegistryStore) -> Any:
+        await asyncio.sleep(0)
+        return await original_load(self)
+
+    dr.async_setup(hass)
+
+    with patch.object(dr.DeviceRegistryStore, "async_load", delayed_load):
+        await asyncio.gather(
+            er.async_load(hass),
+            dr.async_load(hass),
+        )
+
+    registry = er.async_get(hass)
+    assert registry.async_get("test.my_entity") is not None
+
+
 def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -449,6 +575,175 @@ def test_get_available_entity_id_considers_existing_entities(
     )
 
 
+@pytest.mark.parametrize(
+    (
+        "device_name",
+        "device_area_name",
+        "entity_area_name",
+        "object_id_base",
+        "suggested_object_id",
+        "user_name",
+        "expected_initial_entity_id",
+        "expected_entity_id",
+    ),
+    [
+        pytest.param(
+            None,
+            None,
+            None,
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+            "sensor.my_sensor",
+            id="no_device_no_area",
+        ),
+        pytest.param(
+            "Lamp",
+            None,
+            None,
+            "Temperature",
+            None,
+            None,
+            "sensor.lamp_temperature",
+            "sensor.lamp_temperature",
+            id="device_no_area",
+        ),
+        pytest.param(
+            "Lamp",
+            None,
+            None,
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+            "sensor.custom_id",
+            id="suggested_object_id",
+        ),
+        pytest.param(
+            "Lamp",
+            None,
+            None,
+            "Temperature",
+            "custom_id",
+            "Humidity",
+            "sensor.custom_id",
+            "sensor.lamp_humidity",
+            id="user_name",
+        ),
+        pytest.param(
+            "Lamp",
+            None,
+            None,
+            "Temperature",
+            None,
+            "Lamp Sensor",
+            "sensor.lamp_temperature",
+            "sensor.lamp_sensor",
+            id="user_name_unprefixed",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            None,
+            "Temperature",
+            None,
+            None,
+            "sensor.kitchen_lamp_temperature",
+            "sensor.kitchen_lamp_temperature",
+            id="device_area",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            "Garage",
+            "Temperature",
+            None,
+            None,
+            "sensor.kitchen_lamp_temperature",
+            "sensor.garage_lamp_temperature",
+            id="entity_area",
+        ),
+        pytest.param(
+            None,
+            None,
+            "Kitchen",
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+            "sensor.kitchen_my_sensor",
+            id="entity_area_no_device",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            "Garage",
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+            "sensor.custom_id",
+            id="suggested_object_id_area",
+        ),
+    ],
+)
+def test_generate_entity_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_name: str | None,
+    device_area_name: str | None,
+    entity_area_name: str | None,
+    object_id_base: str | None,
+    suggested_object_id: str | None,
+    user_name: str | None,
+    expected_initial_entity_id: str,
+    expected_entity_id: str,
+) -> None:
+    """Test generating and regenerating entity IDs."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    device_id: str | None = None
+    if device_name is not None:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            name=device_name,
+        )
+        device_id = device_entry.id
+        if device_area_name is not None:
+            device_area = area_registry.async_create(device_area_name)
+            device_registry.async_update_device(device_id, area_id=device_area.id)
+
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_id,
+        has_entity_name=True,
+        object_id_base=object_id_base,
+        original_name=object_id_base,
+        suggested_object_id=suggested_object_id,
+    )
+    assert entry.entity_id == expected_initial_entity_id
+
+    if entity_area_name is not None:
+        entity_area = area_registry.async_create(entity_area_name)
+        entry = entity_registry.async_update_entity(
+            entry.entity_id, area_id=entity_area.id
+        )
+
+    if user_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=user_name)
+
+    new_entity_id = entity_registry.async_regenerate_entity_id(entry)
+    assert new_entity_id == expected_entity_id
+
+
 def test_is_registered(entity_registry: er.EntityRegistry) -> None:
     """Test that is_registered works."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
@@ -462,7 +757,7 @@ async def test_filter_on_load(
 ) -> None:
     """Test we transform some data when loading from storage."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION_MAJOR,
+        "version": 1,
         "minor_version": 1,
         "data": {
             "entities": [
@@ -493,6 +788,9 @@ async def test_filter_on_load(
             ]
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -543,6 +841,7 @@ async def test_load_bad_data(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "capabilities": None,
                     "categories": {},
@@ -576,6 +875,7 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "capabilities": None,
                     "categories": {},
@@ -611,6 +911,7 @@ async def test_load_bad_data(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -635,6 +936,7 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -660,6 +962,9 @@ async def test_load_bad_data(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -968,6 +1273,9 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -987,6 +1295,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1083,6 +1392,9 @@ async def test_migration_1_7(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1155,6 +1467,9 @@ async def test_migration_1_11(
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1181,6 +1496,7 @@ async def test_migration_1_11(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1216,6 +1532,7 @@ async def test_migration_1_11(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1320,6 +1637,9 @@ async def test_migration_1_18(
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1346,6 +1666,7 @@ async def test_migration_1_18(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1381,6 +1702,7 @@ async def test_migration_1_18(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1404,6 +1726,202 @@ async def test_migration_1_18(
                     "unique_id": "very_very_unique",
                 }
             ],
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_21(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from version 1.21.
+
+    Version 1.21 stored entity names in a new format, but was reverted.
+    """
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["mock_entry"],
+                    "config_entries_subentries": {"mock_entry": [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "disabled_by_undefined": False,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "device_1234",
+                    "identifiers": [["test", "device_1"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "name": "My Device",
+                    "primary_config_entry": "mock_entry",
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
+    entity_base = {
+        "aliases": [],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 21,
+        "data": {
+            "entities": [
+                {
+                    **entity_base,
+                    "entity_id": "test.custom_name",
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
+                    "name_v2": "My Custom Name",
+                },
+                {
+                    **entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
+                    "name_v2": "Temperature",
+                },
+                {
+                    **entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Temperature",
+                    "name_v2": "Heat",
+                },
+            ],
+            "deleted_entities": [],
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "custom_name")
+    assert entry.name == "My Custom Name"
+
+    entry = registry.async_get_or_create("test", "super_platform", "stripped")
+    assert entry.name == "My Device Temperature"
+
+    entry = registry.async_get_or_create(
+        "test", "super_platform", "stripped_and_renamed"
+    )
+    assert entry.name == "My Device Heat"
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+
+    migrated_entity_base = {
+        "aliases": [],
+        "aliases_v2": [None],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_id": "device_1234",
+        "disabled_by": None,
+        "entity_category": None,
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "object_id_base": "Temperature",
+        "options": {},
+        "original_device_class": "temperature",
+        "original_icon": None,
+        "original_name": "Temperature",
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unit_of_measurement": None,
+        "device_class": None,
+    }
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.custom_name",
+                    "id": "entity_custom_name",
+                    "unique_id": "custom_name",
+                    "name": "My Custom Name",
+                },
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped",
+                    "id": "entity_stripped",
+                    "unique_id": "stripped",
+                    "name": "My Device Temperature",
+                },
+                {
+                    **migrated_entity_base,
+                    "entity_id": "test.stripped_and_renamed",
+                    "id": "entity_stripped_and_renamed",
+                    "unique_id": "stripped_and_renamed",
+                    "name": "My Device Heat",
+                },
+            ],
+            "deleted_entities": [],
         },
     }
 
@@ -1615,6 +2133,67 @@ async def test_update_entity(
         entry = updated_entry
 
 
+async def test_update_entity_recalculates_original_name_unprefixed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test original_name_unprefixed is recalculated when relevant fields change."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Device Bla",
+    )
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AB:CD:EF:12:34:56")},
+        name="Other",
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device1.id,
+        has_entity_name=False,
+        original_name="Device Bla Sensor",
+    )
+    assert entry.original_name_unprefixed == "Sensor"
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, original_name="Device Bla Temperature"
+    )
+    assert entry.original_name_unprefixed == "Temperature"
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, original_name="Something Else"
+    )
+    assert entry.original_name_unprefixed is None
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, original_name="Other Sensor"
+    )
+    assert entry.original_name_unprefixed is None
+
+    entry = entity_registry.async_update_entity(entry.entity_id, device_id=device2.id)
+    assert entry.original_name_unprefixed == "Sensor"
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, original_name="Device Bla Sensor"
+    )
+    assert entry.original_name_unprefixed is None
+
+    entry = entity_registry.async_update_entity(entry.entity_id, device_id=device1.id)
+    assert entry.original_name_unprefixed == "Sensor"
+
+    entry = entity_registry.async_update_entity(entry.entity_id, has_entity_name=True)
+    assert entry.original_name_unprefixed is None
+
+
 @pytest.mark.parametrize(
     (
         "new_config_entry_disabled_by",
@@ -1743,7 +2322,7 @@ async def test_update_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -1840,7 +2419,7 @@ async def test_update_entity_disabled_by_2(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -2141,7 +2720,7 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that we don't remove entities with no config entry when device is modified."""
+    """Test we don't remove entities w/o config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
@@ -2345,7 +2924,7 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
     subentries_in_device: list[str | None],
     subentry_in_entity: str | None,
 ) -> None:
-    """Test that we don't remove entities with no config entry when device is modified."""
+    """Test we don't remove entities w/o config entry when device is modified."""
     config_entry_1 = MockConfigEntry(
         domain="hue",
         subentries_data=[
@@ -2550,6 +3129,127 @@ async def test_update_device_race_2(
     assert not entity_registry.async_is_registered(entry_same_config_entry.entity_id)
     assert not entity_registry.async_is_registered(entry_no_config_entry.entity_id)
     assert not entity_registry.async_is_registered(entry_same_config_entry_2.entity_id)
+
+
+async def test_has_entity_name_false_device_name_changes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device name changes update entities with has_entity_name=False."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Hue Light",
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=False,
+        original_name="Hue Light Temperature",
+    )
+    assert entry.original_name_unprefixed == "Temperature"
+
+    entry2 = entity_registry.async_get_or_create(
+        "sensor",
+        "hue",
+        "2",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=False,
+        original_name="Bulb brightness",
+    )
+    assert entry2.original_name_unprefixed is None
+
+    entry3 = entity_registry.async_get_or_create(
+        "sensor",
+        "hue",
+        "3",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=False,
+        original_name="Bulb brightness",
+    )
+    entity_registry.async_update_entity(entry3.entity_id, name="My name")
+    assert entry3.original_name_unprefixed is None
+
+    entry4 = entity_registry.async_get_or_create(
+        "sensor",
+        "hue",
+        "4",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name="Hue Light Battery",
+    )
+    assert entry4.original_name_unprefixed is None
+
+    # Integration renames device
+    device_registry.async_update_device(device_entry.id, name="Something else")
+    await hass.async_block_till_done()
+
+    updated = entity_registry.async_get(entry.entity_id)
+    assert updated.name is None
+    assert updated.original_name_unprefixed is None
+
+    updated2 = entity_registry.async_get(entry2.entity_id)
+    assert updated2.name is None
+    assert updated2.original_name_unprefixed is None
+
+    updated3 = entity_registry.async_get(entry3.entity_id)
+    assert updated3.name == "My name"
+    assert updated3.original_name_unprefixed is None
+
+    updated4 = entity_registry.async_get(entry4.entity_id)
+    assert updated4.name is None
+    assert updated4.original_name_unprefixed is None
+
+    # Integration renames device to something else
+    device_registry.async_update_device(device_entry.id, name="Bulb")
+    await hass.async_block_till_done()
+
+    updated = entity_registry.async_get(entry.entity_id)
+    assert updated.name is None
+    assert updated.original_name_unprefixed is None
+
+    updated2 = entity_registry.async_get(entry2.entity_id)
+    assert updated2.name is None
+    assert updated2.original_name_unprefixed == "Brightness"
+
+    updated3 = entity_registry.async_get(entry3.entity_id)
+    assert updated3.name == "My name"
+    assert updated3.original_name_unprefixed == "Brightness"
+
+    updated4 = entity_registry.async_get(entry4.entity_id)
+    assert updated4.name is None
+    assert updated4.original_name_unprefixed is None
+
+    # User renames device
+    device_registry.async_update_device(device_entry.id, name_by_user="Hue")
+    await hass.async_block_till_done()
+
+    updated = entity_registry.async_get(entry.entity_id)
+    assert updated.name is None
+    assert updated.original_name_unprefixed == "Light Temperature"
+
+    updated2 = entity_registry.async_get(entry2.entity_id)
+    assert updated2.name == "Hue Brightness"
+    assert updated2.original_name_unprefixed is None
+
+    updated3 = entity_registry.async_get(entry3.entity_id)
+    assert updated3.name == "My name"
+    assert updated3.original_name_unprefixed is None
+
+    updated4 = entity_registry.async_get(entry4.entity_id)
+    assert updated4.name is None
+    assert updated4.original_name_unprefixed is None
 
 
 async def test_disable_device_disables_entities(
@@ -3135,7 +3835,11 @@ def test_migrate_entity_to_new_platform_error_handling(
     # Test migrate entity without new config entry ID
     with pytest.raises(
         ValueError,
-        match="new_config_entry_id required because light.light is already linked to a config entry",
+        match=(
+            "new_config_entry_id required because"
+            " light.light is already linked"
+            " to a config entry"
+        ),
     ):
         entity_registry.async_update_entity_platform(
             "light.light",
@@ -3242,7 +3946,7 @@ async def test_restore_entity(
     # Apply user customizations
     entry1 = entity_registry.async_update_entity(
         entry1.entity_id,
-        aliases={"alias1", "alias2"},
+        aliases=["alias1", "alias2"],
         area_id="12345A",
         categories={"scope1": "id", "scope2": "id"},
         device_class="device_class_user",
@@ -3307,7 +4011,7 @@ async def test_restore_entity(
         entity_id="light.custom_1",
         unique_id="1234",
         platform="hue",
-        aliases={"alias1", "alias2"},
+        aliases=["alias1", "alias2"],
         area_id="12345A",
         categories={"scope1": "id", "scope2": "id"},
         capabilities={"key2": "value2"},
@@ -3358,7 +4062,8 @@ async def test_restore_entity(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Re-add two entities, expect to get a new id after the purge for entity w/o config entry
+    # Re-add two entities, expect to get a new id after the purge
+    # for entity w/o config entry
     entry1_restored = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
@@ -3503,7 +4208,7 @@ async def test_restore_migrated_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3628,7 +4333,7 @@ async def test_restore_migrated_entity_hidden_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3744,7 +4449,7 @@ async def test_restore_migrated_entity_initial_options(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -3931,7 +4636,7 @@ async def test_restore_entity_disabled_by(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -4060,7 +4765,7 @@ async def test_restore_entity_disabled_by_2(
         entity_id="light.hue_5678",
         unique_id="1234",
         platform="hue",
-        aliases=set(),
+        aliases=[er.COMPUTED_NAME],
         area_id=None,
         categories={},
         capabilities={"key2": "value2"},
@@ -4390,7 +5095,11 @@ async def test_get_or_create_thread_safety(
     """Test call async_get_or_create_from a thread."""
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls entity_registry.async_get_or_create from a thread.",
+        match=(
+            "Detected code that calls"
+            " entity_registry.async_get_or_create"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             entity_registry.async_get_or_create, "light", "hue", "1234"
@@ -4404,7 +5113,11 @@ async def test_async_update_entity_thread_safety(
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     with pytest.raises(
         RuntimeError,
-        match="Detected code that calls entity_registry.async_update_entity from a thread.",
+        match=(
+            "Detected code that calls"
+            " entity_registry.async_update_entity"
+            " from a thread."
+        ),
     ):
         await hass.async_add_executor_job(
             partial(

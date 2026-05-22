@@ -15,12 +15,20 @@ from visionpluspython.exceptions import (
 )
 from visionpluspython.models import create_device_from_data
 
+from homeassistant.components.climate import (
+    ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_TEMPERATURE,
+)
 from homeassistant.components.watts.const import (
     DISCOVERY_INTERVAL_MINUTES,
     DOMAIN,
+    FAST_POLLING_INTERVAL_SECONDS,
     OAUTH2_TOKEN,
+    UPDATE_INTERVAL_SECONDS,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -49,7 +57,6 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_auth_failed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -79,7 +86,6 @@ async def test_setup_entry_auth_failed(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -128,7 +134,6 @@ async def test_setup_entry_hub_coordinator_update_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("setup_credentials")
 async def test_setup_entry_server_error_5xx(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -235,7 +240,7 @@ async def test_dynamic_device_creation(
     assert new_device_entry is not None
     assert new_device_entry.name == "Kitchen Thermostat"
 
-    state = hass.states.get("climate.kitchen_thermostat")
+    state = hass.states.get("climate.kitchen_kitchen_thermostat")
     assert state is not None
 
 
@@ -259,6 +264,7 @@ async def test_stale_device_removal(
     assert device_456 is not None
 
     current_devices = list(mock_watts_client.discover_devices.return_value)
+
     # remove thermostat_456
     mock_watts_client.discover_devices.return_value = [
         d for d in current_devices if d.device_id != "thermostat_456"
@@ -273,3 +279,78 @@ async def test_stale_device_removal(
         identifiers={(DOMAIN, "thermostat_456")}
     )
     assert device_456_after_removal is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "has_reauth_flow"),
+    [
+        (WattsVisionAuthError("expired"), True),
+        (WattsVisionConnectionError("lost"), False),
+    ],
+)
+async def test_hub_coordinator_update_errors(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+    has_reauth_flow: bool,
+) -> None:
+    """Test hub coordinator handles errors during regular update."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room_living_room_thermostat")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_watts_client.get_devices_report.side_effect = exception
+
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room_living_room_thermostat")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    assert (
+        any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        == has_reauth_flow
+    )
+
+
+async def test_device_coordinator_refresh_error(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device coordinator handles refresh error."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.living_room_living_room_thermostat")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Activate fast polling
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room_living_room_thermostat",
+            ATTR_TEMPERATURE: 23.5,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Device refresh fail on the next fast poll
+    mock_watts_client.get_device.side_effect = WattsVisionConnectionError("lost")
+
+    freezer.tick(timedelta(seconds=FAST_POLLING_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room_living_room_thermostat")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

@@ -1,7 +1,5 @@
 """Support for Hue groups (room/zone)."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -81,7 +79,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 

@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -79,6 +81,7 @@ async def test_form_invalid_host(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -111,6 +114,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -144,7 +148,8 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_duplicate_host(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -17,6 +17,9 @@ VACUUM_FAN_SPEED_STANDARD = "standard"
 VACUUM_FAN_SPEED_STRONG = "strong"
 VACUUM_FAN_SPEED_MAX = "max"
 
+
+CLIMATE_PRESET_SCHEDULE = "schedule"
+
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 SMART_RADIATOR_THERMOSTAT_AFTER_COMMAND_REFRESH = 30
@@ -58,3 +61,25 @@ class Humidifier2Mode(Enum):
     def get_modes(cls) -> list[str]:
         """Return a list of available humidifier2 modes as lowercase strings."""
         return [mode.name.lower() for mode in cls]
+
+
+class SwitchbotCloudDeviceLockState(Enum):
+    """Lock State."""
+
+    LOCKED = "locked"
+    UNLOCKED = "unlocked"
+    LOCKING = "locking"
+    UNLOCKING = "unlocking"
+    JAMMED = "jammed"
+    LATCH_BOLT_LOCKED = "latchBoltLocked"
+    HALF_LOCKED = "halfLocked"
+
+    @classmethod
+    def get_states(cls) -> list[SwitchbotCloudDeviceLockState]:
+        """Get lock states."""
+        return list(cls)
+
+    @classmethod
+    def get_values(cls) -> list[str]:
+        """Get lock value."""
+        return [mode.value for mode in cls]

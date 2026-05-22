@@ -1,13 +1,12 @@
 """Support for Rflink binary sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -27,28 +26,31 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ALIASES
 from .entity import RflinkDevice
+from .utils import create_issue_yaml_migration
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
 
+RFLINK_PLATFORM = {
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema(
+            {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
+                ): cv.boolean,
+                vol.Optional(CONF_OFF_DELAY): cv.positive_int,
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
+    }
+}
+
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(
-                        CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
-                    ): cv.boolean,
-                    vol.Optional(CONF_OFF_DELAY): cv.positive_int,
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                }
-            )
-        }
-    },
+    RFLINK_PLATFORM,
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -70,7 +72,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(config))
+    if discovery_info is None:
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
+        async_add_entities(devices_from_config(config))
+    else:
+        async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
@@ -125,6 +131,6 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
             )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._state

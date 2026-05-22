@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from pyuptimerobot import (
@@ -17,12 +15,14 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
 
 type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
 
 
-class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
+class UptimeRobotDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[int, UptimeRobotMonitor]]
+):
     """Data update coordinator for UptimeRobot."""
 
     config_entry: UptimeRobotConfigEntry
@@ -43,38 +43,37 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         )
         self.api = api
 
-    async def _async_update_data(self) -> list[UptimeRobotMonitor]:
+    async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_exception",
+            ) from exception
         except UptimeRobotException as exception:
-            raise UpdateFailed(exception) from exception
-
-        if response.status != API_ATTR_OK:
             raise UpdateFailed(
-                response.error.message if response.error else "Unknown error"
-            )
+                translation_domain=DOMAIN,
+                translation_key="api_generic_exception",
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
+            ) from exception
 
         if TYPE_CHECKING:
             assert isinstance(response.data, list)
 
-        monitors: list[UptimeRobotMonitor] = response.data
+        current_ids = self.data.keys() if self.data else ()
+        new_monitors = {monitor.id: monitor for monitor in response.data}
+        if stale_ids := set(current_ids) - new_monitors.keys():
+            device_registry = dr.async_get(self.hass)
 
-        current_monitors = (
-            {str(monitor.id) for monitor in self.data} if self.data else set()
-        )
-        new_monitors = {str(monitor.id) for monitor in monitors}
-        if stale_monitors := current_monitors - new_monitors:
-            for monitor_id in stale_monitors:
-                device_registry = dr.async_get(self.hass)
+            for monitor_id in stale_ids:
                 if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, monitor_id)}
+                    identifiers={(DOMAIN, str(monitor_id))}
                 ):
                     device_registry.async_update_device(
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
 
-        return monitors
+        return new_monitors

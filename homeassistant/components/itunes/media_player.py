@@ -1,7 +1,5 @@
 """Support for interfacing to iTunes API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import requests
@@ -451,7 +449,7 @@ class AirPlayDevice(MediaPlayerEntity):
         return self.device_name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self.selected is True:
             return "mdi:volume-high"

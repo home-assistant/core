@@ -1,12 +1,12 @@
 """The OpenEVSE integration."""
 
-from __future__ import annotations
-
 from openevsehttp.__main__ import OpenEVSE
+from openevsehttp.exceptions import AuthenticationError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
@@ -19,12 +19,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     try:
         await charger.test_and_get()
     except TimeoutError as ex:
         raise ConfigEntryNotReady("Unable to connect to charger") from ex
+    except AuthenticationError as ex:
+        raise ConfigEntryAuthFailed("Invalid credentials for charger") from ex
 
     coordinator = OpenEVSEDataUpdateCoordinator(hass, entry, charger)
     await coordinator.async_config_entry_first_refresh()

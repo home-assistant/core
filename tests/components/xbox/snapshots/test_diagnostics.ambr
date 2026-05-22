@@ -9588,7 +9588,7 @@
         'gamertag': '**REDACTED**',
         'is_broadcasting': False,
         'is_cloaked': None,
-        'is_favorite': True,
+        'is_favorite': False,
         'is_followed_by_caller': True,
         'is_following_caller': True,
         'is_friend': True,

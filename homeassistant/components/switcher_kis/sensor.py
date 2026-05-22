@@ -1,7 +1,5 @@
 """Switcher integration Sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -81,7 +79,7 @@ TEMPERATURE_SENSORS: list[SwitcherSensorEntityDescription] = [
 ]
 
 POWER_PLUG_SENSORS = POWER_SENSORS
-WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
+HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
 THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
 
 
@@ -95,17 +93,20 @@ async def async_setup_entry(
     @callback
     def async_add_sensors(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add sensors from Switcher device."""
-        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category is DeviceCategory.POWER_PLUG:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in POWER_PLUG_SENSORS
             )
-        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
+        elif coordinator.data.device_type.category in [
+            DeviceCategory.WATER_HEATER,
+            DeviceCategory.HEATER,
+        ]:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
-                for description in WATER_HEATER_SENSORS
+                for description in HEATER_SENSORS
             )
-        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+        elif coordinator.data.device_type.category is DeviceCategory.THERMOSTAT:
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in THERMOSTAT_SENSORS

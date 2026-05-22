@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import DeviceType, FunctionalChannelType
@@ -17,6 +15,7 @@ from homematicip.device import (
     PlugableSwitch,
     PrintedCircuitBoardSwitch2,
     PrintedCircuitBoardSwitchBattery,
+    StatusBoard8,
     SwitchMeasuring,
     WiredInput32,
     WiredInputSwitch6,
@@ -57,6 +56,7 @@ async def async_setup_entry(
                 WiredSwitch4,
                 WiredSwitch8,
                 OpenCollector8Module,
+                StatusBoard8,
                 BrandSwitch2,
                 PrintedCircuitBoardSwitch2,
                 HeatingSwitch2,
@@ -107,7 +107,11 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
     ) -> None:
         """Initialize the multi switch device."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            feature_id="switch",
         )
 
     @property
@@ -138,10 +142,12 @@ class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     """Representation of the HomematicIP switching group."""
 
+    _attr_has_entity_name = False
+
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
-        super().__init__(hap, device, post)
+        super().__init__(hap, device, post, feature_id="switch")
 
     @property
     def is_on(self) -> bool:

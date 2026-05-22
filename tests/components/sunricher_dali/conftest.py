@@ -73,6 +73,9 @@ ILLUMINANCE_SENSOR_DATA: dict[str, Any] = {
     "channel": 0,
 }
 
+# Light device data for energy sensor testing (reuse first device from DEVICE_DATA)
+LIGHT_DEVICE_DATA: dict[str, Any] = DEVICE_DATA[0]
+
 MOTION_SENSOR_DATA: dict[str, Any] = {
     "dev_id": "02010000106A242121110E",
     "dev_type": "0201",
@@ -131,6 +134,11 @@ def _create_mock_device(device_data: dict[str, Any]) -> MagicMock:
     device.model = device_data["model"]
     device.gw_sn = GATEWAY_SERIAL
     device.color_mode = device_data["color_mode"]
+    device.address = device_data["address"]
+    device.channel = device_data["channel"]
+    device.dev_sn = device_data.get("dev_sn", f"DEVSN-{device_data['address']:04d}")
+    device.area_name = device_data.get("area_name", "Test Area")
+    device.area_id = device_data.get("area_id", "test_area")
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
@@ -150,6 +158,12 @@ def mock_devices() -> list[MagicMock]:
 def mock_illuminance_device() -> MagicMock:
     """Return a mocked illuminance sensor device."""
     return _create_mock_device(ILLUMINANCE_SENSOR_DATA)
+
+
+@pytest.fixture
+def mock_light_device() -> MagicMock:
+    """Return a mocked light device for energy sensor testing."""
+    return _create_mock_device(LIGHT_DEVICE_DATA)
 
 
 @pytest.fixture
@@ -214,6 +228,7 @@ def _create_mock_scene(
     scene.unique_id = unique_id
     scene.gw_sn = gw_sn
     scene.channel = channel
+    scene.area_id = area_id
     scene.activate = MagicMock()
     scene.devices = devices_with_ids
 

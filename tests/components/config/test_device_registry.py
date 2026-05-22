@@ -470,7 +470,10 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test removing config entry from device doesn't lead to an error when the integration removes the entry."""
+    """Test removing config entry from device.
+
+    Should not error when the integration removes the entry.
+    """
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 

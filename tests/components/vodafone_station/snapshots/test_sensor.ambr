@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.vodafone_station_m123456789_active_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -62,8 +63,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -112,8 +114,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -162,8 +165,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_reboot_cause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -211,8 +215,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -233,14 +238,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sys_uptime',
+    'translation_key': None,
     'unique_id': 'm123456789_sys_uptime',
     'unit_of_measurement': None,
   })
@@ -248,7 +253,7 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
+      'device_class': 'uptime',
       'friendly_name': 'Vodafone Station (m123456789) Uptime',
     }),
     'context': <ANY>,

@@ -1,7 +1,5 @@
 """Balboa entities."""
 
-from __future__ import annotations
-
 from pybalboa import EVENT_UPDATE, SpaClient
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo

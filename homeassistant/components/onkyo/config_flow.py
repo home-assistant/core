@@ -47,6 +47,7 @@ from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_DEVICE = "device"
 
 INPUT_SOURCES_DEFAULT: list[InputSource] = []
@@ -213,7 +214,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await async_interview(host)
         except TimeoutError:
-            _LOGGER.warning("Timed out interviewing: %s", host)
+            _LOGGER.info("Timed out interviewing: %s", host)
             return self.async_abort(reason="cannot_connect")
         except OSError:
             _LOGGER.exception("Unexpected exception interviewing: %s", host)

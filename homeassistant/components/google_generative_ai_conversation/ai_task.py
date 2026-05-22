@@ -1,7 +1,5 @@
 """AI Task integration for Google Generative AI Conversation."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 from typing import TYPE_CHECKING
 
@@ -80,12 +78,16 @@ class GoogleGenerativeAITaskEntity(
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
         await self._async_handle_chat_log(
-            chat_log, task.structure, default_max_tokens=RECOMMENDED_AI_TASK_MAX_TOKENS
+            chat_log,
+            task.structure,
+            default_max_tokens=RECOMMENDED_AI_TASK_MAX_TOKENS,
+            max_iterations=1000,
         )
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             LOGGER.error(
-                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+                "Last content in chat log is not an AssistantContent: %s."
+                " This could be due to the model not returning a valid response",
                 chat_log.content[-1],
             )
             raise HomeAssistantError(ERROR_GETTING_RESPONSE)
@@ -148,7 +150,9 @@ class GoogleGenerativeAITaskEntity(
 
         if response.prompt_feedback:
             raise HomeAssistantError(
-                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+                "Error generating content due to content"
+                " violations, reason:"
+                f" {response.prompt_feedback.block_reason_message}"
             )
 
         if (

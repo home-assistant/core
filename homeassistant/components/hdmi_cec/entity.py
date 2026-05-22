@@ -1,7 +1,8 @@
 """Support for HDMI CEC."""
 
-from __future__ import annotations
+from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
@@ -51,11 +52,16 @@ class CecEntity(Entity):
         elif self._device.osd_name is None:
             self._attr_name = f"{self._device.type_name} {self._logical_address}"
         else:
-            self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
+            self._attr_name = (
+                f"{self._device.type_name}"
+                f" {self._logical_address}"
+                f" ({self._device.osd_name})"
+            )
 
+    @callback
     def _hdmi_cec_unavailable(self, callback_event):
         self._attr_available = False
-        self.schedule_update_ha_state(False)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register HDMI callbacks after initialization."""
@@ -95,7 +101,7 @@ class CecEntity(Entity):
         return self._device.type
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:

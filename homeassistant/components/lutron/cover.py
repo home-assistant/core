@@ -1,7 +1,5 @@
 """Support for Lutron shades."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -75,7 +73,7 @@ class LutronCover(LutronDevice, CoverEntity):
         """Update the state attributes."""
         level = self._lutron_device.last_level()
         self._attr_is_closed = level < 1
-        self._attr_current_cover_position = level
+        self._attr_current_cover_position = int(level)
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
 
     @property

@@ -1,7 +1,5 @@
 """Class representing a Sonos household storage helper."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
@@ -83,5 +81,11 @@ class SonosHouseholdCoordinator:
         raise NotImplementedError
 
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
-        """Update the cache of the household-level feature and return if cache has changed."""
+        """Update the household-level feature cache.
+
+        Return if cache has changed.
+        """
         raise NotImplementedError
+
+    def add_speaker(self, soco: SoCo) -> None:
+        """Additional processing when a speaker is added if needed."""
