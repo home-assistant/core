@@ -142,13 +142,11 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         Use the discovered device name when available, otherwise generate a name
         to be used as a prefix for device entities.
         """
-        model = self.config[CONF_MODEL]
-        title_placeholders = self.context.get("title_placeholders")
-
-        if title_placeholders is not None:
+        if (title_placeholders := self.context.get("title_placeholders")) is not None:
             name = title_placeholders[CONF_NAME]
             title = name
         else:
+            model = self.config[CONF_MODEL]
             same_model = [
                 entry.data[CONF_NAME]
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
