@@ -156,7 +156,12 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.config[CONF_NAME] = name
 
-        title = f"{model} - {serial}"
+        title_placeholders = self.context.get("title_placeholders")
+        if title_placeholders is not None:
+            title = title_placeholders[CONF_NAME] or f"{model} - {serial}"
+        else:
+            title = f"{model} - {serial}"
+
         return self.async_create_entry(title=title, data=self.config)
 
     async def async_step_reconfigure(
