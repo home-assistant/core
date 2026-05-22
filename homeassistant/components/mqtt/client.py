@@ -156,8 +156,8 @@ async def async_publish(
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
-            f"Cannot publish to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
@@ -281,17 +281,17 @@ def async_subscribe_internal(
     try:
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         ) from exc
     client = mqtt_data.client
     if not mqtt_config_entry_enabled(hass):
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
-            translation_key="mqtt_not_setup_cannot_subscribe",
+            translation_key="mqtt_not_enabled_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
@@ -855,10 +855,24 @@ class MQTT:
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
-            self._mqtt_data.subscription_id_generator.restore(
-                subscription.subscription_id, subscription.topic
+            subscription_id = (
+                1
+                if subscription.is_simple_match
+                else self._mqtt_data.subscription_id_generator.get_subscription_id(
+                    subscription.topic
+                )
             )
-            self._async_track_subscription(subscription)
+            self._async_track_subscription(
+                Subscription(
+                    subscription.topic,
+                    subscription.is_simple_match,
+                    subscription.complex_matcher,
+                    subscription.job,
+                    subscription.qos,
+                    subscription.encoding,
+                    subscription_id,
+                )
+            )
         self._matching_subscriptions.cache_clear()
 
     @callback

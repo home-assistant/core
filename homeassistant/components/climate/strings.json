@@ -373,7 +373,12 @@
           "name": "Target temperature"
         }
       },
-      "name": "Set thermostat target temperature"
+      "name": "Set thermostat target temperature",
+      "sections": {
+        "temperature_range": {
+          "name": "Temperature range"
+        }
+      }
     },
     "toggle": {
       "description": "Toggles a thermostat on/off.",

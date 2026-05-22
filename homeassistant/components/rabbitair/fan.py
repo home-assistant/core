@@ -101,7 +101,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         else:
             # Get key by value in dictionary
             self._attr_preset_mode = next(
-                k for k, v in PRESET_MODES.items() if v == data.mode
+                k for k, v in PRESET_MODES.items() if v is data.mode
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
