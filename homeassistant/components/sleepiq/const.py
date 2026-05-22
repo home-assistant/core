@@ -1,7 +1,5 @@
 """Define constants for the SleepIQ component."""
 
-from homeassistant.const import PRESSURE
-
 DATA_SLEEPIQ = "data_sleepiq"
 DOMAIN = "sleepiq"
 
