@@ -178,6 +178,18 @@
       "title": "System Bridge upgrade required"
     }
   },
+  "selector": {
+    "power_command": {
+      "options": {
+        "hibernate": "Hibernate",
+        "lock": "Lock",
+        "logout": "Logout",
+        "restart": "[%key:common::action::restart%]",
+        "shutdown": "Shutdown",
+        "sleep": "Sleep"
+      }
+    }
+  },
   "services": {
     "get_process_by_id": {
       "description": "Gets a process by the ID.",

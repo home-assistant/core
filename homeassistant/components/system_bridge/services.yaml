@@ -89,3 +89,4 @@ power_command:
             - "restart"
             - "shutdown"
             - "sleep"
+          translation_key: "power_command"
