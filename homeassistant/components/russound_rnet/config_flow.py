@@ -201,14 +201,9 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_SOURCES] = sources
             return await self.async_step_zones()
 
-        # Pre-fill from YAML import data if available
-        existing_sources = self.data.get(CONF_SOURCES, {})
         source_schema = vol.Schema(
             {
-                vol.Optional(
-                    f"source_{i}",
-                    default=existing_sources.get(str(i), ""),
-                ): TextSelector()
+                vol.Optional(f"source_{i}", default=""): TextSelector()
                 for i in range(1, model.max_sources + 1)
             }
         )
@@ -236,14 +231,9 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=self.data,
             )
 
-        # Pre-fill from YAML import data if available
-        existing_zones = self.data.get(CONF_ZONES, {})
         zone_schema = vol.Schema(
             {
-                vol.Optional(
-                    f"zone_{c}_{z}",
-                    default=existing_zones.get(f"{c}_{z}", ""),
-                ): TextSelector()
+                vol.Optional(f"zone_{c}_{z}", default=""): TextSelector()
                 for c in range(1, num_controllers + 1)
                 for z in range(1, model.max_zones + 1)
             }
