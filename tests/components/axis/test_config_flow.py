@@ -73,7 +73,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: f"M1065-LW - {MAC}",
     }
 
 
@@ -189,10 +189,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 2",
+        CONF_NAME: f"M1065-LW - {MAC}",
     }
 
-    assert result["data"][CONF_NAME] == "M1065-LW 2"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {MAC}"
 
 
 async def test_reauth_flow_update_configuration(

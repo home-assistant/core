@@ -8,7 +8,6 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -139,31 +138,15 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_entry(self, serial: str) -> ConfigFlowResult:
         """Create entry for device.
 
-        Use the discovered device name when available, otherwise generate a name
-        to be used as a prefix for device entities.
+        Use the discovered device name when available.
         """
         if (title_placeholders := self.context.get("title_placeholders")) is not None:
             name = title_placeholders[CONF_NAME]
-            title = name
         else:
-            model = self.config[CONF_MODEL]
-            same_model = [
-                entry.data[CONF_NAME]
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
-            ]
-
-            name = model
-            for idx in range(len(same_model) + 1):
-                name = f"{model} {idx}"
-                if name not in same_model:
-                    break
-
-            title = f"{model} - {serial}"
-
+            name = f"{self.config[CONF_MODEL]} - {serial}"
         self.config[CONF_NAME] = name
 
-        return self.async_create_entry(title=title, data=self.config)
+        return self.async_create_entry(title=name, data=self.config)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
