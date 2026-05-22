@@ -1,7 +1,7 @@
 """Define mocks and test objects."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from collections.abc import AsyncGenerator, Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 from zeversolar import StatusEnum, ZeverSolarData
@@ -46,17 +46,30 @@ def zeversolar_data() -> ZeverSolarData:
 
 
 @pytest.fixture
+def mock_zeversolar_client(zeversolar_data: ZeverSolarData) -> Generator[MagicMock]:
+    """Mock the ZeverSolar client."""
+    with (
+        patch(
+            "homeassistant.components.zeversolar.coordinator.zeversolar.ZeverSolarClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.zeversolar.config_flow.zeversolar.ZeverSolarClient",
+            new=mock_client,
+        ),
+    ):
+        mock_client.return_value.get_data.return_value = zeversolar_data
+        yield mock_client.return_value
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    zeversolar_data: ZeverSolarData,
+    mock_zeversolar_client: MagicMock,
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up the Zeversolar integration for testing."""
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.zeversolar.coordinator.zeversolar.ZeverSolarClient.get_data",
-        return_value=zeversolar_data,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        yield config_entry
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
