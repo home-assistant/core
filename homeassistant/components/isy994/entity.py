@@ -181,7 +181,7 @@ class ISYProgramEntity(ISYEntity):
     _status: Program
     _node: Program
 
-    def __init__(self, name: str, status: Program, actions: Program = None) -> None:
+    def __init__(self, name: str, status: Program, actions: Program | None = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._attr_name = name
@@ -237,8 +237,8 @@ class ISYAuxControlEntity(Entity):
         self._attr_has_entity_name = node.address == node.primary_node
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        self._change_handler: EventListener = None
-        self._availability_handler: EventListener = None
+        self._change_handler: EventListener | None = None
+        self._availability_handler: EventListener | None = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
