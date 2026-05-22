@@ -437,9 +437,9 @@ def fake_devices_fixture() -> list[FakeDevice]:
                 NETWORK_INFO_BY_DEVICE[device_data.duid]
             )
         elif device_data.pv == "A01":
-            if device_product_data.category == RoborockCategory.WET_DRY_VAC:
+            if device_product_data.category is RoborockCategory.WET_DRY_VAC:
                 fake_device.dyad = create_dyad_trait()
-            elif device_product_data.category == RoborockCategory.WASHING_MACHINE:
+            elif device_product_data.category is RoborockCategory.WASHING_MACHINE:
                 fake_device.zeo = create_zeo_trait()
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")

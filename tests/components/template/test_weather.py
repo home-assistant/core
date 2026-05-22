@@ -78,7 +78,6 @@ TEST_SENSORS = (
 )
 TEST_WEATHER = TemplatePlatformSetup(
     WEATHER_DOMAIN,
-    None,
     "template_weather",
     make_test_trigger(TEST_STATE_ENTITY_ID, *TEST_SENSORS),
 )

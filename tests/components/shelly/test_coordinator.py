@@ -1027,7 +1027,7 @@ async def test_block_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device did not update" in caplog.text
+    assert "Sleeping device Test name did not update" in caplog.text
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
@@ -1081,7 +1081,7 @@ async def test_rpc_sleeping_device_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Sleeping device did not update" in caplog.text
+    assert "Sleeping device Test name did not update" in caplog.text
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 

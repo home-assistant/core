@@ -37,7 +37,6 @@ from tests.conftest import WebSocketGenerator
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_EVENT = TemplatePlatformSetup(
     event.DOMAIN,
-    None,
     "template_event",
     make_test_trigger(TEST_STATE_ENTITY_ID),
 )
