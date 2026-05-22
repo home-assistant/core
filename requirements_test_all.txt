@@ -224,7 +224,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==4.0.3
+aiodns==4.0.4
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -306,7 +306,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.2
+aiolyric==2.1.1
 
 # homeassistant.components.mealie
 aiomealie==1.2.4
@@ -2280,7 +2280,7 @@ python-qube-heatpump==1.8.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==5.5.1
+python-roborock==5.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2419,7 +2419,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.8
+renault-api==0.5.10
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2828,7 +2828,7 @@ wiffi==1.1.2
 wiim==0.1.2
 
 # homeassistant.components.wled
-wled==0.22.0
+wled==0.23.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.48

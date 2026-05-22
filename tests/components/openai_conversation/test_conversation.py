@@ -659,6 +659,52 @@ async def test_web_search(
     assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
 
 
+async def test_web_search_remove_citations_gpt5(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test that citations are stripped for GPT-5 models with inline_citations disabled."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_CHAT_MODEL: "gpt-5-mini",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_INLINE_CITATIONS: False,
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    message = [
+        "The match ended 0-2",
+        " ([legaseriea.it](https://www.legaseriea.it/))",
+        ".",
+    ]
+    mock_create_stream.return_value = [
+        (
+            *create_web_search_item(id="ws_A", output_index=0),
+            *create_message_item(id="msg_A", text=message, output_index=1),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What was the score?",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    # Citation should be stripped from the response
+    assert result.response.speech["plain"]["speech"] == "The match ended 0-2."
+
+
 async def test_code_interpreter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

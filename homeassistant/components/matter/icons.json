@@ -102,7 +102,7 @@
         "default": "mdi:home-lightning-bolt"
       },
       "eve_weather_trend": {
-        "default": "mdi:weather",
+        "default": "mdi:weather-cloudy",
         "state": {
           "cloudy": "mdi:weather-cloudy",
           "rainy": "mdi:weather-rainy",

@@ -2,7 +2,7 @@
 
 aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
-aiodns==4.0.3
+aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
