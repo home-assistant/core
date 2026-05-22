@@ -1379,6 +1379,98 @@ def test_base_tracker_entity() -> None:
         entity.state_attributes  # noqa: B018
 
 
+async def test_attr_location_name_deprecation_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setting _attr_location_name logs a deprecation warning."""
+    error_message = "is setting the deprecated _attr_location_name property"
+
+    # No warning when _attr_location_name is unset (default None)
+    entity_no_attr = TrackerEntity()
+    entity_no_attr.hass = hass
+    assert entity_no_attr.location_name is None
+    assert error_message not in caplog.text
+
+    # Warning fires when _attr_location_name has a non-None value
+    entity = TrackerEntity()
+    entity.hass = hass
+    entity._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message in caplog.text
+
+    # Warning does not fire again on subsequent access for the same instance
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message not in caplog.text
+
+    # Warning is suppressed for this instance even after the cached value is
+    # invalidated by a subsequent _attr_location_name assignment.
+    entity._attr_location_name = "another_zone"
+    caplog.clear()
+    assert entity.location_name == "another_zone"
+    assert error_message not in caplog.text
+
+    # A fresh instance warns once again
+    entity_new = TrackerEntity()
+    entity_new.hass = hass
+    entity_new._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity_new.location_name == "the_zone"
+    assert error_message in caplog.text
+
+
+def test_location_name_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding location_name in a subclass logs a warning."""
+    error_message = "is overriding the deprecated location_name method"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def location_name(self) -> str | None:
+            return "custom"
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override location_name
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
+
+
+def test_battery_level_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding battery_level in a subclass logs a warning."""
+    error_message = "is overriding the deprecated battery_level method"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def battery_level(self) -> int | None:
+            return 50
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override battery_level
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
+
+
 @pytest.mark.parametrize(
     ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
 )
