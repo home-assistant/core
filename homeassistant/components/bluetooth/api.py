@@ -136,13 +136,14 @@ def async_register_callback(
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
-    When ``mode`` is ACTIVE and ``scan_interval`` is provided, the
-    matched address (taken from ``match_dict["address"]``) is registered
-    with habluetooth's active-scan scheduler so AUTO-mode scanners flip
-    on demand every ``scan_interval`` seconds for ``scan_duration``
-    seconds, instead of forcing continuous active scanning. Without an
-    address in the matcher the active-scan request is skipped; the
-    callback itself still fires normally.
+    When ``mode`` is not PASSIVE and ``match_dict["address"]`` is set,
+    the address is registered with habluetooth's active-scan scheduler
+    so AUTO-mode scanners flip ACTIVE on demand for that device.
+    ``scan_interval`` / ``scan_duration`` default to habluetooth's
+    DEFAULT_ACTIVE_SCAN_* (5 minutes / 10 seconds) when not provided;
+    integrations that need a different cadence can pass explicit
+    values. Without an address in the matcher the active-scan request
+    is skipped; the callback itself still fires normally.
 
     Returns a callback that can be used to cancel the registration.
     """

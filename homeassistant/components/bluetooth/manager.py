@@ -219,14 +219,14 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         connectable = callback_matcher[CONNECTABLE]
         self._callback_index.add_callback_matcher(callback_matcher)
 
-        # If the caller declared an active-scan cadence and the matcher
-        # targets a specific address, also wire it into habluetooth's
-        # active-scan scheduler so AUTO-mode scanners flip active on
-        # demand for this device instead of forcing continuous scanning.
+        # If the matcher targets a specific address and the caller
+        # didn't explicitly ask for PASSIVE, wire it into habluetooth's
+        # active-scan scheduler so AUTO-mode scanners flip ACTIVE on
+        # demand for this device. ``scan_interval``/``scan_duration``
+        # default to habluetooth's DEFAULT_ACTIVE_SCAN_* when None.
         cancel_active_scan: Callable[[], None] | None = None
         if (
-            scan_interval is not None
-            and mode is not BluetoothScanningMode.PASSIVE
+            mode is not BluetoothScanningMode.PASSIVE
             and (address := callback_matcher.get(ADDRESS)) is not None
         ):
             cancel_active_scan = self.async_register_active_scan(
