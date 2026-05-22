@@ -21,4 +21,4 @@ CONF_INSTANCE_ID = "instance_id"
 # Polling interval (seconds)
 DEFAULT_SCAN_INTERVAL = 1800
 
-PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.LOCK, Platform.SWITCH]
