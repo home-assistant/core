@@ -66,7 +66,7 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get the current emergency heat status."""
-        return self._element.mode == ThermostatMode.EMERGENCY_HEAT
+        return self._element.mode is ThermostatMode.EMERGENCY_HEAT
 
     def _elk_set(self, mode: ThermostatMode) -> None:
         """Set the thermostat mode."""

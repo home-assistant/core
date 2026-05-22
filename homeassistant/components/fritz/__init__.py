@@ -61,13 +61,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     except FRITZ_AUTH_EXCEPTIONS as ex:
         raise ConfigEntryAuthFailed from ex
     except FRITZ_EXCEPTIONS as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="error_connecting",
+            translation_placeholders={"error": str(ex)},
+        ) from ex
 
     if (
         "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
         and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
     ):
-        raise ConfigEntryAuthFailed("Missing UPnP configuration")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="error_upnp_disabled",
+        )
 
     await avm_wrapper.async_config_entry_first_refresh()
 
