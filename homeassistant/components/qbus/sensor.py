@@ -48,8 +48,10 @@ class QbusWeatherDescription(SensorEntityDescription):
     """Description for Qbus weather entities."""
 
     property: str
+    scale_factor: int | None = None
 
 
+# Qbus reports illuminance in klux, HA only supports lux.
 _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="daylight",
@@ -58,6 +60,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light",
@@ -65,6 +68,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_east",
@@ -73,6 +77,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_south",
@@ -81,6 +86,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_west",
@@ -89,6 +95,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="temperature",
@@ -375,4 +382,8 @@ class QbusWeatherSensor(QbusEntity, SensorEntity):
 
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
         if value := state.read_property(self.entity_description.property, None):
-            self.native_value = value
+            self.native_value = (
+                value * self.entity_description.scale_factor
+                if self.entity_description.scale_factor is not None
+                else value
+            )
