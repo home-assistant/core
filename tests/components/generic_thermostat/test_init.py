@@ -647,6 +647,7 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     # Run migration
+    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
     result = await generic_thermostat.async_migrate_entry(hass, config_entry)
     assert result is True
 

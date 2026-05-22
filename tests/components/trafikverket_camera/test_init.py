@@ -256,4 +256,5 @@ async def test_no_migration_needed(
         "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_camera",
         return_value=get_camera,
     ):
+        # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
         assert await async_migrate_entry(hass, entry) is True

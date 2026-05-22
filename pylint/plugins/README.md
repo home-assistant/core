@@ -99,6 +99,7 @@ Every check has a code following the
 | `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
+| `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 
 
 ## `home_assistant_logger` checker
@@ -340,3 +341,18 @@ only needed for its side effects.
 
 This rule only applies to `test_*` functions, not to fixture functions.
 
+
+
+## `home_assistant_tests_direct_async_migrate_entry` checker
+
+Detects tests that call an integration's `async_migrate_entry` directly.
+
+### `W7421`: `home-assistant-tests-direct-async-migrate-entry`
+
+Tests should not invoke an integration's `async_migrate_entry` from
+`__init__.py` directly. Instead, tests should let Home Assistant perform
+the setup via `await hass.config_entries.async_setup(entry.entry_id)` so
+that the real migration pipeline (version bumps, reloads, post-migration
+setup, etc.) is exercised.
+
+See [epic #78](https://github.com/home-assistant/epics/issues/78).
