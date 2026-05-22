@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, replace
 import hashlib
 import json
 from math import ceil
+from operator import attrgetter
 import os
 from pathlib import Path
 import subprocess
@@ -72,11 +73,8 @@ class BucketHolder:
                 for b in self._buckets
                 if b.total_tests + size <= self._tests_per_bucket
             ]
-            bucket = (
-                max(fits, key=lambda b: b.total_tests)
-                if fits
-                else min(self._buckets, key=lambda b: b.total_tests)
-            )
+            by_load = attrgetter("total_tests")
+            bucket = max(fits, key=by_load) if fits else min(self._buckets, key=by_load)
             for item in items:
                 bucket.add(item)
 
