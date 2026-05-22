@@ -6,5 +6,6 @@
   "iot_class": "cloud_push",
   "loggers": ["pyjoin"],
   "quality_scale": "legacy",
-  "requirements": ["python-join-api==0.1.0"]
+  "requirements": ["python-join-api==0.1.1"]
 }
+
