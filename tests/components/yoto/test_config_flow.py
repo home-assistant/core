@@ -1,7 +1,6 @@
 """Tests for the Yoto config flow."""
 
 from http import HTTPStatus
-from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import jwt
@@ -68,7 +67,9 @@ async def test_abort_if_no_credentials(hass: HomeAssistant) -> None:
     assert result["reason"] == "missing_credentials"
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -89,9 +90,7 @@ async def test_full_flow(
     assert query["redirect_uri"] == REDIRECT_URI
 
     await _complete_callback(hass, result, hass_client_no_auth, aioclient_mock)
-
-    with patch("homeassistant.components.yoto.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Yoto"

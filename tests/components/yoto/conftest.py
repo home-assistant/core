@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from datetime import UTC, datetime
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt
 import pytest
@@ -87,6 +87,15 @@ def mock_token_hex() -> Generator[MagicMock]:
     """Pin the access token used for proxy URLs to keep snapshots stable."""
     with patch("secrets.token_hex", return_value="abcdef") as token:
         yield token
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Bypass the integration setup so the config flow can be tested in isolation."""
+    with patch(
+        "homeassistant.components.yoto.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture

@@ -178,9 +178,9 @@ async def test_setup_succeeds_without_card_library(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_periodic_poll_fails_on_network_error(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:

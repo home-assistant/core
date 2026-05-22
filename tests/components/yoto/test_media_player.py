@@ -33,10 +33,9 @@ ENTITY_ID = "media_player.nursery_yoto"
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 
 
-@pytest.mark.usefixtures("mock_token_hex")
+@pytest.mark.usefixtures("mock_token_hex", "mock_yoto_client")
 async def test_entity_state(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
