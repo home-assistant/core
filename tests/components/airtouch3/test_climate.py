@@ -1,7 +1,7 @@
 """Test AirTouch 3 climate entities."""
 
 from typing import cast
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, call
 
 from pyairtouch3.airtouch_aircon import Aircon
 from pyairtouch3.airtouch_sensor import Sensor
@@ -228,18 +228,14 @@ async def test_group_set_temperature_steps_to_target(
     monkeypatch.setattr(coordinator, "send_command", send_command)
     monkeypatch.setattr(entity, "async_write_ha_state", write_state)
 
-    with patch(
-        "homeassistant.components.airtouch3.climate.asyncio.sleep", AsyncMock()
-    ) as sleep:
-        await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22})
+    await entity.async_set_temperature(**{ATTR_TEMPERATURE: 22})
 
     assert send_command.mock_calls == [
         call("set_group_temperature", 1, 1),
         call("set_group_temperature", 1, 1),
     ]
     assert coordinator.data.zones[0].desired_temperature == 22
-    assert sleep.await_count == 2
-    assert write_state.call_count == 2
+    write_state.assert_called_once()
 
 
 async def test_group_set_temperature_ignores_noop_and_missing_zone(
@@ -283,6 +279,7 @@ async def test_group_hvac_mode_toggles_zone(
     await entity.async_set_hvac_mode(hvac_mode)
 
     send_command.assert_awaited_once_with("toggle_zone", group_id)
+    assert entity.hvac_mode == hvac_mode
     write_state.assert_called_once()
 
 

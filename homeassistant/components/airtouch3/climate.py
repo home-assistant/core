@@ -1,6 +1,5 @@
 """AirTouch 3 component to control AirTouch 3 Climate Devices."""
 
-import asyncio
 import logging
 from typing import Any
 
@@ -257,14 +256,14 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
                 await self.coordinator.send_command(
                     "set_group_temperature", self.group_id, inc_dec
                 )
-                zone.desired_temperature += inc_dec
-                self.async_write_ha_state()
-                await asyncio.sleep(1)
+
+            zone.desired_temperature = current_temp + inc_dec * steps
+            self.async_write_ha_state()
 
             _LOGGER.debug(
                 "Set target temperature for zone %s to %s",
                 self.group_id,
-                temperature,
+                zone.desired_temperature,
             )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -276,12 +275,14 @@ class AirtouchGroup(CoordinatorEntity[Airtouch3DataUpdateCoordinator], ClimateEn
 
         if hvac_mode == HVACMode.FAN_ONLY and zone.status == ZoneStatus.ZONE_OFF:
             await self.coordinator.send_command("toggle_zone", self.group_id)
+            zone.status = ZoneStatus.ZONE_ON
             _LOGGER.debug(
                 "Turning on group %s with FAN_ONLY mode",
                 self.group_id,
             )
         elif hvac_mode == HVACMode.OFF and zone.status == ZoneStatus.ZONE_ON:
             await self.coordinator.send_command("toggle_zone", self.group_id)
+            zone.status = ZoneStatus.ZONE_OFF
             _LOGGER.debug(
                 "Turning off group %s with OFF mode",
                 self.group_id,
