@@ -1,6 +1,6 @@
 """Generate MDI icons file for the pylint plugin."""
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
 import json
 
@@ -14,7 +14,7 @@ def _get_frontend_version() -> str | None:
     """Get the installed home-assistant-frontend version."""
     try:
         return version("home-assistant-frontend")
-    except Exception:  # noqa: BLE001
+    except PackageNotFoundError:
         return None
 
 
@@ -37,6 +37,10 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
     icons = _load_mdi_icons()
     if not icons:
+        config.add_error(
+            "mdi_icons",
+            "Could not load MDI icons from home-assistant-frontend",
+        )
         return
 
     content = format_python_namespace(
