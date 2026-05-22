@@ -5,12 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 from pysmartthings import Attribute, Capability
 from pysmartthings.models import HealthStatus
 import pytest
-
-from homeassistant.components.smartthings.sensor import (
-    SmartThingsSensor,
-    SmartThingsSensorEntityDescription,
-    _normalize_cycle_value,
-)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
@@ -18,6 +12,11 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
+from homeassistant.components.smartthings.sensor import (
+    SmartThingsSensor,
+    SmartThingsSensorEntityDescription,
+    _normalize_cycle_value,
+)
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -554,4 +553,3 @@ def test_sensor_options_normalization_dict() -> None:
     # Test with mixed-case strings that normalize to different values
     mock_options_status.value = ["Wash_Normal", "Wash_Delicate", "wash_normal"]
     assert sensor.options == ["normal", "delicate", "cycle"]
-

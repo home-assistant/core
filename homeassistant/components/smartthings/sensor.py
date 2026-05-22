@@ -1620,17 +1620,15 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                             )
                         if opt_val is not None:
                             options_list.append(str(opt_val).lower())
-            else:
-                # Fall back to static options in description if attribute is missing/None
-                if (static_options := super().options) is not None:
-                    options_list = [str(opt).lower() for opt in static_options]
-                else:
-                    return []
-        else:
-            if (static_options := super().options) is not None:
+            # Fall back to static options in description if attribute is missing/None
+            elif (static_options := super().options) is not None:
                 options_list = [str(opt).lower() for opt in static_options]
             else:
-                return None
+                return []
+        elif (static_options := super().options) is not None:
+            options_list = [str(opt).lower() for opt in static_options]
+        else:
+            return None
 
         # Deduplicate while preserving order
         seen: set[str] = set()
