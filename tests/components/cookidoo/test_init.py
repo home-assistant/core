@@ -85,7 +85,7 @@ async def test_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    ("exception", "status"),
+    ("login_exception", "status"),
     [
         (None, ConfigEntryState.LOADED),
         (CookidooRequestException(), ConfigEntryState.SETUP_RETRY),
@@ -96,12 +96,25 @@ async def test_config_entry_not_ready_auth_error(
     hass: HomeAssistant,
     cookidoo_config_entry: MockConfigEntry,
     mock_cookidoo_client: AsyncMock,
-    exception: Exception | None,
+    login_exception: Exception | None,
     status: ConfigEntryState,
 ) -> None:
-    """Test config entry recovery when data fetch hits an auth error."""
-    mock_cookidoo_client.get_ingredient_items.side_effect = CookidooAuthException
-    mock_cookidoo_client.login.side_effect = [None, exception] if exception else None
+    """Test config entry recovery when data fetch hits an auth error.
+
+    Simulates: initial login succeeds (_async_setup), first data fetch
+    raises CookidooAuthException (expired session), then re-login either
+    succeeds or fails. On success, the next data fetch returns valid data.
+    """
+    # get_ingredient_items raises auth error once, then returns valid data
+    default_return = mock_cookidoo_client.get_ingredient_items.return_value
+    mock_cookidoo_client.get_ingredient_items.side_effect = [
+        CookidooAuthException(),
+        default_return,
+    ]
+    # First login() is _async_setup (succeeds), second is re-login attempt
+    mock_cookidoo_client.login.side_effect = (
+        [None, login_exception] if login_exception else None
+    )
 
     cookidoo_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(cookidoo_config_entry.entry_id)
