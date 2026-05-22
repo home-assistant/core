@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ENTITY_ID_FORMAT,
-    SourceType,
     TrackerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -109,7 +108,6 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
     """Representation of a template device tracker features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
-    _attr_source_type = SourceType.GPS
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
