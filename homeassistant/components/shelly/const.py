@@ -343,3 +343,5 @@ TRV_CHANNEL = 0
 
 ATTR_KEY = "key"
 ATTR_VALUE = "value"
+
+DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"
