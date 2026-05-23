@@ -23,6 +23,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_DEBUG,
     CONF_PASSWORD,
@@ -37,7 +38,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
@@ -86,20 +86,30 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-    ssl_context = create_client_context() if config[CONF_VERIFY_SSL] else None
+    if config:
+        hass.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+        return None
+
+    if discovery_info is None:
+        return None
+
+    ssl_context = create_client_context() if discovery_info[CONF_VERIFY_SSL] else None
     mail_service = MailNotificationService(
-        config[CONF_SERVER],
-        config[CONF_PORT],
-        config[CONF_TIMEOUT],
-        config[CONF_SENDER],
-        config[CONF_ENCRYPTION],
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config[CONF_RECIPIENT],
-        config.get(CONF_SENDER_NAME),
-        config[CONF_DEBUG],
-        config[CONF_VERIFY_SSL],
+        discovery_info[CONF_SERVER],
+        discovery_info[CONF_PORT],
+        discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        discovery_info[CONF_SENDER],
+        discovery_info[CONF_ENCRYPTION],
+        discovery_info.get(CONF_USERNAME),
+        discovery_info.get(CONF_PASSWORD),
+        discovery_info[CONF_RECIPIENT],
+        discovery_info.get(CONF_SENDER_NAME),
+        DEFAULT_DEBUG,
+        discovery_info[CONF_VERIFY_SSL],
         ssl_context,
     )
 
