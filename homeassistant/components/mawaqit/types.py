@@ -35,14 +35,14 @@ class MawaqitMosqueData:
     @property
     def display_name(self) -> str:
         """Compute the display name for the mosque."""
-        proximity_str = ""
+        display_name = ""
         if self.proximity is not None:
             km = self.proximity / 1000
-            proximity_str = f"{self.name} ({km:.2f} km)"
+            display_name = f"{self.label} ({km:.2f} km)"
         elif self.localisation is not None:
-            proximity_str = " - " + self.localisation
+            display_name = f"{self.label} - {self.localisation}"
 
-        return self.label + proximity_str
+        return display_name
 
     @classmethod
     def from_dict(cls, data: dict):
