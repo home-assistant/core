@@ -10,10 +10,9 @@ from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_PIN
 
 from .const import (
-    CONF_PIN,
     CONF_PRESET_AWAY_TEMP,
     CONF_PRESET_COMFORT_TEMP,
     DEFAULT_PIN,
@@ -143,7 +142,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_name = discovery_info.name or ""
             is_heater_name = any(
                 name in device_name.upper()
-                for name in ["VEVOR", "HEATER", "AIR HEATER", "DIESEL"]
+                for name in ("VEVOR", "HEATER", "AIR HEATER", "DIESEL")
             )
 
             # Method 3: Check manufacturer_id 65535 (0xFFFF)
@@ -168,7 +167,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             _LOGGER.warning(
                 "No diesel heaters found. Make sure the heater is powered on and within Bluetooth range. "
-                "If using ESPHome Bluetooth Proxy, ensure it has available connection slots (max 3 connections)."
+                "If using ESPHome Bluetooth Proxy, ensure it has available connection slots (max 3 connections)"
             )
             # Allow manual entry if no devices found
             return await self.async_step_manual()

@@ -33,6 +33,7 @@ def _make_flow(*, configured_addresses=None):
     """Create a VevorHeaterConfigFlow with a mock hass."""
     flow = VevorHeaterConfigFlow()
     flow.hass = MagicMock()
+    flow.context = {}
     if configured_addresses:
         flow.hass.config_entries.async_entries.return_value = [
             MagicMock(unique_id=addr) for addr in configured_addresses

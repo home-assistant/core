@@ -84,7 +84,6 @@ SENSOR_TEMP_MIN: Final = -128
 SENSOR_TEMP_MAX: Final = 127
 
 # BLE authentication PIN
-CONF_PIN: Final = "pin"
 DEFAULT_PIN: Final = 1234
 MIN_PIN: Final = 0
 MAX_PIN: Final = 9999
