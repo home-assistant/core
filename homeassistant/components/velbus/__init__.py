@@ -1,5 +1,7 @@
 """Support for Velbus devices."""
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 import logging
@@ -13,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -107,6 +113,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="connection_failed",
         ) from error
+
+    issue_id = f"connection_lost_{entry.entry_id}"
+
+    async def on_disconnect() -> None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="connection_lost",
+        )
+
+    async def on_reconnect() -> None:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+    controller.add_disconnect_callback(on_disconnect)
+    controller.add_connect_callback(on_reconnect)
+    entry.async_on_unload(
+        lambda: controller.remove_disconnect_callback(on_disconnect)
+    )
+    entry.async_on_unload(
+        lambda: controller.remove_connect_callback(on_reconnect)
+    )
+    entry.async_on_unload(lambda: ir.async_delete_issue(hass, DOMAIN, issue_id))
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)

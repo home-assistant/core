@@ -83,6 +83,10 @@
     }
   },
   "issues": {
+    "connection_lost": {
+      "description": "The connection to the Velbus interface was lost. Check that your Velbus interface is powered on and reachable. Home Assistant will automatically reconnect.",
+      "title": "Velbus connection lost"
+    },
     "deprecated_interface_parameter": {
       "description": "The 'interface' parameter in the Velbus actions is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
       "title": "Deprecated 'interface' parameter"
