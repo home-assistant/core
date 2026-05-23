@@ -15,13 +15,14 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.opnsense import OPNsenseSSLError, OPNsenseUnknownFirmware
-from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
     ConfigEntry,
     ConfigSubentryData,
 )
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, CONFIG_DATA_IMPORT
@@ -56,10 +57,10 @@ async def test_interfaces_step_with_tracker_interfaces(
     # Now submit interfaces step with tracker_interfaces
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"tracker_interfaces": ["LAN", "WAN"]},
+        user_input={CONF_TRACKER_INTERFACES: ["LAN", "WAN"]},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"]["tracker_interfaces"] == ["LAN", "WAN"]
+    assert result["data"][CONF_TRACKER_INTERFACES] == ["LAN", "WAN"]
 
 
 async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
@@ -124,10 +125,10 @@ async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> Non
     # Submit interfaces step (simulate user selecting all interfaces)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"tracker_interfaces": []},
+        user_input={CONF_TRACKER_INTERFACES: []},
     )
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == CONFIG_DATA["url"]
+    assert result.get("title") == CONFIG_DATA[CONF_URL]
     assert result.get("data") == CONFIG_DATA
     assert "result" in result
     config_entry: ConfigEntry | None = result.get("result")
@@ -283,20 +284,20 @@ async def test_import_empty_tracker_interfaces(
 ) -> None:
     """Test import with empty CONF_TRACKER_INTERFACES (should pop the key)."""
     import_data = dict(CONFIG_DATA_IMPORT)
-    import_data["tracker_interfaces"] = []
+    import_data[CONF_TRACKER_INTERFACES] = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=import_data,
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert "tracker_interfaces" not in result["data"]
+    assert CONF_TRACKER_INTERFACES not in result["data"]
 
 
 async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
     """Test import with missing tracker interfaces (should create issue and abort)."""
     import_data = dict(CONFIG_DATA_IMPORT)
-    import_data["tracker_interfaces"] = ["MISSING"]
+    import_data[CONF_TRACKER_INTERFACES] = ["MISSING"]
     with (
         patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
         patch(
@@ -377,6 +378,6 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
         # Submit interfaces step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"tracker_interfaces": []},
+            user_input={CONF_TRACKER_INTERFACES: []},
         )
         assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
