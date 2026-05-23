@@ -18,7 +18,7 @@ import pytest
 from homeassistant.components.matter import _derive_ble_proxy_url
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -802,6 +802,54 @@ async def test_ble_proxy_setup_when_enabled(
 
     await hass.config_entries.async_unload(entry.entry_id)
     proxy.disconnect.assert_awaited()
+
+
+async def test_ble_proxy_disconnect_on_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy is disconnected when Home Assistant stops."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    proxy.disconnect.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
+async def test_ble_proxy_disconnect_failure_does_not_break_hass_stop(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """A BLE proxy disconnect failure must not prevent matter_client.disconnect()."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+    proxy.disconnect.side_effect = RuntimeError("boom")
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
 
 
 async def test_ble_proxy_skipped_when_disabled(
