@@ -254,7 +254,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.1.0
+aioesphomeapi==45.2.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1210,7 +1210,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.4.0
+habluetooth==6.5.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
