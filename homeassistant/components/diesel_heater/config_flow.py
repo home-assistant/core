@@ -84,15 +84,14 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         address = _normalize_mac_address(self._discovery_info.address)
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({
-                vol.Optional(
-                    CONF_PIN,
-                    default=DEFAULT_PIN
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_PIN, max=MAX_PIN),
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_PIN, default=DEFAULT_PIN): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_PIN, max=MAX_PIN),
+                    ),
+                }
+            ),
             description_placeholders={
                 "name": f"Diesel Heater ({address[-5:].replace(':', '')})",
                 "address": address,
@@ -122,7 +121,9 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Scan for diesel heaters
         discovered = list(bluetooth.async_discovered_service_info(self.hass))
 
-        _LOGGER.debug("Scanning for diesel heaters, found %d BLE devices", len(discovered))
+        _LOGGER.debug(
+            "Scanning for diesel heaters, found %d BLE devices", len(discovered)
+        )
 
         for discovery_info in discovered:
             address = _normalize_mac_address(discovery_info.address)
@@ -140,22 +141,29 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Method 2: Check for known device names
             device_name = discovery_info.name or ""
-            is_heater_name = any(name in device_name.upper() for name in [
-                "VEVOR", "HEATER", "AIR HEATER", "DIESEL"
-            ])
+            is_heater_name = any(
+                name in device_name.upper()
+                for name in ["VEVOR", "HEATER", "AIR HEATER", "DIESEL"]
+            )
 
             # Method 3: Check manufacturer_id 65535 (0xFFFF)
             has_heater_manufacturer = 65535 in discovery_info.manufacturer_data
 
             _LOGGER.debug(
                 "Device %s (%s): service_uuid=%s, name_match=%s, manufacturer=%s",
-                address, device_name, has_service_uuid, is_heater_name, has_heater_manufacturer
+                address,
+                device_name,
+                has_service_uuid,
+                is_heater_name,
+                has_heater_manufacturer,
             )
 
             # Accept device if any method matches
             if has_service_uuid or is_heater_name or has_heater_manufacturer:
                 self._discovered_devices[address] = discovery_info
-                _LOGGER.info("Found potential diesel heater: %s (%s)", address, device_name)
+                _LOGGER.info(
+                    "Found potential diesel heater: %s (%s)", address, device_name
+                )
 
         if not self._discovered_devices:
             _LOGGER.warning(
@@ -173,16 +181,15 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_ADDRESS): vol.In(devices),
-                vol.Optional(
-                    CONF_PIN,
-                    default=DEFAULT_PIN
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_PIN, max=MAX_PIN),
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): vol.In(devices),
+                    vol.Optional(CONF_PIN, default=DEFAULT_PIN): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_PIN, max=MAX_PIN),
+                    ),
+                }
+            ),
         )
 
     async def async_step_manual(
@@ -211,20 +218,19 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema({
-                vol.Required(CONF_ADDRESS): str,
-                vol.Optional(
-                    CONF_PIN,
-                    default=DEFAULT_PIN
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_PIN, max=MAX_PIN),
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): str,
+                    vol.Optional(CONF_PIN, default=DEFAULT_PIN): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_PIN, max=MAX_PIN),
+                    ),
+                }
+            ),
             errors=errors,
             description_placeholders={
                 "address_format": "XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
-            }
+            },
         )
 
     @staticmethod
@@ -261,14 +267,20 @@ class VevorHeaterOptionsFlowHandler(config_entries.OptionsFlow):
             ),
             vol.Optional(
                 CONF_PRESET_AWAY_TEMP,
-                default=opts.get(CONF_PRESET_AWAY_TEMP, data.get(CONF_PRESET_AWAY_TEMP, DEFAULT_PRESET_AWAY_TEMP)),
+                default=opts.get(
+                    CONF_PRESET_AWAY_TEMP,
+                    data.get(CONF_PRESET_AWAY_TEMP, DEFAULT_PRESET_AWAY_TEMP),
+                ),
             ): vol.All(
                 vol.Coerce(int),
                 vol.Range(min=8, max=36),
             ),
             vol.Optional(
                 CONF_PRESET_COMFORT_TEMP,
-                default=opts.get(CONF_PRESET_COMFORT_TEMP, data.get(CONF_PRESET_COMFORT_TEMP, DEFAULT_PRESET_COMFORT_TEMP)),
+                default=opts.get(
+                    CONF_PRESET_COMFORT_TEMP,
+                    data.get(CONF_PRESET_COMFORT_TEMP, DEFAULT_PRESET_COMFORT_TEMP),
+                ),
             ): vol.All(
                 vol.Coerce(int),
                 vol.Range(min=8, max=36),

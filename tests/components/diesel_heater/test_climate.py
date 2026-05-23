@@ -1,4 +1,5 @@
 """Tests for Diesel Heater climate platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -57,6 +58,7 @@ def create_mock_config_entry() -> MagicMock:
 # ---------------------------------------------------------------------------
 # Climate entity tests
 # ---------------------------------------------------------------------------
+
 
 class TestVevorHeaterClimate:
     """Tests for Vevor climate entity."""
@@ -142,6 +144,7 @@ class TestClimateAvailability:
 # ---------------------------------------------------------------------------
 # HVAC Action tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateHvacAction:
     """Tests for HVAC action functionality."""
@@ -235,6 +238,7 @@ class TestClimateHvacAction:
 # Preset mode tests
 # ---------------------------------------------------------------------------
 
+
 class TestClimatePresetMode:
     """Tests for preset mode functionality."""
 
@@ -281,6 +285,7 @@ class TestClimatePresetMode:
 # Async method tests
 # ---------------------------------------------------------------------------
 
+
 class TestClimateAsyncMethods:
     """Tests for async climate methods."""
 
@@ -291,7 +296,7 @@ class TestClimateAsyncMethods:
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert hasattr(climate, 'async_set_temperature')
+        assert hasattr(climate, "async_set_temperature")
         assert callable(climate.async_set_temperature)
 
     @pytest.mark.asyncio
@@ -323,7 +328,7 @@ class TestClimateAsyncMethods:
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert hasattr(climate, 'async_set_hvac_mode')
+        assert hasattr(climate, "async_set_hvac_mode")
         assert callable(climate.async_set_hvac_mode)
 
     @pytest.mark.asyncio
@@ -333,13 +338,14 @@ class TestClimateAsyncMethods:
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert hasattr(climate, 'async_set_preset_mode')
+        assert hasattr(climate, "async_set_preset_mode")
         assert callable(climate.async_set_preset_mode)
 
 
 # ---------------------------------------------------------------------------
 # Climate attributes tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateAttributes:
     """Tests for climate entity attributes."""
@@ -406,6 +412,7 @@ class TestClimateAttributes:
 # ---------------------------------------------------------------------------
 # Helper method tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateHelperMethods:
     """Tests for climate helper methods."""
@@ -479,6 +486,7 @@ class TestClimateHelperMethods:
 # Async setup entry tests
 # ---------------------------------------------------------------------------
 
+
 class TestAsyncSetupEntry:
     """Tests for async_setup_entry."""
 
@@ -509,6 +517,7 @@ class TestAsyncSetupEntry:
 # ---------------------------------------------------------------------------
 # Extended async method tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateAsyncSetTemperature:
     """Tests for async_set_temperature method."""
@@ -578,6 +587,7 @@ class TestClimateAsyncSetHvacMode:
 # Preset mode edge cases
 # ---------------------------------------------------------------------------
 
+
 class TestClimatePresetModeEdgeCases:
     """Tests for preset mode edge cases."""
 
@@ -610,6 +620,7 @@ class TestClimatePresetModeEdgeCases:
 # Entity lifecycle tests
 # ---------------------------------------------------------------------------
 
+
 class TestClimateEntityLifecycle:
     """Tests for climate entity lifecycle."""
 
@@ -619,7 +630,7 @@ class TestClimateEntityLifecycle:
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert hasattr(climate, '_handle_coordinator_update')
+        assert hasattr(climate, "_handle_coordinator_update")
 
     def test_handle_coordinator_update_is_callable(self):
         """Test _handle_coordinator_update calls async_write_ha_state."""
@@ -636,6 +647,7 @@ class TestClimateEntityLifecycle:
 # ---------------------------------------------------------------------------
 # Full async_set_preset_mode tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateAsyncSetPresetModeFull:
     """Full tests for async_set_preset_mode method."""
@@ -719,6 +731,7 @@ class TestClimateAsyncSetPresetModeFull:
 # ---------------------------------------------------------------------------
 # Full async_set_temperature tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateAsyncSetTemperatureFull:
     """Full tests for async_set_temperature method."""
@@ -869,6 +882,7 @@ class TestClimateAsyncSetTemperatureFull:
 # Full async_set_hvac_mode tests
 # ---------------------------------------------------------------------------
 
+
 class TestClimateAsyncSetHvacModeFull:
     """Full tests for async_set_hvac_mode method."""
 
@@ -899,6 +913,7 @@ class TestClimateAsyncSetHvacModeFull:
 # Temperature unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestClimateTemperatureUnit:
     """Tests for climate temperature unit."""
 
@@ -922,6 +937,7 @@ class TestClimateTemperatureUnit:
 # ---------------------------------------------------------------------------
 # Additional edge case tests
 # ---------------------------------------------------------------------------
+
 
 class TestClimateEdgeCases:
     """Additional edge case tests for climate entity."""

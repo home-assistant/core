@@ -1,4 +1,5 @@
 """Constants for the Diesel Heater integration."""
+
 from typing import Final
 
 # Re-export all protocol constants from the diesel-heater-ble PyPI package.

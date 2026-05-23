@@ -109,12 +109,16 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             6: cbff,
         }
         self._is_abba_device = False  # True if using ABBA/HeaterCC protocol
-        self._abba_write_char: BleakGATTCharacteristic | None = None  # ABBA devices use separate write characteristic
+        self._abba_write_char: BleakGATTCharacteristic | None = (
+            None  # ABBA devices use separate write characteristic
+        )
         self._connection_attempts = 0
         self._last_connection_attempt = 0.0
         self._consecutive_failures = 0  # Track consecutive update failures
         self._max_stale_cycles = 3  # Keep last values for this many failed cycles
-        self._last_valid_data: dict[str, Any] = {}  # Cache of last valid sensor readings
+        self._last_valid_data: dict[
+            str, Any
+        ] = {}  # Cache of last valid sensor readings
         self._heater_uses_fahrenheit: bool = False  # Detected from heater response
 
         # Current state
@@ -148,9 +152,17 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
     # Fields that represent volatile heater state (cleared on disconnect)
     _VOLATILE_FIELDS = (
-        "case_temperature", "cab_temperature", "cab_temperature_raw",
-        "supply_voltage", "running_state", "running_step", "running_mode",
-        "set_level", "set_temp", "altitude", "error_code",
+        "case_temperature",
+        "cab_temperature",
+        "cab_temperature_raw",
+        "supply_voltage",
+        "running_state",
+        "running_step",
+        "running_mode",
+        "set_level",
+        "set_temp",
+        "altitude",
+        "error_code",
     )
 
     def _clear_sensor_values(self) -> None:
@@ -182,7 +194,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 "Update failed (attempt %d/%d), keeping last values: %s",
                 self._consecutive_failures,
                 self._max_stale_cycles,
-                err
+                err,
             )
         else:
             # Too many failures, mark disconnected and clear values
@@ -192,7 +204,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 self._logger.warning(
                     "Diesel Heater offline after %d attempts: %s",
                     self._consecutive_failures,
-                    err
+                    err,
                 )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -215,7 +227,8 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 if attempt < max_retries - 1:
                     self._logger.debug(
                         "Status request timed out (attempt %d/%d), retrying...",
-                        attempt + 1, max_retries
+                        attempt + 1,
+                        max_retries,
                     )
                     await asyncio.sleep(1.0)
 
@@ -264,7 +277,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 self._logger.debug(
                     "Waiting %.1fs before reconnection attempt %d",
                     remaining,
-                    self._connection_attempts + 1
+                    self._connection_attempts + 1,
                 )
                 await asyncio.sleep(remaining)
 
@@ -274,7 +287,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         self._logger.debug(
             "Connecting to Diesel Heater at %s (attempt %d)",
             self._ble_device.address,
-            self._connection_attempts
+            self._connection_attempts,
         )
 
         try:
@@ -288,7 +301,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
             # Verify services are available
             if not self._client.services:
-                self._logger.warning("No services discovered, triggering service refresh")
+                self._logger.warning(
+                    "No services discovered, triggering service refresh"
+                )
                 await self._cleanup_connection()
                 raise BleakError("No services available")  # noqa: TRY301
 
@@ -338,7 +353,8 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                                     self._active_char_uuid = char_uuid
                                     self._logger.info(
                                         "Found heater characteristic: %s (service: %s)",
-                                        char_uuid, service_uuid
+                                        char_uuid,
+                                        service_uuid,
                                     )
                                     break
                             if self._characteristic:
@@ -350,7 +366,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 available_services = [s.uuid for s in self._client.services]
                 self._logger.error(
                     "Could not find heater characteristic. Available services: %s",
-                    available_services
+                    available_services,
                 )
                 await self._cleanup_connection()
                 raise BleakError("Could not find heater characteristic")  # noqa: TRY301
@@ -360,7 +376,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 await self._client.start_notify(
                     self._characteristic, self._notification_callback
                 )
-                self._logger.debug("Started notifications on %s", self._active_char_uuid)
+                self._logger.debug(
+                    "Started notifications on %s", self._active_char_uuid
+                )
             else:
                 self._logger.warning("Characteristic does not support notify")
 
@@ -380,11 +398,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         self, _sender: BleakGATTCharacteristic, data: bytearray
     ) -> None:
         """Handle notification from heater."""
-        self._logger.debug(
-            "Received BLE data (%d bytes): %s",
-            len(data),
-            data.hex()
-        )
+        self._logger.debug("Received BLE data (%d bytes): %s", len(data), data.hex())
         try:
             self._parse_response(data)
         except Exception as err:  # noqa: BLE001
@@ -425,7 +439,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
     def _parse_response(self, data: bytearray) -> None:
         """Parse response from heater using protocol handler classes."""
         if len(data) < 8:
-            header_short = (_u8_to_number(data[0]) << 8) | _u8_to_number(data[1]) if len(data) >= 2 else 0
+            header_short = (
+                (_u8_to_number(data[0]) << 8) | _u8_to_number(data[1])
+                if len(data) >= 2
+                else 0
+            )
             if header_short == PROTOCOL_HEADER_AA77:
                 self._logger.debug("AA77 ACK received (%d bytes)", len(data))
                 self._notification_data = data
@@ -460,12 +478,14 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             state = protocol.parse_to_state(parse_data)
         except Exception as err:  # noqa: BLE001
             self._logger.error("%s parse error: %s", protocol.name, err)
-            self.data.update({
-                "connected": True,
-                "running_state": 0,
-                "running_step": 0,
-                "error_code": 0,
-            })
+            self.data.update(
+                {
+                    "connected": True,
+                    "running_state": 0,
+                    "running_step": 0,
+                    "error_code": 0,
+                }
+            )
             self._notification_data = data
             return
 
@@ -489,14 +509,15 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 "CBFF data appears encrypted or corrupt (protocol_version=%s, "
                 "raw=%s). Sensor values discarded — only connection state kept. "
                 "Please report this on GitHub Issue #24 with your heater model.",
-                proto_ver, data.hex(),
+                proto_ver,
+                data.hex(),
             )
 
         self.data.update(parsed)
 
         # Update coordinator state from parsed data
         if "temp_unit" in parsed:
-            self._heater_uses_fahrenheit = (parsed["temp_unit"] == 1)
+            self._heater_uses_fahrenheit = parsed["temp_unit"] == 1
 
         # Apply temperature calibration (ABBA handles it internally)
         if protocol.needs_calibration:
@@ -509,7 +530,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if old_mode != self._protocol_mode:
             self._logger.info(
                 "Protocol mode changed: %d -> %d (%s)",
-                old_mode, self._protocol_mode, protocol.name
+                old_mode,
+                self._protocol_mode,
+                protocol.name,
             )
 
     def _apply_ui_temperature_offset(self) -> None:
@@ -537,7 +560,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # Apply manual offset for display purposes
         if manual_offset != 0.0:
             calibrated_temp = reported_temp + manual_offset
-            calibrated_temp = max(SENSOR_TEMP_MIN, min(SENSOR_TEMP_MAX, calibrated_temp))
+            calibrated_temp = max(
+                SENSOR_TEMP_MIN, min(SENSOR_TEMP_MAX, calibrated_temp)
+            )
             calibrated_temp = round(calibrated_temp, 1)
             self.data["cab_temperature"] = calibrated_temp
 
@@ -546,7 +571,11 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if self._client:
             try:
                 if self._client.is_connected:
-                    if self._characteristic and self._active_char_uuid and "notify" in self._characteristic.properties:
+                    if (
+                        self._characteristic
+                        and self._active_char_uuid
+                        and "notify" in self._characteristic.properties
+                    ):
                         try:
                             await self._client.stop_notify(self._active_char_uuid)
                         except Exception as err:  # noqa: BLE001
@@ -591,7 +620,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             protocol = self._protocols[1]
         return protocol.build_command(command, argument, self._passkey)
 
-    async def _send_command(self, command: int, argument: int, timeout: float = 5.0) -> bool:
+    async def _send_command(
+        self, command: int, argument: int, timeout: float = 5.0
+    ) -> bool:
         """Send command to heater with configurable timeout."""
         if not self._client or not self._client.is_connected:
             self._logger.warning("Cannot send command: heater not connected")
@@ -605,7 +636,10 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
         self._logger.debug(
             "Sending command: %s (cmd=%d, arg=%d, protocol=%d)",
-            packet.hex(), command, argument, self._protocol_mode
+            packet.hex(),
+            command,
+            argument,
+            self._protocol_mode,
         )
 
         try:
@@ -626,7 +660,8 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 if self._notification_data:
                     self._logger.debug(
                         "Received response after %.1fs (protocol=%d)",
-                        i * 0.1, self._protocol_mode
+                        i * 0.1,
+                        self._protocol_mode,
                     )
                     return True
 
@@ -683,13 +718,15 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         # Ventilation mode (ABBA only)
         if mode == 3:
             if self._protocol_mode != 5:
-                self._logger.warning("Ventilation mode is only available for ABBA devices")
+                self._logger.warning(
+                    "Ventilation mode is only available for ABBA devices"
+                )
                 return
             running_step = self.data.get("running_step", 0)
             if running_step not in (0, 6):
                 self._logger.warning(
                     "Ventilation mode only available when heater is off (current step: %d)",
-                    running_step
+                    running_step,
                 )
                 return
             success = await self._send_command(101, 0)
@@ -749,7 +786,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
     async def async_set_high_altitude(self, enabled: bool) -> None:
         """Toggle high altitude mode (ABBA-only, cmd 99)."""
         if not self._is_abba_device:
-            self._logger.warning("High altitude mode is only available for ABBA/HeaterCC devices")
+            self._logger.warning(
+                "High altitude mode is only available for ABBA/HeaterCC devices"
+            )
             return
         success = await self._send_command(99, 0)
         if success:
