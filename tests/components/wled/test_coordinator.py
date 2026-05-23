@@ -300,7 +300,7 @@ async def test_fail_when_other_device(
             ),
             ConfigEntryState.SETUP_RETRY,
             None,
-            "Failed to download presets from device. Check preset configurations in WLED UI.",
+            "Failed to download presets from the device. Check preset configurations in WLED UI.",
             id="invalid_response_presets",
         ),
         pytest.param(
@@ -309,7 +309,7 @@ async def test_fail_when_other_device(
             ),
             ConfigEntryState.SETUP_RETRY,
             None,
-            "Invalid response from WLED API: ",
+            "Invalid response from WLED API:",
             id="empty_response_full_update",
         ),
         pytest.param(
@@ -318,7 +318,7 @@ async def test_fail_when_other_device(
             ),
             ConfigEntryState.SETUP_RETRY,
             None,
-            "Failed to download presets from device. Check preset configurations in WLED UI.",
+            "Failed to download presets from the device. Check preset configurations in WLED UI.",
             id="empty_response_presets_update",
         ),
     ],
