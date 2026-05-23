@@ -984,16 +984,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
 @callback
 def _entry_has_bluetooth_scanner(entry: ESPHomeConfigEntry) -> bool:
-    """Return True if the entry's device exposes a bluetooth proxy scanner.
-
-    Falls back to the presence of a saved CONF_BLUETOOTH_SCANNING_MODE so
-    the option stays editable when the device is offline.
-    """
-    # A previously-saved value still surfaces the option even if the
-    # connected device stops advertising the feature flag (e.g. a
-    # firmware downgrade that kept the bluetooth proxy but dropped
-    # state-and-mode), so the user can edit or clear it instead of
-    # silently losing it on the next options save.
+    """Return True if the entry exposes a bluetooth proxy scanner or has one saved."""
+    # Keep showing the option if it was previously saved, even when the
+    # device is offline or stops advertising the feature flag, so the
+    # saved value isn't silently dropped on the next options save.
     if CONF_BLUETOOTH_SCANNING_MODE in entry.options:
         return True
     if entry.state is ConfigEntryState.LOADED and (

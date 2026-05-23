@@ -39,7 +39,7 @@ def _async_unload(unload_callbacks: list[CALLBACK_TYPE]) -> None:
 
 @hass_callback
 def _noop() -> None:
-    """No-op placeholder for an inactive unsubscribe slot."""
+    """Placeholder unsubscribe."""
 
 
 @hass_callback
@@ -83,23 +83,11 @@ def _async_apply_scanning_mode(
     scanner: ESPHomeScanner,
     cli: APIClient,
 ) -> CALLBACK_TYPE:
-    """Apply the saved scanning mode, or migrate from the proxy's configured mode.
-
-    If the entry already has a saved CONF_BLUETOOTH_SCANNING_MODE, that wins
-    and is pushed to the proxy immediately. Otherwise we wait for the first
-    scanner state update so we can read the proxy's firmware-configured
-    mode: PASSIVE is honored as-is (saved as PASSIVE), and ACTIVE migrates
-    to AUTO (the new default). After the migration the saved option is
-    persisted so subsequent setups skip the wait.
-    """
+    """Apply the saved scanning mode or migrate from the proxy's configured mode."""
     saved = entry.options.get(CONF_BLUETOOTH_SCANNING_MODE)
     if saved is not None:
         if saved not in _VALID_SCANNING_MODES:
-            _LOGGER.warning(
-                "%s: ignoring unknown saved bluetooth scanning mode %r; using default",
-                entry.title,
-                saved,
-            )
+            _LOGGER.warning("%s: unknown scanning mode %r", entry.title, saved)
             saved = DEFAULT_BLUETOOTH_SCANNING_MODE
         scanner.async_set_scanning_mode(BluetoothScanningMode(saved))
         return _noop
@@ -108,11 +96,8 @@ def _async_apply_scanning_mode(
 
     @hass_callback
     def _migrate(state: BluetoothScannerStateResponse) -> None:
-        # Wait until the proxy reports a known configured_mode. proto3 has
-        # no presence info for an unset enum field, so unset values arrive
-        # as None via the dataclass converter; if we committed on the
-        # first response we could migrate a PASSIVE-configured proxy to
-        # AUTO just because the value was not yet populated.
+        # proto3 has no presence info; an unset enum decodes as None.
+        # Wait for a real configured_mode before committing.
         if (configured_pb := state.configured_mode) is None:
             return
         if unsub_holder:
