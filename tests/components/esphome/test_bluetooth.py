@@ -293,6 +293,10 @@ async def test_scanning_mode_migration_active_becomes_auto(
     await hass.config_entries.async_reload(device.entry.entry_id)
     await hass.async_block_till_done()
 
+    # AUTO was applied at setup before async_register_scanner so habluetooth's
+    # scheduler spawns a worker; AUTO maps to PASSIVE on the firmware.
+    assert set_mode_mock.call_args_list == [((BluetoothScannerMode.PASSIVE,), {})]
+    set_mode_mock.reset_mock()
     assert state_subscriptions
     for callback in state_subscriptions[:]:
         callback(
@@ -305,6 +309,22 @@ async def test_scanning_mode_migration_active_becomes_auto(
     await hass.async_block_till_done()
 
     assert device.entry.options[CONF_BLUETOOTH_SCANNING_MODE] == "auto"
-    # AUTO maps to PASSIVE on the firmware so the proxy stops radio-scanning
-    # in continuous mode; habluetooth's scheduler flips it ACTIVE on demand.
-    set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
+    # AUTO -> AUTO does not re-send a firmware command.
+    set_mode_mock.assert_not_called()
+
+
+async def test_scanning_mode_default_pinned_before_register(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """The default AUTO is applied immediately so the AUTO worker spawns at register."""
+    set_mode_mock = MagicMock()
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # AUTO -> PASSIVE is sent before any firmware state arrives.
+    set_mode_mock.assert_called_once_with(BluetoothScannerMode.PASSIVE)
