@@ -120,7 +120,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_addresses = self._async_current_ids()
 
         # Scan for diesel heaters
-        discovered = bluetooth.async_discovered_service_info(self.hass)
+        discovered = list(bluetooth.async_discovered_service_info(self.hass))
 
         _LOGGER.debug("Scanning for diesel heaters, found %d BLE devices", len(discovered))
 

@@ -358,7 +358,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             # Start notifications on the discovered characteristic
             if "notify" in self._characteristic.properties:
                 await self._client.start_notify(
-                    self._active_char_uuid, self._notification_callback
+                    self._characteristic, self._notification_callback
                 )
                 self._logger.debug("Started notifications on %s", self._active_char_uuid)
             else:
@@ -376,7 +376,9 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
             raise
 
     @callback
-    def _notification_callback(self, _sender: int, data: bytearray) -> None:
+    def _notification_callback(
+        self, _sender: BleakGATTCharacteristic, data: bytearray
+    ) -> None:
         """Handle notification from heater."""
         self._logger.debug(
             "Received BLE data (%d bytes): %s",
@@ -559,6 +561,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
 
     async def _write_gatt(self, packet: bytearray) -> None:
         """Write a packet to the appropriate BLE characteristic."""
+        write_char: BleakGATTCharacteristic | None
         if self._is_abba_device and self._abba_write_char:
             write_char = self._abba_write_char
         else:
