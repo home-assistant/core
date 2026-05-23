@@ -170,7 +170,7 @@ async def async_process_advertisements(
             done.set_result(service_info)
 
     unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict, mode
+        _async_discovered_device, match_dict, mode, scan_duration=timeout
     )
 
     try:

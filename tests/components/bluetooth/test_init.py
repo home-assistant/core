@@ -2647,6 +2647,35 @@ async def test_process_advertisements_timeout(
         )
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_process_advertisements_wires_timeout_as_scan_duration(
+    hass: HomeAssistant,
+) -> None:
+    """async_process_advertisements forwards its timeout as scan_duration."""
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        return False
+
+    mock_cancel = Mock()
+    with (
+        patch.object(
+            HomeAssistantBluetoothManager,
+            "async_register_active_scan",
+            return_value=mock_cancel,
+        ) as mock_register,
+        pytest.raises(TimeoutError),
+    ):
+        await async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            30,
+        )
+    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 30)
+    mock_cancel.assert_called_once()
+
+
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_wrapped_instance_with_filter(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
