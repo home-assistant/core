@@ -282,10 +282,15 @@ class OpenResponsesConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
+            suggested_values = {
+                key: value
+                for key, value in self._get_reauth_entry().data.items()
+                if key != CONF_API_KEY
+            }
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, self._get_reauth_entry().data
+                    STEP_USER_DATA_SCHEMA, suggested_values
                 ),
             )
 

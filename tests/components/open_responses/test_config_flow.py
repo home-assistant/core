@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.open_responses.config_flow import (
@@ -90,6 +91,15 @@ def _mock_successful_validation(mock_create: AsyncMock) -> None:
         return object()
 
     mock_create.side_effect = create
+
+
+def _get_schema_default(schema: vol.Schema, key_name: str) -> Any:
+    """Return a schema key default."""
+    for schema_key in schema.schema:
+        if schema_key == key_name:
+            default = schema_key.default
+            return default() if callable(default) else default
+    raise KeyError(key_name)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -624,6 +634,7 @@ async def test_reauth_updates_default_subentry_models(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert _get_schema_default(result["data_schema"], CONF_API_KEY) is vol.UNDEFINED
 
     with (
         patch(

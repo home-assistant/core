@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.open_responses.const import (
     CONF_BASE_URL,
     CONF_GENERATED_DEFAULT_SUBENTRY,
@@ -69,6 +70,9 @@ async def test_conversation_turn(
     mock_init_component: None,
 ) -> None:
     """Test a conversation turn reaches the Open Responses client."""
+    hass.states.async_set("light.kitchen", "on")
+    async_expose_entity(hass, "conversation", "light.kitchen", True)
+
     calls: list[dict[str, Any]] = []
     with patch(
         "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
@@ -84,7 +88,9 @@ async def test_conversation_turn(
         )
 
     assert result.response.speech["plain"]["speech"] == "Hello from Open Responses"
+    assert calls[0]["input"][0]["role"] == "system"
     assert calls[0]["model"] == "open-responses-model"
+    assert any(tool["name"] == "GetLiveContext" for tool in calls[0]["tools"])
     assert calls[0]["input"][-1] == {
         "type": "message",
         "role": "user",
