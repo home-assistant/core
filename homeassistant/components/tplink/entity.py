@@ -433,7 +433,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 parent=parent,
             )
             for feat in device.features.values()
-            if feat.type == feature_type
+            if feat.type is feature_type
             and feat.id not in EXCLUDED_FEATURES
             and (
                 feat.category is not Feature.Category.Primary
