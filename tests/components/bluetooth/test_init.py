@@ -163,11 +163,11 @@ async def test_setup_and_stop_old_bluez(
     mock_bleak_scanner_start: MagicMock,
     one_adapter_old_bluez: None,
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner with older bluez."""
+    """Default AUTO falls back to active on adapters without passive scan support."""
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
-        options={CONF_MODE: "active"},
+        options={},
         unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)

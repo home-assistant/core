@@ -11,6 +11,7 @@ from bluetooth_adapters import (
     ADAPTER_CONNECTION_SLOTS,
     ADAPTER_HW_VERSION,
     ADAPTER_MANUFACTURER,
+    ADAPTER_PASSIVE_SCAN,
     ADAPTER_SW_VERSION,
     DEFAULT_ADDRESS,
     DEFAULT_CONNECTION_SLOTS,
@@ -390,6 +391,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
     adapters = await manager.async_get_bluetooth_adapters()
+    details = adapters[adapter]
     if (mode_value := entry.options.get(CONF_MODE)) is not None:
         mode = BluetoothScanningMode(mode_value)
     elif (legacy_passive := entry.options.get(CONF_PASSIVE)) is True:
@@ -398,9 +400,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mode = BluetoothScanningMode.ACTIVE
     else:
         mode = BluetoothScanningMode(DEFAULT_MODE)
+    # AUTO starts the scanner in passive mode and lets the manager promote
+    # it to active on demand; that only works on adapters that actually
+    # support passive scanning. Fall back to ACTIVE on adapters that don't
+    # (old BlueZ, etc.) so we don't regress them from the historical default.
+    if mode is BluetoothScanningMode.AUTO and not details[ADAPTER_PASSIVE_SCAN]:
+        mode = BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
-    details = adapters[adapter]
     if entry.title == address:
         hass.config_entries.async_update_entry(
             entry, title=adapter_title(adapter, details)
