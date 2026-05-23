@@ -79,7 +79,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch prayer times from API and notify sensors.
 
-        We fetch the prayer times once per day, but the coordinator updates every
+        We fetch the prayer times twice per day, but the coordinator updates every
         minute so that sensors can re-evaluate which prayer is upcoming.
         """
         now = dt_util.utcnow()
@@ -87,7 +87,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
 
         if (
             not self.last_fetch
-            or ((now - self.last_fetch) > timedelta(days=1))
+            or ((now - self.last_fetch) > timedelta(hours=12))
             or (self.data is None)
         ):
             try:
