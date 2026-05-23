@@ -2187,7 +2187,9 @@ async def test_reader_writer_create_remote_backup(
             {"include_homeassistant": False},
             {
                 "code": "home_assistant_error",
-                "message": "Cannot create a backup with database but without Home Assistant",
+                "message": (
+                    "Cannot create a backup with database but without Home Assistant"
+                ),
             },
         ),
         (

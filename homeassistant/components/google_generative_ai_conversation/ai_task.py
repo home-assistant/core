@@ -86,7 +86,8 @@ class GoogleGenerativeAITaskEntity(
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             LOGGER.error(
-                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+                "Last content in chat log is not an AssistantContent: %s."
+                " This could be due to the model not returning a valid response",
                 chat_log.content[-1],
             )
             raise HomeAssistantError(ERROR_GETTING_RESPONSE)
@@ -149,7 +150,9 @@ class GoogleGenerativeAITaskEntity(
 
         if response.prompt_feedback:
             raise HomeAssistantError(
-                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+                "Error generating content due to content"
+                " violations, reason:"
+                f" {response.prompt_feedback.block_reason_message}"
             )
 
         if (

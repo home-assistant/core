@@ -257,12 +257,13 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         try:
             # Retrieve all firmware updates including non-stable ones but filter
             # non-stable channels out
-            available_firmware_updates = [
-                update
-                for update in await self.driver.controller.async_get_available_firmware_updates(
+            all_updates = (
+                await self.driver.controller.async_get_available_firmware_updates(
                     self.node, API_KEY_FIRMWARE_UPDATE_SERVICE, True
                 )
-                if update.channel == "stable"
+            )
+            available_firmware_updates = [
+                update for update in all_updates if update.channel == "stable"
             ]
         except FailedZWaveCommand as err:
             LOGGER.debug(

@@ -112,7 +112,7 @@ async def test_join_non_snapcast_client(
     mock_create_server: AsyncMock,
     mock_group_1: AsyncMock,
 ) -> None:
-    """Test join service throws an exception when trying to add a non-Snapcast client."""
+    """Test join throws when trying to add a non-Snapcast client."""
 
     # Create a dummy media player entity
     entity_registry.async_get_or_create(
@@ -152,7 +152,7 @@ async def test_join_different_server(
     mock_create_server: AsyncMock,
     mock_group_1: AsyncMock,
 ) -> None:
-    """Test join service throws an exception when trying to join a Snapcast client from another server."""
+    """Test join throws when joining a Snapcast client from another server."""
 
     # Create a dummy Snapcast client with a different unique_id prefix
     entity_registry.async_get_or_create(
@@ -196,7 +196,8 @@ async def test_join_client_key_error(
 ) -> None:
     """Test join service throws an exception when a key error is thrown."""
 
-    # add_client will throw a KeyError if the client identifier is not found on the server
+    # add_client will throw a KeyError if the client identifier
+    # is not found on the server
     mock_group_1.add_client = AsyncMock(side_effect=KeyError())
 
     # Setup and verify the integration is loaded
@@ -320,7 +321,7 @@ async def test_select_source_group_is_none(
     mock_client_1: AsyncMock,
     mock_group_1: AsyncMock,
 ) -> None:
-    """Test the select source action throws a service validation error when a client has no group."""
+    """Test select source throws a validation error when client has no group."""
     # Force nonexistent group
     mock_client_1.group = None
 
@@ -378,7 +379,7 @@ async def test_unjoin_group_is_none(
     mock_client_1: AsyncMock,
     mock_group_1: AsyncMock,
 ) -> None:
-    """Test the unjoin action throws a service validation error when a client has no group."""
+    """Test unjoin throws a validation error when client has no group."""
     # Force nonexistent group
     mock_client_1.group = None
 

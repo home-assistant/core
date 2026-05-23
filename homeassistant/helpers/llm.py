@@ -71,18 +71,35 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
-DYNAMIC_CONTEXT_PROMPT = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+DYNAMIC_CONTEXT_PROMPT = (
+    "You ARE equipped to answer questions about the"
+    " current state of\n"
+    "the home using the `GetLiveContext` tool."
+    " This is a primary function."
+    " Do not state you lack the\n"
+    "functionality if the question requires live data.\n"
+    "If the user asks about device existence/type"
+    ' (e.g., "Do I have lights in the bedroom?"):'
+    " Answer\n"
+    "from the static context below.\n"
+    "If the user asks about the CURRENT state, value,"
+    ' or mode (e.g., "Is the lock locked?",\n'
+    '"Is the fan on?",'
+    ' "What mode is the thermostat in?",'
+    ' "What is the temperature outside?"):\n'
+    "    1.  Recognize this requires live data.\n"
+    "    2.  You MUST call `GetLiveContext`."
+    " This tool will provide the needed real-time"
+    " information (like temperature from the local"
+    " weather, lock status, etc.).\n"
+    "    3.  Use the tool's response** to answer the"
+    " user accurately"
+    ' (e.g., "The temperature outside is'
+    ' [value from tool].").\n'
+    "For general knowledge questions not about the"
+    " home: Answer truthfully from internal"
+    " knowledge.\n"
+)
 
 
 @callback
@@ -516,7 +533,11 @@ class AssistAPI(API):
                     if area.floor_id:
                         floor = floor_reg.async_get_floor(area.floor_id)
 
-            extra = "and all generic commands like 'turn on the lights' should target this area."
+            extra = (
+                "and all generic commands like"
+                " 'turn on the lights' should target"
+                " this area."
+            )
 
         if floor and area:
             return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
@@ -524,7 +545,8 @@ class AssistAPI(API):
             return f"You are in area {area.name} {extra}".strip()
         return (
             "When a user asks to turn on all devices of a specific type, "
-            "ask user to specify an area, unless there is only one device of that type."
+            "ask user to specify an area, unless there"
+            " is only one device of that type."
         )
 
     @callback
@@ -550,7 +572,8 @@ class AssistAPI(API):
 
         if exposed_entities and exposed_entities["entities"]:
             prompt.append(
-                "Static Context: An overview of the areas and the devices in this smart home:"
+                "Static Context: An overview of the areas"
+                " and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
@@ -1114,7 +1137,9 @@ class TodoGetItemsTool(Tool):
     name = "todo_get_items"
     description = (
         "Query a to-do list to find out what items are on it. "
-        "Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. "
+        "Use this to answer questions like "
+        "'What's on my task list?' or "
+        "'Read my grocery list'. "
         "Filters items by status (needs_action, completed, all)."
     )
 
@@ -1125,7 +1150,11 @@ class TodoGetItemsTool(Tool):
                 vol.Required("todo_list"): vol.In(todo_lists),
                 vol.Optional(
                     "status",
-                    description="Filter returned items by status, by default returns incomplete items",
+                    description=(
+                        "Filter returned items by status,"
+                        " by default returns incomplete"
+                        " items"
+                    ),
                     default="needs_action",
                 ): vol.In(["needs_action", "completed", "all"]),
             }
@@ -1197,12 +1226,21 @@ class GetLiveContextTool(Tool):
 
     name = "GetLiveContext"
     description = (
-        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
+        "Provides real-time information about the"
+        " CURRENT state, value, or mode of devices,"
+        " sensors, entities, or areas. "
         "Use this tool for: "
-        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). "
-        "You may filter for devices by name, domain, and area, including combining those filters. "
-        "Prefer filtering by domain when searching for multiple devices of the same type."
+        "1. Answering questions about current"
+        " conditions (e.g., 'Is the light on?'). "
+        "2. As the first step in conditional actions"
+        " (e.g., 'If the weather is rainy, turn off"
+        " sprinklers' requires checking the weather"
+        " first). "
+        "You may filter for devices by name, domain,"
+        " and area, including combining those"
+        " filters. "
+        "Prefer filtering by domain when searching"
+        " for multiple devices of the same type."
     )
     parameters = vol.Schema(
         {
@@ -1212,7 +1250,11 @@ class GetLiveContextTool(Tool):
             ): cv.string,
             vol.Optional(
                 "domain",
-                description="Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
+                description=(
+                    "Filter entities by domain"
+                    " (e.g. 'light', 'sensor')."
+                    " Accepts a single domain or a list."
+                ),
             ): vol.Any(cv.string, [cv.string]),
             vol.Optional(
                 "area",
@@ -1287,7 +1329,8 @@ class GetLiveContextTool(Tool):
             entities = list(exposed_entities["entities"].values())
 
         prompt = [
-            "Live Context: An overview of the areas and the devices in this smart home:",
+            "Live Context: An overview of the areas"
+            " and the devices in this smart home:",
             yaml_util.dump(entities),
         ]
         return {
