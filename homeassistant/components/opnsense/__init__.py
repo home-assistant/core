@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -114,13 +114,13 @@ async def async_setup_entry(
             "Authentication failure while connecting to OPNsense API endpoint at %s",
             url,
         )
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryError from err
     except OPNsensePrivilegeMissing as err:
         _LOGGER.error(
             "Invalid Permissions while connecting to OPNsense API endpoint at %s",
             url,
         )
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryError from err
     except OPNsenseConnectionError as err:
         _LOGGER.error(
             "Connection failure while connecting to OPNsense API endpoint at %s",
