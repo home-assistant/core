@@ -1695,7 +1695,7 @@ async def help_test_entity_name(
     device = registry.async_get_device({(mqtt.DOMAIN, "helloworld")})
     assert device is not None
 
-    entity_id = f"{domain}.beer_{expected_entity_name}"
+    entity_id = f"{domain}.default_area_beer_{expected_entity_name}"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == f"Beer {expected_friendly_name}"
