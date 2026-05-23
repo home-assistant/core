@@ -51,7 +51,6 @@ class OPNsenseDeviceTrackerEntity(
     """Representation of a tracked device."""
 
     _attr_should_poll = False
-    _attr_translation_key = "device_tracker"
 
     def __init__(
         self,
