@@ -86,10 +86,8 @@ class ONVIFDevice:
         """Re-fetch profiles and reload config entry if they changed."""
         try:
             new_profiles = await self.async_get_profiles()
-        except (*GET_CAPABILITIES_EXCEPTIONS,):
-            LOGGER.debug(
-                "%s: Could not refresh profiles", self.name, exc_info=True
-            )
+        except GET_CAPABILITIES_EXCEPTIONS:
+            LOGGER.debug("%s: Could not refresh profiles", self.name, exc_info=True)
             return
         if not new_profiles:
             return
@@ -104,9 +102,7 @@ class ONVIFDevice:
             )
             self.profiles = new_profiles
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(
-                    self.config_entry.entry_id
-                )
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
 
     async def _async_update_listener(
@@ -163,7 +159,10 @@ class ONVIFDevice:
         # Create event manager
         assert self.config_entry.unique_id
         self.events = EventManager(
-            self.hass, self.device, self.config_entry, self.name,
+            self.hass,
+            self.device,
+            self.config_entry,
+            self.name,
             onvif_device=self,
         )
 

@@ -101,9 +101,7 @@ async def test_refresh_profiles_no_change(hass: HomeAssistant) -> None:
 
     original_profiles = list(device.profiles)
 
-    with patch.object(
-        device, "async_get_profiles", new_callable=AsyncMock
-    ) as mock_get:
+    with patch.object(device, "async_get_profiles", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = original_profiles
         await device.async_refresh_profiles()
 
@@ -125,9 +123,7 @@ async def test_refresh_profiles_with_change_triggers_reload(
     )
 
     with (
-        patch.object(
-            device, "async_get_profiles", new_callable=AsyncMock
-        ) as mock_get,
+        patch.object(device, "async_get_profiles", new_callable=AsyncMock) as mock_get,
         patch.object(
             hass.config_entries, "async_reload", new_callable=AsyncMock
         ) as mock_reload,
@@ -167,9 +163,7 @@ async def test_refresh_profiles_empty_result(hass: HomeAssistant) -> None:
 
     original_profiles = list(device.profiles)
 
-    with patch.object(
-        device, "async_get_profiles", new_callable=AsyncMock
-    ) as mock_get:
+    with patch.object(device, "async_get_profiles", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = []
         await device.async_refresh_profiles()
 

@@ -1,6 +1,6 @@
 """Tests for ONVIF camera stream URI cache invalidation on reconnection."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from homeassistant.components.onvif.camera import ONVIFCameraEntity
 from homeassistant.components.onvif.device import ONVIFDevice

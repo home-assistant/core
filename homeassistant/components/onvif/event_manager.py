@@ -286,8 +286,9 @@ class EventManager:
         if was_unavailable and self.onvif_device:
             self.onvif_device.async_mark_available()
             self.async_callback_listeners()
-            self.hass.async_create_task(
-                self.onvif_device.async_refresh_profiles()
+            self.hass.async_create_background_task(
+                self.onvif_device.async_refresh_profiles(),
+                f"{self.name} refresh profiles after reconnection",
             )
 
     @callback
