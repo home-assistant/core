@@ -136,11 +136,11 @@ async def async_setup_entry(
         ]
         for intf_description in tracker_interfaces:
             if intf_description not in known_interfaces:
-                _LOGGER.error(
+                error_message = (
                     "Specified OPNsense tracker interface %s is not found",
                     intf_description,
                 )
-                return False
+                raise ConfigEntryError(error_message)
 
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
