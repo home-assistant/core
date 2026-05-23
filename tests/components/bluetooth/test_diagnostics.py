@@ -239,11 +239,11 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                 ],
