@@ -98,7 +98,6 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTION_STATE,
 )
-
 from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
