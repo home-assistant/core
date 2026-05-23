@@ -63,9 +63,7 @@ def test_extract_time_valid() -> None:
     calendar = [{} for _ in range(12)]
     calendar[3] = month_data  # April (month 4, index 3)
     target_date = date(2025, 4, 10)
-    result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
     assert result == "05:30"
 
 
@@ -76,7 +74,7 @@ def test_extract_time_iqama_mode() -> None:
     calendar[3] = month_data
     target_date = date(2025, 4, 10)
     result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris", mode_iqama=True
+        calendar, "Fajr", target_date, mode_iqama=True
     )
     assert result == "+10"
 
@@ -85,9 +83,7 @@ def test_extract_time_invalid_prayer_name() -> None:
     """Test extracting time with invalid prayer name."""
     calendar = [{"1": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}]
     target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(
-        calendar, "InvalidPrayer", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "InvalidPrayer", target_date)
     assert result is None
 
 
@@ -95,9 +91,7 @@ def test_extract_time_missing_month() -> None:
     """Test extracting time when month data is missing."""
     calendar = []  # Empty calendar
     target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
     assert result is None
 
 
@@ -105,9 +99,7 @@ def test_extract_time_missing_day() -> None:
     """Test extracting time when day data is missing."""
     calendar = [{}]  # Month with no days
     target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
     assert result is None
 
 
@@ -115,9 +107,7 @@ def test_extract_time_incomplete_times() -> None:
     """Test extracting time when times array is incomplete."""
     calendar = [{"1": ["05:30"]}]  # Only 1 time instead of 6
     target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
     assert result is None
 
 
@@ -350,12 +340,86 @@ def test_get_jumua_time_no_jumua() -> None:
     assert result is None
 
 
+# --- parse_iqama_time ---
+
+
+def test_parse_iqama_time_offset_format() -> None:
+    """Test parse_iqama_time with +xx offset format."""
+    result = utils.parse_iqama_time("05:30", "+10")
+    assert result == "05:40"
+
+
+def test_parse_iqama_time_offset_zero() -> None:
+    """Test parse_iqama_time with +0 offset."""
+    result = utils.parse_iqama_time("05:30", "+0")
+    assert result == "05:30"
+
+
+def test_parse_iqama_time_absolute_format() -> None:
+    """Test parse_iqama_time with HH:MM absolute time format."""
+    result = utils.parse_iqama_time("05:30", "06:15")
+    assert result == "06:15"
+
+
+def test_parse_iqama_time_absolute_ignores_prayer_time() -> None:
+    """Test that absolute format does not use prayer_time at all."""
+    # Different prayer_time shouldn't affect the result
+    assert utils.parse_iqama_time("05:30", "06:15") == utils.parse_iqama_time(
+        "20:00", "06:15"
+    )
+
+
+def test_parse_iqama_time_empty_string() -> None:
+    """Test parse_iqama_time with empty string."""
+    result = utils.parse_iqama_time("05:30", "")
+    assert result is None
+
+
+def test_parse_iqama_time_unrecognised_format() -> None:
+    """Test parse_iqama_time with unrecognised format logs error and returns None."""
+    result = utils.parse_iqama_time("05:30", "invalid")
+    assert result is None
+
+
+def test_parse_iqama_time_unrecognised_format_partial_match() -> None:
+    """Test parse_iqama_time rejects partial HH:MM matches like '5:30' or '05:3'."""
+    assert utils.parse_iqama_time("05:30", "5:30") is None  # single digit hour
+    assert utils.parse_iqama_time("05:30", "05:3") is None  # single digit minute
+
+
 # --- get_iqama_time ---
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_success() -> None:
-    """Test getting iqama time successfully."""
+def test_get_iqama_time_absolute_format() -> None:
+    """Test getting iqama time when iqama calendar uses HH:MM absolute times."""
+    month_data = {
+        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
+    }
+    iqama_month_data = {
+        "10": ["05:45", "13:00", "16:00", "19:00", "21:00"],  # absolute times
+    }
+    calendar = [{} for _ in range(12)]
+    calendar[3] = month_data
+    iqama_calendar = [{} for _ in range(12)]
+    iqama_calendar[3] = iqama_month_data
+
+    prayer_data = {
+        "calendar": calendar,
+        "iqamaCalendar": iqama_calendar,
+        "timezone": "Europe/Paris",
+    }
+    result = utils.get_iqama_time(prayer_data, "Fajr")
+    assert result is not None
+    assert isinstance(result, datetime)
+    # 05:45 Paris (UTC+2) = 03:45 UTC
+    assert result.hour == 3
+    assert result.minute == 45
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+def test_get_iqama_time_offset_format() -> None:
+    """Test getting iqama time when iqama is in offset format Successfully."""
     month_data = {
         "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
     }
@@ -417,8 +481,8 @@ def test_get_iqama_time_no_iqama_offset() -> None:
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_add_minutes_returns_none() -> None:
-    """Test getting iqama time when add_minutes_to_time returns None."""
+def test_get_iqama_time_parse_returns_none() -> None:
+    """Test getting iqama time when parse_iqama_time returns None."""
     month_data = {
         "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
     }
@@ -436,7 +500,7 @@ def test_get_iqama_time_add_minutes_returns_none() -> None:
         "timezone": "Europe/Paris",
     }
     with patch(
-        "homeassistant.components.mawaqit.utils.add_minutes_to_time",
+        "homeassistant.components.mawaqit.utils.parse_iqama_time",
         return_value=None,
     ):
         result = utils.get_iqama_time(prayer_data, "Fajr")
@@ -490,9 +554,7 @@ def test_extract_time_key_error() -> None:
     mock_month.get = MagicMock(side_effect=KeyError("missing"))
     calendar_with_error = [mock_month]
     target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(
-        calendar_with_error, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar_with_error, "Fajr", target_date)
     assert result is None
 
 
@@ -514,9 +576,7 @@ def test_extract_time_value_error() -> None:
         "homeassistant.components.mawaqit.utils.PRAYER_NAMES",
         new=FailIndexList(["fajr", "shuruq", "dhuhr", "asr", "maghrib", "isha"]),
     ):
-        result = utils.extract_time_from_calendar(
-            calendar, "Fajr", target_date, "Europe/Paris"
-        )
+        result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
         assert result is None
 
 
@@ -535,9 +595,7 @@ def test_extract_time_index_error() -> None:
     calendar = [month_data]
     target_date = date(2025, 1, 1)
 
-    result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, "Europe/Paris"
-    )
+    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
     assert result is None
 
 

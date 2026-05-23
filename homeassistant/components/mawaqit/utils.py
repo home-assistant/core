@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+import re
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 import homeassistant.util.dt as dt_util
@@ -9,6 +10,8 @@ import homeassistant.util.dt as dt_util
 from .const import CONF_UUID, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 _LOGGER = logging.getLogger(__name__)
+
+_TIME_ABSOLUTE_RE = re.compile(r"^\d{2}:\d{2}$")  # Matches HH:MM format
 
 
 def save_mosque(
@@ -49,14 +52,14 @@ def save_mosque(
 
 
 def extract_time_from_calendar(
-    calendar, prayer_name, target_date, timezone, mode_iqama=False
+    calendar, prayer_name, target_date, mode_iqama=False
 ) -> str | None:
-    """Extract the time of a specific prayer for a given date and apply the correct timezone.
+    """Extract the time of a specific prayer for a given date.
 
     :param calendar: List containing 12 dictionaries (one for each month).
     :param prayer_name: The name of the prayer to extract (e.g., "Fajr", "Dhuhr").
     :param target_date: The date for which to extract the prayer time (datetime.date object).
-    :param timezone: The timezone string (e.g., "Europe/Paris") from prayer data.
+    :param mode_iqama: Whether to extract iqama times instead of prayer times.
     :return: The prayer time as a string , or None if missing.
     """
 
@@ -180,6 +183,27 @@ def add_minutes_to_time(time_str, minutes_str):
         return None
 
 
+def parse_iqama_time(prayer_time: str, iqama_value: str) -> str | None:
+    """Return the iqama time as HH:MM.
+
+    Handles two formats:
+    - '+xx' : offset in minutes from the prayer time (e.g. '+5', '+15')
+    - 'HH:MM': absolute time in mosque local timezone (e.g. '04:32')
+    """
+    if not iqama_value:
+        return None
+
+    if iqama_value.startswith("+"):
+        return add_minutes_to_time(prayer_time, iqama_value)
+
+    # If it's not an offset, it should be an absolute time in HH:MM format
+    if _TIME_ABSOLUTE_RE.match(iqama_value):
+        return iqama_value
+
+    _LOGGER.error("Unrecognised iqama format: %s", iqama_value)
+    return None
+
+
 def compute_islamic_midnight(prayer_data: dict, date, timezone: str) -> datetime | None:
     """Return the Islamic midnight for a given date.
 
@@ -201,8 +225,8 @@ def compute_islamic_midnight(prayer_data: dict, date, timezone: str) -> datetime
 
     next_day = date + timedelta(days=1)
 
-    isha_str = extract_time_from_calendar(calendar, "isha", date, timezone)
-    fajr_str = extract_time_from_calendar(calendar, "fajr", next_day, timezone)
+    isha_str = extract_time_from_calendar(calendar, "isha", date)
+    fajr_str = extract_time_from_calendar(calendar, "fajr", next_day)
 
     if not isha_str or not fajr_str:
         _LOGGER.warning(
@@ -365,7 +389,7 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
         return None
 
     day = get_islamic_date(prayer_data, timezone)
-    prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
+    prayer_time = extract_time_from_calendar(calendar, prayer_name, day)
 
     return _to_utc(timezone, day, prayer_time) if prayer_time else None
 
@@ -408,18 +432,19 @@ def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
     day = get_islamic_date(prayer_data, timezone)
 
     # Get base prayer time
-    prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
+    prayer_time = extract_time_from_calendar(calendar, prayer_name, day)
     if not prayer_time:
         return None
 
-    # Get iqama offset
-    iqama_offset = extract_time_from_calendar(
-        iqama_calendar, prayer_name, day, timezone, mode_iqama=True
+    # Get iqama data and compute iqama time
+    iqama_raw = extract_time_from_calendar(
+        iqama_calendar, prayer_name, day, mode_iqama=True
     )
-    if not iqama_offset:
+    if not iqama_raw:
         return None
 
-    # Add offset to base prayer time
-    iqama_time = add_minutes_to_time(prayer_time, iqama_offset)
+    iqama_time = parse_iqama_time(prayer_time, iqama_raw)
+    if not iqama_time:
+        return None
 
     return _to_utc(timezone, day, iqama_time)
