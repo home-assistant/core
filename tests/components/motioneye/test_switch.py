@@ -74,8 +74,9 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "off"
 
-    # When the next refresh is called return the updated values.
+    # When the next refresh is called return the original values (motion detection on).
     client.async_get_cameras = AsyncMock(return_value={"cameras": [TEST_CAMERA]})
+    client.async_get_camera = AsyncMock(return_value=TEST_CAMERA)
 
     # Turn switch on.
     with patch("homeassistant.components.motioneye.switch.asyncio.sleep"):
