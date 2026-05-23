@@ -79,11 +79,13 @@ from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_MODE,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
+    DEFAULT_MODE,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -387,9 +389,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Bluetooth adapter {adapter} with address {address} not found"
         )
-    passive = entry.options.get(CONF_PASSIVE)
     adapters = await manager.async_get_bluetooth_adapters()
-    mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
+    if (mode_value := entry.options.get(CONF_MODE)) is not None:
+        mode = BluetoothScanningMode(mode_value)
+    elif (legacy_passive := entry.options.get(CONF_PASSIVE)) is True:
+        mode = BluetoothScanningMode.PASSIVE
+    elif legacy_passive is False:
+        mode = BluetoothScanningMode.ACTIVE
+    else:
+        mode = BluetoothScanningMode(DEFAULT_MODE)
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()
     details = adapters[adapter]

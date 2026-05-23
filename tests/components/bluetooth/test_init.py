@@ -26,7 +26,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
-    CONF_PASSIVE,
+    CONF_MODE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DOMAIN,
@@ -103,7 +103,7 @@ async def test_setup_and_stop_passive(
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
-        options={CONF_PASSIVE: True},
+        options={CONF_MODE: "passive"},
         unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)

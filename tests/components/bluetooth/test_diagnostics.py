@@ -198,11 +198,11 @@ async def test_diagnostics(
                         "type": "HaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                     {
@@ -239,11 +239,11 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                 ],
@@ -439,11 +439,11 @@ async def test_diagnostics_macos(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     }
                 ],
@@ -633,11 +633,11 @@ async def test_diagnostics_remote_adapter(
                         "type": "HaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                     {

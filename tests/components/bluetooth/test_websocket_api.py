@@ -467,8 +467,8 @@ async def test_subscribe_scanner_state(
     assert response["event"] == {
         "source": "00:00:00:00:00:01",
         "adapter": "hci0",
-        "current_mode": "active",
-        "requested_mode": "active",
+        "current_mode": "auto",
+        "requested_mode": "auto",
     }
 
     # Register a new scanner

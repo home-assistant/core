@@ -10,7 +10,7 @@ from homeassistant.components.bluetooth import HaBluetoothConnector
 from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
-    CONF_PASSIVE,
+    CONF_MODE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
@@ -347,10 +347,11 @@ async def test_async_step_integration_discovery_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize("mode", ["auto", "active", "passive"])
 @pytest.mark.usefixtures(
     "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
 )
-async def test_options_flow_linux(hass: HomeAssistant) -> None:
+async def test_options_flow_linux(hass: HomeAssistant, mode: str) -> None:
     """Test options on Linux."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -370,32 +371,12 @@ async def test_options_flow_linux(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_PASSIVE: True,
-        },
+        user_input={CONF_MODE: mode},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PASSIVE] is True
-
-    # Verify we can change it to False
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_PASSIVE: False,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PASSIVE] is False
+    assert result["data"][CONF_MODE] == mode
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

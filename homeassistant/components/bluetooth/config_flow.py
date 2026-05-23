@@ -12,7 +12,7 @@ from bluetooth_adapters import (
     adapter_model,
     get_adapters,
 )
-from habluetooth import get_manager
+from habluetooth import BluetoothScanningMode, get_manager
 import voluptuous as vol
 
 from homeassistant.components import onboarding
@@ -24,31 +24,61 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
+)
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
+    CONF_MODE,
     CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
+    DEFAULT_MODE,
     DOMAIN,
 )
 from .util import adapter_title
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSIVE, default=False): bool,
+        vol.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    BluetoothScanningMode.AUTO.value,
+                    BluetoothScanningMode.ACTIVE.value,
+                    BluetoothScanningMode.PASSIVE.value,
+                ],
+                translation_key="mode",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
     }
 )
+
+
+async def _validate_options(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Mirror CONF_MODE into the legacy CONF_PASSIVE option so a downgrade still works."""
+    user_input[CONF_PASSIVE] = (
+        user_input[CONF_MODE] == BluetoothScanningMode.PASSIVE.value
+    )
+    return user_input
+
+
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA, validate_user_input=_validate_options),
 }
 
 
