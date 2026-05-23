@@ -399,6 +399,8 @@ class EntityControlTool(Tool):
 
     def __init__(self, service_name: str) -> None:
         """Init the class."""
+        if service_name not in ENTITY_CONTROL_SERVICE_MAP:
+            raise ValueError(f"Unsupported entity control service: {service_name}")
         self._service_name = service_name
         service_label = (
             unicode_slug.slugify(service_name, separator="_").title().replace("_", "")
@@ -453,9 +455,11 @@ class EntityControlTool(Tool):
                 if service_name is None:
                     unsupported_domains.add(service_entity_domain)
                     continue
-                entity_service_calls.setdefault(
+                service_call_entity_ids = entity_service_calls.setdefault(
                     (service_domain, service_name), []
-                ).append(service_entity_id)
+                )
+                if service_entity_id not in service_call_entity_ids:
+                    service_call_entity_ids.append(service_entity_id)
 
             if not entity_service_calls:
                 failed[entity_id] = (
@@ -470,11 +474,14 @@ class EntityControlTool(Tool):
                     else f"Group contains domains that do not support {self._service_name}: "
                     f"{', '.join(sorted(unsupported_domains))}"
                 )
-                continue
 
-            valid_entity_ids.append(entity_id)
+            if entity_id not in valid_entity_ids:
+                valid_entity_ids.append(entity_id)
             for service_key, service_entity_ids in entity_service_calls.items():
-                service_calls.setdefault(service_key, []).extend(service_entity_ids)
+                service_call_entity_ids = service_calls.setdefault(service_key, [])
+                for service_entity_id in service_entity_ids:
+                    if service_entity_id not in service_call_entity_ids:
+                        service_call_entity_ids.append(service_entity_id)
 
         for (service_domain, service_name), service_entity_ids in service_calls.items():
             await hass.services.async_call(
@@ -497,7 +504,9 @@ class EntityControlTool(Tool):
     def _get_service(self, hass: HomeAssistant, domain: str) -> tuple[str, str | None]:
         """Get the service to call for a domain."""
         if (
-            service_name := ENTITY_CONTROL_SERVICE_MAP[self._service_name].get(domain)
+            service_name := ENTITY_CONTROL_SERVICE_MAP.get(self._service_name, {}).get(
+                domain
+            )
         ) and hass.services.has_service(domain, service_name):
             return domain, service_name
 
@@ -958,7 +967,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if schema is _entity_control_entity_ids:
         return {
-            "type": "string",
+            "anyOf": [
+                {"type": "string"},
+                {"type": "array", "items": {"type": "string"}},
+            ],
             "description": "An entity_id or comma-separated entity_ids from the static context",
         }
 

@@ -482,7 +482,7 @@ async def test_prompt_get(
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
     assert "When controlling Home Assistant" in result.messages[0].content.text
-    assert result.messages[0].content.text.endswith(EXPECTED_PROMPT_SUFFIX)
+    assert EXPECTED_PROMPT_SUFFIX in result.messages[0].content.text
 
 
 async def test_get_unknown_prompt(

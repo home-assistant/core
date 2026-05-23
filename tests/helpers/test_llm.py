@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 from decimal import Decimal
-import re
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +15,7 @@ from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.script import ScriptConfig
 from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.const import SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,7 +29,7 @@ from homeassistant.helpers import (
     selector,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.json import JsonObjectType
 
 from tests.common import MockConfigEntry, async_mock_service
@@ -37,7 +37,30 @@ from tests.common import MockConfigEntry, async_mock_service
 
 def _strip_static_entity_ids(prompt: str) -> str:
     """Strip entity IDs from the static context for legacy prompt assertions."""
-    return re.sub(r"- entity_id: [^\n]+\n  names:", "- names:", prompt)
+    marker = (
+        "Static Context: An overview of the areas and the devices in this smart home:\n"
+    )
+    prefix, separator, static_context = prompt.partition(marker)
+    if not separator:
+        return prompt
+
+    yaml_lines: list[str] = []
+    suffix_lines: list[str] = []
+    in_suffix = False
+    for line in static_context.splitlines(keepends=True):
+        if not in_suffix and line.startswith(("- ", "  ")):
+            yaml_lines.append(line)
+        else:
+            in_suffix = True
+            suffix_lines.append(line)
+
+    entities = yaml_util.parse_yaml("".join(yaml_lines))
+    assert isinstance(entities, list)
+    for entity in entities:
+        assert isinstance(entity, dict)
+        entity.pop("entity_id", None)
+
+    return f"{prefix}{separator}{yaml_util.dump(entities)}{''.join(suffix_lines)}"
 
 
 @pytest.fixture
@@ -1168,6 +1191,7 @@ async def test_entity_control_tool_uses_only_exposed_entities(
             tool_args={
                 "entity_id": [
                     exposed_light.entity_id,
+                    exposed_light.entity_id,
                     unexposed_light.entity_id,
                     exposed_lock.entity_id,
                     exposed_sensor.entity_id,
@@ -1399,6 +1423,74 @@ async def test_entity_control_tool_allows_exposed_groups(
     }
     assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
     assert unlock_calls[0].data == {"entity_id": [exposed_lock.entity_id]}
+
+
+async def test_entity_control_tool_calls_supported_members_in_mixed_groups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test exact entity control calls supported members in mixed groups."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "group", {})
+
+    exposed_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "exposed_light",
+        original_name="Exposed Light",
+        suggested_object_id="exposed_light",
+    )
+    exposed_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "exposed_sensor",
+        original_name="Exposed Sensor",
+        suggested_object_id="exposed_sensor",
+    )
+    hass.states.async_set(exposed_light.entity_id, "on")
+    hass.states.async_set(exposed_sensor.entity_id, "23")
+    test_group = await group.Group.async_create_group(
+        hass,
+        "Test Mixed Group",
+        created_by_service=False,
+        entity_ids=[exposed_light.entity_id, exposed_sensor.entity_id],
+        icon=None,
+        mode=None,
+        object_id="test_mixed_group",
+        order=None,
+    )
+    await hass.async_block_till_done()
+    async_expose_entity(hass, "conversation", test_group.entity_id, True)
+
+    light_calls = async_mock_service(hass, "light", "turn_off")
+
+    api = await llm.async_get_api(
+        hass,
+        "assist",
+        llm.LLMContext(
+            platform="test_platform",
+            context=Context(),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={"entity_id": test_group.entity_id},
+        )
+    )
+
+    assert result == {
+        "success": False,
+        "done": [test_group.entity_id],
+        "failed": {
+            test_group.entity_id: "Group contains domains that do not support turn_off: sensor"
+        },
+    }
+    assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
 
 
 async def test_entity_control_tool_is_not_exposed_without_homeassistant_service(
@@ -1698,10 +1790,13 @@ async def test_selector_serializer(
     selector_serializer = api.custom_serializer
 
     entity_control_schema = next(
-        iter(llm.EntityControlTool("turn_off").parameters.schema.values())
+        iter(llm.EntityControlTool(SERVICE_TURN_OFF).parameters.schema.values())
     )
     assert selector_serializer(entity_control_schema) == {
-        "type": "string",
+        "anyOf": [
+            {"type": "string"},
+            {"type": "array", "items": {"type": "string"}},
+        ],
         "description": "An entity_id or comma-separated entity_ids from the static context",
     }
     assert selector_serializer(selector.ActionSelector()) == {"type": "string"}
