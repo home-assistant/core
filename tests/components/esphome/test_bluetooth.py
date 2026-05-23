@@ -1,12 +1,28 @@
 """Test the ESPHome bluetooth integration."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from unittest.mock import MagicMock, patch
+
+from aioesphomeapi import (
+    BluetoothProxyFeature,
+    BluetoothScannerMode,
+    BluetoothScannerState,
+    BluetoothScannerStateResponse,
+)
 
 from homeassistant.components import bluetooth
+from homeassistant.components.esphome.const import CONF_BLUETOOTH_SCANNING_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockBluetoothEntryType, MockESPHomeDevice
+
+_PROXY_WITH_STATE_AND_MODE = (
+    BluetoothProxyFeature.PASSIVE_SCAN
+    | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+    | BluetoothProxyFeature.RAW_ADVERTISEMENTS
+    | BluetoothProxyFeature.FEATURE_STATE_AND_MODE
+)
 
 
 async def test_bluetooth_connect_with_raw_adv(
@@ -94,3 +110,121 @@ async def test_bluetooth_cleanup_on_remove_entry(
         await hass.async_block_till_done()
 
     remove_mock.assert_called_once_with(hass, scanner.source)
+
+
+async def test_scanning_mode_saved_option_applied(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """A saved CONF_BLUETOOTH_SCANNING_MODE is applied immediately to the proxy."""
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    hass.config_entries.async_update_entry(
+        device.entry,
+        options={**device.entry.options, CONF_BLUETOOTH_SCANNING_MODE: "passive"},
+    )
+    set_mode_mock = MagicMock()
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
+
+
+async def test_scanning_mode_invalid_option_falls_back_to_default(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """A malformed saved value falls back to the AUTO default instead of raising."""
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    hass.config_entries.async_update_entry(
+        device.entry,
+        options={**device.entry.options, CONF_BLUETOOTH_SCANNING_MODE: "bogus"},
+    )
+    set_mode_mock = MagicMock()
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # AUTO maps to PASSIVE on the firmware.
+    set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
+
+
+async def test_scanning_mode_migration_passive_is_honored(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """Proxy configured PASSIVE in YAML is honored on first state update."""
+    set_mode_mock = MagicMock()
+    state_subscriptions: list[Callable[[BluetoothScannerStateResponse], None]] = []
+
+    def _subscribe(
+        callback: Callable[[BluetoothScannerStateResponse], None],
+    ) -> Callable[[], None]:
+        state_subscriptions.append(callback)
+        return lambda: state_subscriptions.remove(callback)
+
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    device.client.subscribe_bluetooth_scanner_state = _subscribe
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # bleak-esphome subscribes first, then our migration callback.
+    assert len(state_subscriptions) >= 2
+    for callback in state_subscriptions:
+        callback(
+            BluetoothScannerStateResponse(
+                state=BluetoothScannerState.RUNNING,
+                mode=BluetoothScannerMode.PASSIVE,
+                configured_mode=BluetoothScannerMode.PASSIVE,
+            )
+        )
+    await hass.async_block_till_done()
+
+    assert device.entry.options[CONF_BLUETOOTH_SCANNING_MODE] == "passive"
+    set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
+
+
+async def test_scanning_mode_migration_active_becomes_auto(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """Proxy configured ACTIVE migrates to AUTO on first state update."""
+    set_mode_mock = MagicMock()
+    state_subscriptions: list[Callable[[BluetoothScannerStateResponse], None]] = []
+
+    def _subscribe(
+        callback: Callable[[BluetoothScannerStateResponse], None],
+    ) -> Callable[[], None]:
+        state_subscriptions.append(callback)
+        return lambda: state_subscriptions.remove(callback)
+
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    device.client.subscribe_bluetooth_scanner_state = _subscribe
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(state_subscriptions) >= 2
+    for callback in state_subscriptions:
+        callback(
+            BluetoothScannerStateResponse(
+                state=BluetoothScannerState.RUNNING,
+                mode=BluetoothScannerMode.ACTIVE,
+                configured_mode=BluetoothScannerMode.ACTIVE,
+            )
+        )
+    await hass.async_block_till_done()
+
+    assert device.entry.options[CONF_BLUETOOTH_SCANNING_MODE] == "auto"
+    # AUTO maps to PASSIVE on the firmware so the proxy stops radio-scanning
+    # in continuous mode; habluetooth's scheduler flips it ACTIVE on demand.
+    set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)

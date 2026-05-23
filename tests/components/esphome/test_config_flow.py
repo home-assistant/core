@@ -46,7 +46,11 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockBluetoothEntryType,
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+)
 
 from tests.common import MockConfigEntry
 
@@ -2104,7 +2108,7 @@ async def test_option_flow_hides_bluetooth_scanning_mode_without_proxy(
 
 async def test_option_flow_bluetooth_scanning_mode(
     hass: HomeAssistant,
-    mock_bluetooth_entry: Any,
+    mock_bluetooth_entry: MockBluetoothEntryType,
 ) -> None:
     """Bluetooth proxy devices with FEATURE_STATE_AND_MODE expose the option."""
     device = await mock_bluetooth_entry(

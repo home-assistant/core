@@ -1,6 +1,7 @@
 """Bluetooth support for esphome."""
 
 from functools import partial
+import logging
 from typing import TYPE_CHECKING
 
 from aioesphomeapi import (
@@ -23,6 +24,9 @@ from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 if TYPE_CHECKING:
     from bleak_esphome.backend.scanner import ESPHomeScanner
+
+_LOGGER = logging.getLogger(__name__)
+_VALID_SCANNING_MODES = {mode.value for mode in BluetoothScanningMode}
 
 
 @hass_callback
@@ -89,6 +93,13 @@ def _async_apply_scanning_mode(
     """
     saved = entry.options.get(CONF_BLUETOOTH_SCANNING_MODE)
     if saved is not None:
+        if saved not in _VALID_SCANNING_MODES:
+            _LOGGER.warning(
+                "%s: ignoring unknown saved bluetooth scanning mode %r; using default",
+                entry.title,
+                saved,
+            )
+            saved = DEFAULT_BLUETOOTH_SCANNING_MODE
         scanner.async_set_scanning_mode(BluetoothScanningMode(saved))
         return _noop
 
