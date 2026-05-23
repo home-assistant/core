@@ -56,17 +56,17 @@ DOMESTIC_HOT_WATER_TANK = FixtureDevice(
 )
 
 
+SNAPSHOT_FIXTURES = [
+    ON_OFF,
+    MYFOX_CAMERA,
+]
+
+
 @pytest.fixture(autouse=True)
 def fixture_platforms() -> Generator[None]:
     """Limit platforms to switch only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.SWITCH]):
         yield
-
-
-SNAPSHOT_FIXTURES = [
-    ON_OFF,
-    MYFOX_CAMERA,
-]
 
 
 @pytest.mark.parametrize(
