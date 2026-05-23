@@ -1,5 +1,4 @@
 """Config flow for Diesel Heater integration."""
-from __future__ import annotations
 
 import logging
 import re
@@ -10,8 +9,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_PIN,
@@ -36,8 +35,7 @@ def _normalize_mac_address(address: str) -> str:
     Home Assistant expects MAC addresses in format XX:XX:XX:XX:XX:XX.
     """
     # Replace hyphens with colons and convert to uppercase
-    normalized = address.upper().replace("-", ":")
-    return normalized
+    return address.upper().replace("-", ":")
 
 
 class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,7 +52,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered Diesel Heater: %s", discovery_info.address)
 
@@ -67,7 +65,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovery_info is not None
 
@@ -103,7 +101,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = _normalize_mac_address(user_input[CONF_ADDRESS])
@@ -189,7 +187,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle manual MAC address entry."""
         errors = {}
 
@@ -242,7 +240,7 @@ class VevorHeaterOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             # Remove empty/None values

@@ -1,42 +1,40 @@
 """Climate platform for Vevor Diesel Heater."""
-from __future__ import annotations
-
-PARALLEL_UPDATES = 1
 
 import logging
 from typing import Any
 
 from homeassistant.components.climate import (
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_NONE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-
-from . import DieselHeaterConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DieselHeaterConfigEntry
 from .const import (
     CONF_PRESET_AWAY_TEMP,
     CONF_PRESET_COMFORT_TEMP,
     DEFAULT_PRESET_AWAY_TEMP,
     DEFAULT_PRESET_COMFORT_TEMP,
     DOMAIN,
-    RUNNING_STEP_STANDBY,
-    RUNNING_STEP_SELF_TEST,
+    RUNNING_STEP_COOLDOWN,
     RUNNING_STEP_IGNITION,
     RUNNING_STEP_RUNNING,
-    RUNNING_STEP_COOLDOWN,
+    RUNNING_STEP_SELF_TEST,
+    RUNNING_STEP_STANDBY,
     RUNNING_STEP_VENTILATION,
 )
 from .coordinator import VevorHeaterCoordinator
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,14 +121,13 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
             if running_state == 1:  # RUNNING_STATE_ON
                 return HVACAction.IDLE
             return HVACAction.OFF
-        elif running_step in (RUNNING_STEP_SELF_TEST, RUNNING_STEP_IGNITION, RUNNING_STEP_RUNNING):
+        if running_step in (RUNNING_STEP_SELF_TEST, RUNNING_STEP_IGNITION, RUNNING_STEP_RUNNING):
             return HVACAction.HEATING
-        elif running_step in (RUNNING_STEP_COOLDOWN, RUNNING_STEP_VENTILATION):
+        if running_step in (RUNNING_STEP_COOLDOWN, RUNNING_STEP_VENTILATION):
             # Cooldown and Ventilation both run fans at full speed
             return HVACAction.FAN
-        else:
-            # Unknown step, return idle as safe default
-            return HVACAction.IDLE
+        # Unknown step, return idle as safe default
+        return HVACAction.IDLE
 
     def _get_away_temp(self) -> int:
         """Get configured away preset temperature."""
@@ -163,17 +160,17 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
 
         current_temp = self.coordinator.data.get("set_temp")
         if current_temp is None:
-            return self._current_preset if self._current_preset else PRESET_NONE
+            return self._current_preset or PRESET_NONE
 
         # Check if current temp matches a preset
         if current_temp == self._get_away_temp():
             return PRESET_AWAY
-        elif current_temp == self._get_comfort_temp():
+        if current_temp == self._get_comfort_temp():
             return PRESET_COMFORT
 
         # If we manually set the preset, keep it even if temp doesn't match exactly
         # This handles cases where heater rounds temperature
-        return self._current_preset if self._current_preset else PRESET_NONE
+        return self._current_preset or PRESET_NONE
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

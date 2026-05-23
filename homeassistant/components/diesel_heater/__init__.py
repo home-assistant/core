@@ -2,7 +2,6 @@
 
 Supports Vevor, BYD, HeaterCC, Sunster and other Chinese diesel heaters via BLE.
 """
-from __future__ import annotations
 
 import asyncio
 import logging
@@ -13,7 +12,6 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
 from .coordinator import VevorHeaterCoordinator
 
 type DieselHeaterConfigEntry = ConfigEntry[VevorHeaterCoordinator]
@@ -48,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry)
             coordinator.async_config_entry_first_refresh(),
             timeout=30.0,
         )
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(
             f"Initial connection to Diesel Heater at {address} "
             "timed out after 30 seconds"
