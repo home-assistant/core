@@ -21,7 +21,7 @@ from .helpers import log_update_error
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from . import AmcrestConfigEntryData, AmcrestDevice
 
 PRIVACY_MODE_KEY = "privacy_mode"
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for an Amcrest config entry."""
-    runtime_data = cast("dict[str, AmcrestDevice]", config_entry.runtime_data)
+    runtime_data = cast("AmcrestConfigEntryData", config_entry.runtime_data)
     device = runtime_data["device"]
     name = device.name
     serial = device.serial_number
