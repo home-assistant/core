@@ -1,7 +1,5 @@
 """The Open Responses integration."""
 
-from openresponses.client import AsyncOpenResponsesClient
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -9,6 +7,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
+from .client import AsyncOpenResponsesClient
 from .const import CONF_BASE_URL, DOMAIN
 from .helpers import client_base_url
 

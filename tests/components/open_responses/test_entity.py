@@ -5,12 +5,6 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from openresponses.exceptions import (
-    AuthenticationError,
-    BadRequestError,
-    OpenResponsesError,
-    RateLimitError,
-)
 import pytest
 import voluptuous as vol
 
@@ -24,6 +18,12 @@ from homeassistant.components.open_responses.entity import (
     _format_tool,
     _transform_stream,
     async_prepare_files_for_prompt,
+)
+from homeassistant.components.open_responses.exceptions import (
+    AuthenticationError,
+    BadRequestError,
+    OpenResponsesError,
+    RateLimitError,
 )
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant

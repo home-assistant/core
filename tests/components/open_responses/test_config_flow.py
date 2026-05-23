@@ -4,14 +4,6 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openresponses.exceptions import (
-    APIConnectionError,
-    AuthenticationError,
-    BadRequestError,
-    ModelError,
-    OpenResponsesError,
-    RateLimitError,
-)
 import pytest
 
 from homeassistant import config_entries
@@ -27,6 +19,14 @@ from homeassistant.components.open_responses.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
+)
+from homeassistant.components.open_responses.exceptions import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    ModelError,
+    OpenResponsesError,
+    RateLimitError,
 )
 from homeassistant.const import CONF_API_KEY, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -102,7 +102,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "openresponses.client.AsyncOpenResponsesClient.create",
+            "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
             new_callable=AsyncMock,
         ) as mock_create,
         patch(
@@ -321,7 +321,7 @@ async def test_form_validates_endpoint(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_api_connection_error(),
     ):
@@ -345,7 +345,7 @@ async def test_form_handles_auth_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_authentication_error(),
     ):
@@ -369,7 +369,7 @@ async def test_form_handles_invalid_model(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_bad_request_error({"message": "Unknown model", "param": "model"}),
     ):
@@ -393,7 +393,7 @@ async def test_form_handles_model_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_model_error(),
     ):
@@ -419,7 +419,7 @@ async def test_form_handles_bad_request_without_model_reference(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_bad_request_error({"message": "Invalid payload"}),
     ):
@@ -443,7 +443,7 @@ async def test_form_handles_api_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=OpenResponsesError("boom"),
     ):
@@ -467,7 +467,7 @@ async def test_form_handles_rate_limit(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_rate_limit_error(),
     ):
@@ -498,7 +498,7 @@ async def test_form_validates_stream_endpoint(hass: HomeAssistant) -> None:
         raise _api_connection_error()
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
     ) as mock_create:
         mock_create.side_effect = [object(), failing_stream_response()]
@@ -528,7 +528,7 @@ async def test_form_rejects_stream_error_events(hass: HomeAssistant) -> None:
         }
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
     ) as mock_create:
         mock_create.side_effect = [object(), failing_stream_response()]
@@ -558,7 +558,7 @@ async def test_form_rejects_sdk_stream_error_events(hass: HomeAssistant) -> None
         }
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
     ) as mock_create:
         mock_create.side_effect = [object(), failing_stream_response()]
@@ -627,7 +627,7 @@ async def test_reauth_updates_default_subentry_models(
 
     with (
         patch(
-            "openresponses.client.AsyncOpenResponsesClient.create",
+            "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
             new_callable=AsyncMock,
         ) as mock_create,
         patch(
@@ -687,7 +687,7 @@ async def test_creating_conversation_subentry(
     assert not result["errors"]
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
     ) as mock_create:
         _mock_successful_validation(mock_create)
@@ -726,7 +726,7 @@ async def test_creating_subentry_validates_model(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_bad_request_error({"message": "Unknown model", "param": "model"}),
     ):
@@ -761,7 +761,7 @@ async def test_creating_subentry_handles_model_error(
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_model_error(),
     ):
@@ -790,7 +790,7 @@ async def test_creating_subentry_handles_auth_error(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_authentication_error(),
     ):
@@ -820,7 +820,7 @@ async def test_creating_subentry_handles_rate_limit(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_rate_limit_error(),
     ):
@@ -850,7 +850,7 @@ async def test_creating_subentry_handles_bad_request_without_model_reference(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=_bad_request_error({"message": "Invalid payload"}),
     ):
@@ -880,7 +880,7 @@ async def test_creating_subentry_handles_api_error(
     )
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
         side_effect=OpenResponsesError("boom"),
     ):
@@ -918,7 +918,7 @@ async def test_reconfiguring_default_subentry_preserves_marker(
     assert result["step_id"] == "init"
 
     with patch(
-        "openresponses.client.AsyncOpenResponsesClient.create",
+        "homeassistant.components.open_responses.client.AsyncOpenResponsesClient.create",
         new_callable=AsyncMock,
     ) as mock_create:
         _mock_successful_validation(mock_create)

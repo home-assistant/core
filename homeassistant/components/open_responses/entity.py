@@ -7,12 +7,6 @@ from mimetypes import guess_file_type
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from openresponses.exceptions import (
-    AuthenticationError,
-    BadRequestError,
-    OpenResponsesError,
-    RateLimitError,
-)
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -33,6 +27,12 @@ from .const import (
     LOGGER,
     RECOMMENDED_MAX_OUTPUT_TOKENS,
     RECOMMENDED_STORE_RESPONSES,
+)
+from .exceptions import (
+    AuthenticationError,
+    BadRequestError,
+    OpenResponsesError,
+    RateLimitError,
 )
 
 if TYPE_CHECKING:

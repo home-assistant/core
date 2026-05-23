@@ -3,15 +3,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-from openresponses.client import AsyncOpenResponsesClient
-from openresponses.exceptions import (
-    APIConnectionError,
-    AuthenticationError,
-    BadRequestError,
-    ModelError,
-    OpenResponsesError,
-    RateLimitError,
-)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -40,6 +31,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from .client import AsyncOpenResponsesClient
 from .const import (
     CONF_BASE_URL,
     CONF_GENERATED_DEFAULT_SUBENTRY,
@@ -51,6 +43,14 @@ from .const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_OUTPUT_TOKENS,
     RECOMMENDED_STORE_RESPONSES,
+)
+from .exceptions import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    ModelError,
+    OpenResponsesError,
+    RateLimitError,
 )
 from .helpers import client_base_url
 
