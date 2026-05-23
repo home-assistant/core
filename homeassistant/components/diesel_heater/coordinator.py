@@ -24,6 +24,7 @@ from diesel_heater_ble import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -34,7 +35,6 @@ from .const import (
     ABBA_WRITE_UUID,
     CHARACTERISTIC_UUID,
     CHARACTERISTIC_UUID_ALT,
-    CONF_PIN,
     CONF_TEMPERATURE_OFFSET,
     DEFAULT_PIN,
     DEFAULT_TEMPERATURE_OFFSET,
@@ -254,6 +254,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                 return self.data
             raise UpdateFailed(f"Error updating data: {err}") from err
 
+    # pylint: disable=too-many-nested-blocks
     async def _ensure_connected(self) -> None:
         """Ensure BLE connection is established with exponential backoff."""
         # Check if already connected
