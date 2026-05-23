@@ -804,6 +804,31 @@ async def test_ble_proxy_setup_when_enabled(
     proxy.disconnect.assert_awaited()
 
 
+async def test_ble_proxy_disconnects_on_setup_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+) -> None:
+    """BLE proxy + matter_client are disconnected when setup raises after connect."""
+    proxy, _factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.matter.MatterAdapter.setup_nodes",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    proxy.connect.assert_awaited_once()
+    proxy.disconnect.assert_awaited_once()
+    matter_client.disconnect.assert_awaited()
+
+
 async def test_ble_proxy_disconnect_on_hass_stop(
     hass: HomeAssistant,
     matter_client: MagicMock,

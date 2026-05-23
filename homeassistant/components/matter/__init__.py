@@ -201,8 +201,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
 
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
-    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
-    await matter.setup_nodes()
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
+        await matter.setup_nodes()
+    except Exception:
+        # Setup raised after the matter client (and optionally the BLE proxy)
+        # were brought up: tear them down so the BLE proxy's bluetooth callback
+        # registration and the matter client websocket are not leaked.
+        listen_task.cancel()
+        if ble_proxy is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during setup abort")
+        await matter_client.disconnect()
+        raise
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
