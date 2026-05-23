@@ -385,7 +385,6 @@ FLOWS = {
         "knocki",
         "knx",
         "kodi",
-        "konnected",
         "kostal_plenticore",
         "kraken",
         "kulersky",
