@@ -83,7 +83,6 @@ async def test_camera_entity_clears_stream_uri_on_reconnect(
 
     # Simulate cached stream URI
     camera._stream_uri = "rtsp://old-uri:554/stream"
-    camera._stream_uri_future = MagicMock()
 
     # Simulate going offline
     device.available = False
@@ -94,11 +93,9 @@ async def test_camera_entity_clears_stream_uri_on_reconnect(
     if camera._was_unavailable:
         camera._was_unavailable = False
         camera._stream_uri = None
-        camera._stream_uri_future = None
 
     assert camera._was_unavailable is False
     assert camera._stream_uri is None
-    assert camera._stream_uri_future is None
 
 
 async def test_camera_entity_no_clear_without_prior_unavailable(

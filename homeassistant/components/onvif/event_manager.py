@@ -28,7 +28,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import CONSECUTIVE_ERROR_THRESHOLD, DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
 
 if TYPE_CHECKING:
@@ -281,7 +281,7 @@ class EventManager:
     @callback
     def async_event_pull_success(self) -> None:
         """Handle successful event pull — device is reachable."""
-        was_unavailable = self._consecutive_errors >= 3
+        was_unavailable = self._consecutive_errors >= CONSECUTIVE_ERROR_THRESHOLD
         self._consecutive_errors = 0
         if was_unavailable and self.onvif_device:
             self.onvif_device.async_mark_available()
@@ -294,7 +294,10 @@ class EventManager:
     def async_event_pull_failed(self) -> None:
         """Handle failed event pull — device may be offline."""
         self._consecutive_errors += 1
-        if self._consecutive_errors >= 3 and self.onvif_device:
+        if (
+            self._consecutive_errors == CONSECUTIVE_ERROR_THRESHOLD
+            and self.onvif_device
+        ):
             self.onvif_device.async_mark_unavailable()
             self.async_callback_listeners()
 
@@ -457,7 +460,6 @@ class PullPointManager:
                 self._name,
                 stringify_onvif_error(err),
             )
-            self._event_manager.async_event_pull_failed()
         except Fault as err:
             # Device may not support subscriptions so log at debug level
             # when we get an XMLParseError

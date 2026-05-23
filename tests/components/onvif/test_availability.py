@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.components.onvif.device import ONVIFDevice
 from homeassistant.components.onvif.event_manager import EventManager
 from homeassistant.components.onvif.models import Profile, Resolution, Video
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from . import HOST, MAC, NAME, PASSWORD, PORT, USERNAME
 
@@ -74,6 +74,30 @@ async def test_pull_failed_stays_unavailable(hass: HomeAssistant) -> None:
 
     assert device.available is False
     assert event_manager._consecutive_errors == 5
+
+
+async def test_pull_failed_only_fires_callback_at_threshold(
+    hass: HomeAssistant,
+) -> None:
+    """Test that async_callback_listeners only fires once at threshold."""
+    event_manager, device = _make_event_manager(hass)
+    callback_count = 0
+    original_callback = event_manager.async_callback_listeners
+
+    @callback
+    def counting_callback() -> None:
+        nonlocal callback_count
+        callback_count += 1
+        original_callback()
+
+    event_manager.async_callback_listeners = counting_callback
+
+    # 5 failures — callback should fire exactly once (at failure #3)
+    for _ in range(5):
+        event_manager.async_event_pull_failed()
+
+    assert device.available is False
+    assert callback_count == 1
 
 
 async def test_pull_success_resets_error_counter(hass: HomeAssistant) -> None:

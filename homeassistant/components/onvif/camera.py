@@ -122,15 +122,15 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Handle device availability changes and clear stale stream URI."""
         if not self.device.available:
             self._was_unavailable = True
+            self.async_write_ha_state()
         elif self._was_unavailable:
             self._was_unavailable = False
             self._stream_uri = None
-            self._stream_uri_future = None
             LOGGER.debug(
                 "%s: Cleared cached stream URI after reconnection",
                 self.device.name,
             )
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register event listener when entity is added."""

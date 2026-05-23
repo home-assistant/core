@@ -67,7 +67,6 @@ class ONVIFDevice:
 
         self._dt_diff_seconds: float = 0
         self._consecutive_errors: int = 0
-        self._max_errors_before_unavailable: int = 3
 
     @callback
     def async_mark_available(self) -> None:
