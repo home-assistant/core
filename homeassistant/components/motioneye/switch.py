@@ -150,4 +150,3 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
         super()._handle_coordinator_update()
-    
