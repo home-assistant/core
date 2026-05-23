@@ -186,7 +186,7 @@ def subscribe(
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: str = "utf-8",
+    encoding: str | None = DEFAULT_ENCODING,
 ) -> Callable[[], None]:
     """Subscribe to an MQTT topic."""
     async_remove = asyncio.run_coroutine_threadsafe(

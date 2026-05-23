@@ -48,10 +48,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EnsureJobAfterCooldown:
-    """Ensure a cool down period before executing a job.
+    """Ensure at least one complete execution runs after all requests settle.
 
-    When a new execute request arrives, we cancel the current request
-    and start a new one.
+    If a task is already running when a new execute request arrives, a
+    follow-up run is scheduled via the cooldown timer rather than cancelling
+    the in-flight task. If no task is running, any pending cooldown timer is
+    cancelled and execution starts immediately.
 
     We allow patching this util, as we generally have exceptions
     for sleeps/waits/debouncers/timers causing long run times in tests.
@@ -98,7 +100,7 @@ class EnsureJobAfterCooldown:
 
     @callback
     def _async_cancel_timer(self) -> None:
-        """Cancel any pending task."""
+        """Cancel any pending cooldown timer."""
         if self._timer:
             self._timer.cancel()
             self._timer = None

@@ -355,7 +355,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unsub = async_subscribe_internal(hass, call.data["topic"], collect_msg)
 
         def write_dump() -> None:
-            with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
+            with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf-8") as fp:
                 fp.writelines([",".join(msg) + "\n" for msg in messages])
 
         async def finish_dump(_: datetime) -> None:
