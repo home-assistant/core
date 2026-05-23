@@ -191,6 +191,40 @@ async def test_scanning_mode_migration_passive_is_honored(
     set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
 
 
+async def test_scanning_mode_pending_subscription_unsubscribes_on_unload(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """Unloading before the first state update cancels the migration subscription."""
+    state_subscriptions: list[Callable[[BluetoothScannerStateResponse], None]] = []
+    unsub_calls: list[Callable[[BluetoothScannerStateResponse], None]] = []
+
+    def _subscribe(
+        callback: Callable[[BluetoothScannerStateResponse], None],
+    ) -> Callable[[], None]:
+        state_subscriptions.append(callback)
+
+        def _unsub() -> None:
+            unsub_calls.append(callback)
+            state_subscriptions.remove(callback)
+
+        return _unsub
+
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    device.client.subscribe_bluetooth_scanner_state = _subscribe
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+    # The migration subscription is pending; tear the entry down without
+    # firing a state update so _unsubscribe in bluetooth.py runs the
+    # cancellation arm.
+    assert state_subscriptions
+    await hass.config_entries.async_unload(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert unsub_calls
+
+
 async def test_scanning_mode_migration_active_becomes_auto(
     hass: HomeAssistant,
     mock_bluetooth_entry: MockBluetoothEntryType,
