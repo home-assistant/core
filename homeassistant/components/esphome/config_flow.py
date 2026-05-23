@@ -989,6 +989,13 @@ def _entry_has_bluetooth_scanner(entry: ESPHomeConfigEntry) -> bool:
     Falls back to the presence of a saved CONF_BLUETOOTH_SCANNING_MODE so
     the option stays editable when the device is offline.
     """
+    # A previously-saved value still surfaces the option even if the
+    # connected device stops advertising the feature flag (e.g. a
+    # firmware downgrade that kept the bluetooth proxy but dropped
+    # state-and-mode), so the user can edit or clear it instead of
+    # silently losing it on the next options save.
+    if CONF_BLUETOOTH_SCANNING_MODE in entry.options:
+        return True
     if entry.state is ConfigEntryState.LOADED and (
         device_info := entry.runtime_data.device_info
     ):
@@ -996,4 +1003,4 @@ def _entry_has_bluetooth_scanner(entry: ESPHomeConfigEntry) -> bool:
             entry.runtime_data.api_version
         )
         return bool(flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE)
-    return CONF_BLUETOOTH_SCANNING_MODE in entry.options
+    return False

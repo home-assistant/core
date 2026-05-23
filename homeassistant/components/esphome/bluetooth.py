@@ -108,13 +108,16 @@ def _async_apply_scanning_mode(
 
     @hass_callback
     def _migrate(state: BluetoothScannerStateResponse) -> None:
+        # Wait until the proxy reports a known configured_mode. proto3 has
+        # no presence info for an unset enum field, so unset values arrive
+        # as None via the dataclass converter; if we committed on the
+        # first response we could migrate a PASSIVE-configured proxy to
+        # AUTO just because the value was not yet populated.
+        if (configured_pb := state.configured_mode) is None:
+            return
         if unsub_holder:
             unsub_holder.pop()()
-        # Read configured_mode directly off the proto: aioesphomeapi stores
-        # message handlers in a set, so the iteration order between our
-        # callback and bleak-esphome's scanner.async_update_scanner_state
-        # is undefined and scanner.configured_mode may not yet be populated.
-        if state.configured_mode is BluetoothScannerMode.PASSIVE:
+        if configured_pb is BluetoothScannerMode.PASSIVE:
             new_mode = BluetoothScanningMode.PASSIVE
         else:
             new_mode = BluetoothScanningMode(DEFAULT_BLUETOOTH_SCANNING_MODE)

@@ -191,6 +191,53 @@ async def test_scanning_mode_migration_passive_is_honored(
     set_mode_mock.assert_any_call(BluetoothScannerMode.PASSIVE)
 
 
+async def test_scanning_mode_migration_waits_for_known_configured_mode(
+    hass: HomeAssistant,
+    mock_bluetooth_entry: MockBluetoothEntryType,
+) -> None:
+    """An initial state with configured_mode=None must not commit a migration."""
+    state_subscriptions: list[Callable[[BluetoothScannerStateResponse], None]] = []
+    set_mode_mock = MagicMock()
+
+    def _subscribe(
+        callback: Callable[[BluetoothScannerStateResponse], None],
+    ) -> Callable[[], None]:
+        state_subscriptions.append(callback)
+        return lambda: state_subscriptions.remove(callback)
+
+    device = await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
+    )
+    device.client.bluetooth_scanner_set_mode = set_mode_mock
+    device.client.subscribe_bluetooth_scanner_state = _subscribe
+    await hass.config_entries.async_reload(device.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert state_subscriptions
+    for callback in state_subscriptions:
+        callback(
+            BluetoothScannerStateResponse(
+                state=BluetoothScannerState.RUNNING,
+                mode=None,
+                configured_mode=None,
+            )
+        )
+    await hass.async_block_till_done()
+
+    assert CONF_BLUETOOTH_SCANNING_MODE not in device.entry.options
+    # A second response with a real configured_mode commits the migration.
+    for callback in state_subscriptions:
+        callback(
+            BluetoothScannerStateResponse(
+                state=BluetoothScannerState.RUNNING,
+                mode=BluetoothScannerMode.PASSIVE,
+                configured_mode=BluetoothScannerMode.PASSIVE,
+            )
+        )
+    await hass.async_block_till_done()
+    assert device.entry.options[CONF_BLUETOOTH_SCANNING_MODE] == "passive"
+
+
 async def test_scanning_mode_pending_subscription_unsubscribes_on_unload(
     hass: HomeAssistant,
     mock_bluetooth_entry: MockBluetoothEntryType,
