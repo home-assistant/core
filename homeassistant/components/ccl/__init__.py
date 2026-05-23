@@ -49,7 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     # Create the device and register a webhook after restart, or fetch the existing device if it was already created during the config flow
     devices = hass.data.setdefault(KEY_DEVICES, {})
-    device = devices.setdefault(webhook_id, CCLDevice(webhook_id))
+    device = devices.get(webhook_id)
+    if device is None:
+        device = CCLDevice(webhook_id)
+        devices[webhook_id] = device
 
     coordinator = entry.runtime_data = CCLCoordinator(hass, device, entry)
 

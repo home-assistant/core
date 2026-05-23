@@ -1,5 +1,6 @@
 """Test the CCL Electronics config flow."""
 
+import asyncio
 import contextlib
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
@@ -9,9 +10,10 @@ from aiohttp import web
 
 from homeassistant import config_entries
 from homeassistant.components.ccl import KEY_DEVICES
+from homeassistant.components.ccl.config_flow import CCLConfigFlow
 from homeassistant.components.ccl.const import DOMAIN
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
@@ -203,6 +205,48 @@ async def test_timeout_error_task_one(
         # The flow should abort with connect_timeout due to the timeout
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "connect_timeout"
+
+
+async def test_cancelled_error_task_one(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_ccl: MagicMock,
+) -> None:
+    """Test handling when task_one is cancelled during config flow progress."""
+    await async_setup_component(hass, "http", {})
+    await async_setup_component(hass, "webhook", {})
+
+    config_flow = CCLConfigFlow()
+    config_flow.hass = hass
+    config_flow.webhook_id = WEBHOOK_ID
+    config_flow.data = {
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+        CONF_HOST: "example.com",
+        CONF_PORT: "80",
+        CONF_PATH: "/webhook/path",
+    }
+
+    task = hass.loop.create_task(asyncio.sleep(0))
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+    config_flow.task_one = task
+
+    config_flow.async_show_progress_done = MagicMock(
+        return_value={"type": FlowResultType.SHOW_PROGRESS_DONE}
+    )
+
+    hass.data.setdefault(KEY_DEVICES, {})[WEBHOOK_ID] = mock_ccl
+
+    with patch(
+        "homeassistant.components.ccl.config_flow.webhook.async_unregister"
+    ) as unregister:
+        result = await config_flow.async_step_user()
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert config_flow.data["abort_reason"] == "unknown"
+    unregister.assert_called_once_with(hass, WEBHOOK_ID)
+    assert WEBHOOK_ID not in hass.data[KEY_DEVICES]
 
 
 async def test_abort_flow_device_none(

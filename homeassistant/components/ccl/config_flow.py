@@ -115,6 +115,16 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.webhook_id,
                 )
                 return self.async_show_progress_done(next_step_id="finish")
+            except asyncio.CancelledError:
+                self.task_one = None
+                webhook.async_unregister(self.hass, self.webhook_id)
+                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
+                self.data["abort_reason"] = "unknown"
+                _LOGGER.debug(
+                    "Device with webhook ID %s config flow task was cancelled",
+                    self.webhook_id,
+                )
+                return self.async_show_progress_done(next_step_id="finish")
             except AbortFlow as err:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)

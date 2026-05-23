@@ -1,6 +1,7 @@
 """Test initialization of ccl."""
 
 from http import HTTPStatus
+import json
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
@@ -46,7 +47,7 @@ async def test_load_unload_config_entry(
         ),
         (
             None,
-            HTTPStatus.OK,
+            HTTPStatus.BAD_REQUEST,
         ),
         (
             {"Content-Type": "text/html"},
@@ -74,7 +75,8 @@ async def test_webhook_post(
 
     async def handler_side_effect(request, devices_dict):
         """Mock handler that validates content type and returns the expected response."""
-        if request.content_type != "application/json":
+        content_type = request.headers.get("Content-Type", "")
+        if content_type and content_type != "application/json":
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         return web.Response(status=HTTPStatus.OK)
 
@@ -82,7 +84,17 @@ async def test_webhook_post(
         "homeassistant.components.ccl.CCLServer.handler",
         side_effect=handler_side_effect,
     ):
-        resp = await client.post(urlparse(webhook_url).path, headers=headers, json=body)
+        if headers is None:
+            resp = await client.post(
+                urlparse(webhook_url).path,
+                data=json.dumps(body),
+            )
+        else:
+            resp = await client.post(
+                urlparse(webhook_url).path,
+                headers=headers,
+                json=body,
+            )
 
     # Wait for remaining tasks to complete.
     await hass.async_block_till_done()
