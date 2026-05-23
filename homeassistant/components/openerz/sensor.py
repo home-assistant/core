@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,8 +19,6 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 CONF_ZIP = "zip"
 CONF_WASTE_TYPE = "waste_type"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_NAME = "name"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
