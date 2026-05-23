@@ -176,7 +176,9 @@ def async_subscribe_internal(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
+    return mqtt_data.client.async_subscribe(
+        topic, msg_callback, qos, encoding, job_type
+    )
 
 
 def subscribe(
