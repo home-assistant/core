@@ -50,7 +50,7 @@ rules:
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
