@@ -11,6 +11,76 @@ from homeassistant.components.mawaqit import utils
 from homeassistant.components.mawaqit.const import CONF_UUID
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 
+# --- _to_utc ---
+
+
+def test_to_utc_empty_string() -> None:
+    """Test _to_utc returns None for empty time string."""
+    result = utils._to_utc("Europe/Paris", date(2025, 4, 10), "")
+    assert result is None
+
+
+def test_to_utc_none_string() -> None:
+    """Test _to_utc returns None for None time string."""
+    result = utils._to_utc("Europe/Paris", date(2025, 4, 10), None)
+    assert result is None
+
+
+# --- compute_islamic_midnight ---
+
+
+def test_compute_islamic_midnight_isha_localization_fails() -> None:
+    """Test compute_islamic_midnight returns None when isha localization fails."""
+    month_data = {
+        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
+        "11": ["05:29", "06:44", "12:29", "15:44", "18:29", "19:59"],
+    }
+    calendar = [{} for _ in range(12)]
+    calendar[3] = month_data
+
+    prayer_data = {"calendar": calendar}
+    target_date = date(2025, 4, 10)
+
+    # First call (isha) returns None, second call (fajr) would be fine
+    with patch(
+        "homeassistant.components.mawaqit.utils.time_with_timezone",
+        side_effect=[
+            None,
+            datetime(2025, 4, 11, 5, 29, tzinfo=ZoneInfo("Europe/Paris")),
+        ],
+    ):
+        result = utils.compute_islamic_midnight(
+            prayer_data, target_date, "Europe/Paris"
+        )
+        assert result is None
+
+
+def test_compute_islamic_midnight_fajr_localization_fails() -> None:
+    """Test compute_islamic_midnight returns None when fajr localization fails."""
+    month_data = {
+        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
+        "11": ["05:29", "06:44", "12:29", "15:44", "18:29", "19:59"],
+    }
+    calendar = [{} for _ in range(12)]
+    calendar[3] = month_data
+
+    prayer_data = {"calendar": calendar}
+    target_date = date(2025, 4, 10)
+
+    # First call (isha) succeeds, second call (fajr) returns None
+    with patch(
+        "homeassistant.components.mawaqit.utils.time_with_timezone",
+        side_effect=[
+            datetime(2025, 4, 10, 20, 0, tzinfo=ZoneInfo("Europe/Paris")),
+            None,
+        ],
+    ):
+        result = utils.compute_islamic_midnight(
+            prayer_data, target_date, "Europe/Paris"
+        )
+        assert result is None
+
+
 # --- save_mosque ---
 
 
