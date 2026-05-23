@@ -172,25 +172,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # into every Matter setup when the server has BLE proxy disabled.
     server_info = matter_client.server_info
     if server_info and server_info.ble_proxy_enabled:
-        from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
-
         ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
-        LOGGER.debug("Matter server reports BLE available, connecting BLE proxy")
-        ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
-        try:
-            async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
-                await ble_proxy.connect()
-        except TimeoutError, ConnectionError, OSError:
+        if ble_proxy_url is None:
             LOGGER.warning(
-                "Failed to connect BLE proxy - BLE commissioning may not work",
-                exc_info=True,
+                "Could not derive BLE proxy endpoint from %s; BLE proxy will not be used",
+                entry.data[CONF_URL],
             )
-            ble_proxy = None
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected error connecting BLE proxy")
-            ble_proxy = None
         else:
-            entry.async_on_unload(ble_proxy.disconnect)
+            from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
+
+            LOGGER.debug("Matter server reports BLE available, connecting BLE proxy")
+            ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
+            try:
+                async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
+                    await ble_proxy.connect()
+            except TimeoutError, ConnectionError, OSError:
+                LOGGER.warning(
+                    "Failed to connect BLE proxy - BLE commissioning may not work",
+                    exc_info=True,
+                )
+                ble_proxy = None
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error connecting BLE proxy")
+                ble_proxy = None
 
     entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
 
@@ -201,6 +205,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
         try:
+            if ble_proxy is not None:
+                try:
+                    await ble_proxy.disconnect()
+                except Exception:  # noqa: BLE001
+                    LOGGER.exception("Failed to disconnect BLE proxy during setup abort")
             await matter_client.disconnect()
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
@@ -208,10 +217,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     return True
 
 
-def _derive_ble_proxy_url(matter_ws_url: str) -> str:
+def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     """Derive the `/ble` endpoint URL by swapping the trailing `/ws` path segment.
 
-    Uses real URL parsing so hostnames containing `ws` aren't corrupted.
+    Uses real URL parsing so hostnames containing `ws` aren't corrupted. Returns
+    `None` when the path does not match the expected `/ws` shape, so callers can
+    skip BLE proxy setup instead of probing a wrong endpoint.
     """
     parsed = urlsplit(matter_ws_url)
     path = parsed.path.rstrip("/")
@@ -219,6 +230,8 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str:
         path = f"{path[:-3]}/ble"
     elif not path:
         path = "/ble"
+    else:
+        return None
     return urlunsplit(parsed._replace(path=path))
 
 
@@ -253,6 +266,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
     )
 
     if unload_ok:
+        # Disconnect the BLE proxy first so it stops accepting new GATT/BTP
+        # traffic before the matter client (which originates that traffic) is
+        # torn down.
+        if (ble_proxy := entry.runtime_data.ble_proxy) is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during unload")
         entry.runtime_data.listen_task.cancel()
         await entry.runtime_data.adapter.matter_client.disconnect()
 

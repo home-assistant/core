@@ -55,16 +55,20 @@ def ble_proxy_connect_timeout_fixture() -> Generator[int]:
 
 
 @pytest.fixture(name="mock_ble_proxy")
-def mock_ble_proxy_fixture() -> Generator[MagicMock]:
-    """Stub the BLE proxy created inside async_setup_entry."""
+def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Stub the BLE proxy created inside async_setup_entry.
+
+    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
+    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
+    """
     proxy = MagicMock()
     proxy.connect = AsyncMock()
     proxy.disconnect = AsyncMock()
     with patch(
         "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
         return_value=proxy,
-    ):
-        yield proxy
+    ) as factory:
+        yield proxy, factory
 
 
 @pytest.fixture(name="listen_ready_timeout")
@@ -765,19 +769,25 @@ async def test_remove_config_entry_device_no_node(
         ("ws://localhost:5580", "ws://localhost:5580/ble"),
         ("ws://ws.example.com:5580/ws", "ws://ws.example.com:5580/ble"),
         ("ws://localhost:5580/custom/ws", "ws://localhost:5580/custom/ble"),
+        ("ws://localhost:5580/api", None),
+        ("ws://localhost:5580/matter", None),
     ],
 )
-def test_derive_ble_proxy_url(matter_ws_url: str, expected: str) -> None:
-    """Derived /ble URL preserves scheme/host/port and only swaps the trailing path."""
+def test_derive_ble_proxy_url(matter_ws_url: str, expected: str | None) -> None:
+    """Derived /ble URL preserves scheme/host/port and only swaps the trailing path.
+
+    Returns None when the path does not match the expected `/ws` shape.
+    """
     assert _derive_ble_proxy_url(matter_ws_url) == expected
 
 
 async def test_ble_proxy_setup_when_enabled(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    mock_ble_proxy: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
 ) -> None:
-    """BLE proxy is created and connected when the server reports it enabled."""
+    """BLE proxy is created with the derived `/ble` URL and connected."""
+    proxy, factory = mock_ble_proxy
     matter_client.server_info.ble_proxy_enabled = True
 
     entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
@@ -786,11 +796,12 @@ async def test_ble_proxy_setup_when_enabled(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    mock_ble_proxy.connect.assert_awaited_once()
-    assert entry.runtime_data.ble_proxy is mock_ble_proxy
+    factory.assert_called_once_with(hass, "ws://localhost:5580/ble")
+    proxy.connect.assert_awaited_once()
+    assert entry.runtime_data.ble_proxy is proxy
 
     await hass.config_entries.async_unload(entry.entry_id)
-    mock_ble_proxy.disconnect.assert_awaited()
+    proxy.disconnect.assert_awaited()
 
 
 async def test_ble_proxy_skipped_when_disabled(
@@ -818,12 +829,13 @@ async def test_ble_proxy_skipped_when_disabled(
 async def test_ble_proxy_connect_failure_does_not_block_setup(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    mock_ble_proxy: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
     connect_error: Exception,
 ) -> None:
     """Setup succeeds with ble_proxy=None when the proxy connect raises."""
+    proxy, _factory = mock_ble_proxy
     matter_client.server_info.ble_proxy_enabled = True
-    mock_ble_proxy.connect.side_effect = connect_error
+    proxy.connect.side_effect = connect_error
 
     entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
@@ -832,22 +844,23 @@ async def test_ble_proxy_connect_failure_does_not_block_setup(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.ble_proxy is None
-    mock_ble_proxy.disconnect.assert_not_awaited()
+    proxy.disconnect.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("ble_proxy_connect_timeout")
 async def test_ble_proxy_connect_timeout_does_not_block_setup(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    mock_ble_proxy: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
 ) -> None:
     """Setup succeeds with ble_proxy=None when proxy connect times out."""
+    proxy, _factory = mock_ble_proxy
     matter_client.server_info.ble_proxy_enabled = True
 
     async def hang() -> None:
         await asyncio.Event().wait()
 
-    mock_ble_proxy.connect.side_effect = hang
+    proxy.connect.side_effect = hang
 
     entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
@@ -856,3 +869,25 @@ async def test_ble_proxy_connect_timeout_does_not_block_setup(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.ble_proxy is None
+
+
+async def test_ble_proxy_skipped_when_url_underivable(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    mock_ble_proxy: tuple[MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """BLE proxy is skipped (with a warning) when the WS URL has a non-`/ws` path."""
+    proxy, factory = mock_ble_proxy
+    matter_client.server_info.ble_proxy_enabled = True
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/api"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    factory.assert_not_called()
+    proxy.connect.assert_not_awaited()
+    assert entry.runtime_data.ble_proxy is None
+    assert "BLE proxy will not be used" in caplog.text
