@@ -1,7 +1,7 @@
 {
   "domain": "samsungtv",
   "name": "Samsung Smart TV",
-  "codeowners": ["@chemelli74", "@epenet"],
+  "codeowners": ["@chemelli74"],
   "config_flow": true,
   "dependencies": ["ssdp"],
   "dhcp": [
