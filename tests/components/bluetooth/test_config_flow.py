@@ -1,5 +1,6 @@
 """Test the bluetooth config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
@@ -11,6 +12,7 @@ from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_MODE,
+    CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
@@ -377,6 +379,44 @@ async def test_options_flow_linux(hass: HomeAssistant, mode: str) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_MODE] == mode
+    assert result["data"][CONF_PASSIVE] is (mode == "passive")
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_default"),
+    [
+        ({}, "auto"),
+        ({CONF_PASSIVE: True}, "passive"),
+        ({CONF_PASSIVE: False}, "active"),
+        ({CONF_MODE: "passive"}, "passive"),
+    ],
+    ids=["fresh", "legacy_passive_true", "legacy_passive_false", "explicit_mode"],
+)
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
+async def test_options_flow_default_reflects_existing_options(
+    hass: HomeAssistant, options: dict[str, Any], expected_default: str
+) -> None:
+    """Options form preselects the current mode, including legacy CONF_PASSIVE."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options=options,
+        unique_id="00:00:00:00:00:01",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    schema = result["data_schema"].schema
+    mode_key = next(k for k in schema if k == CONF_MODE)
+    assert mode_key.default() == expected_default
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

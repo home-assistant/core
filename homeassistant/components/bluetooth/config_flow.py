@@ -50,21 +50,37 @@ from .const import (
 )
 from .util import adapter_title
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
-            SelectSelectorConfig(
-                options=[
-                    BluetoothScanningMode.AUTO.value,
-                    BluetoothScanningMode.ACTIVE.value,
-                    BluetoothScanningMode.PASSIVE.value,
-                ],
-                translation_key="mode",
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        ),
-    }
+_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[
+            BluetoothScanningMode.AUTO.value,
+            BluetoothScanningMode.ACTIVE.value,
+            BluetoothScanningMode.PASSIVE.value,
+        ],
+        translation_key="mode",
+        mode=SelectSelectorMode.DROPDOWN,
+    )
 )
+
+
+async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Build the options schema with the current mode as the default.
+
+    Existing installs may only have the legacy CONF_PASSIVE boolean and no
+    CONF_MODE; deriving the form default from both keeps the saved choice
+    visible so opening Configure and clicking Submit does not silently
+    flip a deliberately-chosen mode.
+    """
+    options = handler.options
+    if (current := options.get(CONF_MODE)) is None:
+        legacy_passive = options.get(CONF_PASSIVE)
+        if legacy_passive is True:
+            current = BluetoothScanningMode.PASSIVE.value
+        elif legacy_passive is False:
+            current = BluetoothScanningMode.ACTIVE.value
+        else:
+            current = DEFAULT_MODE
+    return vol.Schema({vol.Required(CONF_MODE, default=current): _MODE_SELECTOR})
 
 
 async def _validate_options(
@@ -78,7 +94,7 @@ async def _validate_options(
 
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA, validate_user_input=_validate_options),
+    "init": SchemaFlowFormStep(_options_schema, validate_user_input=_validate_options),
 }
 
 
