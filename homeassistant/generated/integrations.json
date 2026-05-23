@@ -1415,6 +1415,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "diesel_heater": {
+      "name": "Diesel Heater",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "digital_loggers": {
       "name": "Digital Loggers",
       "integration_type": "virtual",
