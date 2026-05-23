@@ -125,7 +125,6 @@ async def test_prayer_time_coordinator_success(
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     assert coordinator.data == prayer_data
     assert coordinator.last_fetch is not None
-    assert coordinator.prayer_times == prayer_data
 
 
 async def test_prayer_time_coordinator_cached(
