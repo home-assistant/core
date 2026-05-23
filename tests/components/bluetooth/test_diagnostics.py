@@ -182,7 +182,17 @@ async def test_diagnostics(
                     "monotonic_time": ANY,
                     "requests": {},
                     "running": True,
-                    "workers": {},
+                    "workers": {
+                        "00:00:00:00:00:02": {
+                            "failed_window": False,
+                            "name": "hci1 (00:00:00:00:00:02)",
+                            "next_event_at": ANY,
+                            "next_sweep_at": ANY,
+                            "sweep_last_completed": ANY,
+                            "warned_no_fallback": False,
+                            "window_end": 0.0,
+                        },
+                    },
                 },
                 "connectable_history": [],
                 "scanners": [
