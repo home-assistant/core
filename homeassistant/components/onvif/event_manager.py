@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+from typing import TYPE_CHECKING
 
 import aiohttp
 from aiohttp.web import Request
@@ -29,6 +30,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
+
+if TYPE_CHECKING:
+    from .device import ONVIFDevice
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
@@ -108,6 +112,7 @@ class EventManager:
         device: ONVIFCamera,
         config_entry: ConfigEntry,
         name: str,
+        onvif_device: ONVIFDevice | None = None,
     ) -> None:
         """Initialize event manager."""
         self.hass = hass
@@ -115,13 +120,13 @@ class EventManager:
         self.config_entry = config_entry
         self.unique_id = config_entry.unique_id
         self.name = name
-
+        self.onvif_device = onvif_device
         self.webhook_manager = WebHookManager(self)
         self.pullpoint_manager = PullPointManager(self)
-
         self._uid_by_platform: dict[str, set[str]] = {}
         self._events: dict[str, Event] = {}
         self._listeners: list[CALLBACK_TYPE] = []
+        self._consecutive_errors: int = 0
 
     @property
     def started(self) -> bool:
@@ -272,6 +277,26 @@ class EventManager:
             return
         LOGGER.debug("%s: Switching to webhook for events", self.name)
         self.pullpoint_manager.async_pause()
+
+    @callback
+    def async_event_pull_success(self) -> None:
+        """Handle successful event pull — device is reachable."""
+        was_unavailable = self._consecutive_errors >= 3
+        self._consecutive_errors = 0
+        if was_unavailable and self.onvif_device:
+            self.onvif_device.async_mark_available()
+            self.async_callback_listeners()
+            self.hass.async_create_task(
+                self.onvif_device.async_refresh_profiles()
+            )
+
+    @callback
+    def async_event_pull_failed(self) -> None:
+        """Handle failed event pull — device may be offline."""
+        self._consecutive_errors += 1
+        if self._consecutive_errors >= 3 and self.onvif_device:
+            self.onvif_device.async_mark_unavailable()
+            self.async_callback_listeners()
 
     @callback
     def async_mark_events_stale(self) -> None:
@@ -432,6 +457,7 @@ class PullPointManager:
                 self._name,
                 stringify_onvif_error(err),
             )
+            self._event_manager.async_event_pull_failed()
         except Fault as err:
             # Device may not support subscriptions so log at debug level
             # when we get an XMLParseError
@@ -443,6 +469,7 @@ class PullPointManager:
             # Treat errors as if the camera restarted. Assume that the pullpoint
             # subscription is no longer valid.
             self._pullpoint_manager.resume()
+            self._event_manager.async_event_pull_failed()
         except (
             XMLParseError,
             aiohttp.ClientError,
@@ -459,6 +486,7 @@ class PullPointManager:
             # Avoid renewing the subscription too often since it causes problems
             # for some cameras, mainly the Tapo ones.
             next_pull_delay = SUBSCRIPTION_RESTART_INTERVAL_ON_ERROR
+            self._event_manager.async_event_pull_failed()
         finally:
             self.async_schedule_pull_messages(next_pull_delay)
 
@@ -488,8 +516,10 @@ class PullPointManager:
             )
             await event_manager.async_parse_messages(notification_message)
             event_manager.async_callback_listeners()
+            event_manager.async_event_pull_success()
         else:
             LOGGER.debug("%s: continuous PullMessages: no events", self._name)
+            event_manager.async_event_pull_success()
 
     @callback
     def async_cancel_pull_messages(self) -> None:
