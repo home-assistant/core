@@ -297,9 +297,11 @@ async def async_cleanup_devices(
     for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
         mac = next(
             (
-                dr.format_mac(identifier[1])
+                fmt
                 for identifier in device_entry.identifiers
                 if identifier[0] == DOMAIN
+                and len(fmt := dr.format_mac(identifier[1])) == 17
+                and fmt.count(":") == 5
             ),
             None,
         )
