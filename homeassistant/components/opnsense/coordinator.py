@@ -16,6 +16,7 @@ from aiopnsense import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
@@ -54,7 +55,8 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         out_devices: DeviceDetailsByMAC = {}
         for device in devices:
             if not self.interfaces or device["intf_description"] in self.interfaces:
-                out_devices[device["mac"]] = device
+                formatted_mac = format_mac(device["mac"])
+                out_devices[formatted_mac] = device
         return out_devices
 
     async def _async_update_data(self) -> DeviceDetailsByMAC:
