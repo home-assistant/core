@@ -168,6 +168,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
     _attr_target_temperature_high: float | None = TEMPERATURE_MAX
     _attr_target_temperature_low: float | None = TEMPERATURE_MIN
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    _zone: int | None = None
 
     def __init__(
         self,
@@ -233,7 +234,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
             self._device.set_target_temperature(
                 target_temperature=temperature,
                 mode=mode,
-                zone=None,
+                zone=self._zone,
             )
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -483,6 +484,7 @@ class MideaC3Climate(MideaClimate):
     """Midea C3 Climate Entries."""
 
     _device: MideaC3Device
+    _zone: int
 
     _powers: list[C3Attributes] = [
         C3Attributes.zone1_power,
@@ -599,22 +601,6 @@ class MideaC3Climate(MideaClimate):
         """Midea C3 Climate current temperature."""
         return None
 
-    def set_temperature(self, **kwargs: Any) -> None:
-        """Midea C3 Climate set temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            return
-        temperature = round(kwargs[ATTR_TEMPERATURE] * 2) / 2
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        if hvac_mode == HVACMode.OFF:
-            self.turn_off()
-        else:
-            mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
-            self._device.set_target_temperature(
-                target_temperature=temperature,
-                mode=mode,
-                zone=self._zone,
-            )
-
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea C3 Climate set hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -672,20 +658,6 @@ class MideaFBClimate(MideaClimate):
             "float",
             self._device.get_attribute(FBAttributes.current_temperature),
         )
-
-    def set_temperature(self, **kwargs: Any) -> None:
-        """Midea FB Climate set temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            return
-        temperature = round(kwargs[ATTR_TEMPERATURE] * 2) / 2
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-        if hvac_mode == HVACMode.OFF:
-            self.turn_off()
-        else:
-            self._device.set_target_temperature(
-                target_temperature=temperature,
-                mode=None,
-            )
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea FB Climate set hvac mode."""
