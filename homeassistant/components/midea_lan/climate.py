@@ -210,7 +210,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Midea Climate extra state attributes."""
-        return cast("dict", self._device.attributes)
+        return self._device.attributes
 
     def turn_on(self, **kwargs: Any) -> None:
         """Midea Climate turn on."""
@@ -401,7 +401,7 @@ class MideaCCClimate(MideaClimate):
     @property
     def fan_modes(self) -> list[str] | None:
         """Midea CC Climate fan modes."""
-        return cast("list", self._device.fan_modes)
+        return self._device.fan_modes
 
     @property
     def fan_mode(self) -> str:
