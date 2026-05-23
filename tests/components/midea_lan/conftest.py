@@ -1,7 +1,5 @@
 """Fixtures for Midea LAN tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Tests for midea_lan __init__.py."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from midealocal.const import DeviceType, ProtocolVersion

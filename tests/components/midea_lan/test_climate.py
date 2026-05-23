@@ -1,7 +1,5 @@
 """Tests for midea_lan climate.py."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from midealocal.const import DeviceType

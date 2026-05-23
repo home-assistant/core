@@ -1,7 +1,5 @@
 """Tests for midea_lan entity.py."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from midealocal.const import DeviceType

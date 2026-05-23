@@ -1,7 +1,5 @@
 """Helpers for Midea device names and entity definitions."""
 
-from __future__ import annotations
-
 from midealocal.const import DeviceType
 
 MIDEA_DEVICE_NAMES: dict[DeviceType, str] = {
