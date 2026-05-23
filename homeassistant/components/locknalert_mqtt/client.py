@@ -5,10 +5,15 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
+from aiolocknalert.client import MQTT as _LibMQTT, MQTTError, Subscription
+from aiolocknalert.const import DEFAULT_ENCODING, DEFAULT_QOS
+from aiolocknalert.models import MessageCallbackType, PublishPayloadType
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HassJobType,
     HomeAssistant,
     callback,
@@ -23,14 +28,6 @@ from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.logging import catch_log_exception
-
-from aiolocknalert.client import MQTT as _LibMQTT, MQTTError, Subscription
-from aiolocknalert.const import DEFAULT_ENCODING, DEFAULT_QOS
-from aiolocknalert.models import (
-    MessageCallbackType,
-    PublishPayloadType,
-    ReceiveMessage,
-)
 
 from .const import DOMAIN, MQTT_CONNECTION_STATE, MQTT_PROCESSED_SUBSCRIPTIONS
 from .models import DATA_MQTT, MqttData
@@ -65,7 +62,6 @@ async def async_publish(
     """Publish message to an MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot publish to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
@@ -122,7 +118,7 @@ def async_on_subscribe_done(
         hass.loop.call_soon(on_subscribe_status)
 
     mqtt_data = hass.data[DATA_MQTT]
-    lib_client = mqtt_data.client.client
+    lib_client = mqtt_data.client
     if (
         lib_client.connected
         and lib_client.is_active_subscription(topic)
@@ -138,7 +134,7 @@ def async_on_subscribe_done(
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: Callable[[ReceiveMessage], None],
+    msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -153,7 +149,7 @@ async def async_subscribe(
 def async_subscribe_internal(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: Callable[[ReceiveMessage], None],
+    msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
     job_type: HassJobType | None = None,
@@ -170,19 +166,23 @@ def async_subscribe_internal(
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         ) from exc
     if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
+    if job_type is None:
+        job_type = get_hassjob_callable_job_type(msg_callback)
+    if job_type is not HassJobType.Callback:
+        msg_callback = catch_log_exception(
+            msg_callback, lambda _: f"Exception in '{topic}' listener"
+        )
+    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding)
 
 
 def subscribe(
@@ -227,12 +227,14 @@ class MQTT(_LibMQTT):
             lambda subs: async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, subs)
         )
         self.on_reauth_required = lambda: config_entry.async_start_reauth(hass)
+
+        @callback
+        def _stop_on_hass_stop(_: Event) -> None:
+            hass.async_create_task(self.async_disconnect())
+
         self._cleanup_on_unload: list[Callable[[], None]] = [
             async_at_started(hass, lambda _: self.async_signal_ha_started()),
-            hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_STOP,
-                lambda _event: hass.async_create_task(self.async_disconnect()),
-            ),
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _stop_on_hass_stop),
         ]
 
     def _async_mqtt_on_message(
@@ -244,12 +246,12 @@ class MQTT(_LibMQTT):
         super()._async_mqtt_on_message(_mqttc, _userdata, msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
-    async def async_start(self, mqtt_data: MqttData) -> None:
-        """Start the MQTT client."""
+    async def async_initialize(self, mqtt_data: MqttData) -> None:
+        """Store HA-specific data then start the MQTT client."""
         self._mqtt_data = mqtt_data
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
             await async_import_module(self.hass, "aiolocknalert.async_client")
-        await super().async_start()
+        await self.async_start()
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -259,28 +261,9 @@ class MQTT(_LibMQTT):
             await super().async_publish(topic, payload, qos, retain)
         except MQTTError as err:
             raise HomeAssistantError(
-                str(err),
-                translation_domain=DOMAIN,
                 translation_key="mqtt_broker_error",
+                translation_domain=DOMAIN,
             ) from err
-
-    @callback
-    def async_subscribe(
-        self,
-        topic: str,
-        msg_callback: MessageCallbackType,
-        qos: int,
-        encoding: str | None = None,
-        job_type: HassJobType | None = None,
-    ) -> Callable[[], None]:
-        """Set up a subscription to a topic with the provided qos."""
-        if job_type is None:
-            job_type = get_hassjob_callable_job_type(msg_callback)
-        if job_type is not HassJobType.Callback:
-            msg_callback = catch_log_exception(
-                msg_callback, lambda: f"Exception handling msg on '{topic}'"
-            )
-        return super().async_subscribe(topic, msg_callback, qos, encoding)
 
     def cleanup(self) -> None:
         """Clean up HA listeners."""

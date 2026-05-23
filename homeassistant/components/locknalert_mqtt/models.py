@@ -14,6 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
+from aiolocknalert.models import ReceiveMessage
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -61,21 +62,6 @@ def convert_outgoing_mqtt_payload(
                 return native_object
 
     return payload
-
-
-# eq=False so we use the id() of the object for comparison
-# since client will only generate one instance of this object
-# per messages/subscribed_topic.
-@dataclass(slots=True, frozen=True, eq=False)
-class ReceiveMessage:
-    """MQTT Message received."""
-
-    topic: str
-    payload: ReceivePayloadType
-    qos: int
-    retain: bool
-    subscribed_topic: str
-    timestamp: float
 
 
 type MessageCallbackType = Callable[[ReceiveMessage], None]

@@ -280,7 +280,6 @@ async def async_check_config_schema(
                         hass, exc, domain, config, integration.documentation
                     )
                     raise ServiceValidationError(
-                        message,
                         translation_domain=DOMAIN,
                         translation_key="invalid_platform_config",
                         translation_placeholders={
@@ -436,7 +435,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             # Initial setup
             hass.data[DATA_MQTT] = mqtt_data = MqttData(config=mqtt_yaml, client=client)
-        await client.async_start(mqtt_data)
+        await client.async_initialize(mqtt_data)
 
         # Restore saved subscriptions
         if mqtt_data.subscriptions_to_restore:
