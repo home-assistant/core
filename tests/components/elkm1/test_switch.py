@@ -3,22 +3,25 @@
 from unittest.mock import MagicMock
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
+from elkm1_lib.elk import Elk
+from elkm1_lib.thermostats import Thermostat
 import pytest
 
+from homeassistant.components.elkm1.models import ELKM1Data
 from homeassistant.components.elkm1.switch import ElkThermostatEMHeat
 
 
 @pytest.fixture
 def emheat_entity() -> ElkThermostatEMHeat:
     """Return an ElkThermostatEMHeat entity with mocked dependencies."""
-    element = MagicMock()
+    element = MagicMock(spec=Thermostat)
     element.name = "Downstairs"
     element.default_name.return_value = "downstairs"
     element.index = 0
 
-    elk = MagicMock()
+    elk = MagicMock(spec=Elk)
 
-    elk_data = MagicMock()
+    elk_data = MagicMock(spec=ELKM1Data)
     elk_data.mac = "aa:bb:cc:dd:ee:ff"
     elk_data.prefix = ""
     elk_data.auto_configure = True
