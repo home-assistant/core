@@ -5,11 +5,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName
+from pyoverkiz.enums import EventName, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
-
-from pyoverkiz.enums import OverkizState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
