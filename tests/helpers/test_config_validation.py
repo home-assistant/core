@@ -1,6 +1,7 @@
 """Test config validators."""
 
 from collections import OrderedDict
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 import enum
 from functools import partial
@@ -2013,3 +2014,73 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     # Check error handling if data is not a dict
     with pytest.raises(vol.Invalid, match="expected a dictionary"):
         renamed_schema([])
+
+
+def test_stop_action_schema_error_false_with_response() -> None:
+    """Test stop action allows error: false with response_variable."""
+    schema = cv._SCRIPT_STOP_SCHEMA
+
+    # error: true with response_variable should fail
+    with pytest.raises(vol.Invalid, match="not allowed to add a response"):
+        schema({"stop": "Error", "error": True, "response_variable": "result"})
+
+    # error: false with response_variable should work
+    config = schema({"stop": "Done", "error": False, "response_variable": "result"})
+    assert config["error"] is False
+    assert config["response_variable"] == "result"
+
+    # no error with response_variable should work
+    config = schema({"stop": "Done", "response_variable": "result"})
+    assert config["response_variable"] == "result"
+
+
+_COMMENT_SCHEMA_PARAMS = [
+    pytest.param(
+        cv.TRIGGER_BASE_SCHEMA,
+        {"platform": "event"},
+        id="trigger_base",
+    ),
+    pytest.param(
+        cv.CONDITION_SCHEMA,
+        {"condition": "state", "entity_id": "sun.sun", "state": "above_horizon"},
+        id="condition",
+    ),
+    pytest.param(
+        cv.script_action,
+        {"action": "test.foo"},
+        id="script_action",
+    ),
+]
+
+
+@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.usefixtures("hass")
+def test_base_schemas_accept_comment(
+    validator: Callable[[dict[str, Any]], dict[str, Any]],
+    base_config: dict[str, Any],
+) -> None:
+    """Test that the comment field is accepted and stripped from the output."""
+    validated = validator({**base_config, "comment": "Single line"})
+    assert "comment" not in validated
+
+
+@pytest.mark.parametrize(("validator", "base_config"), _COMMENT_SCHEMA_PARAMS)
+@pytest.mark.parametrize(
+    "invalid_comment",
+    [
+        pytest.param(None, id="none"),
+        pytest.param(42, id="int"),
+        pytest.param(True, id="bool"),
+        pytest.param([], id="list"),
+        pytest.param({}, id="dict"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_base_schemas_reject_invalid_comment(
+    validator: Callable[[dict[str, Any]], dict[str, Any]],
+    base_config: dict[str, Any],
+    invalid_comment: Any,
+) -> None:
+    """Test that script, condition, trigger base schemas reject non-string comments."""
+    with pytest.raises(vol.Invalid):
+        validator({**base_config, "comment": invalid_comment})

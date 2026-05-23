@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 from iaqualink.exception import (
     AqualinkServiceException,
+    AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
 
@@ -44,6 +45,12 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.system.update()
         except AqualinkServiceUnauthorizedException as err:
             raise ConfigEntryAuthFailed("Invalid credentials for iAquaLink") from err
+        except AqualinkServiceThrottledException:
+            _LOGGER.warning(
+                "Rate limited by iAquaLink system %s, will retry later",
+                self.system.serial,
+            )
+            return
         except (AqualinkServiceException, httpx.HTTPError) as err:
             raise UpdateFailed(
                 f"Unable to update iAquaLink system {self.system.serial}: {err}"

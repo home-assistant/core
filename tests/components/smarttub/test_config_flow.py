@@ -96,7 +96,7 @@ async def test_reauth_success(hass: HomeAssistant, smarttub_api, config_entry) -
 async def test_reauth_wrong_account(
     hass: HomeAssistant, smarttub_api, account, config_entry
 ) -> None:
-    """Test reauthentication flow if the user enters credentials for a different already-configured account."""
+    """Test reauth flow with credentials for a different account."""
     config_entry.add_to_hass(hass)
 
     mock_entry2 = MockConfigEntry(

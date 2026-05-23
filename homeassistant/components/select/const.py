@@ -4,6 +4,7 @@ DOMAIN = "select"
 
 ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"
+# pylint: disable-next=home-assistant-duplicate-const
 ATTR_OPTION = "option"
 
 CONF_CYCLE = "cycle"
@@ -12,5 +13,6 @@ CONF_OPTION = "option"
 SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
+# pylint: disable-next=home-assistant-duplicate-const
 SERVICE_SELECT_OPTION = "select_option"
 SERVICE_SELECT_PREVIOUS = "select_previous"

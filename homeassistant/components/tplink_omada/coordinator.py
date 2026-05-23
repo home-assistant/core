@@ -186,7 +186,7 @@ class FirmwareUpdateStatus(NamedTuple):
 
 
 class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
-    """Coordinator for getting details about available firmware updates for Omada devices."""
+    """Coordinator for Omada device firmware update details."""
 
     def __init__(
         self,
