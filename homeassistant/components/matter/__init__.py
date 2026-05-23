@@ -209,7 +209,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
                 try:
                     await ble_proxy.disconnect()
                 except Exception:  # noqa: BLE001
-                    LOGGER.exception("Failed to disconnect BLE proxy during setup abort")
+                    LOGGER.exception(
+                        "Failed to disconnect BLE proxy during setup abort"
+                    )
             await matter_client.disconnect()
         finally:
             raise ConfigEntryNotReady(listen_error) from listen_error
