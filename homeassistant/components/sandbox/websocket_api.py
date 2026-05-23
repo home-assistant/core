@@ -38,7 +38,9 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_entity)
     websocket_api.async_register_command(hass, ws_remove_entity)
     websocket_api.async_register_command(hass, ws_update_state)
-    websocket_api.async_register_command(hass, ws_subscribe_service_calls)
+    websocket_api.async_register_command(hass, ws_register_service)
+    websocket_api.async_register_command(hass, ws_sandbox_call_service)
+    websocket_api.async_register_command(hass, ws_service_call_result)
     websocket_api.async_register_command(hass, ws_subscribe_entity_commands)
     websocket_api.async_register_command(hass, ws_entity_command_result)
 
@@ -445,62 +447,297 @@ def ws_remove_entity(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "sandbox/subscribe_service_calls",
-        vol.Required("entity_ids"): [str],
+        vol.Required("type"): "sandbox/register_service",
+        vol.Required("domain"): str,
+        vol.Required("service"): str,
     }
 )
 @callback
-def ws_subscribe_service_calls(
+def ws_register_service(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Subscribe to service calls targeting sandbox entities.
+    """Register a service on the host on behalf of a sandbox.
 
-    Forwards service calls for the specified entity IDs to the sandbox client.
+    If the service already exists (e.g. entity component loaded it),
+    this is a no-op. Otherwise a proxy service is created that forwards
+    calls to the sandbox for execution.
     """
-    _require_sandbox_token(hass, connection)
+    import asyncio
 
-    entity_ids = set(msg["entity_ids"])
+    sandbox_id = _require_sandbox_token(hass, connection)
     sandbox_data = hass.data[DATA_SANDBOX]
-    sandbox_id = sandbox_data.token_to_sandbox[connection.refresh_token_id]
 
-    managed_entities = sandbox_data.sandboxes[sandbox_id].managed_entity_ids
-    managed_entities.update(entity_ids)
+    domain = msg["domain"]
+    service = msg["service"]
 
-    from homeassistant.const import EVENT_CALL_SERVICE
+    if hass.services.has_service(domain, service):
+        connection.send_result(msg["id"])
+        return
 
-    @callback
-    def forward_service_call(event: Any) -> None:
-        """Forward service calls targeting sandbox entities."""
-        service_data = dict(event.data.get("service_data", {}))
-        target_entity_ids = set()
+    sandbox_info = sandbox_data.sandboxes[sandbox_id]
 
-        if "entity_id" in service_data:
-            target = service_data["entity_id"]
-            if isinstance(target, str):
-                target_entity_ids.add(target)
-            elif isinstance(target, list):
-                target_entity_ids.update(target)
+    async def proxy_service_handler(call: Any) -> Any:
+        """Forward service call to sandbox for execution."""
+        if sandbox_info.send_command is None:
+            from homeassistant.exceptions import ServiceNotFound
 
-        matching = target_entity_ids & entity_ids
-        if not matching:
-            return
+            raise ServiceNotFound(domain, service)
 
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                {
-                    "domain": event.data.get("domain"),
-                    "service": event.data.get("service"),
-                    "service_data": service_data,
-                    "entity_ids": list(matching),
-                },
+        call_id = f"svc_{sandbox_id}_{id(call)}"
+        future: asyncio.Future[Any] = hass.loop.create_future()
+        sandbox_info.pending_service_calls[call_id] = future
+
+        target: dict[str, Any] = {}
+        if hasattr(call, "target") and call.target:
+            target = dict(call.target)
+
+        # Use pending_contexts if sandbox/call_service stored one for
+        # this context. This ensures only contexts originating from the
+        # sandbox client are forwarded — not the auto-generated context
+        # from the standard call_service WS command.
+        context_data: dict[str, str | None] | None = None
+        if call.context:
+            context_data = sandbox_info.pending_contexts.pop(
+                call.context.id, None
             )
+
+        sandbox_info.send_command(
+            {
+                "type": "call_service",
+                "call_id": call_id,
+                "domain": call.domain,
+                "service": call.service,
+                "service_data": dict(call.data),
+                "target": target,
+                "return_response": call.return_response,
+                "context": context_data,
+            }
         )
 
-    unsub = hass.bus.async_listen(EVENT_CALL_SERVICE, forward_service_call)
-    connection.subscriptions[msg["id"]] = unsub
+        try:
+            return await asyncio.wait_for(future, timeout=30)
+        except asyncio.TimeoutError:
+            sandbox_info.pending_service_calls.pop(call_id, None)
+            raise
+
+    from homeassistant.core import SupportsResponse
+
+    hass.services.async_register(
+        domain, service, proxy_service_handler,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "sandbox/call_service",
+        vol.Required("domain"): str,
+        vol.Required("service"): str,
+        vol.Optional("service_data"): dict,
+        vol.Optional("target"): vol.Any(dict, None),
+        vol.Optional("return_response"): bool,
+        vol.Optional("context"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_sandbox_call_service(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Call a service with full context forwarding.
+
+    Unlike the standard call_service WS command which creates context from the
+    connection, this uses the context passed from the sandbox so that permission
+    checks and context tracking work correctly.
+    """
+    import voluptuous as _vol
+
+    from homeassistant.components.websocket_api import const
+    from homeassistant.core import Context
+    from homeassistant.exceptions import (
+        HomeAssistantError,
+        ServiceNotFound,
+        ServiceValidationError,
+    )
+
+    sandbox_id = _require_sandbox_token(hass, connection)
+    sandbox_data = hass.data[DATA_SANDBOX]
+    sandbox_info = sandbox_data.sandboxes[sandbox_id]
+
+    domain = msg["domain"]
+    service = msg["service"]
+    service_data = msg.get("service_data") or {}
+    target = msg.get("target")
+    return_response = msg.get("return_response", False)
+
+    # Reconstruct context from sandbox
+    context_data = msg.get("context")
+    if context_data:
+        context = Context(
+            id=context_data.get("id"),
+            user_id=context_data.get("user_id"),
+            parent_id=context_data.get("parent_id"),
+        )
+        # Store context so the proxy_service_handler can forward it
+        # to the sandbox. Only contexts explicitly sent by the sandbox
+        # client are forwarded — not auto-generated ones from standard
+        # call_service.
+        sandbox_info.pending_contexts[context.id] = {
+            "id": context.id,
+            "user_id": context.user_id,
+            "parent_id": context.parent_id,
+        }
+    else:
+        context = connection.context(msg)
+
+    try:
+        response = await hass.services.async_call(
+            domain,
+            service,
+            service_data,
+            blocking=True,
+            context=context,
+            target=target,
+            return_response=return_response,
+        )
+        result: dict[str, Any] = {"context": context.as_dict()}
+        if return_response:
+            result["response"] = response
+        connection.send_result(msg["id"], result)
+    except ServiceNotFound as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_NOT_FOUND,
+            f"Service {err.domain}.{err.service} not found.",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    except _vol.Invalid as err:
+        connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+    except ServiceValidationError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            f"Validation error: {err}",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    except Unauthorized:
+        connection.send_error(msg["id"], const.ERR_UNAUTHORIZED, "Unauthorized")
+    except HomeAssistantError as err:
+        connection.send_error(
+            msg["id"],
+            const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+    except Exception as err:
+        connection.logger.exception("Unexpected exception in sandbox/call_service")
+        connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "sandbox/service_call_result",
+        vol.Required("call_id"): str,
+        vol.Required("success"): bool,
+        vol.Optional("result"): vol.Any(dict, list, str, int, float, bool, None),
+        vol.Optional("error"): str,
+        vol.Optional("error_type"): str,
+        vol.Optional("translation_domain"): str,
+        vol.Optional("translation_key"): str,
+        vol.Optional("translation_placeholders"): dict,
+    }
+)
+@callback
+def ws_service_call_result(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Receive the result of a forwarded service call from the sandbox."""
+    import voluptuous as _vol
+
+    from homeassistant.exceptions import (
+        HomeAssistantError,
+        ServiceNotSupported,
+        ServiceValidationError,
+        Unauthorized,
+    )
+
+    sandbox_id = _require_sandbox_token(hass, connection)
+    sandbox_data = hass.data[DATA_SANDBOX]
+    sandbox_info = sandbox_data.sandboxes.get(sandbox_id)
+
+    if sandbox_info is None:
+        connection.send_error(msg["id"], "not_found", "Sandbox not found")
+        return
+
+    future = sandbox_info.pending_service_calls.pop(msg["call_id"], None)
+    if future is None or future.done():
+        connection.send_result(msg["id"])
+        return
+
+    if msg["success"]:
+        future.set_result(msg.get("result"))
+    else:
+        error_msg = msg.get("error", "Unknown error")
+        error_type = msg.get("error_type", "")
+        translation_domain = msg.get("translation_domain")
+        translation_key = msg.get("translation_key")
+        translation_placeholders = msg.get("translation_placeholders")
+
+        if error_type == "Unauthorized":
+            exc: Exception = Unauthorized()
+        elif error_type == "Invalid":
+            exc = _vol.Invalid(error_msg)
+        elif error_type == "MultipleInvalid":
+            exc = _vol.MultipleInvalid([_vol.Invalid(error_msg)])
+        elif error_type == "ServiceNotSupported":
+            placeholders = translation_placeholders or {}
+            domain = placeholders.get("domain", "")
+            service = placeholders.get("service", "")
+            entity_id = placeholders.get("entity_id", "")
+            exc = ServiceNotSupported(domain, service, entity_id)
+        elif error_type == "ServiceValidationError":
+            if translation_domain and translation_key:
+                exc = ServiceValidationError(
+                    translation_domain=translation_domain,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
+            else:
+                exc = ServiceValidationError(error_msg)
+        elif error_type == "HomeAssistantError" or not error_type:
+            if translation_domain and translation_key:
+                exc = HomeAssistantError(
+                    translation_domain=translation_domain,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
+            else:
+                exc = HomeAssistantError(error_msg)
+        else:
+            # Unknown error types — use ServiceValidationError if it looks
+            # like a validation error subclass, otherwise HomeAssistantError
+            if translation_domain and translation_key:
+                exc = ServiceValidationError(
+                    translation_domain=translation_domain,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
+            else:
+                exc = HomeAssistantError(error_msg)
+        future.set_exception(exc)
+
     connection.send_result(msg["id"])
 
 

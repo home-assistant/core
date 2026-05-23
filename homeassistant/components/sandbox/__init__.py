@@ -42,6 +42,12 @@ class SandboxInstance:
     process: asyncio.subprocess.Process | None = None
     managed_entity_ids: set[str] = field(default_factory=set)
     send_command: Callable[[dict[str, Any]], None] | None = None
+    pending_service_calls: dict[str, asyncio.Future[Any]] = field(
+        default_factory=dict
+    )
+    pending_contexts: dict[str, dict[str, str | None]] = field(
+        default_factory=dict
+    )
 
 
 @dataclass
