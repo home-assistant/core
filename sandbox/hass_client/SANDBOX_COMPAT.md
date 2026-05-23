@@ -4,6 +4,23 @@ Tested with `pytest -p hass_client.testing.conftest_sandbox` which runs each
 integration's test suite through a real websocket connection to a host HA Core
 with the sandbox integration.
 
+## Setup
+
+The sandbox client's `pyproject.toml` only pulls in the minimal deps needed to
+run the client and its own tests. To run HA Core's per-integration test suites
+through it, also install Core's full dependency tree:
+
+```
+cd sandbox/hass_client
+uv sync
+uv pip install -r requirements_ha.txt
+```
+
+`requirements_ha.txt` references `../../requirements_all.txt` (and
+`../../requirements_test.txt`) so it stays in sync with Core's pinned deps.
+On macOS, `pyitachip2ir` (the `itach` integration) fails to compile — see the
+comment in `requirements_ha.txt` for the workaround.
+
 ## Results Summary
 
 | Integration          | Tests | Passed | Failed | Status |
@@ -41,8 +58,12 @@ with the sandbox integration.
 | filter               | 1     | 1      | 0      | PASS   |
 | mqtt_statestream     | 18    | 18     | 0      | PASS   |
 | recorder             | 93    | 93     | 0      | PASS   |
+| rest                 | 10    | 10     | 0      | PASS   |
+| logbook              | 55    | 55     | 0      | PASS   |
+| command_line         | 7     | 7      | 0      | PASS   |
+| trend                | 9     | 9      | 0      | PASS   |
 
-**31 of 33 integrations fully pass. 878 of 880 tests pass (99.8%).**
+**35 of 37 integrations fully pass. 955 of 957 tests pass (99.8%).**
 
 ## Remaining Failures
 
@@ -58,14 +79,22 @@ with the sandbox integration.
 - `test_logbook_humanify_script_started_event`: Same root cause as the automation
   logbook test. Also fails with the base plugin.
 
-## Not Tested (missing dependencies)
+## Newly Runnable, Still Investigating
 
-These integrations fail to collect or import in the hass-client environment:
-- `conversation` — requires `hassil`
-- `rest` — requires `xmltodict`
-- `logbook` — requires `sqlalchemy` (test infrastructure, not the integration)
-- `command_line` — 2 test failures also present with the base plugin
-- `trend` — config entry setup failures also present with the base plugin
+### conversation: 8 fail, 11 pass, 2 hang (out of 21)
+
+Now that `hassil` is installed, conversation tests collect and partially run.
+Of the 21 collected tests, 8 fail in the first batch, 11 pass, and the run
+deadlocks before completing tests 20–21 (perl alarm SIGTERM after 600s).
+Failures and the hang are unrelated to missing deps and need their own
+investigation — likely interaction between conversation's chat-session helpers
+and the live sandbox websocket. Not counted in the 35/37 figure above.
+
+## Not Tested
+
+These integrations were previously listed as missing deps; after running
+`uv pip install -r requirements_ha.txt` they import and run normally. No
+remaining "missing dependency" cases in this report.
 
 ## Fixes Applied
 
