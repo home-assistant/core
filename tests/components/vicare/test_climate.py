@@ -111,3 +111,57 @@ async def test_hvac_action_compressor_phase(
     assert climate_states, "no climate entity exposed hvac_action"
     for state in climate_states:
         assert state.attributes[ATTR_HVAC_ACTION] == expected_action
+
+
+async def test_hvac_action_multi_compressor_cooling_takes_precedence(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Cooling on any compressor must win over heating/unknown on another.
+
+    Regression guard for the order-dependent bug raised on #171945: with
+    one compressor reporting `cooling` and a second compressor active
+    without a recognisable phase, the result must be COOLING regardless
+    of iteration order.
+    """
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+    ]
+    cooling_compressor = Mock()
+    cooling_compressor.getActive.return_value = True
+    cooling_compressor.getPhase.return_value = "cooling"
+    unknown_compressor = Mock()
+    unknown_compressor.getActive.return_value = True
+    unknown_compressor.getPhase.side_effect = PyViCareNotSupportedFeatureError("phase")
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.vicare.climate.get_compressors",
+            return_value=[unknown_compressor, cooling_compressor],
+        ),
+        patch(
+            "homeassistant.components.vicare.climate.get_burners",
+            return_value=[],
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+        component: entity_component.EntityComponent = hass.data["climate"]
+        for entity in component.entities:
+            await entity.async_update_ha_state(force_refresh=True)
+
+    climate_states = [
+        state
+        for state in hass.states.async_all("climate")
+        if state.attributes.get(ATTR_HVAC_ACTION) is not None
+    ]
+    assert climate_states, "no climate entity exposed hvac_action"
+    for state in climate_states:
+        assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING

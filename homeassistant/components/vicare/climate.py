@@ -200,27 +200,38 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             # Resolve the current hvac action from the underlying heat
             # source. Burners (boilers) only heat; compressors (heat pumps)
             # expose a `phase` ("heating" / "cooling" / "off" / ...) on top
-            # of the active flag.
-            self._current_action = HVACAction.IDLE
+            # of the active flag. Collect per-source flags first, then map
+            # to a single HVACAction so the result is independent of
+            # iteration order: cooling takes precedence over heating, which
+            # takes precedence over idle.
+            heating_active = False
+            cooling_active = False
             with suppress(PyViCareNotSupportedFeatureError):
                 for burner in get_burners(self._device):
                     if burner.getActive():
-                        self._current_action = HVACAction.HEATING
+                        heating_active = True
 
             with suppress(PyViCareNotSupportedFeatureError):
                 for compressor in get_compressors(self._device):
                     if not compressor.getActive():
                         continue
                     phase = None
-                    with suppress(PyViCareNotSupportedFeatureError, KeyError):
+                    with suppress(PyViCareNotSupportedFeatureError):
                         phase = compressor.getPhase()
                     if phase == "cooling":
-                        self._current_action = HVACAction.COOLING
+                        cooling_active = True
                     elif phase == "heating" or phase is None:
-                        # Fall back to HEATING when the device reports
-                        # active without a recognisable phase, matching
-                        # the pre-cooling-support behaviour.
-                        self._current_action = HVACAction.HEATING
+                        # Phase is unset on hybrid devices that do not
+                        # expose it: fall back to HEATING to match the
+                        # pre-cooling-support behaviour.
+                        heating_active = True
+
+            if cooling_active:
+                self._current_action = HVACAction.COOLING
+            elif heating_active:
+                self._current_action = HVACAction.HEATING
+            else:
+                self._current_action = HVACAction.IDLE
 
     @property
     def hvac_mode(self) -> HVACMode | None:
