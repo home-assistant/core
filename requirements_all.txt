@@ -3428,7 +3428,6 @@ zamg==0.3.6
 # homeassistant.components.zimi
 zcc-helper==3.8
 
-# homeassistant.components.locknalert_mqtt
 # homeassistant.components.zeroconf
 zeroconf==0.149.16
 
