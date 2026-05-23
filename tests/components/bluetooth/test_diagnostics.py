@@ -178,6 +178,12 @@ async def test_diagnostics(
                     "timings": {},
                 },
                 "all_history": [],
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
+                },
                 "connectable_history": [],
                 "scanners": [
                     {
@@ -343,6 +349,12 @@ async def test_diagnostics_macos(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {
@@ -553,6 +565,12 @@ async def test_diagnostics_remote_adapter(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {
