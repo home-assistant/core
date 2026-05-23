@@ -373,7 +373,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): vol.All(int, vol.Range(min=1, max=300)),
+                vol.Optional("duration", default=5): vol.All(
+                    int, vol.Range(min=1, max=300)
+                ),
             }
         ),
     )
