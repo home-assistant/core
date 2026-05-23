@@ -8,6 +8,7 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
+    BluetoothScannerMode,
     BluetoothScannerStateResponse,
     DeviceInfo,
 )
@@ -109,9 +110,11 @@ def _async_apply_scanning_mode(
     def _migrate(state: BluetoothScannerStateResponse) -> None:
         if unsub_holder:
             unsub_holder.pop()()
-        # bleak-esphome's own subscription has already updated scanner.configured_mode
-        # by the time this callback runs (registered first).
-        if scanner.configured_mode is BluetoothScanningMode.PASSIVE:
+        # Read configured_mode directly off the proto: aioesphomeapi stores
+        # message handlers in a set, so the iteration order between our
+        # callback and bleak-esphome's scanner.async_update_scanner_state
+        # is undefined and scanner.configured_mode may not yet be populated.
+        if state.configured_mode is BluetoothScannerMode.PASSIVE:
             new_mode = BluetoothScanningMode.PASSIVE
         else:
             new_mode = BluetoothScanningMode(DEFAULT_BLUETOOTH_SCANNING_MODE)
