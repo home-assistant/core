@@ -192,30 +192,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         search_method = user_input[CONF_TYPE_SEARCH]
 
         if search_method == CONF_TYPE_SEARCH_COORDINATES:
-            lat = self.hass.config.latitude
-            longi = self.hass.config.longitude
-
-            self.mosques = {}
-            try:
-                # pre-fetch mosques to provide data for users in next step
-                neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    lat, longi, token=self.token
-                )
-                if neighborhood_mosques:
-                    self.mosques = {
-                        mosque.uuid: mosque for mosque in neighborhood_mosques
-                    }
-
-            except NoMosqueAround:
-                return self.async_abort(reason="no_mosque")
-            except (
-                BadCredentialsException,
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-            ):
-                return self.async_abort(reason="cannot_connect")
-
             return await self.async_step_mosques_coordinates()
 
         if search_method == CONF_TYPE_SEARCH_KEYWORD:
