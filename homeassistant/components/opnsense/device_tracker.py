@@ -32,7 +32,7 @@ async def async_setup_entry(
             if mac_address in coordinator.tracked_devices:
                 continue
             entity = OPNsenseDeviceTrackerEntity(coordinator, mac_address)
-            coordinator.tracked_devices[mac_address] = entity
+            coordinator.tracked_devices.add(mac_address)
             entities.append(entity)
 
         if entities:

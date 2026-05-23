@@ -1,7 +1,6 @@
 """Coordinator for OPNsense device tracker updates."""
 
 import logging
-from typing import TYPE_CHECKING
 
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
@@ -22,9 +21,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import SCAN_INTERVAL
 from .types import DeviceDetails, DeviceDetailsByMAC, OPNsenseConfigEntry
-
-if TYPE_CHECKING:
-    from .device_tracker import OPNsenseDeviceTrackerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +45,7 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         )
         self.client = client
         self.interfaces = interfaces
-        self.tracked_devices: dict[str, OPNsenseDeviceTrackerEntity] = {}
+        self.tracked_devices: set[str] = set()
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""
