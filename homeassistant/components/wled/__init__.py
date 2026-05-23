@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
         ):
             hass.config_entries.async_update_entry(
                 entry,
-                options={CONF_KEEP_MAIN_LIGHT: True} | entry.options,
+                options=entry.options | {CONF_KEEP_MAIN_LIGHT: True},
             )
 
     entry.async_on_unload(coordinator.async_add_listener(_async_check_keep_main_light))

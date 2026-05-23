@@ -1,6 +1,5 @@
 """Support for LED lights."""
 
-from functools import partial
 from typing import Any, cast
 
 from homeassistant.components.light import (
@@ -41,15 +40,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator = entry.runtime_data
-    if coordinator.keep_main_light:
-        async_add_entities([WLEDMainLight(coordinator=coordinator)])
+    current_ids: set[int] = set()
+    main_light_added = False
 
-    update_segments = partial(
-        async_update_segments,
-        coordinator,
-        set(),
-        async_add_entities,
-    )
+    @callback
+    def update_segments() -> None:
+        nonlocal main_light_added
+        segment_ids = coordinator.segment_ids
+        new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
+
+        if not main_light_added and coordinator.has_main_light:
+            new_entities.append(WLEDMainLight(coordinator))
+            main_light_added = True
+
+        for segment_id in segment_ids - current_ids:
+            current_ids.add(segment_id)
+            new_entities.append(WLEDSegmentLight(coordinator, segment_id))
+
+        async_add_entities(new_entities)
 
     coordinator.async_add_listener(update_segments)
     update_segments()
@@ -290,27 +298,3 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             return
 
         await self.coordinator.wled.segment(**data)
-
-
-@callback
-def async_update_segments(
-    coordinator: WLEDDataUpdateCoordinator,
-    current_ids: set[int],
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Update segments."""
-    segment_ids = coordinator.segment_ids
-    new_entities: list[WLEDMainLight | WLEDSegmentLight] = []
-
-    # More than 1 segment now? No main? Add main controls
-    if not coordinator.keep_main_light and (
-        len(current_ids) < 2 and len(segment_ids) > 1
-    ):
-        new_entities.append(WLEDMainLight(coordinator))
-
-    # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
-        current_ids.add(segment_id)
-        new_entities.append(WLEDSegmentLight(coordinator, segment_id))
-
-    async_add_entities(new_entities)
