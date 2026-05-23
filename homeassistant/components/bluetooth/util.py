@@ -30,7 +30,7 @@ def resolve_scanning_mode(options: Mapping[str, Any]) -> BluetoothScanningMode:
     if (mode_value := options.get(CONF_MODE)) is not None:
         try:
             return BluetoothScanningMode(mode_value)
-        except ValueError:
+        except TypeError, ValueError:
             _LOGGER.warning("Unknown bluetooth scanning mode %r", mode_value)
             return BluetoothScanningMode(DEFAULT_MODE)
     if (legacy_passive := options.get(CONF_PASSIVE)) is True:
