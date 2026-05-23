@@ -41,4 +41,6 @@ async def test_emheat_actions(
 ) -> None:
     """Test emergency heat turn on/off sets the correct thermostat mode."""
     await getattr(emheat_entity, method)()
-    emheat_entity._element.set.assert_called_once_with(ThermostatSetting.MODE, expected_mode)
+    emheat_entity._element.set.assert_called_once_with(
+        ThermostatSetting.MODE, expected_mode
+    )
