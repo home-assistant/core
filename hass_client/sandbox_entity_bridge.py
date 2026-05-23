@@ -133,65 +133,122 @@ class SandboxEntityBridge:
         self.hass.bus.async_listen(EVENT_STATE_CHANGED, _on_state_changed)
 
     async def subscribe_entity_commands(self) -> None:
-        """Subscribe to entity method calls from the host."""
+        """Subscribe to entity method calls and service calls from the host."""
         if self._subscribed:
             return
         self._subscribed = True
 
-        async def _on_entity_command(message: dict[str, Any]) -> None:
+        async def _on_command(message: dict[str, Any]) -> None:
             event_data = message.get("event", {})
             cmd_type = event_data.get("type")
-            if cmd_type != "call_method":
-                return
 
-            call_id = event_data.get("call_id")
-            host_entity_id = event_data.get("entity_id")
-            method_name = event_data.get("method")
-            kwargs = event_data.get("kwargs", {})
-
-            local_entity_id = self._host_id_to_entity_id.get(host_entity_id, "")
-            entity = self._local_entities.get(local_entity_id)
-
-            if entity is None:
-                _LOGGER.warning(
-                    "Entity command for unknown entity: %s", host_entity_id
-                )
-                await self.api.async_sandbox_entity_command_result(
-                    call_id=call_id,
-                    success=False,
-                    error=f"Entity {host_entity_id} not found in sandbox",
-                )
-                return
-
-            try:
-                method = getattr(entity, method_name, None)
-                if method is None:
-                    raise AttributeError(
-                        f"Entity {local_entity_id} has no method {method_name}"
-                    )
-
-                result = await method(**kwargs)
-
-                await self.api.async_sandbox_entity_command_result(
-                    call_id=call_id,
-                    success=True,
-                    result=result if _is_serializable(result) else None,
-                )
-            except Exception as err:
-                _LOGGER.exception(
-                    "Error executing %s on %s", method_name, local_entity_id
-                )
-                await self.api.async_sandbox_entity_command_result(
-                    call_id=call_id,
-                    success=False,
-                    error=str(err),
-                )
+            if cmd_type == "call_method":
+                await self._handle_entity_command(event_data)
+            elif cmd_type == "call_service":
+                await self._handle_service_call(event_data)
 
         await self.api.subscribe(
-            _on_entity_command,
+            _on_command,
             "sandbox/subscribe_entity_commands",
         )
-        _LOGGER.info("Subscribed to entity commands from host")
+        _LOGGER.info("Subscribed to commands from host")
+
+    async def _handle_entity_command(self, event_data: dict[str, Any]) -> None:
+        """Handle an entity method call from the host."""
+        call_id = event_data.get("call_id")
+        host_entity_id = event_data.get("entity_id")
+        method_name = event_data.get("method")
+        kwargs = event_data.get("kwargs", {})
+
+        local_entity_id = self._host_id_to_entity_id.get(host_entity_id, "")
+        entity = self._local_entities.get(local_entity_id)
+
+        if entity is None:
+            _LOGGER.warning(
+                "Entity command for unknown entity: %s", host_entity_id
+            )
+            await self.api.async_sandbox_entity_command_result(
+                call_id=call_id,
+                success=False,
+                error=f"Entity {host_entity_id} not found in sandbox",
+            )
+            return
+
+        try:
+            method = getattr(entity, method_name, None)
+            if method is None:
+                raise AttributeError(
+                    f"Entity {local_entity_id} has no method {method_name}"
+                )
+
+            result = await method(**kwargs)
+
+            await self.api.async_sandbox_entity_command_result(
+                call_id=call_id,
+                success=True,
+                result=result if _is_serializable(result) else None,
+            )
+        except Exception as err:
+            _LOGGER.exception(
+                "Error executing %s on %s", method_name, local_entity_id
+            )
+            await self.api.async_sandbox_entity_command_result(
+                call_id=call_id,
+                success=False,
+                error=str(err),
+            )
+
+    async def _handle_service_call(self, event_data: dict[str, Any]) -> None:
+        """Handle a service call forwarded from the host."""
+        from .sandbox_service_registry import SandboxServiceRegistry
+
+        call_id = event_data.get("call_id")
+        domain = event_data.get("domain", "")
+        service = event_data.get("service", "")
+        service_data = event_data.get("service_data", {})
+        target = event_data.get("target")
+        return_response = event_data.get("return_response", False)
+        context_data = event_data.get("context")
+
+        services = self.hass.services
+        if not isinstance(services, SandboxServiceRegistry):
+            await self.api.async_sandbox_service_call_result(
+                call_id=call_id,
+                success=False,
+                error="Service registry not in sandbox mode",
+            )
+            return
+
+        try:
+            result = await services.async_execute_forwarded_call(
+                domain, service, service_data,
+                target=target,
+                return_response=return_response,
+                context_data=context_data,
+            )
+            await self.api.async_sandbox_service_call_result(
+                call_id=call_id,
+                success=True,
+                result=result if _is_serializable(result) else None,
+            )
+        except Exception as err:
+            _LOGGER.debug(
+                "Error executing forwarded service %s.%s: %s",
+                domain, service, err,
+            )
+            kwargs: dict[str, Any] = {
+                "call_id": call_id,
+                "success": False,
+                "error": str(err),
+                "error_type": type(err).__name__,
+            }
+            if hasattr(err, "translation_domain") and err.translation_domain:
+                kwargs["translation_domain"] = err.translation_domain
+            if hasattr(err, "translation_key") and err.translation_key:
+                kwargs["translation_key"] = err.translation_key
+            if hasattr(err, "translation_placeholders") and err.translation_placeholders:
+                kwargs["translation_placeholders"] = err.translation_placeholders
+            await self.api.async_sandbox_service_call_result(**kwargs)
 
 
 def _is_serializable(value: Any) -> bool:

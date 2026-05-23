@@ -109,6 +109,7 @@ def _translate_command_error(
         from homeassistant.exceptions import (
             HomeAssistantError,
             ServiceNotFound,
+            ServiceNotSupported,
             ServiceValidationError,
             TemplateError,
             Unauthorized,
@@ -123,7 +124,7 @@ def _translate_command_error(
             translation_placeholders=translation_placeholders,
         )
 
-    if command == "call_service":
+    if command in ("call_service", "sandbox/call_service"):
         if (
             code == websocket_api_const.ERR_NOT_FOUND
             and translation_key == "service_not_found"
@@ -146,9 +147,20 @@ def _translate_command_error(
                 return ServiceNotFound(domain, service)
 
         if code == websocket_api_const.ERR_INVALID_FORMAT:
-            return vol.Invalid(message)
+            return vol.MultipleInvalid([vol.Invalid(message)])
 
         if code == websocket_api_const.ERR_SERVICE_VALIDATION_ERROR:
+            # Reconstruct specific subclasses based on translation_key
+            if (
+                translation_key == "service_not_supported"
+                and translation_placeholders
+            ):
+                domain = translation_placeholders.get("domain")
+                service = translation_placeholders.get("service")
+                entity_id = translation_placeholders.get("entity_id")
+                if domain and service and entity_id:
+                    return ServiceNotSupported(domain, service, entity_id)
+
             return _build_homeassistant_error(
                 ServiceValidationError,
                 message,
@@ -294,6 +306,7 @@ class HomeAssistantAPI:
         service_data: dict[str, Any] | None = None,
         target: dict[str, Any] | None = None,
         return_response: bool = False,
+        context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Call a Home Assistant service over the websocket API."""
         payload: dict[str, Any] = {
@@ -305,6 +318,17 @@ class HomeAssistantAPI:
             payload["service_data"] = service_data
         if target:
             payload["target"] = target
+
+        # Use sandbox/call_service when context is provided, which forwards
+        # the full context (user_id, parent_id, id) for permission checks
+        # and context tracking.
+        if context:
+            payload["context"] = context
+            return cast(
+                dict[str, Any],
+                await self.send_command("sandbox/call_service", **payload),
+            )
+
         return cast(dict[str, Any], await self.send_command("call_service", **payload))
 
     async def async_get_states(self) -> list[dict[str, Any]]:
@@ -448,6 +472,44 @@ class HomeAssistantAPI:
         if error is not None:
             kwargs["error"] = error
         await self.send_command("sandbox/entity_command_result", **kwargs)
+
+    async def async_sandbox_register_service(
+        self, domain: str, service: str
+    ) -> None:
+        """Register a service on the host on behalf of the sandbox."""
+        await self.send_command(
+            "sandbox/register_service", domain=domain, service=service
+        )
+
+    async def async_sandbox_service_call_result(
+        self,
+        call_id: str,
+        success: bool,
+        result: Any = None,
+        error: str | None = None,
+        error_type: str | None = None,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Send the result of a forwarded service call back to the host."""
+        kwargs: dict[str, Any] = {
+            "call_id": call_id,
+            "success": success,
+        }
+        if result is not None:
+            kwargs["result"] = result
+        if error is not None:
+            kwargs["error"] = error
+        if error_type is not None:
+            kwargs["error_type"] = error_type
+        if translation_domain is not None:
+            kwargs["translation_domain"] = translation_domain
+        if translation_key is not None:
+            kwargs["translation_key"] = translation_key
+        if translation_placeholders is not None:
+            kwargs["translation_placeholders"] = translation_placeholders
+        await self.send_command("sandbox/service_call_result", **kwargs)
 
     async def send_command(self, command: str, **payload: Any) -> Any:
         """Send a command and await the result."""

@@ -23,7 +23,6 @@ class RemoteConfig:
     ssl: bool = True
     sync_states: bool = True
     sync_entity_registry: bool = True
-    sync_remote_services: bool = True
 
     @property
     def enabled(self) -> bool:
@@ -39,5 +38,4 @@ class RemoteConfig:
             ssl=_env_flag("HASS_CLIENT_SSL", True),
             sync_states=_env_flag("HASS_CLIENT_SYNC_STATES", True),
             sync_entity_registry=_env_flag("HASS_CLIENT_SYNC_ENTITY_REGISTRY", True),
-            sync_remote_services=_env_flag("HASS_CLIENT_SYNC_REMOTE_SERVICES", True),
         )

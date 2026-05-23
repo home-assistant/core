@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
 from typing import Any
-from unittest.mock import Mock
 
 from .api import HomeAssistantAPI
 from .config import RemoteConfig
@@ -16,12 +15,6 @@ from .remotes.helpers import RemoteEntityRegistryManager
 LOGGER = logging.getLogger(__name__)
 
 from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_SERVICE,
-    ATTR_SERVICE_DATA,
-    EVENT_CALL_SERVICE,
-    EVENT_SERVICE_REGISTERED,
-    EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
 )
@@ -29,195 +22,10 @@ from homeassistant.core import (
     Context,
     EventOrigin,
     HomeAssistant as CoreHomeAssistant,
-    ServiceCall,
-    ServiceRegistry,
-    ServiceResponse,
     State,
     callback,
 )
-from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 
-_ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL = ServiceRegistry.async_call
-
-
-class HybridServiceRegistry(ServiceRegistry):
-    """Local service registry with remote fallback."""
-
-    __slots__ = ("_local_call_passthrough_depth", "_remote_services")
-
-    def __init__(self, hass: CoreHomeAssistant) -> None:
-        """Initialize the hybrid service registry."""
-        super().__init__(hass)
-        self._local_call_passthrough_depth = 0
-        self._remote_services: dict[str, dict[str, dict[str, Any]]] = {}
-
-    @property
-    def remote_api(self) -> HomeAssistantAPI | None:
-        """Return the live remote API bound to the runtime."""
-        return getattr(self._hass, "remote_api", None)
-
-    @callback
-    def async_set_remote_services(self, services: Mapping[str, Mapping[str, Any]]) -> None:
-        """Replace the remote service cache."""
-        self._remote_services = {
-            domain.lower(): {
-                service.lower(): dict(description)
-                for service, description in domain_services.items()
-            }
-            for domain, domain_services in services.items()
-        }
-
-    @callback
-    def async_remote_services(self) -> dict[str, dict[str, dict[str, Any]]]:
-        """Return a copy of the remote service cache."""
-        return {
-            domain: services.copy() for domain, services in self._remote_services.items()
-        }
-
-    def has_service(self, domain: str, service: str) -> bool:
-        """Return if a local or remote service exists."""
-        if super().has_service(domain, service):
-            return True
-        return service.lower() in self._remote_services.get(domain.lower(), {})
-
-    async def _async_call_local_service(
-        self,
-        domain: str,
-        service: str,
-        service_data: dict[str, Any] | None,
-        blocking: bool,
-        context: Context | None,
-        target: dict[str, Any] | None,
-        return_response: bool,
-    ) -> ServiceResponse:
-        """Call the local registry while remaining compatible with patched tests."""
-        call_kwargs = {
-            "domain": domain,
-            "service": service,
-            "service_data": service_data,
-            "blocking": blocking,
-            "context": context,
-            "target": target,
-            "return_response": return_response,
-        }
-        mock_args = (domain, service, service_data)
-        mock_kwargs = {
-            "blocking": blocking,
-            "context": context,
-            "return_response": return_response,
-        }
-        if target is not None:
-            mock_kwargs["target"] = target
-
-        if self._local_call_passthrough_depth:
-            return await _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL(self, **call_kwargs)
-
-        patched_async_call = ServiceRegistry.async_call
-        if patched_async_call is _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL:
-            return await _ORIGINAL_SERVICE_REGISTRY_ASYNC_CALL(self, **call_kwargs)
-
-        try:
-            self._local_call_passthrough_depth += 1
-            if isinstance(patched_async_call, Mock):
-                return await patched_async_call(*mock_args, **mock_kwargs)
-            return await patched_async_call(
-                self,
-                domain,
-                service,
-                service_data,
-                blocking,
-                context,
-                target,
-                return_response,
-            )
-        finally:
-            self._local_call_passthrough_depth -= 1
-
-    async def async_call(
-        self,
-        domain: str,
-        service: str,
-        service_data: dict[str, Any] | None = None,
-        blocking: bool = False,
-        context: Context | None = None,
-        target: dict[str, Any] | None = None,
-        return_response: bool = False,
-    ) -> ServiceResponse:
-        """Call a local service, then fall back to the remote websocket API."""
-        try:
-            return await self._async_call_local_service(
-                domain,
-                service,
-                service_data,
-                blocking,
-                context,
-                target,
-                return_response,
-            )
-        except ServiceNotFound:
-            remote_api = self.remote_api
-            if remote_api is None or not remote_api.connected:
-                raise
-            if service.lower() not in self._remote_services.get(domain.lower(), {}):
-                raise
-
-        context = context or Context()
-        merged_service_data = dict(service_data or {})
-        if target:
-            merged_service_data.update(target)
-
-        service_call = ServiceCall(
-            self._hass,
-            domain.lower(),
-            service.lower(),
-            merged_service_data,
-            context=context,
-            return_response=return_response,
-        )
-
-        async def _remote_call() -> dict[str, Any]:
-            remote_api = self.remote_api
-            assert remote_api is not None
-            response = await remote_api.async_call_service(
-                domain=domain,
-                service=service,
-                service_data=service_data,
-                target=target,
-                return_response=return_response,
-            )
-            self._hass.bus.async_fire_internal(
-                EVENT_CALL_SERVICE,
-                {
-                    ATTR_DOMAIN: domain.lower(),
-                    ATTR_SERVICE: service.lower(),
-                    ATTR_SERVICE_DATA: merged_service_data,
-                },
-                context=context,
-            )
-            return response
-
-        if not blocking:
-            self._hass.async_create_task_internal(
-                self._run_service_call_catch_exceptions(_remote_call(), service_call),
-                f"remote service call {domain.lower()}.{service.lower()}",
-                eager_start=True,
-            )
-            return None
-
-        if return_response and not blocking:
-            raise ServiceValidationError(
-                translation_domain="homeassistant",
-                translation_key="service_should_be_blocking",
-                translation_placeholders={
-                    "return_response": "return_response=True",
-                    "non_blocking_argument": "blocking=False",
-                },
-            )
-
-        result = await _remote_call()
-        if not return_response:
-            return None
-        return result.get("response")
 
 
 class RemoteHomeAssistant(CoreHomeAssistant):
@@ -248,7 +56,6 @@ class RemoteHomeAssistant(CoreHomeAssistant):
             )
 
         self.remote_entity_registry = RemoteEntityRegistryManager(self)
-        self.services = HybridServiceRegistry(self)
 
     async def async_setup_remote(self) -> None:
         """Initialize remote sync."""
@@ -257,9 +64,6 @@ class RemoteHomeAssistant(CoreHomeAssistant):
 
         await self.remote_api.start(ssl=self.remote_config.ssl)
         await self.async_refresh_remote_config()
-
-        if self.remote_config.sync_remote_services:
-            await self.async_refresh_remote_services()
 
         if self.remote_config.sync_states:
             await self.async_refresh_remote_states()
@@ -278,19 +82,6 @@ class RemoteHomeAssistant(CoreHomeAssistant):
 
         if self.remote_config.sync_entity_registry:
             await self.remote_entity_registry.async_setup()
-
-        self._remote_unsubscribers.append(
-            await self.remote_api.subscribe_events(
-                self._handle_remote_service_registry_event,
-                EVENT_SERVICE_REGISTERED,
-            )
-        )
-        self._remote_unsubscribers.append(
-            await self.remote_api.subscribe_events(
-                self._handle_remote_service_registry_event,
-                EVENT_SERVICE_REMOVED,
-            )
-        )
 
         self.remote_ready = True
 
@@ -313,13 +104,6 @@ class RemoteHomeAssistant(CoreHomeAssistant):
             return
         config = await self.remote_api.async_get_config()
         await self.config.async_set_time_zone(config["time_zone"])
-
-    async def async_refresh_remote_services(self) -> None:
-        """Refresh the cached remote services."""
-        if self.remote_api is None:
-            return
-        services = await self.remote_api.async_get_services()
-        self.services.async_set_remote_services(services)
 
     async def async_refresh_remote_states(self) -> None:
         """Fetch the remote state snapshot."""
@@ -351,14 +135,6 @@ class RemoteHomeAssistant(CoreHomeAssistant):
                 del state_store[entity_id]
 
         self._remote_state_ids = remote_ids
-
-    async def _handle_remote_service_registry_event(
-        self, message: dict[str, Any]
-    ) -> None:
-        """Refresh the service cache when the remote registry changes."""
-        if not self.remote_config.sync_remote_services:
-            return
-        await self.async_refresh_remote_services()
 
     @callback
     def _handle_remote_state_changed(self, message: dict[str, Any]) -> None:

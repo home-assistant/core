@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock
 
 from hass_client.config import RemoteConfig
 from hass_client.runtime import RemoteHomeAssistant
+from hass_client.sandbox_service_registry import SandboxServiceRegistry
 from homeassistant.util import dt as dt_util
 
 
@@ -26,7 +27,6 @@ def test_async_setup_remote_syncs_time_zone(tmp_path: Path) -> None:
         hass.remote_config = RemoteConfig(
             sync_states=False,
             sync_entity_registry=False,
-            sync_remote_services=False,
         )
         hass.remote_api = remote_api
 
@@ -45,8 +45,8 @@ def test_async_setup_remote_syncs_time_zone(tmp_path: Path) -> None:
     asyncio.run(run_test())
 
 
-def test_service_registry_uses_live_remote_api(tmp_path: Path) -> None:
-    """Use the runtime's current remote API instead of a stale constructor copy."""
+def test_sandbox_service_registry_forwards_calls(tmp_path: Path) -> None:
+    """SandboxServiceRegistry forwards async_call to the remote API."""
 
     async def run_test() -> None:
         remote_api = AsyncMock()
@@ -55,6 +55,7 @@ def test_service_registry_uses_live_remote_api(tmp_path: Path) -> None:
 
         hass = RemoteHomeAssistant(str(tmp_path))
         hass.remote_api = remote_api
+        hass.services = SandboxServiceRegistry(hass, remote_api)
 
         await hass.services.async_call("light", "turn_on", blocking=True)
 

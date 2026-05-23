@@ -18,6 +18,7 @@ from typing import Any
 from .api import HomeAssistantAPI
 from .config import RemoteConfig
 from .sandbox_entity_bridge import SandboxEntityBridge
+from .sandbox_service_registry import SandboxServiceRegistry
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -80,7 +81,6 @@ class SandboxClient:
             ssl=False,
             sync_states=False,
             sync_entity_registry=False,
-            sync_remote_services=True,
         )
 
         self._hass = RemoteHomeAssistant(
@@ -88,6 +88,7 @@ class SandboxClient:
             remote_config=config,
         )
         self._hass.remote_api = self._api
+        self._hass.services = SandboxServiceRegistry(self._hass, self._api)
 
         os.makedirs(self._hass.config.config_dir, exist_ok=True)
 
@@ -176,69 +177,6 @@ class SandboxClient:
                 )
 
         self._subscribe_state_changes(domain)
-
-        ha_entity_ids = list(self._entity_map.values())
-        if ha_entity_ids:
-            await self._subscribe_service_calls(domain, ha_entity_ids)
-
-    async def _subscribe_service_calls(
-        self, domain: str, ha_entity_ids: list[str]
-    ) -> None:
-        """Subscribe to service calls from HA Core targeting our entities."""
-        api = self._api
-        assert api is not None
-
-        reverse_map = {v: k for k, v in self._entity_map.items()}
-
-        async def _on_service_call(message: dict[str, Any]) -> None:
-            event_data = message.get("event", {})
-            svc_domain = event_data.get("domain", "")
-            service = event_data.get("service", "")
-            service_data = event_data.get("service_data", {})
-            target_entity_ids = event_data.get("entity_ids", [])
-
-            for ha_eid in target_entity_ids:
-                local_eid = reverse_map.get(ha_eid)
-                if local_eid is None:
-                    continue
-
-                _LOGGER.info(
-                    "Forwarding service call %s.%s to %s",
-                    svc_domain,
-                    service,
-                    local_eid,
-                )
-
-                target = {"entity_id": [local_eid]}
-                call_data = {
-                    k: v
-                    for k, v in service_data.items()
-                    if k != "entity_id"
-                }
-                try:
-                    await self._hass.services.async_call(
-                        svc_domain,
-                        service,
-                        call_data,
-                        blocking=True,
-                        target=target,
-                    )
-                except Exception:
-                    _LOGGER.exception(
-                        "Error handling service %s.%s for %s",
-                        svc_domain,
-                        service,
-                        local_eid,
-                    )
-
-        await api.subscribe(
-            _on_service_call,
-            "sandbox/subscribe_service_calls",
-            entity_ids=ha_entity_ids,
-        )
-        _LOGGER.info(
-            "Subscribed to service calls for %s", ha_entity_ids
-        )
 
     async def _setup_config_entry_integration(
         self, entry_config: dict[str, Any]

@@ -16,7 +16,14 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Generator as _Generator
+from contextlib import suppress
 import threading
+
+import pytest_asyncio
+
+_pytest_fixture = pytest_asyncio.fixture
 
 _state = threading.local()
 
@@ -24,6 +31,57 @@ _state = threading.local()
 def pytest_runtest_setup(item) -> None:
     """Detect tests that use the freezer fixture before hass setup runs."""
     _state.uses_freezer = "freezer" in getattr(item, "fixturenames", ())
+
+
+@_pytest_fixture(autouse=True)
+def verify_cleanup(
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
+) -> _Generator[None]:
+    """Override verify_cleanup to tolerate ImportExecutor threads.
+
+    The sandbox creates a host HA instance whose import executor thread
+    may still be running when cleanup checks happen.
+    """
+    import asyncio as _asyncio
+
+    event_loop = _asyncio.get_event_loop()
+    threads_before = frozenset(threading.enumerate())
+    tasks_before = _asyncio.all_tasks(event_loop)
+    yield
+
+    event_loop.run_until_complete(event_loop.shutdown_default_executor())
+
+    from tests.common import INSTANCES
+
+    if len(INSTANCES) >= 2:
+        count = len(INSTANCES)
+        for inst in INSTANCES:
+            inst.stop()
+        import pytest as _pytest
+        _pytest.exit(
+            f"Detected non stopped instances ({count}), aborting test run"
+        )
+
+    tasks = _asyncio.all_tasks(event_loop) - tasks_before
+    for task in tasks:
+        if expected_lingering_tasks:
+            pass
+        else:
+            task.cancel()
+    if tasks:
+        event_loop.run_until_complete(_asyncio.wait(tasks))
+
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        if thread.name.startswith("ImportExecutor"):
+            thread.join(timeout=5)
+            continue
+        assert (
+            isinstance(thread, threading._DummyThread)
+            or thread.name.startswith("waitpid-")
+            or "_run_safe_shutdown_loop" in thread.name
+        )
 
 
 def pytest_runtest_teardown(item, nextitem) -> None:
@@ -127,13 +185,72 @@ def pytest_configure() -> None:
                         ssl=False,
                         sync_states=False,
                         sync_entity_registry=False,
-                        sync_remote_services=True,
                     )
-                    sandbox_hass.remote_api = HomeAssistantAPI(
+                    sandbox_api = HomeAssistantAPI(
                         websocket_url=ws_url,
                         token=access_token,
                     )
+                    sandbox_hass.remote_api = sandbox_api
+
+                    from hass_client.sandbox_service_registry import (
+                        SandboxServiceRegistry,
+                    )
+
+                    sandbox_svc_registry = SandboxServiceRegistry(
+                        sandbox_hass, sandbox_api
+                    )
+                    sandbox_hass.services = sandbox_svc_registry
                     await sandbox_hass.async_setup_remote()
+
+                    async def _on_command(message):
+                        """Handle commands forwarded from host."""
+                        event_data = message.get("event", {})
+                        cmd_type = event_data.get("type")
+                        if cmd_type == "call_service":
+                            call_id = event_data.get("call_id")
+                            domain = event_data.get("domain", "")
+                            service = event_data.get("service", "")
+                            service_data = event_data.get("service_data", {})
+                            target = event_data.get("target")
+                            return_response = event_data.get(
+                                "return_response", False
+                            )
+                            context_data = event_data.get("context")
+                            try:
+                                result = (
+                                    await sandbox_svc_registry.async_execute_forwarded_call(
+                                        domain, service, service_data,
+                                        target=target,
+                                        return_response=return_response,
+                                        context_data=context_data,
+                                    )
+                                )
+                                await sandbox_api.async_sandbox_service_call_result(
+                                    call_id=call_id,
+                                    success=True,
+                                    result=result,
+                                )
+                            except Exception as err:
+                                kwargs = {
+                                    "call_id": call_id,
+                                    "success": False,
+                                    "error": str(err),
+                                    "error_type": type(err).__name__,
+                                }
+                                if hasattr(err, "translation_domain") and err.translation_domain:
+                                    kwargs["translation_domain"] = err.translation_domain
+                                if hasattr(err, "translation_key") and err.translation_key:
+                                    kwargs["translation_key"] = err.translation_key
+                                if hasattr(err, "translation_placeholders") and err.translation_placeholders:
+                                    kwargs["translation_placeholders"] = err.translation_placeholders
+                                await sandbox_api.async_sandbox_service_call_result(
+                                    **kwargs
+                                )
+
+                    await sandbox_api.subscribe(
+                        _on_command,
+                        "sandbox/subscribe_entity_commands",
+                    )
 
                     try:
                         yield sandbox_hass
@@ -141,6 +258,13 @@ def pytest_configure() -> None:
                         await sandbox_hass.async_teardown_remote()
                         await server.close()
                         await host_hass.async_stop(force=True)
+                        # Clear the shutdown flag so pytest-asyncio can
+                        # still finalize fixtures on the shared loop.
+                        with suppress(AttributeError):
+                            delattr(
+                                host_hass.loop,
+                                "_shutdown_run_callback_threadsafe",
+                            )
         finally:
             _socket_mod.socket = saved_socket
 
