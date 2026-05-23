@@ -54,8 +54,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
-        self._async_abort_entries_match()
-
         errors = {}
         schema = vol.Schema(
             {
