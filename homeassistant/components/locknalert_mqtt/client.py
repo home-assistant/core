@@ -176,13 +176,7 @@ def async_subscribe_internal(
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         )
-    if job_type is None:
-        job_type = get_hassjob_callable_job_type(msg_callback)
-    if job_type is not HassJobType.Callback:
-        msg_callback = catch_log_exception(
-            msg_callback, lambda _: f"Exception in '{topic}' listener"
-        )
-    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding)
+    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
 def subscribe(
@@ -252,6 +246,24 @@ class MQTT(_LibMQTT):
         with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PACKAGES):
             await async_import_module(self.hass, "aiolocknalert.async_client")
         await self.async_start()
+
+    @callback
+    def async_subscribe(
+        self,
+        topic: str,
+        msg_callback: MessageCallbackType,
+        qos: int,
+        encoding: str | None = None,
+        job_type: HassJobType | None = None,
+    ) -> Callable[[], None]:
+        """Set up a subscription to a topic with the provided qos."""
+        if job_type is None:
+            job_type = get_hassjob_callable_job_type(msg_callback)
+        if job_type is not HassJobType.Callback:
+            msg_callback = catch_log_exception(
+                msg_callback, lambda _: f"Exception in '{topic}' listener"
+            )
+        return super().async_subscribe(topic, msg_callback, qos, encoding)
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
