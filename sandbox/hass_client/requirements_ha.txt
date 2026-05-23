@@ -1,0 +1,21 @@
+# Install all Home Assistant Core integration dependencies into the
+# sandbox client venv. Required for running HA Core's per-integration
+# test suites through the sandbox plugin — without these, integrations
+# like `conversation` (needs hassil), `rest` (needs xmltodict), and
+# `logbook` (needs sqlalchemy + numpy + turbojpeg at collection time)
+# fail to import and never get a chance to run.
+#
+# Use after `uv sync`:
+#   uv pip install -r requirements_ha.txt
+#
+# macOS caveat: `pyitachip2ir` (used by the `itach` integration) has
+# C++ source that doesn't compile against modern macOS headers. The
+# install will abort on that package. To skip it:
+#
+#   grep -v '^pyitachip2ir' ../../requirements_all.txt > /tmp/req.txt
+#   cp ../../requirements_all.txt ../../requirements_all_filtered.txt   # keep relative -r paths working
+#   # …then install from the filtered copy.
+#
+# Paths in the -r directives below are resolved relative to this file.
+-r ../../requirements_all.txt
+-r ../../requirements_test.txt
