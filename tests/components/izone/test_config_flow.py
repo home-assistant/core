@@ -1635,14 +1635,24 @@ async def test_async_migrate_entry_returns_false_for_current_version(
     assert migrated is False
 
 
+@pytest.mark.parametrize(
+    ("initial_title", "expected_title"),
+    [
+        pytest.param("iZone Aircon", "iZone 000000001", id="default_title_updated"),
+        pytest.param("My AC", "My AC", id="custom_title_preserved"),
+    ],
+)
 async def test_async_migrate_entry_clears_legacy_data(
     hass: HomeAssistant,
+    initial_title: str,
+    expected_title: str,
 ) -> None:
     """Version migration should clear legacy entry data when switching to UID-only state."""
     entry = MockConfigEntry(
         domain=IZONE,
         version=1,
         unique_id="000000001",
+        title=initial_title,
         data={"host": "192.0.2.1"},
     )
     entry.add_to_hass(hass)
@@ -1658,6 +1668,7 @@ async def test_async_migrate_entry_clears_legacy_data(
     assert entry.version == 2
     assert entry.unique_id == controller.device_uid
     assert entry.data == {}
+    assert entry.title == expected_title
 
 
 def test_discovery_listener_methods_dispatch_expected_signals(
