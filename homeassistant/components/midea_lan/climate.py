@@ -225,7 +225,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
         """Midea Climate set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-        temperature = round(kwargs[ATTR_TEMPERATURE] * 2) / 2
+        temperature = kwargs[ATTR_TEMPERATURE]
         hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
@@ -580,7 +580,11 @@ class MideaC3Climate(MideaClimate):
     def hvac_mode(self) -> HVACMode:
         """Midea C3 Climate hvac mode."""
         mode = self._device.get_attribute(C3Attributes.mode)
-        if self._device.get_attribute(self._power_attr) and isinstance(mode, int):
+        if (
+            self._device.get_attribute(self._power_attr)
+            and isinstance(mode, int)
+            and 0 <= mode < len(self.hvac_modes)
+        ):
             return self.hvac_modes[mode]
         return HVACMode.OFF
 
