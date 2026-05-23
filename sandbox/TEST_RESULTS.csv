@@ -1,0 +1,96 @@
+integration,passed,failed,errors,total,status,category,reason
+api,53,2,11,66,issues,error_type_lost,Service call errors - response type lost through WS (2f/11e)
+automation,108,4,83,195,issues,context_and_reload,Context (1) + reload (2) + trigger (1) + teardown errors (83)
+backup,13,3,0,16,issues,auth_bypass,Sandbox token bypasses admin check - DID NOT RAISE Unauthorized (3 tests)
+blue_current,7,1,0,8,issues,config_entry_state,ValueError during button platform setup (1 test)
+blueprint,0,0,0,0,no_tests,no_tests,No test_init.py tests
+bluetooth,0,0,0,0,no_tests,no_tests,No test_init.py tests
+calendar,46,21,0,67,issues,error_type_lost,"Expects ServiceNotSupported, gets HomeAssistantError (21 tests)"
+climate,7,4,2,13,issues,error_type_lost,ServiceValidationError message format differs; translation_domain lost (4f/2e)
+cloud,9,1,0,10,issues,auth_bypass,Sandbox token bypasses admin check (1 test)
+configurator,7,1,0,8,issues,auth_bypass,Sandbox token bypasses admin check (1 test)
+conversation,0,0,0,0,timeout,timeout,Hangs - complex async setup
+counter,16,2,0,18,issues,error_type_lost,HomeAssistantError instead of ValueError + context (2 tests)
+debugpy,0,0,0,0,timeout,timeout,Hangs - debugger attachment
+demo,0,0,0,0,timeout,timeout,Hangs - large integration with many platforms
+device_automation,0,0,0,0,timeout,timeout,Hangs - complex automation/device setup
+device_tracker,24,2,1,27,issues,yaml_config,YAML-based device tracker config not supported (2f/1e)
+devolo_home_network,0,0,0,0,timeout,timeout,Hangs - network device setup
+dialogflow,17,0,2,19,issues,teardown,Teardown errors (2)
+directv,0,2,0,2,issues,config_entry_state,Config entry state mismatch (2 tests)
+duckdns,7,4,0,11,issues,error_type_lost,ServiceValidationError.translation_key is None (4 tests)
+dynalite,3,1,0,4,issues,other,Test-specific issue (1 test)
+fan,9,1,0,10,issues,error_type_lost,"Expects ServiceValidationError, gets HomeAssistantError (1 test)"
+ffmpeg,0,0,0,0,timeout,timeout,Hangs - binary process interaction
+file,2,0,2,4,issues,teardown,Teardown errors (2)
+flume,3,2,0,5,issues,target_config_entry,target.config_entry not supported in WS call_service schema (2 tests)
+frontend,58,4,0,62,issues,reload,Theme reload/YAML-based services not supported (4 tests)
+google,31,26,0,57,issues,error_type_lost,"Expects ServiceNotSupported, gets HomeAssistantError (26 tests)"
+google_assistant,2,1,0,3,issues,other,OAuth/token handling issue (1 test)
+google_assistant_sdk,14,3,0,17,issues,error_type_lost,ServiceValidationError.translation_key is None (3 tests)
+google_photos,7,0,7,14,issues,teardown,All 7 errors are fixture teardown failures
+google_pubsub,3,0,12,15,issues,teardown,All 12 errors are fixture teardown failures
+google_sheets,16,3,0,19,issues,error_type_lost,ServiceValidationError with missing translation metadata (3 tests)
+group,0,0,0,0,timeout,timeout,Hangs - complex entity group setup
+hassio,79,5,0,84,issues,host_specific,Tests require supervisor connection (5 failures)
+hdmi_cec,9,29,0,38,issues,service_not_registered,Services registered locally but not on host (29 tests)
+homeassistant,36,3,1,40,issues,auth_bypass,Admin check bypass + reload not supported (3f/1e)
+homeassistant_connect_zbt2,6,1,0,7,issues,config_entry_state,Config entry loads when test expects SETUP_RETRY (1 test)
+homeassistant_sky_connect,7,1,0,8,issues,config_entry_state,Config entry loads when test expects SETUP_RETRY (1 test)
+homematic,1,1,0,2,issues,auth_bypass,Sandbox token bypasses admin check (1 test)
+humidifier,2,1,0,3,issues,error_type_lost,ServiceValidationError.translation_key is None (1 test)
+imap,124,2,0,126,issues,error_type_lost,ServiceValidationError.translation_key is None (2 tests)
+infrared,21,2,0,23,issues,error_type_lost,Error type/message lost (2 tests)
+input_boolean,15,1,0,16,issues,context,Context not preserved (1 test)
+input_button,13,1,0,14,issues,context,Context not preserved (1 test)
+input_datetime,24,2,0,26,issues,context_and_reload,Context (1) + reload (1)
+input_number,20,2,0,22,issues,context_and_reload,Context (1) + reload (1)
+input_select,22,2,0,24,issues,context_and_reload,Context (1) + reload (1)
+input_text,19,2,0,21,issues,context_and_reload,Context (1) + reload (1)
+intent_script,8,0,6,14,issues,reload,YAML reload + service execution issues (6 errors)
+kitchen_sink,8,1,8,17,issues,teardown,Service validation (1f) + teardown errors (8e)
+knx,10,0,8,18,issues,teardown,All 8 errors are fixture teardown failures
+lametric,4,0,4,8,issues,async_timeout,Config entry setup/teardown times out (4 errors)
+light,63,3,0,66,issues,error_type_lost,ServiceValidationError type/context lost + context test (3 tests)
+local_file,2,0,1,3,issues,teardown,Teardown error (1)
+lock,10,1,0,11,issues,error_type_lost,ServiceValidationError message text differs (1 test)
+logger,8,2,0,10,issues,auth_bypass,Sandbox token bypasses admin check (2 tests)
+lojack,8,1,0,9,issues,config_entry_state,Unexpected entities created (1 test)
+media_extractor,0,0,0,0,timeout,timeout,Hangs - media processing
+media_player,33,2,0,35,issues,error_type_lost,ServiceValidationError type lost through websocket (2 tests)
+microsoft_face,10,0,2,12,issues,teardown,Teardown errors (2)
+mikrotik,0,0,0,0,timeout,timeout,Hangs - network device polling
+mobile_app,16,0,1,17,issues,teardown,Teardown error (1)
+modern_forms,1,2,0,3,issues,config_entry_state,async_timeout compat + config entry state (2 tests)
+network,14,6,0,20,issues,host_specific,Tests inspect host network interfaces (6 failures)
+ntfy,9,0,9,18,issues,async_timeout,Config entry setup times out (9 errors)
+number,39,1,0,40,issues,error_type_lost,ServiceValidationError.translation_domain is None (1 test)
+onedrive,20,0,20,40,issues,teardown,All 20 errors are fixture teardown failures
+opentherm_gw,2,0,2,4,issues,teardown,Teardown errors (2)
+pglab,0,0,0,0,no_tests,no_tests,No test_init.py tests
+pi_hole,0,0,0,0,timeout,timeout,Hangs - network polling
+pilight,0,0,1,1,issues,teardown,Teardown error (1)
+python_script,22,7,0,29,issues,service_not_registered,YAML-loaded services don't register on host (7 tests)
+qwikswitch,2,9,0,11,issues,service_not_registered,async_timeout compat issue + service not found (9 tests)
+radio_frequency,11,2,0,13,issues,error_type_lost,Error message regex doesn't match formatted websocket error (2 tests)
+rflink,17,1,0,18,issues,other,Test-specific issue (1 test)
+schedule,24,1,0,25,issues,other,service get not working through sandbox (1 test)
+script,0,0,0,0,timeout,timeout,Hangs - complex async script execution
+select,1,1,0,2,issues,error_type_lost,ServiceValidationError.translation_domain is None (1 test)
+shell_command,13,1,0,14,issues,error_type_lost,TemplateError becomes HomeAssistantError through websocket (1 test)
+sun,0,0,0,0,timeout,timeout,Hangs - time-dependent calculations
+switch,1,1,0,2,issues,context,Context not preserved (1 test)
+telegram_bot,2,0,2,4,issues,teardown,Teardown errors (2)
+teslemetry,48,0,32,80,issues,teardown,All 32 errors are fixture teardown failures
+timer,29,1,0,30,issues,reload,Reload not supported (1 test)
+todo,67,4,0,71,issues,error_type_lost,"Expects ServiceNotSupported, gets HomeAssistantError (4 tests)"
+tplink,46,3,0,49,issues,other,Credential migration issues (3 tests)
+update,20,1,0,21,issues,error_type_lost,"Expects specific error type, gets HomeAssistantError (1 test)"
+utility_meter,22,3,0,25,issues,error_type_lost,ServiceValidationError raised but tests expect different message (3 tests)
+vacuum,21,4,0,25,issues,error_type_lost,ServiceValidationError.translation_domain is None through websocket (4 tests)
+voip,0,0,0,0,no_tests,no_tests,No test_init.py tests
+wallbox,6,1,0,7,issues,error_type_lost,HomeAssistantError raised when test expects different behavior (1 test)
+water_heater,4,1,2,7,issues,error_type_lost,ServiceValidationError message text differs (1 test)
+yeelight,22,0,17,39,issues,async_timeout,Async operations timeout (17 errors)
+zone,21,1,0,22,issues,reload,Reload not supported (1 test)
+zwave_js,66,0,65,131,issues,teardown,All 65 errors are fixture teardown failures

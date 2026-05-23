@@ -55,4 +55,4 @@ hass_client = ["py.typed"]
 default-groups = ["dev"]
 
 [tool.uv.sources]
-homeassistant = { path = "../core", editable = true }
+homeassistant = { path = "../..", editable = true }
