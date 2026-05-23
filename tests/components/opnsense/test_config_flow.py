@@ -75,7 +75,7 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == CONFIG_DATA_IMPORT["url"]
+    assert result.get("title") == CONFIG_DATA_IMPORT[CONF_URL]
 
 
 async def test_import_unique_id_already_configured(
@@ -229,7 +229,7 @@ async def test_interfaces_step_user_input_missing(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={**CONFIG_DATA, "url": TEST_URL},
+            user_input={**CONFIG_DATA, CONF_URL: TEST_URL},
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "interfaces"
