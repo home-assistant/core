@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from functools import lru_cache
 import logging
-import os
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -170,7 +169,7 @@ async def async_forward_entry_setup_and_setup_discovery(
     platforms_loaded.update(new_platforms)
 
 
-def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
+def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool:
     """Return true when the MQTT config entry is enabled."""
     # If the mqtt client is connected, skip the expensive config
     # entry check as its roughly two orders of magnitude faster.
@@ -325,10 +324,10 @@ async def async_create_certificate_temp_files(
 
     def _create_temp_file(temp_file: Path, data: str | None) -> None:
         if data is None or data == "auto":
-            if temp_file.exists():
-                os.remove(Path(temp_file))
+            temp_file.unlink(missing_ok=True)
             return
         temp_file.write_text(data)
+        temp_file.chmod(0o600)
 
     def _create_temp_dir_and_files() -> None:
         """Create temporary directory."""

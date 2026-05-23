@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import HassJobType, HomeAssistant, callback
 
 from .client import async_subscribe_internal
-from .const import DEFAULT_QOS
+from .const import DEFAULT_ENCODING, DEFAULT_QOS
 from .models import MessageCallbackType
 
 
@@ -22,7 +22,7 @@ class EntitySubscription:
     should_subscribe: bool | None
     unsubscribe_callback: Callable[[], None] | None
     qos: int = 0
-    encoding: str = "utf-8"
+    encoding: str | None = DEFAULT_ENCODING
     entity_id: str | None
     job_type: HassJobType | None
 

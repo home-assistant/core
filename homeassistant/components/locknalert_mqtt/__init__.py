@@ -365,14 +365,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         ev.async_call_later(hass, call.data["duration"], finish_dump)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DUMP,
         async_dump_service,
         schema=vol.Schema(
             {
                 vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): int,
+                vol.Optional("duration", default=5): vol.All(int, vol.Range(min=1, max=300)),
             }
         ),
     )
