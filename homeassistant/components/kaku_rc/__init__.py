@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_TRANSMITTER
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.LIGHT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 type KakuRuntimeData = dict[str, Any]
 

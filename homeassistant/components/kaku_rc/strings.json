@@ -9,9 +9,21 @@
     },
     "error": {
       "invalid_channel": "Channel must be between 1 and 16.",
-      "invalid_device_id": "Device ID must be between 0 and 67108863."
+      "invalid_device_id": "Device ID must be between 0 and 67108863.",
+      "no_response": "No response detected. Put the device in pairing mode again and retry."
     },
     "step": {
+      "pairing_mode": {
+        "description": "Bring device into learn mode by pushing its button for more than 2 seconds, then press Ok.",
+        "title": "Pair device"
+      },
+      "pairing_result": {
+        "data": {
+          "device_responded": "Did the device respond?"
+        },
+        "description": "Select Yes to continue setup. Select No to return to learn mode and resend the learn command.",
+        "title": "Confirm pairing"
+      },
       "reconfigure": {
         "data": {
           "channel": "Channel",
@@ -33,16 +45,6 @@
         },
         "description": "Choose the transmitter and configure your device settings.",
         "title": "Set Up Kaku RC 32-bit Device"
-      }
-    }
-  },
-  "entity": {
-    "button": {
-      "learn": {
-        "name": "Learn"
-      },
-      "unlearn": {
-        "name": "Unlearn"
       }
     }
   },

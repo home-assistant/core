@@ -1,7 +1,6 @@
 """Constants and protocol encoding for the KlikAanKlikUit (Kaku) RC integration."""
 
-import importlib
-import sys
+from importlib import import_module
 from typing import Final
 
 DOMAIN: Final = "kaku_rc"
@@ -17,30 +16,6 @@ FREQUENCY_HZ: Final = 433_920_000
 REPEAT_COUNT: Final = 4
 REPEAT_COUNT_LEARN: Final = 10  # Higher repeats for learning/pairing
 TIMEBASE_US: Final = 275  # Symbol time in microseconds (T = 275 µs)
-
-
-def _import_kaku_command() -> type:
-    """Import KakuCommand from rf-protocols >= 3.1.0.
-
-    Home Assistant may preload rf_protocols 2.x from site-packages. Ensure the
-    /config/deps location (where custom integration requirements are installed)
-    is preferred, then reload rf_protocols modules.
-    """
-    deps_path = "/config/deps"
-    if deps_path not in sys.path:
-        sys.path.insert(0, deps_path)
-
-    for module_name in (
-        "rf_protocols.commands.kaku",
-        "rf_protocols.commands",
-        "rf_protocols",
-    ):
-        sys.modules.pop(module_name, None)
-
-    return importlib.import_module("rf_protocols.commands.kaku").KakuCommand
-
-
-KakuCommand = _import_kaku_command()
 
 
 def get_kaku_timings(
@@ -68,7 +43,8 @@ def get_kaku_timings(
     if (on is None) == (dimlevel is None):
         raise ValueError("provide exactly one of 'on' or 'dimlevel'")
 
-    command = KakuCommand(
+    kaku_command = import_module("rf_protocols.commands.kaku").KakuCommand
+    command = kaku_command(
         id=device_id,
         group=group,
         channel=channel,

@@ -6,7 +6,10 @@ from rf_protocols.commands import ModulationType
 from rf_protocols.commands.ook import OOKCommand
 import voluptuous as vol
 
-from homeassistant.components.radio_frequency import async_get_transmitters
+from homeassistant.components.radio_frequency import (
+    async_get_transmitters,
+    async_send_command,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -24,6 +27,8 @@ from .const import (
     CONF_TRANSMITTER,
     DOMAIN,
     FREQUENCY_HZ,
+    REPEAT_COUNT_LEARN,
+    get_kaku_timings,
 )
 
 _SAMPLE_COMMAND = OOKCommand(
@@ -31,6 +36,7 @@ _SAMPLE_COMMAND = OOKCommand(
     timings=[275],
     repeat_count=0,
 )
+_CONF_DEVICE_RESPONDED = "device_responded"
 
 
 def _resolve_transmitter_entity_id(
@@ -56,6 +62,11 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize config flow."""
+        self._pending_data: dict[str, Any] | None = None
+        self._pending_title: str | None = None
+
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this config entry."""
@@ -64,7 +75,7 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the single-step add flow."""
+        """Handle collecting initial setup data."""
         try:
             transmitters = async_get_transmitters(
                 self.hass,
@@ -104,20 +115,85 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 f"{entity_entry.id}_{device_id}_{channel}_{int(group)}"
             )
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"Kaku ID {device_id} CH {channel}",
-                data={
-                    CONF_TRANSMITTER: transmitter,
-                    CONF_DEVICE_ID: device_id,
-                    CONF_CHANNEL: channel,
-                    CONF_GROUP: group,
-                    CONF_DIM: dim,
-                },
-            )
+            self._pending_data = {
+                CONF_TRANSMITTER: transmitter,
+                CONF_DEVICE_ID: device_id,
+                CONF_CHANNEL: channel,
+                CONF_GROUP: group,
+                CONF_DIM: dim,
+            }
+            self._pending_title = f"Kaku ID {device_id} CH {channel}"
+            return await self.async_step_pairing_mode()
 
         return self.async_show_form(
             step_id="user",
             data_schema=self._async_user_schema(transmitters),
+        )
+
+    async def async_step_pairing_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask user to put the target device in pairing mode."""
+        if user_input is not None:
+            await self._async_send_learn_command()
+            return await self.async_step_pairing_result()
+
+        return self.async_show_form(
+            step_id="pairing_mode",
+            data_schema=vol.Schema({}),
+        )
+
+    async def async_step_pairing_result(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm whether the device responded to the learn command."""
+        if user_input is not None:
+            if user_input[_CONF_DEVICE_RESPONDED]:
+                assert self._pending_data is not None
+                assert self._pending_title is not None
+                return self.async_create_entry(
+                    title=self._pending_title,
+                    data=self._pending_data,
+                )
+
+            return self.async_show_form(
+                step_id="pairing_mode",
+                data_schema=vol.Schema({}),
+                errors={"base": "no_response"},
+            )
+
+        return self.async_show_form(
+            step_id="pairing_result",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        _CONF_DEVICE_RESPONDED,
+                        default=False,
+                    ): selector.BooleanSelector()
+                }
+            ),
+        )
+
+    async def _async_send_learn_command(self) -> None:
+        """Send the learn command for the pending configuration."""
+        assert self._pending_data is not None
+
+        timings = get_kaku_timings(
+            self._pending_data[CONF_DEVICE_ID],
+            self._pending_data[CONF_CHANNEL],
+            group=self._pending_data[CONF_GROUP],
+            on=True,
+            frame_repeats=REPEAT_COUNT_LEARN,
+        )
+        command = OOKCommand(
+            frequency=FREQUENCY_HZ,
+            timings=timings,
+            repeat_count=REPEAT_COUNT_LEARN,
+        )
+        await async_send_command(
+            self.hass,
+            self._pending_data[CONF_TRANSMITTER],
+            command,
         )
 
     async def async_step_reconfigure(

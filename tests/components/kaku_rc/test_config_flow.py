@@ -47,9 +47,64 @@ async def test_user_flow(
         result["flow_id"], user_input=user_input
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_mode"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert len(mock_rf_entity.send_command_calls) == 1
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_result"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device_responded": True}
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Kaku ID 123456 CH 1"
     assert result["data"] == user_input
+
+
+async def test_user_flow_retry_learn(
+    hass: HomeAssistant, mock_rf_entity: MockRadioFrequencyEntity
+) -> None:
+    """Test the user can retry pairing when the device does not respond."""
+    result = await _start_user_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
+            CONF_DEVICE_ID: 123456,
+            CONF_CHANNEL: 1,
+            CONF_GROUP: False,
+            CONF_DIM: False,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_mode"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert len(mock_rf_entity.send_command_calls) == 1
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_result"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device_responded": False}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_mode"
+    assert result["errors"] == {"base": "no_response"}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert len(mock_rf_entity.send_command_calls) == 2
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing_result"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device_responded": True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_invalid_device_id(
