@@ -56,9 +56,7 @@ def async_connect_scanner(
     api_version = cli.api_version or APIVersion()
     feature_flags = device_info.bluetooth_proxy_feature_flags_compat(api_version)
     state_and_mode = bool(feature_flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE)
-    # Apply the saved scanning mode before async_register_scanner so the
-    # auto-mode scheduler in habluetooth sees requested_mode=AUTO at
-    # registration time and spawns a worker for this remote scanner.
+    # Pin mode before async_register_scanner so habluetooth spawns the AUTO worker.
     deferred_migration: CALLBACK_TYPE | None = None
     if state_and_mode:
         deferred_migration = _async_apply_scanning_mode(hass, entry, scanner, cli)
@@ -85,13 +83,7 @@ def _async_apply_scanning_mode(
     scanner: ESPHomeScanner,
     cli: APIClient,
 ) -> CALLBACK_TYPE | None:
-    """Apply the saved scanning mode or migrate from the proxy's configured mode.
-
-    Always pins the scanner's requested_mode synchronously so the worker
-    for AUTO scanners is spawned at registration time. When no option is
-    saved yet, defaults to AUTO and lets the migration callback downgrade
-    to PASSIVE if the proxy was YAML-configured PASSIVE.
-    """
+    """Apply saved scanning mode synchronously; migrate from configured_mode later."""
     saved = entry.options.get(CONF_BLUETOOTH_SCANNING_MODE)
     if saved is not None and saved not in _VALID_SCANNING_MODES:
         _LOGGER.warning("%s: unknown scanning mode %r", entry.title, saved)
@@ -105,8 +97,7 @@ def _async_apply_scanning_mode(
 
     @hass_callback
     def _migrate(state: BluetoothScannerStateResponse) -> None:
-        # proto3 has no presence info; an unset enum decodes as None.
-        # Wait for a real configured_mode before committing.
+        # proto3 unset enums decode to None; wait for a real value.
         if (configured_pb := state.configured_mode) is None:
             return
         if unsub_holder:
@@ -122,8 +113,7 @@ def _async_apply_scanning_mode(
                 CONF_BLUETOOTH_SCANNING_MODE: new_mode.value,
             },
         )
-        # Only re-apply if we're switching away from the default AUTO we
-        # already pinned; the AUTO -> AUTO case is a no-op on the firmware.
+        # AUTO -> AUTO is already pinned; only re-apply on a downgrade.
         if new_mode is not BluetoothScanningMode(DEFAULT_BLUETOOTH_SCANNING_MODE):
             scanner.async_set_scanning_mode(new_mode)
 
