@@ -44,6 +44,8 @@ MYFOX_CAMERA = FixtureDevice(
     "myfox://SOMFY_PROTECT-1234567890ABCDEF/jQ5ul40RVLnipT6JB8b3JK96tUsf14mR",
     "switch.outdoor_camera_camera_shutter",
 )
+# Bug: entity ID contains "undefinedtype_singleton" because the DomesticHotWaterTank
+# description has no name set, and the #7 suffix makes it a sub-device.
 DOMESTIC_HOT_WATER_TANK = FixtureDevice(
     "setup/cloud_somfy_myfox_europe.json",
     "io://1234-5678-1202/6019143#7",
@@ -83,225 +85,77 @@ async def test_switch_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_switch_on_off_turn_on(
+@pytest.mark.parametrize(
+    ("device", "service", "expected_command", "expected_parameters"),
+    [
+        pytest.param(ON_OFF, SERVICE_TURN_ON, "on", None, id="on_off_turn_on"),
+        pytest.param(ON_OFF, SERVICE_TURN_OFF, "off", None, id="on_off_turn_off"),
+        pytest.param(
+            SWIMMING_POOL, SERVICE_TURN_ON, "on", None, id="swimming_pool_turn_on"
+        ),
+        pytest.param(
+            SWIMMING_POOL, SERVICE_TURN_OFF, "off", None, id="swimming_pool_turn_off"
+        ),
+        pytest.param(
+            RTD_OUTDOOR_SIREN,
+            SERVICE_TURN_ON,
+            "on",
+            None,
+            id="rtd_outdoor_siren_turn_on",
+        ),
+        pytest.param(
+            RTD_OUTDOOR_SIREN,
+            SERVICE_TURN_OFF,
+            "off",
+            None,
+            id="rtd_outdoor_siren_turn_off",
+        ),
+        pytest.param(
+            MYFOX_CAMERA, SERVICE_TURN_ON, "open", None, id="myfox_camera_turn_on"
+        ),
+        pytest.param(
+            MYFOX_CAMERA, SERVICE_TURN_OFF, "close", None, id="myfox_camera_turn_off"
+        ),
+        pytest.param(
+            DOMESTIC_HOT_WATER_TANK,
+            SERVICE_TURN_ON,
+            "setForceHeating",
+            ["on"],
+            id="domestic_hot_water_tank_turn_on",
+        ),
+        pytest.param(
+            DOMESTIC_HOT_WATER_TANK,
+            SERVICE_TURN_OFF,
+            "setForceHeating",
+            ["off"],
+            id="domestic_hot_water_tank_turn_off",
+        ),
+    ],
+)
+async def test_switch_service_call(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    device: FixtureDevice,
+    service: str,
+    expected_command: str,
+    expected_parameters: list[str] | None,
 ) -> None:
-    """Test turning on an OnOff switch sends the correct command."""
-    await setup_overkiz_integration(fixture=ON_OFF.fixture)
+    """Test switch service calls send the correct commands."""
+    await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ON_OFF.entity_id},
+        service,
+        {ATTR_ENTITY_ID: device.entity_id},
         blocking=True,
     )
 
     assert_command_call(
         mock_client,
-        device_url=ON_OFF.device_url,
-        command_name="on",
-    )
-
-
-async def test_switch_on_off_turn_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning off an OnOff switch sends the correct command."""
-    await setup_overkiz_integration(fixture=ON_OFF.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ON_OFF.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=ON_OFF.device_url,
-        command_name="off",
-    )
-
-
-async def test_switch_swimming_pool_turn_on(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning on a SwimmingPool switch sends the correct command."""
-    await setup_overkiz_integration(fixture=SWIMMING_POOL.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SWIMMING_POOL.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=SWIMMING_POOL.device_url,
-        command_name="on",
-    )
-
-
-async def test_switch_swimming_pool_turn_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning off a SwimmingPool switch sends the correct command."""
-    await setup_overkiz_integration(fixture=SWIMMING_POOL.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWIMMING_POOL.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=SWIMMING_POOL.device_url,
-        command_name="off",
-    )
-
-
-async def test_switch_rtd_outdoor_siren_turn_on(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning on an RTDOutdoorSiren switch sends the correct command."""
-    await setup_overkiz_integration(fixture=RTD_OUTDOOR_SIREN.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: RTD_OUTDOOR_SIREN.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=RTD_OUTDOOR_SIREN.device_url,
-        command_name="on",
-    )
-
-
-async def test_switch_rtd_outdoor_siren_turn_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning off an RTDOutdoorSiren switch sends the correct command."""
-    await setup_overkiz_integration(fixture=RTD_OUTDOOR_SIREN.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: RTD_OUTDOOR_SIREN.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=RTD_OUTDOOR_SIREN.device_url,
-        command_name="off",
-    )
-
-
-async def test_switch_myfox_camera_turn_on(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test opening the MyFox camera shutter sends the open command."""
-    await setup_overkiz_integration(fixture=MYFOX_CAMERA.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MYFOX_CAMERA.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=MYFOX_CAMERA.device_url,
-        command_name="open",
-    )
-
-
-async def test_switch_myfox_camera_turn_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test closing the MyFox camera shutter sends the close command."""
-    await setup_overkiz_integration(fixture=MYFOX_CAMERA.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: MYFOX_CAMERA.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=MYFOX_CAMERA.device_url,
-        command_name="close",
-    )
-
-
-async def test_switch_domestic_hot_water_tank_turn_on(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning on a DomesticHotWaterTank sends setForceHeating on."""
-    await setup_overkiz_integration(fixture=DOMESTIC_HOT_WATER_TANK.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: DOMESTIC_HOT_WATER_TANK.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=DOMESTIC_HOT_WATER_TANK.device_url,
-        command_name="setForceHeating",
-        parameters=["on"],
-    )
-
-
-async def test_switch_domestic_hot_water_tank_turn_off(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test turning off a DomesticHotWaterTank sends setForceHeating off."""
-    await setup_overkiz_integration(fixture=DOMESTIC_HOT_WATER_TANK.fixture)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DOMESTIC_HOT_WATER_TANK.entity_id},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=DOMESTIC_HOT_WATER_TANK.device_url,
-        command_name="setForceHeating",
-        parameters=["off"],
+        device_url=device.device_url,
+        command_name=expected_command,
+        **({"parameters": expected_parameters} if expected_parameters else {}),
     )
 
 
