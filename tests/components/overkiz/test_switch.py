@@ -1,6 +1,7 @@
 """Tests for the Overkiz switch platform."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -72,7 +73,7 @@ def fixture_platforms() -> Generator[None]:
 @pytest.mark.parametrize(
     "device",
     SNAPSHOT_FIXTURES,
-    ids=[device.fixture.split("/")[-1] for device in SNAPSHOT_FIXTURES],
+    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_entities_snapshot(
