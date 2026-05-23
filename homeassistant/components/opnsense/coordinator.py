@@ -16,6 +16,7 @@ from aiopnsense import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -64,14 +65,17 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         try:
             devices = await self.client.get_arp_table(True)
         except (
-            OPNsenseConnectionError,
             OPNsenseInvalidAuth,
             OPNsenseInvalidURL,
             OPNsensePrivilegeMissing,
             OPNsenseSSLError,
-            OPNsenseTimeoutError,
             OPNsenseBelowMinFirmware,
             OPNsenseUnknownFirmware,
+        ) as err:
+            raise ConfigEntryError(f"Error with OPNsense configuration: {err}") from err
+        except (
+            OPNsenseConnectionError,
+            OPNsenseTimeoutError,
         ) as err:
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
