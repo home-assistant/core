@@ -66,7 +66,6 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         self.mosque_uuid = config_entry.data.get(CONF_UUID)
         self.token = config_entry.data.get(CONF_API_KEY)
         self.last_fetch: datetime | None = None
-        self.prayer_times: dict | None = None
 
         super().__init__(
             hass,
@@ -84,14 +83,15 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         minute so that sensors can re-evaluate which prayer is upcoming.
         """
         now = dt_util.utcnow()
+        prayer_times: dict | None = None
 
         if (
             not self.last_fetch
             or ((now - self.last_fetch) > timedelta(days=1))
-            or (self.prayer_times is None)
+            or (self.data is None)
         ):
             try:
-                self.prayer_times = await mawaqit_wrapper.fetch_prayer_times(
+                prayer_times = await mawaqit_wrapper.fetch_prayer_times(
                     mosque=self.mosque_uuid, token=self.token
                 )
                 self.last_fetch = now
@@ -102,7 +102,11 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
             except (ConnectionError, TimeoutError) as err:
                 raise UpdateFailed(f"Network error: {err}") from err
 
-        if not self.prayer_times:
-            raise UpdateFailed("No data received from API")
+            if not prayer_times:
+                raise UpdateFailed("No data received from API")
 
-        return self.prayer_times
+            # return fresh data when fetched
+            return prayer_times
+
+        # return existing data so sensors re-evaluate
+        return self.data
