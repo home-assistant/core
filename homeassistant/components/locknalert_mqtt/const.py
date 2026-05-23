@@ -5,7 +5,13 @@ import logging
 import jinja2
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
+from homeassistant.const import (
+    ATTR_SERIAL_NUMBER,
+    CONF_DISCOVERY,
+    CONF_PAYLOAD,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
@@ -14,7 +20,6 @@ ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
-ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 AVAILABILITY_ALL = "all"
@@ -162,7 +167,6 @@ PAYLOAD_NONE = "None"
 
 # LocknAlert Bridge API Discovery
 CONF_BRIDGE_SERIAL = "bridge_serial"
-CONF_VERIFY_SSL = "verify_ssl"
 
 # Discovery attribute names from zeroconf TXT properties
 DISCOVERY_ATTR_API_PORT = "api_port"
