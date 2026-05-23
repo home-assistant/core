@@ -82,7 +82,7 @@ class OPNsenseDeviceTrackerEntity(
         device_data = self.device_data
         if device_data and device_data.get("hostname"):
             return str(device_data["hostname"])
-        return f"OPNsense Device {self.mac_address}"
+        return f"OPNsense {self.mac_address}"
 
     @property
     def ip_address(self) -> str | None:
