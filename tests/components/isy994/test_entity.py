@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-import pytest
 from pyisy.constants import PROTO_INSTEON, PROTO_ZWAVE
+import pytest
 
 from homeassistant.components.isy994.entity import ISYNodeEntity
 
