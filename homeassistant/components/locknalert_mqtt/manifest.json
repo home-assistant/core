@@ -1,7 +1,7 @@
 {
   "domain": "locknalert_mqtt",
   "name": "LocknAlert MQTT",
-  "codeowners": ["@LocknAlert-Pty-LTD"],
+  "codeowners": ["@LocknAlert-Pty-LTD", "@rainepretorius"],
   "config_flow": true,
   "dependencies": ["file_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/locknalert_mqtt",
@@ -10,7 +10,7 @@
   "quality_scale": "bronze",
   "requirements": [
     "aiolocknalert==0.1.5",
-    "zeroconf==0.148.0"
+    "zeroconf==0.149.16"
   ],
   "single_config_entry": true,
   "zeroconf": ["_locknalert._tcp.local."]

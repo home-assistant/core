@@ -640,3 +640,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _async_remove_mqtt_issues(hass, mqtt_data)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove locknalert_mqtt config entry from a device."""
+    return True

@@ -1,7 +1,5 @@
 """Tests for the LocknAlert MQTT integration __init__."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.locknalert_mqtt.const import (
@@ -14,7 +12,7 @@ from homeassistant.components.locknalert_mqtt.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClientGenerator
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 
 @pytest.fixture
@@ -79,6 +77,7 @@ async def test_dump_service_is_registered(
 
 async def test_setup_entry_fails_if_broker_unreachable(
     hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Setup succeeds even when the broker is not yet reachable (early exit)."""
     entry = MockConfigEntry(
@@ -89,11 +88,7 @@ async def test_setup_entry_fails_if_broker_unreachable(
         minor_version=CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
-
-    with patch(
-        "aiolocknalert.client.AsyncMQTTClient"
-    ) as mock_client:
-        mock_client.return_value.connect.side_effect = OSError("unreachable")
-        # Integration uses early exit — setup should not raise
-        result = await hass.config_entries.async_setup(entry.entry_id)
-        assert result is True
+    mqtt_client_mock.connect.side_effect = OSError("unreachable")
+    result = await hass.config_entries.async_setup(entry.entry_id)
+    assert result is True
+    await hass.async_block_till_done()

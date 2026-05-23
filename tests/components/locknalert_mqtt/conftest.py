@@ -156,8 +156,12 @@ def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
     task_done = asyncio.Event()
 
     class MockDebouncer(EnsureJobAfterCooldown):
-        async def _async_job(self) -> None:
-            await super()._async_job()
+        async def _run(self) -> None:
+            await super()._run()
+            task_done.set()
+
+        async def async_execute(self) -> None:
+            await super().async_execute()
             task_done.set()
 
     with patch(
