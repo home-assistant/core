@@ -2085,6 +2085,49 @@ async def test_option_flow_subscribe_logs(
     assert len(mock_reload.mock_calls) == 1
 
 
+async def test_option_flow_shows_saved_scanning_mode_when_proxy_unavailable(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """A previously-saved mode keeps surfacing even if the proxy feature flag is gone."""
+    entry = await mock_generic_device_entry(mock_client=mock_client)
+    hass.config_entries.async_update_entry(
+        entry,
+        options={**entry.options, CONF_BLUETOOTH_SCANNING_MODE: "passive"},
+    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_BLUETOOTH_SCANNING_MODE in result["data_schema"].schema
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ALLOW_SERVICE_CALLS: False,
+                CONF_SUBSCRIBE_LOGS: False,
+                CONF_BLUETOOTH_SCANNING_MODE: "auto",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLUETOOTH_SCANNING_MODE] == "auto"
+
+
+async def test_option_flow_unloaded_entry_without_saved_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """An unloaded entry without a saved scanning mode hides the option."""
+    entry = await mock_generic_device_entry(mock_client=mock_client)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert CONF_BLUETOOTH_SCANNING_MODE not in result["data_schema"].schema
+
+
 async def test_option_flow_hides_bluetooth_scanning_mode_without_proxy(
     hass: HomeAssistant,
     mock_client: APIClient,
