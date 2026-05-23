@@ -10,6 +10,7 @@ from pyatmo.event import Event as NaEvent
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -20,7 +21,6 @@ from .const import (
     ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
     ATTR_PERSON,
-    ATTR_PERSONS,
     CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
