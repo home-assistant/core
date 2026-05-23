@@ -107,7 +107,7 @@ async def test_setup_and_stop_passive(
     mock_bleak_scanner_start: MagicMock,
     options: dict[str, Any],
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner.
+    """Test we set up and stop the scanner in passive mode.
 
     Covers both the new CONF_MODE key and the legacy CONF_PASSIVE boolean
     so the fallback path in async_setup_entry stays exercised.

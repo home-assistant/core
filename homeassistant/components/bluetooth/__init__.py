@@ -1,5 +1,6 @@
 """The bluetooth integration."""
 
+from collections.abc import Mapping
 import datetime
 import logging
 import platform
@@ -347,6 +348,30 @@ async def async_update_device(
         device_registry.async_update_device(device_entry.id, **kwargs)
 
 
+def _async_resolve_scanning_mode(options: Mapping[str, Any]) -> BluetoothScanningMode:
+    """Resolve the scanning mode from saved options.
+
+    CONF_MODE wins; otherwise the legacy CONF_PASSIVE boolean is honored;
+    otherwise the new AUTO default is used. An unrecognized CONF_MODE
+    string falls back to DEFAULT_MODE so a malformed value never aborts
+    setup.
+    """
+    if (mode_value := options.get(CONF_MODE)) is not None:
+        try:
+            return BluetoothScanningMode(mode_value)
+        except ValueError:
+            _LOGGER.warning(
+                "Unknown bluetooth scanning mode %r in options; using default",
+                mode_value,
+            )
+            return BluetoothScanningMode(DEFAULT_MODE)
+    if (legacy_passive := options.get(CONF_PASSIVE)) is True:
+        return BluetoothScanningMode.PASSIVE
+    if legacy_passive is False:
+        return BluetoothScanningMode.ACTIVE
+    return BluetoothScanningMode(DEFAULT_MODE)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
     if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
@@ -392,14 +417,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
-    if (mode_value := entry.options.get(CONF_MODE)) is not None:
-        mode = BluetoothScanningMode(mode_value)
-    elif (legacy_passive := entry.options.get(CONF_PASSIVE)) is True:
-        mode = BluetoothScanningMode.PASSIVE
-    elif legacy_passive is False:
-        mode = BluetoothScanningMode.ACTIVE
-    else:
-        mode = BluetoothScanningMode(DEFAULT_MODE)
+    mode = _async_resolve_scanning_mode(entry.options)
     # AUTO starts the scanner in passive mode and lets the manager promote
     # it to active on demand; that only works on adapters that actually
     # support passive scanning. Fall back to ACTIVE on adapters that don't

@@ -50,6 +50,7 @@ from .const import (
 )
 from .util import adapter_title
 
+_VALID_MODE_VALUES = {mode.value for mode in BluetoothScanningMode}
 _MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[
@@ -72,7 +73,8 @@ async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     flip a deliberately-chosen mode.
     """
     options = handler.options
-    if (current := options.get(CONF_MODE)) is None:
+    current = options.get(CONF_MODE)
+    if current is None or current not in _VALID_MODE_VALUES:
         legacy_passive = options.get(CONF_PASSIVE)
         if legacy_passive is True:
             current = BluetoothScanningMode.PASSIVE.value
