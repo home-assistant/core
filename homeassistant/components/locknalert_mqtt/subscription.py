@@ -104,7 +104,7 @@ def async_prepare_subscribe_topics(
             message_callback=value["msg_callback"],
             unsubscribe_callback=None,
             qos=value.get("qos", DEFAULT_QOS),
-            encoding=value.get("encoding", "utf-8"),
+            encoding=value.get("encoding", DEFAULT_ENCODING),
             hass=hass,
             should_subscribe=None,
             entity_id=value.get("entity_id"),
