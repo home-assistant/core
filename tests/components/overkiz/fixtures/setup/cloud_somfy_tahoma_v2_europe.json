@@ -7474,6 +7474,43 @@
       "uiClass": "Gate"
     },
     {
+      "creationTime": 1676547436000,
+      "lastUpdateTime": 1676547436000,
+      "label": "RTS Garage Door 4T",
+      "deviceURL": "rts://1234-1234-6233/16721270",
+      "shortcut": false,
+      "controllableName": "rts:GarageDoor4TRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "cycle",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownGarageDoor4T",
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "rts:GarageDoor4TRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "UpDownGarageDoor4T",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567892",
+      "uiClass": "GarageDoor"
+    },
+    {
       "creationTime": 1654894302000,
       "lastUpdateTime": 1654894302000,
       "label": "Sliding Gate",
@@ -8400,6 +8437,108 @@
       "widget": "DynamicPergola",
       "type": 1,
       "oid": "60df5650-2d35-4fae-bfff-787521598e7f",
+      "uiClass": "Pergola"
+    },
+    {
+      "label": "Bioclimatic Pergola",
+      "deviceURL": "ogp://1234-1234-6233/10943109",
+      "shortcut": false,
+      "controllableName": "ogp:Pergola",
+      "creationTime": 1748079242000,
+      "lastUpdateTime": 1748079242000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "goToAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "saveAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTilt",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TiltState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicPergola",
+        "uiProfiles": ["Specific"],
+        "uiClass": "Pergola",
+        "qualifiedName": "ogp:Pergola",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TiltState",
+          "type": 1,
+          "value": 89
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 89
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicPergola",
+      "type": 1,
+      "oid": "21832602-8bce-4317-b785-68f72b2113f6",
       "uiClass": "Pergola"
     },
     {

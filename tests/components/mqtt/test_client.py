@@ -1502,12 +1502,13 @@ async def test_publish_error(
 
 async def test_subscribe_error(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
+    await mqtt_mock_entry()
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
     mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, None)
@@ -2602,6 +2603,8 @@ async def test_subscriptions_id_generation(hass: HomeAssistant) -> None:
     # Mock we are past the last subscriptions
     generator._next_id = mqtt.models.MAX_28BIT - 2
     new_id_1 = generator.get_or_generate("test1/#")
+    assert generator.get_or_generate("test1/#") == new_id_1
+    assert generator.get_subscription_id("test1/#") == new_id_1
     assert new_id_1 == mqtt.models.MAX_28BIT - 2
     new_id_2 = generator.get_or_generate("test2/#")
     assert new_id_2 == mqtt.models.MAX_28BIT - 1
