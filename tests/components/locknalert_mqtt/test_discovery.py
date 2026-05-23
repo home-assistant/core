@@ -9,14 +9,11 @@ import re
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
+from aiolocknalert.abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import locknalert_mqtt as mqtt
-from aiolocknalert.abbreviations import (
-    ABBREVIATIONS,
-    DEVICE_ABBREVIATIONS,
-)
 from homeassistant.components.locknalert_mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.locknalert_mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
@@ -2438,9 +2435,7 @@ async def test_complex_discovery_topic_prefix(
 
 
 @patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0)
-@patch(
-    "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
-)
+@patch("aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0)
 @patch("aiolocknalert.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 @pytest.mark.parametrize(
@@ -2513,9 +2508,7 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
 
 
 @patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0)
-@patch(
-    "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0
-)
+@patch("aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0)
 @patch("aiolocknalert.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_flow_starts_once(

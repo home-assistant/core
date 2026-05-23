@@ -4,18 +4,12 @@ from collections.abc import Iterable
 from contextlib import suppress
 import copy
 import json
-from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
-from freezegun import freeze_time
 import pytest
-import voluptuous as vol
-import yaml
 
-from homeassistant import config as module_hass_config
 from homeassistant.components import locknalert_mqtt as mqtt
-
 from homeassistant.components.locknalert_mqtt.const import (
     MQTT_CONNECTION_STATE,
     SUPPORTED_COMPONENTS,
@@ -28,7 +22,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
-    EntityCategory,
 )
 from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
@@ -39,7 +32,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -1015,7 +1007,6 @@ async def help_test_default_availability_payload(
         assert state and state.state != STATE_UNAVAILABLE
 
 
-
 async def help_test_custom_availability_payload(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1062,7 +1053,6 @@ async def help_test_custom_availability_payload(
 
         state = hass.states.get(f"{domain}.test")
         assert state and state.state != STATE_UNAVAILABLE
-
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(
@@ -1803,7 +1793,6 @@ async def help_test_entity_id_update_discovery_update(
     assert state and state.state != STATE_UNAVAILABLE
 
 
-
 async def help_test_entity_icon_and_entity_picture(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1977,7 +1966,6 @@ async def help_test_publishing_with_custom_encoding(
     mqtt_mock.async_publish.reset_mock()
 
 
-
 async def help_test_reloadable(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -2096,7 +2084,6 @@ async def help_test_unload_config_entry_with_platform(
 
     discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
     assert discovery_setup_entity is None
-
 
 
 async def help_test_skipped_async_ha_write_state(

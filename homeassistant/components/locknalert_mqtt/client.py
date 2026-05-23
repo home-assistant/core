@@ -5,7 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
-from aiolocknalert.client import MQTT as _LibMQTT, MQTTError, Subscription
+from aiolocknalert.client import MQTT as _LibMQTT, MQTTError
 from aiolocknalert.const import DEFAULT_ENCODING, DEFAULT_QOS
 from aiolocknalert.models import MessageCallbackType, PublishPayloadType
 
@@ -84,7 +84,7 @@ async def async_publish(
         if encoding != DEFAULT_ENCODING:
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except (AttributeError, LookupError, UnicodeEncodeError):
+            except AttributeError, LookupError, UnicodeEncodeError:
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,
@@ -220,11 +220,11 @@ class MQTT(_LibMQTT):
         super().__init__(conf)
         self.hass = hass
         self.config_entry = config_entry
-        self.on_connection_state_changed = (
-            lambda connected: async_dispatcher_send(hass, MQTT_CONNECTION_STATE, connected)
+        self.on_connection_state_changed = lambda connected: async_dispatcher_send(
+            hass, MQTT_CONNECTION_STATE, connected
         )
-        self.on_subscriptions_acknowledged = (
-            lambda subs: async_dispatcher_send(hass, MQTT_PROCESSED_SUBSCRIPTIONS, subs)
+        self.on_subscriptions_acknowledged = lambda subs: async_dispatcher_send(
+            hass, MQTT_PROCESSED_SUBSCRIPTIONS, subs
         )
         self.on_reauth_required = lambda: config_entry.async_start_reauth(hass)
 
@@ -239,9 +239,9 @@ class MQTT(_LibMQTT):
 
     def _async_mqtt_on_message(
         self,
-        _mqttc: "mqtt.Client",
+        _mqttc: mqtt.Client,
         _userdata: None,
-        msg: "mqtt.MQTTMessage",
+        msg: mqtt.MQTTMessage,
     ) -> None:
         super()._async_mqtt_on_message(_mqttc, _userdata, msg)
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)

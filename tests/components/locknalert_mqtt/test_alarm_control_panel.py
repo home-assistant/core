@@ -45,7 +45,6 @@ from .common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
     help_test_encoding_subscribable_topics,
-
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -82,8 +81,13 @@ DEFAULT_FEATURES = (
     | AlarmControlPanelEntityFeature.TRIGGER
 )
 
+
 def _alarm_config(**extra) -> dict:
-    base = {"name": "test", "state_topic": "alarm/state", "command_topic": "alarm/command"}
+    base = {
+        "name": "test",
+        "state_topic": "alarm/state",
+        "command_topic": "alarm/command",
+    }
     return {locknalert_mqtt.DOMAIN: {alarm_control_panel.DOMAIN: base | extra}}
 
 
@@ -91,7 +95,9 @@ DEFAULT_CONFIG = _alarm_config()
 DEFAULT_CONFIG_CODE_NOT_REQUIRED = _alarm_config(code_arm_required=False)
 DEFAULT_CONFIG_CODE = _alarm_config(code="0123", code_arm_required=True)
 DEFAULT_CONFIG_REMOTE_CODE = _alarm_config(code="REMOTE_CODE", code_arm_required=True)
-DEFAULT_CONFIG_REMOTE_CODE_TEXT = _alarm_config(code="REMOTE_CODE_TEXT", code_arm_required=True)
+DEFAULT_CONFIG_REMOTE_CODE_TEXT = _alarm_config(
+    code="REMOTE_CODE_TEXT", code_arm_required=True
+)
 
 
 @contextmanager
@@ -1124,7 +1130,6 @@ async def test_entity_id_update_discovery_update(
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock_entry, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
-
 
 
 @pytest.mark.parametrize(

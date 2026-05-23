@@ -1018,8 +1018,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/locknalert_mqtt/ @LocknAlert-Pty-LTD
-/tests/components/locknalert_mqtt/ @LocknAlert-Pty-LTD
+/homeassistant/components/locknalert_mqtt/ @LocknAlert-Pty-LTD @rainepretorius
+/tests/components/locknalert_mqtt/ @LocknAlert-Pty-LTD @rainepretorius
 /homeassistant/components/logbook/ @home-assistant/core
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core

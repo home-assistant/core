@@ -48,7 +48,6 @@ _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _LOGGER = logging.getLogger(__name__)
 
 
-
 class EnsureJobAfterCooldown:
     """Ensure a cool down period before executing a job.
 

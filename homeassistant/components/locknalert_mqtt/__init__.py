@@ -532,7 +532,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "mqtt/subscribe",
@@ -555,7 +554,7 @@ async def websocket_subscribe(
             payload = cast(bytes, mqttmsg.payload).decode(
                 DEFAULT_ENCODING
             )  # not str because encoding is set to None
-        except (AttributeError, UnicodeDecodeError):
+        except AttributeError, UnicodeDecodeError:
             # Convert non UTF-8 payload to a string presentation
             payload = str(mqttmsg.payload)
 
@@ -597,7 +596,6 @@ def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     mqtt_data = hass.data[DATA_MQTT]
     return mqtt_data.client.connected
-
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

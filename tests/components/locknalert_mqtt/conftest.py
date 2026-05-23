@@ -7,6 +7,7 @@ from random import getrandbits
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from aiolocknalert.util import EnsureJobAfterCooldown
 import pytest
 
 from homeassistant.components import locknalert_mqtt
@@ -14,7 +15,6 @@ from homeassistant.components.locknalert_mqtt.models import (
     MessageCallbackType,
     ReceiveMessage,
 )
-from aiolocknalert.util import EnsureJobAfterCooldown
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
@@ -80,9 +80,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.mid = mid
             self.rc = 0
 
-    with patch(
-        "aiolocknalert.client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("aiolocknalert.client.AsyncMQTTClient") as mock_client:
 
         @callback
         def _async_fire_mqtt_message(topic, payload, qos, retain):
@@ -255,12 +253,8 @@ async def setup_with_birth_msg_client_mock(
             "aiolocknalert.client.INITIAL_SUBSCRIBE_COOLDOWN",
             0.0,
         ),
-        patch(
-            "aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0
-        ),
-        patch(
-            "aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0
-        ),
+        patch("aiolocknalert.client.DISCOVERY_COOLDOWN", 0.0),
+        patch("aiolocknalert.client.SUBSCRIBE_COOLDOWN", 0.0),
     ):
         entry = MockConfigEntry(
             domain=locknalert_mqtt.DOMAIN,

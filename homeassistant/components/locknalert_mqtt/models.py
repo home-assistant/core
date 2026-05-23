@@ -17,18 +17,12 @@ from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    TemplateVarsType,
-    VolSchemaType,
-)
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from paho.mqtt.client import MQTTMessage
-
     from aiolocknalert.client import Subscription
+    from paho.mqtt.client import MQTTMessage
 
     from .client import MQTT
     from .discovery import MQTTDiscoveryPayload
@@ -56,7 +50,7 @@ def convert_outgoing_mqtt_payload(
     if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
-        except (ValueError, TypeError, SyntaxError, MemoryError):
+        except ValueError, TypeError, SyntaxError, MemoryError:
             pass
         else:
             if isinstance(native_object, bytes):

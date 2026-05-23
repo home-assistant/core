@@ -10,6 +10,11 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
+from aiolocknalert.abbreviations import (
+    ABBREVIATIONS,
+    DEVICE_ABBREVIATIONS,
+    ORIGIN_ABBREVIATIONS,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -34,7 +39,6 @@ from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from aiolocknalert.abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
 from .client import async_subscribe_internal
 from .const import (
     ATTR_DISCOVERY_HASH,
