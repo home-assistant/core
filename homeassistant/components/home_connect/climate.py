@@ -266,14 +266,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "appliance_name": self.appliance.info.name,
-                    "value": BSH_POWER_ON,
                 },
             ) from err
 
