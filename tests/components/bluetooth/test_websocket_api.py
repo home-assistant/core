@@ -461,14 +461,14 @@ async def test_subscribe_scanner_state(
         response = await client.receive_json()
     assert response["success"]
 
-    # Should receive initial state for existing scanner
+    # hci0 has passive_scan=False so AUTO falls back to ACTIVE.
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
         "source": "00:00:00:00:00:01",
         "adapter": "hci0",
-        "current_mode": "auto",
-        "requested_mode": "auto",
+        "current_mode": "active",
+        "requested_mode": "active",
     }
 
     # Register a new scanner

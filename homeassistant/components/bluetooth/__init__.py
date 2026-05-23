@@ -349,21 +349,12 @@ async def async_update_device(
 
 
 def _async_resolve_scanning_mode(options: Mapping[str, Any]) -> BluetoothScanningMode:
-    """Resolve the scanning mode from saved options.
-
-    CONF_MODE wins; otherwise the legacy CONF_PASSIVE boolean is honored;
-    otherwise the new AUTO default is used. An unrecognized CONF_MODE
-    string falls back to DEFAULT_MODE so a malformed value never aborts
-    setup.
-    """
+    """Resolve CONF_MODE, falling back to legacy CONF_PASSIVE or DEFAULT_MODE."""
     if (mode_value := options.get(CONF_MODE)) is not None:
         try:
             return BluetoothScanningMode(mode_value)
         except ValueError:
-            _LOGGER.warning(
-                "Unknown bluetooth scanning mode %r in options; using default",
-                mode_value,
-            )
+            _LOGGER.warning("Unknown bluetooth scanning mode %r", mode_value)
             return BluetoothScanningMode(DEFAULT_MODE)
     if (legacy_passive := options.get(CONF_PASSIVE)) is True:
         return BluetoothScanningMode.PASSIVE
@@ -418,11 +409,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     mode = _async_resolve_scanning_mode(entry.options)
-    # AUTO starts the scanner in passive mode and lets the manager promote
-    # it to active on demand; that only works on adapters that actually
-    # support passive scanning. Fall back to ACTIVE on adapters that don't
-    # (old BlueZ, etc.) so we don't regress them from the historical default.
-    if mode is BluetoothScanningMode.AUTO and not details[ADAPTER_PASSIVE_SCAN]:
+    # AUTO needs passive scanning support to flip on demand; without it
+    # the scanner would start passive on hardware that can't do passive.
+    if mode is BluetoothScanningMode.AUTO and not details.get(ADAPTER_PASSIVE_SCAN):
         mode = BluetoothScanningMode.ACTIVE
     scanner = HaScanner(mode, adapter, address)
     scanner.async_setup()

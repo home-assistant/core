@@ -65,13 +65,7 @@ _MODE_SELECTOR = SelectSelector(
 
 
 async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    """Build the options schema with the current mode as the default.
-
-    Existing installs may only have the legacy CONF_PASSIVE boolean and no
-    CONF_MODE; deriving the form default from both keeps the saved choice
-    visible so opening Configure and clicking Submit does not silently
-    flip a deliberately-chosen mode.
-    """
+    """Build the options schema with the saved mode as the default."""
     options = handler.options
     current = options.get(CONF_MODE)
     if current is None or current not in _VALID_MODE_VALUES:
@@ -88,7 +82,7 @@ async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 async def _validate_options(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Mirror CONF_MODE into the legacy CONF_PASSIVE option so a downgrade still works."""
+    """Mirror CONF_MODE into the legacy CONF_PASSIVE for downgrade safety."""
     user_input[CONF_PASSIVE] = (
         user_input[CONF_MODE] == BluetoothScanningMode.PASSIVE.value
     )

@@ -198,11 +198,11 @@ async def test_diagnostics(
                         "type": "HaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                     },
                     {
@@ -439,11 +439,11 @@ async def test_diagnostics_macos(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                     }
                 ],
@@ -633,11 +633,11 @@ async def test_diagnostics_remote_adapter(
                         "type": "HaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                         },
                     },
                     {
