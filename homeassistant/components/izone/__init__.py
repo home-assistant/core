@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow
 from .const import DATA_CONFIG, IZONE
-from .discovery import async_start_discovery_service, async_stop_discovery_service
+from .discovery import async_start_discovery_service
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -50,10 +50,8 @@ async def _async_pick_legacy_migration_controller(
 ) -> pizone.Controller:
     """Return the single controller to bind to a legacy ``unique_id == izone`` entry.
 
-    Raises:
-        ConfigEntryNotReady: No eligible controller on the network or discovery failed.
-        ConfigEntryError: More than one eligible controller (ambiguous).
-
+    Raises ConfigEntryNotReady if no eligible controller is found on the network,
+    or ConfigEntryError if multiple eligible controllers are found (ambiguous).
     """
     try:
         controllers = await config_flow.async_discover_controllers(hass)
@@ -89,23 +87,11 @@ async def _async_pick_legacy_migration_controller(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-
-    had_loaded_entries = any(
-        config_entry.state
-        in (
-            config_entries.ConfigEntryState.LOADED,
-            config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
-        )
-        for config_entry in hass.config_entries.async_entries(IZONE)
-        if config_entry.entry_id != entry.entry_id
-    )
-    await async_start_discovery_service(hass)
     try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
-        if not had_loaded_entries:
-            await async_stop_discovery_service(hass)
-        raise
+        await async_start_discovery_service(hass)
+    except OSError as err:
+        raise ConfigEntryNotReady("iZone discovery service failed to start") from err
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -113,12 +99,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entry schema to the current version."""
     if entry.version == 1:
         controller = await _async_pick_legacy_migration_controller(hass, entry)
+        new_title = (
+            f"iZone {controller.device_uid}"
+            if entry.title == "iZone Aircon"
+            else entry.title
+        )
         hass.config_entries.async_update_entry(
             entry,
             version=2,
             unique_id=controller.device_uid,
             data={},
-            title=f"iZone {controller.device_uid}",
+            title=new_title,
         )
         return True
     return False
