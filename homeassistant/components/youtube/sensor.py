@@ -21,6 +21,7 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
 )
 from .coordinator import YouTubeConfigEntry
@@ -66,6 +67,16 @@ SENSOR_TYPES = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
+        entity_picture_fn=lambda channel: channel[ATTR_ICON],
+        attributes_fn=None,
+    ),
+    YouTubeSensorEntityDescription(
+        key="videos",
+        translation_key="videos",
+        native_unit_of_measurement="videos",
+        state_class=SensorStateClass.MEASUREMENT,
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_VIDEO_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
     ),
