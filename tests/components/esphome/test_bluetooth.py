@@ -177,7 +177,7 @@ async def test_scanning_mode_migration_passive_is_honored(
 
     # bleak-esphome subscribes first, then our migration callback.
     assert len(state_subscriptions) >= 2
-    for callback in state_subscriptions:
+    for callback in list(state_subscriptions):
         callback(
             BluetoothScannerStateResponse(
                 state=BluetoothScannerState.RUNNING,
@@ -214,7 +214,7 @@ async def test_scanning_mode_migration_waits_for_known_configured_mode(
     await hass.async_block_till_done()
 
     assert state_subscriptions
-    for callback in state_subscriptions:
+    for callback in list(state_subscriptions):
         callback(
             BluetoothScannerStateResponse(
                 state=BluetoothScannerState.RUNNING,
@@ -226,7 +226,7 @@ async def test_scanning_mode_migration_waits_for_known_configured_mode(
 
     assert CONF_BLUETOOTH_SCANNING_MODE not in device.entry.options
     # A second response with a real configured_mode commits the migration.
-    for callback in state_subscriptions:
+    for callback in list(state_subscriptions):
         callback(
             BluetoothScannerStateResponse(
                 state=BluetoothScannerState.RUNNING,
@@ -295,7 +295,7 @@ async def test_scanning_mode_migration_active_becomes_auto(
     await hass.async_block_till_done()
 
     assert len(state_subscriptions) >= 2
-    for callback in state_subscriptions:
+    for callback in list(state_subscriptions):
         callback(
             BluetoothScannerStateResponse(
                 state=BluetoothScannerState.RUNNING,
