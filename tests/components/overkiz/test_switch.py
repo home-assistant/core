@@ -8,11 +8,14 @@ from pyoverkiz.enums import EventName
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from pyoverkiz.enums import OverkizState
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -157,6 +160,39 @@ async def test_switch_service_call(
         command_name=expected_command,
         **({"parameters": expected_parameters} if expected_parameters else {}),
     )
+
+
+async def test_switch_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switch reflects state changes from the device."""
+    await setup_overkiz_integration(fixture=ON_OFF.fixture)
+
+    assert hass.states.get(ON_OFF.entity_id).state == STATE_OFF
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=ON_OFF.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_ON_OFF.value,
+                        "type": 3,
+                        "value": "on",
+                    },
+                ],
+            )
+        ],
+    )
+
+    assert hass.states.get(ON_OFF.entity_id).state == STATE_ON
 
 
 async def test_switch_unavailability(
