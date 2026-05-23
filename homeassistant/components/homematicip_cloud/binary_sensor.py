@@ -80,12 +80,17 @@ SAM_DEVICE_ATTRIBUTES = {
 }
 
 
+def _always_exists(_device: Device) -> bool:
+    """Default exists_fn: every matched device gets the entity."""
+    return True
+
+
 @dataclass(frozen=True, kw_only=True)
 class HmipBinarySensorDescription[_DeviceT: Device](BinarySensorEntityDescription):
     """Describe a simple HomematicIP binary sensor."""
 
     value_fn: Callable[[_DeviceT], bool]
-    exists_fn: Callable[[_DeviceT], bool] = lambda _device: True
+    exists_fn: Callable[[_DeviceT], bool] = _always_exists
     # Required: contributes to unique_id via {device.id}_{channel}_{key}. An
     # implicit default would silently lean on get_channel_index()'s fallback
     # and create a migration footgun.
@@ -217,6 +222,10 @@ def _create_simple_binary_sensors(
             for description in descriptions
             if description.exists_fn(device)
         )
+        # Each device class matches at most one group key (enforced by
+        # test_simple_binary_sensor_descriptions_no_overlap), so further
+        # iteration cannot add entities.
+        break
 
     if device.lowBat is not None:
         entities.append(
