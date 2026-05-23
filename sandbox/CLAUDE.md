@@ -14,7 +14,7 @@ This directory (`core/sandbox/`) holds everything sandbox-related:
 
 - `hass_client/` — Client library that provides `RemoteHomeAssistant`, a HA subclass connected to a real HA via websocket. Extended with sandbox mode for running integrations out-of-process. Brought in as a git subtree from `balloob-travel/hass-client`.
 - `ARCHITECTURE.md`, `OVERVIEW.md` — design docs.
-- `analyze_failures.py`, `run_all_sandbox_tests.{py,sh}`, `TEST_RESULTS.csv` — test driver and results for running HA Core's integration test suites through the sandbox.
+- `analyze_failures.py`, `run_all_sandbox_tests.py`, `TEST_RESULTS.csv` — test driver and results for running HA Core's integration test suites through the sandbox.
 - `architecture.html` — rendered architecture diagram (publishable via `gh gist create`, see below).
 
 The HA Core integration lives at `../homeassistant/components/sandbox/` (one level up).
