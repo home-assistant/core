@@ -183,8 +183,8 @@ class MideaClimate(MideaEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Midea Climate hvac mode."""
         if self._device.get_attribute("power"):
-            mode = cast("int", self._device.get_attribute("mode") or 0)
-            if 0 <= mode < len(self.hvac_modes):
+            mode = self._device.get_attribute("mode")
+            if isinstance(mode, int) and 0 <= mode < len(self.hvac_modes):
                 return self.hvac_modes[mode]
         return HVACMode.OFF
 

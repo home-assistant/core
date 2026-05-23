@@ -81,12 +81,14 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         for item in sorted_device_names:
             self.supports[item[0]] = item[1]
         # preset account
+        _acct_hex = format(PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[1], "x")
         self.preset_account: str = bytes.fromhex(
-            format((PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[1]), "X"),
+            _acct_hex if len(_acct_hex) % 2 == 0 else "0" + _acct_hex,
         ).decode("utf-8", errors="ignore")
         # preset password
+        _pass_hex = format(PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[2], "x")
         self.preset_password: str = bytes.fromhex(
-            format((PRESET_ACCOUNT_DATA[0] ^ PRESET_ACCOUNT_DATA[2]), "X"),
+            _pass_hex if len(_pass_hex) % 2 == 0 else "0" + _pass_hex,
         ).decode("utf-8", errors="ignore")
         self.preset_cloud_name: str = DEFAULT_CLOUD
 
@@ -154,17 +156,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         Config flow result
 
         """
-        # user select a device discovery mode
-        if user_input is not None and "action" in user_input:
-            if user_input["action"] == "discovery":
-                return await self.async_step_discovery()
-            if user_input["action"] == "manually":
-                self.found_device = {}
-                return await self.async_step_manually()
-            if user_input["action"] == "cache":
-                return await self.async_step_cache()
-            return await self.async_step_list()
-
         return self.async_show_menu(
             step_id="user",
             menu_options=ADD_WAY,
@@ -745,10 +736,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_KEY: user_input[CONF_KEY],
                     }
 
-                    await self._save_device_config(data)
-
                     await self.async_set_unique_id(str(device_id))
                     self._abort_if_unique_id_configured()
+                    await self._save_device_config(data)
 
                     return self.async_create_entry(
                         title=name,

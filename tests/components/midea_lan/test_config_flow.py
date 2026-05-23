@@ -251,40 +251,11 @@ def test_check_storage_device() -> None:
 
 
 async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test step_user exposes menu options and routes legacy action payloads."""
+    """Test step_user exposes menu options."""
     result = await mock_config_flow.async_step_user()
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
     assert result["menu_options"] == ["discovery", "manually", "list", "cache"]
-
-    with (
-        patch.object(
-            mock_config_flow,
-            "async_step_discovery",
-            AsyncMock(return_value={"step": 1}),
-        ),
-        patch.object(
-            mock_config_flow, "async_step_manually", AsyncMock(return_value={"step": 2})
-        ),
-        patch.object(
-            mock_config_flow, "async_step_cache", AsyncMock(return_value={"step": 3})
-        ),
-        patch.object(
-            mock_config_flow, "async_step_list", AsyncMock(return_value={"step": 4})
-        ),
-    ):
-        assert await mock_config_flow.async_step_user({"action": "discovery"}) == {
-            "step": 1
-        }
-        mock_config_flow.found_device = {"x": 1}
-        assert await mock_config_flow.async_step_user({"action": "manually"}) == {
-            "step": 2
-        }
-        assert mock_config_flow.found_device == {}
-        assert await mock_config_flow.async_step_user({"action": "cache"}) == {
-            "step": 3
-        }
-        assert await mock_config_flow.async_step_user({"action": "list"}) == {"step": 4}
 
 
 async def test_step_cache(mock_config_flow: MideaLanConfigFlow) -> None:
