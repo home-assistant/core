@@ -20,6 +20,9 @@ from homeassistant.components.virtual_remote.remote import (
     COMMAND_POWER_TOGGLE,
     COMMAND_TOGGLE,
     InfraredRemoteEntity,
+    _as_str_mapping,
+    _create_missing_issue,
+    _delete_missing_issue,
     async_setup_entry,
     async_setup_virtual_remote_entities,
     cleanup_stale_remote_entities,
@@ -103,6 +106,38 @@ def _make_entity(
 def test_remote_unique_id() -> None:
     """Test remote unique id helper."""
     assert remote_unique_id("entry", "remote") == "entry_remote_remote"
+
+
+def test_as_str_mapping_filters_invalid_entries() -> None:
+    """Test invalid command entries are dropped without rejecting the mapping."""
+    assert _as_str_mapping("bad") is None
+    assert _as_str_mapping({"POWER": RAW_COMMAND, "BAD": 1, 2: RAW_COMMAND}) == {
+        "POWER": RAW_COMMAND
+    }
+
+
+def test_standalone_repair_issue_helpers(hass: HomeAssistant) -> None:
+    """Test standalone repair issue helper boundaries."""
+    with patch(
+        "homeassistant.components.virtual_remote.remote."
+        "async_create_linked_infrared_entity_missing_issue"
+    ) as create_issue:
+        _create_missing_issue(hass, REMOTE_ID, REMOTE_NAME, INFRARED_ENTITY_ID)
+
+    create_issue.assert_called_once_with(
+        hass,
+        remote_id=REMOTE_ID,
+        remote_name=REMOTE_NAME,
+        infrared_entity_id=INFRARED_ENTITY_ID,
+    )
+
+    with patch(
+        "homeassistant.components.virtual_remote.remote."
+        "async_delete_linked_infrared_entity_missing_issue"
+    ) as delete_issue:
+        _delete_missing_issue(hass, REMOTE_ID)
+
+    delete_issue.assert_called_once_with(hass, remote_id=REMOTE_ID)
 
 
 def test_configured_remote_definitions(config_entry: MockConfigEntry) -> None:
@@ -208,8 +243,50 @@ async def test_async_setup_skips_malformed_and_duplicate_remotes(
     )
 
     assert [entity.unique_id for entity in entities] == [
-        f"{entry.entry_id}_remote_valid"
+        f"{entry.entry_id}_remote_valid",
+        f"{entry.entry_id}_remote_bad",
     ]
+
+
+async def test_async_setup_keeps_remote_with_invalid_command_entries(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test invalid command entries do not drop an otherwise valid remote."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_VIRTUAL_REMOTES: [
+                {
+                    CONF_REMOTE_ID: "valid",
+                    CONF_REMOTE_NAME: "Valid",
+                    CONF_INFRARED_ENTITY_ID: infrared_entity,
+                    CONF_REMOTE_COMMANDS: {"POWER": RAW_COMMAND, "BAD": 1},
+                },
+                {
+                    CONF_REMOTE_ID: "bad_commands",
+                    CONF_REMOTE_NAME: "Bad commands",
+                    CONF_INFRARED_ENTITY_ID: infrared_entity,
+                    CONF_REMOTE_COMMANDS: "bad",
+                },
+            ]
+        },
+    )
+    entry.add_to_hass(hass)
+    entities: list[InfraredRemoteEntity] = []
+
+    await async_setup_virtual_remote_entities(
+        hass,
+        entry,
+        _add_remote_entities_callback(entities),
+        device_info_factory=_device_info_factory,
+    )
+
+    assert [entity.unique_id for entity in entities] == [
+        f"{entry.entry_id}_remote_valid",
+    ]
+    assert entities[0]._commands == {"POWER": RAW_COMMAND}
 
 
 async def test_cleanup_stale_remote_entities(
@@ -265,6 +342,48 @@ async def test_cleanup_stale_virtual_remote_devices(
     assert registry.async_get(physical.id) is not None
 
 
+async def test_cleanup_stale_remote_entities_ignores_other_domains(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test stale remote cleanup ignores non-remote entity registry entries."""
+    registry = er.async_get(hass)
+    sensor = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{config_entry.entry_id}_remote_stale",
+        suggested_object_id="stale_sensor",
+        config_entry=config_entry,
+    )
+
+    cleanup_stale_remote_entities(hass, config_entry, set())
+
+    assert registry.async_get(sensor.entity_id) is not None
+
+
+async def test_cleanup_stale_virtual_remote_devices_ignores_other_config_entries(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test device cleanup ignores devices from other config entries."""
+    registry = dr.async_get(hass)
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="other_entry",
+    )
+    other_entry.add_to_hass(hass)
+
+    other = registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "stale")},
+    )
+
+    cleanup_stale_virtual_remote_devices(hass, config_entry, set())
+
+    assert registry.async_get(other.id) is not None
+
+
 def test_available_property(hass: HomeAssistant, infrared_entity: str) -> None:
     """Test availability follows backing infrared entity."""
     entity = _make_entity(hass)
@@ -276,6 +395,65 @@ def test_available_property(hass: HomeAssistant, infrared_entity: str) -> None:
 
     hass.states.async_remove(INFRARED_ENTITY_ID)
     assert entity.available is False
+
+
+def test_available_without_hass_returns_true() -> None:
+    """Test entity is considered available before being added to Home Assistant."""
+    entity = InfraredRemoteEntity(
+        remote_id=REMOTE_ID,
+        name=REMOTE_NAME,
+        infrared_entity_id=INFRARED_ENTITY_ID,
+        commands={},
+        unique_id_prefix="entry",
+        device_info=DeviceInfo(identifiers={(DOMAIN, REMOTE_ID)}, name=REMOTE_NAME),
+        entity_name=REMOTE_NAME,
+        has_entity_name=False,
+    )
+
+    assert entity.available is True
+    assert entity._resolve_infrared_entity_id() == INFRARED_ENTITY_ID
+    entity._update_missing_infrared_repair_issue()
+
+
+async def test_infrared_state_change_updates_repair_issue_and_state(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test linked infrared state changes update repairs and entity state."""
+    missing_handler = Mock()
+    restored_handler = Mock()
+    entity = _make_entity(
+        hass,
+        missing_handler=missing_handler,
+        restored_handler=restored_handler,
+    )
+
+    with patch.object(entity, "async_write_ha_state") as write_state:
+        await entity.async_added_to_hass()
+        hass.states.async_set(INFRARED_ENTITY_ID, STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
+
+    restored_handler.assert_called_once_with(hass, REMOTE_ID)
+    missing_handler.assert_called_once_with(
+        hass,
+        REMOTE_ID,
+        REMOTE_NAME,
+        INFRARED_ENTITY_ID,
+    )
+    write_state.assert_called_once()
+
+
+async def test_async_update_refreshes_repair_issue(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test async update refreshes repair issue state."""
+    restored_handler = Mock()
+    entity = _make_entity(hass, restored_handler=restored_handler)
+
+    await entity.async_update()
+
+    restored_handler.assert_called_once_with(hass, REMOTE_ID)
 
 
 async def test_power_methods_send_configured_commands(
@@ -507,6 +685,45 @@ async def test_repair_issue_cleared_when_entity_restored(
 
     restored_handler.assert_called_once_with(hass, REMOTE_ID)
     missing_handler.assert_not_called()
+
+
+async def test_send_command_without_hass_raises_missing_infrared() -> None:
+    """Test sending before entity is added raises a translated error."""
+    entity = InfraredRemoteEntity(
+        remote_id=REMOTE_ID,
+        name=REMOTE_NAME,
+        infrared_entity_id=INFRARED_ENTITY_ID,
+        commands={"POWER": RAW_COMMAND},
+        unique_id_prefix="entry",
+        device_info=DeviceInfo(identifiers={(DOMAIN, REMOTE_ID)}, name=REMOTE_NAME),
+        entity_name=REMOTE_NAME,
+        has_entity_name=False,
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await entity.async_send_command(["POWER"])
+
+    assert err.value.translation_key == "remote_infrared_missing"
+
+
+async def test_send_command_preserves_home_assistant_error(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test HomeAssistantError raised by infrared send is preserved."""
+    entity = _make_entity(hass, commands={"POWER": RAW_COMMAND})
+    expected = HomeAssistantError("boom")
+
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(side_effect=expected),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await entity.async_send_command(["POWER"])
+
+    assert err.value is expected
 
 
 async def test_send_failure_wrapped(

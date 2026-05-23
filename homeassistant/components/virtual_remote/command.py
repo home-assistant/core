@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import json
+import re
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
@@ -173,7 +174,7 @@ def _parse_text_command(command: str, default_modulation: int) -> tuple[int, lis
             raise _command_error("Command modulation must be an integer") from err
 
     return modulation, _coerce_int_list(
-        timings_text.replace(" ", ",").split(","),
+        [token for token in re.split(r"[\s,]+", timings_text.strip()) if token],
         "timings",
     )
 

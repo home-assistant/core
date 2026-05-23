@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.virtual_remote.command import (
     CommandParseError,
     RawTiming,
+    _parse_pronto_command,
     parse_remote_command,
     validate_raw_command,
     validate_remote_command_payload,
@@ -139,6 +140,64 @@ def test_validate_raw_command(
     """Test raw command field validation."""
     with pytest.raises(CommandParseError, match=message):
         validate_raw_command(modulation, timings)
+
+
+def test_parse_text_command_accepts_spaces_after_commas() -> None:
+    """Test text commands allow common comma-space formatting."""
+    command = parse_remote_command("9000, 4500, 560, 560")
+
+    assert command.modulation == 38000
+    assert _timings(command) == [(9000, 4500), (560, 560)]
+
+
+def test_invalid_default_modulation_raises_home_assistant_error() -> None:
+    """Test invalid service modulation is translated by the public parser."""
+    with pytest.raises(HomeAssistantError) as err:
+        parse_remote_command("9000,4500", {"modulation": "bad"})
+
+    assert err.value.translation_key == "remote_invalid_command"
+    assert err.value.translation_placeholders == {
+        "error": "modulation must be an integer"
+    }
+
+
+def test_json_scalar_command_is_rejected() -> None:
+    """Test JSON scalar commands are rejected."""
+    with pytest.raises(
+        CommandParseError,
+        match="timings must contain only integers",
+    ):
+        validate_remote_command_payload('"bad"')
+
+
+def test_invalid_hex_word_falls_back_to_text_parser() -> None:
+    """Test invalid Pronto hex-looking words are rejected as text timings."""
+    with pytest.raises(HomeAssistantError):
+        parse_remote_command("0000 ZZZZ 0001 0000 0001 0001")
+
+
+def test_parse_pronto_command_rejects_non_raw_pronto_type() -> None:
+    """Test private Pronto parser rejects unsupported Pronto types."""
+    with pytest.raises(CommandParseError, match="beginning with 0000"):
+        _parse_pronto_command("0100 006D 0001 0000 0001 0001")
+
+
+def test_parse_pronto_command_requires_declared_pairs() -> None:
+    """Test Pronto commands must declare timing pairs."""
+    with pytest.raises(CommandParseError, match="at least one timing pair"):
+        _parse_pronto_command("0000 006D 0000 0000 0001 0001")
+
+
+def test_parse_pronto_command_requires_matching_timing_count() -> None:
+    """Test Pronto commands must include the declared timing words."""
+    with pytest.raises(CommandParseError, match="does not match"):
+        _parse_pronto_command("0000 006D 0002 0000 0001 0001")
+
+
+def test_validate_remote_command_payload_rejects_empty_timing_values() -> None:
+    """Test JSON timing arrays cannot contain empty values."""
+    with pytest.raises(CommandParseError, match="must not contain empty values"):
+        validate_remote_command_payload('[""]')
 
 
 def test_parse_remote_command_uses_custom_translation_domain() -> None:

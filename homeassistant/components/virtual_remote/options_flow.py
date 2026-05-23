@@ -253,11 +253,15 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             remote_id = str(user_input[CONF_REMOTE_ID])
-            self._virtual_remotes = [
+            remaining_remotes = [
                 remote
                 for remote in self._virtual_remotes
                 if str(remote.get(CONF_REMOTE_ID)) != remote_id
             ]
+            if len(remaining_remotes) == len(self._virtual_remotes):
+                return self.async_abort(reason="remote_not_found")
+
+            self._virtual_remotes = remaining_remotes
             return self._create_options_entry()
 
         return self.async_show_form(

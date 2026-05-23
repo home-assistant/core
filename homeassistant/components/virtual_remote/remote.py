@@ -49,14 +49,15 @@ type RestoredInfraredEntityIssueHandler = Callable[[HomeAssistant, str], None]
 
 
 def _as_str_mapping(value: Any) -> dict[str, str] | None:
-    """Return a string mapping or None when the value is malformed."""
+    """Return valid string items from a mapping or None when not a mapping."""
     if not isinstance(value, Mapping):
         return None
 
     result: dict[str, str] = {}
     for key, item in value.items():
         if not isinstance(key, str) or not isinstance(item, str):
-            return None
+            _LOGGER.debug("Ignoring malformed virtual remote command entry")
+            continue
         result[key] = item
 
     return result
