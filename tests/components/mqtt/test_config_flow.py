@@ -5196,7 +5196,14 @@ async def test_subentry_reconfigure_update_device_properties(
         .schema["mqtt_settings"]
         .schema.schema.items()
     }
-    assert mqtt_settings_key_descriptions == {"qos": {"suggested_value": 2}}
+    assert mqtt_settings_key_descriptions == {
+        "qos": {
+            "suggested_value": 2,
+        },
+        "message_expiry_interval": {
+            "suggested_value": {"days": 0, "hours": 0, "minutes": 1, "seconds": 30}
+        },
+    }
     assert result["data_schema"].schema["mqtt_settings"].options == {"collapsed": False}
 
     # Update the device details
@@ -5209,7 +5216,15 @@ async def test_subentry_reconfigure_update_device_properties(
             "model_id": "bn003",
             "manufacturer": "Beer Masters",
             "configuration_url": "https://example.com",
-            "mqtt_settings": {"qos": 1},
+            "mqtt_settings": {
+                "qos": 1,
+                "message_expiry_interval": {
+                    "days": 0,
+                    "hours": 0,
+                    "minutes": 0,
+                    "seconds": 30,
+                },
+            },
         },
     )
     assert result["type"] is FlowResultType.MENU
@@ -5232,6 +5247,12 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device["sw_version"] == "1.1"
     assert device["manufacturer"] == "Beer Masters"
     assert device["mqtt_settings"]["qos"] == 1
+    assert device["mqtt_settings"]["message_expiry_interval"] == {
+        "days": 0,
+        "hours": 0,
+        "minutes": 0,
+        "seconds": 30,
+    }
     assert "qos" not in device
 
 
