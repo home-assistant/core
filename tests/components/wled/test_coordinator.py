@@ -327,9 +327,9 @@ async def test_errors_on_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
-    exception: Exception,
+    exception: Exception | type[Exception],
     expected_state: ConfigEntryState,
-    expected_error_reason_translation_key: str,
+    expected_error_reason_translation_key: str | None,
     expected_log_message: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

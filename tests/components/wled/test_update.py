@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Releases, WLEDConnectionError
+from wled import Releases, WLEDConnectionError, WLEDUpgradeError
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -15,7 +15,6 @@ from homeassistant.components.update import (
     SERVICE_INSTALL,
 )
 from homeassistant.components.wled.const import DOMAIN, RELEASES_SCAN_INTERVAL
-from homeassistant.components.wled.update import WLEDUpgradeError
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,

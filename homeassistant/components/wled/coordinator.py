@@ -170,7 +170,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         except WLEDError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="connection_error",
+                translation_key="invalid_response_wled_error",
                 translation_placeholders={"error": str(error)},
             ) from error
         device_mac_address = normalize_mac_address(device.info.mac_address)

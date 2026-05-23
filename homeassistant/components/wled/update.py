@@ -116,11 +116,10 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
             version = cast(str, self.latest_version)
         try:
             await self.coordinator.wled.upgrade(version=version)
+            await self.coordinator.async_refresh()
         except WLEDUpgradeError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="install_update_wled_error",
                 translation_placeholders={"error": str(error)},
             ) from error
-        finally:
-            await self.coordinator.async_refresh()
