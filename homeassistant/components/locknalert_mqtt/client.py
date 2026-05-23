@@ -182,7 +182,7 @@ def async_subscribe_internal(
         msg_callback = catch_log_exception(
             msg_callback, lambda _: f"Exception in '{topic}' listener"
         )
-    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding)
+    return mqtt_data.client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
 def subscribe(
