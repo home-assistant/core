@@ -106,13 +106,7 @@ _PRESET_TO_ATTR: dict[str, str] = {
     PRESET_BOOST: "boost_mode",
 }
 
-_ATTR_TO_PRESET: dict[str, str] = {
-    "comfort_mode": PRESET_COMFORT,
-    "eco_mode": PRESET_ECO,
-    "boost_mode": PRESET_BOOST,
-    "sleep_mode": PRESET_SLEEP,
-    "frost_protect": PRESET_AWAY,
-}
+_ATTR_TO_PRESET: dict[str, str] = {v: k for k, v in _PRESET_TO_ATTR.items()}
 
 _SWING_MODE_MAP: dict[str, tuple[bool, bool]] = {
     SWING_OFF: (False, False),
@@ -134,9 +128,7 @@ async def async_setup_entry(
     """Set up climate entries."""
     device = config_entry.runtime_data
     if device is None:
-        _LOGGER.warning(
-            "Unable to set up climate entities: device not found",
-        )
+        _LOGGER.warning("Unable to set up climate entities: device not found")
         return
     entities: list[MideaClimate] = []
     for description in CLIMATE_ENTITIES:
@@ -211,9 +203,9 @@ class MideaClimate(MideaEntity, ClimateEntity):
         """Midea Climate preset mode."""
         for attr, preset in _ATTR_TO_PRESET.items():
             if self._device.get_attribute(attr):
-                return str(preset)
+                return preset
 
-        return str(PRESET_NONE)
+        return PRESET_NONE
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -237,15 +229,12 @@ class MideaClimate(MideaEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
         else:
-            try:
-                mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
-                self._device.set_target_temperature(
-                    target_temperature=temperature,
-                    mode=mode,
-                    zone=None,
-                )
-            except ValueError:
-                _LOGGER.exception("Error setting temperature with: %s", kwargs)
+            mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
+            self._device.set_target_temperature(
+                target_temperature=temperature,
+                mode=mode,
+                zone=None,
+            )
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea Climate set hvac mode."""
@@ -619,15 +608,12 @@ class MideaC3Climate(MideaClimate):
         if hvac_mode == HVACMode.OFF:
             self.turn_off()
         else:
-            try:
-                mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
-                self._device.set_target_temperature(
-                    target_temperature=temperature,
-                    mode=mode,
-                    zone=self._zone,
-                )
-            except ValueError:
-                _LOGGER.exception("Error setting temperature with: %s", kwargs)
+            mode = self.hvac_modes.index(hvac_mode) if hvac_mode else None
+            self._device.set_target_temperature(
+                target_temperature=temperature,
+                mode=mode,
+                zone=self._zone,
+            )
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea C3 Climate set hvac mode."""

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from midealocal.const import DeviceType, ProtocolVersion
+from midealocal.const import ProtocolVersion
 from midealocal.device import AuthException
 from midealocal.exceptions import SocketException
 import pytest
@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.midea_lan.config_flow import (
     DEFAULT_CLOUD,
     MideaLanConfigFlow,
-    MideaLanOptionsFlowHandler,
 )
 from homeassistant.components.midea_lan.const import (
     CONF_ACCOUNT,
@@ -24,7 +23,6 @@ from homeassistant.components.midea_lan.const import (
 from homeassistant.components.midea_lan.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
-    CONF_CUSTOMIZE,
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
@@ -32,8 +30,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_TOKEN,
     CONF_TYPE,
 )
@@ -80,7 +76,6 @@ def _discovery_result() -> dict[int, dict]:
 def _manual_user_input() -> dict:
     """Return user input for the manual step."""
     return {
-        CONF_NAME: TEST_NAME,
         CONF_DEVICE_ID: TEST_DEVICE_ID,
         CONF_TYPE: TEST_TYPE,
         CONF_IP_ADDRESS: TEST_IP_ADDRESS,
@@ -133,9 +128,9 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == MIDEA_DEVICE_NAMES[TEST_TYPE]
     assert result["data"] == {
-        CONF_NAME: TEST_NAME,
+        CONF_NAME: MIDEA_DEVICE_NAMES[TEST_TYPE],
         CONF_DEVICE_ID: TEST_DEVICE_ID,
         CONF_TYPE: TEST_TYPE,
         CONF_PROTOCOL: TEST_PROTOCOL,
@@ -861,66 +856,6 @@ async def test_manual_step_socket_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "device_auth_failed"}
-
-
-async def test_options_flow(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test options flow abort/create/form branches."""
-    account_entry = MockConfigEntry(domain=DOMAIN, data={CONF_TYPE: CONF_ACCOUNT})
-    account_options = MideaLanOptionsFlowHandler(account_entry)
-    result = await account_options.async_step_init()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "account_option"
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_TYPE: TEST_TYPE, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
-        options={
-            CONF_SENSORS: [],
-            CONF_SWITCHES: [],
-            CONF_CUSTOMIZE: "",
-        },
-    )
-    options_flow = MideaLanOptionsFlowHandler(entry)
-
-    create_result = await options_flow.async_step_init({CONF_CUSTOMIZE: "x"})
-    assert create_result["type"] is FlowResultType.CREATE_ENTRY
-
-    form_result = await options_flow.async_step_init()
-    assert form_result["type"] is FlowResultType.FORM
-    assert form_result["step_id"] == "init"
-
-
-def test_async_get_options_flow() -> None:
-    """Test async_get_options_flow returns expected handler."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_TYPE: TEST_TYPE})
-    options_flow = MideaLanConfigFlow.async_get_options_flow(entry)
-    assert isinstance(options_flow, MideaLanOptionsFlowHandler)
-
-
-async def test_options_flow_keeps_existing_entity_options() -> None:
-    """Test options flow does not filter entity options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_TYPE: TEST_TYPE},
-        options={
-            CONF_SENSORS: ["sensor_attr", "invalid_sensor"],
-            CONF_SWITCHES: ["switch_attr", "invalid_switch"],
-        },
-    )
-
-    options_flow = MideaLanOptionsFlowHandler(entry)
-    assert "invalid_sensor" in options_flow._config_entry.options[CONF_SENSORS]
-    assert "invalid_switch" in options_flow._config_entry.options[CONF_SWITCHES]
-
-    form_result = await options_flow.async_step_init()
-    assert form_result["type"] is FlowResultType.FORM
-
-
-def test_options_flow_type_defaults_to_device_type_ac() -> None:
-    """Test options flow defaults type when missing from entry data."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    options_flow = MideaLanOptionsFlowHandler(entry)
-    assert options_flow._device_type == DeviceType.AC
 
 
 def test_already_configured_helper(mock_config_flow: MideaLanConfigFlow) -> None:

@@ -58,7 +58,6 @@
           "ip_address": "IP address",
           "key": "Key",
           "model": "Model",
-          "name": "Name",
           "port": "Port",
           "protocol": "Protocol",
           "subtype": "Subtype",
@@ -70,7 +69,6 @@
           "ip_address": "The local IP address of your Midea appliance",
           "key": "The key of your Midea appliance (hexadecimal string)",
           "model": "The model of your Midea appliance",
-          "name": "A name for this device in Home Assistant",
           "port": "The local port used by your Midea appliance",
           "protocol": "The protocol used by your Midea appliance",
           "subtype": "The subtype of your Midea appliance",
@@ -106,19 +104,6 @@
       },
       "climate_zone2": {
         "name": "Zone 2 Thermostat"
-      }
-    }
-  },
-  "options": {
-    "abort": {
-      "account_option": "Options are not available for this entry"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "customize": "Customize"
-        },
-        "title": "Options"
       }
     }
   },

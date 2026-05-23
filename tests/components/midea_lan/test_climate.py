@@ -139,7 +139,6 @@ def test_midea_climate_base_methods() -> None:
     ent.set_temperature()
     ent.set_temperature(**{ATTR_TEMPERATURE: 23.1, ATTR_HVAC_MODE: HVACMode.OFF})
     ent.set_temperature(**{ATTR_TEMPERATURE: 23.1, ATTR_HVAC_MODE: HVACMode.COOL})
-    ent.set_temperature(**{ATTR_TEMPERATURE: 23.1, ATTR_HVAC_MODE: "invalid"})
 
     ent.set_hvac_mode(HVACMode.OFF)
     ent.set_hvac_mode(HVACMode.HEAT)
@@ -299,7 +298,6 @@ def test_midea_c3_specific() -> None:
     ent.set_temperature()
     ent.set_temperature(**{ATTR_TEMPERATURE: 21.4, ATTR_HVAC_MODE: HVACMode.OFF})
     ent.set_temperature(**{ATTR_TEMPERATURE: 21.4, ATTR_HVAC_MODE: HVACMode.COOL})
-    ent.set_temperature(**{ATTR_TEMPERATURE: 21.4, ATTR_HVAC_MODE: "invalid"})
     ent.set_hvac_mode(HVACMode.OFF)
     ent.set_hvac_mode(HVACMode.HEAT)
 

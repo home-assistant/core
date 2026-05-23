@@ -15,14 +15,8 @@ from midealocal.discover import discover
 from midealocal.exceptions import SocketException
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_CUSTOMIZE,
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
@@ -33,7 +27,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_TYPE,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.storage import Store
@@ -737,10 +730,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(dm.close_socket)
                 if authenticated:
                     device_id = user_input[CONF_DEVICE_ID]
+                    device_type = user_input[CONF_TYPE]
+                    name = self.supports.get(device_type, str(device_id))
                     data = {
-                        CONF_NAME: user_input[CONF_NAME],
+                        CONF_NAME: name,
                         CONF_DEVICE_ID: device_id,
-                        CONF_TYPE: user_input[CONF_TYPE],
+                        CONF_TYPE: device_type,
                         CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PORT: user_input[CONF_PORT],
@@ -756,7 +751,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
-                        title=f"{user_input[CONF_NAME]}",
+                        title=name,
                         data=data,
                     )
             return await self.async_step_manually(
@@ -767,13 +762,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manually",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME,
-                        default=(
-                            self.found_device.get(CONF_NAME)
-                            or self.supports.get(self.found_device.get(CONF_TYPE))
-                        ),
-                    ): str,
                     vol.Required(
                         CONF_DEVICE_ID,
                         default=self.found_device.get(CONF_DEVICE_ID),
@@ -816,53 +804,3 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors={"base": error} if error else None,
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Create the options flow with MideaLanOptionsFlowHandler.
-
-        Returns:
-        -------
-        Config flow options handler
-
-        """
-        return MideaLanOptionsFlowHandler(config_entry)
-
-
-class MideaLanOptionsFlowHandler(OptionsFlow):
-    """define an Options Flow Handler to update the options of a config entry."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self._config_entry = config_entry
-        self._device_type = config_entry.data.get(CONF_TYPE)
-        if self._device_type is None:
-            self._device_type = DeviceType.AC
-
-    async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Manage the options.
-
-        Returns:
-        -------
-        Config flow result
-
-        """
-        if self._device_type == CONF_ACCOUNT:
-            return self.async_abort(reason="account_option")
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-        customize = self._config_entry.options.get(CONF_CUSTOMIZE, "")
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_CUSTOMIZE,
-                    default=customize,
-                ): str,
-            },
-        )
-
-        return self.async_show_form(step_id="init", data_schema=data_schema)
