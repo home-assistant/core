@@ -5,10 +5,9 @@ manual MAC entry, and options flow.
 """
 from __future__ import annotations
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from homeassistant.data_entry_flow import AbortFlow
+import pytest
 
 from homeassistant.components.diesel_heater.config_flow import (
     VevorHeaterConfigFlow,
@@ -21,9 +20,9 @@ from homeassistant.components.diesel_heater.const import (
     DEFAULT_PIN,
     DEFAULT_PRESET_AWAY_TEMP,
     DEFAULT_PRESET_COMFORT_TEMP,
-    DOMAIN,
     SERVICE_UUID,
 )
+from homeassistant.data_entry_flow import AbortFlow
 
 CONF_ADDRESS = "address"  # matches homeassistant.const.CONF_ADDRESS
 MOCK_ADDRESS = "AA:BB:CC:DD:EE:FF"
@@ -66,6 +65,7 @@ class TestBluetoothDiscovery:
     """Test async_step_bluetooth -> async_step_confirm."""
 
     async def test_discovery_proceeds_to_confirm(self):
+        """Discovery proceeds to confirm."""
         flow = _make_flow()
         discovery = _make_ble_discovery()
 
@@ -75,6 +75,7 @@ class TestBluetoothDiscovery:
         assert result["step_id"] == "confirm"
 
     async def test_discovery_sets_unique_id(self):
+        """Discovery sets unique id."""
         flow = _make_flow()
         discovery = _make_ble_discovery()
 
@@ -83,6 +84,7 @@ class TestBluetoothDiscovery:
         assert flow.unique_id == MOCK_ADDRESS
 
     async def test_discovery_already_configured_aborts(self):
+        """Discovery already configured aborts."""
         flow = _make_flow(configured_addresses={MOCK_ADDRESS})
         discovery = _make_ble_discovery()
 
@@ -98,6 +100,7 @@ class TestConfirmStep:
     """Test async_step_confirm."""
 
     async def test_shows_form_when_no_input(self):
+        """Shows form when no input."""
         flow = _make_flow()
         flow._discovery_info = _make_ble_discovery()
 
@@ -107,6 +110,7 @@ class TestConfirmStep:
         assert result["step_id"] == "confirm"
 
     async def test_creates_entry_with_default_pin(self):
+        """Creates entry with default pin."""
         flow = _make_flow()
         flow._discovery_info = _make_ble_discovery()
 
@@ -117,6 +121,7 @@ class TestConfirmStep:
         assert result["data"][CONF_PIN] == DEFAULT_PIN
 
     async def test_creates_entry_with_custom_pin(self):
+        """Creates entry with custom pin."""
         flow = _make_flow()
         flow._discovery_info = _make_ble_discovery()
 
@@ -126,6 +131,7 @@ class TestConfirmStep:
         assert result["data"][CONF_PIN] == 5678
 
     async def test_title_uses_last_chars_of_address(self):
+        """Title uses last chars of address."""
         flow = _make_flow()
         flow._discovery_info = _make_ble_discovery(address="AA:BB:CC:DD:EE:FF")
 
@@ -142,6 +148,7 @@ class TestUserStep:
     """Test async_step_user."""
 
     async def test_no_devices_redirects_to_manual(self):
+        """No devices redirects to manual."""
         flow = _make_flow()
 
         with patch(
@@ -154,6 +161,7 @@ class TestUserStep:
         assert result["step_id"] == "manual"
 
     async def test_detects_device_by_service_uuid(self):
+        """Detects device by service uuid."""
         flow = _make_flow()
         discovery = _make_ble_discovery(
             name="Unknown",
@@ -172,6 +180,7 @@ class TestUserStep:
         assert MOCK_ADDRESS in flow._discovered_devices
 
     async def test_detects_device_by_name_vevor(self):
+        """Detects device by name vevor."""
         flow = _make_flow()
         discovery = _make_ble_discovery(
             name="VEVOR_HT_123",
@@ -189,6 +198,7 @@ class TestUserStep:
         assert MOCK_ADDRESS in flow._discovered_devices
 
     async def test_detects_device_by_name_heater(self):
+        """Detects device by name heater."""
         flow = _make_flow()
         discovery = _make_ble_discovery(
             name="Air Heater Pro",
@@ -200,11 +210,12 @@ class TestUserStep:
             "homeassistant.components.diesel_heater.config_flow.bluetooth"
         ) as mock_bt:
             mock_bt.async_discovered_service_info.return_value = [discovery]
-            result = await flow.async_step_user()
+            await flow.async_step_user()
 
         assert MOCK_ADDRESS in flow._discovered_devices
 
     async def test_detects_device_by_manufacturer_id(self):
+        """Detects device by manufacturer id."""
         flow = _make_flow()
         discovery = _make_ble_discovery(
             name="Unknown",
@@ -222,6 +233,7 @@ class TestUserStep:
         assert MOCK_ADDRESS in flow._discovered_devices
 
     async def test_skips_non_vevor_device(self):
+        """Skips non vevor device."""
         flow = _make_flow()
         discovery = _make_ble_discovery(
             name="Some speaker",
@@ -238,6 +250,7 @@ class TestUserStep:
         assert result["step_id"] == "manual"
 
     async def test_filters_already_configured_addresses(self):
+        """Filters already configured addresses."""
         flow = _make_flow(configured_addresses={MOCK_ADDRESS})
         discovery = _make_ble_discovery(service_uuids=[SERVICE_UUID])
 
@@ -267,6 +280,7 @@ class TestUserStep:
         assert len(flow._discovered_devices) == 1
 
     async def test_select_device_creates_entry(self):
+        """Select device creates entry."""
         flow = _make_flow()
 
         result = await flow.async_step_user(
@@ -278,6 +292,7 @@ class TestUserStep:
         assert result["data"][CONF_PIN] == DEFAULT_PIN
 
     async def test_select_device_default_pin(self):
+        """Select device default pin."""
         flow = _make_flow()
 
         result = await flow.async_step_user(
@@ -287,6 +302,7 @@ class TestUserStep:
         assert result["data"][CONF_PIN] == DEFAULT_PIN
 
     async def test_select_device_already_configured_aborts(self):
+        """Select device already configured aborts."""
         flow = _make_flow(configured_addresses={MOCK_ADDRESS})
 
         with pytest.raises(AbortFlow, match="already_configured"):
@@ -295,6 +311,7 @@ class TestUserStep:
             )
 
     async def test_shows_multiple_devices(self):
+        """Shows multiple devices."""
         flow = _make_flow()
         d1 = _make_ble_discovery(
             address="11:22:33:44:55:66",
@@ -325,6 +342,7 @@ class TestManualStep:
     """Test async_step_manual."""
 
     async def test_shows_form_when_no_input(self):
+        """Shows form when no input."""
         flow = _make_flow()
 
         result = await flow.async_step_manual()
@@ -333,6 +351,7 @@ class TestManualStep:
         assert result["step_id"] == "manual"
 
     async def test_valid_mac_creates_entry(self):
+        """Valid mac creates entry."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -344,6 +363,7 @@ class TestManualStep:
         assert result["data"][CONF_PIN] == DEFAULT_PIN
 
     async def test_mac_uppercased(self):
+        """Mac uppercased."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -353,6 +373,7 @@ class TestManualStep:
         assert result["data"][CONF_ADDRESS] == "AA:BB:CC:DD:EE:FF"
 
     async def test_mac_with_hyphens_accepted(self):
+        """Mac with hyphens accepted."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -362,6 +383,7 @@ class TestManualStep:
         assert result["type"] == "create_entry"
 
     async def test_invalid_mac_shows_error(self):
+        """Invalid mac shows error."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -373,6 +395,7 @@ class TestManualStep:
         assert result["errors"][CONF_ADDRESS] == "invalid_mac"
 
     async def test_short_mac_shows_error(self):
+        """Short mac shows error."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -382,6 +405,7 @@ class TestManualStep:
         assert result["errors"][CONF_ADDRESS] == "invalid_mac"
 
     async def test_mac_without_separators_shows_error(self):
+        """Mac without separators shows error."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -391,6 +415,7 @@ class TestManualStep:
         assert result["errors"][CONF_ADDRESS] == "invalid_mac"
 
     async def test_already_configured_aborts(self):
+        """Already configured aborts."""
         flow = _make_flow(configured_addresses={"AA:BB:CC:DD:EE:FF"})
 
         with pytest.raises(AbortFlow, match="already_configured"):
@@ -399,6 +424,7 @@ class TestManualStep:
             )
 
     async def test_title_format(self):
+        """Title format."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -408,6 +434,7 @@ class TestManualStep:
         assert "Diesel Heater (EEFF)" in result["title"]
 
     async def test_default_pin_when_not_provided(self):
+        """Default pin when not provided."""
         flow = _make_flow()
 
         result = await flow.async_step_manual(
@@ -425,6 +452,7 @@ class TestGetOptionsFlow:
     """Test async_get_options_flow static method."""
 
     def test_returns_options_handler(self):
+        """Returns options handler."""
         handler = VevorHeaterConfigFlow.async_get_options_flow(MagicMock())
         assert isinstance(handler, VevorHeaterOptionsFlowHandler)
 
@@ -445,6 +473,7 @@ class TestOptionsFlow:
         return flow
 
     async def test_shows_form_when_no_input(self):
+        """Shows form when no input."""
         flow = self._create_flow()
 
         result = await flow.async_step_init()
@@ -453,29 +482,32 @@ class TestOptionsFlow:
         assert result["step_id"] == "init"
 
     async def test_schema_has_pin_field(self):
+        """Schema has pin field."""
         flow = self._create_flow()
 
         result = await flow.async_step_init()
 
         schema_keys = {
-            k.schema for k in result["data_schema"].schema.keys()
+            k.schema for k in result["data_schema"].schema
             if hasattr(k, "schema")
         }
         assert CONF_PIN in schema_keys
 
     async def test_schema_has_preset_fields(self):
+        """Schema has preset fields."""
         flow = self._create_flow()
 
         result = await flow.async_step_init()
 
         schema_keys = {
-            k.schema for k in result["data_schema"].schema.keys()
+            k.schema for k in result["data_schema"].schema
             if hasattr(k, "schema")
         }
         assert CONF_PRESET_AWAY_TEMP in schema_keys
         assert CONF_PRESET_COMFORT_TEMP in schema_keys
 
     async def test_updates_pin(self):
+        """Updates pin."""
         flow = self._create_flow()
 
         result = await flow.async_step_init(user_input={
@@ -488,6 +520,7 @@ class TestOptionsFlow:
         assert result["data"][CONF_PIN] == 9999
 
     async def test_updates_preset_temperatures(self):
+        """Updates preset temperatures."""
         flow = self._create_flow()
 
         result = await flow.async_step_init(user_input={

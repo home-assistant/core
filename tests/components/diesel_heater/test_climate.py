@@ -1,16 +1,17 @@
 """Tests for Diesel Heater climate platform."""
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 from homeassistant.components.diesel_heater.climate import (
-    VevorHeaterClimate,
-    async_setup_entry,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_NONE,
     HVACMode,
+    VevorHeaterClimate,
+    async_setup_entry,
 )
 
 
