@@ -42,7 +42,6 @@ rules:
     comment: |
       Authentication is a static PIN code configured at setup; no re-auth needed.
   test-coverage: todo
-
   # Gold
   devices: done
   diagnostics: todo

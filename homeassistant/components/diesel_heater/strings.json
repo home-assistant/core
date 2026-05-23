@@ -38,6 +38,13 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "climate": {
+        "name": "Heater"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -51,13 +58,6 @@
           "preset_away_temp": "Temperature for Away preset (anti-freeze protection). Default: 8°C.",
           "preset_comfort_temp": "Temperature for Comfort preset (normal heating). Default: 21°C."
         }
-      }
-    }
-  },
-  "entity": {
-    "climate": {
-      "climate": {
-        "name": "Heater"
       }
     }
   }
