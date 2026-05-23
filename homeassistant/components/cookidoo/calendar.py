@@ -80,12 +80,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         except CookidooAuthException:
             try:
                 await self.coordinator.cookidoo.login()
-            except CookidooAuthException as exc:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="calendar_fetch_failed",
-                ) from exc
-            except CookidooRequestException as exc:
+            except (CookidooAuthException, CookidooRequestException) as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="calendar_fetch_failed",
