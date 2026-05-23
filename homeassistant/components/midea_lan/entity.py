@@ -1,6 +1,5 @@
 """Base entity for Midea Lan."""
 
-import contextlib
 import logging
 from typing import Any
 
@@ -34,8 +33,7 @@ class MideaEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister update callback when entity is removed."""
-        with contextlib.suppress(AttributeError, ValueError):
-            self._device._updates.remove(self.update_state)  # noqa: SLF001
+        self._device.unregister_update(self.update_state)
 
     @property
     def device(self) -> MideaDevice:

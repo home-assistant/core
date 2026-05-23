@@ -51,4 +51,4 @@ async def test_async_will_remove_from_hass_unregisters_callback() -> None:
     ent = entity_module.MideaEntity(dev, "k")
     await ent.async_added_to_hass()
     await ent.async_will_remove_from_hass()
-    assert ent.update_state not in dev._updates
+    assert ent.update_state not in dev._callbacks

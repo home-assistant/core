@@ -30,7 +30,6 @@ class DummyDevice:
         self.available = available
         self.attributes = attributes or {}
         self._callbacks: list[Callable] = []
-        self._updates: list[Callable] = self._callbacks
         self.calls: list[tuple] = []
         self.temperature_step = 1
         self.fan_modes = ["low", "high"]
@@ -39,6 +38,10 @@ class DummyDevice:
     def register_update(self, callback: Callable) -> None:
         """Record update callback registration."""
         self._callbacks.append(callback)
+
+    def unregister_update(self, callback: Callable) -> None:
+        """Record update callback removal."""
+        self._callbacks.remove(callback)
 
     def get_attribute(self, attr: str) -> Any:
         """Return attribute value."""
