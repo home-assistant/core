@@ -26,6 +26,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
+    CONF_MODE,
     CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
@@ -95,15 +96,26 @@ async def test_setup_and_stop(
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "options",
+    [{CONF_MODE: "passive"}, {CONF_PASSIVE: True}],
+    ids=["mode_passive", "legacy_passive_true"],
+)
 @pytest.mark.usefixtures("one_adapter")
 async def test_setup_and_stop_passive(
-    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    options: dict[str, Any],
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner."""
+    """Test we set up and stop the scanner in passive mode.
+
+    Covers both the new CONF_MODE key and the legacy CONF_PASSIVE boolean
+    so the fallback path in async_setup_entry stays exercised.
+    """
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
-        options={CONF_PASSIVE: True},
+        options=options,
         unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)
@@ -151,7 +163,7 @@ async def test_setup_and_stop_old_bluez(
     mock_bleak_scanner_start: MagicMock,
     one_adapter_old_bluez: None,
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner with older bluez."""
+    """Default AUTO falls back to active on adapters without passive scan support."""
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
