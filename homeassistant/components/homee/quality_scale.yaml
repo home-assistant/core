@@ -59,13 +59,13 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
-      The integration currentlydoes not have any known issues.
+      The integration currently does not have any known issues.
   stale-devices: done
   # Platinum
   async-dependency: todo
