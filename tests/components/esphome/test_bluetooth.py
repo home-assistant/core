@@ -1,6 +1,7 @@
 """Test the ESPHome bluetooth integration."""
 
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aioesphomeapi import (
@@ -11,8 +12,9 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.esphome.const import CONF_BLUETOOTH_SCANNING_MODE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockBluetoothEntryType, MockESPHomeDevice
@@ -319,12 +321,26 @@ async def test_scanning_mode_default_pinned_before_register(
 ) -> None:
     """The default AUTO is applied immediately so the AUTO worker spawns at register."""
     set_mode_mock = MagicMock()
+    requested_at_register: list[BluetoothScanningMode | None] = []
+    real_register = bluetooth.async_register_scanner
+
+    @hass_callback
+    def _spy_register(*args: Any, **kwargs: Any) -> Callable[[], None]:
+        requested_at_register.append(args[1].requested_mode)
+        return real_register(*args, **kwargs)
+
     device = await mock_bluetooth_entry(
         bluetooth_proxy_feature_flags=_PROXY_WITH_STATE_AND_MODE
     )
     device.client.bluetooth_scanner_set_mode = set_mode_mock
-    await hass.config_entries.async_reload(device.entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.esphome.bluetooth.async_register_scanner",
+        _spy_register,
+    ):
+        await hass.config_entries.async_reload(device.entry.entry_id)
+        await hass.async_block_till_done()
 
-    # AUTO -> PASSIVE is sent before any firmware state arrives.
+    # AUTO -> PASSIVE is sent before async_register_scanner, so the
+    # habluetooth auto-mode worker is spawned at registration time.
     set_mode_mock.assert_called_once_with(BluetoothScannerMode.PASSIVE)
+    assert requested_at_register == [BluetoothScanningMode.AUTO]
