@@ -28,7 +28,7 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
+from homeassistant.const import ATTR_MODE, CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -65,8 +65,6 @@ from .typing import XiaomiMiioConfigEntry
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MODE = "mode"
 
 _LOGGER = logging.getLogger(__name__)
 

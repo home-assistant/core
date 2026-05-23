@@ -18,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -803,8 +802,6 @@ def async_get_entities(
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
         entity_id = state.entity_id
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here

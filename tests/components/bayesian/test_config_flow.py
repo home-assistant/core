@@ -70,7 +70,7 @@ async def test_config_flow_step_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result1["type"] == FlowResultType.CREATE_ENTRY
+        assert result1["type"] is FlowResultType.CREATE_ENTRY
         assert result1["result"].title == "Office occupied"
         assert result1["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
 
@@ -260,7 +260,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         entry_id = result["result"].entry_id
         sub_flow_id = result["next_flow"][1]
 
@@ -287,7 +287,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
 
         config_entry = hass.config_entries.async_get_entry(entry_id)
@@ -337,7 +337,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_PRIOR: 20,
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         config_entry = result["result"]
         sub_flow_id = result["next_flow"][1]
         await hass.async_block_till_done()
@@ -408,7 +408,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         config_entry = result["result"]
         sub_flow_id = result["next_flow"][1]
 
@@ -546,7 +546,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         config_entry = result["result"]
         sub_flow_id = result["next_flow"][1]
 
@@ -1086,7 +1086,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result.get("errors") is None
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         config_entry = result["result"]
         sub_flow_id = result["next_flow"][1]
 

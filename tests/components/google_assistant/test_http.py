@@ -28,11 +28,7 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_token,
     async_get_users,
 )
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STARTED,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -365,8 +361,6 @@ async def test_should_expose(hass: HomeAssistant) -> None:
     with patch.object(config, "async_call_homegraph_api"):
         # Wait for google_assistant.helpers.async_initialize.sync_google to be called
         await hass.async_block_till_done()
-
-    assert config.should_expose(State(CLOUD_NEVER_EXPOSED_ENTITIES[0], "mock")) is False
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:
