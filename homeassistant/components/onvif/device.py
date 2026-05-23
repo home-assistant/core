@@ -109,8 +109,9 @@ class ONVIFDevice:
             )
             self.profiles = new_profiles
             if not initial:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                self.hass.async_create_background_task(
+                    self.hass.config_entries.async_reload(self.config_entry.entry_id),
+                    f"{self.name} reload after profile change",
                 )
 
     async def _async_update_listener(

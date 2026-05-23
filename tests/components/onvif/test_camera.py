@@ -1,6 +1,7 @@
 """Tests for ONVIF camera stream URI cache invalidation on reconnection."""
 
-from unittest.mock import MagicMock
+import asyncio
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.onvif.camera import ONVIFCameraEntity
 from homeassistant.components.onvif.device import ONVIFDevice
@@ -66,12 +67,9 @@ async def test_camera_entity_tracks_unavailable_flag(
 
     assert camera._was_unavailable is False
 
-    # Simulate device going offline — call internal logic without
-    # async_write_ha_state (entity not registered with hass)
     device.available = False
-    # Directly check the flag-setting logic
-    if not device.available:
-        camera._was_unavailable = True
+    with patch.object(camera, "async_write_ha_state"):
+        camera._async_event_callback()
     assert camera._was_unavailable is True
 
 
@@ -81,21 +79,25 @@ async def test_camera_entity_clears_stream_uri_on_reconnect(
     """Test camera entity clears cached stream URI when device reconnects."""
     camera, device = _make_camera_entity(hass)
 
-    # Simulate cached stream URI
     camera._stream_uri = "rtsp://old-uri:554/stream"
+    future: asyncio.Future[str] = hass.loop.create_future()
+    future.set_result("rtsp://old-uri:554/stream")
+    camera._stream_uri_future = future
 
-    # Simulate going offline
+    # Go offline
     device.available = False
-    camera._was_unavailable = True
+    with patch.object(camera, "async_write_ha_state"):
+        camera._async_event_callback()
+    assert camera._was_unavailable is True
 
-    # Simulate coming back online — test the reconnect logic
+    # Come back online
     device.available = True
-    if camera._was_unavailable:
-        camera._was_unavailable = False
-        camera._stream_uri = None
+    with patch.object(camera, "async_write_ha_state"):
+        camera._async_event_callback()
 
     assert camera._was_unavailable is False
     assert camera._stream_uri is None
+    assert camera._stream_uri_future is None
 
 
 async def test_camera_entity_no_clear_without_prior_unavailable(
@@ -106,9 +108,11 @@ async def test_camera_entity_no_clear_without_prior_unavailable(
 
     camera._stream_uri = "rtsp://current-uri:554/stream"
 
-    # Device is available, no prior unavailability
     assert camera._was_unavailable is False
     assert device.available is True
 
-    # Stream URI should be unchanged
+    # Callback with device available and no prior unavailability
+    with patch.object(camera, "async_write_ha_state"):
+        camera._async_event_callback()
+
     assert camera._stream_uri == "rtsp://current-uri:554/stream"

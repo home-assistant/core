@@ -126,8 +126,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         elif self._was_unavailable:
             self._was_unavailable = False
             self._stream_uri = None
-            if self._stream_uri_future and self._stream_uri_future.done():
-                self._stream_uri_future = None
+            self._stream_uri_future = None
             LOGGER.debug(
                 "%s: Cleared cached stream URI after reconnection",
                 self.device.name,
