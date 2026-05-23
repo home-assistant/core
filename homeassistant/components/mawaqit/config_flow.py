@@ -1,5 +1,7 @@
 """Config flow for the Mawaqit integration."""
 
+from collections.abc import Mapping
+import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -8,13 +10,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from . import mawaqit_wrapper, utils
 from .const import (
     CANNOT_CONNECT_TO_SERVER,
-    CONF_CALC_METHOD,
     CONF_SEARCH,
     CONF_TYPE_SEARCH,
     CONF_TYPE_SEARCH_COORDINATES,
@@ -29,6 +29,9 @@ from .const import (
     NO_MOSQUE_FOUND_KEYWORD,
     WRONG_CREDENTIAL,
 )
+from .types import MawaqitMosqueData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,7 +42,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.previous_keyword_search: str = ""
-        self.mosques: list[dict] = []
+        self.mosques: dict[str, MawaqitMosqueData] = {}
         self.token: str | None = None
         # keyword search pagination
         self.keyword_page: int = 1
@@ -108,13 +111,19 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         longi = self.hass.config.longitude
 
         if user_input is not None:
+            mosque_uuid = user_input[CONF_UUID]
             title, data_entry = utils.save_mosque(
-                user_input[CONF_UUID],
-                self.mosques,
+                self.mosques[mosque_uuid].display_name,
+                mosque_uuid,
                 self.token,
                 lat,
                 longi,
             )
+            if self.source == config_entries.SOURCE_RECONFIGURE:
+                # reconfigure flow: update existing entry with new data and reload
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(), title=title, data=data_entry
+                )
             return self.async_create_entry(title=title, data=data_entry)
 
         if not self.mosques:
@@ -123,7 +132,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     lat, longi, token=self.token
                 )
                 if neighborhood_mosques:
-                    self.mosques = neighborhood_mosques
+                    self.mosques = {
+                        mosque.uuid: mosque for mosque in neighborhood_mosques
+                    }
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
             except (
@@ -134,18 +145,19 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="cannot_connect")
 
-        name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
-            self.mosques
-        )
-
-        if not name_servers:
+        if len(self.mosques) == 0:
             return self.async_abort(reason="no_mosque")
 
         return self.async_show_form(
             step_id="mosques_coordinates",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_UUID): vol.In(name_servers),
+                    vol.Required(CONF_UUID): vol.In(
+                        {
+                            mosque.uuid: mosque.display_name
+                            for mosque in self.mosques.values()
+                        }
+                    ),
                 }
             ),
             errors=errors,
@@ -185,13 +197,16 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
 
-            self.mosques = []
+            self.mosques = {}
             try:
+                # pre-fetch mosques to provide data for users in next step
                 neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                     lat, longi, token=self.token
                 )
                 if neighborhood_mosques:
-                    self.mosques = neighborhood_mosques
+                    self.mosques = {
+                        mosque.uuid: mosque for mosque in neighborhood_mosques
+                    }
 
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
@@ -236,10 +251,17 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Mosque selected: save and exit
             if selected_uuid is not None and keyword == self.previous_keyword_search:
                 title, data_entry = utils.save_mosque(
+                    self.mosques[selected_uuid].display_name,
                     selected_uuid,
-                    self.mosques,
                     mawaqit_token=self.token,
                 )
+
+                if self.source == config_entries.SOURCE_RECONFIGURE:
+                    # reconfigure flow: update existing entry with new data and reload
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), title=title, data=data_entry
+                    )
+
                 return self.async_create_entry(title=title, data=data_entry)
 
             # New keyword: reset to page 1
@@ -250,12 +272,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Fetch the page
             try:
-                mosques_found = await mawaqit_wrapper.all_mosques_by_keyword(
+                mosques_result = await mawaqit_wrapper.all_mosques_by_keyword(
                     search_keyword=keyword,
                     page=self.keyword_page,
                     token=self.token,
                 )
-                self.mosques = mosques_found or []
+                self.mosques = {mosque.uuid: mosque for mosque in mosques_result}
             except NoMosqueFound:
                 # If we navigated past the last real page, step back silently
                 if self.keyword_page > 1:
@@ -283,11 +305,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-            name_servers, _uuid_servers, _calc_methods = utils.parse_mosque_data(
-                self.mosques
-            )
-
-            if not name_servers:
+            if len(self.mosques) == 0:
                 if self.keyword_page > 1:
                     self.keyword_page -= 1
                 errors["base"] = NO_MOSQUE_FOUND_KEYWORD
@@ -309,7 +327,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     f"← Previous page (page {self.keyword_page - 1})"
                 )
 
-            nav_options.update({name: name for name in name_servers})
+            nav_options.update(
+                {mosque.uuid: mosque.display_name for mosque in self.mosques.values()}
+            )
 
             if self.keyword_has_next:
                 nav_options[KEYWORD_SEARCH_NEXT_PAGE] = (
@@ -322,9 +342,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Schema(
                         {
                             **option,
-                            vol.Required(CONF_UUID, default=name_servers[0]): vol.In(
-                                nav_options
-                            ),
+                            vol.Required(
+                                CONF_UUID, default=list(self.mosques.keys())[0]
+                            ): vol.In(nav_options),
                         }
                     ),
                     {CONF_SEARCH: keyword},
@@ -339,83 +359,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Get the options flow for this handler."""
-        return MawaqitPrayerOptionsFlowHandler()
-
-
-class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Mawaqit Prayer client options."""
-
-    def __init__(self) -> None:
-        """Initialize the options flow handler."""
-        self.mosques: list[dict] = []
-
-    async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
-        """Manage options."""
-
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
-        mawaqit_token = self.config_entry.data.get(CONF_API_KEY)
-
-        if user_input is not None:
-            title_entry, data_entry = utils.save_mosque(
-                user_input[CONF_CALC_METHOD],
-                self.mosques,
-                mawaqit_token,
-                lat,
-                longi,
-            )
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, title=title_entry, data=data_entry
-            )
-            return self.async_create_entry(title=None, data={})
-
-        try:
-            neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                lat, longi, token=mawaqit_token
-            )
-            if neighborhood_mosques:
-                self.mosques = neighborhood_mosques
-        except NoMosqueAround:
-            return self.async_abort(reason="no_mosque")
-        except (
-            BadCredentialsException,
-            ClientConnectorError,
-            ConnectionError,
-            TimeoutError,
-        ):
-            return self.async_abort(reason="cannot_connect")
-
-        name_servers, uuid_servers, _calc_methods = utils.parse_mosque_data(
-            self.mosques
-        )
-
-        if not name_servers:
-            return self.async_abort(reason="no_mosque")
-
-        current_mosque = self.config_entry.data.get(CONF_UUID)
-
-        try:
-            index = uuid_servers.index(current_mosque)
-            default_name = name_servers[index]
-        except ValueError:
-            default_name = name_servers[0]
-
-        options = {
-            vol.Required(
-                CONF_CALC_METHOD,
-                default=default_name,
-            ): vol.In(name_servers)
-        }
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(options),
-            description_placeholders={"mawaqit_url": MAWAQIT_URL},
-        )
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Handle reconfiguration."""
+        self.token = self._get_reconfigure_entry().data[CONF_API_KEY]
+        return await self.async_step_search_method()

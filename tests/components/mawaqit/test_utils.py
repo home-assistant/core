@@ -8,71 +8,37 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.mawaqit import utils
+from homeassistant.components.mawaqit.const import CONF_UUID
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-
-# --- parse_mosque_data ---
-
-
-def test_parse_mosque_data_with_proximity() -> None:
-    """Test parsing mosque data with proximity."""
-    mosques = [
-        {"label": "Mosque1", "uuid": "uuid1", "proximity": 1744},
-        {"label": "Mosque2", "uuid": "uuid2", "proximity": 20000},
-    ]
-    names, uuids, calc = utils.parse_mosque_data(mosques)
-    assert names == ["Mosque1 (1.74km)", "Mosque2 (20.0km)"]
-    assert uuids == ["uuid1", "uuid2"]
-    assert calc == ["Mosque1", "Mosque2"]
-
-
-def test_parse_mosque_data_without_proximity() -> None:
-    """Test parsing mosque data without proximity field."""
-    mosques = [{"label": "Mosque1", "uuid": "uuid1"}]
-    names, uuids, _calc = utils.parse_mosque_data(mosques)
-    assert names == ["Mosque1"]
-    assert uuids == ["uuid1"]
-
-
-def test_parse_mosque_data_none() -> None:
-    """Test parsing None mosque data."""
-    names, uuids, calc = utils.parse_mosque_data(None)
-    assert names == []
-    assert uuids == []
-    assert calc == []
-
-
-def test_parse_mosque_data_empty() -> None:
-    """Test parsing empty mosque data."""
-    names, uuids, calc = utils.parse_mosque_data([])
-    assert names == []
-    assert uuids == []
-    assert calc == []
-
 
 # --- save_mosque ---
 
 
 def test_save_mosque_success() -> None:
     """Test saving mosque data successfully."""
-    mosques = [
-        {"label": "Mosque1", "uuid": "uuid1", "name": "My Mosque", "proximity": 1000},
-    ]
     title, data = utils.save_mosque(
-        "Mosque1 (1.0km)", mosques, mawaqit_token="token", lat=48.0, longi=2.0
+        mosque_display_name="My Mosque",
+        mosque_id="uuid1",
+        mawaqit_token="token",
+        lat=48.0,
+        longi=2.0,
     )
+
     assert title == "MAWAQIT - My Mosque"
     assert data[CONF_API_KEY] == "token"
-    assert data["uuid"] == "uuid1"
+    assert data[CONF_UUID] == "uuid1"
     assert data[CONF_LATITUDE] == 48.0
     assert data[CONF_LONGITUDE] == 2.0
 
 
 def test_save_mosque_no_coords() -> None:
     """Test saving mosque data without coordinates."""
-    mosques = [
-        {"label": "Mosque1", "uuid": "uuid1", "name": "My Mosque", "proximity": 1000},
-    ]
-    title, data = utils.save_mosque("Mosque1 (1.0km)", mosques, mawaqit_token="token")
+    title, data = utils.save_mosque(
+        mosque_display_name="My Mosque",
+        mosque_id="uuid1",
+        mawaqit_token="token",
+    )
+
     assert title == "MAWAQIT - My Mosque"
     assert CONF_LATITUDE not in data
     assert CONF_LONGITUDE not in data
@@ -80,17 +46,12 @@ def test_save_mosque_no_coords() -> None:
 
 def test_save_mosque_no_token() -> None:
     """Test saving mosque data with no token raises ValueError."""
-    with pytest.raises(ValueError, match="Token should not be None"):
-        utils.save_mosque("Mosque1", [], mawaqit_token=None)
-
-
-def test_save_mosque_not_found() -> None:
-    """Test saving mosque with label not in list raises ValueError."""
-    mosques = [
-        {"label": "Mosque1", "uuid": "uuid1", "name": "My Mosque", "proximity": 1000},
-    ]
     with pytest.raises(ValueError):
-        utils.save_mosque("NonExistent", mosques, mawaqit_token="token")
+        utils.save_mosque(
+            mosque_display_name="My Mosque",
+            mosque_id="uuid1",
+            mawaqit_token=None,
+        )
 
 
 # --- extract_time_from_calendar ---

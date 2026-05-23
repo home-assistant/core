@@ -1,10 +1,12 @@
 """Types for the Mawaqit integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 
-from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
+if TYPE_CHECKING:
+    from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
 
 @dataclass
@@ -16,3 +18,39 @@ class MawaqitData:
 
 
 type MawaqitConfigEntry = ConfigEntry[MawaqitData]
+
+
+@dataclass
+class MawaqitMosqueData:
+    """Mosque data for the Mawaqit integration."""
+
+    uuid: str
+    label: str
+    name: str
+    latitude: float
+    longitude: float
+    proximity: int | None = None
+    localisation: str | None = None
+
+    @property
+    def display_name(self) -> str:
+        """Compute the display name for the mosque."""
+        proximity_str = ""
+        if self.proximity is not None:
+            km = self.proximity / 1000
+            proximity_str = f"{self.name} ({km:.2f} km)"
+        elif self.localisation is not None:
+            proximity_str = " - " + self.localisation
+
+        return self.label + proximity_str
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create a MawaqitMosqueData instance from a dictionary."""
+        field_names = {f.name for f in fields(cls)}
+
+        filtered_data = {
+            key: value for key, value in data.items() if key in field_names
+        }
+
+        return cls(**filtered_data)

@@ -11,45 +11,9 @@ from .const import CONF_UUID, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 _LOGGER = logging.getLogger(__name__)
 
 
-def parse_mosque_data(dict_mosques):
-    """Parse mosque data and return names, UUIDs, and calculation methods.
-
-    Args:
-        dict_mosques (dict): The mosque data to parse.
-
-    Returns:
-        tuple: Parsed mosque data as a tuple of names, UUIDs, and calculation methods,
-                        or raw data if raw is True.
-
-    """
-
-    name_servers = []
-    uuid_servers = []
-    CALC_METHODS = []
-
-    _LOGGER.debug("Parsing mosque data: %s", dict_mosques)
-
-    if dict_mosques is not None:
-        for mosque in dict_mosques:
-            proximity_str = ""
-            if "proximity" in mosque:
-                distance = mosque["proximity"]
-                distance = distance / 1000
-                distance = round(distance, 2)
-                proximity_str = " (" + str(distance) + "km)"
-            elif "localisation" in mosque:
-                proximity_str = " ( " + mosque["localisation"] + " )"
-
-            name_servers.extend([mosque["label"] + proximity_str])
-            uuid_servers.extend([mosque["uuid"]])
-            CALC_METHODS.extend([mosque["label"]])
-
-    return name_servers, uuid_servers, CALC_METHODS
-
-
 def save_mosque(
-    UUID,
-    mosques,
+    mosque_display_name: str,
+    mosque_id: str,
     mawaqit_token=None,
     lat=None,
     longi=None,
@@ -57,8 +21,8 @@ def save_mosque(
     """Create a data entry to simplify the process of saving mosque data.
 
     Args:
-        UUID (str): The unique identifier of the mosque.
-        mosques (list): List of mosque data dictionaries.
+        mosque_display_name (str): The display name of the mosque.
+        mosque_id (str): The unique ID of the mosque.
         mawaqit_token (str, optional): Token for Mawaqit API authentication.
         lat (float, optional): Latitude of the mosque.
         longi (float, optional): Longitude of the mosque.
@@ -72,18 +36,7 @@ def save_mosque(
         _LOGGER.error("Token should not be None !")
         raise ValueError("Token should not be None !")
 
-    name_servers, uuid_servers, _calc_methods = parse_mosque_data(mosques)
-    raw_all_mosques_data = mosques
-
-    mosque = UUID
-    try:
-        index = name_servers.index(mosque)
-    except ValueError:
-        _LOGGER.error("Mosque label '%s' not found in available mosques", mosque)
-        raise
-    mosque_id = uuid_servers[index]
-
-    title = "MAWAQIT" + " - " + raw_all_mosques_data[index]["name"]
+    title = "MAWAQIT" + " - " + mosque_display_name
     data_entry = {
         CONF_API_KEY: mawaqit_token,
         CONF_UUID: mosque_id,

@@ -7,8 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.mawaqit.const import DOMAIN
+from homeassistant.components.mawaqit.types import MawaqitMosqueData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -35,8 +38,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_mosques() -> list[dict]:
-    """Return mock mosque data."""
+async def mock_mosques_search_api_raw() -> list[MawaqitMosqueData]:
+    """Provide mock data for mosques."""
     return [
         {
             "uuid": "aaaaa-bbbbb-cccccc-0000",
@@ -52,7 +55,7 @@ def mock_mosques() -> list[dict]:
         },
         {
             "uuid": "bbbbb-cccccc-ddddd-0000",
-            "name": "Mosque2",
+            "name": "Mosque2-label",
             "type": "MOSQUE",
             "slug": "2-mosque",
             "latitude": 47,
@@ -62,6 +65,28 @@ def mock_mosques() -> list[dict]:
             "label": "Mosque2-label",
             "localisation": "bbbbb cccccc ddddd",
         },
+        {
+            "uuid": "bbbbb-cccccc-ddddd-0001",
+            "name": "Mosque3",
+            "type": "MOSQUE",
+            "slug": "2-mosque",
+            "latitude": 47,
+            "longitude": 1,
+            "jumua": None,
+            "proximity": 20000,
+            "label": "Mosque3-label",
+            "localisation": "bbbbb cccccc ddddd",
+        },
+    ]
+
+
+@pytest.fixture
+async def mock_mosques_search_api_wrapper(
+    mock_mosques_search_api_raw: list[dict],
+) -> list[MawaqitMosqueData]:
+    """Provide mock data for mosques."""
+    return [
+        MawaqitMosqueData.from_dict(mosque) for mosque in mock_mosques_search_api_raw
     ]
 
 
@@ -132,3 +157,44 @@ def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.mawaqit.async_setup_entry", return_value=True):
         yield
+
+
+@pytest.fixture
+async def config_entry_setup(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry for tests."""
+    entry = MockConfigEntry(
+        version=10,
+        minor_version=1,
+        domain=DOMAIN,
+        title="MAWAQIT - Mosque1",
+        data={
+            "api_key": "TOKEN",
+            "uuid": "aaaaa-bbbbb-cccccc-0000",
+            "latitude": 32.87336,
+            "longitude": -117.22743,
+        },
+        source=config_entries.SOURCE_USER,
+    )
+
+    entry.add_to_hass(hass)  # register the MockConfigEntry to Hass
+
+    return entry
+
+
+@pytest.fixture
+def mock_config_entry_mawaqit() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        version=10,
+        minor_version=1,
+        domain=DOMAIN,
+        title="MAWAQIT - Mosque1",
+        data={
+            "api_key": "TOKEN",
+            "uuid": "aaaaa-bbbbb-cccccc-0000",
+            "latitude": 32.87336,
+            "longitude": -117.22743,
+        },
+        source=config_entries.SOURCE_USER,
+        unique_id="84fce612f5b8",
+    )

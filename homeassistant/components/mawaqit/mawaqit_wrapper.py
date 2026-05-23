@@ -9,6 +9,8 @@ import logging
 from mawaqit import AsyncMawaqitClient
 from mawaqit.consts import BadCredentialsException
 
+from .types import MawaqitMosqueData
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,7 +65,7 @@ async def all_mosques_neighborhood(
     password: str | None = None,
     token: str | None = None,
     client_instance: AsyncMawaqitClient | None = None,
-) -> list[dict] | None:
+) -> list[MawaqitMosqueData] | None:
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
     client = client_instance
     try:
@@ -72,7 +74,9 @@ async def all_mosques_neighborhood(
                 latitude, longitude, mosque, username, password, token, session=None
             )
         await client.get_api_token()
-        return await client.all_mosques_neighborhood()
+
+        response = await client.all_mosques_neighborhood()
+        return [MawaqitMosqueData.from_dict(mosque) for mosque in response]
     finally:
         if client is not None:
             await client.close()
@@ -85,7 +89,7 @@ async def all_mosques_by_keyword(
     password: str | None = None,
     token: str | None = None,
     client_instance: AsyncMawaqitClient | None = None,
-) -> list[dict]:
+) -> list[MawaqitMosqueData]:
     """Return mosques matching the keyword. Returns a list of dicts."""
     client = client_instance
     try:
@@ -96,7 +100,8 @@ async def all_mosques_by_keyword(
         await client.get_api_token()
 
         if search_keyword is not None:
-            return await client.fetch_mosques_by_keyword(search_keyword, page=page)
+            response = await client.fetch_mosques_by_keyword(search_keyword, page=page)
+            return [MawaqitMosqueData.from_dict(mosque) for mosque in response]
         return []
     finally:
         if client is not None:

@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "A single MAWAQIT entry is allowed. If you want to reconfigure your mosque, you can select \"Configure\" next to the existing entry, or open the 3-dots menu and select Delete.",
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
-      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
+      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
@@ -16,6 +17,10 @@
           "Keyword": "Search",
           "uuid": "Select a mosque (page {page})"
         },
+        "data_description": {
+          "Keyword": "Enter a keyword to search for a mosque by name or location.",
+          "uuid": "Select a mosque from the results, or navigate between pages."
+        },
         "description": "Search for a mosque by entering a keyword:",
         "title": "Search for your mosque"
       },
@@ -24,19 +29,29 @@
           "mosques": "Multiple mosques are available around you, select one:",
           "uuid": "Mosque"
         },
+        "data_description": {
+          "mosques": "Mosques near your Home Assistant location.",
+          "uuid": "Select the mosque closest to your location."
+        },
         "title": "Your favourite mosque"
       },
       "search_method": {
         "data": {
           "search_method_choice": "Choose the search method:"
         },
+        "data_description": {
+          "search_method_choice": "Choose how to find your mosque: by coordinates (uses your Home Assistant location) or by keyword search."
+        },
         "title": "Choose the method to find your mosque"
       },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "server": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Your MAWAQIT account password.",
+          "username": "Your MAWAQIT account email address."
         },
         "description": "Register on [mawaqit.net]({mawaqit_url}) and connect below. The nearest mosques to your location will be suggested and you will choose your favorite one.",
         "title": "Log in to MAWAQIT"
