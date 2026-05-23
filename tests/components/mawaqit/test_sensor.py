@@ -313,7 +313,7 @@ def test_mosque_sensor_native_value_no_data() -> None:
     """Test MyMosqueSensor.native_value returns None when no data."""
     coordinator = MagicMock(spec=MosqueCoordinator)
     coordinator.data = None
-    sensor = MyMosqueSensor(coordinator, "My mosque")
+    sensor = MyMosqueSensor(coordinator)
     assert sensor.native_value is None
 
 
@@ -321,7 +321,7 @@ def test_mosque_sensor_extra_state_attributes_no_data() -> None:
     """Test MyMosqueSensor.extra_state_attributes returns None when no data."""
     coordinator = MagicMock(spec=MosqueCoordinator)
     coordinator.data = None
-    sensor = MyMosqueSensor(coordinator, "My mosque")
+    sensor = MyMosqueSensor(coordinator)
     assert sensor.extra_state_attributes is None
 
 
