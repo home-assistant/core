@@ -1631,6 +1631,7 @@ class MqttEntity(
                 (attribute, getattr(self, attribute, UNDEFINED))
                 for attribute in attributes
             )
+        mqtt_data = self.hass.data[DATA_MQTT]
         try:
             msg_callback(msg)
         except MqttValueTemplateException as exc:
