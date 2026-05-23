@@ -312,7 +312,8 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         self._attr_unique_id = (
             f"mawaqit_next_prayer_{self.entity_description.key.lower()}"
         )
-        self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
+        self.next_prayer_index = None
+        self.time_next_prayer = None
 
     @property
     def native_value(self) -> str | datetime | None:
