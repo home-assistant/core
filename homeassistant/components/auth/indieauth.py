@@ -34,10 +34,14 @@ async def verify_redirect_uri(
     if is_valid:
         return True
 
-    # Whitelist the iOS and Android callbacks so that people can link apps
+    # Whitelist mobile app callbacks so that people can link apps
     # without being connected to the internet.
     if (
-        client_id == "https://home-assistant.io/iOS"
+        client_id
+        in (
+            "https://home-assistant.io/harmonyos",
+            "https://home-assistant.io/iOS",
+        )
         and redirect_uri == "homeassistant://auth-callback"
     ):
         return True

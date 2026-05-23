@@ -169,10 +169,14 @@ async def test_find_link_tag_max_size(hass: HomeAssistant, mock_session) -> None
 
 @pytest.mark.parametrize(
     "client_id",
-    ["https://home-assistant.io/android", "https://home-assistant.io/iOS"],
+    [
+        "https://home-assistant.io/android",
+        "https://home-assistant.io/harmonyos",
+        "https://home-assistant.io/iOS",
+    ],
 )
-async def test_verify_redirect_uri_android_ios(client_id) -> None:
-    """Test that we verify redirect uri correctly for Android/iOS."""
+async def test_verify_redirect_uri_mobile_apps_auth_callback(client_id: str) -> None:
+    """Test that we verify auth callback redirect uri correctly for mobile apps."""
     with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
         assert await indieauth.verify_redirect_uri(
             None, client_id, "homeassistant://auth-callback"
@@ -186,25 +190,28 @@ async def test_verify_redirect_uri_android_ios(client_id) -> None:
             None, "https://incorrect.com", "homeassistant://auth-callback"
         )
 
-        if client_id == "https://home-assistant.io/android":
-            assert await indieauth.verify_redirect_uri(
-                None,
-                client_id,
-                "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
-            )
-            assert await indieauth.verify_redirect_uri(
-                None,
-                client_id,
-                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
-            )
-        else:
-            assert not await indieauth.verify_redirect_uri(
-                None,
-                client_id,
-                "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
-            )
-            assert not await indieauth.verify_redirect_uri(
-                None,
-                client_id,
-                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
-            )
+
+@pytest.mark.parametrize(
+    ("client_id", "expected"),
+    [
+        ("https://home-assistant.io/android", True),
+        ("https://home-assistant.io/harmonyos", False),
+        ("https://home-assistant.io/iOS", False),
+    ],
+)
+@pytest.mark.parametrize(
+    "redirect_uri",
+    [
+        "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+        "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
+    ],
+)
+async def test_verify_redirect_uri_mobile_apps_wear_os(
+    client_id: str, expected: bool, redirect_uri: str
+) -> None:
+    """Test that we verify Wear OS redirect uri correctly for mobile apps."""
+    with patch.object(indieauth, "fetch_redirect_uris", return_value=[]):
+        assert (
+            await indieauth.verify_redirect_uri(None, client_id, redirect_uri)
+            is expected
+        )
