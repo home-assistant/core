@@ -206,8 +206,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         await matter.setup_nodes()
     except Exception:
         # Setup raised after the matter client (and optionally the BLE proxy)
-        # were brought up: tear them down so the BLE proxy's bluetooth callback
+        # were brought up: unload any platforms that already loaded and tear
+        # down the connections so the BLE proxy's bluetooth callback
         # registration and the matter client websocket are not leaked.
+        await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
         listen_task.cancel()
         if ble_proxy is not None:
             try:
