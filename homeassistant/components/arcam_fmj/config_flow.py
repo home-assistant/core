@@ -16,6 +16,13 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceIn
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
+STEP_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
+
 
 class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle config flow."""
@@ -31,13 +38,22 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured({CONF_HOST: host, CONF_PORT: port})
 
-    async def _async_try_connect(self, host: str, port: int) -> None:
-        """Verify the device is reachable."""
+    async def _async_try_connect(self, host: str, port: int) -> dict[str, str]:
+        """Verify the device is reachable; return errors keyed by reason."""
         client = Client(host, port)
         try:
             await client.start()
+        except socket.gaierror:
+            return {"base": "invalid_host"}
+        except TimeoutError:
+            return {"base": "timeout_connect"}
+        except ConnectionRefusedError:
+            return {"base": "connection_refused"}
+        except ConnectionFailed, OSError:
+            return {"base": "cannot_connect"}
         finally:
             await client.stop()
+        return {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,19 +69,10 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_HOST], user_input[CONF_PORT], uuid
                 )
 
-            try:
-                await self._async_try_connect(
-                    user_input[CONF_HOST], user_input[CONF_PORT]
-                )
-            except socket.gaierror:
-                errors["base"] = "invalid_host"
-            except TimeoutError:
-                errors["base"] = "timeout_connect"
-            except ConnectionRefusedError:
-                errors["base"] = "connection_refused"
-            except ConnectionFailed, OSError:
-                errors["base"] = "cannot_connect"
-            else:
+            errors = await self._async_try_connect(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if not errors:
                 return self.async_create_entry(
                     title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})",
                     data={
@@ -74,15 +81,45 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        fields = {
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        }
-        schema = vol.Schema(fields)
+        schema = STEP_DATA_SCHEMA
         if user_input is not None:
             schema = self.add_suggested_values_to_schema(schema, user_input)
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            uuid = await get_uniqueid_from_host(
+                async_get_clientsession(self.hass), user_input[CONF_HOST]
+            )
+            if uuid:
+                await self.async_set_unique_id(uuid)
+                self._abort_if_unique_id_mismatch()
+
+            errors = await self._async_try_connect(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            STEP_DATA_SCHEMA, user_input or reconfigure_entry.data
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -113,9 +150,7 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        try:
-            await self._async_try_connect(host, port)
-        except ConnectionFailed, OSError:
+        if await self._async_try_connect(host, port):
             return self.async_abort(reason="cannot_connect")
 
         self.host = host
