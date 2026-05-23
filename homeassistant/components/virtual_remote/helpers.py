@@ -33,7 +33,10 @@ def available_infrared_entities(
     options: dict[str, selector.SelectOptionDict] = {}
 
     for registry_entry in registry.entities.values():
-        if registry_entry.domain != "infrared":
+        if (
+            registry_entry.domain != "infrared"
+            or registry_entry.disabled_by is not None
+        ):
             continue
 
         entity_id = registry_entry.entity_id

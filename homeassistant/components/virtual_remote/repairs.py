@@ -62,4 +62,3 @@ def async_delete_stale_linked_infrared_entity_missing_issues(
         remote_id = issue.issue_id.removeprefix(issue_id_prefix)
         if remote_id not in configured_remote_ids:
             ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
-

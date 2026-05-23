@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "Virtual Remote is already configured.",
       "no_available_infrared_entities": "No infrared entities are available.",
-      "no_virtual_remotes": "No virtual remotes are configured."
+      "no_virtual_remotes": "No virtual remotes are configured.",
+      "reconfigure_successful": "Reconfiguration was successful."
     },
     "error": {
       "infrared_entity_unavailable": "Selected infrared entity is unavailable.",
@@ -15,11 +16,19 @@
           "infrared_entity_id": "Infrared entity",
           "name": "Remote name"
         },
+        "data_description": {
+          "infrared_entity_id": "Infrared entity",
+          "name": "Remote name"
+        },
         "description": "Update the first configured virtual remote.",
         "title": "Reconfigure Virtual Remote"
       },
       "user": {
         "data": {
+          "infrared_entity_id": "Infrared entity",
+          "name": "Remote name"
+        },
+        "data_description": {
           "infrared_entity_id": "Infrared entity",
           "name": "Remote name"
         },
@@ -74,10 +83,18 @@
           "command_data": "Command data",
           "command_name": "Command name"
         },
+        "data_description": {
+          "command_data": "Command data",
+          "command_name": "Command name"
+        },
         "title": "Add Command"
       },
       "add_remote": {
         "data": {
+          "infrared_entity_id": "Infrared entity",
+          "name": "Remote name"
+        },
+        "data_description": {
           "infrared_entity_id": "Infrared entity",
           "name": "Remote name"
         },
@@ -88,10 +105,18 @@
           "command_data": "Command data",
           "command_name": "Command name"
         },
+        "data_description": {
+          "command_data": "Command data",
+          "command_name": "Command name"
+        },
         "title": "Edit Command"
       },
       "edit_remote": {
         "data": {
+          "infrared_entity_id": "Infrared entity",
+          "name": "Remote name"
+        },
+        "data_description": {
           "infrared_entity_id": "Infrared entity",
           "name": "Remote name"
         },
@@ -118,10 +143,16 @@
         "data": {
           "command_name": "Command"
         },
+        "data_description": {
+          "command_name": "Command"
+        },
         "title": "Remove Command"
       },
       "remove_remote": {
         "data": {
+          "id": "Virtual remote"
+        },
+        "data_description": {
           "id": "Virtual remote"
         },
         "title": "Remove Virtual Remote"
@@ -130,10 +161,16 @@
         "data": {
           "command_name": "Command"
         },
+        "data_description": {
+          "command_name": "Command"
+        },
         "title": "Select Command"
       },
       "select_remote_for_command": {
         "data": {
+          "id": "Virtual remote"
+        },
+        "data_description": {
           "id": "Virtual remote"
         },
         "title": "Select Virtual Remote"
@@ -142,16 +179,25 @@
         "data": {
           "id": "Virtual remote"
         },
+        "data_description": {
+          "id": "Virtual remote"
+        },
         "title": "Select Virtual Remote"
       },
       "select_remote_for_command_removal": {
         "data": {
           "id": "Virtual remote"
         },
+        "data_description": {
+          "id": "Virtual remote"
+        },
         "title": "Select Virtual Remote"
       },
       "select_remote_for_edit": {
         "data": {
+          "id": "Virtual remote"
+        },
+        "data_description": {
           "id": "Virtual remote"
         },
         "title": "Select Virtual Remote"

@@ -1,5 +1,9 @@
 """Tests for virtual remote helper functions."""
 
+from typing import Any, cast
+
+import voluptuous as vol
+
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -21,7 +25,16 @@ from homeassistant.components.virtual_remote.helpers import (
     unique_remote_id,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, selector
+
+
+def _field_default(field: vol.Required) -> Any:
+    """Return a voluptuous field default for typing-friendly tests."""
+    default = cast(Any, field.default)
+    try:
+        return default()
+    except TypeError:
+        return None
 
 
 def test_available_infrared_entities(hass: HomeAssistant) -> None:
@@ -42,6 +55,14 @@ def test_available_infrared_entities(hass: HomeAssistant) -> None:
         original_name="IR A",
     )
     registry.async_get_or_create(
+        "infrared",
+        "test",
+        "ir_disabled",
+        suggested_object_id="ir_disabled",
+        original_name="Disabled IR",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    registry.async_get_or_create(
         "light",
         "test",
         "light",
@@ -57,30 +78,44 @@ def test_available_infrared_entities(hass: HomeAssistant) -> None:
 
 def test_infrared_entity_selector_includes_current_missing_entity() -> None:
     """Test selector includes stale current entity."""
-    available = {"infrared.valid": {"value": "infrared.valid", "label": "Valid"}}
+    available: dict[str, selector.SelectOptionDict] = {
+        "infrared.valid": selector.SelectOptionDict(
+            value="infrared.valid",
+            label="Valid",
+        )
+    }
 
-    selector = infrared_entity_selector(
+    selector_obj = infrared_entity_selector(
         available,
         current_entity_id="infrared.missing",
     )
 
-    values = [option["value"] for option in selector.config["options"]]
+    options = cast(list[selector.SelectOptionDict], selector_obj.config["options"])
+    values = [option["value"] for option in options]
     assert values == ["infrared.valid", "infrared.missing"]
 
 
 def test_infrared_entity_field_defaults() -> None:
     """Test selector field defaults."""
-    available = {"infrared.valid": {"value": "infrared.valid", "label": "Valid"}}
+    available: dict[str, selector.SelectOptionDict] = {
+        "infrared.valid": selector.SelectOptionDict(
+            value="infrared.valid",
+            label="Valid",
+        )
+    }
 
     assert (
-        infrared_entity_field("infrared.valid", available).default() == "infrared.valid"
+        _field_default(infrared_entity_field("infrared.valid", available))
+        == "infrared.valid"
     )
-    assert infrared_entity_field("infrared.missing", available).default() is None
+    assert _field_default(infrared_entity_field("infrared.missing", available)) is None
     assert (
-        infrared_entity_field_with_current(
-            "infrared.missing",
-            available,
-        ).default()
+        _field_default(
+            infrared_entity_field_with_current(
+                "infrared.missing",
+                available,
+            )
+        )
         == "infrared.missing"
     )
 
@@ -120,7 +155,7 @@ def test_find_command_key_case_insensitive() -> None:
 
 def test_normalize_virtual_remotes() -> None:
     """Test stored option normalization."""
-    value = [
+    value: list[object] = [
         {
             CONF_REMOTE_ID: "valid",
             CONF_REMOTE_NAME: "Valid",
@@ -154,7 +189,7 @@ def test_normalize_virtual_remotes() -> None:
 
 def test_remote_and_command_options() -> None:
     """Test options helpers."""
-    remotes = [
+    remotes: list[dict[str, object]] = [
         {
             CONF_REMOTE_ID: "one",
             CONF_REMOTE_NAME: "One",
@@ -168,7 +203,9 @@ def test_remote_and_command_options() -> None:
         },
     ]
 
-    assert remote_options(remotes) == [
+    normalized_remotes = normalize_virtual_remotes(remotes)
+
+    assert remote_options(normalized_remotes) == [
         {"value": "one", "label": "One"},
         {"value": "two", "label": "Two"},
     ]
@@ -176,4 +213,4 @@ def test_remote_and_command_options() -> None:
         {"value": "A", "label": "A"},
         {"value": "B", "label": "B"},
     ]
-    assert remotes_with_commands(remotes) == [remotes[1]]
+    assert remotes_with_commands(normalized_remotes) == [normalized_remotes[1]]

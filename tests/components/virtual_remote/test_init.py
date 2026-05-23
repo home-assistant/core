@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.virtual_remote import (
+    _async_update_listener,
     async_setup_entry,
     async_unload_entry,
 )
@@ -53,6 +54,6 @@ async def test_options_update_listener_reloads_entry(
         ) as mock_reload,
     ):
         assert await async_setup_entry(hass, config_entry)
-        await config_entry.async_on_unload_callbacks[0](hass, config_entry)
+        await _async_update_listener(hass, config_entry)
 
     mock_reload.assert_called_once_with(config_entry.entry_id)

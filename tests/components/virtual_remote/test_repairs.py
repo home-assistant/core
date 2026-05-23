@@ -1,8 +1,5 @@
 """Tests for Virtual Remote repair helpers."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-
 from homeassistant.components.virtual_remote.const import (
     DOMAIN,
     ISSUE_LINKED_INFRARED_ENTITY_MISSING,
@@ -12,6 +9,8 @@ from homeassistant.components.virtual_remote.repairs import (
     async_delete_linked_infrared_entity_missing_issue,
     async_delete_stale_linked_infrared_entity_missing_issues,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 
 def test_create_and_delete_missing_infrared_issue(hass: HomeAssistant) -> None:
@@ -85,4 +84,3 @@ def test_delete_stale_missing_infrared_issues(hass: HomeAssistant) -> None:
         )
         is None
     )
-

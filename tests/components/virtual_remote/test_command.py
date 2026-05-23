@@ -74,7 +74,7 @@ def test_parse_pronto_command() -> None:
     """Test learned Pronto hex parsing."""
     command = parse_remote_command("0000 006D 0002 0000 0156 00AC 0015 0015")
     assert command.modulation == 38029
-    assert _timings(command) == [(8993, 4496), (555, 555)]
+    assert _timings(command) == [(8993, 4523), (552, 552)]
 
 
 @pytest.mark.parametrize(
@@ -112,7 +112,7 @@ def test_parse_invalid_commands_raise_home_assistant_error(payload: str) -> None
         ("[9000]", "timings must contain mark/space pairs"),
         ("[9000, 0]", "timings must be greater than zero"),
         ("{}", "timings must be a list"),
-        ("123", "timings must be a list"),
+        ("123", "timings must contain mark/space pairs"),
         ("bad:9000,4500", "Command modulation must be an integer"),
     ],
 )

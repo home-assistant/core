@@ -428,7 +428,11 @@ class InfraredRemoteEntity(RemoteEntity):
         num_repeats = kwargs.pop("num_repeats", DEFAULT_NUM_REPEATS)
         delay_secs = kwargs.pop("delay_secs", DEFAULT_DELAY_SECS)
 
-        if not isinstance(num_repeats, int) or num_repeats < 1:
+        if (
+            not isinstance(num_repeats, int)
+            or isinstance(num_repeats, bool)
+            or num_repeats < 1
+        ):
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_invalid_service_parameter",
@@ -437,7 +441,11 @@ class InfraredRemoteEntity(RemoteEntity):
                 },
             )
 
-        if not isinstance(delay_secs, (int, float)) or delay_secs < 0:
+        if (
+            not isinstance(delay_secs, (int, float))
+            or isinstance(delay_secs, bool)
+            or delay_secs < 0
+        ):
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_invalid_service_parameter",
@@ -446,19 +454,29 @@ class InfraredRemoteEntity(RemoteEntity):
                 },
             )
 
-        commands = [command] if isinstance(command, str) else list(command)
+        try:
+            commands = [command] if isinstance(command, str) else list(command)
+        except TypeError as err:
+            raise HomeAssistantError(
+                translation_domain=self._translation_domain,
+                translation_key="remote_invalid_service_parameter",
+                translation_placeholders={
+                    "error": "command must be a string or list of strings"
+                },
+            ) from err
+
+        if not all(isinstance(item, str) for item in commands):
+            raise HomeAssistantError(
+                translation_domain=self._translation_domain,
+                translation_key="remote_invalid_service_parameter",
+                translation_placeholders={"error": "command must be a string"},
+            )
+
         total = len(commands) * num_repeats
         sent = 0
 
         for _ in range(num_repeats):
             for item in commands:
-                if not isinstance(item, str):
-                    raise HomeAssistantError(
-                        translation_domain=self._translation_domain,
-                        translation_key="remote_invalid_service_parameter",
-                        translation_placeholders={"error": "command must be a string"},
-                    )
-
                 await self._async_send_named_command(item, kwargs)
                 sent += 1
 

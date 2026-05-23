@@ -1932,6 +1932,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
+/homeassistant/components/virtual_remote/ @orandasoft
+/tests/components/virtual_remote/ @orandasoft
 /homeassistant/components/vivotek/ @HarlemSquirrel
 /tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325

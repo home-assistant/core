@@ -1,6 +1,7 @@
 """Tests for virtual remote entities."""
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -31,6 +32,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .conftest import INFRARED_ENTITY_ID, RAW_COMMAND, REMOTE_ID, REMOTE_NAME
 
@@ -53,6 +56,22 @@ def _entity_name_factory(
 ) -> str:
     """Return entity name for tests."""
     return name
+
+
+def _add_remote_entities_callback(
+    entities: list[InfraredRemoteEntity],
+) -> AddConfigEntryEntitiesCallback:
+    """Return an add-entities callback that captures remote entities."""
+
+    def _add_entities(
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        entities.extend(cast(Iterable[InfraredRemoteEntity], new_entities))
+
+    return _add_entities
 
 
 def _make_entity(
@@ -93,8 +112,12 @@ def test_configured_remote_definitions(config_entry: MockConfigEntry) -> None:
         == config_entry.options[CONF_VIRTUAL_REMOTES]
     )
 
-    config_entry.options[CONF_VIRTUAL_REMOTES] = "bad"
-    assert configured_remote_definitions(config_entry) == []
+    bad_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_VIRTUAL_REMOTES: "bad"},
+    )
+    assert configured_remote_definitions(bad_entry) == []
 
 
 async def test_async_setup_entry_adds_entities(
@@ -102,14 +125,18 @@ async def test_async_setup_entry_adds_entities(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test standalone platform setup creates entities."""
-    entities = []
+    entities: list[InfraredRemoteEntity] = []
 
-    await async_setup_entry(hass, config_entry, entities.extend)
+    await async_setup_entry(hass, config_entry, _add_remote_entities_callback(entities))
 
     assert len(entities) == 1
     entity = entities[0]
     assert entity.unique_id == f"{config_entry.entry_id}_remote_{REMOTE_ID}"
-    assert entity.name == REMOTE_NAME
+    assert entity.name is None
+    assert entity.device_info == DeviceInfo(
+        identifiers={(DOMAIN, REMOTE_ID)},
+        name=REMOTE_NAME,
+    )
 
 
 async def test_async_setup_virtual_remote_entities_shared_options(
@@ -117,14 +144,14 @@ async def test_async_setup_virtual_remote_entities_shared_options(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test shared setup helper supports custom integration boundary."""
-    entities = []
+    entities: list[InfraredRemoteEntity] = []
     missing_handler = Mock()
     restored_handler = Mock()
 
     await async_setup_virtual_remote_entities(
         hass,
         config_entry,
-        entities.extend,
+        _add_remote_entities_callback(entities),
         device_info_factory=_device_info_factory,
         entity_name_factory=_entity_name_factory,
         has_entity_name=False,
@@ -171,12 +198,12 @@ async def test_async_setup_skips_malformed_and_duplicate_remotes(
         },
     )
     entry.add_to_hass(hass)
-    entities = []
+    entities: list[InfraredRemoteEntity] = []
 
     await async_setup_virtual_remote_entities(
         hass,
         entry,
-        entities.extend,
+        _add_remote_entities_callback(entities),
         device_info_factory=_device_info_factory,
     )
 
@@ -194,19 +221,17 @@ async def test_cleanup_stale_remote_entities(
     stale = registry.async_get_or_create(
         "remote",
         DOMAIN,
-        "stale",
+        f"{config_entry.entry_id}_remote_stale",
         suggested_object_id="stale",
         config_entry=config_entry,
     )
-    stale.unique_id = f"{config_entry.entry_id}_remote_stale"
     keep = registry.async_get_or_create(
         "remote",
         DOMAIN,
-        "keep",
+        f"{config_entry.entry_id}_remote_keep",
         suggested_object_id="keep",
         config_entry=config_entry,
     )
-    keep.unique_id = f"{config_entry.entry_id}_remote_keep"
 
     cleanup_stale_remote_entities(hass, config_entry, {"keep"})
 
@@ -267,10 +292,13 @@ async def test_power_methods_send_configured_commands(
         },
     )
 
-    with patch(
-        "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
-        AsyncMock(),
-    ) as mock_send:
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(),
+        ) as mock_send,
+        patch.object(entity, "async_write_ha_state"),
+    ):
         await entity.async_turn_on()
         await entity.async_turn_off()
         await entity.async_toggle()
@@ -286,10 +314,13 @@ async def test_toggle_uses_power_toggle_fallback(
     """Test toggle falls back to POWER_TOGGLE."""
     entity = _make_entity(hass, commands={COMMAND_POWER_TOGGLE: RAW_COMMAND})
 
-    with patch(
-        "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
-        AsyncMock(),
-    ) as mock_send:
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(),
+        ) as mock_send,
+        patch.object(entity, "async_write_ha_state"),
+    ):
         await entity.async_toggle()
 
     assert len(mock_send.mock_calls) == 1
@@ -303,10 +334,13 @@ async def test_power_methods_no_configured_command_noop(
     """Test power methods no-op without configured commands."""
     entity = _make_entity(hass)
 
-    with patch(
-        "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
-        AsyncMock(),
-    ) as mock_send:
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(),
+        ) as mock_send,
+        patch.object(entity, "async_write_ha_state"),
+    ):
         await entity.async_turn_on()
         await entity.async_turn_off()
         await entity.async_toggle()
@@ -345,15 +379,17 @@ async def test_send_command_named_raw_repeat_and_delay(
     ("kwargs", "message"),
     [
         ({"num_repeats": 0}, "num_repeats"),
+        ({"num_repeats": True}, "num_repeats"),
         ({"num_repeats": "bad"}, "num_repeats"),
         ({"delay_secs": -1}, "delay_secs"),
+        ({"delay_secs": True}, "delay_secs"),
         ({"delay_secs": "bad"}, "delay_secs"),
     ],
 )
 async def test_send_command_invalid_service_parameters(
     hass: HomeAssistant,
     infrared_entity: str,
-    kwargs: dict,
+    kwargs: dict[str, Any],
     message: str,
 ) -> None:
     """Test invalid remote.send_command parameters."""
@@ -363,6 +399,7 @@ async def test_send_command_invalid_service_parameters(
         await entity.async_send_command([RAW_COMMAND], **kwargs)
 
     assert err.value.translation_key == "remote_invalid_service_parameter"
+    assert err.value.translation_placeholders is not None
     assert message in err.value.translation_placeholders["error"]
 
 
@@ -370,11 +407,31 @@ async def test_send_command_non_string_command(
     hass: HomeAssistant,
     infrared_entity: str,
 ) -> None:
-    """Test non-string command raises."""
+    """Test non-string command raises before sending anything."""
+    entity = _make_entity(hass)
+
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.remote.infrared.async_send_command",
+            AsyncMock(),
+        ) as mock_send,
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await entity.async_send_command([RAW_COMMAND, 1])  # type: ignore[list-item]
+
+    assert err.value.translation_key == "remote_invalid_service_parameter"
+    assert len(mock_send.mock_calls) == 0
+
+
+async def test_send_command_non_iterable_command(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test non-iterable command raises a translated error."""
     entity = _make_entity(hass)
 
     with pytest.raises(HomeAssistantError) as err:
-        await entity.async_send_command([1])  # type: ignore[list-item]
+        await entity.async_send_command(1)  # type: ignore[arg-type]
 
     assert err.value.translation_key == "remote_invalid_service_parameter"
 

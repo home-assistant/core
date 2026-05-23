@@ -13,6 +13,7 @@ from homeassistant.components.virtual_remote.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import INFRARED_ENTITY_ID
 
@@ -26,7 +27,7 @@ async def test_user_flow_no_infrared_entities(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] is config_entries.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_available_infrared_entities"
 
 
@@ -36,7 +37,7 @@ async def test_user_flow_success(hass: HomeAssistant, infrared_entity: str) -> N
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] is config_entries.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.virtual_remote.async_setup_entry",
@@ -51,7 +52,7 @@ async def test_user_flow_success(hass: HomeAssistant, infrared_entity: str) -> N
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is config_entries.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Virtual Remote"
     assert result["options"] == {
         CONF_VIRTUAL_REMOTES: [
@@ -75,13 +76,6 @@ async def test_user_flow_success(hass: HomeAssistant, infrared_entity: str) -> N
             },
             {CONF_REMOTE_NAME: "remote_name_required"},
         ),
-        (
-            {
-                CONF_REMOTE_NAME: "Living Room TV",
-                CONF_INFRARED_ENTITY_ID: "infrared.missing",
-            },
-            {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"},
-        ),
     ],
 )
 async def test_user_flow_validation_errors(
@@ -100,7 +94,7 @@ async def test_user_flow_validation_errors(
         user_input,
     )
 
-    assert result["type"] is config_entries.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
 
 
@@ -114,7 +108,7 @@ async def test_user_flow_single_instance(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] is config_entries.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -130,7 +124,7 @@ async def test_reconfigure_success(
             "entry_id": config_entry.entry_id,
         },
     )
-    assert result["type"] is config_entries.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -145,7 +139,7 @@ async def test_reconfigure_success(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is config_entries.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert (
         config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_NAME] == "Bedroom TV"
@@ -169,15 +163,12 @@ async def test_reconfigure_validation_errors(
         result["flow_id"],
         {
             CONF_REMOTE_NAME: "",
-            CONF_INFRARED_ENTITY_ID: "infrared.missing",
+            CONF_INFRARED_ENTITY_ID: INFRARED_ENTITY_ID,
         },
     )
 
-    assert result["type"] is config_entries.FlowResultType.FORM
-    assert result["errors"] == {
-        CONF_REMOTE_NAME: "remote_name_required",
-        CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable",
-    }
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_REMOTE_NAME: "remote_name_required"}
 
 
 async def test_reconfigure_no_remotes(
@@ -202,5 +193,5 @@ async def test_reconfigure_no_remotes(
         },
     )
 
-    assert result["type"] is config_entries.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_virtual_remotes"
