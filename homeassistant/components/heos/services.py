@@ -90,7 +90,7 @@ REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
 GROUP_VOLUME_SET_SCHEMA: Final[VolDictType] = {
     vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
 }
-MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
+MOVE_QUEUE_ITEM_SCHEMA: Final[VolDictType] = {
     vol.Required(ATTR_QUEUE_IDS): vol.All(
         cv.ensure_list,
         [vol.All(vol.Coerce(int), vol.Range(min=1, max=1000))],
@@ -110,7 +110,7 @@ MEDIA_PLAYER_ENTITY_SERVICES: Final = (
         SERVICE_REMOVE_FROM_QUEUE, "async_remove_from_queue", REMOVE_FROM_QUEUE_SCHEMA
     ),
     EntityServiceDescription(
-        SERVICE_MOVE_QUEUE_ITEM, "async_move_queue_item", MOVE_QEUEUE_ITEM_SCHEMA
+        SERVICE_MOVE_QUEUE_ITEM, "async_move_queue_item", MOVE_QUEUE_ITEM_SCHEMA
     ),
     # Group volume services
     EntityServiceDescription(

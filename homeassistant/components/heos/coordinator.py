@@ -107,6 +107,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             await self.heos.get_players()
         except HeosError as error:
             _LOGGER.debug("Unexpected error retrieving players", exc_info=True)
+            await self.heos.disconnect()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN, translation_key="unable_to_get_players"
             ) from error
@@ -240,6 +241,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_sources(self) -> None:
         """Build source list for entities."""
         self._source_list.clear()
+        self._favorites = {}
         # Get favorites only if reportedly signed in.
         if self.heos.is_signed_in:
             try:
