@@ -41,6 +41,8 @@ class MawaqitMosqueData:
             display_name = f"{self.label} ({km:.2f} km)"
         elif self.localisation is not None:
             display_name = f"{self.label} - {self.localisation}"
+        else:
+            display_name = self.label
 
         return display_name
 
