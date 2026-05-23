@@ -3,6 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
+import threading
 from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -26,7 +27,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory
+from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -556,3 +557,61 @@ async def test_ipv6_not_supported(
         await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
+
+
+async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no exception when entry is unloaded during speaker discovery IO.
+
+    Exercises the race condition where async_unload_entry is called while
+    get_speaker_info is blocking in an executor thread. The guard in
+    _add_speaker must detect _active=False after IO completes and skip
+    speaker creation instead of accessing the already-cleaned-up runtime_data.
+    """
+    # Initial setup has already completed; the default speaker is discovered.
+    # Create a second speaker mock whose get_speaker_info blocks to hold the
+    # executor thread open so we can trigger an unload concurrently.
+    new_soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.99", "New Room")
+    get_info_started = asyncio.Event()
+    get_info_may_proceed = threading.Event()
+    loop = asyncio.get_running_loop()
+    original_get_info = new_soco.get_speaker_info
+
+    def blocking_get_info(*args, **kwargs):
+        loop.call_soon_threadsafe(get_info_started.set)
+        get_info_may_proceed.wait(timeout=10)
+        return original_get_info(*args, **kwargs)
+
+    new_soco.get_speaker_info = blocking_get_info
+
+    # Fire a new ZGS callback with new_soco visible. The original soco is
+    # already in discovered so only new_soco will trigger async_add_speakers.
+    subscription = soco.zoneGroupTopology.subscribe.return_value
+    sub_callback = await subscription.wait_for_callback_to_be_set()
+    with patch.object(
+        MockSoCo,
+        "visible_zones",
+        new_callable=PropertyMock,
+        return_value={soco, new_soco},
+    ):
+        sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))
+        with caplog.at_level(logging.DEBUG):
+            # Wait for the executor thread to enter get_speaker_info.
+            await asyncio.wait_for(get_info_started.wait(), timeout=5)
+
+            # Unload while IO is in flight — this is the race condition.
+            assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+            # Release the blocked IO. The guard fires and skips speaker creation.
+            get_info_may_proceed.set()
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "Entry unloaded during speaker creation, skipping adding speaker" in caplog.text
+    )
