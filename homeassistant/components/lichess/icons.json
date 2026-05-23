@@ -19,6 +19,15 @@
       "classical_rating": {
         "default": "mdi:chart-line"
       },
+      "correspondence_rating": {
+        "default": "mdi:chart-line"
+      },
+      "puzzle_games": {
+        "default": "mdi:chess-pawn"
+      },
+      "puzzle_rating": {
+        "default": "mdi:chart-line"
+      },
       "rapid_games": {
         "default": "mdi:chess-pawn"
       },

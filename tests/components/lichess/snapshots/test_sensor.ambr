@@ -320,6 +320,166 @@
     'state': '888',
   })
 # ---
+# name: test_all_entities[sensor.drnykterstein_correspondence_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.drnykterstein_correspondence_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Correspondence rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Correspondence rating',
+    'platform': 'lichess',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'correspondence_rating',
+    'unique_id': 'drnykterstien.correspondence_rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.drnykterstein_correspondence_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DrNykterstein Correspondence rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.drnykterstein_correspondence_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1600',
+  })
+# ---
+# name: test_all_entities[sensor.drnykterstein_puzzle_games-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.drnykterstein_puzzle_games',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Puzzle games',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Puzzle games',
+    'platform': 'lichess',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_games',
+    'unique_id': 'drnykterstien.puzzle_games',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.drnykterstein_puzzle_games-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DrNykterstein Puzzle games',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.drnykterstein_puzzle_games',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_all_entities[sensor.drnykterstein_puzzle_rating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.drnykterstein_puzzle_rating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Puzzle rating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Puzzle rating',
+    'platform': 'lichess',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'puzzle_rating',
+    'unique_id': 'drnykterstien.puzzle_rating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.drnykterstein_puzzle_rating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DrNykterstein Puzzle rating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.drnykterstein_puzzle_rating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2500',
+  })
+# ---
 # name: test_all_entities[sensor.drnykterstein_rapid_games-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

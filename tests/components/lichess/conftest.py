@@ -60,9 +60,12 @@ def mock_lichess_client() -> Generator[AsyncMock]:
             rapid_rating=1050,
             bullet_rating=1373,
             classical_rating=888,
+            correspondence_rating=1600,
+            puzzle_rating=2500,
             blitz_games=31,
             rapid_games=324,
             bullet_games=7,
             classical_games=1,
+            puzzle_games=50,
         )
         yield client

@@ -79,6 +79,28 @@ SENSORS: tuple[LichessEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda state: state.classical_games,
     ),
+    LichessEntityDescription(
+        key="correspondence_rating",
+        translation_key="correspondence_rating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda state: state.correspondence_rating,
+    ),
+    LichessEntityDescription(
+        key="puzzle_rating",
+        translation_key="puzzle_rating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda state: state.puzzle_rating,
+    ),
+    LichessEntityDescription(
+        key="puzzle_games",
+        translation_key="puzzle_games",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda state: state.puzzle_games,
+    ),
 )
 
 

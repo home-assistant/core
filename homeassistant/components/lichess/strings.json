@@ -42,6 +42,16 @@
       "classical_rating": {
         "name": "Classical rating"
       },
+      "correspondence_rating": {
+        "name": "Correspondence rating"
+      },
+      "puzzle_games": {
+        "name": "Puzzle games",
+        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+      },
+      "puzzle_rating": {
+        "name": "Puzzle rating"
+      },
       "rapid_games": {
         "name": "Rapid games",
         "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
