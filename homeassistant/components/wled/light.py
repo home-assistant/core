@@ -56,8 +56,8 @@ async def async_setup_entry(
         for segment_id in segment_ids - current_ids:
             current_ids.add(segment_id)
             new_entities.append(WLEDSegmentLight(coordinator, segment_id))
-
-        async_add_entities(new_entities)
+        if new_entities:
+            async_add_entities(new_entities)
 
     coordinator.async_add_listener(update_segments)
     update_segments()
