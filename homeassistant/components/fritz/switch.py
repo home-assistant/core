@@ -390,7 +390,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._attr_is_on = switch_info["init_state"]
         self._attr_name = description
         self._attr_unique_id = f"{self._avm_wrapper.unique_id}-{slugify(description)}"
-        self._attr_extra_state_attributes: dict[str, str | None] = {}
+        self._attr_extra_state_attributes: dict[str, Any | None] = {}
         self._attr_available = True
 
     async def async_update(self) -> None:
@@ -425,7 +425,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         connection_type: str,
     ) -> None:
         """Init Fritzbox port switch."""
-        self._attr_extra_state_attributes = {}
         self.connection_type = connection_type
         # dict in the format as it comes from fritzconnection,
         # eg: {"NewRemoteHost": "0.0.0.0", "NewExternalPort": 22, ...}
@@ -588,7 +587,6 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         """Init Fritz Wifi switch."""
         self._wifi_info = network_data
 
-        self._attr_extra_state_attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_entity_registry_enabled_default = (
             avm_wrapper.mesh_role is not MeshRoles.SLAVE
