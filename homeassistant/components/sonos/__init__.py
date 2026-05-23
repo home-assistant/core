@@ -177,9 +177,11 @@ class SonosDiscoveryManager:
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
+        self._active: bool = True
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
+        self._active = False
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
 
@@ -382,9 +384,8 @@ class SonosDiscoveryManager:
 
         def _add_speakers():
             """Add all speakers in a single executor job."""
-            runtime_data = getattr(self.entry, "runtime_data", None)
-            if runtime_data is None or runtime_data is not self.data:
-                # Entry was unloaded or replaced while this task was in flight; skip adding speakers.
+            if not self._active:
+                # Entry was unloaded while this task was in flight; skip adding speakers.
                 _LOGGER.debug(
                     "Entry unloaded during speaker creation, skipping adding speakers"
                 )
@@ -405,14 +406,13 @@ class SonosDiscoveryManager:
     ) -> None:
         """Create and set up a new SonosSpeaker instance."""
         try:
-            runtime_data = getattr(self.entry, "runtime_data", None)
-            if runtime_data is None or runtime_data is not self.data:
-                # Entry was unloaded or replaced while this task was in flight; skip adding speakers.
+            speaker_info = soco.get_speaker_info(True, timeout=7)
+            if not self._active:
+                # Entry was unloaded during IO; skip adding this speaker.
                 _LOGGER.debug(
                     "Entry unloaded during speaker creation, skipping adding speaker"
                 )
                 return
-            speaker_info = soco.get_speaker_info(True, timeout=7)
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
