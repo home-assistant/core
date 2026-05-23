@@ -252,7 +252,7 @@ class MQTT(_LibMQTT):
         self,
         topic: str,
         msg_callback: MessageCallbackType,
-        qos: int,
+        qos: int = DEFAULT_QOS,
         encoding: str | None = None,
         job_type: HassJobType | None = None,
     ) -> Callable[[], None]:
