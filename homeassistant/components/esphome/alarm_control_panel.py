@@ -90,7 +90,8 @@ class EsphomeAlarmControlPanel(
         )
         flags = AlarmControlPanelEntityFeature(0)
         for esp_flag in esp_flags:
-            flags |= _FEATURES[esp_flag]
+            if (flag := _FEATURES.get(esp_flag)) is not None:
+                flags |= flag
         self._attr_supported_features = flags
         self._attr_code_format = (
             CodeFormat.NUMBER if static_info.requires_code else None
