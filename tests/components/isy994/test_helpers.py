@@ -10,6 +10,7 @@ from pyisy.constants import (
     PROTO_ZWAVE,
     UOM_INDEX,
 )
+from pyisy.helpers import ZWaveProperties
 from pyisy.nodes import Node
 import pytest
 
@@ -251,7 +252,7 @@ def test_check_for_zwave_cat_lock_match() -> None:
     lock_cat = next(iter(NODE_FILTERS[Platform.LOCK][FILTER_ZWAVE_CAT]))
     isy_data = make_isy_data()
     node = make_node(protocol=PROTO_ZWAVE)
-    node.zwave_props = MagicMock()
+    node.zwave_props = MagicMock(spec=ZWaveProperties)
     node.zwave_props.category = lock_cat
     result = _check_for_zwave_cat(isy_data, node, single_platform=Platform.LOCK)
     assert result is True
@@ -262,7 +263,7 @@ def test_check_for_zwave_cat_no_match() -> None:
     """Z-Wave node with unknown category returns False."""
     isy_data = make_isy_data()
     node = make_node(protocol=PROTO_ZWAVE)
-    node.zwave_props = MagicMock()
+    node.zwave_props = MagicMock(spec=ZWaveProperties)
     node.zwave_props.category = "999"
     assert _check_for_zwave_cat(isy_data, node) is False
 
@@ -451,7 +452,7 @@ def test_generate_device_info_zwave_with_mfr_id() -> None:
     node.folder = None
     node.node_def_id = None
     node.type = None
-    node.zwave_props = MagicMock()
+    node.zwave_props = MagicMock(spec=ZWaveProperties)
     node.zwave_props.mfr_id = "256"
     node.zwave_props.prod_type_id = "1"
     node.zwave_props.product_id = "2"
@@ -475,7 +476,7 @@ def test_generate_device_info_zwave_zero_mfr_id() -> None:
     node.folder = None
     node.node_def_id = None
     node.type = None
-    node.zwave_props = MagicMock()
+    node.zwave_props = MagicMock(spec=ZWaveProperties)
     node.zwave_props.mfr_id = "0"
 
     device_info = _generate_device_info(node)
