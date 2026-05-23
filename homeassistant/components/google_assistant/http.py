@@ -12,7 +12,6 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -165,9 +164,6 @@ class GoogleConfig(AbstractConfig):
 
         if state.attributes.get("view") is not None:
             # Ignore entities that are views
-            return False
-
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         entity_registry = er.async_get(self.hass)

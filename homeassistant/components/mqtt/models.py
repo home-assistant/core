@@ -73,9 +73,8 @@ class SubscriptionID:
 
         subscription_id = self._next_id
         if subscription_id > MAX_28BIT:
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise HomeAssistantError(
-                "MQTT Subscription ID limit reached. "
-                "Cannot generate more IDs to subscribe",
                 translation_domain=DOMAIN,
                 translation_key="mqtt_max_subscription_id_reached",
             )
@@ -510,10 +509,20 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
+class MessageExpiryInterval(TypedDict, total=False):
+    """Hold the Message Expiry Interval."""
+
+    days: float
+    hours: float
+    minutes: float
+    seconds: float
+
+
 class DeviceMqttOptions(TypedDict, total=False):
     """Hold the shared MQTT specific options for an MQTT device."""
 
     qos: int
+    message_expiry_interval: MessageExpiryInterval
 
 
 class MqttDeviceData(TypedDict, total=False):

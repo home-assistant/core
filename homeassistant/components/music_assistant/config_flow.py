@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -31,13 +31,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
-    DOMAIN,
-    HASSIO_DISCOVERY_SCHEMA_VERSION,
-    LOGGER,
-)
+from .const import AUTH_SCHEMA_VERSION, DOMAIN, HASSIO_DISCOVERY_SCHEMA_VERSION, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"

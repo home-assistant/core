@@ -91,6 +91,7 @@ CONF_COMMAND_ON: Final = "command_on"
 CONF_COMMAND_OPEN: Final = "command_open"
 CONF_COMMAND_STATE: Final = "command_state"
 CONF_COMMAND_STOP: Final = "command_stop"
+CONF_COMMENT: Final = "comment"
 CONF_CONDITION: Final = "condition"
 CONF_CONDITIONS: Final = "conditions"
 CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
@@ -944,10 +945,6 @@ WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 PRECISION_WHOLE: Final = 1
 PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
-
-# Static list of entities that will never be exposed to
-# cloud, alexa, or google_home components
-CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 
 class EntityCategory(StrEnum):
