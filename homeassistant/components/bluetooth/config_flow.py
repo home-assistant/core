@@ -45,12 +45,10 @@ from .const import (
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
-    DEFAULT_MODE,
     DOMAIN,
 )
-from .util import adapter_title
+from .util import adapter_title, resolve_scanning_mode
 
-_VALID_MODE_VALUES = {mode.value for mode in BluetoothScanningMode}
 _MODE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[
@@ -66,16 +64,7 @@ _MODE_SELECTOR = SelectSelector(
 
 async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Build the options schema with the saved mode as the default."""
-    options = handler.options
-    current = options.get(CONF_MODE)
-    if current is None or current not in _VALID_MODE_VALUES:
-        legacy_passive = options.get(CONF_PASSIVE)
-        if legacy_passive is True:
-            current = BluetoothScanningMode.PASSIVE.value
-        elif legacy_passive is False:
-            current = BluetoothScanningMode.ACTIVE.value
-        else:
-            current = DEFAULT_MODE
+    current = resolve_scanning_mode(handler.options).value
     return vol.Schema({vol.Required(CONF_MODE, default=current): _MODE_SELECTOR})
 
 
