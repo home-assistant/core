@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool
     @callback
     def _async_check_keep_main_light() -> None:
         """Persist keep_main_light=True if multiple segments detected."""
-        if len(coordinator.segment_ids) > 1 and not entry.options.get(
+        if len(coordinator.data.state.segments) > 1 and not entry.options.get(
             CONF_KEEP_MAIN_LIGHT
         ):
             hass.config_entries.async_update_entry(
