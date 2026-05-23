@@ -47,14 +47,15 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "on"
 
-    expected_camera_off = copy.deepcopy(TEST_CAMERA)
-    expected_camera_off[KEY_MOTION_DETECTION] = False
+    # Build the camera state we expect after turning off.
+    camera_on = copy.deepcopy(TEST_CAMERA)
+    camera_off = copy.deepcopy(TEST_CAMERA)
+    camera_off[KEY_MOTION_DETECTION] = False
 
-    # async_get_camera returns current state; async_get_cameras returns updated state.
-    client.async_get_camera = AsyncMock(return_value=TEST_CAMERA)
-    client.async_get_cameras = AsyncMock(
-        return_value={"cameras": [expected_camera_off]}
-    )
+    # async_get_camera is what the switch fetches before calling set_camera.
+    # async_get_cameras is what the coordinator uses to refresh state.
+    client.async_get_camera = AsyncMock(return_value=camera_on)
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
     # Turn switch off.
     with patch("homeassistant.components.motioneye.switch.asyncio.sleep"):
@@ -68,18 +69,16 @@ async def test_switch_turn_on_off(
     await hass.async_block_till_done()
 
     # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(
-        TEST_CAMERA_ID, expected_camera_off
-    )
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, camera_off)
 
     # Verify the switch turns off.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "off"
 
-    # Now set up for turning on: get_camera returns off state, get_cameras returns on.
-    client.async_get_camera = AsyncMock(return_value=expected_camera_off)
-    client.async_get_cameras = AsyncMock(return_value={"cameras": [TEST_CAMERA]})
+    # Now prepare for turn-on: get_camera returns off state, coordinator returns on.
+    client.async_get_camera = AsyncMock(return_value=camera_off)
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_on]})
 
     # Turn switch on.
     with patch("homeassistant.components.motioneye.switch.asyncio.sleep"):
@@ -93,7 +92,7 @@ async def test_switch_turn_on_off(
     await hass.async_block_till_done()
 
     # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, TEST_CAMERA)
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, camera_on)
 
     # Verify the switch turns on.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
