@@ -8,10 +8,11 @@ from midealocal.const import DeviceType, ProtocolVersion
 import pytest
 
 import homeassistant.components.midea_lan as midea_init
-from homeassistant.components.midea_lan.const import CONF_KEY, CONF_MODEL, CONF_SUBTYPE
+from homeassistant.components.midea_lan.const import CONF_KEY, CONF_SUBTYPE
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,

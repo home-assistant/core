@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -31,15 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.storage import Store
 
-from .const import (
-    _LOGGER,
-    CONF_ACCOUNT,
-    CONF_KEY,
-    CONF_MODEL,
-    CONF_SERVER,
-    CONF_SUBTYPE,
-    DOMAIN,
-)
+from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 ADD_WAY = ["discovery", "manually", "list", "cache"]

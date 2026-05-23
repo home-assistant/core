@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
@@ -19,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_KEY, CONF_MODEL, CONF_SUBTYPE, DOMAIN
+from .const import CONF_KEY, CONF_SUBTYPE, DOMAIN
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 

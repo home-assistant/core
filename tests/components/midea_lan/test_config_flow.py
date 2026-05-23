@@ -15,7 +15,6 @@ from homeassistant.components.midea_lan.config_flow import (
 from homeassistant.components.midea_lan.const import (
     CONF_ACCOUNT,
     CONF_KEY,
-    CONF_MODEL,
     CONF_SERVER,
     CONF_SUBTYPE,
     DOMAIN,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,

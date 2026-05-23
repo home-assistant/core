@@ -13,7 +13,6 @@ COMPONENT = "component"
 DEVICES = "devices"
 
 CONF_KEY = "key"
-CONF_MODEL = "model"
 CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
