@@ -127,7 +127,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_translation_key = "heating"
-    _current_action: bool | None = None
+    _current_action: HVACAction | None = None
     _current_mode: str | None = None
     _current_program: str | None = None
 
@@ -197,17 +197,30 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["vicare_modes"] = self._api.getModes()
 
-            self._current_action = False
-            # Update the specific device attributes
+            # Resolve the current hvac action from the underlying heat
+            # source. Burners (boilers) only heat; compressors (heat pumps)
+            # expose a `phase` ("heating" / "cooling" / "off" / ...) on top
+            # of the active flag.
+            self._current_action = HVACAction.IDLE
             with suppress(PyViCareNotSupportedFeatureError):
                 for burner in get_burners(self._device):
-                    self._current_action = self._current_action or burner.getActive()
+                    if burner.getActive():
+                        self._current_action = HVACAction.HEATING
 
             with suppress(PyViCareNotSupportedFeatureError):
                 for compressor in get_compressors(self._device):
-                    self._current_action = (
-                        self._current_action or compressor.getActive()
-                    )
+                    if not compressor.getActive():
+                        continue
+                    phase = None
+                    with suppress(PyViCareNotSupportedFeatureError, KeyError):
+                        phase = compressor.getPhase()
+                    if phase == "cooling":
+                        self._current_action = HVACAction.COOLING
+                    elif phase == "heating" or phase is None:
+                        # Fall back to HEATING when the device reports
+                        # active without a recognisable phase, matching
+                        # the pre-cooling-support behaviour.
+                        self._current_action = HVACAction.HEATING
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -257,9 +270,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
-        if self._current_action:
-            return HVACAction.HEATING
-        return HVACAction.IDLE
+        return self._current_action or HVACAction.IDLE
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
