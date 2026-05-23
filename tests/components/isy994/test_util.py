@@ -51,7 +51,6 @@ async def test_cleanup_removes_stale_entities(
 async def test_cleanup_no_extra_entities_is_noop(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    caplog: object,
 ) -> None:
     """When all registered entities are in unique_ids, nothing is removed."""
     entry = MockConfigEntry(domain="isy994")
