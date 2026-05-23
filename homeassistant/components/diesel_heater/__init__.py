@@ -21,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: DieselHeaterConfigEntry
+) -> bool:
     """Set up Diesel Heater from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
 
@@ -61,7 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DieselHeaterConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: DieselHeaterConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: VevorHeaterCoordinator = entry.runtime_data

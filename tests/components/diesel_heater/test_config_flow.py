@@ -3,6 +3,7 @@
 Tests cover all flow paths: bluetooth discovery, user selection,
 manual MAC entry, and options flow.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -61,6 +62,7 @@ def _make_ble_discovery(
 # Bluetooth discovery flow
 # ---------------------------------------------------------------------------
 
+
 class TestBluetoothDiscovery:
     """Test async_step_bluetooth -> async_step_confirm."""
 
@@ -95,6 +97,7 @@ class TestBluetoothDiscovery:
 # ---------------------------------------------------------------------------
 # Confirm step (after bluetooth discovery)
 # ---------------------------------------------------------------------------
+
 
 class TestConfirmStep:
     """Test async_step_confirm."""
@@ -143,6 +146,7 @@ class TestConfirmStep:
 # ---------------------------------------------------------------------------
 # User step (manual device selection)
 # ---------------------------------------------------------------------------
+
 
 class TestUserStep:
     """Test async_step_user."""
@@ -295,9 +299,7 @@ class TestUserStep:
         """Select device default pin."""
         flow = _make_flow()
 
-        result = await flow.async_step_user(
-            user_input={CONF_ADDRESS: MOCK_ADDRESS}
-        )
+        result = await flow.async_step_user(user_input={CONF_ADDRESS: MOCK_ADDRESS})
 
         assert result["data"][CONF_PIN] == DEFAULT_PIN
 
@@ -306,9 +308,7 @@ class TestUserStep:
         flow = _make_flow(configured_addresses={MOCK_ADDRESS})
 
         with pytest.raises(AbortFlow, match="already_configured"):
-            await flow.async_step_user(
-                user_input={CONF_ADDRESS: MOCK_ADDRESS}
-            )
+            await flow.async_step_user(user_input={CONF_ADDRESS: MOCK_ADDRESS})
 
     async def test_shows_multiple_devices(self):
         """Shows multiple devices."""
@@ -337,6 +337,7 @@ class TestUserStep:
 # ---------------------------------------------------------------------------
 # Manual MAC entry
 # ---------------------------------------------------------------------------
+
 
 class TestManualStep:
     """Test async_step_manual."""
@@ -386,9 +387,7 @@ class TestManualStep:
         """Invalid mac shows error."""
         flow = _make_flow()
 
-        result = await flow.async_step_manual(
-            user_input={CONF_ADDRESS: "not-a-mac"}
-        )
+        result = await flow.async_step_manual(user_input={CONF_ADDRESS: "not-a-mac"})
 
         assert result["type"] == "form"
         assert result["step_id"] == "manual"
@@ -398,9 +397,7 @@ class TestManualStep:
         """Short mac shows error."""
         flow = _make_flow()
 
-        result = await flow.async_step_manual(
-            user_input={CONF_ADDRESS: "AA:BB:CC"}
-        )
+        result = await flow.async_step_manual(user_input={CONF_ADDRESS: "AA:BB:CC"})
 
         assert result["errors"][CONF_ADDRESS] == "invalid_mac"
 
@@ -408,9 +405,7 @@ class TestManualStep:
         """Mac without separators shows error."""
         flow = _make_flow()
 
-        result = await flow.async_step_manual(
-            user_input={CONF_ADDRESS: "AABBCCDDEEFF"}
-        )
+        result = await flow.async_step_manual(user_input={CONF_ADDRESS: "AABBCCDDEEFF"})
 
         assert result["errors"][CONF_ADDRESS] == "invalid_mac"
 
@@ -419,9 +414,7 @@ class TestManualStep:
         flow = _make_flow(configured_addresses={"AA:BB:CC:DD:EE:FF"})
 
         with pytest.raises(AbortFlow, match="already_configured"):
-            await flow.async_step_manual(
-                user_input={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"}
-            )
+            await flow.async_step_manual(user_input={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"})
 
     async def test_title_format(self):
         """Title format."""
@@ -448,6 +441,7 @@ class TestManualStep:
 # Options flow
 # ---------------------------------------------------------------------------
 
+
 class TestGetOptionsFlow:
     """Test async_get_options_flow static method."""
 
@@ -464,10 +458,14 @@ class TestOptionsFlow:
         """Create an options flow with a mock config entry."""
         flow = VevorHeaterOptionsFlowHandler()
         entry = MagicMock()
-        entry.data = data if data is not None else {
-            CONF_ADDRESS: MOCK_ADDRESS,
-            CONF_PIN: DEFAULT_PIN,
-        }
+        entry.data = (
+            data
+            if data is not None
+            else {
+                CONF_ADDRESS: MOCK_ADDRESS,
+                CONF_PIN: DEFAULT_PIN,
+            }
+        )
         entry.options = options if options is not None else {}
         flow._config_entry = entry
         return flow
@@ -488,8 +486,7 @@ class TestOptionsFlow:
         result = await flow.async_step_init()
 
         schema_keys = {
-            k.schema for k in result["data_schema"].schema
-            if hasattr(k, "schema")
+            k.schema for k in result["data_schema"].schema if hasattr(k, "schema")
         }
         assert CONF_PIN in schema_keys
 
@@ -500,8 +497,7 @@ class TestOptionsFlow:
         result = await flow.async_step_init()
 
         schema_keys = {
-            k.schema for k in result["data_schema"].schema
-            if hasattr(k, "schema")
+            k.schema for k in result["data_schema"].schema if hasattr(k, "schema")
         }
         assert CONF_PRESET_AWAY_TEMP in schema_keys
         assert CONF_PRESET_COMFORT_TEMP in schema_keys
@@ -510,11 +506,13 @@ class TestOptionsFlow:
         """Updates pin."""
         flow = self._create_flow()
 
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: 9999,
-            CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
-            CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
-        })
+        result = await flow.async_step_init(
+            user_input={
+                CONF_PIN: 9999,
+                CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
+                CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
+            }
+        )
 
         assert result["type"] == "create_entry"
         assert result["data"][CONF_PIN] == 9999
@@ -523,11 +521,13 @@ class TestOptionsFlow:
         """Updates preset temperatures."""
         flow = self._create_flow()
 
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: DEFAULT_PIN,
-            CONF_PRESET_AWAY_TEMP: 10,
-            CONF_PRESET_COMFORT_TEMP: 25,
-        })
+        result = await flow.async_step_init(
+            user_input={
+                CONF_PIN: DEFAULT_PIN,
+                CONF_PRESET_AWAY_TEMP: 10,
+                CONF_PRESET_COMFORT_TEMP: 25,
+            }
+        )
 
         assert result["type"] == "create_entry"
         assert result["data"][CONF_PRESET_AWAY_TEMP] == 10
@@ -537,11 +537,13 @@ class TestOptionsFlow:
         """Options should contain all submitted fields."""
         flow = self._create_flow()
 
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: 5678,
-            CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
-            CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
-        })
+        result = await flow.async_step_init(
+            user_input={
+                CONF_PIN: 5678,
+                CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
+                CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
+            }
+        )
 
         assert result["data"][CONF_PIN] == 5678
         assert result["data"][CONF_PRESET_AWAY_TEMP] == DEFAULT_PRESET_AWAY_TEMP

@@ -68,12 +68,16 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
     _attr_target_temperature_step = 1
     _attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_COMFORT]
 
-    def __init__(self, coordinator: VevorHeaterCoordinator, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: VevorHeaterCoordinator, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
         self._current_preset: str | None = None
-        self._user_cleared_preset: bool = False  # Track if user explicitly selected "None"
+        self._user_cleared_preset: bool = (
+            False  # Track if user explicitly selected "None"
+        )
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.address)},
             "name": "Diesel heater",
@@ -121,7 +125,11 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
             if running_state == 1:  # RUNNING_STATE_ON
                 return HVACAction.IDLE
             return HVACAction.OFF
-        if running_step in (RUNNING_STEP_SELF_TEST, RUNNING_STEP_IGNITION, RUNNING_STEP_RUNNING):
+        if running_step in (
+            RUNNING_STEP_SELF_TEST,
+            RUNNING_STEP_IGNITION,
+            RUNNING_STEP_RUNNING,
+        ):
             return HVACAction.HEATING
         if running_step in (RUNNING_STEP_COOLDOWN, RUNNING_STEP_VENTILATION):
             # Cooldown and Ventilation both run fans at full speed
