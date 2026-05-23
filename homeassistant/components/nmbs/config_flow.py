@@ -7,6 +7,7 @@ from pyrail.models import StationDetails
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -16,13 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_EXCLUDE_VIAS,
-    CONF_SHOW_ON_MAP,
-    CONF_STATION_FROM,
-    CONF_STATION_TO,
-    DOMAIN,
-)
+from .const import CONF_EXCLUDE_VIAS, CONF_STATION_FROM, CONF_STATION_TO, DOMAIN
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
