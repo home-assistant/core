@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, async_get_loaded_integration
+from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
@@ -275,10 +275,6 @@ async def async_check_config_schema(
                 try:
                     schema(config)
                 except vol.Invalid as exc:
-                    integration = await async_get_integration(hass, DOMAIN)
-                    message = conf_util.format_schema_error(
-                        hass, exc, domain, config, integration.documentation
-                    )
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_platform_config",

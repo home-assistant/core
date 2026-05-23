@@ -263,6 +263,7 @@ class MQTT(_LibMQTT):
             raise HomeAssistantError(
                 translation_key="mqtt_broker_error",
                 translation_domain=DOMAIN,
+                translation_placeholders={"error_message": str(err)},
             ) from err
 
     def cleanup(self) -> None:
