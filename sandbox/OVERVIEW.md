@@ -44,6 +44,51 @@ Run built-in Home Assistant integrations in an isolated sandbox process that con
 └─────────────────────────────────────────┘
 ```
 
+## Startup Sequence
+
+### 1. Host HA startup
+
+During config entry loading, the host checks each entry for a sandbox marker:
+
+```
+config_entry.options["sandbox"] = "<sandbox_id>"
+```
+
+Any entry marked with a sandbox ID is **not** set up normally. Instead:
+
+1. The sandbox integration is loaded (if not already).
+2. The sandbox integration collects all entries grouped by sandbox ID.
+3. For each sandbox ID, it:
+   - Creates a system user and authorization token scoped to that sandbox.
+   - Starts a sandbox subprocess, passing the token and host websocket URL.
+   - Tracks which config entry IDs belong to which sandbox connection.
+
+### 2. Sandbox process startup
+
+The sandbox process:
+
+1. Connects to the host via websocket using the sandbox token.
+2. Reads core config (timezone, units, location) and applies it to the local `hass` object (`dt_util`, `hass.config`).
+3. Fetches its assigned config entries via `sandbox/get_entries`.
+4. Sets up each config entry using `async_setup_entry` — the integration runs normally.
+
+### 3. Entity platform setup (sandbox side)
+
+When an integration calls `async_add_entities(entities)` inside a sandbox, the platform is a `RemoteClientEntityPlatform`. Instead of registering entities locally only, it:
+
+1. For each entity, sends a registration to the host: `unique_id`, `entity_id` suggestion, `device_info`, platform capabilities (`supported_features`, `supported_color_modes`, `device_class`, …), entity category, icon, name.
+2. Receives back from the host the confirmed host-assigned `entity_id` and `device_id`. (The host owns both registries; the sandbox must use the host's IDs.)
+3. Sets up state forwarding so every `async_write_ha_state()` pushes state + attributes to the host.
+
+### 4. Entity platform setup (host side)
+
+When the sandbox integration receives entity registrations on the host, it:
+
+1. Creates/updates device registry entries.
+2. Creates/updates entity registry entries.
+3. For each domain that has entities from this sandbox, ensures a `RemoteHostEntityPlatform` is registered with the domain's `EntityComponent` and adds the appropriate `RemoteEntity` subclass (e.g., `RemoteLightEntity`) via `async_add_entities`.
+4. The proxy entity holds cached state and attributes, forwards service calls back to the sandbox via websocket, and reports availability based on sandbox connection status.
+
 ## Components
 
 ### 1. Sandbox Integration (HA Core side)
@@ -134,6 +179,44 @@ When a sandbox registers entities via `sandbox/register_entity`, the host create
 
 The proxy entity classes live in `entity/` (one file per platform, 32 supported domains). `RemoteHostEntityPlatform` replaces the previous approach of 32 identical per-domain platform setup files.
 
+A typical proxy looks like:
+
+```python
+class RemoteLightEntity(LightEntity):
+    """Proxy for a light entity living in a sandbox."""
+
+    def __init__(self, sandbox_connection, registration_data):
+        self._sandbox = sandbox_connection
+        self._attr_unique_id = registration_data["unique_id"]
+        self._attr_supported_color_modes = registration_data["supported_color_modes"]
+        self._attr_supported_features = registration_data["supported_features"]
+        # ... all static capabilities from registration
+
+    @property
+    def available(self) -> bool:
+        return self._sandbox.connected and self._remote_available
+
+    @property
+    def is_on(self) -> bool:
+        return self._state_cache["is_on"]
+
+    @property
+    def brightness(self) -> int | None:
+        return self._state_cache.get("brightness")
+
+    async def async_turn_on(self, **kwargs) -> None:
+        await self._sandbox.forward_service_call(
+            self.entity_id, "turn_on", kwargs
+        )
+
+    async def async_turn_off(self, **kwargs) -> None:
+        await self._sandbox.forward_service_call(
+            self.entity_id, "turn_off", kwargs
+        )
+```
+
+Service handlers read entity properties synchronously during async service execution (e.g., `light` reads `supported_color_modes` to filter parameters before calling `async_turn_on`), so the proxy keeps both **static** properties (set at registration: `supported_features`, `supported_color_modes`, color-temp range, `device_class`, `entity_category`) and **dynamic** properties (`is_on`, `brightness`, `hs_color`, `color_temp_kelvin`, `effect`, …) cached locally. State updates from the sandbox push both the entity state and all relevant attributes.
+
 ### Sandbox side: RemoteClientEntityPlatform
 
 On the sandbox side, `RemoteClientEntityPlatform` wraps the integration's `EntityPlatform` to intercept `async_add_entities`. When an integration adds entities:
@@ -155,6 +238,14 @@ On the sandbox side, `RemoteClientEntityPlatform` wraps the integration's `Entit
 4. Sandbox receives the event, executes the method on the real entity
 5. Sandbox sends `sandbox/entity_command_result` back
 6. Proxy's future resolves, service call completes
+
+## Entity Method Compatibility
+
+Most entity domains already expose `async_*` versions of every service-callable method. Service handlers call those async wrappers, which is exactly what the remote proxies need — the proxy implements the `async_*` methods and forwards the call. No sync-to-async conversion required.
+
+- **Already fully async** (no changes needed for proxy): `light`, `switch`, `select`, `media_player`, `vacuum`, `camera`, `tts`, `stt`, `todo`, `number`, `button` (`async_press`).
+- **Sync + async-wrapper pattern** (proxy implements async, works as-is): `climate`, `cover`, `fan`, `lock`, `alarm_control_panel`, `valve`, `water_heater`, `humidifier`, `siren`, `lawn_mower`, `remote`.
+- **Minor issues**: `cover.toggle` and `cover.toggle_tilt` are called directly without async wrappers in some code paths; they need async versions added.
 
 ## Known Limitations / Future Work
 

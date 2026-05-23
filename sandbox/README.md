@@ -7,8 +7,7 @@ This directory is the home for all sandbox-related code and docs. It lives on th
 ## Layout
 
 - `hass_client/` — client library (`RemoteHomeAssistant`) plus the sandbox runtime, brought in as a git subtree from [balloob-travel/hass-client](https://github.com/balloob-travel/hass-client).
-- `OVERVIEW.md` — high-level architecture: components, service call flow, test infra, supported platforms.
-- `ARCHITECTURE.md` — deeper prose on entity proxy mechanics, startup sequence, state sync, registry handling, method compatibility.
+- `OVERVIEW.md` — architecture prose: principles, startup sequence, components, service call flow, entity proxy design, method compatibility, limitations.
 - `architecture.html` — visual companion with system diagram, flow diagrams, file structure, websocket API, and test results. Publish via `gh gist create architecture.html` and view at `https://gisthost.github.io/?<gist_id>`.
 - `run_all_sandbox_tests.{py,sh}` + `analyze_failures.py` + `TEST_RESULTS.csv` — driver and results for running HA Core's per-integration test suites through the sandbox plugin.
 - The HA integration itself is at [`../homeassistant/components/sandbox/`](../homeassistant/components/sandbox/).
