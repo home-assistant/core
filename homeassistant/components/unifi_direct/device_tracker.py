@@ -48,26 +48,34 @@ async def async_setup_scanner(
         data=import_data,
     )
 
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        return True
-
     if (
         result["type"] == data_entry_flow.FlowResultType.ABORT
-        and result.get("reason") == "already_configured"
+        and result.get("reason") == "cannot_connect"
     ):
         ir.async_create_issue(
             hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
+            DOMAIN,
+            "yaml_import_cannot_connect",
             is_fixable=False,
             issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "UniFi AP",
-            },
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": config[CONF_HOST]},
         )
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "UniFi AP",
+        },
+    )
 
     return True
 
