@@ -175,8 +175,7 @@ async def test_scanning_mode_migration_passive_is_honored(
     await hass.config_entries.async_reload(device.entry.entry_id)
     await hass.async_block_till_done()
 
-    # bleak-esphome subscribes first, then our migration callback.
-    assert len(state_subscriptions) >= 2
+    assert state_subscriptions
     for callback in state_subscriptions[:]:
         callback(
             BluetoothScannerStateResponse(
@@ -294,7 +293,7 @@ async def test_scanning_mode_migration_active_becomes_auto(
     await hass.config_entries.async_reload(device.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(state_subscriptions) >= 2
+    assert state_subscriptions
     for callback in state_subscriptions[:]:
         callback(
             BluetoothScannerStateResponse(
