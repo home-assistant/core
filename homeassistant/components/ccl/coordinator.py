@@ -55,8 +55,15 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             )
             return {}
         if time.monotonic() - self.last_update_time >= _CHECKING_INTERVAL:
-            raise UpdateFailed("Device timed out or is not responding")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_timed_out",
+            )
         try:
             return self.device.get_sensors()
         except CCLDataUpdateException as err:
-            raise UpdateFailed(f"Error updating data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="error_updating_data",
+                translation_placeholders={"error": str(err)},
+            ) from err

@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 from aioccl.exception import CCLDeviceRegistrationException
 from aiohttp import web
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ccl import KEY_DEVICES
@@ -225,13 +224,24 @@ async def test_abort_flow_device_none(
             "homeassistant.components.ccl.config_flow.CCLDevice",
             return_value=None,
         ),
-        pytest.raises(AttributeError, match="passkey"),
+        patch("homeassistant.components.ccl.config_flow.register", return_value=None),
     ):
-        # When CCLDevice returns None, registration will fail with an AttributeError
-        # from the aioccl register helper.
-        await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        flow_id = result["flow_id"]
+
+        await hass.async_block_till_done()
+
+        if result["type"] in (
+            FlowResultType.SHOW_PROGRESS,
+            FlowResultType.SHOW_PROGRESS_DONE,
+        ):
+            result = await hass.config_entries.flow.async_configure(flow_id, {})
+            await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unknown"
 
 
 async def test_abort_flow_device_id_none(

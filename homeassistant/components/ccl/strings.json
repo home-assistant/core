@@ -52,6 +52,12 @@
     }
   },
   "exceptions": {
+    "device_timed_out": {
+      "message": "Device timed out or is not responding"
+    },
+    "error_updating_data": {
+      "message": "Error updating data: {error}"
+    },
     "failed_to_register_webhook": {
       "message": "Failed to register webhook: {error}"
     }
