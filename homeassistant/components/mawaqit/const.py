@@ -13,7 +13,7 @@ CONF_UUID: str = "uuid"
 
 # Config Flow
 
-CONF_SEARCH: str = "Keyword"
+CONF_SEARCH: str = "keyword"
 
 CONF_TYPE_SEARCH_TRANSLATION_KEY: str = "search_method_choice_translation_key"
 CONF_TYPE_SEARCH: str = "search_method_choice"

@@ -14,11 +14,11 @@
     "step": {
       "keyword_search": {
         "data": {
-          "Keyword": "Search",
+          "keyword": "Search",
           "uuid": "Select a mosque (page {page})"
         },
         "data_description": {
-          "Keyword": "Enter a keyword to search for a mosque by name or location.",
+          "keyword": "Enter a keyword to search for a mosque by name or location.",
           "uuid": "Select a mosque from the results, or navigate between pages."
         },
         "description": "Search for a mosque by entering a keyword:",
