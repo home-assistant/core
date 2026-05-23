@@ -233,8 +233,6 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
         self.entity_description = MOSQUE_SENSOR_DESCRIPTION
         self._attr_unique_id = f"mawaqit_mosque_{self.entity_description.key.lower()}"
 
-        self.identifier = self._attr_unique_id
-
     @property
     def native_value(self) -> str | None:
         """Return the current mosque name as the sensor state."""
@@ -277,7 +275,6 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
         super().__init__(coordinator)
         self.entity_description = sensor_description
         self._attr_unique_id = f"mawaqit_{self.entity_description.key.lower()}"
-        self.identifier = self._attr_unique_id
 
     @property
     def native_value(self) -> datetime | None:
@@ -315,7 +312,6 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         self._attr_unique_id = (
             f"mawaqit_next_prayer_{self.entity_description.key.lower()}"
         )
-        self.identifier = self._attr_unique_id
         self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
 
     @property
