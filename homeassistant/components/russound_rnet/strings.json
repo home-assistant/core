@@ -53,11 +53,11 @@
         "title": "TCP Connection"
       },
       "user": {
-        "menu_options": {
-          "tcp": "TCP/IP",
-          "serial": "Serial"
-        },
         "description": "Select how to connect to your Russound RNET device.",
+        "menu_options": {
+          "serial": "Serial",
+          "tcp": "TCP/IP"
+        },
         "title": "Connection Type"
       },
       "zones": {

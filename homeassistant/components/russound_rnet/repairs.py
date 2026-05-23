@@ -8,8 +8,7 @@ from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -81,7 +80,7 @@ class YamlImportRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the init step — validate connection and show confirm."""
         host = str(self._yaml_config.get(CONF_HOST, ""))
         port = int(self._yaml_config.get(CONF_PORT, 0))
@@ -125,7 +124,7 @@ class YamlImportRepairFlow(RepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Show confirmation before proceeding with import."""
         if user_input is not None:
             return await self.async_step_model()
@@ -134,7 +133,7 @@ class YamlImportRepairFlow(RepairsFlow):
 
     async def async_step_model(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle model selection."""
         if user_input is not None:
             self._data[CONF_MODEL] = user_input[CONF_MODEL]
@@ -158,7 +157,7 @@ class YamlImportRepairFlow(RepairsFlow):
 
     async def async_step_sources(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle source name configuration."""
         model = RNET_MODELS[self._data[CONF_MODEL]]
 
@@ -185,7 +184,7 @@ class YamlImportRepairFlow(RepairsFlow):
 
     async def async_step_zones(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle zone name configuration."""
         model = RNET_MODELS[self._data[CONF_MODEL]]
 
