@@ -13,7 +13,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -39,10 +39,10 @@ def entities_fixture(
 
 def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
     """Create some entities in the entity registry."""
-    entry_blocked = entity_registry.async_get_or_create(
+    entry_group = entity_registry.async_get_or_create(
         "group", "test", "unique", suggested_object_id="all_locks"
     )
-    assert entry_blocked.entity_id == CLOUD_NEVER_EXPOSED_ENTITIES[0]
+    assert entry_group.entity_id == "group.all_locks"
     entry_lock = entity_registry.async_get_or_create("lock", "test", "unique1")
     entry_binary_sensor = entity_registry.async_get_or_create(
         "binary_sensor", "test", "unique1"
@@ -64,7 +64,7 @@ def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
         "media_player", "test", "unique4", original_device_class="media_player"
     )
     return {
-        "blocked": entry_blocked.entity_id,
+        "group": entry_group.entity_id,
         "lock": entry_lock.entity_id,
         "binary_sensor": entry_binary_sensor.entity_id,
         "door_sensor": entry_binary_sensor_door.entity_id,
@@ -76,7 +76,7 @@ def entities_unique_id(entity_registry: er.EntityRegistry) -> dict[str, str]:
 
 def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
     """Create some entities not in the entity registry."""
-    blocked = CLOUD_NEVER_EXPOSED_ENTITIES[0]
+    group = "group.all_locks"
     lock = "lock.test"
     binary_sensor = "binary_sensor.test"
     door_sensor = "binary_sensor.door"
@@ -89,7 +89,7 @@ def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
     hass.states.async_set(sensor_temperature, "on", {"device_class": "temperature"})
     hass.states.async_set(media_player, "idle", {})
     return {
-        "blocked": blocked,
+        "group": group,
         "lock": lock,
         "binary_sensor": binary_sensor,
         "door_sensor": door_sensor,
@@ -248,33 +248,6 @@ async def test_expose_entity_unknown(
     }
 
 
-async def test_expose_entity_blocked(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test behavior when exposing a blocked entity."""
-    ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
-
-    # Set options
-    await ws_client.send_json_auto_id(
-        {
-            "type": "homeassistant/expose_entity",
-            "assistants": ["cloud.alexa"],
-            "entity_ids": ["group.all_locks"],
-            "should_expose": True,
-        }
-    )
-
-    response = await ws_client.receive_json()
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "not_allowed",
-        "message": "can't expose 'group.all_locks'",
-    }
-
-
 @pytest.mark.parametrize("expose_new", [True, False])
 async def test_expose_new_entities(
     hass: HomeAssistant,
@@ -414,8 +387,8 @@ async def test_should_expose(
     # Unknown entity is not exposed
     assert async_should_expose(hass, "test.test", "test.test") is False
 
-    # Blocked entity is not exposed
-    assert async_should_expose(hass, "cloud.alexa", entities["blocked"]) is False
+    # Group entity is not exposed
+    assert async_should_expose(hass, "cloud.alexa", entities["group"]) is False
 
     # Lock is not exposed
     assert async_should_expose(hass, "cloud.alexa", entities["lock"]) is False

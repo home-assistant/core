@@ -15,7 +15,7 @@ from homeassistant.components import (
     light,
     media_player,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -145,9 +145,6 @@ async def test_sync_request(
     assert sorted(dev["id"] for dev in devices) == sorted(
         dev["id"] for dev in DEMO_DEVICES
     )
-
-    for dev in devices:
-        assert dev["id"] not in CLOUD_NEVER_EXPOSED_ENTITIES
 
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),

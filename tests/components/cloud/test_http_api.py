@@ -1418,23 +1418,6 @@ async def test_get_google_entity(
         "message": "light.kitchen unknown",
     }
 
-    # Test getting a blocked entity
-    entity_registry.async_get_or_create(
-        "group", "test", "unique", suggested_object_id="all_locks"
-    )
-    hass.states.async_set("group.all_locks", "bla")
-
-    await client.send_json_auto_id(
-        {"type": "cloud/google_assistant/entities/get", "entity_id": "group.all_locks"}
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "not_supported",
-        "message": "group.all_locks not supported by Google assistant",
-    }
-
     entity_registry.async_get_or_create(
         "light", "test", "unique", suggested_object_id="kitchen"
     )
@@ -1615,23 +1598,6 @@ async def test_get_alexa_entity(
     assert response["error"] == {
         "code": "not_supported",
         "message": "sensor.temperature not supported by Alexa",
-    }
-
-    # Test getting a blocked entity
-    entity_registry.async_get_or_create(
-        "group", "test", "unique", suggested_object_id="all_locks"
-    )
-    hass.states.async_set("group.all_locks", "bla")
-
-    await client.send_json_auto_id(
-        {"type": "cloud/alexa/entities/get", "entity_id": "group.all_locks"}
-    )
-    response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "not_supported",
-        "message": "group.all_locks not supported by Alexa",
     }
 
     entity_registry.async_get_or_create(

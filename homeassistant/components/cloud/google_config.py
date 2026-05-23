@@ -22,7 +22,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import (
     CoreState,
     Event,
@@ -282,9 +281,6 @@ class CloudGoogleConfig(AbstractConfig):
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
         """If an entity ID should be exposed."""
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(entity_id, {})
         entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
@@ -316,8 +312,6 @@ class CloudGoogleConfig(AbstractConfig):
         """If an entity should be exposed."""
         entity_filter: EntityFilter = self._config[CONF_FILTER]
         if not entity_filter.empty_filter:
-            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-                return False
             return entity_filter(entity_id)
 
         return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
