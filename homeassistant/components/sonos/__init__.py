@@ -9,6 +9,7 @@ from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
+import threading
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -177,11 +178,11 @@ class SonosDiscoveryManager:
         self.creation_lock = asyncio.Lock()
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
-        self._active: bool = True
+        self._stop_event = threading.Event()
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
-        self._active = False
+        self._stop_event.set()
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
 
@@ -384,7 +385,7 @@ class SonosDiscoveryManager:
 
         def _add_speakers():
             """Add all speakers in a single executor job."""
-            if not self._active:
+            if self._stop_event.is_set():
                 # Entry was unloaded while this task was in flight; skip adding speakers.
                 _LOGGER.debug(
                     "Entry unloaded during speaker creation, skipping adding speakers"
@@ -407,7 +408,7 @@ class SonosDiscoveryManager:
         """Create and set up a new SonosSpeaker instance."""
         try:
             speaker_info = soco.get_speaker_info(True, timeout=7)
-            if not self._active:
+            if self._stop_event.is_set():
                 # Entry was unloaded during IO; skip adding this speaker.
                 _LOGGER.debug(
                     "Entry unloaded during speaker creation, skipping adding speaker"
