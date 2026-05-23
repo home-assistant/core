@@ -38,11 +38,6 @@ def _async_unload(unload_callbacks: list[CALLBACK_TYPE]) -> None:
 
 
 @hass_callback
-def _noop() -> None:
-    """Placeholder unsubscribe."""
-
-
-@hass_callback
 def async_connect_scanner(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
@@ -71,8 +66,11 @@ def async_connect_scanner(
         ),
         scanner.async_setup(),
     ]
-    if feature_flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE:
-        callbacks.append(_async_apply_scanning_mode(hass, entry, scanner, cli))
+    if (
+        feature_flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE
+        and (unsub := _async_apply_scanning_mode(hass, entry, scanner, cli)) is not None
+    ):
+        callbacks.append(unsub)
     return partial(_async_unload, callbacks)
 
 
@@ -82,7 +80,7 @@ def _async_apply_scanning_mode(
     entry: ESPHomeConfigEntry,
     scanner: ESPHomeScanner,
     cli: APIClient,
-) -> CALLBACK_TYPE:
+) -> CALLBACK_TYPE | None:
     """Apply the saved scanning mode or migrate from the proxy's configured mode."""
     saved = entry.options.get(CONF_BLUETOOTH_SCANNING_MODE)
     if saved is not None:
@@ -90,7 +88,7 @@ def _async_apply_scanning_mode(
             _LOGGER.warning("%s: unknown scanning mode %r", entry.title, saved)
             saved = DEFAULT_BLUETOOTH_SCANNING_MODE
         scanner.async_set_scanning_mode(BluetoothScanningMode(saved))
-        return _noop
+        return None
 
     unsub_holder: list[CALLBACK_TYPE] = []
 
