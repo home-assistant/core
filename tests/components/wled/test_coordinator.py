@@ -279,11 +279,11 @@ async def test_fail_when_other_device(
             id="unsupported_version",
         ),
         pytest.param(
-            WLEDConnectionError,
+            WLEDError,
             ConfigEntryState.SETUP_RETRY,
             None,
-            "Error communicating with WLED API:",
-            id="connection_error",
+            "Invalid response from WLED API:",
+            id="wled_error",
         ),
         pytest.param(
             WLEDInvalidResponseError(
