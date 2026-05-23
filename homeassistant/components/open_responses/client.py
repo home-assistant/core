@@ -1,8 +1,8 @@
 """Open Responses client used by Home Assistant."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterable
 import json
-from typing import Any
+from typing import Any, Literal, overload
 
 import httpx
 
@@ -56,17 +56,15 @@ def _raise_mapped_status(response: httpx.Response) -> None:
 
     message, body = _extract_error_message(response)
     status_code = response.status_code
-    error_kwargs = {"status_code": status_code, "response_body": body}
-
     if status_code in (401, 403):
-        raise AuthenticationError(message, **error_kwargs)
+        raise AuthenticationError(message, status_code=status_code, response_body=body)
     if status_code == 429:
-        raise RateLimitError(message, **error_kwargs)
+        raise RateLimitError(message, status_code=status_code, response_body=body)
     if status_code in (400, 422):
-        raise BadRequestError(message, **error_kwargs)
+        raise BadRequestError(message, status_code=status_code, response_body=body)
     if status_code == 404:
-        raise ModelError(message, **error_kwargs)
-    raise APIStatusError(message, **error_kwargs)
+        raise ModelError(message, status_code=status_code, response_body=body)
+    raise APIStatusError(message, status_code=status_code, response_body=body)
 
 
 def _map_connection_error(error: httpx.HTTPError) -> APIConnectionError:
@@ -77,7 +75,7 @@ def _map_connection_error(error: httpx.HTTPError) -> APIConnectionError:
 
 
 async def _parse_async_sse_lines(
-    lines: AsyncGenerator[str],
+    lines: AsyncIterable[str],
 ) -> AsyncGenerator[dict[str, Any]]:
     """Parse server-sent events into Open Responses event dictionaries."""
     event_type = "message"
@@ -140,6 +138,40 @@ class AsyncOpenResponsesClient:
         """Close the owned HTTP client."""
         if self._client is not None and self._owns_client:
             await self._client.aclose()
+
+    @overload
+    async def create(
+        self,
+        *,
+        model: str,
+        input: str | list[dict[str, Any]],
+        stream: Literal[False] = False,
+        max_tool_calls: int | None = None,
+        max_output_tokens: int | None = None,
+        store: bool | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        user: str | None = None,
+        text: dict[str, Any] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+        **extra_fields: Any,
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def create(
+        self,
+        *,
+        model: str,
+        input: str | list[dict[str, Any]],
+        stream: Literal[True],
+        max_tool_calls: int | None = None,
+        max_output_tokens: int | None = None,
+        store: bool | None = None,
+        tools: list[dict[str, Any]] | None = None,
+        user: str | None = None,
+        text: dict[str, Any] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+        **extra_fields: Any,
+    ) -> AsyncGenerator[dict[str, Any]]: ...
 
     async def create(
         self,
