@@ -2670,9 +2670,9 @@ async def test_process_advertisements_wires_timeout_as_scan_duration(
             _callback,
             {"address": "aa:44:33:11:23:45"},
             BluetoothScanningMode.ACTIVE,
-            30,
+            0,
         )
-    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 30)
+    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 0)
     mock_cancel.assert_called_once()
 
 
