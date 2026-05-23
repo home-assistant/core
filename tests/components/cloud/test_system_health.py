@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -11,6 +11,7 @@ from hass_nabucasa.iot_base import DisconnectReason
 from hass_nabucasa.remote import Certificate, CertificateStatus
 
 from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.util.dt import UTC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -121,7 +122,7 @@ async def test_cloud_system_health_with_cert_and_disconnect(
     await hass.async_block_till_done()
     await cloud.login("test-user", "test-pass")
 
-    expire = datetime(2026, 8, 1, tzinfo=timezone.utc)
+    expire = datetime(2026, 8, 1, tzinfo=UTC)
     cloud.remote.snitun_server = "eu-central-1"
     cloud.remote.certificate_status = CertificateStatus.READY
     cloud.remote.certificate = Certificate(
