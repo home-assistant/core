@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -136,6 +136,31 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    if "old_entity_id" in entry.options:
+        # This means we are migrating from a Min/Max helper to a Group sensor
+        old_entity = entry.options["old_entity_id"]
+        entity_reg = er.async_get(hass)
+        old_entity_entry = entity_reg.async_get(old_entity)
+        if not old_entity_entry:
+            # User has manually removed it before we came here
+            # Skip the migration and just continue with setting up the group sensor
+            _LOGGER.warning(
+                "Old entity %s has been manually removed before migration", old_entity
+            )
+        else:
+            if TYPE_CHECKING:
+                assert old_entity_entry.config_entry_id
+            await hass.config_entries.async_unload(old_entity_entry.config_entry_id)
+            entity_reg.async_update_entity_platform(
+                old_entity,
+                DOMAIN,
+                new_config_entry_id=entry.entry_id,
+                new_unique_id=entry.entry_id,
+            )
+            new_options = dict(entry.options)
+            new_options.pop("old_entity_id")
+            hass.config_entries.async_update_entry(entry, options=new_options)
+            await hass.config_entries.async_remove(old_entity_entry.config_entry_id)
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )

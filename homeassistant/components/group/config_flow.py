@@ -134,6 +134,12 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
     ["sensor", "number", "input_number"]
 ).extend(SENSOR_CONFIG_EXTENDS)
 
+SENSOR_IMPORT_SCHEMA = vol.Schema(
+    {
+        vol.Required("old_entity_id"): selector.TextSelector(),
+    }
+).extend(SENSOR_CONFIG_SCHEMA.schema)
+
 
 async def light_switch_options_schema(
     domain: str, handler: SchemaCommonFlowHandler | None
@@ -197,8 +203,30 @@ def set_group_type(
     return _set_group_type
 
 
+def validate_import() -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+]:
+    """Validate import from Min/Max integration.
+
+    Should be removed when deprecation of Min/Max integration has ended.
+    """
+
+    async def _validate_and_set_type(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Add group type to user input."""
+        validated_input = SENSOR_IMPORT_SCHEMA(user_input)
+        return {CONF_GROUP_TYPE: "sensor", **validated_input}
+
+    return _validate_and_set_type
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
+    "import": SchemaFlowFormStep(
+        None,
+        validate_user_input=validate_import(),
+    ),
     "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA,
         preview="group",
