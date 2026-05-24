@@ -127,7 +127,10 @@ class KlikAanKlikUitLight(LightEntity, RestoreEntity):
         ) is not None and current_brightness <= 0:
             self._attr_brightness = 255
 
-        dimlevel = max(1, min(100, round(self._attr_brightness * 100 / 255)))
+        brightness: int = (
+            self._attr_brightness if self._attr_brightness is not None else 255
+        )
+        dimlevel = max(1, min(100, round(brightness * 100 / 255)))
         await self._async_send(on=None, dimlevel=dimlevel)
         self._attr_is_on = True
         self.async_write_ha_state()
