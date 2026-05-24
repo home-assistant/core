@@ -52,7 +52,7 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             config[CONF_HIDE_MEMBERS] = False
             # config[CONF_IGNORE_NON_NUMERIC] = False
             # config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
-            config["old_entity_id"] = old_entity
+            config["old_config_entry_id"] = self.entry.entry_id
 
             import_result = await self.hass.config_entries.flow.async_init(
                 GROUP_DOMAIN,
@@ -61,7 +61,14 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             )
 
             if import_result["type"] != FlowResultType.CREATE_ENTRY:
-                return self.async_abort(reason="could_not_import")
+                if TYPE_CHECKING:
+                    assert import_result["description_placeholders"]
+                return self.async_abort(
+                    reason="could_not_import",
+                    description_placeholders={
+                        "error": import_result["description_placeholders"]["error"]
+                    },
+                )
             return self.async_create_entry(data={})
 
         entity_info = entity_reg.async_get(old_entity)
