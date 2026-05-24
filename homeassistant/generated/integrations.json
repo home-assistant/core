@@ -7752,6 +7752,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vistapool": {
+      "name": "Vistapool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "vivotek": {
       "name": "VIVOTEK",
       "integration_type": "device",
