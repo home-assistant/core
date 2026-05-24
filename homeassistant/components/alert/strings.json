@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "invalid_repeat": "Each repeat value must be a number of minutes greater than or equal to 0.016 (one second).",
+      "invalid_repeat": "Each repeat value must be a number of minutes (minimum 1 second).",
       "repeat_required": "Provide at least one repeat interval."
     },
     "step": {
@@ -26,7 +26,7 @@
           "entity_id": "Entity whose state is monitored to trigger the alert.",
           "message": "Optional template rendered for the notification body.",
           "notifiers": "Notifier service names (without the `notify.` prefix) to call when the alert fires.",
-          "repeat": "Delays in minutes between repeat notifications. Minimum value is 0.016 (one second).",
+          "repeat": "Delays in minutes between repeat notifications (minimum 1 second).",
           "skip_first": "If enabled, no notification is sent immediately when the alert begins.",
           "state": "State of the watched entity that triggers the alert.",
           "title": "Optional template rendered for the notification title."

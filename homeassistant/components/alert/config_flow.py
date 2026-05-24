@@ -40,7 +40,7 @@ from .const import (
     DOMAIN,
 )
 
-MIN_REPEAT_MINUTES = 0.016
+MIN_REPEAT_MINUTES = 1 / 60
 
 
 async def _validate_repeat(
