@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 async def test_user_flow_success(hass: HomeAssistant, mock_unifiap_validate) -> None:
     """Test a successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 
@@ -38,7 +38,7 @@ async def test_user_flow_cannot_connect(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 

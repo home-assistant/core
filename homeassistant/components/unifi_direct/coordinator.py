@@ -7,6 +7,7 @@ from typing import Any
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -35,7 +36,10 @@ def validate_connection_data(data: dict[str, Any]) -> None:
     Kept for config flow compatibility.
     """
     validate_connection(
-        data["host"], data["username"], data["password"], data.get("port", 22)
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        data.get("port", DEFAULT_SSH_PORT),
     )
 
 

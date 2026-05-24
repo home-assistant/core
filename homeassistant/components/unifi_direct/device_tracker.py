@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): int,
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
     }
 )
 

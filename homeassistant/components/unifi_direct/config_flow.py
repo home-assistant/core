@@ -1,4 +1,4 @@
-"""Config flow for UniFi AP Direct direct integration."""
+"""Config flow for UniFi AP Direct integration."""
 
 from typing import Any
 
@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_NAME, DEFAULT_SSH_PORT, DOMAIN
 from .coordinator import validate_connection_data
@@ -15,7 +16,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): int,
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
     }
 )
 
