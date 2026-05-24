@@ -643,6 +643,7 @@ FLOWS = {
         "sabnzbd",
         "samsung_infrared",
         "samsungtv",
+        "sandbox",
         "sanix",
         "satel_integra",
         "saunum",
