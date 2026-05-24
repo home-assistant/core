@@ -28,7 +28,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -312,19 +312,23 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         self._attr_unique_id = (
             f"mawaqit_next_prayer_{self.entity_description.key.lower()}"
         )
-        self.next_prayer_index: int | None = None
-        self.time_next_prayer: datetime | None = None
+        self._next_prayer_index: int | None = None
+        self._next_prayer_time: datetime | None = None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._next_prayer_index, self._next_prayer_time = self._get_next_prayer_info()
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> str | datetime | None:
         """Return the appropriate value based on the sensor type."""
-        self.next_prayer_index, self.time_next_prayer = self._get_next_prayer_info()
-        if self.next_prayer_index is None or self.time_next_prayer is None:
+        if self._next_prayer_index is None or self._next_prayer_time is None:
             return None
         if self.entity_description.key == "next_salat_name":
-            return PRAYER_NAMES[self.next_prayer_index]
+            return PRAYER_NAMES[self._next_prayer_index]
         if self.entity_description.key == "next_salat_time":
-            return self.time_next_prayer
+            return self._next_prayer_time
         return None
 
     def _get_next_prayer_info(self) -> tuple[int | None, datetime | None]:
