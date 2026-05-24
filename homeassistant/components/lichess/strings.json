@@ -93,7 +93,7 @@
       },
       "puzzle_games": {
         "name": "Puzzle games",
-        "unit_of_measurement": "[%key:component::lichess::entity::sensor::bullet_games::unit_of_measurement%]"
+        "unit_of_measurement": "games"
       },
       "puzzle_rating": {
         "name": "Puzzle rating"

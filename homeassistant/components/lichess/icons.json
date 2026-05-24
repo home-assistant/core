@@ -62,7 +62,7 @@
         "default": "mdi:chart-line"
       },
       "puzzle_games": {
-        "default": "mdi:chess-pawn"
+        "default": "mdi:puzzle"
       },
       "puzzle_rating": {
         "default": "mdi:chart-line"

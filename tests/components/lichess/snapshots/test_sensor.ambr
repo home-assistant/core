@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'antichess_games',
-    'unique_id': 'drnykterstien.antichess_games',
+    'unique_id': 'drnykterstein.antichess_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'antichess_rating',
-    'unique_id': 'drnykterstien.antichess_rating',
+    'unique_id': 'drnykterstein.antichess_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -141,7 +141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'atomic_games',
-    'unique_id': 'drnykterstien.atomic_games',
+    'unique_id': 'drnykterstein.atomic_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -195,7 +195,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'atomic_rating',
-    'unique_id': 'drnykterstien.atomic_rating',
+    'unique_id': 'drnykterstein.atomic_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -248,7 +248,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blitz_games',
-    'unique_id': 'drnykterstien.blitz_games',
+    'unique_id': 'drnykterstein.blitz_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -302,7 +302,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blitz_rating',
-    'unique_id': 'drnykterstien.blitz_rating',
+    'unique_id': 'drnykterstein.blitz_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -355,7 +355,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bullet_games',
-    'unique_id': 'drnykterstien.bullet_games',
+    'unique_id': 'drnykterstein.bullet_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -409,7 +409,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bullet_rating',
-    'unique_id': 'drnykterstien.bullet_rating',
+    'unique_id': 'drnykterstein.bullet_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -462,7 +462,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'chess960_games',
-    'unique_id': 'drnykterstien.chess960_games',
+    'unique_id': 'drnykterstein.chess960_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -516,7 +516,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'chess960_rating',
-    'unique_id': 'drnykterstien.chess960_rating',
+    'unique_id': 'drnykterstein.chess960_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -569,7 +569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'classical_games',
-    'unique_id': 'drnykterstien.classical_games',
+    'unique_id': 'drnykterstein.classical_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -623,7 +623,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'classical_rating',
-    'unique_id': 'drnykterstien.classical_rating',
+    'unique_id': 'drnykterstein.classical_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -676,7 +676,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'correspondence_games',
-    'unique_id': 'drnykterstien.correspondence_games',
+    'unique_id': 'drnykterstein.correspondence_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -730,7 +730,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'correspondence_rating',
-    'unique_id': 'drnykterstien.correspondence_rating',
+    'unique_id': 'drnykterstein.correspondence_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -783,7 +783,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'crazyhouse_games',
-    'unique_id': 'drnykterstien.crazyhouse_games',
+    'unique_id': 'drnykterstein.crazyhouse_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -837,7 +837,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'crazyhouse_rating',
-    'unique_id': 'drnykterstien.crazyhouse_rating',
+    'unique_id': 'drnykterstein.crazyhouse_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -890,7 +890,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'horde_games',
-    'unique_id': 'drnykterstien.horde_games',
+    'unique_id': 'drnykterstein.horde_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -944,7 +944,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'horde_rating',
-    'unique_id': 'drnykterstien.horde_rating',
+    'unique_id': 'drnykterstein.horde_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -997,7 +997,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'king_of_the_hill_games',
-    'unique_id': 'drnykterstien.king_of_the_hill_games',
+    'unique_id': 'drnykterstein.king_of_the_hill_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1051,7 +1051,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'king_of_the_hill_rating',
-    'unique_id': 'drnykterstien.king_of_the_hill_rating',
+    'unique_id': 'drnykterstein.king_of_the_hill_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -1104,7 +1104,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'puzzle_games',
-    'unique_id': 'drnykterstien.puzzle_games',
+    'unique_id': 'drnykterstein.puzzle_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1158,7 +1158,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'puzzle_rating',
-    'unique_id': 'drnykterstien.puzzle_rating',
+    'unique_id': 'drnykterstein.puzzle_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -1211,7 +1211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'racing_kings_games',
-    'unique_id': 'drnykterstien.racing_kings_games',
+    'unique_id': 'drnykterstein.racing_kings_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1265,7 +1265,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'racing_kings_rating',
-    'unique_id': 'drnykterstien.racing_kings_rating',
+    'unique_id': 'drnykterstein.racing_kings_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -1318,7 +1318,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rapid_games',
-    'unique_id': 'drnykterstien.rapid_games',
+    'unique_id': 'drnykterstein.rapid_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1372,7 +1372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rapid_rating',
-    'unique_id': 'drnykterstien.rapid_rating',
+    'unique_id': 'drnykterstein.rapid_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -1425,7 +1425,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'three_check_games',
-    'unique_id': 'drnykterstien.three_check_games',
+    'unique_id': 'drnykterstein.three_check_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1479,7 +1479,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'three_check_rating',
-    'unique_id': 'drnykterstien.three_check_rating',
+    'unique_id': 'drnykterstein.three_check_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -1532,7 +1532,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ultra_bullet_games',
-    'unique_id': 'drnykterstien.ultra_bullet_games',
+    'unique_id': 'drnykterstein.ultra_bullet_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -1586,7 +1586,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ultra_bullet_rating',
-    'unique_id': 'drnykterstien.ultra_bullet_rating',
+    'unique_id': 'drnykterstein.ultra_bullet_rating',
     'unit_of_measurement': None,
   })
 # ---
