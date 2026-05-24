@@ -662,6 +662,42 @@ async def test_migrate_ble_scanner_mode(
     assert entry.options.get(CONF_BLE_SCANNER_MODE) == expected_mode
 
 
+@pytest.mark.parametrize(
+    ("entry_version", "entry_minor_version"),
+    [(2, 1), (1, 4)],
+    ids=["future_major", "future_minor"],
+)
+async def test_migrate_ble_scanner_mode_future_version(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entry_version: int,
+    entry_minor_version: int,
+) -> None:
+    """Future versions are not downgraded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        title="Test name",
+        version=entry_version,
+        minor_version=entry_minor_version,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == entry_version
+    assert entry.minor_version == entry_minor_version
+    assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+
+
 async def test_blu_trv_stale_device_removal(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
