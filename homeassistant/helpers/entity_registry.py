@@ -1957,7 +1957,7 @@ class EntityRegistry(BaseRegistry):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
-        if new_config_entry_id == UNDEFINED and old.config_entry_id is not None:
+        if new_config_entry_id is UNDEFINED and old.config_entry_id is not None:
             raise ValueError(
                 f"new_config_entry_id required because {entity_id} is already linked "
                 "to a config entry"
