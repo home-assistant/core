@@ -189,7 +189,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
-            # Pipeline run is complete ? always update bookkeeping state
+            # Pipeline run is complete — always update bookkeeping state
             # even after a disconnect so follow-up reconnects don't retain
             # stale _is_pipeline_running / _pipeline_ended_event state.
             self._is_pipeline_running = False

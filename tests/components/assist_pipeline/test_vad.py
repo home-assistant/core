@@ -3,9 +3,9 @@
 import itertools as it
 
 from homeassistant.components.assist_pipeline.vad import (
-    AudioBuffer,
     DEFAULT_VAD_SILENCE_SECONDS,
     DEFAULT_VAD_TIMEOUT_SECONDS,
+    AudioBuffer,
     VoiceCommandSegmenter,
     chunk_samples,
 )

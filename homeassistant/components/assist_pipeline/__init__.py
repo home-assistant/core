@@ -23,6 +23,7 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
+from .number import VadSilenceSecondsNumber, VadTimeoutSecondsNumber
 from .pipeline import (
     AudioSettings,
     Pipeline,
@@ -39,7 +40,6 @@ from .pipeline import (
     async_setup_pipeline_store,
     async_update_pipeline,
 )
-from .number import VadSilenceSecondsNumber, VadTimeoutSecondsNumber
 from .select import AssistPipelineSelect, VadSensitivitySelect
 from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
@@ -58,9 +58,9 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
-    "VadSilenceSecondsNumber",
     "VadSensitivity",
     "VadSensitivitySelect",
+    "VadSilenceSecondsNumber",
     "VadTimeoutSecondsNumber",
     "WakeWordSettings",
     "async_create_default_pipeline",

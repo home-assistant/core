@@ -677,12 +677,14 @@ class AssistSatelliteEntity(entity.Entity):
     def _resolve_float_state(self, entity_id: str, name: str) -> float:
         """Resolve float value from entity state."""
         if (state := self.hass.states.get(entity_id)) is None:
-            raise RuntimeError(f"{name} entity not found")
+            raise RuntimeError(f"{name} entity not found: {entity_id}")
 
         try:
             return float(state.state)
         except ValueError as err:
-            raise RuntimeError(f"{name} entity state is not a number") from err
+            raise RuntimeError(
+                f"{name} entity state is not a number: {entity_id}={state.state!r}"
+            ) from err
 
     async def _resolve_announcement_media_id(
         self,

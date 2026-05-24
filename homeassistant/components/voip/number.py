@@ -48,11 +48,6 @@ class VoipVadSilenceSecondsNumber(VoIPEntity, VadSilenceSecondsNumber):
         VoIPEntity.__init__(self, device)
         VadSilenceSecondsNumber.__init__(self, hass, device.voip_id)
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        await self._async_restore_native_value()
-
 
 class VoipVadTimeoutSecondsNumber(VoIPEntity, VadTimeoutSecondsNumber):
     """VAD timeout seconds for VoIP devices."""
@@ -61,8 +56,3 @@ class VoipVadTimeoutSecondsNumber(VoIPEntity, VadTimeoutSecondsNumber):
         """Initialize a VAD timeout seconds number."""
         VoIPEntity.__init__(self, device)
         VadTimeoutSecondsNumber.__init__(self, hass, device.voip_id)
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        await self._async_restore_native_value()

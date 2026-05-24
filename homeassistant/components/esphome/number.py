@@ -111,11 +111,6 @@ class EsphomeVadSilenceSecondsNumber(EsphomeAssistEntity, VadSilenceSecondsNumbe
         EsphomeAssistEntity.__init__(self, entry_data)
         VadSilenceSecondsNumber.__init__(self, hass, self._device_info.mac_address)
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await EsphomeAssistEntity.async_added_to_hass(self)
-        await self._async_restore_native_value()
-
 
 class EsphomeVadTimeoutSecondsNumber(EsphomeAssistEntity, VadTimeoutSecondsNumber):
     """VAD timeout seconds for ESPHome devices."""
@@ -124,8 +119,3 @@ class EsphomeVadTimeoutSecondsNumber(EsphomeAssistEntity, VadTimeoutSecondsNumbe
         """Initialize a VAD timeout seconds number."""
         EsphomeAssistEntity.__init__(self, entry_data)
         VadTimeoutSecondsNumber.__init__(self, hass, self._device_info.mac_address)
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        await EsphomeAssistEntity.async_added_to_hass(self)
-        await self._async_restore_native_value()

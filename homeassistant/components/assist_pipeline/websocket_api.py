@@ -30,6 +30,12 @@ from .const import (
     SAMPLE_WIDTH,
 )
 from .error import PipelineNotFound
+from .number import (
+    MAX_VAD_SILENCE_SECONDS,
+    MAX_VAD_TIMEOUT_SECONDS,
+    MIN_VAD_SILENCE_SECONDS,
+    MIN_VAD_TIMEOUT_SECONDS,
+)
 from .pipeline import (
     KEY_ASSIST_PIPELINE,
     AudioSettings,
@@ -99,11 +105,17 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("no_vad"): bool,
                             vol.Optional("vad_silence_seconds"): vol.All(
                                 vol.Coerce(float),
-                                vol.Range(min=0, min_included=False),
+                                vol.Range(
+                                    min=MIN_VAD_SILENCE_SECONDS,
+                                    max=MAX_VAD_SILENCE_SECONDS,
+                                ),
                             ),
                             vol.Optional("vad_timeout_seconds"): vol.All(
                                 vol.Coerce(float),
-                                vol.Range(min=0, min_included=False),
+                                vol.Range(
+                                    min=MIN_VAD_TIMEOUT_SECONDS,
+                                    max=MAX_VAD_TIMEOUT_SECONDS,
+                                ),
                             ),
                         }
                     },
@@ -116,11 +128,17 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("wake_word_phrase"): str,
                             vol.Optional("vad_silence_seconds"): vol.All(
                                 vol.Coerce(float),
-                                vol.Range(min=0, min_included=False),
+                                vol.Range(
+                                    min=MIN_VAD_SILENCE_SECONDS,
+                                    max=MAX_VAD_SILENCE_SECONDS,
+                                ),
                             ),
                             vol.Optional("vad_timeout_seconds"): vol.All(
                                 vol.Coerce(float),
-                                vol.Range(min=0, min_included=False),
+                                vol.Range(
+                                    min=MIN_VAD_TIMEOUT_SECONDS,
+                                    max=MAX_VAD_TIMEOUT_SECONDS,
+                                ),
                             ),
                         }
                     },

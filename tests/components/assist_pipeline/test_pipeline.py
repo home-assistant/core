@@ -26,10 +26,10 @@ from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
 )
 from homeassistant.components.assist_pipeline.pipeline import (
-    AudioSettings,
     STORAGE_KEY,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
+    AudioSettings,
     Pipeline,
     PipelineData,
     PipelineEventType,
