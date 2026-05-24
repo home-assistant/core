@@ -545,9 +545,7 @@ class AudioSettings:
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
 
         if not (
-            MIN_VAD_SILENCE_SECONDS
-            <= self.silence_seconds
-            <= MAX_VAD_SILENCE_SECONDS
+            MIN_VAD_SILENCE_SECONDS <= self.silence_seconds <= MAX_VAD_SILENCE_SECONDS
         ):
             raise ValueError(
                 "silence_seconds must be in "
@@ -555,9 +553,7 @@ class AudioSettings:
             )
 
         if not (
-            MIN_VAD_TIMEOUT_SECONDS
-            <= self.timeout_seconds
-            <= MAX_VAD_TIMEOUT_SECONDS
+            MIN_VAD_TIMEOUT_SECONDS <= self.timeout_seconds <= MAX_VAD_TIMEOUT_SECONDS
         ):
             raise ValueError(
                 "timeout_seconds must be in "
