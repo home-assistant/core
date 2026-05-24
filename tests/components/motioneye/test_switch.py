@@ -53,9 +53,7 @@ async def test_switch_turn_on_off(
 
     # async_get_camera is called by the switch to fetch the latest config before
     # calling set_camera. Use a fresh deep-copy each call to prevent mutation.
-    client.async_get_camera = AsyncMock(
-        side_effect=lambda _: copy.deepcopy(TEST_CAMERA)
-    )
+    client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(camera_off))
     # async_get_cameras is used by the coordinator to refresh state.
     client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
