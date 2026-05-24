@@ -108,6 +108,9 @@
     "entry_not_loaded": {
       "message": "Entry not loaded: {entry}"
     },
+    "invalid_auth": {
+      "message": "Invalid authentication credentials: {error}"
+    },
     "invalid_device_id": {
       "message": "Invalid device ID specified: {device_id}"
     },

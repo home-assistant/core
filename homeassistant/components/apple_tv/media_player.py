@@ -139,7 +139,7 @@ class AppleTvMediaPlayer(
         all_features = atv.features.all_features()
         for feature_name, support_flag in SUPPORT_FEATURE_MAPPING.items():
             feature_info = all_features.get(feature_name)
-            if feature_info and feature_info.state != FeatureState.Unsupported:
+            if feature_info and feature_info.state is not FeatureState.Unsupported:
                 self._attr_supported_features |= support_flag
 
         # No need to schedule state update here as that will happen when the first
@@ -188,14 +188,14 @@ class AppleTvMediaPlayer(
             return MediaPlayerState.OFF
         if (
             self._is_feature_available(FeatureName.PowerState)
-            and self.atv.power.power_state == PowerState.Off
+            and self.atv.power.power_state is PowerState.Off
         ):
             return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
                 return MediaPlayerState.IDLE
-            if state == DeviceState.Playing:
+            if state is DeviceState.Playing:
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
@@ -446,7 +446,7 @@ class AppleTvMediaPlayer(
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         if self._playing and self._is_feature_available(FeatureName.Shuffle):
-            return self._playing.shuffle != ShuffleState.Off
+            return self._playing.shuffle is not ShuffleState.Off
         return None
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
@@ -506,7 +506,7 @@ class AppleTvMediaPlayer(
             and (self._is_feature_available(FeatureName.TurnOff))
             and (
                 not self._is_feature_available(FeatureName.PowerState)
-                or self.atv.power.power_state == PowerState.On
+                or self.atv.power.power_state is PowerState.On
             )
         ):
             await self.atv.power.turn_off()
