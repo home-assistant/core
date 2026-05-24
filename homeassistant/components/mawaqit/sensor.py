@@ -216,7 +216,7 @@ async def async_setup_entry(
     )
 
     # Register the Sensors
-    async_add_entities(new_entities=entities, update_before_add=True)
+    async_add_entities(new_entities=entities)
 
     _LOGGER.info("Mawaqit sensors successfully initialized")
 
