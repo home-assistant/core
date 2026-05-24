@@ -5,14 +5,9 @@ from unittest.mock import AsyncMock
 from ha_xthings_cloud import XthingsCloudApiError, XthingsCloudAuthError
 import pytest
 
-from homeassistant.components.xthings_cloud.const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_REFRESH_TOKEN,
-    CONF_TOKEN,
-    DOMAIN,
-)
+from homeassistant.components.xthings_cloud.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
