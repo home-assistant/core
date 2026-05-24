@@ -794,24 +794,37 @@ async def test_manage_commands_menu_contains_command_actions(
     assert "remove_command" in result["menu_options"]
 
 
-async def test_manage_commands_menu_contains_available_command_actions(
+@pytest.mark.parametrize(
+    ("source", "expected_step", "needs_commands"),
+    [
+        (SOURCE_ADD_COMMAND, "select_remote_for_command", False),
+        (SOURCE_EDIT_COMMAND, "select_remote_for_command_edit", True),
+        (SOURCE_REMOVE_COMMAND, "select_remote_for_command_removal", True),
+    ],
+)
+async def test_manage_commands_source_shortcuts_cover_direct_branches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    source: str,
+    expected_step: str,
+    needs_commands: bool,
 ) -> None:
-    """Test manage commands menu shows the available command actions."""
-    config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {
-        "POWER_ON": RAW_COMMAND
-    }
+    """Test command source shortcuts route to command selection steps."""
+    if needs_commands:
+        config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {
+            "POWER_ON": RAW_COMMAND
+        }
 
-    result = await _init_options_flow(
-        hass,
-        config_entry,
-        SOURCE_MANAGE_COMMANDS,
+    flow = VirtualRemoteOptionsFlow(config_entry)
+    flow.hass = hass
+    monkeypatch.setattr(
+        type(flow),
+        "context",
+        property(lambda _flow: {"source": source}),
     )
 
-    assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == [
-        SOURCE_ADD_COMMAND,
-        SOURCE_EDIT_COMMAND,
-        SOURCE_REMOVE_COMMAND,
-    ]
+    result = await flow.async_step_manage_commands()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step

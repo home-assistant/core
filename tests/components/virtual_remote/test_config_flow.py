@@ -1,10 +1,11 @@
 """Tests for the Virtual Remote config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.virtual_remote.config_flow import VirtualRemoteConfigFlow
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_ID,
@@ -248,3 +249,72 @@ async def test_reconfigure_aborts_without_available_infrared_entities(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_available_infrared_entities"
+
+
+async def test_user_flow_aborts_without_available_infrared_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow aborts when no infrared entities are available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_available_infrared_entities"
+
+
+async def test_direct_user_step_rejects_unavailable_infrared_entity(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test user step handles unavailable selected infrared entity."""
+    flow = VirtualRemoteConfigFlow()
+    flow.hass = hass
+
+    with (
+        patch(
+            "homeassistant.components.virtual_remote.config_flow.available_infrared_entities",
+            return_value={"infrared.test_ir": "Test IR"},
+        ),
+        patch.object(flow, "async_set_unique_id", AsyncMock(return_value=None)),
+        patch.object(flow, "_abort_if_unique_id_configured", return_value=None),
+    ):
+        result = await flow.async_step_user(
+            {
+                CONF_REMOTE_NAME: "Living Room TV",
+                CONF_INFRARED_ENTITY_ID: "infrared.missing",
+            }
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"}
+
+
+async def test_direct_reconfigure_step_rejects_unavailable_infrared_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    infrared_entity: str,
+) -> None:
+    """Test reconfigure step handles unavailable selected infrared entity."""
+    config_entry.add_to_hass(hass)
+
+    flow = VirtualRemoteConfigFlow()
+    flow.hass = hass
+
+    with (
+        patch.object(flow, "_get_reconfigure_entry", return_value=config_entry),
+        patch(
+            "homeassistant.components.virtual_remote.config_flow.available_infrared_entities",
+            return_value={"infrared.test_ir": "Test IR"},
+        ),
+    ):
+        result = await flow.async_step_reconfigure(
+            {
+                CONF_REMOTE_NAME: "Bedroom TV",
+                CONF_INFRARED_ENTITY_ID: "infrared.missing",
+            }
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_INFRARED_ENTITY_ID: "infrared_entity_unavailable"}

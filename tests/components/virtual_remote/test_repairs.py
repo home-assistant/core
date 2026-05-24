@@ -5,6 +5,7 @@ from homeassistant.components.virtual_remote.const import (
     ISSUE_LINKED_INFRARED_ENTITY_MISSING,
 )
 from homeassistant.components.virtual_remote.repairs import (
+    _linked_infrared_entity_issue_id,
     async_create_linked_infrared_entity_missing_issue,
     async_delete_linked_infrared_entity_missing_issue,
     async_delete_stale_linked_infrared_entity_missing_issues,
@@ -86,24 +87,52 @@ def test_delete_stale_missing_infrared_issues(hass: HomeAssistant) -> None:
     )
 
 
-async def test_delete_stale_missing_infrared_issues_keeps_configured_issue(
+def test_delete_stale_missing_infrared_issues_ignores_unrelated_issues(
     hass: HomeAssistant,
 ) -> None:
-    """Test stale missing-infrared cleanup keeps configured remote issues."""
-    async_create_linked_infrared_entity_missing_issue(
+    """Test stale cleanup ignores unrelated repair issues."""
+    issue_registry = ir.async_get(hass)
+
+    ir.async_create_issue(
         hass,
-        remote_id="configured",
-        remote_name="Configured",
-        infrared_entity_id="infrared.missing",
+        DOMAIN,
+        "unrelated_issue",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_LINKED_INFRARED_ENTITY_MISSING,
+        translation_placeholders={
+            "remote_name": "Unrelated",
+            "infrared_entity_id": "infrared.unrelated",
+        },
     )
 
     async_delete_stale_linked_infrared_entity_missing_issues(
         hass,
-        configured_remote_ids={"configured"},
+        configured_remote_ids=set(),
+    )
+
+    assert issue_registry.async_get_issue(DOMAIN, "unrelated_issue") is not None
+
+
+async def test_async_delete_stale_linked_infrared_entity_missing_issues_keeps_configured_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale issue cleanup keeps issues for configured remotes."""
+    async_create_linked_infrared_entity_missing_issue(
+        hass,
+        remote_id="living_room",
+        remote_name="Living Room",
+        infrared_entity_id="infrared.living_room",
+    )
+
+    async_delete_stale_linked_infrared_entity_missing_issues(
+        hass,
+        configured_remote_ids={"living_room"},
     )
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue(
+
+    assert (
         DOMAIN,
-        f"{ISSUE_LINKED_INFRARED_ENTITY_MISSING}_configured",
-    )
+        _linked_infrared_entity_issue_id("living_room"),
+    ) in issue_registry.issues

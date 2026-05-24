@@ -250,3 +250,20 @@ def test_infrared_entity_field_without_default_uses_required_field() -> None:
     )
 
     assert field.default is vol.UNDEFINED
+
+
+def test_infrared_entity_field_with_current_without_default_uses_required_field() -> (
+    None
+):
+    """Test current infrared entity field has no default when no current value exists."""
+    field = infrared_entity_field_with_current(
+        "",
+        {
+            "infrared.available": selector.SelectOptionDict(
+                value="infrared.available",
+                label="Available",
+            )
+        },
+    )
+
+    assert field.default is vol.UNDEFINED
