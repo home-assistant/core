@@ -51,9 +51,9 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator using a config entry."""
         self.config_entry = config_entry
-        self.host = config_entry.data.get("host")
-        self.username = config_entry.data.get("username")
-        self.password = config_entry.data.get("password")
+        self.host = config_entry.data.get(CONF_HOST)
+        self.username = config_entry.data.get(CONF_USERNAME)
+        self.password = config_entry.data.get(CONF_PASSWORD)
         self.port = config_entry.data.get("port", DEFAULT_SSH_PORT)
 
         self.ap = UniFiAP(
