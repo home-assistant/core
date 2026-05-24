@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components.intent_script import CONF_ACTION, DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
+from homeassistant.components.intent_script import DOMAIN
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
