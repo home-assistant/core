@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_UUID, PRAYER_NAMES, PRAYER_NAMES_IQAMA
+from .const import PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 _LOGGER = logging.getLogger(__name__)
 
