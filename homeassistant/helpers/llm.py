@@ -71,7 +71,7 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
-DEVICE_CONTROL_TOOL_ARGUMENT_PROMPT = (
+DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
     "When controlling Home Assistant always call the intent tools. "
     "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
     "When controlling a device, prefer passing just name and domain. "
@@ -506,7 +506,7 @@ class AssistAPI(API):
 
         # Collect all parts, filtering out any None values
         prompt_parts = [
-            DEVICE_CONTROL_TOOL_ARGUMENT_PROMPT,
+            DEVICE_CONTROL_TOOL_USAGE_PROMPT,
             DYNAMIC_CONTEXT_PROMPT,
             *self._async_get_exposed_entities_prompt(exposed_entities),
             self._async_get_voice_satellite_area_prompt(llm_context),
