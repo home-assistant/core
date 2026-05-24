@@ -47,19 +47,19 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "on"
 
-    camera_on = copy.deepcopy(TEST_CAMERA)
+    # Snapshot camera states before any service calls so they aren't affected
+    # by the optimistic in-place mutation in _async_send_set_camera.
+    camera_on = copy.deepcopy(TEST_CAMERA)  # motion_detection=True
     camera_off = copy.deepcopy(TEST_CAMERA)
     camera_off[KEY_MOTION_DETECTION] = False
 
-    # async_get_camera is fetched by the switch before calling set_camera.
-    # Use side_effect with deep-copies so the dicts aren't mutated across calls.
-    # async_get_cameras is used by the coordinator to refresh state.
+    # Turn-off phase: switch GETs camera_on, coordinator sees camera_off.
+    # async_get_camera uses side_effect so each call gets a fresh copy.
     client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(camera_on))
     client.async_get_cameras = AsyncMock(
         return_value={"cameras": [copy.deepcopy(camera_off)]}
     )
 
-    # Turn switch off.
     with patch(
         "homeassistant.components.motioneye.switch.asyncio.sleep",
         new_callable=AsyncMock,
@@ -82,13 +82,13 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "off"
 
-    # Now prepare for turn-on: get_camera returns off state, coordinator returns on.
+    # Turn-on phase: switch GETs camera_off, coordinator sees camera with motion_detection=True.
+    # Use TEST_CAMERA directly for the coordinator since it is never mutated.
     client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(camera_off))
     client.async_get_cameras = AsyncMock(
-        return_value={"cameras": [copy.deepcopy(camera_on)]}
+        return_value={"cameras": [copy.deepcopy(TEST_CAMERA)]}
     )
 
-    # Turn switch on.
     with patch(
         "homeassistant.components.motioneye.switch.asyncio.sleep",
         new_callable=AsyncMock,
