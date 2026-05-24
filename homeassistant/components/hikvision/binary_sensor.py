@@ -103,6 +103,12 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "Video Loss": BinarySensorEntityDescription(
+        key="video_loss",
+        translation_key="video_loss",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "Bad Video": BinarySensorEntityDescription(
         key="bad_video",
         translation_key="bad_video",
