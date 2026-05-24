@@ -65,7 +65,7 @@ class HaBluetoothScanSource(BleScanSource):
             self._hass,
             _on_advertisement,
             None,
-            BluetoothScanningMode.ACTIVE,
+            BluetoothScanningMode.PASSIVE,
         )
 
     async def stop(self) -> None:

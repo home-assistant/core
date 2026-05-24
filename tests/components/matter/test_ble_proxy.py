@@ -73,10 +73,10 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     assert result is proxy_cls.return_value
 
 
-async def test_scan_source_start_registers_active_callback(
+async def test_scan_source_start_registers_passive_callback(
     hass: HomeAssistant,
 ) -> None:
-    """start() registers an HA bluetooth callback in ACTIVE scanning mode."""
+    """start() registers an HA bluetooth callback in PASSIVE scanning mode."""
     source = HaBluetoothScanSource(hass)
     cancel = MagicMock()
     with patch(
@@ -89,7 +89,7 @@ async def test_scan_source_start_registers_active_callback(
     args, _ = register.call_args
     assert args[0] is hass
     assert args[2] is None
-    assert args[3] is BluetoothScanningMode.ACTIVE
+    assert args[3] is BluetoothScanningMode.PASSIVE
     assert source._cancel is cancel
 
 

@@ -3,7 +3,6 @@
 import asyncio
 from functools import cache
 from typing import TYPE_CHECKING
-from urllib.parse import urlsplit, urlunsplit
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
@@ -14,6 +13,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooOld,
 )
 from matter_server.common.errors import MatterError, NodeNotExists
+from yarl import URL
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
@@ -248,15 +248,15 @@ def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
     `None` when the path does not match the expected `/ws` shape, so callers can
     skip BLE proxy setup instead of probing a wrong endpoint.
     """
-    parsed = urlsplit(matter_ws_url)
+    parsed = URL(matter_ws_url)
     path = parsed.path.rstrip("/")
     if path.endswith("/ws"):
-        path = f"{path[:-3]}/ble"
+        new_path = f"{path[:-3]}/ble"
     elif not path:
-        path = "/ble"
+        new_path = "/ble"
     else:
         return None
-    return urlunsplit(parsed._replace(path=path))
+    return str(parsed.with_path(new_path))
 
 
 async def _client_listen(
