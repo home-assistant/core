@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.hegel.const import CONF_MODEL, DOMAIN
+from homeassistant.components.hegel.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo

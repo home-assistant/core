@@ -9,10 +9,10 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_MODEL, DEFAULT_PORT, DOMAIN, MODEL_INPUTS
+from .const import DEFAULT_PORT, DOMAIN, MODEL_INPUTS
 
 _LOGGER = logging.getLogger(__name__)
 
