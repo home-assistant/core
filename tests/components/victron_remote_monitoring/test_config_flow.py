@@ -7,11 +7,11 @@ from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
