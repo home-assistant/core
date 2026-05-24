@@ -1,5 +1,6 @@
 """Tests for arcam fmj receivers."""
 
+from collections.abc import Generator
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -46,7 +47,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-def platform_fixture():
+def platform_fixture() -> Generator[None]:
     """Only test single platform."""
     with patch("homeassistant.components.arcam_fmj.PLATFORMS", [Platform.MEDIA_PLAYER]):
         yield
@@ -92,11 +93,21 @@ async def update(hass: HomeAssistant, client: Mock, entity_id: str) -> CoreState
 async def test_powered_off(hass: HomeAssistant, client: Mock, state_1: State) -> None:
     """Test properties in powered off state."""
     state_1.get_source.return_value = None
-    state_1.get_power.return_value = None
+    state_1.get_power.return_value = False
 
     data = await update(hass, client, MOCK_ENTITY_ID)
     assert "source" not in data.attributes
     assert data.state == "off"
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_power_unknown(hass: HomeAssistant, client: Mock, state_1: State) -> None:
+    """Test that an unreported power state surfaces as unknown, not off."""
+    state_1.get_source.return_value = None
+    state_1.get_power.return_value = None
+
+    data = await update(hass, client, MOCK_ENTITY_ID)
+    assert data.state == "unknown"
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -355,7 +366,11 @@ async def test_play_media_invalid(hass: HomeAssistant, state_1: State) -> None:
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_sound_mode(
-    hass: HomeAssistant, client: Mock, state_1: State, mode, mode_enum
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    mode: str | None,
+    mode_enum: DecodeMode2CH | DecodeModeMCH | None,
 ) -> None:
     """Test selection sound mode."""
     state_1.get_decode_mode.return_value = mode_enum
@@ -373,7 +388,11 @@ async def test_sound_mode(
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_sound_mode_list(
-    hass: HomeAssistant, client: Mock, state_1: State, modes, modes_enum
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    modes: list[str] | None,
+    modes_enum: list[DecodeMode2CH] | list[DecodeModeMCH] | None,
 ) -> None:
     """Test sound mode list."""
     state_1.get_decode_modes.return_value = modes_enum
@@ -422,10 +441,9 @@ async def test_volume_level(hass: HomeAssistant, client: Mock, state_1: State) -
 @pytest.mark.parametrize(("volume", "call"), [(0.0, 0), (0.5, 50), (1.0, 99)])
 @pytest.mark.usefixtures("player_setup")
 async def test_set_volume_level(
-    hass: HomeAssistant, state_1: State, volume, call
+    hass: HomeAssistant, state_1: State, volume: float, call: int
 ) -> None:
     """Test setting volume."""
-
     await hass.services.async_call(
         "media_player",
         SERVICE_VOLUME_SET,
@@ -468,7 +486,11 @@ async def test_set_volume_level_lost(hass: HomeAssistant, state_1: State) -> Non
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_media_content_type(
-    hass: HomeAssistant, client: Mock, state_1: State, source, media_content_type
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    source: SourceCodes | None,
+    media_content_type: MediaType | None,
 ) -> None:
     """Test content type deduction."""
     state_1.get_source.return_value = source
@@ -488,7 +510,13 @@ async def test_media_content_type(
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_media_channel(
-    hass: HomeAssistant, client: Mock, state_1: State, source, dab, rds, channel
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    source: SourceCodes,
+    dab: str | None,
+    rds: str | None,
+    channel: str | None,
 ) -> None:
     """Test media channel."""
     state_1.get_dab_station.return_value = dab
@@ -508,7 +536,12 @@ async def test_media_channel(
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_media_artist(
-    hass: HomeAssistant, client: Mock, state_1: State, source, dls, artist
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    source: SourceCodes,
+    dls: str | None,
+    artist: str | None,
 ) -> None:
     """Test media artist."""
     state_1.get_dls_pdt.return_value = dls
@@ -527,17 +560,18 @@ async def test_media_artist(
 )
 @pytest.mark.usefixtures("player_setup")
 async def test_media_title(
-    hass: HomeAssistant, client: Mock, state_1: State, source, channel, title
+    hass: HomeAssistant,
+    client: Mock,
+    state_1: State,
+    source: SourceCodes | None,
+    channel: str | None,
+    title: str | None,
 ) -> None:
     """Test media title."""
-
     state_1.get_source.return_value = source
     with patch.object(
         ArcamFmj, "media_channel", new_callable=PropertyMock
     ) as media_channel:
         media_channel.return_value = channel
         data = await update(hass, client, MOCK_ENTITY_ID)
-        if title is None:
-            assert "media_title" not in data.attributes
-        else:
-            assert data.attributes["media_title"] == title
+        assert data.attributes.get("media_title") == title

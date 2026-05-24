@@ -1,4 +1,4 @@
-"""Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+"""Support for TMB Barcelona public transport."""
 
 from datetime import timedelta
 import logging

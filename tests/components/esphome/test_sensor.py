@@ -241,7 +241,7 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a state class of measurement with last reset type of auto is converted to total increasing."""
+    """Test measurement with last_reset auto converts to total_increasing."""
     entity_info = [
         SensorInfo(
             object_id="mysensor",

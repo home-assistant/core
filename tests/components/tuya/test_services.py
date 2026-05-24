@@ -154,7 +154,9 @@ async def test_set_feeder_meal_plan_unsupported_device(
     mock_device.product_id = "unsupported_product"
     with pytest.raises(
         ServiceValidationError,
-        match=f"Feeder with ID {mock_device.id} does not support meal plan functionality",
+        match=(
+            f"Feeder with ID {mock_device.id} does not support meal plan functionality"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
