@@ -1,13 +1,12 @@
 """Support for Renault services."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -21,7 +20,6 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 ATTR_SCHEDULES = "schedules"
-ATTR_TEMPERATURE = "temperature"
 ATTR_VEHICLE = "vehicle"
 ATTR_WHEN = "when"
 
@@ -33,6 +31,11 @@ SERVICE_VEHICLE_SCHEMA = vol.Schema(
 SERVICE_AC_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
         vol.Required(ATTR_TEMPERATURE): cv.positive_float,
+        vol.Optional(ATTR_WHEN): cv.datetime,
+    }
+)
+SERVICE_CHARGE_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
         vol.Optional(ATTR_WHEN): cv.datetime,
     }
 )
@@ -111,6 +114,16 @@ async def ac_start(service_call: ServiceCall) -> None:
     LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
     result = await proxy.set_ac_start(temperature, when)
     LOGGER.debug("A/C start result: %s", result.raw_data)
+
+
+async def charge_start(service_call: ServiceCall) -> None:
+    """Start Charging with optional delay."""
+    when: datetime | None = service_call.data.get(ATTR_WHEN)
+    proxy = get_vehicle_proxy(service_call)
+
+    LOGGER.debug("Charge start attempt, when: %s", when)
+    result = await proxy.set_charge_start(when)
+    LOGGER.debug("Charge start result: %s", result.raw_data)
 
 
 async def charge_set_schedules(service_call: ServiceCall) -> None:
@@ -195,6 +208,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "ac_start",
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "charge_start",
+        charge_start,
+        schema=SERVICE_CHARGE_START_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,

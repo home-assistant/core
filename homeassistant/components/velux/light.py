@@ -1,7 +1,5 @@
 """Support for Velux lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyvlx import DimmableDevice, Intensity, Light, OnOffLight

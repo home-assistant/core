@@ -1,7 +1,5 @@
 """Config flow for OctoPrint integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -154,6 +152,8 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         except ApiError as err:
             _LOGGER.error("Failed to connect to printer")
             raise CannotConnect from err
+        finally:
+            await self._sessions.pop().close()
 
         await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
@@ -262,9 +262,12 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._user_input is not None
         octoprint = self._get_octoprint_client(self._user_input)
 
-        self._user_input[CONF_API_KEY] = await octoprint.request_app_key(
-            "Home Assistant", self._user_input[CONF_USERNAME], 300
-        )
+        try:
+            self._user_input[CONF_API_KEY] = await octoprint.request_app_key(
+                "Home Assistant", self._user_input[CONF_USERNAME], 300
+            )
+        finally:
+            await self._sessions.pop().close()
 
     def _get_octoprint_client(self, user_input: dict[str, Any]) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
@@ -286,11 +289,6 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             ssl=user_input[CONF_SSL],
             path=user_input[CONF_PATH],
         )
-
-    def async_remove(self) -> None:
-        """Detach the session."""
-        for session in self._sessions:
-            session.detach()
 
 
 class CannotConnect(HomeAssistantError):

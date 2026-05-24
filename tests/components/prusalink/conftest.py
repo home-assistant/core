@@ -33,6 +33,7 @@ def mock_version_api() -> Generator[dict[str, str]]:
         "server": "2.1.2",
         "text": "PrusaLink",
         "hostname": "PrusaXL",
+        "firmware": "6.1.2+11023",
     }
     with patch("pyprusalink.PrusaLink.get_version", return_value=resp):
         yield resp
@@ -47,6 +48,9 @@ def mock_info_api() -> Generator[dict[str, Any]]:
         "serial": "serial-1337",
         "hostname": "PrusaXL",
         "min_extrusion_temp": 170,
+        "location": "Workshop",
+        "sd_ready": True,
+        "farm_mode": False,
     }
     with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
         yield resp
@@ -82,6 +86,7 @@ def mock_get_status_idle() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 100,
             "fan_print": 75,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
@@ -110,6 +115,7 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
             "speed": 100,
             "fan_hotend": 5000,
             "fan_print": 2500,
+            "status_connect": {"ok": True, "message": ""},
         },
     }
     with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
@@ -183,6 +189,15 @@ def mock_job_api_paused(
     """Mock PrusaLink paused printing."""
     mock_job_api_printing["state"] = "PAUSED"
     mock_get_status_printing["printer"]["state"] = "PAUSED"
+
+
+@pytest.fixture
+def mock_job_api_attention(
+    mock_get_status_printing: dict[str, Any], mock_job_api_printing: dict[str, Any]
+) -> None:
+    """Mock PrusaLink printing in ATTENTION state (e.g. timelapse capture)."""
+    mock_job_api_printing["state"] = "ATTENTION"
+    mock_get_status_printing["printer"]["state"] = "ATTENTION"
 
 
 @pytest.fixture

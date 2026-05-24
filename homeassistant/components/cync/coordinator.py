@@ -1,7 +1,5 @@
 """Coordinator to handle keeping device states up to date."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
@@ -53,7 +51,7 @@ class CyncCoordinator(DataUpdateCoordinator[dict[int, CyncDevice]]):
             await self._update_config_cync_credentials(logged_in_user)
 
     async def _async_update_data(self) -> dict[int, CyncDevice]:
-        """First, refresh the user's auth token if it is set to expire in less than one hour.
+        """Refresh the user's auth token if it expires within one hour.
 
         Then, fetch all current device states.
         """

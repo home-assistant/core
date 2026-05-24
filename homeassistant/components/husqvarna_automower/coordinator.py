@@ -1,7 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -184,10 +182,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             )
 
     def _should_poll(self) -> bool:
-        """Return True if at least one mower is connected and at least one is not OFF."""
-        return any(mower.metadata.connected for mower in self.data.values()) and any(
-            mower.mower.state != MowerStates.OFF for mower in self.data.values()
-        )
+        """Return True if at least one mower is not OFF."""
+        return any(mower.mower.state != MowerStates.OFF for mower in self.data.values())
 
     async def _pong_watchdog(self) -> None:
         """Watchdog to check for pong messages."""

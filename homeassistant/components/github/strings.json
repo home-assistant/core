@@ -7,12 +7,26 @@
     "progress": {
       "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
     },
-    "step": {
-      "repositories": {
-        "data": {
-          "repositories": "Select repositories to track."
-        },
-        "title": "Configure repositories"
+    "step": {}
+  },
+  "config_subentries": {
+    "repository": {
+      "abort": {
+        "already_configured": "Repository is already configured"
+      },
+      "entry_type": "[%key:component::github::config_subentries::repository::step::user::data::repository%]",
+      "initiate_flow": {
+        "user": "Add repository"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "repository": "Repository"
+          },
+          "data_description": {
+            "repository": "The repository to track"
+          }
+        }
       }
     }
   },

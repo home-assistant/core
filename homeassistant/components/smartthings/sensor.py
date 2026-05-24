@@ -1,7 +1,5 @@
 """Support for sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -133,6 +131,14 @@ HEALTH_CONCERN = {
     "unhealthy": "unhealthy",
     "veryUnhealthy": "very_unhealthy",
     "hazardous": "hazardous",
+}
+
+STICK_CLEANER_STATUS = {
+    "ready": "ready",
+    "usingVacuum": "using_vacuum",
+    "emptyingDustbin": "emptying_dustbin",
+    "UVCleaning": "uv_cleaning",
+    "UVPaused": "uv_paused",
 }
 
 WASHER_OPTIONS = ["pause", "run", "stop"]
@@ -388,7 +394,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -441,7 +447,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -559,7 +565,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.GAS_METER_TIME,
                 translation_key="gas_meter_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
         Attribute.GAS_METER_VOLUME: [
@@ -720,7 +726,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "cavity-01",
                 component_translation_key={
                     "cavity-01": "oven_completion_time_cavity_01",
@@ -1190,7 +1196,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
@@ -1239,12 +1245,47 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUST_BAG: {
+        Attribute.USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.USAGE,
+                translation_key="stick_cleaner_dust_bag_usage",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                component_fn=lambda component: component == "station",
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_STATUS: {
+        Attribute.OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OPERATING_STATE,
+                name=None,
+                translation_key="stick_cleaner_operating_state",
+                options=list(STICK_CLEANER_STATUS.values()),
+                device_class=SensorDeviceClass.ENUM,
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: {
+        Attribute.LAST_EMPTIED_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.LAST_EMPTIED_TIME,
+                translation_key="stick_cleaner_dustbin_last_emptied",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
+            )
+        ]
+    },
 }
 
 
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "Celsius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
@@ -1278,7 +1319,9 @@ async def async_setup_entry(
                                             capability in device.status[MAIN]
                                             for capability in capability_list
                                         )
-                                        for capability_list in description.capability_ignore_list
+                                        for capability_list in (
+                                            description.capability_ignore_list
+                                        )
                                     )
                                 )
                                 and (
@@ -1360,7 +1403,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe, component=component)
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{capability}_{attribute}"
+            f"_{entity_description.key}"
+        )
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description

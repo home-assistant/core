@@ -1,7 +1,5 @@
 """Service registration for the OpenDisplay integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import contextlib
@@ -12,6 +10,8 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
     DitherMode,
     FitMode,
     OpenDisplayDevice,
@@ -38,7 +38,7 @@ from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 if TYPE_CHECKING:
     from . import OpenDisplayConfigEntry
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
 
 ATTR_IMAGE = "image"
 ATTR_ROTATION = "rotation"
@@ -49,7 +49,7 @@ ATTR_TONE_COMPRESSION = "tone_compression"
 
 
 def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
-    """Return a validator that converts a lowercase enum name string to an enum member."""
+    """Convert a lowercase enum name string to an enum member."""
     members = {m.name.lower(): m for m in enum_class}
 
     def validate(value: str) -> IntEnum:
@@ -177,6 +177,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         with contextlib.suppress(asyncio.CancelledError):
             await prev
     entry.runtime_data.upload_task = current
@@ -193,21 +194,41 @@ async def _async_upload_image(call: ServiceCall) -> None:
         else:
             pil_image = await _async_download_image(call.hass, media.url)
 
+        raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
+        if raw_key is not None and len(raw_key) != 32:
+            entry.async_start_reauth(call.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_error"
+            )
+        try:
+            encryption_key = bytes.fromhex(raw_key) if raw_key is not None else None
+        except ValueError as err:
+            entry.async_start_reauth(call.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="authentication_error"
+            ) from err
+
         async with OpenDisplayDevice(
             mac_address=address,
             ble_device=ble_device,
             config=entry.runtime_data.device_config,
+            encryption_key=encryption_key,
         ) as device:
             await device.upload_image(
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
-                tone_compression=tone_compression,
+                tone=tone_compression,
                 fit=fit_mode,
                 rotate=rotation,
             )
     except asyncio.CancelledError:
         return
+    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+        entry.async_start_reauth(call.hass)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="authentication_error"
+        ) from err
     except OpenDisplayError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="upload_error"

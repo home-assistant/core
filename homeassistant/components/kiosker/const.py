@@ -1,0 +1,14 @@
+"""Constants for the Kiosker integration."""
+
+DOMAIN = "kiosker"
+
+# Configuration keys
+# pylint: disable-next=home-assistant-duplicate-const
+CONF_API_TOKEN = "api_token"
+
+# Default values
+PORT = 8081
+POLL_INTERVAL = 15
+DEFAULT_SSL = False
+DEFAULT_SSL_VERIFY = False
+REFRESH_DELAY = 0.5

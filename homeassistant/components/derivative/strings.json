@@ -61,7 +61,7 @@
   "services": {
     "reload": {
       "description": "Reloads derivative sensors from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload derivative sensors"
     }
   },
   "title": "Derivative sensor"

@@ -12,6 +12,7 @@ from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, Amazon
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"
 TEST_USERNAME = "fake_email@gmail.com"
+TEST_USER_ID = "amzn1.account.fake_user_id"
 
 TEST_DEVICE_1_SN = "echo_test_serial_number"
 TEST_DEVICE_1_ID = "echo_test_device_id"
@@ -70,6 +71,7 @@ TEST_DEVICE_1 = AmazonDevice(
             next_occurrence=None,
         ),
     },
+    media_player_supported=True,
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -102,4 +104,5 @@ TEST_DEVICE_2 = AmazonDevice(
     },
     notifications_supported=False,
     notifications={},
+    media_player_supported=False,
 )

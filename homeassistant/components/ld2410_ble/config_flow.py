@@ -1,7 +1,5 @@
 """Config flow for LD2410BLE integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -99,7 +97,9 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
                         for service_info in self._discovered_devices.values()
                     }
                 ),

@@ -1,7 +1,5 @@
 """Update coordinator for HomeWizard."""
 
-from __future__ import annotations
-
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
@@ -46,6 +44,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             data = await self.api.combined()
 
         except RequestError as ex:
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise UpdateFailed(
                 ex, translation_domain=DOMAIN, translation_key="communication_error"
             ) from ex
@@ -56,11 +55,13 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
                 # Do not reload when performing first refresh
                 if self.data is not None:
-                    # Reload config entry to let init flow handle retrying and trigger repair flow
+                    # Reload config entry to let init flow handle
+                    # retrying and trigger repair flow
                     self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
                     )
 
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise UpdateFailed(
                 ex, translation_domain=DOMAIN, translation_key="api_disabled"
             ) from ex

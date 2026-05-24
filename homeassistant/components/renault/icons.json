@@ -88,6 +88,9 @@
     },
     "charge_set_schedules": {
       "service": "mdi:calendar-clock"
+    },
+    "charge_start": {
+      "service": "mdi:ev-station"
     }
   }
 }

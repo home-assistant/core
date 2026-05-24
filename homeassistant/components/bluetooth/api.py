@@ -3,8 +3,6 @@
 These APIs are the only documented way to interact with the bluetooth integration.
 """
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
@@ -132,17 +130,26 @@ def async_register_callback(
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
     mode: BluetoothScanningMode,
+    *,
+    scan_interval: float | None = None,
+    scan_duration: float | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
-    mode is currently not used as we only support active scanning.
-    Passive scanning will be available in the future. The flag
-    is required to be present to avoid a future breaking change
-    when we support passive scanning.
+    When ``mode`` is not PASSIVE and ``match_dict["address"]`` is set,
+    the address is registered with habluetooth's active-scan scheduler
+    so AUTO-mode scanners flip ACTIVE on demand for that device.
+    ``scan_interval`` / ``scan_duration`` default to habluetooth's
+    DEFAULT_ACTIVE_SCAN_* (5 minutes / 10 seconds) when not provided;
+    integrations that need a different cadence can pass explicit
+    values. Without an address in the matcher the active-scan request
+    is skipped; the callback itself still fires normally.
 
     Returns a callback that can be used to cancel the registration.
     """
-    return _get_manager(hass).async_register_callback(callback, match_dict)
+    return _get_manager(hass).async_register_callback(
+        callback, match_dict, mode, scan_interval, scan_duration
+    )
 
 
 async def async_process_advertisements(
@@ -163,7 +170,7 @@ async def async_process_advertisements(
             done.set_result(service_info)
 
     unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict
+        _async_discovered_device, match_dict, mode, scan_duration=timeout
     )
 
     try:
@@ -205,6 +212,19 @@ def async_clear_address_from_match_history(hass: HomeAssistant, address: str) ->
     discovery with the current advertisement in history.
     """
     _get_manager(hass).async_clear_address_from_match_history(address)
+
+
+@hass_callback
+def async_clear_advertisement_history(hass: HomeAssistant, address: str) -> None:
+    """Clear cached advertisement history for a device.
+
+    Causes the next advertisement from this address to be treated as new
+    data, bypassing the change-detection guard in the Bluetooth manager.
+    Intended for devices that emit static advertisements as a wake-up
+    signal, for example, devices that require an active GATT connection
+    to read sensor data and whose advertisement payload never changes.
+    """
+    _get_manager(hass).async_clear_advertisement_history(address)
 
 
 @hass_callback

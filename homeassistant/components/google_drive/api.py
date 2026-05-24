@@ -1,7 +1,5 @@
 """API for Google Drive bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 import json
@@ -134,7 +132,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='root' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -198,7 +197,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -222,7 +222,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]
         )

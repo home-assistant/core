@@ -1,7 +1,5 @@
 """Support for control of ElkM1 outputs (relays)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.const import ThermostatMode, ThermostatSetting
@@ -68,7 +66,7 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Get the current emergency heat status."""
-        return self._element.mode == ThermostatMode.EMERGENCY_HEAT
+        return self._element.mode is ThermostatMode.EMERGENCY_HEAT
 
     def _elk_set(self, mode: ThermostatMode) -> None:
         """Set the thermostat mode."""

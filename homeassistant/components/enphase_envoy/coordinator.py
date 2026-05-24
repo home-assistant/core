@@ -1,7 +1,5 @@
 """The enphase_envoy component."""
 
-from __future__ import annotations
-
 import contextlib
 import datetime
 from datetime import timedelta
@@ -21,7 +19,13 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MANUAL_TOKEN, DOMAIN, INVALID_AUTH_ERRORS
+from .const import (
+    CONF_MANUAL_TOKEN,
+    DOMAIN,
+    INVALID_AUTH_ERRORS,
+    OPERATIONAL_RETRY_TIMEOUT,
+    SETUP_RETRY_TIMEOUT,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -55,6 +59,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.password = entry_data.get(CONF_PASSWORD)
         self.manual_token = entry_data.get(CONF_MANUAL_TOKEN, False)
         self._setup_complete = False
+        self._operational_timeout = False
         self.envoy_firmware = ""
         self.interface = None
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
@@ -231,7 +236,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete and setup firmware checks and token refresh if needed."""
+        """Mark setup as complete, setup firmware checks and token refresh."""
         self._setup_complete = True
         self.async_cancel_firmware_refresh()
         self._cancel_firmware_refresh = async_track_time_interval(
@@ -305,10 +310,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 if not self._setup_complete:
                     _LOGGER.debug("update on try %s, setup not complete", tries)
+                    self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
+                    self._operational_timeout = False
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
+                if not self._operational_timeout:
+                    self.envoy.set_retry_policy(max_delay=OPERATIONAL_RETRY_TIMEOUT)
+                    self._operational_timeout = True
             except INVALID_AUTH_ERRORS as err:
                 _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
                 if self._setup_complete and tries == 0:
@@ -342,7 +352,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 new_firmware := envoy.firmware
             ):
                 _LOGGER.warning(
-                    "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
+                    "Envoy firmware changed from: %s to: %s,"
+                    " reloading enphase envoy integration",
                     current_firmware,
                     new_firmware,
                 )
