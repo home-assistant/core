@@ -4,6 +4,7 @@ import asyncio
 import math
 from typing import Any
 
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 from rf_protocols.commands.novy import NovyCookerHoodCommand
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
@@ -18,7 +19,6 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .commands import COMMAND_MINUS, COMMAND_PLUS
 from .const import SPEED_COUNT
 from .entity import NovyCookerHoodEntity
 
@@ -107,7 +107,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def async_increase_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        plus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_PLUS)
+        plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
         await self._async_send_repeated(plus, steps)
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
@@ -115,7 +115,7 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def async_decrease_speed(self, percentage_step: int | None = None) -> None:
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
-        minus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_MINUS)
+        minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
         await self._async_send_repeated(minus, steps)
         self._level = max(0, self._level - steps)
         self.async_write_ha_state()
@@ -129,11 +129,11 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
 
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
-        minus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_MINUS)
+        minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
         await self._async_send_repeated(minus, SPEED_COUNT)
         if level > 0:
             await asyncio.sleep(_COMMAND_DELAY)
-            plus = NovyCookerHoodCommand(channel=self._code, key=COMMAND_PLUS)
+            plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
             await self._async_send_repeated(plus, level)
         self._level = level
         self.async_write_ha_state()

@@ -1,11 +1,12 @@
 """Tests for the Novy Hood light platform."""
 
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
+
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -65,8 +66,8 @@ async def test_turn_on_and_off_send_light_once_each(
     assert state.state == STATE_OFF
     assert len(mock_rf_entity.send_command_calls) == 2
     assert [c.command.key for c in mock_rf_entity.send_command_calls] == [
-        COMMAND_LIGHT,
-        COMMAND_LIGHT,
+        NovyCookerHoodButton.LIGHT.code,
+        NovyCookerHoodButton.LIGHT.code,
     ]
 
 

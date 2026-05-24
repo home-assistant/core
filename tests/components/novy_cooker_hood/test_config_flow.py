@@ -4,8 +4,8 @@ from collections.abc import Iterator
 from unittest.mock import patch
 
 import pytest
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
-from homeassistant.components.novy_cooker_hood.commands import COMMAND_LIGHT
 from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.components.radio_frequency import DATA_COMPONENT, DOMAIN as RF_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -59,7 +59,7 @@ async def test_user_flow_test_then_finish(
     assert result["step_id"] == "test_light"
     assert len(mock_rf_entity.send_command_calls) == 2
     sent = mock_rf_entity.send_command_calls[0].command
-    assert sent.key == COMMAND_LIGHT
+    assert sent.key == NovyCookerHoodButton.LIGHT.code
     assert sent.channel == 3
 
     result = await hass.config_entries.flow.async_configure(
@@ -226,7 +226,7 @@ async def test_reconfigure_updates_entry(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "test_light"
     sent = mock_rf_entity.send_command_calls[-1].command
-    assert sent.key == COMMAND_LIGHT
+    assert sent.key == NovyCookerHoodButton.LIGHT.code
     assert sent.channel == 4
 
     result = await hass.config_entries.flow.async_configure(

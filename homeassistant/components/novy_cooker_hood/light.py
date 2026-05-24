@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from rf_protocols.commands.novy import NovyCookerHoodCommand
+from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .commands import COMMAND_LIGHT
 from .entity import NovyCookerHoodEntity
 
 PARALLEL_UPDATES = 1
@@ -48,19 +47,19 @@ class NovyCookerHoodLight(NovyCookerHoodEntity, LightEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on by sending the toggle command."""
-        await self._async_send_command(COMMAND_LIGHT)
+        await self._async_send_light()
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off by sending the toggle command."""
-        await self._async_send_command(COMMAND_LIGHT)
+        await self._async_send_light()
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def _async_send_command(self, key: str) -> None:
-        """Build the named command and send it via the configured transmitter."""
-        command = NovyCookerHoodCommand(channel=self._code, key=key)
+    async def _async_send_light(self) -> None:
+        """Send the light toggle command via the configured transmitter."""
+        command = NovyCookerHoodButton.LIGHT.to_command(channel=self._code)
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context
         )
