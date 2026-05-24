@@ -25,25 +25,22 @@ from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_
 
 from tests.common import MockConfigEntry
 
-ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
-    ip_address=IPv4Address(TEST_HOST),
-    ip_addresses=[IPv4Address(TEST_HOST)],
-    port=80,
-    hostname="3300003082.local.",
-    type="_http._tcp.local.",
-    name="IGEN_FW._http._tcp.local.",
-    properties={},
-)
 
-ZEROCONF_DISCOVERY_ALT_IP = ZeroconfServiceInfo(
-    ip_address=IPv4Address(TEST_HOST_ALT),
-    ip_addresses=[IPv4Address(TEST_HOST_ALT)],
-    port=80,
-    hostname="3300003082.local.",
-    type="_http._tcp.local.",
-    name="IGEN_FW._http._tcp.local.",
-    properties={},
-)
+def _make_zeroconf_discovery(ip: str) -> ZeroconfServiceInfo:
+    """Create a ZeroconfServiceInfo for an Indevolt device at the given IP."""
+    return ZeroconfServiceInfo(
+        ip_address=IPv4Address(ip),
+        ip_addresses=[IPv4Address(ip)],
+        port=80,
+        hostname="3300003082.local.",
+        type="_http._tcp.local.",
+        name="IGEN_FW._http._tcp.local.",
+        properties={},
+    )
+
+
+ZEROCONF_DISCOVERY = _make_zeroconf_discovery(TEST_HOST)
+ZEROCONF_DISCOVERY_ALT_IP = _make_zeroconf_discovery(TEST_HOST_ALT)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

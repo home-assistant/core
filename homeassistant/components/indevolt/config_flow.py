@@ -94,7 +94,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery — probe the device to confirm it is an Indevolt device."""
-        host = discovery_info.host
+        host = str(discovery_info.ip_address)
 
         try:
             device_data = await self._async_get_device_data(host)
