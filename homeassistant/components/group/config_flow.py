@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -136,7 +137,7 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 
 SENSOR_IMPORT_SCHEMA = vol.Schema(
     {
-        vol.Required("old_entity_id"): selector.TextSelector(),
+        vol.Required("old_config_entry_id"): selector.TextSelector(),
     }
 ).extend(SENSOR_CONFIG_SCHEMA.schema)
 
@@ -203,29 +204,28 @@ def set_group_type(
     return _set_group_type
 
 
-def validate_import() -> Callable[
-    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
-]:
+async def validate_import(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
     """Validate import from Min/Max integration.
 
     Should be removed when deprecation of Min/Max integration has ended.
     """
 
-    async def _validate_and_set_type(
-        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Add group type to user input."""
+    try:
         validated_input = SENSOR_IMPORT_SCHEMA(user_input)
-        return {CONF_GROUP_TYPE: "sensor", **validated_input}
-
-    return _validate_and_set_type
+    except vol.Invalid as err:
+        raise AbortFlow(
+            reason="invalid_import", description_placeholders={"error": str(err)}
+        ) from err
+    return {CONF_GROUP_TYPE: "sensor", **validated_input}
 
 
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "import": SchemaFlowFormStep(
         None,
-        validate_user_input=validate_import(),
+        validate_user_input=validate_import,
     ),
     "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA,
@@ -382,7 +382,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @callback
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Hide the group members if requested."""
-        if options[CONF_HIDE_MEMBERS]:
+        if options.get(CONF_HIDE_MEMBERS):
             _async_hide_members(
                 self.hass, options[CONF_ENTITIES], er.RegistryEntryHider.INTEGRATION
             )
