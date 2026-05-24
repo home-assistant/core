@@ -138,4 +138,8 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             or self._last_service_info
         )
         if service_info and self.needs_poll(service_info):
+            # Seed ``_last_service_info`` so the debounced poll has a service
+            # info to hand to ``_async_poll_data``; the base ``_async_poll``
+            # asserts on it.
+            self._last_service_info = service_info
             self._debounced_poll.async_schedule_call()
