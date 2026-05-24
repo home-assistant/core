@@ -1,7 +1,6 @@
 """Config flow for CCL Electronics."""
 
 import asyncio
-import contextlib
 import logging
 from typing import Any
 from urllib.parse import urlsplit
@@ -75,6 +74,9 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
                 await register_webhook(self.hass, self.webhook_id)
             except ValueError as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
+                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
+                self.data = {}
+                self.webhook_id = ""
                 return self.async_abort(reason="invalid_webhook")
             _LOGGER.debug("Webhook registered at hass: %s", self.webhook_id)
 
@@ -181,11 +183,8 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.task_one and not self.task_one.done():
             self.task_one.cancel()
 
-        # Unregister the webhook
-        if CONF_WEBHOOK_ID in self.data:
-            webhook.async_unregister(self.hass, self.data[CONF_WEBHOOK_ID])
-
-        # Remove the device from the global devices dict
-        if CONF_WEBHOOK_ID in self.data:
-            with contextlib.suppress(KeyError):
-                self.hass.data[KEY_DEVICES].pop(self.data[CONF_WEBHOOK_ID], None)
+        # Unregister the webhook and remove the device
+        webhook_id = self.data.get(CONF_WEBHOOK_ID)
+        if webhook_id:
+            webhook.async_unregister(self.hass, webhook_id)
+            self.hass.data[KEY_DEVICES].pop(webhook_id, None)

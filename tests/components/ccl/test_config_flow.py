@@ -180,7 +180,10 @@ async def test_timeout_error_task_one(
             "homeassistant.components.webhook.async_generate_id",
             return_value=WEBHOOK_ID,
         ),
-        patch("asyncio.wait_for", side_effect=mock_wait_for_timeout),
+        patch(
+            "homeassistant.components.ccl.config_flow.asyncio.wait_for",
+            side_effect=mock_wait_for_timeout,
+        ),
     ):
         # Create the flow - the asyncio.wait_for will timeout immediately
         result = await hass.config_entries.flow.async_init(

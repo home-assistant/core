@@ -1,6 +1,7 @@
 """Platform for sensor integration."""
 
 import dataclasses
+from typing import Any
 
 from aioccl import CCLSensor, CCLSensorTypes
 
@@ -182,10 +183,15 @@ async def async_setup_entry(
 
         for sensor in sensors.values():
             if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
+                description = CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type]
+                replace_args: dict[str, Any] = {
+                    "key": sensor.key,
+                }
+                if description.translation_key is None:
+                    replace_args["name"] = sensor.name
                 entity_description = dataclasses.replace(
-                    CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],
-                    key=sensor.key,
-                    name=sensor.name,
+                    description,
+                    **replace_args,
                 )
                 sensor_entities.append(
                     CCLSensorEntity(

@@ -87,6 +87,7 @@ async def test_webhook_post(
         if headers is None:
             resp = await client.post(
                 urlparse(webhook_url).path,
+                headers={"Content-Type": "text/plain"},
                 data=json.dumps(body),
             )
         else:
