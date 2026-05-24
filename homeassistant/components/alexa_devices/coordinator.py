@@ -175,10 +175,10 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     @property
     def todo_items(self) -> dict[str, list[ListItem]]:
-        "Current todo_items."
+        """Current todo_items."""
         return self._list_items
 
     @property
     def todo_items_lookup(self) -> dict[str, dict[str, ListItem]]:
-        "Current todo_items."
+        """Current todo_items_lookup."""
         return self._list_items_lookup
