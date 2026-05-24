@@ -18,6 +18,8 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
 )
+from homeassistant.components.tuya.const import DeviceCategory, DPCode
+from homeassistant.components.tuya.cover import COVERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -28,6 +30,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
+from tuya_device_handlers.device_wrapper.extended import (
+    DPCodeInvertedPercentageWrapper,
+    DPCodePercentageWrapper,
+)
 
 from . import initialize_entry
 
@@ -341,3 +347,35 @@ async def test_cl_n3xgr5pdmpinictg_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+def test_cl_control_uses_inverted_position_wrapper() -> None:
+    """Test CL CONTROL description explicitly uses DPCodeInvertedPercentageWrapper.
+
+    These devices (e.g. cl_zah67ekd) report position in the Tuya-inverted
+    convention (0=open, 100=closed) and require inversion to match the HA
+    convention (0=closed, 100=open). This must be set explicitly; it is no
+    longer the default.
+
+    See https://github.com/home-assistant/core/issues/159800
+    """
+    cl_descriptions = COVERS[DeviceCategory.CL]
+    control_desc = next(d for d in cl_descriptions if d.key == DPCode.CONTROL)
+    assert control_desc.position_wrapper is DPCodeInvertedPercentageWrapper
+
+
+def test_cl_other_descriptions_use_non_inverted_position_wrapper() -> None:
+    """Test CL descriptions other than CONTROL use DPCodePercentageWrapper.
+
+    Devices using these descriptions report position in the standard HA
+    convention (0=closed, 100=open) and must not have values inverted.
+
+    See https://github.com/home-assistant/core/issues/159800
+    """
+    cl_descriptions = COVERS[DeviceCategory.CL]
+    for desc in cl_descriptions:
+        if desc.key != DPCode.CONTROL:
+            assert desc.position_wrapper is DPCodePercentageWrapper, (
+                f"Expected DPCodePercentageWrapper for CL description "
+                f"key={desc.key}, got {desc.position_wrapper}"
+            )
