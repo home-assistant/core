@@ -48,7 +48,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     ] = CoverClosedEnumWrapper
     current_position: DPCode | tuple[DPCode, ...] | None = None
     instruction_wrapper: type[CoverInstructionEnumWrapper] = CoverInstructionEnumWrapper
-    position_wrapper: type[DPCodePercentageWrapper] = DPCodeInvertedPercentageWrapper
+    position_wrapper: type[DPCodePercentageWrapper] = DPCodePercentageWrapper
     set_position: DPCode | None = None
 
 
@@ -85,6 +85,9 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="curtain",
             current_state=(DPCode.SITUATION_SET, DPCode.CONTROL),
             current_position=(DPCode.PERCENT_STATE, DPCode.PERCENT_CONTROL),
+            # These devices report 0=open, 100=closed (inverted Tuya convention).
+            # Inversion is required so HA position 0=closed, 100=open is correct.
+            position_wrapper=DPCodeInvertedPercentageWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
