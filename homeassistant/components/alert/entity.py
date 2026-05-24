@@ -38,7 +38,7 @@ class AlertEntity(Entity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entity_id: str,
+        entity_id: str | None,
         name: str,
         watched_entity_id: str,
         state: str,
@@ -49,11 +49,13 @@ class AlertEntity(Entity):
         notifiers: list[str],
         can_ack: bool,
         title_template: Template | None,
-        data: dict[Any, Any],
+        data: dict[Any, Any] | None,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize the alert."""
         self.hass = hass
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
@@ -72,7 +74,8 @@ class AlertEntity(Entity):
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
-        self.entity_id = f"{DOMAIN}.{entity_id}"
+        if entity_id is not None:
+            self.entity_id = f"{DOMAIN}.{entity_id}"
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change

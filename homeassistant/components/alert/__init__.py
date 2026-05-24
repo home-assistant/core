@@ -3,8 +3,11 @@
 DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
 """
 
+from typing import Any
+
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -18,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -34,6 +38,8 @@ from .const import (
     LOGGER,
 )
 from .entity import AlertEntity
+
+type AlertConfigEntry = ConfigEntry[str]
 
 ALERT_SCHEMA = vol.Schema(
     {
@@ -63,56 +69,90 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _alert_from_yaml(
+    hass: HomeAssistant, object_id: str, cfg: dict[str, Any] | None
+) -> AlertEntity:
+    """Build an AlertEntity from a YAML alert configuration."""
+    if not cfg:
+        cfg = {}
+
+    return AlertEntity(
+        hass,
+        object_id,
+        cfg[CONF_NAME],
+        cfg[CONF_ENTITY_ID],
+        cfg[CONF_STATE],
+        cfg[CONF_REPEAT],
+        cfg[CONF_SKIP_FIRST],
+        cfg.get(CONF_ALERT_MESSAGE),
+        cfg.get(CONF_DONE_MESSAGE),
+        cfg[CONF_NOTIFIERS],
+        cfg[CONF_CAN_ACK],
+        cfg.get(CONF_TITLE),
+        cfg.get(CONF_DATA),
+    )
+
+
+def _template_from_string(hass: HomeAssistant, value: str | None) -> Template | None:
+    """Wrap an optional string in a Template attached to hass."""
+    if value is None:
+        return None
+    return Template(value, hass)
+
+
+def _alert_from_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> AlertEntity:
+    """Build an AlertEntity from a config entry."""
+    options = entry.options
+    return AlertEntity(
+        hass,
+        None,
+        entry.title,
+        options[CONF_ENTITY_ID],
+        options.get(CONF_STATE, STATE_ON),
+        [float(value) for value in options[CONF_REPEAT]],
+        options.get(CONF_SKIP_FIRST, DEFAULT_SKIP_FIRST),
+        _template_from_string(hass, options.get(CONF_ALERT_MESSAGE)),
+        _template_from_string(hass, options.get(CONF_DONE_MESSAGE)),
+        list(options.get(CONF_NOTIFIERS, [])),
+        options.get(CONF_CAN_ACK, DEFAULT_CAN_ACK),
+        _template_from_string(hass, options.get(CONF_TITLE)),
+        options.get(CONF_DATA),
+        unique_id=entry.entry_id,
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component.
 
     DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
     """
-    component = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
-
-    entities: list[AlertEntity] = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
-
-        name = cfg[CONF_NAME]
-        watched_entity_id = cfg[CONF_ENTITY_ID]
-        alert_state = cfg[CONF_STATE]
-        repeat = cfg[CONF_REPEAT]
-        skip_first = cfg[CONF_SKIP_FIRST]
-        message_template = cfg.get(CONF_ALERT_MESSAGE)
-        done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg[CONF_NOTIFIERS]
-        can_ack = cfg[CONF_CAN_ACK]
-        title_template = cfg.get(CONF_TITLE)
-        data = cfg.get(CONF_DATA)
-
-        entities.append(
-            AlertEntity(
-                hass,
-                object_id,
-                name,
-                watched_entity_id,
-                alert_state,
-                repeat,
-                skip_first,
-                message_template,
-                done_message_template,
-                notifiers,
-                can_ack,
-                title_template,
-                data,
-            )
-        )
-
-    if not entities:
-        return False
+    component = hass.data[DOMAIN] = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
 
     component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
     component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
 
-    await component.async_add_entities(entities)
+    yaml_entities = [
+        _alert_from_yaml(hass, object_id, cfg)
+        for object_id, cfg in config.get(DOMAIN, {}).items()
+    ]
+    if yaml_entities:
+        await component.async_add_entities(yaml_entities)
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> bool:
+    """Set up an alert from a config entry."""
+    component: EntityComponent[AlertEntity] = hass.data[DOMAIN]
+    alert = _alert_from_entry(hass, entry)
+    await component.async_add_entities([alert])
+    entry.runtime_data = alert.entity_id
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent[AlertEntity] = hass.data[DOMAIN]
+    await component.async_remove_entity(entry.runtime_data)
     return True

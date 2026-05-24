@@ -1,4 +1,41 @@
 {
+  "config": {
+    "error": {
+      "invalid_repeat": "Each repeat value must be a number of minutes greater than or equal to 0.016 (one second).",
+      "repeat_required": "Provide at least one repeat interval."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "can_acknowledge": "Allow acknowledging the alert",
+          "data": "Notification data",
+          "done_message": "Done message",
+          "entity_id": "Watched entity",
+          "message": "Message",
+          "name": "[%key:common::config_flow::data::name%]",
+          "notifiers": "Notifiers",
+          "repeat": "Repeat",
+          "skip_first": "Skip first notification",
+          "state": "Alert state",
+          "title": "Title"
+        },
+        "data_description": {
+          "can_acknowledge": "If enabled, the alert can be silenced.",
+          "data": "Extra data sent to the notifier service.",
+          "done_message": "Optional template rendered once the alert clears.",
+          "entity_id": "Entity whose state is monitored to trigger the alert.",
+          "message": "Optional template rendered for the notification body.",
+          "notifiers": "Notifier service names (without the `notify.` prefix) to call when the alert fires.",
+          "repeat": "Delays in minutes between repeat notifications. Minimum value is 0.016 (one second).",
+          "skip_first": "If enabled, no notification is sent immediately when the alert begins.",
+          "state": "State of the watched entity that triggers the alert.",
+          "title": "Optional template rendered for the notification title."
+        },
+        "description": "Create an alert that watches an entity's state and sends repeating notifications while the state matches.",
+        "title": "Add alert"
+      }
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::alert::title%]",
@@ -6,6 +43,41 @@
         "idle": "[%key:common::state::idle%]",
         "off": "Acknowledged",
         "on": "[%key:common::state::active%]"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_repeat": "[%key:component::alert::config::error::invalid_repeat%]",
+      "repeat_required": "[%key:component::alert::config::error::repeat_required%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "can_acknowledge": "[%key:component::alert::config::step::user::data::can_acknowledge%]",
+          "data": "[%key:component::alert::config::step::user::data::data%]",
+          "done_message": "[%key:component::alert::config::step::user::data::done_message%]",
+          "entity_id": "[%key:component::alert::config::step::user::data::entity_id%]",
+          "message": "[%key:component::alert::config::step::user::data::message%]",
+          "notifiers": "[%key:component::alert::config::step::user::data::notifiers%]",
+          "repeat": "[%key:component::alert::config::step::user::data::repeat%]",
+          "skip_first": "[%key:component::alert::config::step::user::data::skip_first%]",
+          "state": "[%key:component::alert::config::step::user::data::state%]",
+          "title": "[%key:component::alert::config::step::user::data::title%]"
+        },
+        "data_description": {
+          "can_acknowledge": "[%key:component::alert::config::step::user::data_description::can_acknowledge%]",
+          "data": "[%key:component::alert::config::step::user::data_description::data%]",
+          "done_message": "[%key:component::alert::config::step::user::data_description::done_message%]",
+          "entity_id": "[%key:component::alert::config::step::user::data_description::entity_id%]",
+          "message": "[%key:component::alert::config::step::user::data_description::message%]",
+          "notifiers": "[%key:component::alert::config::step::user::data_description::notifiers%]",
+          "repeat": "[%key:component::alert::config::step::user::data_description::repeat%]",
+          "skip_first": "[%key:component::alert::config::step::user::data_description::skip_first%]",
+          "state": "[%key:component::alert::config::step::user::data_description::state%]",
+          "title": "[%key:component::alert::config::step::user::data_description::title%]"
+        },
+        "description": "Adjust the alert configuration."
       }
     }
   },
