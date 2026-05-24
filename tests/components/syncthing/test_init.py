@@ -157,3 +157,6 @@ async def test_syncthing_client_reconnect_on_error(
         await hass.async_block_till_done()
 
         assert len(server_available_calls) >= 1
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
