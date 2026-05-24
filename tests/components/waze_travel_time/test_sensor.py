@@ -1,5 +1,6 @@
 """Test Waze Travel Time sensors."""
 
+import httpx
 import pytest
 from pywaze.route_calculator import WRCError
 
@@ -31,6 +32,13 @@ from tests.common import MockConfigEntry
 def mock_update_wrcerror_fixture(mock_update):
     """Mock an update to the sensor failed with WRCError."""
     mock_update.side_effect = WRCError("test")
+    return mock_update
+
+
+@pytest.fixture(name="mock_update_connect_error")
+def mock_update_connect_error_fixture(mock_update):
+    """Mock an update to the sensor failed with httpx.ConnectError."""
+    mock_update.side_effect = httpx.ConnectError("[Errno -3] Try again")
     return mock_update
 
 
@@ -160,3 +168,23 @@ async def test_sensor_failed_wrcerror(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Error on retrieving data: " in caplog.text
+
+
+@pytest.mark.usefixtures("mock_update_connect_error")
+async def test_sensor_failed_connect_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that sensor update fails with log message on connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
+        entry_id="test",
+        version=WazeConfigFlow.VERSION,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "Connection error: " in caplog.text

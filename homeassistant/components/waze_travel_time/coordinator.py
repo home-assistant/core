@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Literal
 
+import httpx
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 
 from homeassistant.config_entries import ConfigEntry
@@ -149,6 +150,8 @@ async def async_get_travel_times(
 
     except WRCError as exp:
         raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
+    except httpx.ConnectError as exp:
+        raise UpdateFailed(f"Connection error: {exp}") from exp
 
     else:
         return filtered_routes
