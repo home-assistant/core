@@ -71,9 +71,14 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test the user initiated form with valid mac."""
 
-    with patch(
-        "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
-        return_value=[SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
+            return_value=[SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.keymitt_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -81,6 +86,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     with patch_microbot_api():
         result2 = await hass.config_entries.flow.async_configure(

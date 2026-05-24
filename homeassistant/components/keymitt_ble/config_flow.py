@@ -12,6 +12,7 @@ from microbot import (
 )
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -83,6 +84,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovered_adv:
             self._discovered_advs[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery_info in async_discovered_service_info(self.hass):
                 self._ble_device = discovery_info.device
