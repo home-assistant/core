@@ -183,13 +183,16 @@ class SonosDiscoveryManager:
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
         self._stop_event.set()
+        # Stop the event listener first so new topology events cannot schedule
+        # additional async_add_speakers runs while shutdown is waiting for
+        # creation_lock to drain existing work.
+        await self._async_stop_event_listener()
         # Wait for any in-flight _add_speakers executor job to finish before
         # tearing down speakers and the event listener. Every async_add_speakers
         # call holds creation_lock for its entire duration (including blocking
         # network IO), so acquiring it here serializes cleanup after creation.
         async with self.creation_lock:
             pass
-        await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
 
     def is_device_invisible(self, ip_address: str) -> bool:
