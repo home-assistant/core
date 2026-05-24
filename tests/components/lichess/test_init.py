@@ -25,7 +25,7 @@ async def test_device(
     """Test the Lichess device."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(DOMAIN, "drnykterstien")})
+    device = device_registry.async_get_device({(DOMAIN, "drnykterstein")})
     assert device
     assert device == snapshot
 
