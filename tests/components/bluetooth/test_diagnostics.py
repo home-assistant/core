@@ -178,6 +178,22 @@ async def test_diagnostics(
                     "timings": {},
                 },
                 "all_history": [],
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {
+                        "00:00:00:00:00:02": {
+                            "failed_window": False,
+                            "name": "hci1 (00:00:00:00:00:02)",
+                            "next_event_at": ANY,
+                            "next_sweep_at": ANY,
+                            "sweep_last_completed": ANY,
+                            "warned_no_fallback": False,
+                            "window_end": 0.0,
+                        },
+                    },
+                },
                 "connectable_history": [],
                 "scanners": [
                     {
@@ -239,11 +255,11 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                 ],
@@ -343,6 +359,12 @@ async def test_diagnostics_macos(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {
@@ -553,6 +575,12 @@ async def test_diagnostics_remote_adapter(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {

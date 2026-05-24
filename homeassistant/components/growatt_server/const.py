@@ -3,13 +3,6 @@
 from homeassistant.const import Platform
 
 CONF_PLANT_ID = "plant_id"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_REGION = "region"
-
-
-# API key support
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_API_KEY = "api_key"
 
 # Auth types for config flow
 AUTH_PASSWORD = "password"

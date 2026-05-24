@@ -8,9 +8,10 @@ import pytest
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
     async_is_preview_feature_enabled,
-    async_setup,
 )
+from homeassistant.components.labs.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import assert_stored_labs_data
 
@@ -48,8 +49,7 @@ async def test_websocket_list_preview_features(
     if load_integration:
         hass.config.components.add("kitchen_sink")
 
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -69,8 +69,7 @@ async def test_websocket_update_preview_feature_enable(
     """Test enabling a preview feature via WebSocket."""
     # Load kitchen_sink integration
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -134,8 +133,7 @@ async def test_websocket_update_preview_feature_disable(
     }
 
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -167,8 +165,7 @@ async def test_websocket_update_nonexistent_feature(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test updating a preview feature that doesn't exist."""
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -197,8 +194,7 @@ async def test_websocket_update_unavailable_preview_feature(
 ) -> None:
     """Test updating a preview feature whose integration is not loaded still works."""
     # Don't load kitchen_sink integration
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -240,8 +236,7 @@ async def test_websocket_requires_admin(
     hass_admin_user.groups = []
 
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -270,8 +265,7 @@ async def test_websocket_update_validates_enabled_parameter(
 ) -> None:
     """Test that enabled parameter must be boolean."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -298,8 +292,7 @@ async def test_storage_persists_preview_feature_across_calls(
 ) -> None:
     """Test that storage persists preview feature state across multiple calls."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -358,8 +351,7 @@ async def test_preview_feature_urls_present(
 ) -> None:
     """Test that preview features include feedback and report URLs."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -410,8 +402,7 @@ async def test_websocket_update_preview_feature_backup_scenarios(
 ) -> None:
     """Test various backup scenarios when updating preview features."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -473,8 +464,7 @@ async def test_websocket_list_multiple_enabled_features(
     }
 
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -495,8 +485,7 @@ async def test_websocket_update_rapid_toggle(
 ) -> None:
     """Test rapid toggling of a preview feature."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -546,8 +535,7 @@ async def test_websocket_update_same_state_idempotent(
 ) -> None:
     """Test that enabling an already-enabled feature is idempotent."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -585,8 +573,7 @@ async def test_websocket_list_filtered_by_loaded_components(
 ) -> None:
     """Test that list only shows features from loaded integrations."""
     # Don't load kitchen_sink - its preview feature shouldn't appear
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -614,8 +601,7 @@ async def test_websocket_update_with_missing_required_field(
 ) -> None:
     """Test that missing required fields are rejected."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -640,8 +626,7 @@ async def test_websocket_event_data_structure(
 ) -> None:
     """Test that event data has correct structure."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -682,8 +667,7 @@ async def test_websocket_backup_timeout_handling(
 ) -> None:
     """Test handling of backup timeout/long-running backup."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -719,8 +703,7 @@ async def test_websocket_subscribe_feature(
 ) -> None:
     """Test subscribing to a specific preview feature."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -757,8 +740,7 @@ async def test_websocket_subscribe_feature_receives_updates(
 ) -> None:
     """Test that subscription receives updates when feature is toggled."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -812,8 +794,7 @@ async def test_websocket_subscribe_nonexistent_feature(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribing to a preview feature that doesn't exist."""
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -841,8 +822,7 @@ async def test_websocket_subscribe_does_not_require_admin(
     hass_admin_user.groups = []
 
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -868,8 +848,7 @@ async def test_websocket_subscribe_only_receives_subscribed_feature_updates(
 ) -> None:
     """Test that subscription only receives updates for the subscribed feature."""
     hass.config.components.add("kitchen_sink")
-    # pylint: disable-next=home-assistant-tests-direct-async-setup
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
