@@ -137,5 +137,5 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             async_last_service_info(self.hass, self.address, connectable=False)
             or self._last_service_info
         )
-        if service_info and self._async_needs_poll(service_info, self._last_poll):
+        if service_info and self.needs_poll(service_info):
             self._debounced_poll.async_schedule_call()
