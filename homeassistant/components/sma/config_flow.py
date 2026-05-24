@@ -40,14 +40,17 @@ async def validate_input(
     data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    session = async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL])
-
     protocol = "https" if user_input[CONF_SSL] else "http"
     host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
-    url = URL.build(scheme=protocol, host=host)
+    url = str(URL.build(scheme=protocol, host=host))
 
     sma = SMAWebConnect(
-        session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
+        session=async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL]),
+        url=url,
+        **{
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_GROUP: user_input[CONF_GROUP],
+        },
     )
 
     # new_session raises SmaAuthenticationException on failure
