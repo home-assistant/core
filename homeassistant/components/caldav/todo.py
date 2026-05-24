@@ -23,6 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars, get_attr_value
+from .coordinator import REQUEST_SEMAPHORE, close_idle_connections
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,13 +109,17 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self._calendar.search,
-                todo=True,
-                include_completed=True,
-            )
-        )
+        try:
+            async with REQUEST_SEMAPHORE:
+                results = await self.hass.async_add_executor_job(
+                    partial(
+                        self._calendar.search,
+                        todo=True,
+                        include_completed=True,
+                    )
+                )
+        finally:
+            close_idle_connections(self._calendar.client)
         self._attr_todo_items = [
             todo_item
             for resource in results

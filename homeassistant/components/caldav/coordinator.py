@@ -1,5 +1,6 @@
 """Data update coordinator for caldav."""
 
+import asyncio
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
@@ -22,6 +23,30 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
+
+# Cap concurrent CalDAV requests across all calendar/todo entities.
+# When a user has many calendars (e.g. an iCloud account with 30+ shared
+# calendars), every entity firing its first refresh in parallel at boot
+# saturates the HA thread pool and leaves sockets in CLOSE_WAIT against
+# Cloudflare-fronted CalDAV endpoints. Capping at 4 keeps overall throughput
+# high (each request takes <1 s in steady state) while preventing pool
+# exhaustion regardless of how many calendars are configured.
+MAX_CONCURRENT_REQUESTS = 4
+REQUEST_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+
+def close_idle_connections(client: caldav.DAVClient | None) -> None:
+    """Drop urllib3 idle connections after each request.
+
+    Prevents CLOSE_WAIT sockets from accumulating between polls when the
+    server (e.g. iCloud via Cloudflare) closes the connection silently and
+    urllib3 doesn't notice until the next use. requests.Session stays usable
+    — new pools are created lazily on next call.
+    """
+    if client is None:
+        return
+    if session := getattr(client, "session", None):
+        session.close()
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -55,15 +80,19 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = await hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_date,
-                end=end_date,
-                event=True,
-                expand=True,
-            )
-        )
+        try:
+            async with REQUEST_SEMAPHORE:
+                vevent_list = await hass.async_add_executor_job(
+                    partial(
+                        self.calendar.search,
+                        start=start_date,
+                        end=end_date,
+                        event=True,
+                        expand=True,
+                    )
+                )
+        finally:
+            close_idle_connections(self.calendar.client)
         event_list = []
         for event in vevent_list:
             if not hasattr(event.instance, "vevent"):
@@ -97,15 +126,19 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_of_today,
-                end=start_of_tomorrow,
-                event=True,
-                expand=True,
-            ),
-        )
+        try:
+            async with REQUEST_SEMAPHORE:
+                results = await self.hass.async_add_executor_job(
+                    partial(
+                        self.calendar.search,
+                        start=start_of_today,
+                        end=start_of_tomorrow,
+                        event=True,
+                        expand=True,
+                    ),
+                )
+        finally:
+            close_idle_connections(self.calendar.client)
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original
