@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
 
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher
 from homeassistant.util import dt as dt_util
 
-from . import FOLDER_ID, SERVER_ID, create_mock_syncthing_client
+from . import FOLDER_ID, SERVER_ID
 
 from tests.common import (
     MockConfigEntry,
@@ -30,7 +30,7 @@ from tests.common import (
 async def test_syncthing_client_event_listener(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    events: list[dict[str, Any]],
+    mock_syncthing_client: MagicMock,
 ) -> None:
     """Test SyncthingClient event listener handles device and folder events."""
     events = [
@@ -72,14 +72,14 @@ async def test_syncthing_client_event_listener(
         stop_event = asyncio.Event()
         await stop_event.wait()
 
-    mock_syncthing = create_mock_syncthing_client()
-    mock_syncthing.events.listen = mock_listen
-    mock_syncthing.events.last_seen_id = 10
+    mock_syncthing_client.events.listen = mock_listen
+    mock_syncthing_client.events.last_seen_id = 10
 
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
@@ -99,6 +99,7 @@ async def test_syncthing_client_event_listener(
 async def test_syncthing_client_reconnect_on_error(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    mock_syncthing_client: MagicMock,
 ) -> None:
     """Test SyncthingClient reconnects when server becomes unavailable."""
     call_count = 0
@@ -115,9 +116,8 @@ async def test_syncthing_client_reconnect_on_error(
                 load_json_object_fixture, "state_changed_event.json", DOMAIN
             )
 
-    mock_syncthing = create_mock_syncthing_client()
-    mock_syncthing.events.last_seen_id = 10
-    mock_syncthing.events.listen = mock_listen
+    mock_syncthing_client.events.last_seen_id = 10
+    mock_syncthing_client.events.listen = mock_listen
 
     server_unavailable_calls = []
     server_available_calls = []
@@ -143,8 +143,9 @@ async def test_syncthing_client_reconnect_on_error(
 
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

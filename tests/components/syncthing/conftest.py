@@ -26,18 +26,31 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_syncthing_client() -> MagicMock:
+    """Create a mock Syncthing client."""
+    return create_mock_syncthing_client()
+
+
+@pytest.fixture
 async def mock_syncthing(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    mock_syncthing_client: MagicMock,
 ) -> AsyncIterator[MagicMock]:
     """Create a mock Syncthing client and set up the config entry."""
-    mock_syncthing = create_mock_syncthing_client()
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
+    with (
+        patch(
+            "homeassistant.components.syncthing.aiosyncthing.Syncthing",
+            autospec=True,
+        ) as mock_class,
+        patch(
+            "homeassistant.components.syncthing.config_flow.aiosyncthing.Syncthing",
+            new=mock_class,
+        ),
     ):
+        mock_class.return_value = mock_syncthing_client
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        yield mock_syncthing
+        yield mock_syncthing_client
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

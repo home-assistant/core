@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import FOLDER_ID, SERVER_ID, SERVER_ID_SHORT_HA, create_mock_syncthing_client
+from . import FOLDER_ID, SERVER_ID, SERVER_ID_SHORT_HA
 
 from tests.common import (
     MockConfigEntry,
@@ -48,15 +48,16 @@ async def test_sensor_platform_no_sensors_on_config_error(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_syncthing_client: MagicMock,
 ) -> None:
     """Test sensor platform does not create folder sensors when config fetch fails."""
-    mock_client = create_mock_syncthing_client()
-    mock_client.system.config.side_effect = SyncthingError("Connection error")
+    mock_syncthing_client.system.config.side_effect = SyncthingError("Connection error")
 
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_client,
-    ):
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
         await hass.config_entries.async_setup(entry.entry_id)
 
         assert entry.state is ConfigEntryState.LOADED
