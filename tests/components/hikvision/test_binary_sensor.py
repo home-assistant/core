@@ -207,6 +207,25 @@ async def test_binary_sensor_device_class_unknown(
     assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
 
 
+async def test_binary_sensor_videoloss_silently_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test pyhik's videoloss watchdog event is skipped without warning."""
+    mock_hikcamera.return_value.current_event_states = {
+        "Video Loss": [(False, 1)],
+    }
+
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
+
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 0
+    assert "Unknown Hikvision sensor type" not in caplog.text
+
+
 async def test_yaml_import_creates_deprecation_issue(
     hass: HomeAssistant,
     mock_hikcamera: MagicMock,

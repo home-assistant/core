@@ -84,14 +84,8 @@
       "scene_change_detection": {
         "name": "Scene change detection"
       },
-      "shelter_alarm": {
-        "name": "Shelter alarm"
-      },
       "unattended_baggage": {
         "name": "Unattended baggage"
-      },
-      "video_loss": {
-        "name": "Video loss"
       },
       "video_mismatch": {
         "name": "Video mismatch"
