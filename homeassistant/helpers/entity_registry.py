@@ -1953,9 +1953,7 @@ class EntityRegistry(BaseRegistry):
         # import here to avoid circular import
         from .entity import entity_sources  # noqa: PLC0415
 
-        if (
-            loaded_entities := entity_sources(self.hass)
-        ) and entity_id in loaded_entities:
+        if entity_id in entity_sources(self.hass):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]

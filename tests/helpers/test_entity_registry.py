@@ -3782,7 +3782,7 @@ async def test_migrate_entity_to_new_platform_error_handling(
     """Test migrate_entity_to_new_platform."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="hue")
     orig_config_entry = MockConfigEntry(
-        domain="test",
+        domain="hue",
         subentries_data=[
             config_entries.ConfigSubentryData(
                 data={},
@@ -3795,17 +3795,13 @@ async def test_migrate_entity_to_new_platform_error_handling(
     )
     orig_config_entry.add_to_hass(hass)
     platform.config_entry = orig_config_entry
-    entity_entry = MockEntity(
-        name="Light entity", entity_id="light.light", unique_id="5678"
-    )
-    await platform.async_add_entities(
-        [entity_entry], config_subentry_id="mock-subentry-id-1"
-    )
+    entity = MockEntity(name="Light entity", entity_id="light.light", unique_id="5678")
+    await platform.async_add_entities([entity], config_subentry_id="mock-subentry-id-1")
 
     assert entity_registry.async_get("light.light") is not None
 
     new_config_entry = MockConfigEntry(
-        domain="light",
+        domain="hue2",
         subentries_data=[
             config_entries.ConfigSubentryData(
                 data={},
@@ -3826,15 +3822,6 @@ async def test_migrate_entity_to_new_platform_error_handling(
             "hue2",
             new_unique_id=new_unique_id,
             new_config_entry_id=new_config_entry.entry_id,
-        )
-
-    with pytest.raises(
-        ValueError,
-        match="Only entities that haven't been loaded can be migrated",
-    ):
-        entity_registry.async_update_entity_platform(
-            "light.light",
-            "hue3",
         )
 
     with pytest.raises(
@@ -3860,7 +3847,7 @@ async def test_migrate_entity_to_new_platform_error_handling(
     ):
         entity_registry.async_update_entity_platform(
             "light.light",
-            "hue3",
+            "hue2",
         )
 
     # Test migrate entity without new config subentry ID
@@ -3870,7 +3857,7 @@ async def test_migrate_entity_to_new_platform_error_handling(
     ):
         entity_registry.async_update_entity_platform(
             "light.light",
-            "hue3",
+            "hue2",
             new_config_entry_id=new_config_entry.entry_id,
         )
 
