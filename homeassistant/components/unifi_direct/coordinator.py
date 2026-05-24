@@ -7,7 +7,7 @@ from typing import Any
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -39,7 +39,7 @@ def validate_connection_data(data: dict[str, Any]) -> None:
         data[CONF_HOST],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
-        data.get("port", DEFAULT_SSH_PORT),
+        data.get(CONF_PORT, DEFAULT_SSH_PORT),
     )
 
 
@@ -54,7 +54,7 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.host = config_entry.data.get(CONF_HOST)
         self.username = config_entry.data.get(CONF_USERNAME)
         self.password = config_entry.data.get(CONF_PASSWORD)
-        self.port = config_entry.data.get("port", DEFAULT_SSH_PORT)
+        self.port = config_entry.data.get(CONF_PORT, DEFAULT_SSH_PORT)
 
         self.ap = UniFiAP(
             target=self.host,
