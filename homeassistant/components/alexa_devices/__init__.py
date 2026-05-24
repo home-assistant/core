@@ -115,8 +115,4 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Unload a config entry."""
-    try:
-        await entry.runtime_data.api.stop_http2_processing()
-    except Exception:  # noqa: BLE001
-        _LOGGER.error("Error while stopping http2 task", exc_info=True)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

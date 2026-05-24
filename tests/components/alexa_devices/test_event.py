@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -64,4 +64,6 @@ async def test_no_vocal_record_skips_event_trigger(
     await coordinator.history_state_event_handler({})
     await hass.async_block_till_done()
 
-    assert hass.states.get("event.echo_test_voice_event")
+    assert (state := hass.states.get("event.echo_test_voice_event"))
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("event_type") is None
