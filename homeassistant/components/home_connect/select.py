@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -13,7 +12,6 @@ from aiohomeconnect.model.program import Execution
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,7 +23,6 @@ from .const import (
     CLEANING_MODE_OPTIONS,
     COFFEE_MILK_RATIO_OPTIONS,
     COFFEE_TEMPERATURE_OPTIONS,
-    DOMAIN,
     DRYING_TARGET_OPTIONS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
@@ -43,9 +40,7 @@ from .const import (
 )
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
-from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
-
-_LOGGER = logging.getLogger(__name__)
+from .utils import bsh_key_to_translation_key, raise_service_error
 
 PARALLEL_UPDATES = 1
 
@@ -465,14 +460,11 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 program_key,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=self.entity_description.error_translation_key,
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "program": program_key.value,
-                },
-            ) from err
+            raise_service_error(
+                err,
+                self.entity_description.error_translation_key,
+                {"program": program_key.value},
+            )
 
 
 class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
@@ -503,16 +495,11 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 value=value,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_setting_entity",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                    "key": self.bsh_key,
-                    "value": value,
-                },
-            ) from err
+            raise_service_error(
+                err,
+                "set_setting_entity",
+                {"entity_id": self.entity_id, "key": self.bsh_key, "value": value},
+            )
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""

@@ -13,15 +13,14 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry, should_add_option_entity
-from .const import DOMAIN, UNIT_MAP
+from .const import UNIT_MAP
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,16 +179,9 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 value=value,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_setting_entity",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                    "key": self.bsh_key,
-                    "value": str(value),
-                },
-            ) from err
+            raise_service_error(
+                err, "set_setting_entity", {"entity_id": self.entity_id}
+            )
 
     @constraint_fetcher
     async def async_fetch_constraints(self) -> None:

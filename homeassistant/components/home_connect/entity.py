@@ -15,7 +15,6 @@ from aiohomeconnect.model.error import (
 )
 
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.event import async_call_later
@@ -23,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,11 +95,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
                 self.appliance.info.ha_id, option_key=option_key, value=value
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_option",
-                translation_placeholders=get_dict_from_home_connect_error(err),
-            ) from err
+            raise_service_error(err, "set_option")
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):

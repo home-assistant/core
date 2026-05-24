@@ -5,14 +5,13 @@ from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN
+from .const import APPLIANCES_WITH_PROGRAMS
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 PARALLEL_UPDATES = 1
 
@@ -105,14 +104,9 @@ class HomeConnectCommandButtonEntity(HomeConnectButtonEntity):
                 value=True,
             )
         except HomeConnectError as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="execute_command",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(error),
-                    "command": self.entity_description.key,
-                },
-            ) from error
+            raise_service_error(
+                error, "execute_command", {"command": self.entity_description.key}
+            )
 
 
 class HomeConnectStopProgramButtonEntity(HomeConnectButtonEntity):
@@ -133,8 +127,4 @@ class HomeConnectStopProgramButtonEntity(HomeConnectButtonEntity):
         try:
             await self.coordinator.client.stop_program(self.appliance.info.ha_id)
         except HomeConnectError as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="stop_program",
-                translation_placeholders=get_dict_from_home_connect_error(error),
-            ) from error
+            raise_service_error(error, "stop_program")

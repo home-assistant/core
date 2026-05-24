@@ -16,15 +16,14 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .common import setup_home_connect_entry
-from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR, DOMAIN
+from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,14 +149,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=True,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="turn_on_light",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                },
-            ) from err
+            raise_service_error(err, "turn_on_light", {"entity_id": self.entity_id})
         if self._color_key and self._custom_color_key:
             if (
                 ATTR_RGB_COLOR in kwargs or ATTR_HS_COLOR in kwargs
@@ -169,14 +161,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="select_light_custom_color",
-                        translation_placeholders={
-                            **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
-                        },
-                    ) from err
+                    raise_service_error(
+                        err, "select_light_custom_color", {"entity_id": self.entity_id}
+                    )
 
             if ATTR_RGB_COLOR in kwargs:
                 hex_val = color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])
@@ -187,14 +174,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="set_light_color",
-                        translation_placeholders={
-                            **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
-                        },
-                    ) from err
+                    raise_service_error(
+                        err, "set_light_color", {"entity_id": self.entity_id}
+                    )
                 return
             if (self._attr_brightness is not None or ATTR_BRIGHTNESS in kwargs) and (
                 self._attr_hs_color is not None or ATTR_HS_COLOR in kwargs
@@ -219,14 +201,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="set_light_color",
-                        translation_placeholders={
-                            **get_dict_from_home_connect_error(err),
-                            "entity_id": self.entity_id,
-                        },
-                    ) from err
+                    raise_service_error(
+                        err, "set_light_color", {"entity_id": self.entity_id}
+                    )
                 return
 
         if self._brightness_key and ATTR_BRIGHTNESS in kwargs:
@@ -242,14 +219,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     value=brightness,
                 )
             except HomeConnectError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="set_light_brightness",
-                    translation_placeholders={
-                        **get_dict_from_home_connect_error(err),
-                        "entity_id": self.entity_id,
-                    },
-                ) from err
+                raise_service_error(
+                    err, "set_light_brightness", {"entity_id": self.entity_id}
+                )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the light off."""
@@ -260,14 +232,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=False,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="turn_off_light",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                },
-            ) from err
+            raise_service_error(err, "turn_off_light", {"entity_id": self.entity_id})
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""

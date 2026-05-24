@@ -16,14 +16,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
+from .const import BSH_POWER_ON, BSH_POWER_STANDBY
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,14 +265,9 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="power_on",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "appliance_name": self.appliance.info.name,
-                },
-            ) from err
+            raise_service_error(
+                err, "power_on", {"appliance_name": self.appliance.info.name}
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
@@ -284,15 +278,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_STANDBY,
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="power_off",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
+            raise_service_error(
+                err,
+                "power_off",
+                {
                     "appliance_name": self.appliance.info.name,
                     "value": BSH_POWER_STANDBY,
                 },
-            ) from err
+            )
 
     async def _set_program(self, program_key: ProgramKey) -> None:
         try:
@@ -300,14 +293,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 self.appliance.info.ha_id, program_key=program_key
             )
         except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="start_program",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "program": program_key.value,
-                },
-            ) from err
+            raise_service_error(err, "start_program", {"program": program_key.value})
         _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

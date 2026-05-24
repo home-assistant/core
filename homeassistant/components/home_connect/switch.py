@@ -18,7 +18,7 @@ from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
-from .utils import get_dict_from_home_connect_error
+from .utils import raise_service_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,15 +228,9 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="turn_on",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                    "key": self.bsh_key,
-                },
-            ) from err
+            raise_service_error(
+                err, "turn_on", {"entity_id": self.entity_id, "key": self.bsh_key}
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
@@ -248,15 +242,9 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="turn_off",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "entity_id": self.entity_id,
-                    "key": self.bsh_key,
-                },
-            ) from err
+            raise_service_error(
+                err, "turn_off", {"entity_id": self.entity_id, "key": self.bsh_key}
+            )
 
     def update_native_value(self) -> None:
         """Update the switch's status."""
@@ -278,14 +266,9 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="power_on",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "appliance_name": self.appliance.info.name,
-                },
-            ) from err
+            raise_service_error(
+                err, "power_on", {"appliance_name": self.appliance.info.name}
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
@@ -314,15 +297,9 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = True
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="power_off",
-                translation_placeholders={
-                    **get_dict_from_home_connect_error(err),
-                    "appliance_name": self.appliance.info.name,
-                    "value": self.power_off_state,
-                },
-            ) from err
+            raise_service_error(
+                err, "power_off", {"appliance_name": self.appliance.info.name}
+            )
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""
