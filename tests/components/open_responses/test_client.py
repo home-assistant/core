@@ -120,6 +120,39 @@ async def test_create_maps_error_statuses(
     assert err.value.status_code == status_code
 
 
+async def test_create_maps_json_error_without_message() -> None:
+    """Test JSON status errors fall back to the response reason phrase."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"error": {"type": "server_error"}})
+
+    http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = AsyncOpenResponsesClient(
+        "https://provider.example",
+        http_client=http_client,
+    )
+    try:
+        with pytest.raises(APIStatusError) as err:
+            await client.create(model="model-a", input="hello")
+    finally:
+        await http_client.aclose()
+
+    assert str(err.value) == "Internal Server Error"
+    assert err.value.response_body == {"error": {"type": "server_error"}}
+
+
+async def test_owned_client_is_created_and_closed() -> None:
+    """Test the default HTTP client is lazy-created and closed when owned."""
+    client = AsyncOpenResponsesClient("https://provider.example")
+
+    http_client = client.client
+    assert isinstance(http_client, httpx.AsyncClient)
+
+    await client.async_close()
+
+    assert http_client.is_closed
+
+
 async def test_create_maps_connection_errors() -> None:
     """Test connection errors map to integration exceptions."""
 
@@ -197,3 +230,25 @@ async def test_stream_maps_error_status_after_reading_body() -> None:
 
     assert str(err.value) == "forbidden"
     assert err.value.response_body == {"error": {"message": "forbidden"}}
+
+
+async def test_stream_maps_connection_errors() -> None:
+    """Test stream connection errors map to integration exceptions."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("stream down", request=request)
+
+    http_client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = AsyncOpenResponsesClient(
+        "https://provider.example",
+        http_client=http_client,
+    )
+    try:
+        stream = await client.create(model="model-a", input="hello", stream=True)
+        with pytest.raises(APIConnectionError) as err:
+            _ = [event async for event in stream]
+    finally:
+        await http_client.aclose()
+
+    assert "stream down" in str(err.value)
+    assert isinstance(err.value.__cause__, httpx.ConnectError)

@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.open_responses.entity import (
     OpenResponsesEntity,
+    _adjust_schema,
     _async_prepare_message_attachments,
     _convert_content_to_param,
     _event_to_dict,
@@ -101,6 +102,29 @@ def test_format_structured_output_adjusts_nested_schema() -> None:
         "string",
         "null",
     ]
+
+
+def test_adjust_schema_handles_empty_objects_and_arrays() -> None:
+    """Test schemas without properties or items are accepted."""
+    object_schema: dict[str, Any] = {"type": "object"}
+    array_schema: dict[str, Any] = {"type": "array"}
+    optional_schema: dict[str, Any] = {
+        "type": "object",
+        "properties": {"name": {"type": "string"}},
+    }
+
+    _adjust_schema(object_schema)
+    _adjust_schema(array_schema)
+    _adjust_schema(optional_schema)
+
+    assert object_schema == {
+        "type": "object",
+        "strict": True,
+        "additionalProperties": False,
+    }
+    assert array_schema == {"type": "array"}
+    assert optional_schema["required"] == ["name"]
+    assert optional_schema["properties"]["name"]["type"] == ["string", "null"]
 
 
 def test_convert_content_preserves_system_role() -> None:
@@ -333,6 +357,49 @@ async def test_prepare_message_attachments_skips_tool_results(
     ]
 
 
+async def test_prepare_message_attachments_indexes_past_assistant_tool_calls(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test attachment insertion indexes past assistant tool calls."""
+    image_path = tmp_path / "door.jpg"
+    image_path.write_bytes(b"image")
+    chat_content = [
+        conversation.AssistantContent(
+            agent_id="agent",
+            content="Turning on the light.",
+            tool_calls=[
+                llm.ToolInput(
+                    id="call_1",
+                    tool_name="HassTurnOn",
+                    tool_args={"name": "Kitchen"},
+                )
+            ],
+        ),
+        conversation.UserContent(
+            content="What changed?",
+            attachments=[
+                conversation.Attachment(
+                    media_content_id="media-source://media/door.jpg",
+                    mime_type="image/jpeg",
+                    path=image_path,
+                )
+            ],
+        ),
+    ]
+    messages = _convert_content_to_param(chat_content)
+
+    await _async_prepare_message_attachments(hass, chat_content, messages)
+
+    assert messages[2]["content"] == [
+        {"type": "input_text", "text": "What changed?"},
+        {
+            "type": "input_image",
+            "image_url": "data:image/jpeg;base64,aW1hZ2U=",
+            "detail": "auto",
+        },
+    ]
+
+
 async def test_prepare_pdf_file_uses_basename(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
@@ -422,6 +489,27 @@ async def test_transform_stream_handles_sdk_event_objects() -> None:
     class Event:
         def model_dump(self, **kwargs):
             return {"type": "response.output_text.delta", "delta": "hello"}
+
+    async def stream() -> AsyncGenerator[Event]:
+        yield Event()
+
+    deltas = [
+        delta
+        async for delta in _transform_stream(
+            Mock(),
+            stream(),
+        )
+    ]
+
+    assert deltas == [{"content": "hello"}]
+
+
+async def test_transform_stream_handles_event_data_objects() -> None:
+    """Test SDK event/data objects are converted before handling."""
+
+    class Event:
+        event = "response.output_text.delta"
+        data = {"delta": "hello"}
 
     async def stream() -> AsyncGenerator[Event]:
         yield Event()
@@ -795,6 +883,37 @@ async def test_transform_stream_rejects_terminal_failure_events(
         ]
 
 
+@pytest.mark.parametrize(
+    ("event", "message"),
+    [
+        (
+            {"response": {}, "type": "response.incomplete"},
+            "Open Responses response incomplete: unknown reason",
+        ),
+        (
+            {"response": {}, "type": "response.failed"},
+            "Open Responses response failed: unknown reason",
+        ),
+    ],
+)
+async def test_transform_stream_rejects_terminal_failure_events_without_reason(
+    event: dict[str, Any], message: str
+) -> None:
+    """Test terminal failure events without details still fail clearly."""
+
+    async def stream() -> AsyncGenerator[dict[str, Any]]:
+        yield event
+
+    with pytest.raises(HomeAssistantError, match=message):
+        [
+            delta
+            async for delta in _transform_stream(
+                Mock(),
+                stream(),
+            )
+        ]
+
+
 async def test_transform_stream_handles_spec_error_envelope() -> None:
     """Test streaming error events use the Open Responses error envelope."""
 
@@ -921,6 +1040,59 @@ async def test_handle_chat_log_passes_structured_output_schema(
             },
         }
     }
+
+
+async def test_handle_chat_log_passes_tools(
+    hass: HomeAssistant,
+) -> None:
+    """Test LLM API tools are sent to the endpoint."""
+
+    async def stream() -> AsyncGenerator[dict]:
+        yield {"type": "response.completed"}
+
+    async def add_delta_content_stream(
+        entity_id: str,
+        delta_stream: AsyncGenerator[conversation.AssistantContentDeltaDict],
+    ) -> AsyncGenerator[conversation.AssistantContent]:
+        async for _delta in delta_stream:
+            pass
+        if entity_id == "":
+            yield conversation.AssistantContent(agent_id=entity_id, content="")
+
+    client = Mock()
+    client.create = AsyncMock(return_value=stream())
+    entity = Mock()
+    entity.hass = hass
+    entity.entity_id = "conversation.open_responses"
+    entity.entry = Mock(
+        data={CONF_MODEL: "open-responses-model"},
+        runtime_data=client,
+    )
+    entity.subentry = Mock(data={})
+    chat_log = Mock(
+        content=[],
+        conversation_id="conversation-id",
+        llm_api=Mock(custom_serializer=None, tools=[EnumTool()]),
+        unresponded_tool_results=False,
+    )
+    chat_log.async_add_delta_content_stream = add_delta_content_stream
+
+    await OpenResponsesEntity._async_handle_chat_log(entity, chat_log)
+
+    client.create.assert_awaited_once()
+    assert client.create.await_args.kwargs["tools"] == [
+        {
+            "description": "Test tool",
+            "name": "enum_tool",
+            "parameters": {
+                "properties": {"mode": {"type": "string"}},
+                "required": ["mode"],
+                "type": "object",
+            },
+            "strict": False,
+            "type": "function",
+        }
+    ]
 
 
 @pytest.mark.parametrize(
