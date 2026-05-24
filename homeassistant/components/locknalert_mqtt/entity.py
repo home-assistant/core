@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
+import hashlib
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
@@ -429,8 +430,8 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
+                issue_id = hashlib.sha256(yaml_config_str.encode()).hexdigest()[:16]
                 async_create_issue(
                     hass,
                     DOMAIN,
