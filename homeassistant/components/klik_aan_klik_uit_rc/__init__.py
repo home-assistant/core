@@ -7,7 +7,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_TRANSMITTER
 
-PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

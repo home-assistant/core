@@ -84,7 +84,7 @@ async def init_klik_aan_klik_uit_rc_dim(
     hass: HomeAssistant,
     mock_dim_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Set up Kaku RC integration with dimming enabled."""
+    """Set up KlikAanKlikUit RC integration with dimming enabled."""
     mock_dim_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_dim_config_entry.entry_id)
     await hass.async_block_till_done()

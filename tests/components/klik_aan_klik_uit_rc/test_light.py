@@ -30,9 +30,59 @@ def _light_entity_id(hass: HomeAssistant) -> str:
 async def test_turn_on_off_sends_kaku_commands(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
+    init_klik_aan_klik_uit_rc: MockConfigEntry,
+) -> None:
+    """Test non-dim light on/off behavior."""
+    entity_id = _light_entity_id(hass)
+    context = Context()
+
+    with patch(
+        "homeassistant.components.klik_aan_klik_uit_rc.light.get_kaku_timings",
+        return_value=[275, -275, 275, -1375],
+    ) as mock_timings:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            context=context,
+            blocking=True,
+        )
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_ON
+        assert len(mock_rf_entity.send_command_calls) == 1
+
+        first_call = mock_timings.call_args_list[0]
+        assert first_call.kwargs["on"] is True
+        assert first_call.kwargs["dimlevel"] is None
+        assert first_call.kwargs["frame_repeats"] == REPEAT_COUNT
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            context=context,
+            blocking=True,
+        )
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+        assert len(mock_rf_entity.send_command_calls) == 2
+
+        second_call = mock_timings.call_args_list[1]
+        assert second_call.kwargs["on"] is False
+        assert second_call.kwargs["dimlevel"] is None
+        assert second_call.kwargs["frame_repeats"] == REPEAT_COUNT
+
+
+async def test_dim_turn_on_off_sends_kaku_commands(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
     init_klik_aan_klik_uit_rc_dim: MockConfigEntry,
 ) -> None:
-    """Test turning light on/off sends commands and updates state."""
+    """Test dim light on/off sends commands and updates state."""
     entity_id = _light_entity_id(hass)
     context = Context()
 

@@ -36,39 +36,41 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the optional dimmer light entity."""
-    if not config_entry.data.get(CONF_DIM, False):
-        return
-
-    async_add_entities([KakuDimmerLight(config_entry)])
+    """Set up the KlikAanKlikUit light entity."""
+    async_add_entities([KlikAanKlikUitLight(config_entry)])
 
 
-class KakuDimmerLight(LightEntity, RestoreEntity):
-    """Brightness control for KlikAanKlikUit devices."""
+class KlikAanKlikUitLight(LightEntity, RestoreEntity):
+    """Light entity for KlikAanKlikUit devices."""
 
     _attr_has_entity_name = True
-    _attr_name = "Brightness"
+    _attr_name = "Output"
     _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize the dimmer light."""
+        """Initialize the light."""
         self._transmitter: str = entry.data[CONF_TRANSMITTER]
         self._device_id: int = entry.data[CONF_DEVICE_ID]
         self._channel: int = entry.data[CONF_CHANNEL]
-        self._group: bool = entry.data.get(CONF_GROUP, False)
-        self._attr_unique_id = f"{entry.entry_id}_dim"
+        self._group: bool = entry.data[CONF_GROUP]
+        self._dim: bool = entry.data[CONF_DIM]
+        self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="KlikAanKlikUit",
-            model="KlikAanKlikUit RC Dimmer",
+            model="KlikAanKlikUit RC Receiver",
             name=entry.title,
             sw_version=format_device_summary(
-                self._device_id, self._channel, self._group, True
+                self._device_id, self._channel, self._group, self._dim
             ),
         )
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        self._attr_color_mode = ColorMode.BRIGHTNESS
-        self._attr_brightness = 255
+        if self._dim:
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_brightness = 255
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to transmitter state and restore last light state."""
@@ -104,12 +106,19 @@ class KakuDimmerLight(LightEntity, RestoreEntity):
 
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
-            last_brightness = last_state.attributes.get("brightness")
-            if isinstance(last_brightness, int):
-                self._attr_brightness = last_brightness
+            if self._dim:
+                last_brightness = last_state.attributes.get("brightness")
+                if isinstance(last_brightness, int):
+                    self._attr_brightness = last_brightness
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the dimmer on and update brightness level."""
+        """Turn the light on and optionally update brightness."""
+        if not self._dim:
+            await self._async_send(on=True, dimlevel=None)
+            self._attr_is_on = True
+            self.async_write_ha_state()
+            return
+
         brightness = kwargs.get("brightness")
         if isinstance(brightness, int):
             self._attr_brightness = max(1, min(255, brightness))
@@ -118,45 +127,29 @@ class KakuDimmerLight(LightEntity, RestoreEntity):
         ) is not None and current_brightness <= 0:
             self._attr_brightness = 255
 
-        await self._async_send(brightness=self._attr_brightness)
+        dimlevel = max(1, min(100, round(self._attr_brightness * 100 / 255)))
+        await self._async_send(on=None, dimlevel=dimlevel)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the dimmer off."""
-        await self._async_send(brightness=None)
+        """Turn the light off."""
+        await self._async_send(on=False, dimlevel=None)
         self._attr_is_on = False
-        self._attr_brightness = 0
+        if self._dim:
+            self._attr_brightness = 0
         self.async_write_ha_state()
 
-    async def _async_send(self, *, brightness: int | None = None) -> None:
-        """Send dimming command using dimlevel or on/off.
-
-        When brightness is provided, uses dimlevel parameter with on=None.
-        When brightness is None (off), uses on=False with dimlevel=None.
-        """
-        if brightness is not None:
-            dimlevel = max(1, min(100, round(brightness * 100 / 255)))
-            # Use dimming with dimlevel, set on=None
-            timings = get_kaku_timings(
-                self._device_id,
-                self._channel,
-                group=self._group,
-                on=None,
-                dimlevel=dimlevel,
-                frame_repeats=REPEAT_COUNT,
-            )
-        else:
-            # Turn off using on=False
-            timings = get_kaku_timings(
-                self._device_id,
-                self._channel,
-                group=self._group,
-                on=False,
-                dimlevel=None,
-                frame_repeats=REPEAT_COUNT,
-            )
-            self._attr_brightness = 0
+    async def _async_send(self, *, on: bool | None, dimlevel: int | None) -> None:
+        """Send on/off or dim command depending on entity capabilities."""
+        timings = get_kaku_timings(
+            self._device_id,
+            self._channel,
+            group=self._group,
+            on=on,
+            dimlevel=dimlevel,
+            frame_repeats=REPEAT_COUNT,
+        )
         command = OOKCommand(
             frequency=FREQUENCY_HZ,
             timings=timings,
