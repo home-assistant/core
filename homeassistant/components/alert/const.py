@@ -1,9 +1,19 @@
 """Constants for the Alert integration."""
 
+from __future__ import annotations
+
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import AlertEntity
 
 DOMAIN: Final = "alert"
+DATA_COMPONENT: HassKey[EntityComponent[AlertEntity]] = HassKey(DOMAIN)
 
 LOGGER = logging.getLogger(__package__)
 

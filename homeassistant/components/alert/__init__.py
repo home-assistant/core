@@ -32,6 +32,7 @@ from .const import (
     CONF_NOTIFIERS,
     CONF_SKIP_FIRST,
     CONF_TITLE,
+    DATA_COMPONENT,
     DEFAULT_CAN_ACK,
     DEFAULT_SKIP_FIRST,
     DOMAIN,
@@ -126,7 +127,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
     """
-    component = hass.data[DOMAIN] = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[AlertEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
     component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
@@ -144,7 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> bool:
     """Set up an alert from a config entry."""
-    component: EntityComponent[AlertEntity] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     alert = _alert_from_entry(hass, entry)
     await component.async_add_entities([alert])
     entry.runtime_data = alert.entity_id
@@ -153,6 +156,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: AlertConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[AlertEntity] = hass.data[DOMAIN]
-    await component.async_remove_entity(entry.runtime_data)
+    await hass.data[DATA_COMPONENT].async_remove_entity(entry.runtime_data)
     return True
