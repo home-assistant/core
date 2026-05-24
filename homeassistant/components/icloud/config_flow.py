@@ -129,6 +129,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2fa:
+            await self.hass.async_add_executor_job(
+                self.api.request_2fa_code
+            )
             return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
