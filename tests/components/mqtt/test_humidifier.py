@@ -1323,7 +1323,10 @@ async def test_discovery_removal_humidifier(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered humidifier."""
-    data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data = (
+        '{ "name": "test", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     await help_test_discovery_removal(hass, mqtt_mock_entry, humidifier.DOMAIN, data)
 
 
@@ -1350,7 +1353,10 @@ async def test_discovery_update_unchanged_humidifier(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data1 = (
+        '{ "name": "Beer", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     with patch(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
@@ -1365,7 +1371,10 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data2 = (
+        '{ "name": "Milk", "command_topic": "test_topic",'
+        ' "target_humidity_command_topic": "test-topic2" }'
+    )
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, humidifier.DOMAIN, data1, data2
     )
@@ -1622,6 +1631,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

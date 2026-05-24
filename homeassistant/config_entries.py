@@ -629,7 +629,9 @@ class ConfigEntry[_DataT = Any]:
                             subentry_flow_handler, "async_step_reconfigure"
                         )
                     }
-                    for subentry_flow_type, subentry_flow_handler in supported_flows.items()
+                    for subentry_flow_type, subentry_flow_handler in (
+                        supported_flows.items()
+                    )
                 },
             )
         return self._supported_subentry_types or {}
@@ -983,7 +985,7 @@ class ConfigEntry[_DataT = Any]:
             self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
-        if self.state == ConfigEntryState.NOT_LOADED:
+        if self.state is ConfigEntryState.NOT_LOADED:
             return True
 
         if not integration and (integration := self._integration_for_domain) is None:
@@ -1646,7 +1648,7 @@ class ConfigEntriesFlowManager(
         """
         flow = cast(ConfigFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # If there's a config entry with a matching unique ID,
             # update the discovery key.
             if (
@@ -2175,7 +2177,7 @@ class ConfigEntries:
         """
         entries = self._entries.get_entries_for_domain(domain)
 
-        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
+        return [entry for entry in entries if entry.state is ConfigEntryState.LOADED]
 
     @callback
     def async_entry_for_domain_unique_id(
@@ -3649,7 +3651,7 @@ class ConfigSubentryFlowManager(
         """
         flow = cast(ConfigSubentryFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry_id, subentry_type = flow.handler
@@ -3872,7 +3874,7 @@ class OptionsFlowManager(
         """
         flow = cast(OptionsFlow, flow)
 
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)

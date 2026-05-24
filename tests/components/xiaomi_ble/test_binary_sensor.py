@@ -405,7 +405,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
 
 async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
-    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    """Test sleepy device doesn't go unavailable and restores state."""
     start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(

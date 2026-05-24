@@ -3,11 +3,6 @@
 from homeassistant.const import Platform
 
 CONF_PLANT_ID = "plant_id"
-CONF_REGION = "region"
-
-
-# API key support
-CONF_API_KEY = "api_key"
 
 # Auth types for config flow
 AUTH_PASSWORD = "password"

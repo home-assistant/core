@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.helpers import llm
 
 LOGGER = logging.getLogger(__package__)
@@ -15,7 +15,6 @@ DEFAULT_STT_NAME = "Google AI STT"
 DEFAULT_TTS_NAME = "Google AI TTS"
 DEFAULT_AI_TASK_NAME = "Google AI Task"
 
-CONF_PROMPT = "prompt"
 DEFAULT_STT_PROMPT = "Transcribe the attached audio"
 
 CONF_RECOMMENDED = "recommended"
