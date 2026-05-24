@@ -78,7 +78,8 @@ class Ld2410BleConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
-            await bluetooth.async_request_active_scan(self.hass)
+            if not self._discovered_devices:
+                await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
