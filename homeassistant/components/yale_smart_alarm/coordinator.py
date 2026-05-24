@@ -36,7 +36,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.locks: list[YaleLock] = []
 
-    def yale_setup(self) -> tuple[YaleSmartAlarmClient, list[YaleLock]]:
+    def _yale_setup(self) -> tuple[YaleSmartAlarmClient, list[YaleLock]]:
         """Set up connection to Yale."""
         yale = YaleSmartAlarmClient(
             self.config_entry.data[CONF_USERNAME],
@@ -49,7 +49,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set up connection to Yale."""
         try:
             self.yale, self.locks = await self.hass.async_add_executor_job(
-                self.yale_setup
+                self._yale_setup
             )
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
