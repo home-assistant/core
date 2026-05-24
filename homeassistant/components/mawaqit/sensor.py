@@ -241,19 +241,6 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
         return self.coordinator.data.get("name")
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return additional attributes for the mosque sensor."""
-        if not self.coordinator.data:
-            return None
-        filtered_data = {}
-        announcements = self.coordinator.data.get("announcements")
-        if announcements:
-            filtered_data["announcements"] = [
-                f"{elem['title']} - {elem['content']}" for elem in announcements
-            ]
-        return filtered_data
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data is not None

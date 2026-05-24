@@ -118,19 +118,6 @@ async def test_mosque_sensor_native_value(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-async def test_mosque_sensor_extra_state_attributes(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque sensor has announcement attributes."""
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.mosque_information")
-    assert state is not None
-    assert "announcements" in state.attributes
-    assert state.attributes["announcements"] == ["Ramadan - Starts tomorrow"]
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
 async def test_mosque_sensor_no_announcements(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -315,14 +302,6 @@ def test_mosque_sensor_native_value_no_data() -> None:
     coordinator.data = None
     sensor = MyMosqueSensor(coordinator)
     assert sensor.native_value is None
-
-
-def test_mosque_sensor_extra_state_attributes_no_data() -> None:
-    """Test MyMosqueSensor.extra_state_attributes returns None when no data."""
-    coordinator = MagicMock(spec=MosqueCoordinator)
-    coordinator.data = None
-    sensor = MyMosqueSensor(coordinator)
-    assert sensor.extra_state_attributes is None
 
 
 def test_prayer_time_sensor_native_value_no_data() -> None:
