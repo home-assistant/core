@@ -95,9 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             prefer_cache=False,
         )
     except RoborockInvalidCredentials as err:
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryAuthFailed(
-            "Invalid credentials",
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -118,9 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryNotReady(
-            "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -178,9 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         len(v1_coords) + len(a01_coords) + len(b01_q7_coords) + len(b01_q10_coords) == 0
         and enabled_devices
     ):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ConfigEntryNotReady(
-            "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
