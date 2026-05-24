@@ -946,10 +946,6 @@ PRECISION_WHOLE: Final = 1
 PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
 
-# Static list of entities that will never be exposed to
-# cloud, alexa, or google_home components
-CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
-
 
 class EntityCategory(StrEnum):
     """Category of an entity.
