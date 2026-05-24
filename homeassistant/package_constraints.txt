@@ -32,10 +32,10 @@ cronsim==2.7
 cryptography==48.0.0
 dbus-fast==5.0.3
 file-read-backwards==2.0.0
-fnv-hash-fast==2.0.2
+fnv-hash-fast==2.0.3
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==6.7.1
+habluetooth==6.7.2
 hass-nabucasa==2.2.0
 hassil==3.5.0
 home-assistant-bluetooth==2.0.0
@@ -68,7 +68,7 @@ SQLAlchemy==2.0.49
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
-ulid-transform==2.2.0
+ulid-transform==2.2.1
 urllib3>=2.0
 uv==0.11.14
 voluptuous-openapi==0.3.0

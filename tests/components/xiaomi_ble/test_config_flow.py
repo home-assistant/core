@@ -1162,7 +1162,9 @@ async def test_async_step_reauth_legacy(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1211,7 +1213,9 @@ async def test_async_step_reauth_legacy_wrong_key(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1268,7 +1272,9 @@ async def test_async_step_reauth_v4(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1322,7 +1328,9 @@ async def test_async_step_reauth_v4_wrong_key(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1384,7 +1392,9 @@ async def test_async_step_reauth_v4_from_cloud(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
