@@ -1,22 +1,19 @@
 """Repairs platform for the Min/Max integration."""
 
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.group import (
     CONF_ENTITIES,
-    CONF_GROUP_TYPE,
     CONF_HIDE_MEMBERS,
-    CONF_IGNORE_NON_NUMERIC,
     DOMAIN as GROUP_DOMAIN,
 )
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryDisabler
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -32,13 +29,13 @@ class MigrateToGroupSensorFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_migrate()
 
     async def async_step_migrate(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the migration step of a fix flow."""
         entity_reg = er.async_get(self.hass)
         old_entity = entity_reg.async_get_entity_id(
@@ -53,40 +50,18 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             config.pop(CONF_ROUND_DIGITS)
             # Set group sensor defaults
             config[CONF_HIDE_MEMBERS] = False
-            config[CONF_IGNORE_NON_NUMERIC] = False
-            config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
+            # config[CONF_IGNORE_NON_NUMERIC] = False
+            # config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
+            config["old_entity_id"] = old_entity
 
-            new_config_entry = ConfigEntry(
-                data={},
-                discovery_keys=MappingProxyType({}),
-                domain=GROUP_DOMAIN,
-                minor_version=1,
-                options=config,
-                source=SOURCE_USER,
-                subentries_data=[],
-                title=self.entry.title,
-                unique_id=None,
-                version=1,
-                disabled_by=ConfigEntryDisabler.USER,
+            import_result = await self.hass.config_entries.flow.async_init(
+                GROUP_DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config,
             )
 
-            if not await self.hass.config_entries.async_unload(self.entry.entry_id):
-                return self.async_abort(reason="unload_failed")
-            await self.hass.config_entries.async_add(new_config_entry)
-            try:
-                entity_reg.async_update_entity_platform(
-                    old_entity,
-                    GROUP_DOMAIN,
-                    new_config_entry_id=new_config_entry.entry_id,
-                    new_unique_id=new_config_entry.entry_id,
-                )
-            except ValueError:
-                return self.async_abort(reason="entity_update_failed")
-            await self.hass.config_entries.async_set_disabled_by(
-                entry_id=new_config_entry.entry_id, disabled_by=None
-            )
-            await self.hass.config_entries.async_remove(self.entry.entry_id)
-
+            if import_result["type"] != FlowResultType.CREATE_ENTRY:
+                return self.async_abort(reason="could_not_import")
             return self.async_create_entry(data={})
 
         entity_info = entity_reg.async_get(old_entity)
