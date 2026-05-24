@@ -14,7 +14,6 @@ import pytest
 
 from homeassistant.components import tts
 from homeassistant.components.elevenlabs.const import (
-    ATTR_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
@@ -30,7 +29,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.tts import TTSAudioRequest
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 

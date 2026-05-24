@@ -444,7 +444,7 @@ aiousbwatcher==1.1.2
 aiovlc==0.5.1
 
 # homeassistant.components.vodafone_station
-aiovodafone==3.2.0
+aiovodafone==3.3.0
 
 # homeassistant.components.waqi
 aiowaqi==3.1.0
@@ -681,7 +681,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.29.11
+bluetooth-data-tools==1.29.18
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1097,7 +1097,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==7.0.0
+gios==7.1.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1311,7 +1311,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.2.2
+ical==13.2.4
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1359,7 +1359,7 @@ influxdb==5.3.1
 infrared-protocols==5.4.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.1.1
+inkbird-ble==1.1.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -2644,7 +2644,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.2.9
+python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
@@ -3239,7 +3239,7 @@ unifiled==0.11
 universal-silabs-flasher==1.1.0
 
 # homeassistant.components.upb
-upb-lib==0.7.1
+upb-lib==0.7.2
 
 # homeassistant.components.upcloud
 upcloud-api==2.9.0
