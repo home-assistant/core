@@ -527,6 +527,31 @@ async def test_refresh_token_type_long_lived_access_token(hass: HomeAssistant) -
     assert token.expire_at is None
 
 
+async def test_refresh_token_scopes_default_to_none(hass: HomeAssistant) -> None:
+    """Refresh tokens default to no scope restriction."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    assert token.scopes is None
+
+
+async def test_refresh_token_scopes_round_trip_through_store(
+    hass: HomeAssistant,
+) -> None:
+    """A scoped refresh token persists and reloads with the same scopes."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser(system_generated=True, is_active=True).add_to_auth_manager(manager)
+    scopes = frozenset({"sandbox_v2/", "auth/current_user"})
+    token = await manager.async_create_refresh_token(user, scopes=scopes)
+    assert token.scopes == scopes
+
+    # Force a save+reload cycle through the underlying store to confirm
+    # scopes survive serialisation.
+    data = manager._store._data_to_save()
+    rt_dict = next(rt for rt in data["refresh_tokens"] if rt["id"] == token.id)
+    assert sorted(rt_dict["scopes"]) == sorted(scopes)
+
+
 async def test_refresh_token_provider_validation(mock_hass) -> None:
     """Test that creating access token from refresh token checks with provider."""
     manager = await auth.auth_manager_from_config(

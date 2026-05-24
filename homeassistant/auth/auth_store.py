@@ -211,6 +211,7 @@ class AuthStore:
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
         expire_at: float | None = None,
         credential: models.Credentials | None = None,
+        scopes: frozenset[str] | None = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
         kwargs: dict[str, Any] = {
@@ -220,6 +221,7 @@ class AuthStore:
             "access_token_expiration": access_token_expiration,
             "expire_at": expire_at,
             "credential": credential,
+            "scopes": scopes,
         }
         if client_name:
             kwargs["client_name"] = client_name
@@ -475,6 +477,7 @@ class AuthStore:
             else:
                 last_used_at = None
 
+            scopes = rt_dict.get("scopes")
             token = models.RefreshToken(
                 id=rt_dict["id"],
                 user=users[rt_dict["user_id"]],
@@ -493,6 +496,7 @@ class AuthStore:
                 last_used_ip=rt_dict.get("last_used_ip"),
                 expire_at=rt_dict.get("expire_at"),
                 version=rt_dict.get("version"),
+                scopes=frozenset(scopes) if scopes else None,
             )
             if "credential_id" in rt_dict:
                 token.credential = credentials.get(rt_dict["credential_id"])
@@ -581,6 +585,9 @@ class AuthStore:
                 if refresh_token.credential
                 else None,
                 "version": refresh_token.version,
+                "scopes": sorted(refresh_token.scopes)
+                if refresh_token.scopes is not None
+                else None,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()

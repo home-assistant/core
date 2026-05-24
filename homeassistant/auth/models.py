@@ -129,6 +129,13 @@ class RefreshToken:
 
     version: str | None = attr.ib(default=__version__)
 
+    # Optional set of websocket-API command scopes. ``None`` means the token
+    # has no scope restriction (the default for normal user/system tokens).
+    # When set, the token may only call commands matching an entry in the
+    # set: a scope ending in ``/`` matches any command whose type starts
+    # with the prefix; otherwise the scope is an exact ``type`` match.
+    scopes: frozenset[str] | None = attr.ib(default=None)
+
 
 @attr.s(slots=True)
 class Credentials:
