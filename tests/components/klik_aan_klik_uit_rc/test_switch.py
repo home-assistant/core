@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.kaku_rc.const import REPEAT_COUNT
+from homeassistant.components.klik_aan_klik_uit_rc.const import REPEAT_COUNT
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -29,14 +29,14 @@ def _switch_entity_id(hass: HomeAssistant) -> str:
 async def test_turn_on_off_sends_kaku_commands(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_kaku_rc: MockConfigEntry,
+    init_klik_aan_klik_uit_rc: MockConfigEntry,
 ) -> None:
     """Test turning switch on/off sends commands and updates state."""
     entity_id = _switch_entity_id(hass)
     context = Context()
 
     with patch(
-        "homeassistant.components.kaku_rc.switch.get_kaku_timings",
+        "homeassistant.components.klik_aan_klik_uit_rc.switch.get_kaku_timings",
         return_value=[275, -275, 275, -1375],
     ) as mock_timings:
         await hass.services.async_call(

@@ -14,7 +14,7 @@
     },
     "step": {
       "pairing_mode": {
-        "description": "Bring device into learn mode by pushing its button for more than 2 seconds, then press Ok.",
+        "description": "Bring device into learn mode by pushing it's button for more than 2 seconds, then press Ok.",
         "title": "Pair device"
       },
       "pairing_result": {
@@ -23,17 +23,6 @@
         },
         "description": "Select Yes to continue setup. Select No to return to learn mode and resend the learn command.",
         "title": "Confirm pairing"
-      },
-      "reconfigure": {
-        "data": {
-          "channel": "Channel",
-          "device_id": "Device ID",
-          "dim": "Dimming",
-          "group": "Group",
-          "transmitter": "RF Transmitter"
-        },
-        "description": "Update transmitter and device settings.",
-        "title": "Reconfigure Kaku RC device"
       },
       "user": {
         "data": {
@@ -44,26 +33,7 @@
           "transmitter": "RF Transmitter"
         },
         "description": "Choose the transmitter and configure your device settings.",
-        "title": "Set Up Kaku RC 32-bit Device"
-      }
-    }
-  },
-  "options": {
-    "error": {
-      "invalid_channel": "Channel must be between 1 and 16.",
-      "invalid_device_id": "Device ID must be between 0 and 67108863."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "channel": "Channel",
-          "device_id": "Device ID",
-          "dim": "Dimming",
-          "group": "Group",
-          "transmitter": "RF Transmitter"
-        },
-        "description": "Update transmitter and device settings.",
-        "title": "Reconfigure Kaku Device"
+        "title": "Setup KlikAanKlikUit RC device"
       }
     }
   }

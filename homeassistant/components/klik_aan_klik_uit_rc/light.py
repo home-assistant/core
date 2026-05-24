@@ -1,4 +1,4 @@
-"""Light platform for Kaku RC 32 bit dim control."""
+"""Light platform for KlikAanKlikUit RC dim control."""
 
 from typing import Any
 
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class KakuDimmerLight(LightEntity, RestoreEntity):
-    """Brightness control for Kaku devices."""
+    """Brightness control for KlikAanKlikUit devices."""
 
     _attr_has_entity_name = True
     _attr_name = "Brightness"
@@ -59,8 +59,8 @@ class KakuDimmerLight(LightEntity, RestoreEntity):
         self._attr_unique_id = f"{entry.entry_id}_dim"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Kaku",
-            model="Kaku RC 32 bit",
+            manufacturer="KlikAanKlikUit",
+            model="KlikAanKlikUit RC Dimmer",
             name=entry.title,
             sw_version=format_device_summary(
                 self._device_id, self._channel, self._group, True

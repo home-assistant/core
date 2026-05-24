@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.kaku_rc.const import REPEAT_COUNT
+from homeassistant.components.klik_aan_klik_uit_rc.const import REPEAT_COUNT
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -30,14 +30,14 @@ def _light_entity_id(hass: HomeAssistant) -> str:
 async def test_turn_on_off_sends_kaku_commands(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_kaku_rc_dim: MockConfigEntry,
+    init_klik_aan_klik_uit_rc_dim: MockConfigEntry,
 ) -> None:
     """Test turning light on/off sends commands and updates state."""
     entity_id = _light_entity_id(hass)
     context = Context()
 
     with patch(
-        "homeassistant.components.kaku_rc.light.get_kaku_timings",
+        "homeassistant.components.klik_aan_klik_uit_rc.light.get_kaku_timings",
         return_value=[275, -275, 275, -1375],
     ) as mock_timings:
         await hass.services.async_call(
@@ -81,13 +81,13 @@ async def test_turn_on_off_sends_kaku_commands(
 async def test_mid_brightness_maps_to_percent(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_kaku_rc_dim: MockConfigEntry,
+    init_klik_aan_klik_uit_rc_dim: MockConfigEntry,
 ) -> None:
     """Test HA brightness 128 is mapped to Kaku dimlevel 50."""
     entity_id = _light_entity_id(hass)
 
     with patch(
-        "homeassistant.components.kaku_rc.light.get_kaku_timings",
+        "homeassistant.components.klik_aan_klik_uit_rc.light.get_kaku_timings",
         return_value=[275, -275, 275, -1375],
     ) as mock_timings:
         await hass.services.async_call(

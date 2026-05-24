@@ -1,9 +1,10 @@
 """Constants and protocol encoding for the KlikAanKlikUit (Kaku) RC integration."""
 
-from importlib import import_module
 from typing import Final
 
-DOMAIN: Final = "kaku_rc"
+from rf_protocols.commands.kaku import KakuCommand
+
+DOMAIN: Final = "klik_aan_klik_uit_rc"
 
 CONF_TRANSMITTER: Final = "transmitter"
 CONF_DEVICE_ID: Final = "device_id"
@@ -27,7 +28,7 @@ def get_kaku_timings(
     dimlevel: int | None = None,
     frame_repeats: int = REPEAT_COUNT,
 ) -> list[int]:
-    """Get OOK timings for a Kaku command using rf-protocols library.
+    """Get OOK timings for a KlikAanKlikUit command using rf-protocols library.
 
     Args:
         device_id: Device ID (0-67108863)
@@ -43,8 +44,7 @@ def get_kaku_timings(
     if (on is None) == (dimlevel is None):
         raise ValueError("provide exactly one of 'on' or 'dimlevel'")
 
-    kaku_command = import_module("rf_protocols.commands.kaku").KakuCommand
-    command = kaku_command(
+    command = KakuCommand(
         id=device_id,
         group=group,
         channel=channel,

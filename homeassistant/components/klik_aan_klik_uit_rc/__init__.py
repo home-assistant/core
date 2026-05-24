@@ -1,6 +1,4 @@
-"""The Kaku RC 32 bit integration."""
-
-from typing import Any
+"""The KlikAanKlikUit RC integration."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -11,18 +9,15 @@ from .const import CONF_TRANSMITTER
 
 PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
-type KakuRuntimeData = dict[str, Any]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Kaku RC 32 bit from a config entry."""
+    """Setup KlikAanKlikUit RC from a config entry."""
     transmitter_entity_id = str(entry.data[CONF_TRANSMITTER])
     if hass.states.get(transmitter_entity_id) is None:
         raise ConfigEntryNotReady(
             f"RF transmitter entity {transmitter_entity_id} is not available"
         )
 
-    entry.runtime_data = {}
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

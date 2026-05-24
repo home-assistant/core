@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.kaku_rc.const import (
+from homeassistant.components.klik_aan_klik_uit_rc.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
     CONF_DIM,
@@ -24,7 +24,7 @@ def mock_config_entry(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> MockConfigEntry:
-    """Return a mock config entry for Kaku RC switch/button setup."""
+    """Return a mock config entry for Kaku RC setup."""
     entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(TRANSMITTER_ENTITY_ID)
     assert entity_entry is not None
@@ -68,7 +68,7 @@ def mock_dim_config_entry(
 
 
 @pytest.fixture
-async def init_kaku_rc(
+async def init_klik_aan_klik_uit_rc(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
@@ -80,7 +80,7 @@ async def init_kaku_rc(
 
 
 @pytest.fixture
-async def init_kaku_rc_dim(
+async def init_klik_aan_klik_uit_rc_dim(
     hass: HomeAssistant,
     mock_dim_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:

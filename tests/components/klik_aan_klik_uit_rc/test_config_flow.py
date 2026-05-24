@@ -1,6 +1,6 @@
 """Test the Kaku RC config flow."""
 
-from homeassistant.components.kaku_rc.const import (
+from homeassistant.components.klik_aan_klik_uit_rc.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
     CONF_DIM,
@@ -199,33 +199,3 @@ async def test_no_compatible_transmitters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_compatible_transmitters"
-
-
-async def test_options_flow_updates_entry(
-    hass: HomeAssistant,
-    init_kaku_rc: MockConfigEntry,
-) -> None:
-    """Test options flow updates existing config entry data."""
-    result = await init_kaku_rc.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRANSMITTER: TRANSMITTER_ENTITY_ID,
-            CONF_DEVICE_ID: 654321,
-            CONF_CHANNEL: 2,
-            CONF_GROUP: True,
-            CONF_DIM: True,
-        },
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    entry = hass.config_entries.async_get_entry(init_kaku_rc.entry_id)
-    assert entry is not None
-    assert entry.data[CONF_DEVICE_ID] == 654321
-    assert entry.data[CONF_CHANNEL] == 2
-    assert entry.data[CONF_GROUP] is True
-    assert entry.data[CONF_DIM] is True

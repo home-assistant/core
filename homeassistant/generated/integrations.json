@@ -3451,7 +3451,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "kaku_rc": {
+    "klik_aan_klik_uit_rc": {
       "name": "KlikAanKlikUit RC",
       "integration_type": "device",
       "config_flow": true,
