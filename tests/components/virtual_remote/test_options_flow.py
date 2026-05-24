@@ -792,3 +792,26 @@ async def test_manage_commands_menu_contains_command_actions(
     assert "add_command" in result["menu_options"]
     assert "edit_command" in result["menu_options"]
     assert "remove_command" in result["menu_options"]
+
+
+async def test_manage_commands_menu_contains_available_command_actions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test manage commands menu shows the available command actions."""
+    config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {
+        "POWER_ON": RAW_COMMAND
+    }
+
+    result = await _init_options_flow(
+        hass,
+        config_entry,
+        SOURCE_MANAGE_COMMANDS,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == [
+        SOURCE_ADD_COMMAND,
+        SOURCE_EDIT_COMMAND,
+        SOURCE_REMOVE_COMMAND,
+    ]

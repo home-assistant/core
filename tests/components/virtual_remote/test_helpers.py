@@ -235,3 +235,18 @@ def test_infrared_entity_field_omits_unavailable_default() -> None:
 def test_command_options_ignores_malformed_command_mapping() -> None:
     """Test command options ignores malformed command mappings."""
     assert command_options(cast(Mapping[str, Any], "not-a-mapping")) == []
+
+
+def test_infrared_entity_field_without_default_uses_required_field() -> None:
+    """Test infrared entity field has no default when no valid default is provided."""
+    field = infrared_entity_field(
+        "",
+        {
+            "infrared.available": selector.SelectOptionDict(
+                value="infrared.available",
+                label="Available",
+            )
+        },
+    )
+
+    assert field.default is vol.UNDEFINED
