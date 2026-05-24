@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
+from .coordinator import HDFuryConfigEntry, async_create_runtime_data
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -17,10 +17,7 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: HDFuryConfigEntry) -> bool:
     """Set up HDFury as config entry."""
 
-    coordinator = HDFuryCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
+    entry.runtime_data = await async_create_runtime_data(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

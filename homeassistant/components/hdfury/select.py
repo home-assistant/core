@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
+from .coordinator import HDFuryConfigEntry, HDFuryInfoCoordinator, HDFuryRuntimeData
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 1
 class HDFurySelectEntityDescription(SelectEntityDescription):
     """Description for HDFury select entities."""
 
-    set_value_fn: Callable[[HDFuryCoordinator, str], Awaitable[None]]
+    set_value_fn: Callable[[HDFuryRuntimeData, str], Awaitable[None]]
 
 
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
@@ -29,13 +29,13 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         key="portseltx0",
         translation_key="portseltx0",
         options=list(TX0_INPUT_PORTS.keys()),
-        set_value_fn=lambda coordinator, value: _set_ports(coordinator),
+        set_value_fn=lambda runtime_data, value: _set_ports(runtime_data),
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
         translation_key="portseltx1",
         options=list(TX1_INPUT_PORTS.keys()),
-        set_value_fn=lambda coordinator, value: _set_ports(coordinator),
+        set_value_fn=lambda runtime_data, value: _set_ports(runtime_data),
     ),
 )
 
@@ -44,15 +44,16 @@ SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescrip
     key="opmode",
     translation_key="opmode",
     options=list(OPERATION_MODES.keys()),
-    set_value_fn=lambda coordinator, value: coordinator.client.set_operation_mode(
+    set_value_fn=lambda runtime_data, value: runtime_data.client.set_operation_mode(
         value
     ),
 )
 
 
-async def _set_ports(coordinator: HDFuryCoordinator) -> None:
-    tx0 = coordinator.data.info.get("portseltx0")
-    tx1 = coordinator.data.info.get("portseltx1")
+async def _set_ports(runtime_data: HDFuryRuntimeData) -> None:
+    info = runtime_data.info_coordinator.data
+    tx0 = info.get("portseltx0")
+    tx1 = info.get("portseltx1")
 
     if tx0 is None or tx1 is None:
         raise HomeAssistantError(
@@ -61,7 +62,7 @@ async def _set_ports(coordinator: HDFuryCoordinator) -> None:
             translation_placeholders={"details": f"tx0={tx0}, tx1={tx1}"},
         )
 
-    await coordinator.client.set_port_selection(tx0, tx1)
+    await runtime_data.client.set_port_selection(tx0, tx1)
 
 
 async def async_setup_entry(
@@ -71,17 +72,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up selects using the platform schema."""
 
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
+    coordinator = runtime_data.info_coordinator
 
     entities: list[HDFuryEntity] = [
-        HDFurySelect(coordinator, description)
+        HDFurySelect(coordinator, runtime_data, description)
         for description in SELECT_PORTS
-        if description.key in coordinator.data.info
+        if description.key in coordinator.data
     ]
 
-    # Add OPMODE select if present
-    if "opmode" in coordinator.data.info:
-        entities.append(HDFurySelect(coordinator, SELECT_OPERATION_MODE))
+    if "opmode" in coordinator.data:
+        entities.append(HDFurySelect(coordinator, runtime_data, SELECT_OPERATION_MODE))
 
     async_add_entities(entities)
 
@@ -90,27 +91,37 @@ class HDFurySelect(HDFuryEntity, SelectEntity):
     """HDFury Select Class."""
 
     entity_description: HDFurySelectEntityDescription
+    _runtime_data: HDFuryRuntimeData
+
+    def __init__(
+        self,
+        coordinator: HDFuryInfoCoordinator,
+        runtime_data: HDFuryRuntimeData,
+        entity_description: HDFurySelectEntityDescription,
+    ) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator, runtime_data, entity_description)
+        self._runtime_data = runtime_data
 
     @property
     def current_option(self) -> str:
         """Return the current option."""
 
-        return self.coordinator.data.info[self.entity_description.key]
+        return self.coordinator.data[self.entity_description.key]
 
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        # Update local data first
-        self.coordinator.data.info[self.entity_description.key] = option
+        previous = self.coordinator.data[self.entity_description.key]
+        self.coordinator.data[self.entity_description.key] = option
 
-        # Send command to device
         try:
-            await self.entity_description.set_value_fn(self.coordinator, option)
+            await self.entity_description.set_value_fn(self._runtime_data, option)
         except HDFuryError as error:
+            self.coordinator.data[self.entity_description.key] = previous
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        # Trigger HA coordinator refresh
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data(self.coordinator.data)

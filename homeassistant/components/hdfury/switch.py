@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry
+from .coordinator import HDFuryConfigCoordinator, HDFuryConfigEntry, HDFuryRuntimeData
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -141,12 +141,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches using the platform schema."""
 
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
+    coordinator = runtime_data.config_coordinator
 
     async_add_entities(
-        HDFurySwitch(coordinator, description)
+        HDFurySwitch(coordinator, runtime_data, description)
         for description in SWITCHES
-        if description.key in coordinator.data.config
+        if description.key in coordinator.data
     )
 
 
@@ -155,34 +156,46 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
 
     entity_description: HDFurySwitchEntityDescription
 
+    def __init__(
+        self,
+        coordinator: HDFuryConfigCoordinator,
+        runtime_data: HDFuryRuntimeData,
+        entity_description: HDFurySwitchEntityDescription,
+    ) -> None:
+        """Initialize the switch entity."""
+        super().__init__(coordinator, runtime_data, entity_description)
+        self._client = runtime_data.client
+
     @property
     def is_on(self) -> bool:
         """Set Switch State."""
 
-        return self.coordinator.data.config.get(self.entity_description.key) == "1"
+        return self.coordinator.data.get(self.entity_description.key) == "1"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle Switch On Event."""
 
         try:
-            await self.entity_description.set_value_fn(self.coordinator.client, "on")
+            await self.entity_description.set_value_fn(self._client, "on")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.entity_description.key] = "1"
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle Switch Off Event."""
 
         try:
-            await self.entity_description.set_value_fn(self.coordinator.client, "off")
+            await self.entity_description.set_value_fn(self._client, "off")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.entity_description.key] = "0"
+        self.coordinator.async_set_updated_data(self.coordinator.data)

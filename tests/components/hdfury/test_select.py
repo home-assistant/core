@@ -55,6 +55,9 @@ async def test_select_operation_mode(
 
     mock_hdfury_client.set_operation_mode.assert_awaited_once_with("1")
 
+    state = hass.states.get("select.hdfury_vrroom_02_operation_mode")
+    assert state.state == "1"
+
 
 @pytest.mark.parametrize(
     ("entity_id"),
@@ -84,6 +87,9 @@ async def test_select_tx_ports(
     )
 
     mock_hdfury_client.set_port_selection.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "1"
 
 
 async def test_select_operation_mode_error(

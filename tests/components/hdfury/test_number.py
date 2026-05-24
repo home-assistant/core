@@ -66,6 +66,9 @@ async def test_number_set_value(
 
     getattr(mock_hdfury_client, method).assert_awaited_once_with("50")
 
+    state = hass.states.get(entity_id)
+    assert state.state == "50.0"
+
 
 @pytest.mark.parametrize(
     ("entity_id", "method"),
@@ -123,7 +126,7 @@ async def test_number_entities_unavailable_on_error(
 
     await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    mock_hdfury_client.get_info.side_effect = HDFuryError()
+    mock_hdfury_client.get_config.side_effect = HDFuryError()
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)

@@ -39,26 +39,48 @@ async def test_switch_entities(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "method", "service"),
+    ("entity_id", "method", "service", "expected_state"),
     [
-        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_ON),
-        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_OFF),
+        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_ON, "on"),
+        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_OFF, "off"),
         (
             "switch.hdfury_vrroom_02_auto_switch_inputs",
             "set_auto_switch_inputs",
             SERVICE_TURN_ON,
+            "on",
         ),
         (
             "switch.hdfury_vrroom_02_auto_switch_inputs",
             "set_auto_switch_inputs",
             SERVICE_TURN_OFF,
+            "off",
         ),
-        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_ON),
-        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_OFF),
-        ("switch.hdfury_vrroom_02_tx0_force_5v", "set_tx0_force_5v", SERVICE_TURN_ON),
-        ("switch.hdfury_vrroom_02_tx0_force_5v", "set_tx0_force_5v", SERVICE_TURN_OFF),
-        ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_ON),
-        ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_OFF),
+        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_ON, "on"),
+        ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_OFF, "off"),
+        (
+            "switch.hdfury_vrroom_02_tx0_force_5v",
+            "set_tx0_force_5v",
+            SERVICE_TURN_ON,
+            "on",
+        ),
+        (
+            "switch.hdfury_vrroom_02_tx0_force_5v",
+            "set_tx0_force_5v",
+            SERVICE_TURN_OFF,
+            "off",
+        ),
+        (
+            "switch.hdfury_vrroom_02_tx1_force_5v",
+            "set_tx1_force_5v",
+            SERVICE_TURN_ON,
+            "on",
+        ),
+        (
+            "switch.hdfury_vrroom_02_tx1_force_5v",
+            "set_tx1_force_5v",
+            SERVICE_TURN_OFF,
+            "off",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -69,6 +91,7 @@ async def test_switch_turn_on_off(
     entity_id: str,
     method: str,
     service: str,
+    expected_state: str,
 ) -> None:
     """Test turning device switches on and off."""
 
@@ -82,6 +105,9 @@ async def test_switch_turn_on_off(
     )
 
     getattr(mock_hdfury_client, method).assert_awaited_once()
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
@@ -126,7 +152,7 @@ async def test_switch_entities_unavailable_on_error(
 
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
 
-    mock_hdfury_client.get_info.side_effect = HDFuryError()
+    mock_hdfury_client.get_config.side_effect = HDFuryError()
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)

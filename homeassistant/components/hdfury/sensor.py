@@ -102,12 +102,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors using the platform schema."""
 
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
+    coordinator = runtime_data.info_coordinator
 
     async_add_entities(
-        HDFurySensor(coordinator, description)
+        HDFurySensor(coordinator, runtime_data, description)
         for description in SENSORS
-        if description.key in coordinator.data.info
+        if description.key in coordinator.data
     )
 
 
@@ -120,4 +121,4 @@ class HDFurySensor(HDFuryEntity, SensorEntity):
     def native_value(self) -> str:
         """Set Sensor Value."""
 
-        return self.coordinator.data.info[self.entity_description.key]
+        return self.coordinator.data[self.entity_description.key]
