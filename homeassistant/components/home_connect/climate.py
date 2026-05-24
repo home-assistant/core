@@ -22,7 +22,7 @@ from .common import setup_home_connect_entry
 from .const import BSH_POWER_ON, BSH_POWER_STANDBY
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,7 +265,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err, "power_on", {"appliance_name": self.appliance.info.name}
             )
 
@@ -278,7 +278,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 value=BSH_POWER_STANDBY,
             )
         except HomeConnectError as err:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err,
                 "power_off",
                 {
@@ -293,7 +293,9 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 self.appliance.info.ha_id, program_key=program_key
             )
         except HomeConnectError as err:
-            raise_service_error(err, "start_program", {"program": program_key.value})
+            raise_home_assistant_error_from_home_connect_error(
+                err, "start_program", {"program": program_key.value}
+            )
         _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

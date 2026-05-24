@@ -20,7 +20,7 @@ from .common import setup_home_connect_entry, should_add_option_entity
 from .const import UNIT_MAP
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 value=value,
             )
         except HomeConnectError as err:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err,
                 "set_setting_entity",
                 {

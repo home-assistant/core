@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
                 self.appliance.info.ha_id, option_key=option_key, value=value
             )
         except HomeConnectError as err:
-            raise_service_error(err, "set_option")
+            raise_home_assistant_error_from_home_connect_error(err, "set_option")
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):

@@ -40,7 +40,10 @@ from .const import (
 )
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
-from .utils import bsh_key_to_translation_key, raise_service_error
+from .utils import (
+    bsh_key_to_translation_key,
+    raise_home_assistant_error_from_home_connect_error,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -460,7 +463,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 program_key,
             )
         except HomeConnectError as err:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err,
                 self.entity_description.error_translation_key,
                 {"program": program_key.value},
@@ -495,7 +498,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 value=value,
             )
         except HomeConnectError as err:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err,
                 "set_setting_entity",
                 {"entity_id": self.entity_id, "key": self.bsh_key, "value": value},

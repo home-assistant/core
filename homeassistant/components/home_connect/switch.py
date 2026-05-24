@@ -18,7 +18,7 @@ from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err, "turn_on", {"entity_id": self.entity_id, "key": self.bsh_key}
             )
 
@@ -242,7 +242,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err, "turn_off", {"entity_id": self.entity_id, "key": self.bsh_key}
             )
 
@@ -266,7 +266,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = False
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err, "power_on", {"appliance_name": self.appliance.info.name}
             )
 
@@ -297,7 +297,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = True
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 err,
                 "power_off",
                 {

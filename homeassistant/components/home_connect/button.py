@@ -11,7 +11,7 @@ from .common import setup_home_connect_entry
 from .const import APPLIANCES_WITH_PROGRAMS
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 PARALLEL_UPDATES = 1
 
@@ -104,7 +104,7 @@ class HomeConnectCommandButtonEntity(HomeConnectButtonEntity):
                 value=True,
             )
         except HomeConnectError as error:
-            raise_service_error(
+            raise_home_assistant_error_from_home_connect_error(
                 error, "execute_command", {"command": self.entity_description.key}
             )
 
@@ -127,4 +127,4 @@ class HomeConnectStopProgramButtonEntity(HomeConnectButtonEntity):
         try:
             await self.coordinator.client.stop_program(self.appliance.info.ha_id)
         except HomeConnectError as error:
-            raise_service_error(error, "stop_program")
+            raise_home_assistant_error_from_home_connect_error(error, "stop_program")

@@ -34,7 +34,10 @@ from .const import (
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
 from .coordinator import HomeConnectConfigEntry
-from .utils import bsh_key_to_translation_key, raise_service_error
+from .utils import (
+    bsh_key_to_translation_key,
+    raise_home_assistant_error_from_home_connect_error,
+)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -207,7 +210,9 @@ async def async_service_setting(call: ServiceCall) -> None:
     try:
         await client.set_setting(ha_id, setting_key=key, value=value)
     except HomeConnectError as err:
-        raise_service_error(err, "set_setting", {"key": key, "value": str(value)})
+        raise_home_assistant_error_from_home_connect_error(
+            err, "set_setting", {"key": key, "value": str(value)}
+        )
 
 
 async def async_service_set_program_and_options(call: ServiceCall) -> None:
@@ -267,7 +272,7 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
     try:
         await method_call
     except HomeConnectError as err:
-        raise_service_error(
+        raise_home_assistant_error_from_home_connect_error(
             err, exception_translation_key, {"program": program} if program else {}
         )
 
@@ -282,7 +287,7 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         except NoProgramActiveError:
             program_obj = await client.get_selected_program(ha_id)
     except HomeConnectError as err:
-        raise_service_error(err, "fetch_program_error")
+        raise_home_assistant_error_from_home_connect_error(err, "fetch_program_error")
     if not program_obj.key:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="no_program_to_start"
@@ -301,7 +306,9 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             options=list(options_dict.values()) if options_dict else None,
         )
     except HomeConnectError as err:
-        raise_service_error(err, "start_program", {"program": program})
+        raise_home_assistant_error_from_home_connect_error(
+            err, "start_program", {"program": program}
+        )
 
 
 @callback

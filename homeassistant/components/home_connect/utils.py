@@ -16,12 +16,12 @@ def get_dict_from_home_connect_error(
     return {"error": str(err)}
 
 
-def raise_service_error(
+def raise_home_assistant_error_from_home_connect_error(
     err: HomeConnectError,
     translation_key: str,
     extra_placeholders: dict[str, str] | None = None,
 ) -> None:
-    """Raise a Home Assistant error with a translation string from a Home Connect error."""
+    """Raise a Home Assistant error from a Home Connect error."""
     from .const import DOMAIN  # noqa: PLC0415 - avoid circular import
 
     raise HomeAssistantError(

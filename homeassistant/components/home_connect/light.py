@@ -23,7 +23,7 @@ from .common import setup_home_connect_entry
 from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-from .utils import raise_service_error
+from .utils import raise_home_assistant_error_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +149,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=True,
             )
         except HomeConnectError as err:
-            raise_service_error(err, "turn_on_light", {"entity_id": self.entity_id})
+            raise_home_assistant_error_from_home_connect_error(
+                err, "turn_on_light", {"entity_id": self.entity_id}
+            )
         if self._color_key and self._custom_color_key:
             if (
                 ATTR_RGB_COLOR in kwargs or ATTR_HS_COLOR in kwargs
@@ -161,7 +163,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    raise_service_error(
+                    raise_home_assistant_error_from_home_connect_error(
                         err, "select_light_custom_color", {"entity_id": self.entity_id}
                     )
 
@@ -174,7 +176,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise_service_error(
+                    raise_home_assistant_error_from_home_connect_error(
                         err, "set_light_color", {"entity_id": self.entity_id}
                     )
                 return
@@ -201,7 +203,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         value=f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise_service_error(
+                    raise_home_assistant_error_from_home_connect_error(
                         err, "set_light_color", {"entity_id": self.entity_id}
                     )
                 return
@@ -219,7 +221,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     value=brightness,
                 )
             except HomeConnectError as err:
-                raise_service_error(
+                raise_home_assistant_error_from_home_connect_error(
                     err, "set_light_brightness", {"entity_id": self.entity_id}
                 )
 
@@ -232,7 +234,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 value=False,
             )
         except HomeConnectError as err:
-            raise_service_error(err, "turn_off_light", {"entity_id": self.entity_id})
+            raise_home_assistant_error_from_home_connect_error(
+                err, "turn_off_light", {"entity_id": self.entity_id}
+            )
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
