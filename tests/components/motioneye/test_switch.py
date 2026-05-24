@@ -47,20 +47,19 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "on"
 
-    # Prepare camera state with motion_detection=False for the coordinator
-    # to return after the turn-off call. Use a fresh deep-copy so the dict
-    # isn't shared with anything else.
+    # Prepare the camera state with motion_detection=False.
     camera_off = copy.deepcopy(TEST_CAMERA)
     camera_off[KEY_MOTION_DETECTION] = False
 
-    # The coordinator will return camera_off after the switch is turned off.
-    # async_get_camera returns a fresh copy each call so it isn't mutated.
+    # async_get_camera is called by the switch to fetch the latest config before
+    # calling set_camera. Use a fresh deep-copy each call to prevent mutation.
     client.async_get_camera = AsyncMock(
         side_effect=lambda _: copy.deepcopy(TEST_CAMERA)
     )
+    # async_get_cameras is used by the coordinator to refresh state.
     client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
-    # Turn switch off. Patch sleep so the service call doesn't actually wait 2s.
+    # Turn switch off. Patch sleep so the 2s delay is skipped.
     with patch(
         "homeassistant.components.motioneye.switch.asyncio.sleep",
         new_callable=AsyncMock,
@@ -71,26 +70,25 @@ async def test_switch_turn_on_off(
             {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
             blocking=True,
         )
-
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Verify set_camera was called with motion_detection=False.
     assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
     assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is False
 
-    # Verify the switch is off after the coordinator refresh completes.
+    # Verify the switch is off after the coordinator refresh triggered by the service.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "off"
 
     # Now prepare for turn-on: coordinator returns TEST_CAMERA (motion_detection=True).
-    # Use a fresh deep-copy of camera_off for async_get_camera so it isn't mutated.
-    client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(camera_off))
-    client.async_get_cameras = AsyncMock(
-        return_value={"cameras": [copy.deepcopy(TEST_CAMERA)]}
+    camera_on = copy.deepcopy(TEST_CAMERA)
+    client.async_get_camera = AsyncMock(
+        side_effect=lambda _: copy.deepcopy(camera_off)
     )
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_on]})
 
-    # Turn switch on.
+    # Turn switch on. Patch sleep so the 2s delay is skipped.
     with patch(
         "homeassistant.components.motioneye.switch.asyncio.sleep",
         new_callable=AsyncMock,
@@ -101,14 +99,13 @@ async def test_switch_turn_on_off(
             {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
             blocking=True,
         )
-
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Verify set_camera was called with motion_detection=True.
     assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
     assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is True
 
-    # Verify the switch is on after the coordinator refresh completes.
+    # Verify the switch is on after the coordinator refresh triggered by the service.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "on"
