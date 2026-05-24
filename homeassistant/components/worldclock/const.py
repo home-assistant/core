@@ -1,4 +1,5 @@
 """Constants for world clock component."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "worldclock"
