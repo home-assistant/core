@@ -26,6 +26,7 @@ from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
 )
 from homeassistant.components.assist_pipeline.pipeline import (
+    AudioSettings,
     STORAGE_KEY,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
@@ -39,6 +40,10 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipeline,
     async_get_pipelines,
     async_update_pipeline,
+)
+from homeassistant.components.assist_pipeline.vad import (
+    DEFAULT_VAD_SILENCE_SECONDS,
+    DEFAULT_VAD_TIMEOUT_SECONDS,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -64,6 +69,29 @@ from .conftest import (
 
 from tests.common import MockConfigEntry, async_mock_service, flush_store
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+def test_audio_settings_vad_timing_defaults() -> None:
+    """Test default VAD timing settings."""
+    settings = AudioSettings()
+
+    assert settings.silence_seconds == DEFAULT_VAD_SILENCE_SECONDS
+    assert settings.timeout_seconds == DEFAULT_VAD_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error"),
+    [
+        ({"silence_seconds": 0}, "silence_seconds must be greater than 0"),
+        ({"timeout_seconds": 0}, "timeout_seconds must be greater than 0"),
+    ],
+)
+def test_audio_settings_vad_timing_validation(
+    kwargs: dict[str, float], error: str
+) -> None:
+    """Test VAD timing settings validation."""
+    with pytest.raises(ValueError, match=error):
+        AudioSettings(**kwargs)
 
 
 @pytest.fixture(autouse=True)

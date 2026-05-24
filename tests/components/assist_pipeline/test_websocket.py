@@ -1764,6 +1764,8 @@ async def test_audio_pipeline_with_enhancements(
                     "noise_suppression_level": 2,
                     "auto_gain_dbfs": 15,
                     "volume_multiplier": 2.0,
+                    "vad_silence_seconds": 1.5,
+                    "vad_timeout_seconds": 30,
                 },
             }
         )

@@ -131,6 +131,8 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_supported_features = AssistSatelliteEntityFeature(0)
     _attr_pipeline_entity_id: str | None = None
     _attr_vad_sensitivity_entity_id: str | None = None
+    _attr_vad_silence_seconds_entity_id: str | None = None
+    _attr_vad_timeout_seconds_entity_id: str | None = None
 
     _conversation_id: str | None = None
 
@@ -159,6 +161,16 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    @property
+    def vad_silence_seconds_entity_id(self) -> str | None:
+        """Entity ID of the VAD silence seconds to use for the next conversation."""
+        return self._attr_vad_silence_seconds_entity_id
+
+    @property
+    def vad_timeout_seconds_entity_id(self) -> str | None:
+        """Entity ID of the VAD timeout seconds to use for the next conversation."""
+        return self._attr_vad_timeout_seconds_entity_id
 
     @property
     def tts_options(self) -> dict[str, Any] | None:
@@ -528,7 +540,8 @@ class AssistSatelliteEntity(entity.Entity):
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
                         audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                            silence_seconds=self._resolve_vad_silence_seconds(),
+                            timeout_seconds=self._resolve_vad_timeout_seconds(),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,
@@ -639,6 +652,37 @@ class AssistSatelliteEntity(entity.Entity):
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
         return vad.VadSensitivity.to_seconds(vad_sensitivity)
+
+    @callback
+    def _resolve_vad_silence_seconds(self) -> float:
+        """Resolve VAD silence seconds from number entity or legacy select entity."""
+        if vad_silence_seconds_entity_id := self.vad_silence_seconds_entity_id:
+            return self._resolve_float_state(
+                vad_silence_seconds_entity_id, "VAD silence seconds"
+            )
+
+        return self._resolve_vad_sensitivity()
+
+    @callback
+    def _resolve_vad_timeout_seconds(self) -> float:
+        """Resolve VAD timeout seconds from number entity."""
+        if vad_timeout_seconds_entity_id := self.vad_timeout_seconds_entity_id:
+            return self._resolve_float_state(
+                vad_timeout_seconds_entity_id, "VAD timeout seconds"
+            )
+
+        return vad.DEFAULT_VAD_TIMEOUT_SECONDS
+
+    @callback
+    def _resolve_float_state(self, entity_id: str, name: str) -> float:
+        """Resolve float value from entity state."""
+        if (state := self.hass.states.get(entity_id)) is None:
+            raise RuntimeError(f"{name} entity not found")
+
+        try:
+            return float(state.state)
+        except ValueError as err:
+            raise RuntimeError(f"{name} entity state is not a number") from err
 
     async def _resolve_announcement_media_id(
         self,

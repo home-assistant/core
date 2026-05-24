@@ -20,10 +20,10 @@
       "service_received": "Action received"
     },
     "error": {
-      "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
+      "connection_error": "Unable to connect to the ESPHome device. Make sure the device?s YAML configuration includes an `api` section.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device’s YAML configuration under `api -> encryption -> key`.",
-      "requires_encryption_key": "The ESPHome device requires an encryption key. Enter the key defined in the device’s YAML configuration under `api -> encryption -> key`.",
+      "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device?s YAML configuration under `api -> encryption -> key`.",
+      "requires_encryption_key": "The ESPHome device requires an encryption key. Enter the key defined in the device?s YAML configuration under `api -> encryption -> key`.",
       "resolve_error": "Unable to resolve the address of the ESPHome device. If this issue continues, consider setting a static IP address."
     },
     "flow_title": "{name}",
@@ -87,6 +87,14 @@
     "assist_satellite": {
       "assist_satellite": {
         "name": "[%key:component::assist_satellite::entity_component::_::name%]"
+      }
+    },
+    "number": {
+      "vad_silence_seconds": {
+        "name": "[%key:component::assist_pipeline::entity::number::vad_silence_seconds::name%]"
+      },
+      "vad_timeout_seconds": {
+        "name": "[%key:component::assist_pipeline::entity::number::vad_timeout_seconds::name%]"
       }
     },
     "climate": {

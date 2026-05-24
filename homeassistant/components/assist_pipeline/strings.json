@@ -5,6 +5,14 @@
         "name": "Assist in progress"
       }
     },
+    "number": {
+      "vad_silence_seconds": {
+        "name": "Finished speaking silence"
+      },
+      "vad_timeout_seconds": {
+        "name": "Finished speaking timeout"
+      }
+    },
     "select": {
       "pipeline": {
         "name": "Assistant",

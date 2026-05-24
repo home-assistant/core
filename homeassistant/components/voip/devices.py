@@ -76,6 +76,20 @@ class VoIPDevice:
             "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
         )
 
+    def get_vad_silence_seconds_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD silence seconds."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "number", DOMAIN, f"{self.voip_id}-vad_silence_seconds"
+        )
+
+    def get_vad_timeout_seconds_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD timeout seconds."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "number", DOMAIN, f"{self.voip_id}-vad_timeout_seconds"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""

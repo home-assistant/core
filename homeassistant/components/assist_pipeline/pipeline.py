@@ -81,7 +81,14 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
-from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
+from .vad import (
+    DEFAULT_VAD_SILENCE_SECONDS,
+    DEFAULT_VAD_TIMEOUT_SECONDS,
+    AudioBuffer,
+    VoiceActivityTimeout,
+    VoiceCommandSegmenter,
+    chunk_samples,
+)
 
 if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
@@ -519,8 +526,11 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    silence_seconds: float = 0.7
+    silence_seconds: float = DEFAULT_VAD_SILENCE_SECONDS
     """Seconds of silence after voice command has ended."""
+
+    timeout_seconds: float = DEFAULT_VAD_TIMEOUT_SECONDS
+    """Maximum number of seconds before end-of-speech detection times out."""
 
     def __post_init__(self) -> None:
         """Verify settings post-initialization."""
@@ -529,6 +539,12 @@ class AudioSettings:
 
         if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
+
+        if self.silence_seconds <= 0:
+            raise ValueError("silence_seconds must be greater than 0")
+
+        if self.timeout_seconds <= 0:
+            raise ValueError("timeout_seconds must be greater than 0")
 
     @property
     def needs_processor(self) -> bool:
@@ -952,7 +968,8 @@ class PipelineRun:
                 and self.stt_provider.audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
-                    silence_seconds=self.audio_settings.silence_seconds
+                    silence_seconds=self.audio_settings.silence_seconds,
+                    timeout_seconds=self.audio_settings.timeout_seconds,
                 )
 
             result = await self.stt_provider.async_process_audio_stream(

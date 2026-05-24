@@ -9,6 +9,9 @@ from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_VAD_SILENCE_SECONDS = 0.7
+DEFAULT_VAD_TIMEOUT_SECONDS = 15.0
+
 
 class VadSensitivity(StrEnum):
     """How quickly the end of a voice command is detected."""
@@ -27,7 +30,7 @@ class VadSensitivity(StrEnum):
         if sensitivity == VadSensitivity.AGGRESSIVE:
             return 0.25
 
-        return 0.7
+        return DEFAULT_VAD_SILENCE_SECONDS
 
 
 class AudioBuffer:
@@ -79,10 +82,10 @@ class VoiceCommandSegmenter:
     command_seconds: float = 1.0
     """Minimum number of seconds for a voice command."""
 
-    silence_seconds: float = 0.7
+    silence_seconds: float = DEFAULT_VAD_SILENCE_SECONDS
     """Seconds of silence after voice command has ended."""
 
-    timeout_seconds: float = 15.0
+    timeout_seconds: float = DEFAULT_VAD_TIMEOUT_SECONDS
     """Maximum number of seconds before stopping with timeout=True."""
 
     reset_seconds: float = 1.0

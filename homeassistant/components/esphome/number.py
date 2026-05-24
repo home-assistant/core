@@ -1,7 +1,5 @@
 """Support for esphome numbers."""
 
-from functools import partial
-
 from aioesphomeapi import (
     EntityInfo,
     NumberInfo,
@@ -9,16 +7,23 @@ from aioesphomeapi import (
     NumberState,
 )
 
+from homeassistant.components.assist_pipeline import (
+    VadSilenceSecondsNumber,
+    VadTimeoutSecondsNumber,
+)
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
+    EsphomeAssistEntity,
     EsphomeEntity,
     convert_api_error_ha_error,
     esphome_float_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
@@ -30,6 +35,34 @@ NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapp
         EsphomeNumberMode.SLIDER: NumberMode.SLIDER,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up esphome numbers based on a config entry."""
+    await platform_async_setup_entry(
+        hass,
+        entry,
+        async_add_entities,
+        info_type=NumberInfo,
+        entity_type=EsphomeNumber,
+        state_type=NumberState,
+    )
+
+    entry_data = entry.runtime_data
+    assert entry_data.device_info is not None
+    if entry_data.device_info.voice_assistant_feature_flags_compat(
+        entry_data.api_version
+    ):
+        async_add_entities(
+            [
+                EsphomeVadSilenceSecondsNumber(hass, entry_data),
+                EsphomeVadTimeoutSecondsNumber(hass, entry_data),
+            ]
+        )
 
 
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
@@ -70,9 +103,29 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         )
 
 
-async_setup_entry = partial(
-    platform_async_setup_entry,
-    info_type=NumberInfo,
-    entity_type=EsphomeNumber,
-    state_type=NumberState,
-)
+class EsphomeVadSilenceSecondsNumber(EsphomeAssistEntity, VadSilenceSecondsNumber):
+    """VAD silence seconds for ESPHome devices."""
+
+    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+        """Initialize a VAD silence seconds number."""
+        EsphomeAssistEntity.__init__(self, entry_data)
+        VadSilenceSecondsNumber.__init__(self, hass, self._device_info.mac_address)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await EsphomeAssistEntity.async_added_to_hass(self)
+        await self._async_restore_native_value()
+
+
+class EsphomeVadTimeoutSecondsNumber(EsphomeAssistEntity, VadTimeoutSecondsNumber):
+    """VAD timeout seconds for ESPHome devices."""
+
+    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+        """Initialize a VAD timeout seconds number."""
+        EsphomeAssistEntity.__init__(self, entry_data)
+        VadTimeoutSecondsNumber.__init__(self, hass, self._device_info.mac_address)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await EsphomeAssistEntity.async_added_to_hass(self)
+        await self._async_restore_native_value()

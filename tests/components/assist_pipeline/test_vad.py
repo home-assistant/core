@@ -4,11 +4,21 @@ import itertools as it
 
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
+    DEFAULT_VAD_SILENCE_SECONDS,
+    DEFAULT_VAD_TIMEOUT_SECONDS,
     VoiceCommandSegmenter,
     chunk_samples,
 )
 
 _ONE_SECOND = 1.0
+
+
+def test_defaults() -> None:
+    """Test default VAD timing."""
+    segmenter = VoiceCommandSegmenter()
+
+    assert segmenter.silence_seconds == DEFAULT_VAD_SILENCE_SECONDS
+    assert segmenter.timeout_seconds == DEFAULT_VAD_TIMEOUT_SECONDS
 
 
 def test_silence() -> None:

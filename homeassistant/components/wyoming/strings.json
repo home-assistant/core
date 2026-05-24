@@ -34,6 +34,12 @@
       "auto_gain": {
         "name": "Auto gain"
       },
+      "vad_silence_seconds": {
+        "name": "[%key:component::assist_pipeline::entity::number::vad_silence_seconds::name%]"
+      },
+      "vad_timeout_seconds": {
+        "name": "[%key:component::assist_pipeline::entity::number::vad_timeout_seconds::name%]"
+      },
       "volume_multiplier": {
         "name": "Mic volume"
       }

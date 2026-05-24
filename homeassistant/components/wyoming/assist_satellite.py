@@ -144,6 +144,16 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    def vad_silence_seconds_entity_id(self) -> str | None:
+        """Return the VAD silence seconds entity ID for next conversation."""
+        return self.device.get_vad_silence_seconds_entity_id(self.hass)
+
+    @property
+    def vad_timeout_seconds_entity_id(self) -> str | None:
+        """Return the VAD timeout seconds entity ID for next conversation."""
+        return self.device.get_vad_timeout_seconds_entity_id(self.hass)
+
+    @property
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -179,7 +189,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
-            # Pipeline run is complete — always update bookkeeping state
+            # Pipeline run is complete ? always update bookkeeping state
             # even after a disconnect so follow-up reconnects don't retain
             # stale _is_pipeline_running / _pipeline_ended_event state.
             self._is_pipeline_running = False

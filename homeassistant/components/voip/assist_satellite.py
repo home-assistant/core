@@ -148,6 +148,16 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    def vad_silence_seconds_entity_id(self) -> str | None:
+        """Return the VAD silence seconds entity ID for next conversation."""
+        return self.voip_device.get_vad_silence_seconds_entity_id(self.hass)
+
+    @property
+    def vad_timeout_seconds_entity_id(self) -> str | None:
+        """Return the VAD timeout seconds entity ID for next conversation."""
+        return self.voip_device.get_vad_timeout_seconds_entity_id(self.hass)
+
+    @property
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {

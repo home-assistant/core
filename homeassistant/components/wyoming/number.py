@@ -2,11 +2,16 @@
 
 from typing import Final
 
+from homeassistant.components.assist_pipeline import (
+    VadSilenceSecondsNumber,
+    VadTimeoutSecondsNumber,
+)
 from homeassistant.components.number import NumberEntityDescription, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
 from .models import WyomingConfigEntry
 
@@ -30,6 +35,8 @@ async def async_setup_entry(
         [
             WyomingSatelliteAutoGainNumber(item.device),
             WyomingSatelliteVolumeMultiplierNumber(item.device),
+            WyomingSatelliteVadSilenceSecondsNumber(hass, item.device),
+            WyomingSatelliteVadTimeoutSecondsNumber(hass, item.device),
         ]
     )
 
@@ -93,3 +100,35 @@ class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumb
         )
         self.async_write_ha_state()
         self._device.set_volume_multiplier(self._attr_native_value)
+
+
+class WyomingSatelliteVadSilenceSecondsNumber(
+    WyomingSatelliteEntity, VadSilenceSecondsNumber
+):
+    """VAD silence seconds for Wyoming satellites."""
+
+    def __init__(self, hass: HomeAssistant, device: SatelliteDevice) -> None:
+        """Initialize a VAD silence seconds number."""
+        WyomingSatelliteEntity.__init__(self, device)
+        VadSilenceSecondsNumber.__init__(self, hass, device.satellite_id)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        await self._async_restore_native_value()
+
+
+class WyomingSatelliteVadTimeoutSecondsNumber(
+    WyomingSatelliteEntity, VadTimeoutSecondsNumber
+):
+    """VAD timeout seconds for Wyoming satellites."""
+
+    def __init__(self, hass: HomeAssistant, device: SatelliteDevice) -> None:
+        """Initialize a VAD timeout seconds number."""
+        WyomingSatelliteEntity.__init__(self, device)
+        VadTimeoutSecondsNumber.__init__(self, hass, device.satellite_id)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        await self._async_restore_native_value()
