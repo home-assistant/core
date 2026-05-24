@@ -1,7 +1,5 @@
 """Number entities for assist pipeline settings."""
 
-from typing import Final
-
 from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
@@ -10,12 +8,14 @@ from homeassistant.components.number import (
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 
-from .vad import DEFAULT_VAD_SILENCE_SECONDS, DEFAULT_VAD_TIMEOUT_SECONDS
-
-MIN_VAD_SILENCE_SECONDS: Final = 0.1
-MAX_VAD_SILENCE_SECONDS: Final = 5.0
-MIN_VAD_TIMEOUT_SECONDS: Final = 1.0
-MAX_VAD_TIMEOUT_SECONDS: Final = 120.0
+from .vad import (
+    DEFAULT_VAD_SILENCE_SECONDS,
+    DEFAULT_VAD_TIMEOUT_SECONDS,
+    MAX_VAD_SILENCE_SECONDS,
+    MAX_VAD_TIMEOUT_SECONDS,
+    MIN_VAD_SILENCE_SECONDS,
+    MIN_VAD_TIMEOUT_SECONDS,
+)
 
 
 class _VadTimingNumber(RestoreNumber):

@@ -84,6 +84,10 @@ from .error import (
 from .vad import (
     DEFAULT_VAD_SILENCE_SECONDS,
     DEFAULT_VAD_TIMEOUT_SECONDS,
+    MAX_VAD_SILENCE_SECONDS,
+    MAX_VAD_TIMEOUT_SECONDS,
+    MIN_VAD_SILENCE_SECONDS,
+    MIN_VAD_TIMEOUT_SECONDS,
     AudioBuffer,
     VoiceActivityTimeout,
     VoiceCommandSegmenter,
@@ -540,11 +544,25 @@ class AudioSettings:
         if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
 
-        if self.silence_seconds <= 0:
-            raise ValueError("silence_seconds must be greater than 0")
+        if not (
+            MIN_VAD_SILENCE_SECONDS
+            <= self.silence_seconds
+            <= MAX_VAD_SILENCE_SECONDS
+        ):
+            raise ValueError(
+                "silence_seconds must be in "
+                f"[{MIN_VAD_SILENCE_SECONDS}, {MAX_VAD_SILENCE_SECONDS}]"
+            )
 
-        if self.timeout_seconds <= 0:
-            raise ValueError("timeout_seconds must be greater than 0")
+        if not (
+            MIN_VAD_TIMEOUT_SECONDS
+            <= self.timeout_seconds
+            <= MAX_VAD_TIMEOUT_SECONDS
+        ):
+            raise ValueError(
+                "timeout_seconds must be in "
+                f"[{MIN_VAD_TIMEOUT_SECONDS}, {MAX_VAD_TIMEOUT_SECONDS}]"
+            )
 
     @property
     def needs_processor(self) -> bool:

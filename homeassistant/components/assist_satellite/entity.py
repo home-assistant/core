@@ -27,6 +27,7 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
@@ -657,9 +658,12 @@ class AssistSatelliteEntity(entity.Entity):
     def _resolve_vad_silence_seconds(self) -> float:
         """Resolve VAD silence seconds from number entity or legacy select entity."""
         if vad_silence_seconds_entity_id := self.vad_silence_seconds_entity_id:
-            return self._resolve_float_state(
-                vad_silence_seconds_entity_id, "VAD silence seconds"
-            )
+            if (
+                vad_silence_seconds := self._resolve_float_state(
+                    vad_silence_seconds_entity_id, "VAD silence seconds"
+                )
+            ) is not None:
+                return vad_silence_seconds
 
         return self._resolve_vad_sensitivity()
 
@@ -667,17 +671,23 @@ class AssistSatelliteEntity(entity.Entity):
     def _resolve_vad_timeout_seconds(self) -> float:
         """Resolve VAD timeout seconds from number entity."""
         if vad_timeout_seconds_entity_id := self.vad_timeout_seconds_entity_id:
-            return self._resolve_float_state(
-                vad_timeout_seconds_entity_id, "VAD timeout seconds"
-            )
+            if (
+                vad_timeout_seconds := self._resolve_float_state(
+                    vad_timeout_seconds_entity_id, "VAD timeout seconds"
+                )
+            ) is not None:
+                return vad_timeout_seconds
 
         return vad.DEFAULT_VAD_TIMEOUT_SECONDS
 
     @callback
-    def _resolve_float_state(self, entity_id: str, name: str) -> float:
+    def _resolve_float_state(self, entity_id: str, name: str) -> float | None:
         """Resolve float value from entity state."""
         if (state := self.hass.states.get(entity_id)) is None:
             raise RuntimeError(f"{name} entity not found: {entity_id}")
+
+        if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            return None
 
         try:
             return float(state.state)

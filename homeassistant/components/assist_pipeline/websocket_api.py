@@ -30,12 +30,6 @@ from .const import (
     SAMPLE_WIDTH,
 )
 from .error import PipelineNotFound
-from .number import (
-    MAX_VAD_SILENCE_SECONDS,
-    MAX_VAD_TIMEOUT_SECONDS,
-    MIN_VAD_SILENCE_SECONDS,
-    MIN_VAD_TIMEOUT_SECONDS,
-)
 from .pipeline import (
     KEY_ASSIST_PIPELINE,
     AudioSettings,
@@ -49,7 +43,14 @@ from .pipeline import (
     WakeWordSettings,
     async_get_pipeline,
 )
-from .vad import DEFAULT_VAD_SILENCE_SECONDS, DEFAULT_VAD_TIMEOUT_SECONDS
+from .vad import (
+    DEFAULT_VAD_SILENCE_SECONDS,
+    DEFAULT_VAD_TIMEOUT_SECONDS,
+    MAX_VAD_SILENCE_SECONDS,
+    MAX_VAD_TIMEOUT_SECONDS,
+    MIN_VAD_SILENCE_SECONDS,
+    MIN_VAD_TIMEOUT_SECONDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

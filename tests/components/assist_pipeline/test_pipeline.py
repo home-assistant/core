@@ -44,6 +44,10 @@ from homeassistant.components.assist_pipeline.pipeline import (
 from homeassistant.components.assist_pipeline.vad import (
     DEFAULT_VAD_SILENCE_SECONDS,
     DEFAULT_VAD_TIMEOUT_SECONDS,
+    MAX_VAD_SILENCE_SECONDS,
+    MAX_VAD_TIMEOUT_SECONDS,
+    MIN_VAD_SILENCE_SECONDS,
+    MIN_VAD_TIMEOUT_SECONDS,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -82,8 +86,22 @@ def test_audio_settings_vad_timing_defaults() -> None:
 @pytest.mark.parametrize(
     ("kwargs", "error"),
     [
-        ({"silence_seconds": 0}, "silence_seconds must be greater than 0"),
-        ({"timeout_seconds": 0}, "timeout_seconds must be greater than 0"),
+        (
+            {"silence_seconds": MIN_VAD_SILENCE_SECONDS - 0.1},
+            "silence_seconds must be in",
+        ),
+        (
+            {"silence_seconds": MAX_VAD_SILENCE_SECONDS + 0.1},
+            "silence_seconds must be in",
+        ),
+        (
+            {"timeout_seconds": MIN_VAD_TIMEOUT_SECONDS - 0.1},
+            "timeout_seconds must be in",
+        ),
+        (
+            {"timeout_seconds": MAX_VAD_TIMEOUT_SECONDS + 0.1},
+            "timeout_seconds must be in",
+        ),
     ],
 )
 def test_audio_settings_vad_timing_validation(
