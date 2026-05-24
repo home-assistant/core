@@ -2658,6 +2658,21 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.PASSIVE
 
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.AUTO,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
