@@ -30,8 +30,6 @@ class DelugeGetSessionStatusKeys(enum.Enum):
 
     """
 
-    DHT_DOWNLOAD_RATE = "dht_download_rate"
-    DHT_UPLOAD_RATE = "dht_upload_rate"
     DOWNLOAD_RATE = "download_rate"
     UPLOAD_RATE = "upload_rate"
 
@@ -47,7 +45,25 @@ class DelugeSensorType(enum.StrEnum):
     CURRENT_STATUS_SENSOR = "current_status"
     DOWNLOAD_SPEED_SENSOR = "download_speed"
     UPLOAD_SPEED_SENSOR = "upload_speed"
-    PROTOCOL_TRAFFIC_UPLOAD_SPEED_SENSOR = "protocol_traffic_upload_speed"
-    PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR = "protocol_traffic_download_speed"
     DOWNLOADING_COUNT_SENSOR = "downloading_count"
     SEEDING_COUNT_SENSOR = "seeding_count"
+    LISTEN_PORTS_SENSOR = "listen_ports"
+
+
+class DelugeNumberType(enum.StrEnum):
+    """Number entity types for the Deluge integration."""
+
+    LISTEN_PORT = "listen_port"
+
+
+class DelugeGetConfigValueKeys(enum.StrEnum):
+    """Keys passed into the Deluge RPC `core.get_config_value`."""
+
+    LISTEN_PORTS = "listen_ports"
+
+
+class DelugeSetConfigKeys(enum.StrEnum):
+    """Keys passed into the Deluge RPC `core.set_config`."""
+
+    LISTEN_PORTS = "listen_ports"
+    RANDOM_PORT = "random_port"

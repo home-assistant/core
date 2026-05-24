@@ -13,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, DelugeGetSessionStatusKeys, DelugeSensorType
+from .const import (
+    LOGGER,
+    DelugeGetConfigValueKeys,
+    DelugeGetSessionStatusKeys,
+    DelugeSensorType,
+    DelugeSetConfigKeys,
+)
 
 type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
@@ -45,9 +51,27 @@ class DelugeDataUpdateCoordinator(
             logger=LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
         )
         self.api = api
+
+    def set_listen_port(self, port: int) -> None:
+        """Set Deluge to use one fixed listen port.
+
+        Deluge stores the incoming ports as a [start_port, end_port] list.
+        Setting both values to the same port creates a single fixed port.
+        random_port must be disabled, otherwise Deluge may ignore listen_ports.
+        """
+        if not 1 <= port <= 65535:
+            raise ValueError(f"Invalid Deluge listen port: {port}")
+
+        self.api.call(
+            "core.set_config",
+            {
+                DelugeSetConfigKeys.LISTEN_PORTS.value: [port, port],
+                DelugeSetConfigKeys.RANDOM_PORT.value: False,
+            },
+        )
 
     def _get_deluge_data(self):
         """Get the latest data from Deluge."""
@@ -63,6 +87,9 @@ class DelugeDataUpdateCoordinator(
             )
             data["torrents_status_paused"] = self.api.call(
                 "core.get_torrents_status", {}, ["paused"]
+            )
+            data["listen_ports"] = self.api.call(
+                "core.get_config_value", DelugeGetConfigValueKeys.LISTEN_PORTS.value
             )
 
         except (
@@ -89,8 +116,15 @@ class DelugeDataUpdateCoordinator(
 
         data = {}
         data[Platform.SENSOR] = {
-            k.decode(): v for k, v in deluge_data["session_status"].items()
+            (k.decode() if isinstance(k, bytes) else k): v
+            for k, v in deluge_data["session_status"].items()
         }
         data[Platform.SENSOR].update(count_states(deluge_data["torrents_status_state"]))
-        data[Platform.SWITCH] = deluge_data["torrents_status_paused"]
+        # Normalize keys to strings for the SWITCH platform
+        data[Platform.SWITCH] = {
+            k.decode(): v for k, v in deluge_data["torrents_status_paused"].items()
+        }
+        data[Platform.SENSOR][DelugeSensorType.LISTEN_PORTS_SENSOR.value] = deluge_data[
+            "listen_ports"
+        ]
         return data

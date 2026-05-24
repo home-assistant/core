@@ -24,5 +24,5 @@ class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
-            sw_version=coordinator.api.deluge_version,
+            sw_version=str(coordinator.api.deluge_version),
         )

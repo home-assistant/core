@@ -20,12 +20,10 @@ from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 from .entity import DelugeEntity
 
 
-def get_state(data: dict[str, float], key: str) -> str | float:
+def get_state(data: dict[str, Any], key: str) -> str | float:
     """Get current download/upload state."""
     upload = data[DelugeGetSessionStatusKeys.UPLOAD_RATE.value]
     download = data[DelugeGetSessionStatusKeys.DOWNLOAD_RATE.value]
-    protocol_upload = data[DelugeGetSessionStatusKeys.DHT_UPLOAD_RATE.value]
-    protocol_download = data[DelugeGetSessionStatusKeys.DHT_DOWNLOAD_RATE.value]
 
     # if key is CURRENT_STATUS, we just return whether
     # we are uploading / downloading / idle
@@ -39,26 +37,31 @@ def get_state(data: dict[str, float], key: str) -> str | float:
         return STATE_IDLE
 
     # if not, return the transfer rate for the given key
-    rate = 0.0
-    if key == DelugeSensorType.DOWNLOAD_SPEED_SENSOR:
-        rate = download
-    elif key == DelugeSensorType.UPLOAD_SPEED_SENSOR:
-        rate = upload
-    elif key == DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR:
-        rate = protocol_download
-    else:
-        rate = protocol_upload
+    rate = download if key == DelugeSensorType.DOWNLOAD_SPEED_SENSOR else upload
 
     # convert to KiB/s and round
     kb_spd = rate / 1024
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
+def format_listen_ports(data: dict[str, Any]) -> str | None:
+    """Return a user-friendly representation of Deluge listen_ports."""
+    listen_ports = data.get(DelugeSensorType.LISTEN_PORTS_SENSOR.value)
+
+    if not isinstance(listen_ports, list | tuple) or not listen_ports:
+        return None
+
+    if len(listen_ports) == 1 or listen_ports[0] == listen_ports[1]:
+        return str(listen_ports[0])
+
+    return f"{listen_ports[0]} bis {listen_ports[1]}"
+
+
 @dataclass(frozen=True)
 class DelugeSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Deluge sensor."""
 
-    value: Callable[[dict[str, float]], Any] = lambda val: val
+    value: Callable[[dict[str, Any]], Any] = lambda val: val
 
 
 SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
@@ -90,26 +93,6 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
         value=lambda data: get_state(data, DelugeSensorType.UPLOAD_SPEED_SENSOR.value),
     ),
     DelugeSensorEntityDescription(
-        key=DelugeSensorType.PROTOCOL_TRAFFIC_UPLOAD_SPEED_SENSOR.value,
-        translation_key=DelugeSensorType.PROTOCOL_TRAFFIC_UPLOAD_SPEED_SENSOR.value,
-        device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: get_state(
-            data, DelugeSensorType.PROTOCOL_TRAFFIC_UPLOAD_SPEED_SENSOR.value
-        ),
-    ),
-    DelugeSensorEntityDescription(
-        key=DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR.value,
-        translation_key=DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR.value,
-        device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: get_state(
-            data, DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR.value
-        ),
-    ),
-    DelugeSensorEntityDescription(
         key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
         translation_key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
         state_class=SensorStateClass.TOTAL,
@@ -120,6 +103,11 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
         translation_key=DelugeSensorType.SEEDING_COUNT_SENSOR.value,
         state_class=SensorStateClass.TOTAL,
         value=lambda data: data[DelugeSensorType.SEEDING_COUNT_SENSOR.value],
+    ),
+    DelugeSensorEntityDescription(
+        key=DelugeSensorType.LISTEN_PORTS_SENSOR.value,
+        translation_key=DelugeSensorType.LISTEN_PORTS_SENSOR.value,
+        value=format_listen_ports,
     ),
 )
 

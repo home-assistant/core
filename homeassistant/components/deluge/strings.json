@@ -26,6 +26,11 @@
     }
   },
   "entity": {
+    "number": {
+      "listen_port": {
+        "name": "Listen port"
+      }
+    },
     "sensor": {
       "download_speed": {
         "name": "Download speed"
@@ -34,11 +39,8 @@
         "name": "Downloading count",
         "unit_of_measurement": "torrents"
       },
-      "protocol_traffic_download_speed": {
-        "name": "Protocol traffic download speed"
-      },
-      "protocol_traffic_upload_speed": {
-        "name": "Protocol traffic upload speed"
+      "listen_ports": {
+        "name": "Listen ports"
       },
       "seeding_count": {
         "name": "Seeding count",
