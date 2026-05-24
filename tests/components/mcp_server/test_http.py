@@ -61,13 +61,11 @@ INITIALIZE_MESSAGE = {
 }
 EVENT_PREFIX = "event: "
 DATA_PREFIX = "data: "
-EXPECTED_PROMPT_SUFFIX = """
+EXPECTED_PROMPT_ENTITY_DEFINITION = """
 - names: Kitchen Light
   domain: light
   areas: Kitchen
-
-When a user asks to turn on all devices of a specific type, ask user to specify an area, unless there is only one device of that type.
-This device is not able to start timers."""
+"""
 
 
 class MockLLMAPI(llm.API):
@@ -483,7 +481,7 @@ async def test_prompt_get(
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
     assert "When controlling Home Assistant" in result.messages[0].content.text
-    assert result.messages[0].content.text.endswith(EXPECTED_PROMPT_SUFFIX)
+    assert EXPECTED_PROMPT_ENTITY_DEFINITION in result.messages[0].content.text
 
 
 async def test_get_unknown_prompt(

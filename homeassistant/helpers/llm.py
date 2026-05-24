@@ -71,6 +71,13 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
+DEVICE_CONTROL_TOOL_ARGUMENT_PROMPT = (
+    "When controlling Home Assistant always call the intent tools. "
+    "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
+    "When controlling a device, prefer passing just name and domain. "
+    "When controlling an area, prefer passing just area name and domain."
+)
+
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
@@ -499,7 +506,8 @@ class AssistAPI(API):
 
         # Collect all parts, filtering out any None values
         prompt_parts = [
-            *self._async_get_preamble(),
+            DEVICE_CONTROL_TOOL_ARGUMENT_PROMPT,
+            DYNAMIC_CONTEXT_PROMPT,
             *self._async_get_exposed_entities_prompt(exposed_entities),
             self._async_get_voice_satellite_area_prompt(llm_context),
             self._async_get_no_timer_prompt(llm_context),
@@ -545,23 +553,9 @@ class AssistAPI(API):
             return f"You are in area {area.name} {extra}".strip()
         return (
             "When a user asks to turn on all devices of a specific type, "
-            "ask user to specify an area, unless there"
+            "ask the user to specify an area, unless there"
             " is only one device of that type."
         )
-
-    @callback
-    def _async_get_preamble(self) -> list[str]:
-        """Return the prompt for the API."""
-
-        return [
-            (
-                "When controlling Home Assistant always call the intent tools. "
-                "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-                "When controlling a device, prefer passing just name and domain. "
-                "When controlling an area, prefer passing just area name and domain."
-            ),
-            DYNAMIC_CONTEXT_PROMPT,
-        ]
 
     @callback
     def _async_get_exposed_entities_prompt(

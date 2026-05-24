@@ -419,6 +419,7 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
         "Only if the user wants to control a device, tell them to expose"
         " entities to their "
@@ -677,7 +678,7 @@ Static Context: An overview of the areas and the devices in this smart home:
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
     dynamic_context_prompt = (
         "You ARE equipped to answer questions about the"
