@@ -369,7 +369,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_direction-entry]
@@ -419,7 +419,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.c3_stop_100_next_departure_3_type-entry]
@@ -479,7 +479,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_velov_all_entities[sensor.velo_v_1001_available_bikes-entry]

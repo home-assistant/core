@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
@@ -46,8 +46,6 @@ from .receiver import async_discover, async_interview
 from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 
 INPUT_SOURCES_DEFAULT: list[InputSource] = []
 LISTENING_MODES_DEFAULT: list[ListeningMode] = []

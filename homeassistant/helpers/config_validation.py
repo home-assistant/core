@@ -38,6 +38,7 @@ from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_BELOW,
     CONF_CHOOSE,
+    CONF_COMMENT,
     CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_CONTINUE_ON_ERROR,
@@ -694,7 +695,7 @@ def slugify(value: Any) -> str:
 
 
 def string(value: Any) -> str:
-    """Coerce value to string, except for None."""
+    """Coerce value to string, except for None, list or dict."""
     if value is None:
         raise vol.Invalid("string value is None")
 
@@ -1458,6 +1459,7 @@ SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
 SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
+    vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
@@ -1525,6 +1527,7 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
 
 CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
+    vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
@@ -1859,6 +1862,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
+        vol.Remove(CONF_COMMENT): str,  # Is only used in frontend
     }
 )
 
@@ -1992,17 +1996,24 @@ _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
     }
 )
 
-_SCRIPT_STOP_SCHEMA = vol.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(
-            CONF_RESPONSE_VARIABLE,
-            "error_or_response",
-            msg="not allowed to add a response to an error stop action",
-        ): str,
-    }
+
+def _stop_action_check_error_response(config: dict) -> dict:
+    """Validate that error stop actions don't have a response variable."""
+    if config.get(CONF_ERROR) and CONF_RESPONSE_VARIABLE in config:
+        raise vol.Invalid("not allowed to add a response to an error stop action")
+    return config
+
+
+_SCRIPT_STOP_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            vol.Required(CONF_STOP): vol.Any(None, string),
+            vol.Optional(CONF_ERROR): boolean,
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
+        }
+    ),
+    _stop_action_check_error_response,
 )
 
 _SCRIPT_SEQUENCE_SCHEMA = vol.Schema(

@@ -41,7 +41,11 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="some_unique_id",
         data={
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            ),
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -56,7 +60,11 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.homeassistant_sky_connect.guess_firmware_info",
         return_value=FirmwareInfo(
-            device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            device=(
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            ),
             firmware_version=None,
             firmware_type=ApplicationType.SPINEL,
             source="otbr",
@@ -70,7 +78,11 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     assert config_entry.unique_id == "3c0ed67c628beb11b1cd64a0f320645d"
     assert config_entry.data == {
         "description": "SkyConnect v1.0",
-        "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+        "device": (
+            "/dev/serial/by-id/"
+            "usb-Nabu_Casa_SkyConnect_v1.0"
+            "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+        ),
         "vid": "10C4",
         "pid": "EA60",
         "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -111,7 +123,8 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
             },
             {
                 "unique_id": (
-                    "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d_Nabu Casa_SkyConnect v1.0"
+                    "10C4:EA60_9e2adbd75b8beb119fe564a0f320645d"
+                    "_Nabu Casa_SkyConnect v1.0"
                 ),
                 "source": "import",
                 "data": {
@@ -135,7 +148,8 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
         (
             {
                 "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d_Nabu_Casa_SkyConnect v1.0"
+                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
+                    "_Nabu_Casa_SkyConnect v1.0"
                 ),
                 "source": "usb",
                 "data": {
@@ -155,7 +169,8 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
             },
             {
                 "unique_id": (
-                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d_Nabu_Casa_SkyConnect v1.0"
+                    "10C4:EA60_3c0ed67c628beb11b1cd64a0f320645d"
+                    "_Nabu_Casa_SkyConnect v1.0"
                 ),
                 "source": "import",
                 "data": {
@@ -295,7 +310,11 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
         unique_id="some_unique_id",
         data={
             "description": "SkyConnect v1.0",
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            ),
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -343,7 +362,11 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         unique_id="some_unique_id",
         data={
             "description": "SkyConnect v1.0",
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            ),
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -374,7 +397,11 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         with patch_scanned_serial_ports(
             return_value=[
                 USBDevice(
-                    device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+                    device=(
+                        "/dev/serial/by-id/"
+                        "usb-Nabu_Casa_SkyConnect_v1.0"
+                        "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+                    ),
                     vid="10C4",
                     pid="EA60",
                     serial_number="3c0ed67c628beb11b1cd64a0f320645d",
@@ -411,7 +438,11 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="some_unique_id-9e2adbd75b8beb119fe564a0f320645d",
         data={
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            ),
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
@@ -431,7 +462,11 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="some_unique_id-3c0ed67c628beb11b1cd64a0f320645d",
         data={
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_3c0ed67c628beb11b1cd64a0f320645d-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+            ),
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
@@ -449,7 +484,11 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="some_unique_id-9f6c4bba657cc9a4f0cea48bc5948562",
         data={
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9f6c4bba657cc9a4f0cea48bc5948562-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_9f6c4bba657cc9a4f0cea48bc5948562-if00-port0"
+            ),
         },
         version=1,
         minor_version=2,
@@ -462,7 +501,11 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="some_unique_id-4f5f3b26d59f8714a78b599690741999",
         data={
-            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_4f5f3b26d59f8714a78b599690741999-if00-port0",
+            "device": (
+                "/dev/serial/by-id/"
+                "usb-Nabu_Casa_SkyConnect_v1.0"
+                "_4f5f3b26d59f8714a78b599690741999-if00-port0"
+            ),
         },
         version=1,
         minor_version=2,

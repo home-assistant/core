@@ -68,6 +68,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/ai_task/ @home-assistant/core
 /tests/components/ai_task/ @home-assistant/core
+/homeassistant/components/aidot/ @s1eedz @HongBryan
+/tests/components/aidot/ @s1eedz @HongBryan
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
 /homeassistant/components/airgradient/ @airgradienthq @joostlek
@@ -943,8 +945,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
-/homeassistant/components/konnected/ @heythisisnate
-/tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
 /tests/components/kostal_plenticore/ @stegm
 /homeassistant/components/kraken/ @eifinger
@@ -1045,6 +1045,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
 /tests/components/madvr/ @iloveicedgreentea
+/homeassistant/components/marantz_infrared/ @balloob
+/tests/components/marantz_infrared/ @balloob
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
@@ -1409,8 +1411,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
 /tests/components/pvoutput/ @frenck
-/homeassistant/components/pvpc_hourly_pricing/ @azogue
-/tests/components/pvpc_hourly_pricing/ @azogue
+/homeassistant/components/pvpc_hourly_pricing/ @azogue @chiro79
+/tests/components/pvpc_hourly_pricing/ @azogue @chiro79
 /homeassistant/components/pyload/ @tr4nt0r
 /tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
@@ -1534,8 +1536,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/saj/ @fredericvl
 /homeassistant/components/samsung_infrared/ @lmaertin
 /tests/components/samsung_infrared/ @lmaertin
-/homeassistant/components/samsungtv/ @chemelli74 @epenet
-/tests/components/samsungtv/ @chemelli74 @epenet
+/homeassistant/components/samsungtv/ @chemelli74
+/tests/components/samsungtv/ @chemelli74
 /homeassistant/components/sanix/ @tomaszsluszniak
 /tests/components/sanix/ @tomaszsluszniak
 /homeassistant/components/satel_integra/ @Tommatheussen

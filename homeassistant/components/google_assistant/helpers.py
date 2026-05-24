@@ -18,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -112,7 +111,7 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+        self._on_deinitialize.append(start.async_at_started(self.hass, sync_google))
 
     @callback
     def async_deinitialize(self) -> None:
@@ -803,8 +802,6 @@ def async_get_entities(
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
         entity_id = state.entity_id
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here

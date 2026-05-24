@@ -23,7 +23,7 @@ classifiers = [
 ]
 requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==4.0.3",
+  "aiodns==4.0.4",
   # aiogithubapi is needed by frontend; frontend is unconditionally imported at
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
@@ -57,16 +57,16 @@ dependencies = [
   "lru-dict==1.4.1",
   "PyJWT==2.12.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==47.0.0",
+  "cryptography==48.0.0",
   "Pillow==12.2.0",
-  "propcache==0.4.1",
+  "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
   "orjson==3.11.9",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
   "PyYAML==6.0.3",
-  "requests==2.33.1",
+  "requests==2.34.2",
   "securetar==2026.4.1",
   "SQLAlchemy==2.0.49",
   "standard-aifc==3.13.0",
@@ -74,13 +74,13 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.11",
+  "uv==0.11.14",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",
-  "yarl==1.23.0",
+  "yarl==1.24.2",
   "webrtc-models==0.3.0",
-  "zeroconf==0.148.0",
+  "zeroconf==0.149.16",
 ]
 
 [project.urls]
@@ -648,7 +648,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.12"
+required-version = ">=0.15.13"
 
 [tool.ruff.lint]
 select = [

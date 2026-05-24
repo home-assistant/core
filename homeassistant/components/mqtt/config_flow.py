@@ -91,6 +91,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_OPTIONS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
@@ -119,6 +120,8 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DurationSelector,
+    DurationSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -226,6 +229,7 @@ from .const import (
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX,
     CONF_MAX_KELVIN,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_MIN,
     CONF_MIN_KELVIN,
     CONF_MODE_COMMAND_TEMPLATE,
@@ -235,7 +239,6 @@ from .const import (
     CONF_MODE_STATE_TOPIC,
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
-    CONF_OPTIONS,
     CONF_OSCILLATION_COMMAND_TEMPLATE,
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
@@ -3721,6 +3724,11 @@ MQTT_DEVICE_PLATFORM_FIELDS = {
         default=DEFAULT_QOS,
         section="mqtt_settings",
     ),
+    CONF_MESSAGE_EXPIRY_INTERVAL: PlatformField(
+        selector=DurationSelector(DurationSelectorConfig(enable_day=True)),
+        required=False,
+        section="mqtt_settings",
+    ),
 }
 
 
@@ -4154,11 +4162,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"addon": self._addon_manager.addon_name},
             ) from err
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             # Finish setup using discovery info
             return await self.async_step_setup_entry_from_discovery()
 
-        if addon_info.state == AddonState.NOT_RUNNING:
+        if addon_info.state is AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
         # Install the add-on and start it

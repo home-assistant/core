@@ -476,7 +476,8 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
+                "Setting brightness and color temperature:"
+                " %s %s%%, %s mireds, %s%% cct",
                 brightness,
                 percent_brightness,
                 color_temp,
