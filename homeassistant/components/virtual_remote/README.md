@@ -6,7 +6,7 @@ It allows infrared command sets to be organized as reusable remote entities whil
 
 ---
 
-# Features
+## Features
 
 - Create one or more virtual remote entities
 - Associate each virtual remote with any Home Assistant `infrared` entity
@@ -19,7 +19,7 @@ It allows infrared command sets to be organized as reusable remote entities whil
 
 ---
 
-# Supported Command Formats
+## Supported Command Formats
 
 The integration supports the same command formats as the iTach IP2IR remote functionality.
 
@@ -32,9 +32,9 @@ Supported formats include:
 
 ---
 
-# Configuration
+## Configuration
 
-## Adding Virtual Remote
+### Adding Virtual Remote
 
 1. Go to **Settings** → **Devices & services** → **Add integration**.
 2. Search for **Virtual Remote**.
@@ -45,7 +45,7 @@ The initial setup flow creates the first virtual remote. Additional remotes are 
 
 ---
 
-# Managing Virtual Remotes
+## Managing Virtual Remotes
 
 Open the Virtual Remote integration options to:
 
@@ -58,7 +58,7 @@ If a virtual remote points to an infrared entity that no longer exists, the opti
 
 ---
 
-# Managing Commands
+## Managing Commands
 
 Commands are managed through the integration options flow.
 
@@ -72,7 +72,7 @@ Command names are normalized to uppercase with underscores.
 
 ---
 
-# Remote Services
+## Remote Services
 
 The integration uses the standard Home Assistant `remote` entity services.
 
@@ -88,13 +88,13 @@ data:
 
 ---
 
-# Availability
+## Availability
 
 A virtual remote is available when its linked infrared entity is available.
 
 ---
 
-# Notes
+## Notes
 
 - Multiple virtual remotes may share the same infrared entity.
 - The integration does not directly communicate with physical hardware.

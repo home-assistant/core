@@ -214,3 +214,59 @@ def test_json_scalar_boolean_command_is_rejected() -> None:
     """Test JSON scalar booleans are rejected by the JSON parser branch."""
     with pytest.raises(CommandParseError, match="object or timing array"):
         _parse_json_command("true", 38000)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "[true, 100]",
+        "[1.5, 100]",
+        '{"timings": [true, 100]}',
+        '{"timings": [1.5, 100]}',
+    ],
+)
+def test_validate_remote_command_payload_rejects_bool_and_float_timings(
+    payload: str,
+) -> None:
+    """Test JSON timings reject booleans and floats."""
+    with pytest.raises(CommandParseError, match="timings must contain only integers"):
+        validate_remote_command_payload(payload)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '{"modulation": true, "timings": [1, 100]}',
+        '{"modulation": 1.5, "timings": [1, 100]}',
+        '{"carrier_frequency": true, "timings": [1, 100]}',
+        '{"carrier_frequency": 1.5, "timings": [1, 100]}',
+    ],
+)
+def test_validate_remote_command_payload_rejects_bool_and_float_modulation(
+    payload: str,
+) -> None:
+    """Test JSON modulation rejects booleans and floats."""
+    with pytest.raises(CommandParseError, match="modulation must be an integer"):
+        validate_remote_command_payload(payload)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"modulation": True},
+        {"modulation": 1.5},
+        {"carrier_frequency": True},
+        {"carrier_frequency": 1.5},
+    ],
+)
+def test_parse_remote_command_rejects_bool_and_float_default_modulation(
+    kwargs: dict[str, object],
+) -> None:
+    """Test service kwargs modulation rejects booleans and floats."""
+    with pytest.raises(HomeAssistantError) as err:
+        parse_remote_command("1,100", kwargs)
+
+    assert err.value.translation_key == "remote_invalid_command"
+    assert err.value.translation_placeholders == {
+        "error": "modulation must be an integer"
+    }

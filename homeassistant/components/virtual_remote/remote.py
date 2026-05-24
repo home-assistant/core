@@ -180,10 +180,10 @@ def cleanup_stale_virtual_remote_devices(
     """
     device_registry = dr.async_get(hass)
 
-    for device_entry in list(device_registry.devices.values()):
-        if entry.entry_id not in device_entry.config_entries:
-            continue
-
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry,
+        entry.entry_id,
+    ):
         remote_identifiers = {
             identifier[1]
             for identifier in device_entry.identifiers

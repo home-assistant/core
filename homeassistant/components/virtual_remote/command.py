@@ -120,10 +120,7 @@ def _default_modulation(kwargs: dict[str, Any]) -> int:
     if value is None:
         value = DEFAULT_CARRIER_FREQUENCY
 
-    try:
-        return int(value)
-    except (TypeError, ValueError) as err:
-        raise _command_error("modulation must be an integer") from err
+    return _coerce_int(value, "modulation")
 
 
 def _parse_json_command(command: str, default_modulation: int) -> tuple[int, list[int]]:
@@ -152,10 +149,7 @@ def _parse_json_command(command: str, default_modulation: int) -> tuple[int, lis
     if raw_modulation is None:
         raw_modulation = default_modulation
 
-    try:
-        modulation = int(raw_modulation)
-    except (TypeError, ValueError) as err:
-        raise _command_error("modulation must be an integer") from err
+    modulation = _coerce_int(raw_modulation, "modulation")
 
     timings = _coerce_int_list(payload.get("timings"), "timings")
     return modulation, timings
@@ -240,6 +234,23 @@ def _parse_pronto_command(command: str) -> tuple[int, list[int]]:
     return modulation, timings
 
 
+def _coerce_int(value: Any, field: str) -> int:
+    """Coerce a value to an integer without truncating malformed input."""
+    if isinstance(value, bool):
+        raise _command_error(f"{field} must be an integer")
+
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError as err:
+            raise _command_error(f"{field} must be an integer") from err
+
+    raise _command_error(f"{field} must be an integer")
+
+
 def _coerce_int_list(value: Any, field: str) -> list[int]:
     """Coerce a sequence of values to integers."""
     if not isinstance(value, (list, tuple)):
@@ -250,8 +261,8 @@ def _coerce_int_list(value: Any, field: str) -> list[int]:
         if not str(item).strip():
             raise _command_error(f"{field} must not contain empty values")
         try:
-            result.append(int(item))
-        except (TypeError, ValueError) as err:
+            result.append(_coerce_int(item, field))
+        except CommandParseError as err:
             raise _command_error(f"{field} must contain only integers") from err
 
     return result
