@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import EventName, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
