@@ -183,6 +183,12 @@ class SonosDiscoveryManager:
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
         self._stop_event.set()
+        # Wait for any in-flight _add_speakers executor job to finish before
+        # tearing down speakers and the event listener. Every async_add_speakers
+        # call holds creation_lock for its entire duration (including blocking
+        # network IO), so acquiring it here serializes cleanup after creation.
+        async with self.creation_lock:
+            pass
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
 
@@ -385,10 +391,6 @@ class SonosDiscoveryManager:
 
         def _add_speakers():
             """Add all speakers in a single executor job."""
-            if self._stop_event.is_set():
-                # Entry was unloaded while this task was in flight; skip adding speakers.
-                _LOGGER.debug("Config entry unloaded while adding speakers, skipping")
-                return
             for soco in socos:
                 if soco.uid in self.data.discovered:
                     continue
