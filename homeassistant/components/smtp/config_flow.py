@@ -67,8 +67,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SENDER_NAME): cv.string,
         vol.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
             SelectSelectorConfig(
                 options=ENCRYPTION_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -87,7 +87,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 autocomplete="current-password",
             ),
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
