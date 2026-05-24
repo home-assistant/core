@@ -5,13 +5,7 @@ import logging
 import jinja2
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
-    CONF_DISCOVERY,
-    CONF_PAYLOAD,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
 from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
