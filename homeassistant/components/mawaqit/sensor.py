@@ -21,7 +21,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -301,6 +300,15 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         )
         self._next_prayer_index: int | None = None
         self._next_prayer_time: datetime | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # coordinator.data is already populated by async_config_entry_first_refresh
+        # before entities are created. async_add_listener only schedules a future
+        # refresh without calling the callback immediately, so we seed the initial
+        # state here to avoid an "unknown" state on first render.
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
