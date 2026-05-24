@@ -1,13 +1,7 @@
 """Duck DNS integration."""
 
-from __future__ import annotations
-
 import logging
 
-import voluptuous as vol
-
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -18,33 +12,13 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the DuckDNS component."""
 
     async_setup_services(hass)
-
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-        )
-    )
 
     return True
 

@@ -419,8 +419,10 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
-        "Only if the user wants to control a device, tell them to expose entities to their "
+        "Only if the user wants to control a device, tell them to expose"
+        " entities to their "
         "voice assistant in Home Assistant."
     )
 
@@ -582,7 +584,8 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+    exposed_entities_prompt = """\
+Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   state: unavailable
@@ -630,7 +633,8 @@ async def test_assist_api_prompt(
   state: unavailable
   areas: Test Area 2
 """
-    stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
+    stateless_exposed_entities_prompt = """\
+Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   areas: Test Area 2
@@ -674,30 +678,45 @@ async def test_assist_api_prompt(
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
-    dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+    dynamic_context_prompt = (
+        "You ARE equipped to answer questions about the"
+        " current state of\nthe home using the"
+        " `GetLiveContext` tool. This is a primary"
+        " function. Do not state you lack the\n"
+        "functionality if the question requires live"
+        " data.\nIf the user asks about device"
+        ' existence/type (e.g., "Do I have lights in'
+        ' the bedroom?"): Answer\nfrom the static'
+        " context below.\nIf the user asks about the"
+        ' CURRENT state, value, or mode (e.g., "Is'
+        ' the lock locked?",\n"Is the fan on?",'
+        ' "What mode is the thermostat in?", "What'
+        ' is the temperature outside?"):\n'
+        "    1.  Recognize this requires live data.\n"
+        "    2.  You MUST call `GetLiveContext`. This"
+        " tool will provide the needed real-time"
+        " information (like temperature from the local"
+        " weather, lock status, etc.).\n"
+        "    3.  Use the tool's response** to answer"
+        ' the user accurately (e.g., "The temperature'
+        ' outside is [value from tool].").\n'
+        "For general knowledge questions not about the"
+        " home: Answer truthfully from internal"
+        " knowledge.\n"
+    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
-    # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
+    # Verify that the GetLiveContext tool returns the same results
+    # as the exposed_entities_prompt
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="GetLiveContext", tool_args={})
     )
@@ -715,26 +734,27 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "You are in area Test Area (floor 2) and all generic commands"
+        " like 'turn on the lights' "
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
@@ -744,10 +764,299 @@ For general knowledge questions not about the home: Answer truthfully from inter
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}"""
     )
+
+
+async def test_get_live_context_tool_filter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test the filter parameters of the GetLiveContext tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    office = area_registry.async_create("Office")
+    area_registry.async_update(office.id, aliases={"Workspace"})
+    area_registry.async_create("Kitchen")
+
+    office_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "office-1")},
+        suggested_area="Office",
+    )
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "kitchen-1")},
+        suggested_area="Kitchen",
+    )
+
+    office_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "office_light",
+        original_name="Office Light",
+        device_id=office_device.id,
+        suggested_object_id="office_light",
+    )
+    kitchen_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "kitchen_light",
+        original_name="Kitchen Light",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_light",
+    )
+    office_switch = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "office_switch",
+        original_name="Office Switch",
+        device_id=office_device.id,
+        suggested_object_id="office_switch",
+    )
+    front_door = entity_registry.async_get_or_create(
+        "lock",
+        "test",
+        "front_door",
+        original_name="Front Door",
+        suggested_object_id="front_door",
+    )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
+    )
+
+    for entity_id in (
+        office_light.entity_id,
+        kitchen_light.entity_id,
+        office_switch.entity_id,
+        front_door.entity_id,
+    ):
+        async_expose_entity(hass, "conversation", entity_id, True)
+
+    hass.states.async_set(office_light.entity_id, "on")
+    hass.states.async_set(kitchen_light.entity_id, "off")
+    hass.states.async_set(office_switch.entity_id, "on")
+    hass.states.async_set(front_door.entity_id, "locked")
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    # Filter by area and domain (example 1)
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "Office", "domain": "light"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Filter by name (example 2)
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Front Door"},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+    assert "Office Light" not in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Name filter is case insensitive
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "front door"},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+
+    # Area filter matches area aliases
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "workspace"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Domain filter accepts a list
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": ["switch", "lock"]},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Switch" in result["result"]
+    assert "Front Door" in result["result"]
+    assert "Office Light" not in result["result"]
+    assert "Kitchen Light" not in result["result"]
+
+    # Domain filter is case insensitive
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "Light"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # No filters returns all exposed entities
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={})
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Front Door" in result["result"]
+
+    # Filter that matches nothing returns a descriptive error
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Does Not Exist"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities matched name 'Does Not Exist'",
+    }
+
+    # Name filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "  Front Door  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+
+    # Area filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "  Office  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+
+    # Name filter accepts entity_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": office_light.entity_id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Area filter accepts area_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": office.id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Name filter matches entity aliases
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "cooking lamp"},
+        )
+    )
+    assert result["success"] is True
+    assert "Kitchen Light" in result["result"]
+    assert "Office Light" not in result["result"]
+
+    # Combining name + area narrows the result
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Office"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Combining name + area returns the failing constraint in the error
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Kitchen"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities found in area 'Kitchen'",
+    }
+
+    # Unknown area distinguishes "invalid area" from "no entities in area"
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "Garage"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "Area 'Garage' does not exist",
+    }
+
+    # Unknown domain reports which domain(s) failed
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "climate"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities found in domain(s): climate",
+    }
 
 
 async def test_script_tool(

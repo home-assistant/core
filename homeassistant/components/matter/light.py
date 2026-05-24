@@ -1,7 +1,5 @@
 """Matter light."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -40,14 +38,17 @@ from .util import (
     renormalize,
 )
 
+_CC_COLOR_MODE = clusters.ColorControl.Enums.ColorModeEnum
+
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
+    _CC_COLOR_MODE.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    _CC_COLOR_MODE.kCurrentXAndCurrentY: ColorMode.XY,
+    _CC_COLOR_MODE.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # Maximum Mireds value per the Matter spec is 65279
-# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
+# Conversion between Kelvin and Mireds is 1,000,000 / Kelvin,
+# so this corresponds to a minimum color temperature of ~15.3K
 # Which is shown in UI as 15 Kelvin due to rounding.
 # But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
 # and causes Invoke error, so cap values over maximum when sending
@@ -363,24 +364,16 @@ class MatterLight(MatterEntity, LightEntity):
 
                 assert capabilities is not None
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
-                ):
+                color_caps = clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap
+                if capabilities & color_caps.kHueSaturation:
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
-                ):
+                if capabilities & color_caps.kXy:
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
-                ):
+                if capabilities & color_caps.kColorTemperature:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
                     min_mireds = self.get_matter_attribute_value(
@@ -401,7 +394,8 @@ class MatterLight(MatterEntity, LightEntity):
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
             self._check_transition_blocklist()
-            # flag support for transition as soon as we support setting brightness and/or color
+            # flag support for transition as soon as we support
+            # setting brightness and/or color
             if (
                 supported_color_modes != {ColorMode.ONOFF}
                 and not self._transitions_disabled
@@ -539,7 +533,8 @@ DISCOVERY_SCHEMAS = [
             clusters.ColorControl.Attributes.CurrentSaturation,
         ),
     ),
-    # Additional schema to match (color temperature) lights with incorrect/missing device type
+    # Additional schema to match (color temperature) lights
+    # with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=MatterLightEntityDescription(

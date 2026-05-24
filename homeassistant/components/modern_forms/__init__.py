@@ -1,7 +1,5 @@
 """The Modern Forms integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, Concatenate

@@ -1,0 +1,119 @@
+# serializer version: 1
+# name: test_numbers[number][number.clou_duo_fan_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.clou_duo_fan_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fan speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fan speed',
+    'platform': 'fumis',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_speed',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_fan_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[number][number.clou_duo_fan_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clou Duo Fan speed',
+      'max': 5,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.clou_duo_fan_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[number][number.clou_duo_power_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.clou_duo_power_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power level',
+    'platform': 'fumis',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_level',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[number][number.clou_duo_power_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clou Duo Power level',
+      'max': 5,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.clou_duo_power_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---

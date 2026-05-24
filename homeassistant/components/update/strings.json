@@ -87,21 +87,6 @@
       "name": "Firmware"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "clear_skipped": {
       "description": "Removes the skipped version marker from an update.",

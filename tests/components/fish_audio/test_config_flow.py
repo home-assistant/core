@@ -1,7 +1,5 @@
 """Config flow tests for Fish Audio."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fishaudio import AuthenticationError, FishAudioError
@@ -9,9 +7,7 @@ import pytest
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
-    CONF_LANGUAGE,
     CONF_LATENCY,
-    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_TITLE,
@@ -20,17 +16,16 @@ from homeassistant.components.fish_audio.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_happy_path(
-    hass: HomeAssistant,
-    mock_fishaudio_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_fishaudio_client: AsyncMock
 ) -> None:
     """Test the full user flow happy path."""
     result = await hass.config_entries.flow.async_init(
@@ -272,7 +267,8 @@ async def test_subflow_reconfigure_already_configured(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Try to reconfigure the first subentry to match the second one (which already exists)
+    # Try to reconfigure the first subentry to match the second
+    # one (which already exists)
     first_subentry = [
         s for s in mock_config_entry.subentries.values() if s.title == "Test Voice"
     ][0]

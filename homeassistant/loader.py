@@ -4,8 +4,6 @@ This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -1174,8 +1172,9 @@ class Integration:
                             load_executor_platforms,
                             exc_info=ex,
                         )
-                        # If importing in the executor deadlocks because there is a circular
-                        # dependency, we fall back to the event loop.
+                        # If importing in the executor deadlocks
+                        # because there is a circular dependency,
+                        # we fall back to the event loop.
                         load_event_loop_platforms.extend(load_executor_platforms)
 
                 if load_event_loop_platforms:
@@ -1418,8 +1417,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:
@@ -1517,8 +1515,9 @@ async def _resolve_integrations_dependencies(
     possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
-    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+    """Resolve all dependencies for integrations.
 
+    Possibly includes after_dependencies.
     Detects circular dependencies and missing integrations.
     """
 

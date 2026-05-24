@@ -152,7 +152,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_on(hass, "switch.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer on", 2, False
+        "command-topic", "beer on", 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("switch.test")
@@ -161,7 +161,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     await common.async_turn_off(hass, "switch.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "beer off", 2, False
+        "command-topic", "beer off", 2, False, message_expiry_interval=None
     )
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -224,14 +224,14 @@ async def test_sending_mqtt_commands_with_command_template(
     await common.async_turn_on(hass, "switch.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{"state": "beer on"}', 2, False
+        "command-topic", '{"state": "beer on"}', 2, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "switch.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{"state": "beer off"}', 2, False
+        "command-topic", '{"state": "beer off"}', 2, False, message_expiry_interval=None
     )
 
 
@@ -830,6 +830,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

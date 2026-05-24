@@ -80,7 +80,7 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload(
 async def test_async_step_bluetooth_valid_device_but_missing_payload_then_full(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovering a valid device. Payload is too short, but later we get full one."""
+    """Test discovering a valid device with short then full payload."""
 
     async def _async_process_advertisements(
         _hass, _callback, _matcher, _mode, _timeout
@@ -175,7 +175,7 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption(
 async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid device, with legacy encryption and invalid key."""
+    """Test bluetooth discovery with legacy encryption and invalid key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -209,7 +209,7 @@ async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key(
 async def test_async_step_bluetooth_valid_device_legacy_encryption_wrong_key_length(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid device, with legacy encryption and wrong key length."""
+    """Test bluetooth discovery with legacy encryption and wrong key length."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -310,7 +310,7 @@ async def test_bluetooth_discovery_device_v4_encryption_from_cloud(
 async def test_bluetooth_discovery_device_v4_encryption_from_cloud_wrong_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid v4 device, with wrong auth from cloud."""
+    """Test bluetooth discovery with v4 device and wrong cloud auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -492,7 +492,7 @@ async def test_bluetooth_discovery_cloud_offline(
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid device, with v4 encryption and wrong key."""
+    """Test bluetooth discovery with v4 encryption and wrong key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -533,7 +533,7 @@ async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key(
 async def test_async_step_bluetooth_valid_device_v4_encryption_wrong_key_length(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery via bluetooth with a valid device, with v4 encryption and wrong key length."""
+    """Test bluetooth discovery with v4 encryption and wrong key length."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -797,7 +797,7 @@ async def test_async_step_user_with_found_devices_v4_encryption(
 async def test_async_step_user_with_found_devices_v4_encryption_wrong_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found, with v4 encryption and wrong key."""
+    """Test user setup with v4 encryption and wrong key."""
     # Get a list of devices
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
@@ -850,7 +850,7 @@ async def test_async_step_user_with_found_devices_v4_encryption_wrong_key(
 async def test_async_step_user_with_found_devices_v4_encryption_wrong_key_length(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found, with v4 encryption and wrong key length."""
+    """Test user setup with v4 encryption and wrong key length."""
     # Get a list of devices
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
@@ -940,7 +940,7 @@ async def test_async_step_user_with_found_devices_legacy_encryption(
 async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found, with legacy encryption and wrong key."""
+    """Test user setup with legacy encryption and wrong key."""
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
         return_value=[YLKG07YL_SERVICE_INFO],
@@ -985,7 +985,7 @@ async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key(
 async def test_async_step_user_with_found_devices_legacy_encryption_wrong_key_length(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup from service info cache with devices found, with legacy encryption and wrong key length."""
+    """Test user setup with legacy encryption and wrong key length."""
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
         return_value=[YLKG07YL_SERVICE_INFO],
@@ -1162,7 +1162,9 @@ async def test_async_step_reauth_legacy(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1211,7 +1213,9 @@ async def test_async_step_reauth_legacy_wrong_key(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1268,7 +1272,9 @@ async def test_async_step_reauth_v4(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1322,7 +1328,9 @@ async def test_async_step_reauth_v4_wrong_key(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1384,7 +1392,9 @@ async def test_async_step_reauth_v4_from_cloud(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None

@@ -1,7 +1,5 @@
 """Support for Sonarr sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
@@ -31,7 +29,7 @@ from .entity import SonarrEntity
 
 
 @dataclass(frozen=True)
-class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
+class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):  # noqa: UP046
     """Mixin for Sonarr sensor."""
 
     attributes_fn: Callable[[SonarrDataT], dict[str, str]]

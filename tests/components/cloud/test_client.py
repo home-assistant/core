@@ -104,7 +104,6 @@ async def test_handler_google_actions(hass: HomeAssistant) -> None:
     """Test handler Google Actions."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
-    hass.states.async_set("group.all_locks", "on", {"friendly_name": "Evil locks"})
 
     await mock_cloud(
         hass,
@@ -314,6 +313,51 @@ async def test_webhook_msg(
         in caplog.text
     )
     assert '{"nonexisting": "payload"}' in caplog.text
+
+
+async def test_webhook_msg_local_only(hass: HomeAssistant) -> None:
+    """Test a cloudhook for a local_only webhook does not fire the handler."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data[DATA_CLOUD]
+
+    await cloud.client.prefs.async_initialize()
+    await cloud.client.prefs.async_update(
+        cloudhooks={
+            "mock-webhook-id": {
+                "webhook_id": "mock-webhook-id",
+                "cloudhook_id": "mock-cloud-id",
+            },
+        }
+    )
+
+    received = []
+
+    async def handler(
+        hass: HomeAssistant, webhook_id: str, request: web.Request
+    ) -> web.Response:
+        """Handle a webhook."""
+        received.append(request)
+        return web.json_response({"from": "handler"})
+
+    webhook.async_register(
+        hass, "test", "Test", "mock-webhook-id", handler, local_only=True
+    )
+
+    response = await cloud.client.async_webhook_message(
+        {
+            "cloudhook_id": "mock-cloud-id",
+            "body": '{"hello": "world"}',
+            "headers": {"content-type": CONTENT_TYPE_JSON},
+            "method": "POST",
+            "query": None,
+        }
+    )
+
+    assert response["status"] == 200
+    # Handler not called because cloudhooks are not considered local
+    assert len(received) == 0
 
 
 @pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")

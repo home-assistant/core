@@ -1,7 +1,5 @@
 """Support for Google Nest SDM Cameras."""
 
-from __future__ import annotations
-
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable
@@ -267,7 +265,10 @@ class NestWebRTCEntity(NestCameraBaseEntity):
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Return a placeholder image for WebRTC cameras that don't support snapshots."""
+        """Return a placeholder image for WebRTC cameras.
+
+        WebRTC cameras don't support snapshots.
+        """
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod

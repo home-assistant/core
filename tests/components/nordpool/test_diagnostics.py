@@ -1,7 +1,5 @@
 """Test Nord Pool diagnostics."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

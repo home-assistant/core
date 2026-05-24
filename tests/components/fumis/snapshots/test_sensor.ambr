@@ -1,4 +1,77 @@
 # serializer version: 1
+# name: test_sensors[sensor][sensor.clou_duo_alert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'low_fuel',
+        'service_due',
+        'flue_gas_warning',
+        'low_battery',
+        'speed_sensor_failure',
+        'door_open',
+        'airflow_malfunction',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.clou_duo_alert',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alert',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alert',
+    'platform': 'fumis',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alert',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_alert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor][sensor.clou_duo_alert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'code': None,
+      'device_class': 'enum',
+      'friendly_name': 'Clou Duo Alert',
+      'options': list([
+        'none',
+        'low_fuel',
+        'service_due',
+        'flue_gas_warning',
+        'low_battery',
+        'speed_sensor_failure',
+        'door_open',
+        'airflow_malfunction',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.clou_duo_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
 # name: test_sensors[sensor][sensor.clou_duo_burning_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -253,6 +326,113 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'combustion',
+  })
+# ---
+# name: test_sensors[sensor][sensor.clou_duo_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'ignition_failed',
+        'chimney_dirty',
+        'sensor_t02',
+        'sensor_t03_t05',
+        'sensor_t04',
+        'safety_switch',
+        'pressure_sensor_off',
+        'sensor_t01_t02',
+        'sensor_t01_t03',
+        'flue_gas_overtemp',
+        'fuel_ignition_timeout',
+        'general_error',
+        'mfdoor_alarm',
+        'fire_error',
+        'chimney_alarm',
+        'grate_error',
+        'ntc2_alarm',
+        'ntc3_alarm',
+        'door_alarm',
+        'pressure_alarm',
+        'ntc1_alarm',
+        'tc1_alarm',
+        'gas_alarm',
+        'no_pellet_alarm',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.clou_duo_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Error',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'fumis',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor][sensor.clou_duo_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'code': None,
+      'device_class': 'enum',
+      'friendly_name': 'Clou Duo Error',
+      'options': list([
+        'none',
+        'ignition_failed',
+        'chimney_dirty',
+        'sensor_t02',
+        'sensor_t03_t05',
+        'sensor_t04',
+        'safety_switch',
+        'pressure_sensor_off',
+        'sensor_t01_t02',
+        'sensor_t01_t03',
+        'flue_gas_overtemp',
+        'fuel_ignition_timeout',
+        'general_error',
+        'mfdoor_alarm',
+        'fire_error',
+        'chimney_alarm',
+        'grate_error',
+        'ntc2_alarm',
+        'ntc3_alarm',
+        'door_alarm',
+        'pressure_alarm',
+        'ntc1_alarm',
+        'tc1_alarm',
+        'gas_alarm',
+        'no_pellet_alarm',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.clou_duo_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
   })
 # ---
 # name: test_sensors[sensor][sensor.clou_duo_fan_1_speed-entry]
@@ -1087,5 +1267,72 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.0',
+  })
+# ---
+# name: test_sensors_active_error_and_alert[info_error_alert-sensor]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'code': 'E101',
+      'device_class': 'enum',
+      'friendly_name': 'Clou Duo Error',
+      'options': list([
+        'none',
+        'ignition_failed',
+        'chimney_dirty',
+        'sensor_t02',
+        'sensor_t03_t05',
+        'sensor_t04',
+        'safety_switch',
+        'pressure_sensor_off',
+        'sensor_t01_t02',
+        'sensor_t01_t03',
+        'flue_gas_overtemp',
+        'fuel_ignition_timeout',
+        'general_error',
+        'mfdoor_alarm',
+        'fire_error',
+        'chimney_alarm',
+        'grate_error',
+        'ntc2_alarm',
+        'ntc3_alarm',
+        'door_alarm',
+        'pressure_alarm',
+        'ntc1_alarm',
+        'tc1_alarm',
+        'gas_alarm',
+        'no_pellet_alarm',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.clou_duo_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ignition_failed',
+  })
+# ---
+# name: test_sensors_active_error_and_alert[info_error_alert-sensor].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'code': 'A001',
+      'device_class': 'enum',
+      'friendly_name': 'Clou Duo Alert',
+      'options': list([
+        'none',
+        'low_fuel',
+        'service_due',
+        'flue_gas_warning',
+        'low_battery',
+        'speed_sensor_failure',
+        'door_open',
+        'airflow_malfunction',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.clou_duo_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low_fuel',
   })
 # ---

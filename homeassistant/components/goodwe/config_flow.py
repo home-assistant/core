@@ -1,7 +1,5 @@
 """Config flow to configure Goodwe inverters using their local API."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -73,8 +71,8 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         """Detects the port of the Inverter."""
         port = GOODWE_UDP_PORT
         try:
-            inverter = await connect(host=host, port=port, retries=10)
+            inverter = await connect(host=host, port=port, retries=3)
         except InverterError:
             port = GOODWE_TCP_PORT
-            inverter = await connect(host=host, port=port, retries=10)
+            inverter = await connect(host=host, port=port, retries=3)
         return inverter, port

@@ -1,7 +1,5 @@
 """Config flow for Roborock."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
@@ -25,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_REGION, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -40,7 +38,6 @@ from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_REGION,
     CONF_SHOW_BACKGROUND,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,

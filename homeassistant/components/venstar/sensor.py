@@ -1,7 +1,5 @@
 """Representation of Venstar sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -155,7 +153,11 @@ class VenstarSensor(VenstarEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
+        return (
+            f"{self._config.entry_id}"
+            f"_{self.sensor_name.replace(' ', '_')}"
+            f"_{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> int:

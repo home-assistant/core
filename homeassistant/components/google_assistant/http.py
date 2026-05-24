@@ -1,7 +1,5 @@
 """Support for Google Actions Smart Home Control."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -14,7 +12,6 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -140,7 +137,7 @@ class GoogleConfig(AbstractConfig):
         return found_agent_user_id
 
     def get_local_webhook_id(self, agent_user_id):
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for a given agent user id via the local SDK."""
         if data := self._store.agent_user_ids.get(agent_user_id):
             return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
         return None
@@ -167,9 +164,6 @@ class GoogleConfig(AbstractConfig):
 
         if state.attributes.get("view") is not None:
             # Ignore entities that are views
-            return False
-
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
         entity_registry = er.async_get(self.hass)
@@ -325,7 +319,8 @@ class GoogleConfigStore:
         if (data := await self._store.async_load()) is None:
             # if the store is not found create an empty one
             # Note that the first request is always a cloud request,
-            # and that will store the correct agent user id to be used for local requests
+            # and that will store the correct agent user id
+            # to be used for local requests
             data = {
                 STORE_AGENT_USER_IDS: {},
             }

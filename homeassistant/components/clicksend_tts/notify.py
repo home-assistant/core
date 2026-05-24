@@ -1,7 +1,5 @@
 """clicksend_tts platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
@@ -31,6 +29,7 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 

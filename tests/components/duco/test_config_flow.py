@@ -1,12 +1,9 @@
 """Tests for the Duco config flow."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import LanInfo
+from duco_connectivity import BoardInfo, DucoConnectionError, DucoError, LanInfo
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -38,10 +35,9 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test a successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -68,10 +64,10 @@ async def test_user_flow_success(
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -117,12 +113,11 @@ async def test_user_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery_new_device(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
-    """Test zeroconf discovery of a new device shows confirmation form and creates entry."""
+    """Test zeroconf discovery shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -322,10 +317,9 @@ async def test_reconfigure_flow_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_new_device(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test DHCP discovery of a new device shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
@@ -418,10 +412,9 @@ async def test_dhcp_discovery_exceptions(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_exception_recovery(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_duco_client: AsyncMock
 ) -> None:
     """Test DHCP discovery recovers after an initial exception and creates the entry."""
     mock_duco_client.async_get_board_info.side_effect = DucoConnectionError(
@@ -454,3 +447,30 @@ async def test_dhcp_discovery_exception_recovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_MAC
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_initializes_client_with_host(
+    hass: HomeAssistant, mock_board_info: BoardInfo, mock_lan_info: LanInfo
+) -> None:
+    """Test that the config flow initializes the Duco client with the host."""
+    with patch(
+        "homeassistant.components.duco.config_flow.DucoClient",
+        autospec=True,
+    ) as mock_client_class:
+        mock_client_class.return_value.async_get_board_info.return_value = (
+            mock_board_info
+        )
+        mock_client_class.return_value.async_get_lan_info.return_value = mock_lan_info
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_client_class.assert_called_once_with(
+        session=ANY,
+        host=TEST_HOST,
+    )

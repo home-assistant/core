@@ -1,7 +1,5 @@
 """Matter vacuum platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
@@ -213,7 +211,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
         ):
             raise HomeAssistantError(
-                f"Failed to select areas: {response['statusText'] or response['status']}"
+                "Failed to select areas: "
+                f"{response['statusText'] or response['status']}"
             )
 
         await self.send_device_command(

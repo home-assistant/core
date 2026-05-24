@@ -1,12 +1,10 @@
 """Config flow for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-from duco import DucoClient
-from duco.exceptions import DucoConnectionError, DucoError
+from duco_connectivity import DucoClient
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
