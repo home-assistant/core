@@ -12,6 +12,7 @@ from homeassistant.components.indevolt.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import (
+    SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -19,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_GEN2
@@ -366,3 +368,25 @@ async def test_zeroconf_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_dhcp_registered_device_ip_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_indevolt: AsyncMock
+) -> None:
+    """Test DHCP discovery updates config entry host for a registered device at a new IP."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=TEST_HOST_ALT,
+            hostname="3300003082",
+            macaddress="1c784b8d47bb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST_ALT

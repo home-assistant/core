@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
@@ -89,6 +90,28 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery for registered Indevolt devices."""
+        host = discovery_info.ip
+
+        try:
+            device_data = await self._async_get_device_data(host)
+        except OSError, ClientError, KeyError:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host}, reload_on_update=True
+        )
+
+        self.context["title_placeholders"] = {"model": device_data[CONF_MODEL]}
+        self._discovered_host = host
+        self._discovered_device_data = device_data
+
+        return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
