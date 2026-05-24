@@ -609,6 +609,7 @@ ZEROCONF = {
         },
         {
             "domain": "indevolt",
+            "name": "igen_fw*",
         },
         {
             "domain": "lektrico",

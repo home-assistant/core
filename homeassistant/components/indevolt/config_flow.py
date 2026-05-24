@@ -16,8 +16,6 @@ from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ZEROCONF_SERVICE_NAME_PREFIX = "IGEN_FW"
-
 
 class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     """Configuration flow for Indevolt integration."""
@@ -96,9 +94,6 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery — probe the device to confirm it is an Indevolt device."""
-        if not discovery_info.name.startswith(ZEROCONF_SERVICE_NAME_PREFIX):
-            return self.async_abort(reason="not_indevolt_device")
-
         host = discovery_info.host
 
         try:

@@ -45,16 +45,6 @@ ZEROCONF_DISCOVERY_ALT_IP = ZeroconfServiceInfo(
     properties={},
 )
 
-ZEROCONF_DISCOVERY_NON_INDEVOLT = ZeroconfServiceInfo(
-    ip_address=IPv4Address(TEST_HOST),
-    ip_addresses=[IPv4Address(TEST_HOST)],
-    port=80,
-    hostname="other-device.local.",
-    type="_http._tcp.local.",
-    name="OTHER_DEVICE._http._tcp.local.",
-    properties={},
-)
-
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_success(hass: HomeAssistant, mock_indevolt: AsyncMock) -> None:
@@ -299,20 +289,6 @@ async def test_zeroconf_flow_success(
         CONF_GENERATION: 2,
     }
     assert result["result"].unique_id == TEST_DEVICE_SN_GEN2
-
-
-async def test_zeroconf_non_indevolt_device(
-    hass: HomeAssistant, mock_indevolt: AsyncMock
-) -> None:
-    """Test zeroconf discovery is ignored for non-Indevolt devices."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY_NON_INDEVOLT,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_indevolt_device"
 
 
 async def test_zeroconf_already_configured(
