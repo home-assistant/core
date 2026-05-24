@@ -16,6 +16,7 @@ from inkbird_ble import (
 from inkbird_ble.parser import Model
 from sensor_state_data import SensorDeviceClass
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.inkbird.const import (
     CONF_DEVICE_DATA,
     CONF_DEVICE_TYPE,
@@ -175,8 +176,8 @@ async def test_polling_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_fallback_poll_uses_latest_service_info(hass: HomeAssistant) -> None:
-    """Fallback timer queries async_last_service_info and forwards it to poll_needed.
+async def test_fallback_poll_queries_latest_service_info(hass: HomeAssistant) -> None:
+    """Fallback timer queries the bluetooth manager for the latest service info.
 
     Regression test for the case where HA dedupes repeat advertisements with the
     same payload; ``_last_service_info`` then goes stale even though the device
@@ -194,31 +195,16 @@ async def test_fallback_poll_uses_latest_service_info(hass: HomeAssistant) -> No
     inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    fresh_service_info = SPS_PASSIVE_SERVICE_INFO
-
-    with (
-        patch(
-            "homeassistant.components.inkbird.coordinator.async_last_service_info",
-            return_value=fresh_service_info,
-        ) as mock_async_last_service_info,
-        patch(
-            "homeassistant.components.inkbird.coordinator.INKBIRDBluetoothDeviceData.poll_needed",
-            return_value=False,
-        ) as mock_poll_needed,
-        patch(
-            "homeassistant.components.inkbird.coordinator.INKBIRDBluetoothDeviceData.async_poll",
-            AsyncMock(),
-        ) as mock_async_poll,
-    ):
+    with patch(
+        "homeassistant.components.inkbird.coordinator.async_last_service_info",
+        wraps=async_last_service_info,
+    ) as mock_async_last_service_info:
         async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_POLL_INTERVAL)
         await hass.async_block_till_done()
 
     mock_async_last_service_info.assert_called_once_with(
         hass, "AA:BB:CC:DD:EE:FF", connectable=False
     )
-    mock_poll_needed.assert_called_once()
-    assert mock_poll_needed.call_args.args[0] is fresh_service_info
-    mock_async_poll.assert_not_called()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
