@@ -15,7 +15,6 @@ from homeassistant.components.diesel_heater.config_flow import (
     VevorHeaterOptionsFlowHandler,
 )
 from homeassistant.components.diesel_heater.const import (
-    CONF_PIN,
     CONF_PRESET_AWAY_TEMP,
     CONF_PRESET_COMFORT_TEMP,
     DEFAULT_PIN,
@@ -23,9 +22,9 @@ from homeassistant.components.diesel_heater.const import (
     DEFAULT_PRESET_COMFORT_TEMP,
     SERVICE_UUID,
 )
+from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.data_entry_flow import AbortFlow
 
-CONF_ADDRESS = "address"  # matches homeassistant.const.CONF_ADDRESS
 MOCK_ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 
