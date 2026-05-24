@@ -84,3 +84,26 @@ def test_delete_stale_missing_infrared_issues(hass: HomeAssistant) -> None:
         )
         is None
     )
+
+
+async def test_delete_stale_missing_infrared_issues_keeps_configured_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Test stale missing-infrared cleanup keeps configured remote issues."""
+    async_create_linked_infrared_entity_missing_issue(
+        hass,
+        remote_id="configured",
+        remote_name="Configured",
+        infrared_entity_id="infrared.missing",
+    )
+
+    async_delete_stale_linked_infrared_entity_missing_issues(
+        hass,
+        configured_remote_ids={"configured"},
+    )
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(
+        DOMAIN,
+        f"{ISSUE_LINKED_INFRARED_ENTITY_MISSING}_configured",
+    )

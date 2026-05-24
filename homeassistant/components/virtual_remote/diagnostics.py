@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -92,7 +93,8 @@ def _diagnostic_remotes(
                 "infrared_entity_id": infrared_entity_id,
                 "infrared_entity_exists": (
                     isinstance(infrared_entity_id, str)
-                    and hass.states.get(infrared_entity_id) is not None
+                    and (state := hass.states.get(infrared_entity_id)) is not None
+                    and state.state != STATE_UNAVAILABLE
                 ),
                 "command_count": len(commands) if isinstance(commands, dict) else 0,
                 "commands": sorted(commands) if isinstance(commands, dict) else [],

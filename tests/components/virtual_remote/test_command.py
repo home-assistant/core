@@ -207,3 +207,12 @@ def test_parse_remote_command_uses_custom_translation_domain() -> None:
 
     assert err.value.translation_domain == "itachip2ir"
     assert err.value.translation_key == "remote_invalid_command"
+
+
+def test_json_scalar_boolean_command_is_rejected() -> None:
+    """Test JSON scalar booleans are rejected."""
+    with pytest.raises(
+        CommandParseError,
+        match="timings must contain only integers",
+    ):
+        validate_remote_command_payload("true")

@@ -1,5 +1,6 @@
 """Tests for virtual remote helper functions."""
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 import voluptuous as vol
@@ -214,3 +215,23 @@ def test_remote_and_command_options() -> None:
         {"value": "B", "label": "B"},
     ]
     assert remotes_with_commands(normalized_remotes) == [normalized_remotes[1]]
+
+
+def test_infrared_entity_field_omits_unavailable_default() -> None:
+    """Test infrared field omits defaults that are not available."""
+    field = infrared_entity_field(
+        "infrared.missing",
+        {
+            "infrared.available": selector.SelectOptionDict(
+                value="infrared.available",
+                label="Available",
+            )
+        },
+    )
+
+    assert field.default is vol.UNDEFINED
+
+
+def test_command_options_ignores_malformed_command_mapping() -> None:
+    """Test command options ignores malformed command mappings."""
+    assert command_options(cast(Mapping[str, Any], "not-a-mapping")) == []

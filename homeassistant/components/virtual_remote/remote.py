@@ -470,7 +470,9 @@ class InfraredRemoteEntity(RemoteEntity):
             raise HomeAssistantError(
                 translation_domain=self._translation_domain,
                 translation_key="remote_invalid_service_parameter",
-                translation_placeholders={"error": "command must be a string"},
+                translation_placeholders={
+                    "error": "command must be a string or list of strings"
+                },
             )
 
         total = len(commands) * num_repeats

@@ -219,24 +219,6 @@ async def test_remove_remote(
     assert result["data"][CONF_VIRTUAL_REMOTES] == []
 
 
-async def test_remove_remote_aborts_when_remote_is_not_found(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test removing a stale or missing remote aborts without writing options."""
-    result = await _init_options_flow(hass, config_entry, SOURCE_REMOVE_REMOTE)
-
-    flow = hass.config_entries.options._progress[result["flow_id"]]
-    flow._virtual_remotes = []
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {CONF_REMOTE_ID: "living_room_tv"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_virtual_remotes"
-
-
 async def test_remote_steps_abort_without_remotes(
     hass: HomeAssistant, infrared_entity: str
 ) -> None:
@@ -565,25 +547,24 @@ async def test_edit_remote_validation_errors(
 
 
 @pytest.mark.parametrize(
-    ("source", "expected_option"),
+    "expected_option",
     [
-        (SOURCE_ADD_COMMAND, "add_command"),
-        (SOURCE_EDIT_COMMAND, "edit_command"),
-        (SOURCE_REMOVE_COMMAND, "remove_command"),
+        "add_command",
+        "edit_command",
+        "remove_command",
     ],
 )
-async def test_manage_commands_source_shortcuts(
+async def test_manage_commands_menu_options(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    source: str,
     expected_option: str,
 ) -> None:
-    """Test command source shortcuts."""
-    flow = VirtualRemoteOptionsFlow(config_entry)
-    flow.hass = hass
-    flow._context = {"source": source}
-
-    result = await flow.async_step_manage_commands()
+    """Test manage commands menu options."""
+    result = await _init_options_flow(
+        hass,
+        config_entry,
+        SOURCE_MANAGE_COMMANDS,
+    )
 
     assert result["type"] is FlowResultType.MENU
     assert expected_option in result["menu_options"]

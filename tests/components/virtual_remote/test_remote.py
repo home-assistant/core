@@ -598,6 +598,9 @@ async def test_send_command_non_string_command(
         await entity.async_send_command([RAW_COMMAND, 1])  # type: ignore[list-item]
 
     assert err.value.translation_key == "remote_invalid_service_parameter"
+    assert err.value.translation_placeholders == {
+        "error": "command must be a string or list of strings"
+    }
     assert len(mock_send.mock_calls) == 0
 
 

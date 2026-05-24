@@ -195,3 +195,56 @@ async def test_reconfigure_no_remotes(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_virtual_remotes"
+
+
+async def test_user_flow_aborts_without_infrared_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow aborts when no infrared entities are available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_available_infrared_entities"
+
+
+async def test_reconfigure_aborts_without_virtual_remotes(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure aborts when no virtual remotes are configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_VIRTUAL_REMOTES: []},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_virtual_remotes"
+
+
+async def test_reconfigure_aborts_without_available_infrared_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure aborts when no infrared entities are available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            CONF_VIRTUAL_REMOTES: [
+                {
+                    CONF_REMOTE_ID: "living_room_tv",
+                    CONF_REMOTE_NAME: "Living Room TV",
+                    CONF_INFRARED_ENTITY_ID: "infrared.missing",
+                }
+            ]
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_available_infrared_entities"
