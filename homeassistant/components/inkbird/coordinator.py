@@ -128,7 +128,14 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
     @callback
     def _async_schedule_poll(self, _: datetime) -> None:
         """Schedule a poll of the device."""
-        if self._last_service_info and self._async_needs_poll(
-            self._last_service_info, self._last_poll
-        ):
+        # ``self._last_service_info`` only tracks dispatched events, so when
+        # the device keeps broadcasting the same payload (HA dedupes the
+        # repeats before dispatch) its timestamp stops advancing. Pull the
+        # latest service info from the bluetooth manager instead so the
+        # recency check in ``poll_needed`` sees every observed advertisement.
+        service_info = (
+            async_last_service_info(self.hass, self.address, connectable=False)
+            or self._last_service_info
+        )
+        if service_info and self._async_needs_poll(service_info, self._last_poll):
             self._debounced_poll.async_schedule_call()
