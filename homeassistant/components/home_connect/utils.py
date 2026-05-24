@@ -27,7 +27,7 @@ def raise_service_error(
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key=translation_key,
-        translation_placeholders={"error": str(err)} | (extra_placeholders or {}),
+        translation_placeholders={**(extra_placeholders or {}), "error": str(err)},
     ) from err
 
 

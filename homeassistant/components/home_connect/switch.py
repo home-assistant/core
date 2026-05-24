@@ -298,7 +298,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             self._attr_is_on = True
             raise_service_error(
-                err, "power_off", {"appliance_name": self.appliance.info.name}
+                err,
+                "power_off",
+                {
+                    "appliance_name": self.appliance.info.name,
+                    "value": self.power_off_state,
+                },
             )
 
     def update_native_value(self) -> None:

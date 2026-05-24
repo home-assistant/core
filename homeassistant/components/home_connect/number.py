@@ -180,7 +180,13 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             )
         except HomeConnectError as err:
             raise_service_error(
-                err, "set_setting_entity", {"entity_id": self.entity_id}
+                err,
+                "set_setting_entity",
+                {
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                    "value": str(value),
+                },
             )
 
     @constraint_fetcher
