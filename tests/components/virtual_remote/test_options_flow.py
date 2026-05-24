@@ -1,5 +1,7 @@
 """Tests for the Virtual Remote options flow."""
 
+from typing import cast
+
 import pytest
 
 from homeassistant import config_entries
@@ -217,6 +219,27 @@ async def test_remove_remote(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_VIRTUAL_REMOTES] == []
+
+
+async def test_remove_remote_aborts_when_remote_is_not_found(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test removing a stale or missing remote aborts without writing options."""
+    result = await _init_options_flow(hass, config_entry, SOURCE_REMOVE_REMOTE)
+
+    flow = cast(
+        VirtualRemoteOptionsFlow,
+        hass.config_entries.options._progress[result["flow_id"]],
+    )
+    flow._virtual_remotes = []
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_REMOTE_ID: "living_room_tv"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_virtual_remotes"
 
 
 async def test_remote_steps_abort_without_remotes(
@@ -547,24 +570,24 @@ async def test_edit_remote_validation_errors(
 
 
 @pytest.mark.parametrize(
-    "expected_option",
+    ("source", "expected_option"),
     [
-        "add_command",
-        "edit_command",
-        "remove_command",
+        (SOURCE_ADD_COMMAND, "add_command"),
+        (SOURCE_EDIT_COMMAND, "edit_command"),
+        (SOURCE_REMOVE_COMMAND, "remove_command"),
     ],
 )
-async def test_manage_commands_menu_options(
+async def test_manage_commands_source_shortcuts(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    source: str,
     expected_option: str,
 ) -> None:
-    """Test manage commands menu options."""
-    result = await _init_options_flow(
-        hass,
-        config_entry,
-        SOURCE_MANAGE_COMMANDS,
-    )
+    """Test command source shortcuts."""
+    flow = VirtualRemoteOptionsFlow(config_entry)
+    flow.hass = hass
+
+    result = await flow.async_step_manage_commands()
 
     assert result["type"] is FlowResultType.MENU
     assert expected_option in result["menu_options"]
@@ -724,3 +747,48 @@ async def test_remove_command_aborts_when_selected_remote_has_no_commands(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_remote_commands"
+
+
+async def test_remove_remote_aborts_when_selected_remote_disappears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test remove remote aborts when selected remote disappeared after form display."""
+    result = await _init_options_flow(hass, config_entry, SOURCE_REMOVE_REMOTE)
+
+    flow = cast(
+        VirtualRemoteOptionsFlow,
+        hass.config_entries.options._progress[result["flow_id"]],
+    )
+    flow._virtual_remotes = [
+        {
+            CONF_REMOTE_ID: "other",
+            CONF_REMOTE_NAME: "Other",
+            CONF_INFRARED_ENTITY_ID: "infrared.test_ir",
+        }
+    ]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_REMOTE_ID: "living_room_tv"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "remote_not_found"
+
+
+async def test_manage_commands_menu_contains_command_actions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test manage commands menu contains command actions."""
+    result = await _init_options_flow(
+        hass,
+        config_entry,
+        SOURCE_MANAGE_COMMANDS,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert "add_command" in result["menu_options"]
+    assert "edit_command" in result["menu_options"]
+    assert "remove_command" in result["menu_options"]
