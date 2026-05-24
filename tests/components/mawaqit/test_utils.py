@@ -8,8 +8,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.mawaqit import utils
-from homeassistant.components.mawaqit.const import CONF_UUID
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 
 # --- _to_utc ---
 

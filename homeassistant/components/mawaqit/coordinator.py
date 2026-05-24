@@ -6,13 +6,12 @@ import logging
 from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from . import mawaqit_wrapper
-from .const import CONF_UUID
 
 _LOGGER = logging.getLogger(__name__)
 

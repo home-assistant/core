@@ -7,9 +7,6 @@ MAWAQIT_URL = "https://mawaqit.net/"
 # INTEGRATION
 DOMAIN = "mawaqit"
 
-# Config Entry
-
-CONF_UUID: str = "uuid"
 
 # Config Flow
 

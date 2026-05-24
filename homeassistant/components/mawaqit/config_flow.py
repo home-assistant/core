@@ -9,7 +9,7 @@ from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFoun
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.helpers import selector
 
 from . import mawaqit_wrapper, utils
@@ -20,7 +20,6 @@ from .const import (
     CONF_TYPE_SEARCH_COORDINATES,
     CONF_TYPE_SEARCH_KEYWORD,
     CONF_TYPE_SEARCH_TRANSLATION_KEY,
-    CONF_UUID,
     DOMAIN,
     KEYWORD_SEARCH_NEXT_PAGE,
     KEYWORD_SEARCH_PAGE_SIZE,
