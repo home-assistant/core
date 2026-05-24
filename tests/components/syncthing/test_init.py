@@ -7,6 +7,7 @@ from unittest.mock import patch
 from aiosyncthing.exceptions import SyncthingError
 
 from homeassistant.components.syncthing.const import (
+    DOMAIN,
     FOLDER_SUMMARY_RECEIVED,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
@@ -17,27 +18,29 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher
 from homeassistant.util import dt as dt_util
 
-from . import (
-    FOLDER_ID,
-    MOCK_FOLDER_SUMMARY_EVENT,
-    MOCK_STATE_CHANGED_EVENT,
-    SERVER_ID,
-    create_mock_syncthing_client,
-)
+from . import FOLDER_ID, SERVER_ID, create_mock_syncthing_client
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 
 async def test_syncthing_client_event_listener(
     hass: HomeAssistant,
     entry: MockConfigEntry,
+    events: list[dict[str, Any]],
 ) -> None:
     """Test SyncthingClient event listener handles device and folder events."""
     events = [
-        MOCK_FOLDER_SUMMARY_EVENT,
-        MOCK_STATE_CHANGED_EVENT,
+        await hass.async_add_executor_job(
+            load_json_object_fixture, "folder_summary_event.json", DOMAIN
+        ),
+        await hass.async_add_executor_job(
+            load_json_object_fixture, "state_changed_event.json", DOMAIN
+        ),
     ]
-
     folder_summary_calls = []
     state_changed_calls = []
 
@@ -84,10 +87,10 @@ async def test_syncthing_client_event_listener(
     await hass.async_block_till_done()
 
     assert len(folder_summary_calls) == 1
-    assert folder_summary_calls[0] == MOCK_FOLDER_SUMMARY_EVENT
+    assert folder_summary_calls[0] == events[0]
 
     assert len(state_changed_calls) == 1
-    assert state_changed_calls[0] == MOCK_STATE_CHANGED_EVENT
+    assert state_changed_calls[0] == events[1]
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -108,7 +111,9 @@ async def test_syncthing_client_reconnect_on_error(
             raise SyncthingError("Connection lost")
         while True:
             await asyncio.sleep(0.1)
-            yield MOCK_STATE_CHANGED_EVENT
+            yield await hass.async_add_executor_job(
+                load_json_object_fixture, "state_changed_event.json", DOMAIN
+            )
 
     mock_syncthing = create_mock_syncthing_client()
     mock_syncthing.events.last_seen_id = 10

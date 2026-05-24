@@ -26,17 +26,6 @@ FOLDER_LABEL = "Test Folder"
 SERVER_ID_SHORT_HA = SERVER_ID.split("-", maxsplit=1)[0]
 URL_HA = URL.lower().replace("://", "_").replace(".", "_").replace(":", "_")
 
-MOCK_SYSTEM_STATUS = load_json_object_fixture("system_status.json", DOMAIN)
-MOCK_SYSTEM_VERSION = load_json_object_fixture("system_version.json", DOMAIN)
-MOCK_PING = load_json_object_fixture("ping.json", DOMAIN)
-MOCK_CONFIG = load_json_object_fixture("config.json", DOMAIN)
-MOCK_FOLDER_STATUS = load_json_object_fixture("folder_status.json", DOMAIN)
-MOCK_FOLDER_SUMMARY_EVENT = load_json_object_fixture(
-    "folder_summary_event.json", DOMAIN
-)
-MOCK_STATE_CHANGED_EVENT = load_json_object_fixture("state_changed_event.json", DOMAIN)
-MOCK_FOLDER_PAUSED_EVENT = load_json_object_fixture("folder_paused_event.json", DOMAIN)
-
 
 def create_mock_syncthing_client() -> MagicMock:
     """Create a mocked Syncthing client."""
@@ -45,11 +34,21 @@ def create_mock_syncthing_client() -> MagicMock:
     mock_database = MagicMock()
     mock_events = MagicMock()
 
-    mock_system.status = AsyncMock(return_value=MOCK_SYSTEM_STATUS)
-    mock_system.version = AsyncMock(return_value=MOCK_SYSTEM_VERSION)
-    mock_system.ping = AsyncMock(return_value=MOCK_PING)
-    mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
-    mock_database.status = AsyncMock(return_value=MOCK_FOLDER_STATUS)
+    mock_system.status = AsyncMock(
+        return_value=load_json_object_fixture("system_status.json", DOMAIN)
+    )
+    mock_system.version = AsyncMock(
+        return_value=load_json_object_fixture("system_version.json", DOMAIN)
+    )
+    mock_system.ping = AsyncMock(
+        return_value=load_json_object_fixture("ping.json", DOMAIN)
+    )
+    mock_system.config = AsyncMock(
+        return_value=load_json_object_fixture("config.json", DOMAIN)
+    )
+    mock_database.status = AsyncMock(
+        return_value=load_json_object_fixture("folder_status.json", DOMAIN)
+    )
 
     async def mock_listen():
         """Mock events.listen that doesn't block."""

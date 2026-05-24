@@ -23,18 +23,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import (
-    FOLDER_ID,
-    MOCK_FOLDER_PAUSED_EVENT,
-    MOCK_FOLDER_STATUS,
-    MOCK_FOLDER_SUMMARY_EVENT,
-    MOCK_STATE_CHANGED_EVENT,
-    SERVER_ID,
-    SERVER_ID_SHORT_HA,
-    create_mock_syncthing_client,
-)
+from . import FOLDER_ID, SERVER_ID, SERVER_ID_SHORT_HA, create_mock_syncthing_client
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 async def test_sensor_platform_setup(
@@ -73,9 +69,18 @@ async def test_sensor_platform_no_sensors_on_config_error(
 @pytest.mark.parametrize(
     ("event_id", "event"),
     [
-        (FOLDER_SUMMARY_RECEIVED, MOCK_FOLDER_SUMMARY_EVENT),
-        (STATE_CHANGED_RECEIVED, MOCK_STATE_CHANGED_EVENT),
-        (FOLDER_PAUSED_RECEIVED, MOCK_FOLDER_PAUSED_EVENT),
+        (
+            FOLDER_SUMMARY_RECEIVED,
+            load_json_object_fixture("folder_summary_event.json", DOMAIN),
+        ),
+        (
+            STATE_CHANGED_RECEIVED,
+            load_json_object_fixture("state_changed_event.json", DOMAIN),
+        ),
+        (
+            FOLDER_PAUSED_RECEIVED,
+            load_json_object_fixture("folder_paused_event.json", DOMAIN),
+        ),
     ],
 )
 async def test_folder_sensor_updates_on_event(
@@ -157,7 +162,10 @@ async def test_folder_sensor_polls_status(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test folder sensor polls for status updates."""
-    syncing_status = {**MOCK_FOLDER_STATUS, "state": "syncing"}
+    syncing_status = await hass.async_add_executor_job(
+        load_json_object_fixture, "folder_status.json", DOMAIN
+    )
+    syncing_status["state"] = "syncing"
     mock_syncthing.database.status = AsyncMock(return_value=syncing_status)
 
     future = dt_util.utcnow() + SCAN_INTERVAL + timedelta(seconds=1)
