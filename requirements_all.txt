@@ -254,7 +254,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.1.0
+aioesphomeapi==45.2.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -606,7 +606,7 @@ avea==1.8.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==71
+axis==72
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -651,7 +651,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.8.1
+bleak-esphome==3.9.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.0
@@ -1100,7 +1100,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==7.0.0
+gios==7.1.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1213,7 +1213,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.4.0
+habluetooth==6.7.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.4.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.1.1
+inkbird-ble==1.1.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -2647,7 +2647,7 @@ python-homewizard-energy==10.1.0
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.2.9
+python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
