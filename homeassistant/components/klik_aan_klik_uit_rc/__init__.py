@@ -1,7 +1,5 @@
 """The KlikAanKlikUit RC integration."""
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,13 +10,6 @@ from .const import CONF_TRANSMITTER
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-@dataclass(slots=True)
-class KlikAanKlikUitRuntimeData:
-    """Runtime data for the integration."""
-
-    transmitter_entity_id: str
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Setup KlikAanKlikUit RC from a config entry."""
     transmitter_entity_id = str(entry.data[CONF_TRANSMITTER])
@@ -27,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"RF transmitter entity {transmitter_entity_id} is not available"
         )
 
-    entry.runtime_data = KlikAanKlikUitRuntimeData(transmitter_entity_id)
+    entry.runtime_data = transmitter_entity_id
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
