@@ -254,7 +254,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.0.4
+aioesphomeapi==45.2.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -603,7 +603,7 @@ avea==1.8.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==71
+axis==72
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -648,7 +648,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.7.3
+bleak-esphome==3.9.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.0
@@ -1210,7 +1210,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.2.0
+habluetooth==6.5.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1421,9 +1421,6 @@ knocki==0.4.2
 
 # homeassistant.components.knx
 knx-frontend==2026.4.30.60856
-
-# homeassistant.components.konnected
-konnected==1.2.0
 
 # homeassistant.components.kraken
 krakenex==2.2.2
