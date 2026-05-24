@@ -165,10 +165,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(e)},
             ) from e
-        except (CannotConnect, Exception) as e:
+        except CannotConnect as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(e)},
+            ) from e
+        except BaseException as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(e)},
             ) from e
 
@@ -176,7 +182,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self, vocal_records: dict[str, AmazonVocalRecord]
     ) -> None:
         """Handle pushed vocal record events."""
-        self._vocal_records = vocal_records
+        self._vocal_records = {**self._vocal_records, **vocal_records}
         self.async_update_listeners()
 
     @property

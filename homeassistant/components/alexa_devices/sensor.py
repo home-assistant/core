@@ -77,15 +77,6 @@ class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
 
 
-@dataclass(frozen=True, kw_only=True)
-class AmazonVoiceEntityDescription(AmazonBaseEntityDescription):
-    """Amazon Devices voice entity description."""
-
-    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online
-    )
-
-
 SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",

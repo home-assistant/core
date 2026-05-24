@@ -48,3 +48,20 @@ async def test_history_event_is_fired(
 
     assert (state := hass.states.get("event.echo_test_voice_event"))
     assert state.attributes == snapshot
+
+
+async def test_no_vocal_record_skips_event_trigger(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a coordinator update with no vocal record skips event trigger."""
+    mock_amazon_devices_client.sync_history_state.return_value = {}
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.history_state_event_handler({})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("event.echo_test_voice_event")

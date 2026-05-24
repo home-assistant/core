@@ -2,8 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -86,31 +91,38 @@ async def test_coordinator_load_previous_devices_from_registry(
     assert coordinator.previous_devices == {TEST_DEVICE_1_SN}
 
 
-async def test_sync_history_state_cannot_authenticate(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+    ],
+)
+async def test_sync_history_state_error(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test sync_history_state raises ConfigEntryAuthFailed on CannotAuthenticate."""
-    mock_amazon_devices_client.sync_history_state.side_effect = CannotAuthenticate
+    """Test sync_history_state error handling."""
+    mock_amazon_devices_client.sync_history_state.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_sync_history_state_cannot_connect(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sync_history_state raises ConfigEntryNotReady on CannotConnect."""
-    mock_amazon_devices_client.sync_history_state.side_effect = CannotConnect
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state

@@ -6,6 +6,7 @@ from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import _LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
 
@@ -57,7 +58,17 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        vocal_record = self.coordinator.vocal_records[self.device.serial_number]
+        if not (
+            vocal_record := self.coordinator.vocal_records.get(
+                self.device.serial_number
+            )
+        ):
+            _LOGGER.debug(
+                "No vocal record found for device %s [%s]",
+                self.device.account_name,
+                self.device.serial_number,
+            )
+            return
 
         self._trigger_event(
             EVENT_TYPE,
