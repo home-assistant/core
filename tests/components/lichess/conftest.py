@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="DrNykterstein",
-        unique_id="drnykterstien",
+        unique_id="drnykterstein",
         data={CONF_API_TOKEN: "my_secret_token"},
     )
 
@@ -47,22 +47,24 @@ def mock_lichess_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.get_all.return_value = LichessUser(
-            id="drnykterstien",
+            id="drnykterstein",
             username="DrNykterstein",
             url="https://lichess.org/@/DrNykterstein",
             created_at=1420502920988,
             seen_at=1747342929853,
             play_time=999999,
         )
-        client.get_user_id.return_value = "drnykterstien"
+        client.get_user_id.return_value = "drnykterstein"
         client.get_statistics.return_value = LichessStatistics(
             blitz_rating=944,
             rapid_rating=1050,
             bullet_rating=1373,
             classical_rating=888,
+            puzzle_rating=2500,
             blitz_games=31,
             rapid_games=324,
             bullet_games=7,
             classical_games=1,
+            puzzle_games=50,
         )
         yield client
