@@ -52,12 +52,20 @@ async def test_switch_turn_on_off(
     camera_off[KEY_MOTION_DETECTION] = False
 
     # async_get_camera is fetched by the switch before calling set_camera.
+    # Use side_effect with deep-copies so the dicts aren't mutated across calls.
     # async_get_cameras is used by the coordinator to refresh state.
-    client.async_get_camera = AsyncMock(return_value=camera_on)
-    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
+    client.async_get_camera = AsyncMock(
+        side_effect=lambda _: copy.deepcopy(camera_on)
+    )
+    client.async_get_cameras = AsyncMock(
+        return_value={"cameras": [copy.deepcopy(camera_off)]}
+    )
 
     # Turn switch off.
-    with patch("homeassistant.components.motioneye.switch.asyncio.sleep"):
+    with patch(
+        "homeassistant.components.motioneye.switch.asyncio.sleep",
+        new_callable=AsyncMock,
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -77,11 +85,18 @@ async def test_switch_turn_on_off(
     assert entity_state.state == "off"
 
     # Now prepare for turn-on: get_camera returns off state, coordinator returns on.
-    client.async_get_camera = AsyncMock(return_value=camera_off)
-    client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_on]})
+    client.async_get_camera = AsyncMock(
+        side_effect=lambda _: copy.deepcopy(camera_off)
+    )
+    client.async_get_cameras = AsyncMock(
+        return_value={"cameras": [copy.deepcopy(camera_on)]}
+    )
 
     # Turn switch on.
-    with patch("homeassistant.components.motioneye.switch.asyncio.sleep"):
+    with patch(
+        "homeassistant.components.motioneye.switch.asyncio.sleep",
+        new_callable=AsyncMock,
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -232,15 +247,18 @@ async def test_switch_reverts_on_get_camera_failure(
     client.async_get_camera = AsyncMock(return_value=None)
     client.async_set_camera.reset_mock()
 
+    calls_before = client.async_get_cameras.call_count
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     # async_set_camera should NOT have been called since GET returned None.
     client.async_set_camera.assert_not_called()
 
-    # Coordinator should have been asked to refresh to revert state.
-    assert client.async_get_cameras.call_count >= 1
+    # Coordinator should have been asked to refresh to revert optimistic state.
+    assert client.async_get_cameras.call_count > calls_before
