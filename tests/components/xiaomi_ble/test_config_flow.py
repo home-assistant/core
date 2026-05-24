@@ -611,9 +611,14 @@ async def test_async_step_user_no_devices_found_2(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
-        return_value=[LYWSDCGQ_SERVICE_INFO],
+    with (
+        patch(
+            "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+            return_value=[LYWSDCGQ_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -621,6 +626,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
         "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
     ):
