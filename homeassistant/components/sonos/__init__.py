@@ -387,9 +387,7 @@ class SonosDiscoveryManager:
             """Add all speakers in a single executor job."""
             if self._stop_event.is_set():
                 # Entry was unloaded while this task was in flight; skip adding speakers.
-                _LOGGER.debug(
-                    "Entry unloaded during speaker creation, skipping adding speakers"
-                )
+                _LOGGER.debug("Config entry unloaded while adding speakers, skipping")
                 return
             for soco in socos:
                 if soco.uid in self.data.discovered:
@@ -411,7 +409,7 @@ class SonosDiscoveryManager:
             if self._stop_event.is_set():
                 # Entry was unloaded during IO; skip adding this speaker.
                 _LOGGER.debug(
-                    "Entry unloaded during speaker creation, skipping adding speaker"
+                    "Config entry unloaded while adding speaker %s, skipping", soco.uid
                 )
                 return
             if soco.uid not in self.data.boot_counts:

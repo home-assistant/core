@@ -612,6 +612,4 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
             get_info_may_proceed.set()
             await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (
-        "Entry unloaded during speaker creation, skipping adding speaker" in caplog.text
-    )
+    assert "Config entry unloaded while adding speaker" in caplog.text
