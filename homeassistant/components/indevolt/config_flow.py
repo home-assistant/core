@@ -10,11 +10,13 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_GENERATION, CONF_SERIAL_NUMBER, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+ZEROCONF_SERVICE_NAME_PREFIX = "IGEN_FW"
 
 
 class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,11 +92,14 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Handle DHCP discovery — probe the device to confirm it is an Indevolt device."""
-        host = discovery_info.ip
+        """Handle zeroconf discovery — probe the device to confirm it is an Indevolt device."""
+        if not discovery_info.name.startswith(ZEROCONF_SERVICE_NAME_PREFIX):
+            return self.async_abort(reason="not_indevolt_device")
+
+        host = discovery_info.host
 
         try:
             device_data = await self._async_get_device_data(host)
@@ -110,12 +115,12 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         self._discovered_device_data = device_data
 
-        return await self.async_step_discovery_confirm()
+        return await self.async_step_zeroconf_confirm()
 
-    async def async_step_discovery_confirm(
+    async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm DHCP discovery by user."""
+        """Confirm zeroconf discovery by user."""
         assert self._discovered_host is not None
         assert self._discovered_device_data is not None
 
@@ -132,7 +137,7 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
         # Retrieve user confirmation
         self._set_confirm_only()
         return self.async_show_form(
-            step_id="discovery_confirm",
+            step_id="zeroconf_confirm",
             description_placeholders={
                 CONF_HOST: self._discovered_host,
                 CONF_MODEL: self._discovered_device_data[CONF_MODEL],

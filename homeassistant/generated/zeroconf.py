@@ -608,6 +608,9 @@ ZEROCONF = {
             "name": "homevolt*",
         },
         {
+            "domain": "indevolt",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
