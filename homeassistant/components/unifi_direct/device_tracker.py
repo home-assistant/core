@@ -32,8 +32,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: AsyncSeeCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the legacy UniFi AP Direct device tracker."""
     import_data = {
