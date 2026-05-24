@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+from bleak.backends.device import BLEDevice
+from bluetooth_data_tools import monotonic_time_coarse
 from matter_ble_proxy import AdvertisementData
 import pytest
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.matter.ble_proxy import (
     HaBluetoothDeviceResolver,
     HaBluetoothScanSource,
@@ -17,17 +22,25 @@ from homeassistant.components.matter.ble_proxy import (
 from homeassistant.core import HomeAssistant
 
 
-def _make_service_info() -> MagicMock:
-    """Return a stub BluetoothServiceInfoBleak with realistic field values."""
-    info = MagicMock()
-    info.address = "AA:BB:CC:DD:EE:FF"
-    info.name = "TestDevice"
-    info.rssi = -55
-    info.connectable = True
-    info.service_data = {"0000fff0-0000-1000-8000-00805f9b34fb": b"sd"}
-    info.manufacturer_data = {0x004C: b"\x01\x02"}
-    info.service_uuids = ["0000fff0-0000-1000-8000-00805f9b34fb"]
-    return info
+def _make_service_info() -> BluetoothServiceInfoBleak:
+    """Return a real BluetoothServiceInfoBleak with realistic field values."""
+    address = "AA:BB:CC:DD:EE:FF"
+    name = "TestDevice"
+    return BluetoothServiceInfoBleak(
+        name=name,
+        address=address,
+        rssi=-55,
+        manufacturer_data={0x004C: b"\x01\x02"},
+        service_data={"0000fff0-0000-1000-8000-00805f9b34fb": b"sd"},
+        service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+        source="local",
+        device=BLEDevice(name=name, address=address, details={}),
+        advertisement=None,
+        connectable=True,
+        time=monotonic_time_coarse(),
+        tx_power=0,
+        raw=None,
+    )
 
 
 def test_to_advertisement_data_translates_fields() -> None:

@@ -175,8 +175,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # into every Matter setup when the server has BLE proxy disabled.
     server_info = matter_client.server_info
     if server_info and server_info.ble_proxy_enabled:
-        ble_proxy_url = _derive_ble_proxy_url(entry.data[CONF_URL])
-        if ble_proxy_url is None:
+        if "bluetooth" not in hass.config.components:
+            LOGGER.warning(
+                "Matter server reports BLE proxy support but Home Assistant's "
+                "bluetooth integration is not loaded; BLE proxy will not be used"
+            )
+        elif (ble_proxy_url := _derive_ble_proxy_url(entry.data[CONF_URL])) is None:
             LOGGER.warning(
                 "Could not derive BLE proxy endpoint from %s; BLE proxy will not be used",
                 entry.data[CONF_URL],
