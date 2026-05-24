@@ -25,12 +25,14 @@ from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
+FALLBACK_POLL_INTERVAL = timedelta(seconds=330)
 
 # INKBIRD devices fall back to a connectable poll once no active
-# advertisement has been seen for 180 seconds. Ask AUTO-mode scanners
-# to flip ACTIVE for a 10 second window every 165 seconds so we keep
-# receiving advertisements and avoid the more expensive connect path.
+# advertisement has been seen for the library's MIN_POLL_INTERVAL
+# (currently 330 seconds, sized to outlast HA's 300 second default
+# AUTO scan cadence). Ask AUTO-mode scanners to flip ACTIVE for a
+# 10 second window every 165 seconds so we keep receiving
+# advertisements and avoid the more expensive connect path.
 ACTIVE_SCAN_INTERVAL = 165.0
 ACTIVE_SCAN_DURATION = 10.0
 
