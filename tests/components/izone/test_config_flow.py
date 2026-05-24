@@ -14,9 +14,10 @@ from homeassistant.components.izone.const import (
     DATA_DISCOVERY_SERVICE,
     IZONE,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -1651,7 +1652,7 @@ async def test_async_migrate_entry_clears_legacy_data(
     entry = MockConfigEntry(
         domain=IZONE,
         version=1,
-        unique_id="000000001",
+        unique_id=IZONE,
         title=initial_title,
         data={"host": "192.0.2.1"},
     )
@@ -1669,6 +1670,155 @@ async def test_async_migrate_entry_clears_legacy_data(
     assert entry.unique_id == controller.device_uid
     assert entry.data == {}
     assert entry.title == expected_title
+
+
+@pytest.mark.parametrize(
+    ("return_value", "side_effect"),
+    [
+        pytest.param({}, None, id="no_controllers_found"),
+        pytest.param(None, OSError, id="discovery_oserror"),
+    ],
+)
+async def test_async_migrate_entry_raises_not_ready_on_discovery_failure(
+    hass: HomeAssistant,
+    return_value: dict | None,
+    side_effect: type[Exception] | None,
+) -> None:
+    """Migration raises ConfigEntryNotReady when discovery finds nothing or fails."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value=return_value,
+            side_effect=side_effect,
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await izone_component.async_migrate_entry(hass, entry)
+
+
+async def test_async_migrate_entry_raises_config_error_for_multiple_eligible(
+    hass: HomeAssistant,
+) -> None:
+    """Migration raises ConfigEntryError when multiple controllers are eligible."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    controllers = {
+        "000000001": _make_controller("000000001", "192.0.2.1"),
+        "000000002": _make_controller("000000002", "192.0.2.2"),
+    }
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value=controllers,
+        ),
+        pytest.raises(ConfigEntryError),
+    ):
+        await izone_component.async_migrate_entry(hass, entry)
+
+
+@pytest.mark.parametrize(
+    ("excluded_uid", "already_configured_uid"),
+    [
+        pytest.param("000000001", "999999999", id="filtered_by_exclude_list"),
+        pytest.param("999999999", "000000001", id="filtered_by_configured_entry"),
+    ],
+)
+async def test_async_migrate_entry_picks_single_eligible_after_filtering(
+    hass: HomeAssistant,
+    excluded_uid: str,
+    already_configured_uid: str,
+) -> None:
+    """Migration picks the one controller not filtered out.
+
+    In each case one of two discovered controllers is ineligible — either its
+    UID is in the exclude list or it is already owned by another config entry.
+    The dummy UID "999999999" is used for the filter that should have no effect.
+    """
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    hass.data[DATA_CONFIG] = {CONF_EXCLUDE: [excluded_uid]}
+    already_configured = MockConfigEntry(
+        domain=IZONE, version=2, unique_id=already_configured_uid, data={}
+    )
+    already_configured.add_to_hass(hass)
+    controllers = {
+        "000000001": _make_controller("000000001", "192.0.2.1"),
+        "000000002": _make_controller("000000002", "192.0.2.2"),
+    }
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value=controllers,
+    ):
+        migrated = await izone_component.async_migrate_entry(hass, entry)
+
+    assert migrated is True
+    assert entry.version == 2
+    assert entry.unique_id == "000000002"
+    assert entry.data == {}
+
+
+@pytest.mark.parametrize(
+    ("excluded_uid", "already_configured_uid"),
+    [
+        pytest.param("000000001", "999999999", id="all_excluded"),
+        pytest.param("999999999", "000000001", id="all_already_configured"),
+    ],
+)
+async def test_async_migrate_entry_raises_not_ready_when_no_eligible_after_filter(
+    hass: HomeAssistant,
+    excluded_uid: str,
+    already_configured_uid: str,
+) -> None:
+    """Migration raises ConfigEntryNotReady when all controllers are filtered out.
+
+    The dummy UID "999999999" is used for the filter that should have no effect.
+    """
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+    hass.data[DATA_CONFIG] = {CONF_EXCLUDE: [excluded_uid]}
+    already_configured = MockConfigEntry(
+        domain=IZONE, version=2, unique_id=already_configured_uid, data={}
+    )
+    already_configured.add_to_hass(hass)
+    controller = _make_controller("000000001", "192.0.2.1")
+
+    with (
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value={"000000001": controller},
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await izone_component.async_migrate_entry(hass, entry)
 
 
 def test_discovery_listener_methods_dispatch_expected_signals(
