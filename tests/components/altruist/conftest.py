@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 from altruistclient import AltruistDeviceModel, AltruistError
 import pytest
 
-from homeassistant.components.altruist.const import CONF_HOST, DOMAIN
+from homeassistant.components.altruist.const import DOMAIN
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture
 
