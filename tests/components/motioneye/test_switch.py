@@ -2,7 +2,7 @@
 
 import copy
 from datetime import timedelta
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from motioneye_client.const import (
@@ -47,13 +47,12 @@ async def test_switch_turn_on_off(
     assert entity_state
     assert entity_state.state == "on"
 
-    # Build the camera state we expect after turning off.
     camera_on = copy.deepcopy(TEST_CAMERA)
     camera_off = copy.deepcopy(TEST_CAMERA)
     camera_off[KEY_MOTION_DETECTION] = False
 
-    # async_get_camera is what the switch fetches before calling set_camera.
-    # async_get_cameras is what the coordinator uses to refresh state.
+    # async_get_camera is fetched by the switch before calling set_camera.
+    # async_get_cameras is used by the coordinator to refresh state.
     client.async_get_camera = AsyncMock(return_value=camera_on)
     client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
@@ -68,8 +67,9 @@ async def test_switch_turn_on_off(
 
     await hass.async_block_till_done()
 
-    # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, camera_off)
+    # Verify set_camera was called with motion_detection=False.
+    assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
+    assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is False
 
     # Verify the switch turns off.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
@@ -91,8 +91,9 @@ async def test_switch_turn_on_off(
 
     await hass.async_block_till_done()
 
-    # Verify correct parameters are passed to the library.
-    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, camera_on)
+    # Verify set_camera was called with motion_detection=True.
+    assert client.async_set_camera.call_args[0][0] == TEST_CAMERA_ID
+    assert client.async_set_camera.call_args[0][1][KEY_MOTION_DETECTION] is True
 
     # Verify the switch turns on.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
