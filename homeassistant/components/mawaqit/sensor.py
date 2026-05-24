@@ -227,7 +227,7 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: MosqueCoordinator) -> None:
         """Initialize the mosque sensor."""
         super().__init__(coordinator)
         self.entity_description = MOSQUE_SENSOR_DESCRIPTION
