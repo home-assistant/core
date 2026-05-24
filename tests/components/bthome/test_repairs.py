@@ -40,7 +40,9 @@ async def _setup_entry(
 
     saved_callback: Callable[[object, BluetoothChange], None] | None = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(
+        _hass, _callback, _matcher, _mode, *, scan_interval=None, scan_duration=None
+    ):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
