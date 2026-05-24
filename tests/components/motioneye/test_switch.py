@@ -55,7 +55,9 @@ async def test_switch_turn_on_off(
 
     # The coordinator will return camera_off after the switch is turned off.
     # async_get_camera returns a fresh copy each call so it isn't mutated.
-    client.async_get_camera = AsyncMock(side_effect=lambda _: copy.deepcopy(TEST_CAMERA))
+    client.async_get_camera = AsyncMock(
+        side_effect=lambda _: copy.deepcopy(TEST_CAMERA)
+    )
     client.async_get_cameras = AsyncMock(return_value={"cameras": [camera_off]})
 
     # Turn switch off. Patch sleep so the service call doesn't actually wait 2s.
