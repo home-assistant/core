@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blitz_games',
-    'unique_id': 'drnykterstien.blitz_games',
+    'unique_id': 'drnykterstein.blitz_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blitz_rating',
-    'unique_id': 'drnykterstien.blitz_rating',
+    'unique_id': 'drnykterstein.blitz_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -141,7 +141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bullet_games',
-    'unique_id': 'drnykterstien.bullet_games',
+    'unique_id': 'drnykterstein.bullet_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -195,7 +195,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bullet_rating',
-    'unique_id': 'drnykterstien.bullet_rating',
+    'unique_id': 'drnykterstein.bullet_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -248,7 +248,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'classical_games',
-    'unique_id': 'drnykterstien.classical_games',
+    'unique_id': 'drnykterstein.classical_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -302,7 +302,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'classical_rating',
-    'unique_id': 'drnykterstien.classical_rating',
+    'unique_id': 'drnykterstein.classical_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -318,59 +318,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '888',
-  })
-# ---
-# name: test_all_entities[sensor.drnykterstein_correspondence_rating-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.drnykterstein_correspondence_rating',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Correspondence rating',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Correspondence rating',
-    'platform': 'lichess',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'correspondence_rating',
-    'unique_id': 'drnykterstien.correspondence_rating',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.drnykterstein_correspondence_rating-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'DrNykterstein Correspondence rating',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.drnykterstein_correspondence_rating',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1600',
   })
 # ---
 # name: test_all_entities[sensor.drnykterstein_puzzle_games-entry]
@@ -408,7 +355,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'puzzle_games',
-    'unique_id': 'drnykterstien.puzzle_games',
+    'unique_id': 'drnykterstein.puzzle_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -462,7 +409,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'puzzle_rating',
-    'unique_id': 'drnykterstien.puzzle_rating',
+    'unique_id': 'drnykterstein.puzzle_rating',
     'unit_of_measurement': None,
   })
 # ---
@@ -515,7 +462,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rapid_games',
-    'unique_id': 'drnykterstien.rapid_games',
+    'unique_id': 'drnykterstein.rapid_games',
     'unit_of_measurement': 'games',
   })
 # ---
@@ -569,7 +516,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rapid_rating',
-    'unique_id': 'drnykterstien.rapid_rating',
+    'unique_id': 'drnykterstein.rapid_rating',
     'unit_of_measurement': None,
   })
 # ---
