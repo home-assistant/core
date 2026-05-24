@@ -2,12 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    DOMAIN,
-)
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.components.aurora_abb_powerone.const import ATTR_FIRMWARE, DOMAIN
+from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
