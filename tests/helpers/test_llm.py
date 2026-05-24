@@ -1493,6 +1493,72 @@ async def test_entity_control_tool_calls_supported_members_in_mixed_groups(
     assert light_calls[0].data == {"entity_id": [exposed_light.entity_id]}
 
 
+async def test_entity_control_tool_reports_unsupported_group_member_domains(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test exact entity control reports unsupported group member domains."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "group", {})
+
+    exposed_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "exposed_sensor",
+        original_name="Exposed Sensor",
+        suggested_object_id="exposed_sensor",
+    )
+    exposed_binary_sensor = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "exposed_binary_sensor",
+        original_name="Exposed Binary Sensor",
+        suggested_object_id="exposed_binary_sensor",
+    )
+    hass.states.async_set(exposed_sensor.entity_id, "23")
+    hass.states.async_set(exposed_binary_sensor.entity_id, "on")
+    test_group = await group.Group.async_create_group(
+        hass,
+        "Test Unsupported Group",
+        created_by_service=False,
+        entity_ids=[exposed_sensor.entity_id, exposed_binary_sensor.entity_id],
+        icon=None,
+        mode=None,
+        object_id="test_unsupported_group",
+        order=None,
+    )
+    await hass.async_block_till_done()
+    async_expose_entity(hass, "conversation", test_group.entity_id, True)
+
+    api = await llm.async_get_api(
+        hass,
+        "assist",
+        llm.LLMContext(
+            platform="test_platform",
+            context=Context(),
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="HassEntityTurnOff",
+            tool_args={"entity_id": test_group.entity_id},
+        )
+    )
+
+    assert result == {
+        "success": False,
+        "done": [],
+        "failed": {
+            test_group.entity_id: "Group contains domains that do not support turn_off: "
+            "binary_sensor, sensor"
+        },
+    }
+
+
 async def test_entity_control_tool_is_not_exposed_without_homeassistant_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1794,8 +1860,8 @@ async def test_selector_serializer(
     )
     assert selector_serializer(entity_control_schema) == {
         "anyOf": [
-            {"type": "string"},
-            {"type": "array", "items": {"type": "string"}},
+            {"type": "string", "format": "entity_id"},
+            {"type": "array", "items": {"type": "string", "format": "entity_id"}},
         ],
         "description": "An entity_id or comma-separated entity_ids from the static context",
     }

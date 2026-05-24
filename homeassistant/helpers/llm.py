@@ -94,7 +94,7 @@ ENTITY_CONTROL_SERVICE_MAP = {
 }
 
 
-def _entity_control_entity_ids(value: str | list) -> list[str]:
+def _entity_control_entity_ids(value: str | list[str]) -> list[str]:
     """Validate exact entity tool entity IDs."""
     return cv.entity_ids(value)
 
@@ -464,6 +464,9 @@ class EntityControlTool(Tool):
             if not entity_service_calls:
                 failed[entity_id] = (
                     f"Domain {domain} does not support {self._service_name}"
+                    if domain != GROUP_DOMAIN or not unsupported_domains
+                    else f"Group contains domains that do not support {self._service_name}: "
+                    f"{', '.join(sorted(unsupported_domains))}"
                 )
                 continue
 
@@ -968,8 +971,8 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     if schema is _entity_control_entity_ids:
         return {
             "anyOf": [
-                {"type": "string"},
-                {"type": "array", "items": {"type": "string"}},
+                {"type": "string", "format": "entity_id"},
+                {"type": "array", "items": {"type": "string", "format": "entity_id"}},
             ],
             "description": "An entity_id or comma-separated entity_ids from the static context",
         }
