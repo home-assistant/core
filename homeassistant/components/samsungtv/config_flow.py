@@ -103,6 +103,16 @@ def _mac_is_same_with_incorrect_formatting(
     )
 
 
+def _wrap_hostname(hostname: str) -> str:
+    """Wrap the hostname in brackets if it is an ipv6 address."""
+    try:
+        socket.inet_pton(socket.AF_INET6, hostname)
+    except OSError:
+        return hostname
+    else:
+        return f"[{hostname}]"
+
+
 class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -256,8 +266,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> bool:
         try:
-            self._host = await self.hass.async_add_executor_job(
-                socket.gethostbyname, user_input[CONF_HOST]
+            self._host = _wrap_hostname(
+                await self.hass.async_add_executor_job(
+                    socket.gethostbyname, user_input[CONF_HOST]
+                )
             )
         except socket.gaierror as err:
             LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
@@ -495,7 +507,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         self._udn = self._upnp_udn = _strip_uuid(discovery_info.upnp[ATTR_UPNP_UDN])
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
-            self._host = hostname
+            self._host = _wrap_hostname(hostname)
         self._manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
         self._abort_if_manufacturer_is_not_samsung()
 
@@ -526,7 +538,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
         self._mac = format_mac(discovery_info.macaddress)
-        self._host = discovery_info.ip
+        self._host = _wrap_hostname(discovery_info.ip)
         self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
@@ -538,7 +550,8 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
         self._mac = format_mac(discovery_info.properties["deviceid"])
-        self._host = discovery_info.host
+        if discovery_info.host:
+            self._host = _wrap_hostname(discovery_info.host)
         self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}

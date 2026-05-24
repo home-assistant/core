@@ -230,6 +230,36 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
+@pytest.mark.usefixtures(
+    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
+)
+async def test_user_websocket_ipv6(hass: HomeAssistant) -> None:
+    """Test starting a flow by user with an IPv6 host."""
+    with (
+        patch(
+            "homeassistant.components.samsungtv.bridge.Remote",
+            side_effect=OSError("Boom"),
+        ),
+        patch(
+            "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+            return_value="2001:db8::1",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_HOST] == "[2001:db8::1]"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert result["data"][CONF_PORT] == 8002
+
+
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api_non_ssl_only")
 async def test_user_encrypted_websocket(
     hass: HomeAssistant,
