@@ -3,8 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from aioamazondevices.const.todo import LIST_TYPE_SHOP
-from aioamazondevices.implementation.todo import is_item_complete
+from aioamazondevices.structures import AmazonListItemStatus, AmazonListType
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -20,7 +19,7 @@ from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
 
 if TYPE_CHECKING:
-    from aioamazondevices.structures import ListInfo, ListItem
+    from aioamazondevices.structures import AmazonListInfo
 
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,7 +44,7 @@ async def async_setup_entry(
     """
     coordinator = entry.runtime_data
 
-    available_lists: list[ListInfo] = coordinator.api.todo_lists
+    available_lists = coordinator.api.todo_lists
 
     async_add_entities(
         [AlexaToDoList(coordinator, alexa_list) for alexa_list in available_lists]
@@ -63,7 +62,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     )
 
     def __init__(
-        self, coordinator: AmazonDevicesCoordinator, alexa_list: ListInfo
+        self, coordinator: AmazonDevicesCoordinator, alexa_list: AmazonListInfo
     ) -> None:
         """Initialize an AlexaTodoList.
 
@@ -73,18 +72,28 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
         """
         self._coordinator: AmazonDevicesCoordinator = coordinator
-        self._list: ListInfo = alexa_list
+        self._list: AmazonListInfo = alexa_list
+
+        if alexa_list.list_type == AmazonListType.SHOP:
+            entity_description = EntityDescription(
+                key=alexa_list.id, translation_key="shop"
+            )
+
+        elif alexa_list.list_type == AmazonListType.TODO:
+            entity_description = EntityDescription(
+                key=alexa_list.id, translation_key="todo"
+            )
+        else:
+            # Custom list -> Use actual name
+            entity_description = EntityDescription(
+                key=alexa_list.id, name=alexa_list.name
+            )
 
         self._attr_unique_id = alexa_list.id
-        self._attr_name = alexa_list.name
-
-        self._attr_translation_key = (
-            "shop" if alexa_list.list_type == LIST_TYPE_SHOP else "todo"
-        )
 
         super().__init__(
             coordinator,
-            EntityDescription(key=alexa_list.id, name=alexa_list.name),
+            entity_description,
         )
 
         _LOGGER.debug(
@@ -92,20 +101,21 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
     @property
-    def todo_items(self) -> list[TodoItem]:
+    def todo_items(self) -> list[TodoItem] | None:
         """All Todo items in the list.
 
         Returns:
             List of TodoItems in the list.
         """
-        todo_items: list[ListItem] = self._coordinator.todo_items.get(self._list.id, [])
+
+        todo_items = self._coordinator.todo_items_lookup.get(self._list.id, {}).values()
 
         return [
             TodoItem(
                 uid=item.id,
                 summary=item.name,
                 status=TodoItemStatus.COMPLETED
-                if is_item_complete(item)
+                if item.status == AmazonListItemStatus.COMPLETE
                 else TodoItemStatus.NEEDS_ACTION,
             )
             for item in todo_items
@@ -154,7 +164,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="exceptions.todo_items_lookup_not_found",
-                translation_placeholders={"list_name": self._list.name},
+                translation_placeholders={"entitiy_id": self.entity_id},
             )
 
         for uid in uids:
@@ -166,7 +176,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                     translation_key="exceptions.todo_item_not_found",
                     translation_placeholders={
                         "uid": uid,
-                        "list_name": self._list.name,
+                        "entitiy_id": self.entity_id,
                     },
                 )
             _LOGGER.debug(
@@ -207,7 +217,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="exceptions.todo_items_lookup_not_found",
-                translation_placeholders={"list_name": self._list.name},
+                translation_placeholders={"entitiy_id": self.entity_id},
             )
 
         existing_item = list_items_lookup.get(item.uid)
@@ -218,14 +228,14 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="exceptions.todo_item_not_found",
                 translation_placeholders={
                     "uid": item.uid,
-                    "list_name": self._list.name,
+                    "entitiy_id": self.entity_id,
                 },
             )
 
         # Check what has changed
-        has_completed_changed = is_item_complete(existing_item) != (
-            item.status == TodoItemStatus.COMPLETED
-        )
+        has_completed_changed = (
+            existing_item.status == AmazonListItemStatus.COMPLETE
+        ) != (item.status == TodoItemStatus.COMPLETED)
         has_summary_changed = existing_item.name != item.summary
 
         if has_completed_changed:

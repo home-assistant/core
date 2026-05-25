@@ -8,7 +8,12 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice, ListItem
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonListEvent,
+    AmazonListEventType,
+    AmazonListItem,
+)
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -73,8 +78,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             if routine.domain == Platform.BUTTON
         }
 
-        self._list_items: dict[str, list[ListItem]] = {}
-        self._list_items_lookup: dict[str, dict[str, ListItem]] = {}
+        self._list_items_lookup: dict[str, dict[str, AmazonListItem]] = {}
 
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
@@ -157,28 +161,27 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 entity_registry.async_remove(entity_id)
 
     async def sync_todo_list_items(self) -> None:
-        """Sync todo items."""
-        await self.api.sync_todo_list_items()
+        """Sync todo items. Only used for initial sync."""
+        for todo_list in self.api.todo_lists:
+            self._list_items_lookup[todo_list.id] = await self.api.get_todo_list_items(
+                todo_list.id
+            )
 
-    async def todo_event_handler(self, all_items: dict[str, list[ListItem]]):
+    async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
-        self._list_items.update(all_items)
-
-        for list_id in all_items:
-            item_lookup: dict[str, ListItem] = {
-                item.id: item for item in self._list_items[list_id]
-            }
-
-            self._list_items_lookup[list_id] = item_lookup
+        if list_event.type == AmazonListEventType.DELETED:
+            del self._list_items_lookup[list_event.list_id][list_event.item_id]
+        elif (
+            list_event.type
+            in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
+        ) and list_event.items:
+            self._list_items_lookup[list_event.list_id][list_event.item_id] = (
+                list_event.items
+            )
 
         self.async_update_listeners()
 
     @property
-    def todo_items(self) -> dict[str, list[ListItem]]:
-        """Current todo_items."""
-        return self._list_items
-
-    @property
-    def todo_items_lookup(self) -> dict[str, dict[str, ListItem]]:
-        """Current todo_items_lookup."""
+    def todo_items_lookup(self) -> dict[str, dict[str, AmazonListItem]]:
+        "Current todo_items."
         return self._list_items_lookup

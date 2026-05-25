@@ -8,9 +8,6 @@
     "todo": {
       "shop": {
         "default": "mdi:cart"
-      },
-      "todo": {
-        "default": "mdi:clipboard-list"
       }
     }
   },
