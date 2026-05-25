@@ -191,8 +191,15 @@ class SonosDiscoveryManager:
         # tearing down speakers and the event listener. Every async_add_speakers
         # call holds creation_lock for its entire duration (including blocking
         # network IO), so acquiring it here serializes cleanup after creation.
-        async with self.creation_lock:
-            pass
+        # Bound the wait so shutdown stays responsive under poor network conditions.
+        try:
+            async with asyncio.timeout(10):
+                async with self.creation_lock:
+                    pass
+        except TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for in-flight speaker discovery to complete"
+            )
         self._stop_manual_heartbeat()
 
     def is_device_invisible(self, ip_address: str) -> bool:
