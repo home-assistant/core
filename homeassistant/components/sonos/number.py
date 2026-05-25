@@ -167,6 +167,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
         await self.hass.async_add_executor_job(self.poll_state)
+        self.async_write_ha_state()
 
     @soco_error()
     def poll_state(self) -> None:
@@ -188,9 +189,3 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set the group volume (0–100), or player volume when ungrouped."""
         self.speaker.set_group_volume(int(value + 0.5))
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Optimistically update state, then write in executor."""
-        self.speaker.group_volume = int(value + 0.5)
-        self.async_write_ha_state()
-        await self.hass.async_add_executor_job(self.set_native_value, value)

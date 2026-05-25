@@ -124,7 +124,7 @@ async def test_group_volume_sets_backend_and_updates_state(
     async_setup_two_sonos_speakers,
     soco_factory: SoCoMockFactory,
 ) -> None:
-    """Setting 33 writes group.volume=33; HA state updates after write completes."""
+    """Setting 33 writes group.volume=33; state update is driven by subscription events."""
     await async_setup_two_sonos_speakers()
     soco_lr = soco_factory.mock_list["10.10.10.1"]
 
@@ -134,14 +134,8 @@ async def test_group_volume_sets_backend_and_updates_state(
         {ATTR_ENTITY_ID: "number.living_room_group_volume", "value": 33},
         blocking=True,
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
-    await hass.async_block_till_done()
 
     assert soco_lr.group.volume == 33
-
-    state = hass.states.get("number.living_room_group_volume")
-    assert state is not None
-    assert int(float(state.state)) == 33
 
 
 async def test_group_volume_rounds_in_range(
