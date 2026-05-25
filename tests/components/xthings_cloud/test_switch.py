@@ -56,20 +56,6 @@ async def test_switches(
             SERVICE_TURN_OFF,
             "async_plug_off",
         ),
-        (
-            "switch.smart_plug_100",
-            "dev_plug_002",
-            "switch",
-            SERVICE_TURN_ON,
-            "async_switch_on",
-        ),
-        (
-            "switch.smart_plug_100",
-            "dev_plug_002",
-            "switch",
-            SERVICE_TURN_OFF,
-            "async_switch_off",
-        ),
     ],
 )
 async def test_turn_on_off(

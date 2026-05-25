@@ -26,7 +26,7 @@ async def async_setup_entry(
     entities = [
         XthingsCloudLight(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
-        if device_data["type"] == "light"
+        if device_data.get("type") in ("light", "switch")
     ]
     async_add_entities(entities)
 
@@ -111,11 +111,17 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         has_brightness = ATTR_BRIGHTNESS in kwargs
         # Only send on command when no color/brightness adjustment
         if not has_color and not has_brightness:
-            await client.async_brite_on(self._device_id)
+            if self.device_data.get("type") == "switch":
+                await client.async_switch_on(self._device_id)
+            else:
+                await client.async_brite_on(self._device_id)
         # Adjust brightness (standalone, no color change)
         if has_brightness and not has_color:
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            await client.async_brite_brightness(self._device_id, brightness)
+            if self.device_data.get("type") == "switch":
+                await client.async_switch_brightness(self._device_id, brightness)
+            else:
+                await client.async_brite_brightness(self._device_id, brightness)
         # Adjust HS color
         if ATTR_HS_COLOR in kwargs:
             hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -152,4 +158,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self.coordinator.client.async_brite_off(self._device_id)
+        if self.device_data.get("type") == "switch":
+            await self.coordinator.client.async_switch_off(self._device_id)
+        else:
+            await self.coordinator.client.async_brite_off(self._device_id)
