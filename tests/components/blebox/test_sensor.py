@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, PropertyMock
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.blebox.const import OPEN_STATUS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -154,3 +155,77 @@ async def test_airsensor_update(airsensor, hass: HomeAssistant) -> None:
     )
 
     assert state.state == "49"
+
+
+@pytest.fixture(name="open_status_sensor")
+def open_status_sensor_fixture():
+    """Return a default openStatus sensor mock."""
+    feature = mock_feature(
+        "sensors",
+        blebox_uniapi.sensor.GenericSensor,
+        unique_id="BleBox-openSensor-1afe34db9437-0.openStatus",
+        full_name="openSensor-0.openStatus",
+        device_class="openStatus",
+        native_value=None,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My open sensor")
+    type(product).model = PropertyMock(return_value="openSensor")
+    return (feature, "sensor.my_open_sensor_opensensor_0_openstatus")
+
+
+async def test_open_status_sensor_init(open_status_sensor, hass: HomeAssistant) -> None:
+    """Test openStatus sensor initial state is unknown."""
+    _, entity_id = open_status_sensor
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes["options"] == list(OPEN_STATUS.values())
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param(0, "open", id="0_open"),
+        pytest.param(1, "unclosed_or_unlocked", id="1_unclosed_or_unlocked"),
+        pytest.param(2, "ajar", id="2_ajar"),
+        pytest.param(3, "closed_but_unlocked", id="3_closed_but_unlocked"),
+        pytest.param(4, "closed", id="4_closed"),
+    ],
+)
+async def test_open_status_sensor_value_mapping(
+    open_status_sensor,
+    hass: HomeAssistant,
+    raw_value: int,
+    expected_state: str,
+) -> None:
+    """Test that each raw numeric openStatus value maps to the correct string state."""
+    feature_mock, entity_id = open_status_sensor
+
+    def set_value():
+        feature_mock.native_value = raw_value
+
+    feature_mock.async_update = AsyncMock(side_effect=set_value)
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+    assert state.state in OPEN_STATUS.values()
+
+
+async def test_open_status_sensor_none_value(
+    open_status_sensor, hass: HomeAssistant
+) -> None:
+    """Test that a None native_value yields an unknown state."""
+    feature_mock, entity_id = open_status_sensor
+
+    def set_none():
+        feature_mock.native_value = None
+
+    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
