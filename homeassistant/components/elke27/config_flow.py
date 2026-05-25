@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, is_dataclass
+import re
 from typing import Any
 
 from elke27_lib import ClientConfig, LinkKeys
@@ -30,6 +31,8 @@ CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
 CONF_PANEL_INFO = "panel_info"
 CONF_TABLE_INFO = "table_info"
+
+_UNIQUE_ID_RE = re.compile(r"[^a-z0-9]")
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -185,6 +188,11 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         link_keys_json = link_keys.to_json()
+        panel_unique_id = _panel_unique_id(panel_info)
+        if panel_unique_id is not None:
+            await self.async_set_unique_id(panel_unique_id)
+            if reauth_entry is None:
+                self._abort_if_unique_id_configured()
         data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -223,6 +231,20 @@ def _panel_name(panel_info: dict[str, Any]) -> str | None:
         or panel_info.get("serial")
         or panel_info.get("panel_serial")
     )
+
+
+def _panel_unique_id(panel_info: dict[str, Any]) -> str | None:
+    """Return the stable panel identifier from panel info."""
+    unique_id = (
+        panel_info.get("serial")
+        or panel_info.get("panel_serial")
+        or panel_info.get("mac")
+        or panel_info.get("panel_mac")
+    )
+    if unique_id is None:
+        return None
+    normalized = _UNIQUE_ID_RE.sub("", str(unique_id).lower())
+    return normalized or None
 
 
 def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:

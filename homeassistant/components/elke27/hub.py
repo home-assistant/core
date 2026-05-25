@@ -200,7 +200,8 @@ class Elke27Hub:
         if listener in self._typed_callbacks:
             unsubscribe = self._typed_callbacks.pop(listener)
             if unsubscribe is not None:
-                unsubscribe()
+                with contextlib.suppress(Exception):
+                    unsubscribe()
             return True
         client = self._client
         if client is None:
