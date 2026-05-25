@@ -15,7 +15,7 @@
           "broadcast_address": "The IP address of the host to send the magic packet to. Defaults to `255.255.255.255` and is normally not changed.",
           "broadcast_port": "The port to send the magic packet to. Defaults to `9` and is normally not changed.",
           "mac": "MAC address of the device to wake up.",
-          "secureon_password": "The SecureOn password to append to the magic packet."
+          "secureon_password": "The SecureOn password in 6 bytes hexadecimal format to append to the magic packet."
         }
       }
     }
