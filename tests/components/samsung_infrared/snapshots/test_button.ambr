@@ -173,6 +173,7 @@
     'button.samsung_tv_number_8',
     'button.samsung_tv_number_9',
     'button.samsung_tv_ok',
+    'button.samsung_tv_power',
     'button.samsung_tv_previous_channel',
     'button.samsung_tv_record',
     'button.samsung_tv_red',

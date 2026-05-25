@@ -87,6 +87,9 @@
       "ok": {
         "name": "[%key:common::entity::button::ok::name%]"
       },
+      "power": {
+        "name": "[%key:common::entity::button::power::name%]"
+      },
       "previous_channel": {
         "name": "Previous channel"
       },

@@ -66,6 +66,7 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
+        ("button.samsung_tv_power", SamsungTVCode.POWER),
         ("button.samsung_tv_source", SamsungTVCode.SOURCE),
         ("button.samsung_tv_settings", SamsungTVCode.SETTINGS),
         ("button.samsung_tv_info", SamsungTVCode.INFO),

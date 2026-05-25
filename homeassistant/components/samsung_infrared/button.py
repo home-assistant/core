@@ -25,6 +25,9 @@ class SamsungIrButtonEntityDescription(ButtonEntityDescription):
 
 TV_BUTTON_DESCRIPTIONS: tuple[SamsungIrButtonEntityDescription, ...] = (
     SamsungIrButtonEntityDescription(
+        key="power", translation_key="power", command_code=SamsungTVCode.POWER
+    ),
+    SamsungIrButtonEntityDescription(
         key="source", translation_key="source", command_code=SamsungTVCode.SOURCE
     ),
     SamsungIrButtonEntityDescription(
