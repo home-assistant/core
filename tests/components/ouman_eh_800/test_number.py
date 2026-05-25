@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from ouman_eh_800_api import (
+    FloatControlOumanEndpoint,
     IntControlOumanEndpoint,
     L1BaseEndpoints,
     L1RoomSensor,
@@ -68,7 +69,7 @@ async def test_async_set_native_value(
     hass: HomeAssistant,
     mock_ouman_client: AsyncMock,
     entity_id: str,
-    endpoint: IntControlOumanEndpoint,
+    endpoint: IntControlOumanEndpoint | FloatControlOumanEndpoint,
     initial_value: float,
     target_value: float,
     set_value: float,
