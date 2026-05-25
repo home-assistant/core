@@ -5,6 +5,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -72,11 +73,11 @@ async def test_entities(
         (SERVICE_MEDIA_PLAY, {}, SamsungTVCode.PLAY),
         (SERVICE_MEDIA_PAUSE, {}, SamsungTVCode.PAUSE),
         (SERVICE_MEDIA_STOP, {}, SamsungTVCode.STOP),
-        (SERVICE_SELECT_SOURCE, {"source": "tv"}, SamsungTVCode.TV),
-        (SERVICE_SELECT_SOURCE, {"source": "hdmi_1"}, SamsungTVCode.HDMI_1),
-        (SERVICE_SELECT_SOURCE, {"source": "hdmi_2"}, SamsungTVCode.HDMI_2),
-        (SERVICE_SELECT_SOURCE, {"source": "hdmi_3"}, SamsungTVCode.HDMI_3),
-        (SERVICE_SELECT_SOURCE, {"source": "hdmi_4"}, SamsungTVCode.HDMI_4),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "tv"}, SamsungTVCode.TV),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_1"}, SamsungTVCode.HDMI_1),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_2"}, SamsungTVCode.HDMI_2),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_3"}, SamsungTVCode.HDMI_3),
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi_4"}, SamsungTVCode.HDMI_4),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -104,7 +105,9 @@ async def test_media_player_action_sends_correct_code(
     if service == SERVICE_SELECT_SOURCE:
         state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
         assert state is not None
-        assert state.attributes.get("source") == service_data["source"]
+        assert (
+            state.attributes.get(ATTR_INPUT_SOURCE) == service_data[ATTR_INPUT_SOURCE]
+        )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -117,7 +120,10 @@ async def test_select_invalid_source(
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "source": "invalid_source"},
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_INPUT_SOURCE: "invalid_source",
+            },
             blocking=True,
         )
 
