@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
@@ -21,10 +23,10 @@ from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 ENTITY_ID = "fan.novy_cooker_hood"
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_turn_on_calibrates_to_level_1(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """Default turn_on sends 4 minus + 1 plus and lands at 25%."""
     state = hass.states.get(ENTITY_ID)
@@ -49,10 +51,10 @@ async def test_turn_on_calibrates_to_level_1(
     assert all(c.context is context for c in mock_rf_entity.send_command_calls)
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_turn_on_with_percentage_calibrates_to_level(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """turn_on with percentage targets the matching level via calibration."""
     await hass.services.async_call(
@@ -69,10 +71,10 @@ async def test_turn_on_with_percentage_calibrates_to_level(
     assert len(mock_rf_entity.send_command_calls) == 6
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_set_percentage_zero_turns_off(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """set_percentage(0) turns the fan off via the calibration sequence."""
     await hass.services.async_call(
@@ -89,10 +91,10 @@ async def test_set_percentage_zero_turns_off(
     assert len(mock_rf_entity.send_command_calls) == 4
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_turn_off_sends_four_minuses(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """turn_off sends 4 minus presses."""
     await hass.services.async_call(
@@ -109,10 +111,10 @@ async def test_turn_off_sends_four_minuses(
     assert len(mock_rf_entity.send_command_calls) == 4
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_set_percentage_calibrates(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """set_percentage(75) sends 4 minus + 3 plus and lands at level 3."""
     await hass.services.async_call(
@@ -129,10 +131,10 @@ async def test_set_percentage_calibrates(
     assert len(mock_rf_entity.send_command_calls) == 7
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_increase_speed_sends_single_plus(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """increase_speed sends one plus and bumps level by one (no recalibration)."""
     await hass.services.async_call(
@@ -201,10 +203,10 @@ async def test_decrease_speed_sends_single_minus(
     assert len(mock_rf_entity.send_command_calls) == 1
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_increase_speed_with_step_sends_n_presses(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """increase_speed with percentage_step sends N plus presses (no recalibration)."""
     await hass.services.async_call(
@@ -246,10 +248,10 @@ async def test_decrease_speed_with_step_sends_n_presses(
     assert len(mock_rf_entity.send_command_calls) == 2
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_decrease_speed_clamps_at_off(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """decrease_speed at level 0 still sends one minus but level stays at 0."""
     await hass.services.async_call(
@@ -265,10 +267,10 @@ async def test_decrease_speed_clamps_at_off(
     assert len(mock_rf_entity.send_command_calls) == 1
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_set_percentage_sleeps_between_presses(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """A delay is awaited between every RF press, including between sequences."""
     delay = 0.2
