@@ -42,7 +42,6 @@
       "room_temperature_fine_tuning": {
         "name": "Room temperature fine tuning"
       },
-      "room_temperature_setpoint_user": { "name": "Room temperature setpoint" },
       "temperature_drop": { "name": "Temperature drop" },
       "trend_sampling_interval": { "name": "Trend sampling interval" },
       "water_out_maximum_temperature": {

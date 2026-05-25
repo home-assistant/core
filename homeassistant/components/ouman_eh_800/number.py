@@ -141,11 +141,6 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
-    L1RoomSensor.ROOM_TEMPERATURE_SETPOINT_USER: _temperature_number(
-        device=OumanDevice.L1,
-        key="room_temperature_setpoint_user",
-        entity_category=None,
-    ),
     L1ConstantTempMode.CONSTANT_TEMP_SETPOINT: _temperature_number(
         device=OumanDevice.L1,
         key="constant_temp_setpoint",
@@ -211,11 +206,6 @@ NUMBER_DESCRIPTIONS: dict[
         device=OumanDevice.L2,
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
-    ),
-    L2RoomSensor.ROOM_TEMPERATURE_SETPOINT_USER: _temperature_number(
-        device=OumanDevice.L2,
-        key="room_temperature_setpoint_user",
-        entity_category=None,
     ),
 }
 

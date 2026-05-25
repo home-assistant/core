@@ -2494,67 +2494,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 50.0,
-      'min': 5.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Room temperature setpoint',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Room temperature setpoint',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'room_temperature_setpoint_user',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_room_temperature_setpoint_user',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Room temperature setpoint',
-      'max': 50.0,
-      'min': 5.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
-  })
-# ---
 # name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3041,67 +2980,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 50.0,
-      'min': 5.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Room temperature setpoint',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Room temperature setpoint',
-    'platform': 'ouman_eh_800',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'room_temperature_setpoint_user',
-    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_room_temperature_setpoint_user',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Room temperature setpoint',
-      'max': 50.0,
-      'min': 5.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
   })
 # ---
 # name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_temperature_drop-entry]

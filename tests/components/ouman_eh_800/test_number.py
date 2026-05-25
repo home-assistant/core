@@ -6,6 +6,7 @@ from ouman_eh_800_api import (
     IntControlOumanEndpoint,
     L1BaseEndpoints,
     L1RoomSensor,
+    L1ThreePointCurve,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
 )
@@ -46,11 +47,11 @@ async def test_entities(
     ("entity_id", "endpoint", "initial_value", "target_value", "set_value"),
     [
         pytest.param(
-            "number.heating_circuit_1_patterilammitys_room_temperature_setpoint",
-            L1RoomSensor.ROOM_TEMPERATURE_SETPOINT_USER,
-            21.0,
-            22.0,
-            22,
+            "number.heating_circuit_1_patterilammitys_curve_0degc_temperature",
+            L1ThreePointCurve.CURVE_0_TEMP,
+            41.0,
+            42.0,
+            42,
             id="int_setpoint",
         ),
         pytest.param(
