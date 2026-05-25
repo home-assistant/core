@@ -126,10 +126,10 @@
         "state_attributes": {
           "source": {
             "state": {
-              "hdmi_1": "[%key:common::entity::button::hdmi_1::name%]",
-              "hdmi_2": "[%key:common::entity::button::hdmi_2::name%]",
-              "hdmi_3": "[%key:common::entity::button::hdmi_3::name%]",
-              "hdmi_4": "[%key:common::entity::button::hdmi_4::name%]",
+              "hdmi_1": "HDMI 1",
+              "hdmi_2": "HDMI 2",
+              "hdmi_3": "HDMI 3",
+              "hdmi_4": "HDMI 4",
               "tv": "[%key:common::generic::tv%]"
             }
           }
