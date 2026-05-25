@@ -182,9 +182,9 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     ) -> ConfigFlowResult:
         """User-started flow: offer configuration choices for discovered controllers.
 
-        If discovery is already running, a rescan is requested and this step waits briefly for
-        replies. If discovery is not running yet, it is started and the initial discovery cycle
-        is used without forcing an immediate second rescan.
+        Discovery is started if not yet running, then a fresh discovery cycle is triggered
+        and this step waits briefly for replies. The pizone library's built-in coalescing
+        avoids redundant broadcasts when discovery was just started.
 
         While this interactive flow is active, runtime integration discovery remains
         blocked by ``_async_blocks_runtime_integration_discovery`` to avoid UI races.
@@ -194,7 +194,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         if self._async_in_progress(include_uninitialized=True):
             return self.async_abort(reason="already_in_progress")
 
-        # refresh=True requests a rescan only when discovery is already running.
         try:
             controllers = await async_discover_controllers(self.hass, refresh=True)
         except OSError:
@@ -263,9 +262,8 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             for ctrl in self._user_discovered_controllers:
                 if ctrl.device_uid == primary.device_uid:
                     continue
-                # Fan out confirm flows for all the other discovered controllers in parallel with the selected one.
-                # These will appear as discovered controllers, which is really the only way to manage this without
-                # it getting very messy.
+                # Using integration_discovery lets HA's deduplication guard prevent stacking
+                # flows for UIDs already in progress or already configured.
                 self._async_schedule_integration_discovery_flow(
                     ctrl.device_uid,
                     ctrl.device_ip,
