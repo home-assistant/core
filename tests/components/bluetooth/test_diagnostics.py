@@ -325,8 +325,10 @@ async def test_diagnostics_macos(
                 "Core Bluetooth": {
                     "adapter_type": None,
                     "address": "00:00:00:00:00:00",
+                    "advertise": True,
                     "manufacturer": "Apple",
                     "passive_scan": False,
+                    "powered": True,
                     "product": "Unknown MacOS Model",
                     "product_id": "Unknown",
                     "sw_version": ANY,
@@ -346,8 +348,10 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "adapter_type": None,
                         "address": "00:00:00:00:00:00",
+                        "advertise": True,
                         "manufacturer": "Apple",
                         "passive_scan": False,
+                        "powered": True,
                         "product": "Unknown MacOS Model",
                         "product_id": "Unknown",
                         "sw_version": ANY,
