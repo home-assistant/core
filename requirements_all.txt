@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.3
+dbus-fast==5.0.9
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
