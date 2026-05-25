@@ -9,7 +9,7 @@
     "step": {
       "confirm": {
         "data": {
-          "model": "[%key:common::config_flow::data::model%]",
+          "model": "Model",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "MAC: {mac}",
@@ -18,7 +18,7 @@
       "manual": {
         "data": {
           "mac": "MAC Address",
-          "model": "[%key:common::config_flow::data::model%]",
+          "model": "Model",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "Enter device MAC address and select model.",
@@ -26,7 +26,7 @@
       },
       "reconfigure": {
         "data": {
-          "model": "[%key:common::config_flow::data::model%]"
+          "model": "Model"
         },
         "description": "Update settings for {device_name}.",
         "title": "Reconfigure Device"
@@ -162,7 +162,7 @@
     "step": {
       "init": {
         "data": {
-          "model": "[%key:common::config_flow::data::model%]"
+          "model": "Model"
         },
         "title": "Qingping Options"
       }
