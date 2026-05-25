@@ -1,6 +1,6 @@
 """Tests for the Novy Hood fan platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
@@ -289,7 +289,7 @@ async def test_set_percentage_sleeps_between_presses(
         )
 
     assert len(mock_rf_entity.send_command_calls) == 7
-    assert mock_sleep.await_args_list == [((delay,),)] * 6
+    assert mock_sleep.await_args_list == [call(delay)] * 6
 
 
 async def test_restore_state(
