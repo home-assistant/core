@@ -184,6 +184,7 @@ PLATFORMS_BY_TYPE = {
         Platform.LOCK,
         Platform.SENSOR,
     ],
+    SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
