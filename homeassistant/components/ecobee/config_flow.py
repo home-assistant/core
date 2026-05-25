@@ -15,7 +15,7 @@ from pyecobee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
@@ -203,6 +203,9 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _reauth_entry(self):
         """Return the existing config entry if this is a reauth flow."""
-        if self.source != "reauth":
+        if self.source != SOURCE_REAUTH:
             return None
-        return self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        entry_id = self.context.get("entry_id")
+        if entry_id is None:
+            return None
+        return self.hass.config_entries.async_get_entry(entry_id)

@@ -319,13 +319,12 @@ async def test_password_login_with_mfa_challenge_succeeds(hass: HomeAssistant) -
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    challenge = _mfa_challenge()
     with patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"
     ) as mock_flow_ecobee:
         flow_instance = mock_flow_ecobee.return_value
-        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
-            _mfa_challenge()
-        )
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(challenge)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -352,7 +351,7 @@ async def test_password_login_with_mfa_challenge_succeeds(hass: HomeAssistant) -
         CONF_PASSWORD: "test-password",
         CONF_REFRESH_TOKEN: "test-token-after-mfa",
     }
-    flow_instance.submit_mfa_code.assert_called_once()
+    flow_instance.submit_mfa_code.assert_called_once_with(challenge, "123456")
 
 
 @pytest.mark.parametrize(
@@ -452,13 +451,12 @@ async def test_reauth_flow_with_mfa_challenge(hass: HomeAssistant) -> None:
     result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
+    challenge = _mfa_challenge()
     with patch(
         "homeassistant.components.ecobee.config_flow.Ecobee"
     ) as mock_flow_ecobee:
         flow_instance = mock_flow_ecobee.return_value
-        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
-            _mfa_challenge()
-        )
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(challenge)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
@@ -477,3 +475,4 @@ async def test_reauth_flow_with_mfa_challenge(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_REFRESH_TOKEN] == "reauth-refresh-token"
     assert entry.data[CONF_PASSWORD] == "new-password"
+    flow_instance.submit_mfa_code.assert_called_once_with(challenge, "123456")

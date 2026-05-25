@@ -116,8 +116,8 @@ class EcobeeData:
             ) from err
         except EcobeeAuthFailedError as err:
             raise ConfigEntryAuthFailed("ecobee rejected stored credentials") from err
-        except EcobeeAuthUnknownError as err:
-            _LOGGER.error("Unexpected error refreshing ecobee tokens: %s", err)
+        except EcobeeAuthUnknownError:
+            _LOGGER.exception("Unexpected error refreshing ecobee tokens")
             return False
 
         if success:
