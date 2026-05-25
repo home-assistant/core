@@ -106,7 +106,9 @@ class Elke27Hub:
                 raise ConfigEntryNotReady(msg)
 
             try:
-                await client.async_connect(self._host, self._port, link_keys)
+                await client.async_connect(
+                    host=self._host, port=self._port, link_keys=link_keys
+                )
                 ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
                 if not ready:
                     _raise_not_ready()
