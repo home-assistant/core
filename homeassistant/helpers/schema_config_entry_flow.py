@@ -180,25 +180,7 @@ class SchemaCommonFlowHandler:
     ) -> ConfigFlowResult:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
-
-        if (
-            user_input is not None
-            and (data_schema := await self._get_schema(form_step))
-            and data_schema.schema
-            and not self._handler.show_advanced_options
-        ):
-            # Add advanced field default if not set
-            for key in data_schema.schema:
-                if isinstance(key, (vol.Optional, vol.Required)):
-                    if (
-                        key.description
-                        and key.description.get("advanced")
-                        and key.default is not vol.UNDEFINED
-                        and key not in self._options
-                    ):
-                        user_input[str(key.schema)] = cast(
-                            Callable[[], Any], key.default
-                        )()
+        data_schema = await self._get_schema(form_step)
 
         if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
@@ -230,12 +212,6 @@ class SchemaCommonFlowHandler:
                 if (
                     isinstance(key, vol.Optional)
                     and key not in user_input
-                    and not (
-                        # don't remove advanced keys, if they are hidden
-                        key.description
-                        and key.description.get("advanced")
-                        and not self._handler.show_advanced_options
-                    )
                     and not (
                         # don't remove read_only keys
                         isinstance(data_schema.schema[key], selector.Selector)
