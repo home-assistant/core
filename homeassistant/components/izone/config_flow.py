@@ -250,12 +250,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         )
 
         if user_input is not None:
-            try:
-                payload = selection_schema(user_input)
-            except vol.Invalid:
-                return self.async_abort(reason="no_devices_found")
-
-            selected_uid = payload[SELECTED_CONTROLLER_UID]
+            selected_uid = user_input[SELECTED_CONTROLLER_UID]
             if (primary := by_uid.get(selected_uid)) is None:
                 return self.async_abort(reason="no_devices_found")
 
