@@ -99,6 +99,50 @@ async def test_connect_wait_ready_false_disconnects(
     client.async_disconnect.assert_awaited_once()
 
 
+async def test_connect_failure_cleans_subscriptions(hass: HomeAssistant) -> None:
+    """Test hub connect clears subscriptions when typed resubscribe fails."""
+    client = AsyncMock()
+    client.async_connect = AsyncMock(return_value=None)
+    client.set_client_identity = Mock()
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    unsubscribe = Mock()
+    typed_unsubscribe = Mock()
+    client.subscribe = Mock(return_value=unsubscribe)
+    client.subscribe_typed = Mock(
+        side_effect=(typed_unsubscribe, RuntimeError("subscribe failed"))
+    )
+
+    def _callback_one(*_args: Any) -> None:
+        return None
+
+    def _callback_two(*_args: Any) -> None:
+        return None
+
+    with patch(
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
+    ):
+        hub = Elke27Hub(
+            hass,
+            "192.168.1.71",
+            2101,
+            LinkKeys("tk", "lk", "lh").to_json(),
+            "112233445566",
+            None,
+        )
+        hub._typed_callbacks = {_callback_one: None, _callback_two: None}
+        with pytest.raises(RuntimeError, match="subscribe failed"):
+            await hub.async_connect()
+
+    unsubscribe.assert_called_once()
+    typed_unsubscribe.assert_called_once()
+    client.async_disconnect.assert_awaited_once()
+    assert hub._connection_unsubscribe is None
+    assert hub._typed_callbacks == {_callback_one: None, _callback_two: None}
+    assert hub._client is None
+
+
 async def test_connect_replaces_client_without_unavailable_log(
     hass: HomeAssistant,
 ) -> None:
@@ -530,7 +574,7 @@ async def test_zone_bypass_validation_and_errors(
     hub._client = SimpleNamespace(
         async_set_zone_bypass=AsyncMock(side_effect=Elke27InvalidArgument("bad"))
     )
-    with pytest.raises(Exception, match=r"PIN=.*required to bypass zones"):
+    with pytest.raises(Elke27PinRequiredError, match=r"PIN=.*required to bypass zones"):
         await hub.async_set_zone_bypass(1, bypassed=True, pin=None)
     hub._client.async_set_zone_bypass.side_effect = Elke27InvalidArgument(
         "PIN must be a non-empty digit string."
@@ -557,7 +601,7 @@ async def test_arm_and_disarm_area_errors(
         None,
     )
     hub._client = SimpleNamespace(async_arm_area=AsyncMock(return_value=None))
-    with pytest.raises(Exception, match=r"PIN=.*required to arm areas"):
+    with pytest.raises(Elke27PinRequiredError, match=r"PIN=.*required to arm areas"):
         await hub.async_arm_area(1, "ARMED_AWAY", pin=None)
     hub._client.async_arm_area.side_effect = Elke27InvalidArgument(
         "PIN must be a non-empty digit string."

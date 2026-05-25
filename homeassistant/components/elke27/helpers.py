@@ -62,7 +62,7 @@ def device_info_for_entry(
     panel_serial = get_panel_field(snapshot, hub.panel_name, "serial")
     model = get_panel_field(snapshot, hub.panel_name, "model")
     firmware = get_panel_field(snapshot, hub.panel_name, "firmware")
-    identifier = unique_base(hub, coordinator, entry)
+    identifier = unique_base(entry)
     identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -76,11 +76,7 @@ def device_info_for_entry(
     )
 
 
-def unique_base(
-    hub: Elke27Hub,
-    coordinator: Elke27DataUpdateCoordinator,
-    entry: Elke27ConfigEntry,
-) -> str:
+def unique_base(entry: Elke27ConfigEntry) -> str:
     """Return the stable unique ID base for this config entry."""
     client_id = entry.data.get(CONF_CLIENT_ID)
     if client_id:

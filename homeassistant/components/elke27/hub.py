@@ -120,9 +120,7 @@ class Elke27Hub:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
             except Exception:
-                with contextlib.suppress(Exception):
-                    await client.async_disconnect()
-                self._client = None
+                await self._async_disconnect(log_unavailable=False)
                 raise
 
     async def async_disconnect(self) -> None:
