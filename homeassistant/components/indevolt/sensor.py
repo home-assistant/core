@@ -613,6 +613,16 @@ SENSORS: Final = (
     ),
     # Battery Pack MOS Temperature
     IndevoltSensorEntityDescription(
+        key=IndevoltBattery.MAIN_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="main_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
         key=IndevoltBattery.PACK_1_MOS_TEMPERATURE,
         generation=(2,),
         translation_key="battery_pack_1_mos_temperature",

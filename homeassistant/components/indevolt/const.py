@@ -116,6 +116,7 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         IndevoltBattery.PACK_3_TEMPERATURE,
         IndevoltBattery.PACK_4_TEMPERATURE,
         IndevoltBattery.PACK_5_TEMPERATURE,
+        IndevoltBattery.MAIN_MOS_TEMPERATURE,
         IndevoltBattery.PACK_1_MOS_TEMPERATURE,
         IndevoltBattery.PACK_2_MOS_TEMPERATURE,
         IndevoltBattery.PACK_3_MOS_TEMPERATURE,
