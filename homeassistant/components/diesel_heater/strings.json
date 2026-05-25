@@ -22,6 +22,7 @@
           "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
         },
         "data_description": {
+          "address": "Format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
           "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
         },
         "description": "Enter the Bluetooth MAC address of your heater (e.g., A4:C1:37:24:B8:64). You can find this in the Bluetooth logs or using a BLE scanner app."
@@ -32,6 +33,7 @@
           "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
         },
         "data_description": {
+          "address": "Select the diesel heater to set up",
           "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
         },
         "description": "Select your diesel heater from the list."
