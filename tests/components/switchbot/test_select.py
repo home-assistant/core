@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from switchbot import NightLightState
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -171,11 +172,11 @@ async def test_standing_fan_oscillation_angle_select(
 
 
 @pytest.mark.parametrize(
-    ("device_state", "option", "expected_cmd"),
+    ("device_state", "option", "expected_state"),
     [
-        (3, "level_1", 1),
-        (1, "level_2", 2),
-        (2, "off", 3),
+        (NightLightState.OFF.value, "level_1", NightLightState.LEVEL_1),
+        (NightLightState.LEVEL_1.value, "level_2", NightLightState.LEVEL_2),
+        (NightLightState.LEVEL_2.value, "off", NightLightState.OFF),
     ],
 )
 async def test_standing_fan_night_light_select(
@@ -183,7 +184,7 @@ async def test_standing_fan_night_light_select(
     mock_entry_factory: Callable[[str], MockConfigEntry],
     device_state: int,
     option: str,
-    expected_cmd: int,
+    expected_state: NightLightState,
 ) -> None:
     """Test night light select translates options to device commands."""
     await async_setup_component(hass, DOMAIN, {})
@@ -209,4 +210,4 @@ async def test_standing_fan_night_light_select(
             blocking=True,
         )
 
-        mocked_set.assert_awaited_once_with(expected_cmd)
+        mocked_set.assert_awaited_once_with(expected_state)

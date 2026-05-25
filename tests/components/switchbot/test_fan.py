@@ -236,13 +236,18 @@ async def test_exception_handling_air_purifier_service(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "mock_method"),
+    ("service", "service_data", "mock_method", "expected_call"),
     [
-        (SERVICE_SET_PRESET_MODE, {ATTR_PRESET_MODE: "sleep"}, "set_preset_mode"),
-        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 50}, "set_percentage"),
-        (SERVICE_OSCILLATE, {ATTR_OSCILLATING: True}, "set_oscillation"),
-        (SERVICE_TURN_OFF, {}, "turn_off"),
-        (SERVICE_TURN_ON, {}, "turn_on"),
+        (
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: "sleep"},
+            "set_preset_mode",
+            ("sleep",),
+        ),
+        (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: 50}, "set_percentage", (50,)),
+        (SERVICE_OSCILLATE, {ATTR_OSCILLATING: True}, "set_oscillation", (True,)),
+        (SERVICE_TURN_OFF, {}, "turn_off", ()),
+        (SERVICE_TURN_ON, {}, "turn_on", ()),
     ],
 )
 async def test_standing_fan_controlling(
@@ -251,6 +256,7 @@ async def test_standing_fan_controlling(
     service: str,
     service_data: dict,
     mock_method: str,
+    expected_call: tuple,
 ) -> None:
     """Test controlling the standing fan with different services."""
     inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
@@ -276,4 +282,4 @@ async def test_standing_fan_controlling(
             blocking=True,
         )
 
-        mocked_instance.assert_awaited_once()
+        mocked_instance.assert_awaited_once_with(*expected_call)

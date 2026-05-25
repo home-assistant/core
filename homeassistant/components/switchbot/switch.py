@@ -87,7 +87,7 @@ async def async_setup_entry(
                 for desc in AIRPURIFIER_TABLE_SWITCHES
             ]
         )
-    elif isinstance(coordinator.device, switchbot.SwitchbotFan):
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
         async_add_entities(
             [
                 SwitchbotFanHorizontalOscillationSwitch(coordinator),
@@ -230,7 +230,7 @@ class SwitchbotFanOscillationSwitch(SwitchbotSwitchedEntity, SwitchEntity):
     """Base class for fan oscillation switch entities."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _device: switchbot.SwitchbotFan
+    _device: switchbot.SwitchbotStandingFan
 
     @property
     def is_on(self) -> bool | None:

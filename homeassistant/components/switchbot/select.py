@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import switchbot
-from switchbot import SwitchbotOperationError
+from switchbot import NightLightState, SwitchbotOperationError
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -83,15 +83,25 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
 
 OSCILLATION_ANGLE_OPTIONS = ["30", "60", "90"]
 
-NIGHT_LIGHT_OPTIONS = ["off", "level_1", "level_2"]
-NIGHT_LIGHT_TO_CMD = {"off": 3, "level_1": 1, "level_2": 2}
-NIGHT_LIGHT_FROM_STATE = {3: "off", 1: "level_1", 2: "level_2"}
+NIGHT_LIGHT_OFF = "off"
+NIGHT_LIGHT_LEVEL_1 = "level_1"
+NIGHT_LIGHT_LEVEL_2 = "level_2"
+NIGHT_LIGHT_OPTIONS = [NIGHT_LIGHT_OFF, NIGHT_LIGHT_LEVEL_1, NIGHT_LIGHT_LEVEL_2]
+NIGHT_LIGHT_TO_STATE: dict[str, NightLightState] = {
+    NIGHT_LIGHT_OFF: NightLightState.OFF,
+    NIGHT_LIGHT_LEVEL_1: NightLightState.LEVEL_1,
+    NIGHT_LIGHT_LEVEL_2: NightLightState.LEVEL_2,
+}
+NIGHT_LIGHT_FROM_STATE: dict[int, str] = {
+    state.value: option for option, state in NIGHT_LIGHT_TO_STATE.items()
+}
 
 
 class SwitchBotStandingFanHorizontalOscillationSelect(SwitchbotEntity, SelectEntity):
     """Select entity for horizontal oscillation angle on Standing Fan."""
 
     _device: switchbot.SwitchbotStandingFan
+    _attr_assumed_state = True
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "horizontal_oscillation_angle"
     _attr_options = OSCILLATION_ANGLE_OPTIONS
@@ -115,6 +125,7 @@ class SwitchBotStandingFanVerticalOscillationSelect(SwitchbotEntity, SelectEntit
     """Select entity for vertical oscillation angle on Standing Fan."""
 
     _device: switchbot.SwitchbotStandingFan
+    _attr_assumed_state = True
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "vertical_oscillation_angle"
     _attr_options = OSCILLATION_ANGLE_OPTIONS
@@ -158,5 +169,5 @@ class SwitchBotStandingFanNightLightSelect(SwitchbotEntity, SelectEntity):
     @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set night light state."""
-        await self._device.set_night_light(NIGHT_LIGHT_TO_CMD[option])
+        await self._device.set_night_light(NIGHT_LIGHT_TO_STATE[option])
         self.async_write_ha_state()

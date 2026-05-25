@@ -93,7 +93,6 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.CIRCULATOR_FAN.value: [
         Platform.FAN,
         Platform.SENSOR,
-        Platform.SWITCH,
     ],
     SupportedModels.STANDING_FAN.value: [
         Platform.FAN,

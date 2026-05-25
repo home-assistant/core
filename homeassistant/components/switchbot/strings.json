@@ -289,20 +289,12 @@
           "90": "90°"
         }
       },
-      "vertical_oscillation_angle": {
-        "name": "Vertical oscillation angle",
-        "state": {
-          "30": "30°",
-          "60": "60°",
-          "90": "90°"
-        }
-      },
       "night_light": {
         "name": "Night light",
         "state": {
-          "off": "[%key:common::state::off%]",
           "level_1": "Level 1",
-          "level_2": "Level 2"
+          "level_2": "Level 2",
+          "off": "[%key:common::state::off%]"
         }
       },
       "time_format": {
@@ -310,6 +302,14 @@
         "state": {
           "12h": "12-hour (AM/PM)",
           "24h": "24-hour"
+        }
+      },
+      "vertical_oscillation_angle": {
+        "name": "Vertical oscillation angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
         }
       }
     },
@@ -352,12 +352,6 @@
       }
     },
     "switch": {
-      "horizontal_oscillation": {
-        "name": "Horizontal oscillation"
-      },
-      "vertical_oscillation": {
-        "name": "Vertical oscillation"
-      },
       "bot": {
         "state_attributes": {
           "last_run_success": {
@@ -376,6 +370,12 @@
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
       },
       "wireless_charging": {
         "name": "Wireless charging"
