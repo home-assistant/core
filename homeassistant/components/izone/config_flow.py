@@ -59,6 +59,7 @@ async def async_discover_controllers(
     from .discovery import async_start_discovery_service  # noqa: PLC0415
 
     disco = await async_start_discovery_service(hass)
+    assert disco.pi_disco is not None
 
     if not refresh:
         return await disco.pi_disco.fetch_controllers()
@@ -178,7 +179,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         return self.async_abort(reason="no_devices_found")
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """User-started flow: offer configuration choices for discovered controllers.
 
@@ -189,7 +190,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         While this interactive flow is active, runtime integration discovery remains
         blocked by ``_async_blocks_runtime_integration_discovery`` to avoid UI races.
         """
-        del user_input
 
         if self._async_in_progress(include_uninitialized=True):
             return self.async_abort(reason="already_in_progress")
