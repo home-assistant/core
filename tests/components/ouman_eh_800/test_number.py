@@ -52,7 +52,7 @@ async def test_entities(
             L1ThreePointCurve.CURVE_0_TEMP,
             41.0,
             42.0,
-            42,
+            42.0,
             id="int_setpoint",
         ),
         pytest.param(
