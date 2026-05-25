@@ -61,6 +61,30 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
+        key="buffer_top_0_temperature",
+        translation_key="buffer_top_0_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="buffer_top_1_temperature",
+        translation_key="buffer_top_1_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="buffer_top_2_temperature",
+        translation_key="buffer_top_2_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="buffer_center_temperature",
         translation_key="buffer_center_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -73,6 +97,30 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="buffer_bottom_0_temperature",
+        translation_key="buffer_bottom_0_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="buffer_bottom_1_temperature",
+        translation_key="buffer_bottom_1_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="buffer_bottom_2_temperature",
+        translation_key="buffer_bottom_2_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="domestic_hot_water_0_temperature",
@@ -172,11 +220,36 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
+        key="auxiliary_pump_0",
+        translation_key="auxiliary_pump_0",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="auxiliary_pump_1",
+        translation_key="auxiliary_pump_1",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="auxiliary_pump_2",
+        translation_key="auxiliary_pump_2",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
         key="suction_fan",
         translation_key="suction_fan",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="primary_air",
@@ -184,6 +257,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="secondary_air",
@@ -191,6 +265,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         # This is CO2 content in a flue. It is measured in % and goes really high.
@@ -200,6 +275,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="dhw_pump_0",
@@ -207,6 +283,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="dhw_pump_1",
@@ -214,6 +291,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="dhw_pump_2",
@@ -221,6 +299,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_0",
