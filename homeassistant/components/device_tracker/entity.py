@@ -173,6 +173,10 @@ class BaseTrackerEntity(Entity):
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         if "battery_level" in cls.__dict__:
+            if cls.__module__.startswith("homeassistant.components."):
+                # Don't ask users to report issue for built in integrations,
+                # they already have issues opened on them.
+                return
             report_issue = async_suggest_report_issue(
                 async_get_hass_or_none(), module=cls.__module__
             )
