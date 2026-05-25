@@ -1,7 +1,5 @@
 """Support for Tibber."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 
@@ -23,7 +21,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
 from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
-from .coordinator import TibberDataAPICoordinator
+from .coordinator import (
+    TibberDataAPICoordinator,
+    TibberDataCoordinator,
+    TibberFetchPriceCoordinator,
+    TibberPriceCoordinator,
+)
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
@@ -39,23 +42,33 @@ class TibberRuntimeData:
 
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
+    data_coordinator: TibberDataCoordinator | None = field(default=None)
+    fetch_price_coordinator: TibberFetchPriceCoordinator | None = field(default=None)
+    price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
+
+    async def _async_get_access_token(self) -> str:
+        """Return a valid Tibber access token."""
+        await self.session.async_ensure_token_valid()
+        token = self.session.token
+        access_token: str | None = token.get(CONF_ACCESS_TOKEN)
+        if not access_token:
+            raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        return access_token
 
     async def async_get_client(self, hass: HomeAssistant) -> tibber.Tibber:
         """Return an authenticated Tibber client."""
-        await self.session.async_ensure_token_valid()
-        token = self.session.token
-        access_token = token.get(CONF_ACCESS_TOKEN)
-        if not access_token:
-            raise ConfigEntryAuthFailed("Access token missing from OAuth session")
+        access_token = await self._async_get_access_token()
         if self._client is None:
             self._client = tibber.Tibber(
                 access_token=access_token,
                 websession=async_get_clientsession(hass),
                 time_zone=dt_util.get_default_time_zone(),
                 ssl=ssl_util.get_default_context(),
+                refresh_access_token=self._async_get_access_token,
             )
-        self._client.set_access_token(access_token)
+        else:
+            await self._client.set_access_token(access_token)
         return self._client
 
 
@@ -123,6 +136,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Invalid login credentials") from err
     except tibber.FatalHttpExceptionError as err:
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
+
+    if tibber_connection.get_homes(only_active=True):
+        fetch_price_coordinator = TibberFetchPriceCoordinator(hass, entry)
+        await fetch_price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.fetch_price_coordinator = fetch_price_coordinator
+
+        price_coordinator = TibberPriceCoordinator(hass, entry, fetch_price_coordinator)
+        await price_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.price_coordinator = price_coordinator
+
+        data_coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+        await data_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.data_coordinator = data_coordinator
 
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()

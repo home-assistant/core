@@ -1,7 +1,5 @@
 """Support for departure information for public transport in Munich."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
@@ -165,7 +163,7 @@ class MVGLiveSensor(SensorEntity):
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
-    """Calculate the time difference in minutes between the current time and a given departure time.
+    """Calculate the time difference in minutes between now and a departure time.
 
     Args:
         departure_time: Unix timestamp of the departure time, in seconds.

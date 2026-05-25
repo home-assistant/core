@@ -1,7 +1,5 @@
 """Base SamsungTV Entity."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from wakeonlan import send_magic_packet
@@ -39,7 +37,8 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         config_entry = coordinator.config_entry
         self._mac: str | None = config_entry.data.get(CONF_MAC)
         self._host: str | None = config_entry.data.get(CONF_HOST)
-        # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
+        # Fallback for legacy models that doesn't have a API
+        # to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),

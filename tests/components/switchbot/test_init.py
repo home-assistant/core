@@ -20,10 +20,10 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from . import (
-    AIR_PURIFIER_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
-    AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
-    AIR_PURIFIER_VOC_SERVICE_INFO,
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
@@ -41,7 +41,8 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     [
         (
             ValueError("wrong model"),
-            "Switchbot device initialization failed because of incorrect configuration parameters: wrong model",
+            "Switchbot device initialization failed because of"
+            " incorrect configuration parameters: wrong model",
         ),
     ],
 )
@@ -253,22 +254,22 @@ async def test_migrate_entry_fails_for_future_version(
     [
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
-            AIR_PURIFIER_VOC_SERVICE_INFO,
+            AIR_PURIFIER_JP_SERVICE_INFO,
             "air_purifier_jp",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
-            AIR_PURIFIER_PM25_SERVICE_INFO,
+            AIR_PURIFIER_US_SERVICE_INFO,
             "air_purifier_us",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-            AIR_PURIFIER_TABLE_VOC_SERVICE_INFO,
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
             "air_purifier_table_jp",
         ),
         (
             DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-            AIR_PURIFIER_TABLE_PM25_SERVICE_INFO,
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO,
             "air_purifier_table_us",
         ),
     ],
@@ -279,7 +280,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
     service_info: BluetoothServiceInfoBleak,
     expected_sensor_type: str,
 ) -> None:
-    """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
+    """Test deprecated air_purifier types are migrated via BLE."""
     inject_bluetooth_service_info(hass, service_info)
 
     entry = MockConfigEntry(
@@ -305,7 +306,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
 async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     hass: HomeAssistant,
 ) -> None:
-    """Test deprecated air_purifier type entry is not loaded when device is out of range."""
+    """Test deprecated air_purifier entry not loaded when out of range."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

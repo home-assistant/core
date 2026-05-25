@@ -1,7 +1,5 @@
 """Config flow to configure Axis devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import ip_address
 from typing import Any
@@ -10,7 +8,6 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -141,25 +138,15 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_entry(self, serial: str) -> ConfigFlowResult:
         """Create entry for device.
 
-        Generate a name to be used as a prefix for device entities.
+        Use the discovered device name when available.
         """
-        model = self.config[CONF_MODEL]
-        same_model = [
-            entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
-        ]
-
-        name = model
-        for idx in range(len(same_model) + 1):
-            name = f"{model} {idx}"
-            if name not in same_model:
-                break
-
+        if (title_placeholders := self.context.get("title_placeholders")) is not None:
+            name = title_placeholders[CONF_NAME]
+        else:
+            name = f"{self.config[CONF_MODEL]} - {serial}"
         self.config[CONF_NAME] = name
 
-        title = f"{model} - {serial}"
-        return self.async_create_entry(title=title, data=self.config)
+        return self.async_create_entry(title=name, data=self.config)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

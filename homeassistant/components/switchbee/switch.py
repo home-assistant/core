@@ -1,7 +1,5 @@
 """Support for SwitchBee switch."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
@@ -14,23 +12,21 @@ from switchbee.device import (
 )
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchBeeCoordinator
+from .coordinator import SwitchBeeConfigEntry, SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchBeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbee switch."""
-    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SwitchBeeSwitchEntity(device, coordinator)
@@ -81,8 +77,9 @@ class SwitchBeeSwitchEntity[
 
         self._check_if_became_online()
 
-        # timed power switch state is an integer representing the number of minutes left until it goes off
-        # regulare switches state is ON/OFF (1/0 respectively)
+        # timed power switch state is an integer representing
+        # the number of minutes left until it goes off;
+        # regular switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = coordinator_device.state != ApiStateCommand.OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:

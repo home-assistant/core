@@ -1,7 +1,5 @@
 """Support for Magic Home sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant

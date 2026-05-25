@@ -1,7 +1,5 @@
 """Support for HomeMatic sensors."""
 
-from __future__ import annotations
-
 from copy import copy
 import logging
 
@@ -288,10 +286,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="",
-    entity_registry_enabled_default=True,
-)
+DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(key="")
 
 
 def setup_platform(

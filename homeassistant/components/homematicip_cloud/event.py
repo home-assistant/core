@@ -82,9 +82,9 @@ class HomematicipDoorBellEvent(HomematicipGenericEntity, EventEntity):
         super().__init__(
             hap,
             device,
-            post=description.key,
             channel=channel,
             is_multi_channel=False,
+            feature_id="doorbell",
         )
 
         self.entity_description = description

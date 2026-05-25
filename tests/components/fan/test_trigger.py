@@ -13,6 +13,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -37,6 +38,31 @@ async def test_fan_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the fan triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("fan.turned_on", {}, True, True),
+        ("fan.turned_off", {}, True, True),
+    ],
+)
+async def test_fan_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that fan triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -69,7 +95,7 @@ async def test_fan_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when any fan state changes to a specific state."""
+    """Test the fan state trigger fires on any fan state change."""
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_fans,
@@ -112,7 +138,7 @@ async def test_fan_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the first fan changes to a specific state."""
+    """Test the fan trigger fires on the first fan state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_fans,
@@ -155,7 +181,7 @@ async def test_fan_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the fan state trigger fires when the last fan changes to a specific state."""
+    """Test the fan trigger fires on the last fan state change."""
     await assert_trigger_behavior_last(
         hass,
         target_entities=target_fans,

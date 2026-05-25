@@ -1,7 +1,5 @@
 """Base extension class for Home Assistant template extensions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
@@ -32,6 +30,9 @@ class TemplateFunction:
         True  # Whether this function is available in limited environments
     )
     requires_hass: bool = False  # Whether this function requires hass to be available
+    pass_context: bool = (
+        True  # Whether to wrap with pass_context when requires_hass is True
+    )
 
 
 def _pass_context[**_P, _R](
@@ -76,7 +77,8 @@ class BaseTemplateExtension(Extension):
                 if template_func.requires_hass and self.environment.hass is None:
                     continue
 
-                # Register unsupported stub for functions not allowed in limited environments
+                # Register unsupported stub for functions not
+                # allowed in limited environments
                 if self.environment.limited and not template_func.limited_ok:
                     unsupported_func = self._create_unsupported_function(
                         template_func.name
@@ -91,7 +93,7 @@ class BaseTemplateExtension(Extension):
 
                 func = template_func.func
 
-                if template_func.requires_hass:
+                if template_func.requires_hass and template_func.pass_context:
                     # We wrap these as a context functions to ensure they get
                     # evaluated fresh with every execution, rather than executed
                     # at compile time and the value stored.
@@ -106,7 +108,7 @@ class BaseTemplateExtension(Extension):
 
     @staticmethod
     def _create_unsupported_function(name: str) -> Callable[[], NoReturn]:
-        """Create a function that raises an error for unsupported functions in limited templates."""
+        """Create a function that raises for unsupported limited template functions."""
 
         def unsupported(*args: Any, **kwargs: Any) -> NoReturn:
             raise TemplateError(

@@ -1,22 +1,21 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted water heaters.",
-    "condition_behavior_name": "Behavior",
-    "condition_threshold_description": "What to test for and threshold values.",
-    "condition_threshold_name": "Threshold configuration",
-    "trigger_behavior_description": "The behavior of the targeted water heaters to trigger on.",
-    "trigger_behavior_name": "Behavior",
-    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
-    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
-    "trigger_threshold_name": "Threshold configuration"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more water heaters are off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         }
       },
       "name": "Water heater is off"
@@ -25,8 +24,10 @@
       "description": "Tests if one or more water heaters are on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         }
       },
       "name": "Water heater is on"
@@ -35,8 +36,10 @@
       "description": "Tests if one or more water heaters are set to a specific operation mode.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
         },
         "operation_mode": {
           "description": "The operation mode to check for.",
@@ -49,11 +52,12 @@
       "description": "Tests the temperature setpoint of one or more water heaters.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::condition_behavior_description%]",
           "name": "[%key:component::water_heater::common::condition_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::water_heater::common::condition_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::water_heater::common::condition_threshold_description%]",
           "name": "[%key:component::water_heater::common::condition_threshold_name%]"
         }
       },
@@ -127,21 +131,6 @@
       "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "set_away_mode": {
       "description": "Sets the away mode of a water heater.",
@@ -192,8 +181,10 @@
       "description": "Triggers after the operation mode of one or more water heaters changes to a specific mode.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::trigger_behavior_description%]",
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
         },
         "operation_mode": {
           "description": "The operation modes to trigger on.",
@@ -206,7 +197,6 @@
       "description": "Triggers after the temperature setpoint of one or more water heaters changes.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::water_heater::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::water_heater::common::trigger_threshold_name%]"
         }
       },
@@ -216,11 +206,12 @@
       "description": "Triggers after the temperature setpoint of one or more water heaters crosses a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::trigger_behavior_description%]",
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::water_heater::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::water_heater::common::trigger_threshold_name%]"
         }
       },
@@ -230,8 +221,10 @@
       "description": "Triggers after one or more water heaters turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::trigger_behavior_description%]",
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
         }
       },
       "name": "Water heater turned off"
@@ -240,8 +233,10 @@
       "description": "Triggers after one or more water heaters turn on, regardless of the operation mode.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::water_heater::common::trigger_behavior_description%]",
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
         }
       },
       "name": "Water heater turned on"

@@ -15,8 +15,6 @@ tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 import copy
@@ -187,8 +185,10 @@ def create_stream(
 ) -> Stream:
     """Create a stream with the specified identifier based on the source url.
 
-    The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
-    options (see STREAM_OPTIONS_SCHEMA) are converted and passed into pyav / ffmpeg.
+    The stream_source is typically an rtsp url (though any
+    url accepted by ffmpeg is fine) and options (see
+    STREAM_OPTIONS_SCHEMA) are converted and passed into
+    pyav / ffmpeg.
 
     The stream_label is a string used as an additional message in logging.
     """
@@ -462,7 +462,8 @@ class Stream:
 
     def _run_worker(self) -> None:
         """Handle consuming streams and restart keepalive streams."""
-        # Keep import here so that we can import stream integration without installing reqs
+        # Keep import here so that we can import stream
+        # integration without installing reqs
         from .worker import StreamState, stream_worker  # noqa: PLC0415
 
         stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
@@ -493,7 +494,8 @@ class Stream:
             stream_state.discontinuity()
             if not _should_retry() or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay and reset the retry
+                    # The stream source is updated, restart
+                    # without any delay and reset the retry
                     # backoff for the new url.
                     wait_timeout = 0
                     self._fast_restart_once = False
@@ -503,8 +505,9 @@ class Stream:
 
             self._set_state(False)
             # To avoid excessive restarts, wait before restarting
-            # As the required recovery time may be different for different setups, start
-            # with trying a short wait_timeout and increase it on each reconnection attempt.
+            # As the required recovery time may be different
+            # for different setups, start with trying a short
+            # wait_timeout and increase it on each attempt.
             # Reset the wait_timeout after the worker has been up for several minutes
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
@@ -517,9 +520,10 @@ class Stream:
             )
 
         async def worker_finished() -> None:
-            # The worker is no checking availability of the stream and can no longer track
-            # availability so mark it as available, otherwise the frontend may not be able to
-            # interact with the stream.
+            # The worker is no longer checking availability
+            # of the stream and can no longer track it so
+            # mark it as available, otherwise the frontend
+            # may not be able to interact with the stream.
             if not self.available:
                 self._async_update_state(True)
             # We can call remove_provider() sequentially as the wrapped _stop() function
@@ -557,7 +561,8 @@ class Stream:
     ) -> None:
         """Make a .mp4 recording from a provided stream."""
 
-        # Keep import here so that we can import stream integration without installing reqs
+        # Keep import here so that we can import stream
+        # integration without installing reqs
         from .recorder import RecorderOutput  # noqa: PLC0415
 
         # Check for file access

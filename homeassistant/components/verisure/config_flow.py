@@ -1,7 +1,5 @@
 """Config flow for Verisure integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -13,12 +11,7 @@ from verisure import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -30,6 +23,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import VerisureConfigEntry
 
 
 class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -44,7 +38,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: VerisureConfigEntry,
     ) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VerisureOptionsFlowHandler()
@@ -256,10 +250,12 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    self.verisure.validate_mfa, user_input[CONF_CODE]
-                )
-                await self.hass.async_add_executor_job(self.verisure.login)
+
+                def _validate_mfa_and_login() -> None:
+                    self.verisure.validate_mfa(user_input[CONF_CODE])
+                    self.verisure.login()
+
+                await self.hass.async_add_executor_job(_validate_mfa_and_login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"

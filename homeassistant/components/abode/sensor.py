@@ -1,7 +1,5 @@
 """Support for Abode Security System sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -14,13 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry, AbodeSystem
 from .entity import AbodeDevice
 
 ABODE_TEMPERATURE_UNIT_HA_UNIT = {
@@ -66,11 +62,11 @@ SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode sensor devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeSensor(data, device, description)

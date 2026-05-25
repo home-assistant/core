@@ -1,7 +1,5 @@
 """The power switch which can be toggled via the APsystems local API integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
