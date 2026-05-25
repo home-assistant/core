@@ -676,11 +676,17 @@ async def test_base_scanner_entity_state(
         pytest.param(
             [
                 ("zone.home", 50.0, 60.0, 100),
+                # Small offset, the home zone is fully inside
+                # the other zone (~330m + 100 < 500).
+                ("zone.nearby", 50.0030, 60.0, 500),
                 # Offset by enough that the home zone is not fully inside
-                # the other zone (~750m + 100 > 500).
+                # the other zone (~440m + 100 > 500).
+                ("zone.further_away", 50.0040, 60.0, 500),
+                # Offset by a very large amount, no overlap
+                # the other zone (~130km + 100 > 500).
                 ("zone.faraway", 51.0, 61.0, 500),
             ],
-            ["zone.home"],
+            ["zone.home", "zone.nearby"],
             id="offset_zone_excluded",
         ),
     ],
