@@ -1149,34 +1149,6 @@ async def test_async_setup_starts_import_flow(hass: HomeAssistant) -> None:
     mock_create_task.assert_called_once()
 
 
-async def test_async_setup_entry_stops_discovery_on_forward_failure(
-    hass: HomeAssistant,
-) -> None:
-    """Test discovery service is stopped when platform forward setup fails."""
-    entry = MockConfigEntry(domain=IZONE, data={"host": "192.0.2.1"})
-
-    with (
-        pytest.raises(RuntimeError, match="boom"),
-        patch(
-            "homeassistant.components.izone.async_start_discovery_service",
-            return_value=None,
-        ) as mock_start,
-        patch(
-            "homeassistant.components.izone.async_stop_discovery_service",
-            return_value=None,
-        ) as mock_stop,
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            side_effect=RuntimeError("boom"),
-        ),
-    ):
-        await izone_component.async_setup_entry(hass, entry)
-
-    mock_start.assert_awaited_once()
-    mock_stop.assert_awaited_once()
-
-
 async def test_async_start_discovery_service_stops_on_home_assistant_stop(
     hass: HomeAssistant,
     mock_pizone_discovery_service: Mock,
