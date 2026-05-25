@@ -1,0 +1,410 @@
+# serializer version: 1
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot Water Tank UndefinedType._singleton',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:water-boiler',
+    'original_name': 'Hot Water Tank UndefinedType._singleton',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1202/6019143#7-DomesticHotWaterTank',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hot Water Tank UndefinedType._singleton',
+      'icon': 'mdi:water-boiler',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.indoor_camera_camera_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.indoor_camera_camera_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Camera shutter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:camera-lock',
+    'original_name': 'Camera shutter',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'myfox://SOMFY_PROTECT-1234567890ABCDEF/NmZSuim2Wwcttk9NB56B1kdql30fDmDY#1-MyFoxSecurityCamera',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.indoor_camera_camera_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Indoor Camera Camera shutter',
+      'icon': 'mdi:camera-lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.indoor_camera_camera_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.outdoor_camera_camera_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.outdoor_camera_camera_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Camera shutter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:camera-lock',
+    'original_name': 'Camera shutter',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'myfox://SOMFY_PROTECT-1234567890ABCDEF/jQ5ul40RVLnipT6JB8b3JK96tUsf14mR-MyFoxSecurityCamera',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.outdoor_camera_camera_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Outdoor Camera Camera shutter',
+      'icon': 'mdi:camera-lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.outdoor_camera_camera_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.home_library_garden_light_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.home_library_garden_light_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/6852535-OnOff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.home_library_garden_light_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Garden Light Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.home_library_garden_light_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.main_bedroom_patio_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.main_bedroom_patio_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/9474368-OnOff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.main_bedroom_patio_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Patio Light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.main_bedroom_patio_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.music_room_pool_pump_on_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.music_room_pool_pump_on_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16168460-OnOff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.music_room_pool_pump_on_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Pool Pump On&Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.music_room_pool_pump_on_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.pool_house-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.pool_house',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:pool',
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/16580352-SwimmingPool',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.pool_house-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool House',
+      'icon': 'mdi:pool',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pool_house',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.willow_house_external_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.willow_house_external_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bell',
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rtds://1234-1234-6233/4065441-RTDOutdoorSiren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][switch.willow_house_external_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'friendly_name': 'External Siren',
+      'icon': 'mdi:bell',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.willow_house_external_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
