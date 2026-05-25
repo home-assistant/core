@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # --- Flow context keys (also used in tests) ---
 
-DISCOVERY_DATA_UID = "uid"
 SELECTED_CONTROLLER_UID = "selected_controller_uid"
 
 # ---------------------------------------------------------------------------
@@ -93,11 +92,11 @@ def async_note_integration_discovery(
     discovery_flow.async_create_flow(
         hass,
         IZONE,
-        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-        data={
-            DISCOVERY_DATA_UID: ctrl.device_uid,
-            CONF_HOST: ctrl.device_ip,
+        context={
+            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            "unique_id": ctrl.device_uid,
         },
+        data={CONF_HOST: ctrl.device_ip},
     )
 
 
@@ -334,7 +333,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle fan-out, YAML import secondaries, and runtime discovery."""
-        uid = discovery_info.get(DISCOVERY_DATA_UID)
+        uid = self.context.get("unique_id")
         host = discovery_info.get(CONF_HOST)
         if not isinstance(uid, str) or not isinstance(host, str):
             return self.async_abort(reason="no_devices_found")
@@ -414,8 +413,11 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         discovery_flow.async_create_flow(
             self.hass,
             IZONE,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={DISCOVERY_DATA_UID: uid, CONF_HOST: host},
+            context={
+                "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+                "unique_id": uid,
+            },
+            data={CONF_HOST: host},
         )
 
     @staticmethod
