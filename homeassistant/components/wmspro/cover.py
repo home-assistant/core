@@ -37,6 +37,8 @@ async def async_setup_entry(
             entities.append(WebControlProValance(config_entry.entry_id, dest))
         if dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
+        if dest.hasAction(ACTION_DESC.SlatDrive):
+            entities.append(WebControlProSlatBlind(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
@@ -110,3 +112,10 @@ class WebControlProRollerShutter(WebControlProCover):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _drive_action_desc = ACTION_DESC.RollerShutterBlindDrive
+
+
+class WebControlProSlatBlind(WebControlProCover):
+    """Representation of a WMS based slat blind."""
+
+    _attr_device_class = CoverDeviceClass.BLIND
+    _drive_action_desc = ACTION_DESC.SlatDrive
