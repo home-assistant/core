@@ -16,8 +16,19 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     EntityCategory,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import (
     DeviceInfo,
     EventDeviceRegistryUpdatedData,
@@ -25,6 +36,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -33,6 +45,7 @@ from .const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
@@ -317,14 +330,116 @@ class BaseScannerEntity(BaseTrackerEntity):
     addresses being used to identify the device.
     """
 
+    _scanner_option_associated_zone: str = zone.ENTITY_ID_HOME
+    _scanner_option_associated_zone_unsub: CALLBACK_TYPE | None = None
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the scanner entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self._async_read_entity_options()
+
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Call when the scanner entity is about to be removed from hass."""
+        if self._scanner_option_associated_zone_unsub is not None:
+            self._scanner_option_associated_zone_unsub()
+            self._scanner_option_associated_zone_unsub = None
+        self._async_clear_associated_zone_issue()
+        await super().async_internal_will_remove_from_hass()
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_read_entity_options()
+
+    @callback
+    def _async_read_entity_options(self) -> None:
+        """Read entity options from the entity registry.
+
+        Called when the entity registry entry has been updated and before the
+        scanner entity is added to the state machine.
+        """
+        assert self.registry_entry
+        if (scanner_options := self.registry_entry.options.get(DOMAIN)) and (
+            associated_zone := scanner_options.get(CONF_ASSOCIATED_ZONE)
+        ):
+            new_zone = associated_zone
+        else:
+            new_zone = zone.ENTITY_ID_HOME
+
+        if new_zone == self._scanner_option_associated_zone:
+            return
+
+        # Tear down tracking for the previous zone.
+        if self._scanner_option_associated_zone_unsub is not None:
+            self._scanner_option_associated_zone_unsub()
+            self._scanner_option_associated_zone_unsub = None
+        self._async_clear_associated_zone_issue()
+
+        self._scanner_option_associated_zone = new_zone
+
+        # zone.home is always present so no tracking or issue handling needed.
+        if new_zone == zone.ENTITY_ID_HOME:
+            return
+
+        self._scanner_option_associated_zone_unsub = async_track_state_change_event(
+            self.hass, new_zone, self._async_associated_zone_state_changed
+        )
+        if self.hass.states.get(new_zone) is None:
+            self._async_create_associated_zone_issue()
+
+    @callback
+    def _async_associated_zone_state_changed(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Open or clear the repair issue when the associated zone appears or disappears."""
+        if event.data["new_state"] is None:
+            self._async_create_associated_zone_issue()
+        else:
+            self._async_clear_associated_zone_issue()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_create_associated_zone_issue(self) -> None:
+        """Create a repair issue prompting the user to reconfigure the scanner."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            self._associated_zone_issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="associated_zone_missing",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                "zone": self._scanner_option_associated_zone,
+            },
+        )
+
+    @callback
+    def _async_clear_associated_zone_issue(self) -> None:
+        """Clear the associated-zone-missing repair issue if it exists."""
+        ir.async_delete_issue(self.hass, DOMAIN, self._associated_zone_issue_id)
+
+    @property
+    def _associated_zone_issue_id(self) -> str:
+        """Return the issue id for the associated-zone-missing repair."""
+        return f"associated_zone_missing_{self.entity_id}"
+
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
         if self.is_connected is None:
             return None
-        if self.is_connected:
+        if not self.is_connected:
+            return STATE_NOT_HOME
+        associated_zone = self._scanner_option_associated_zone
+        if associated_zone == zone.ENTITY_ID_HOME:
             return STATE_HOME
-        return STATE_NOT_HOME
+        if zone_state := self.hass.states.get(associated_zone):
+            return zone_state.name
+        # Configured zone has been removed; state is unknown.
+        return None
 
     @property
     def is_connected(self) -> bool | None:
@@ -341,9 +456,18 @@ class BaseScannerEntity(BaseTrackerEntity):
         if not self.is_connected:
             return attr
 
+        associated_zone = self._scanner_option_associated_zone
+        # If the configured zone has been removed, in_zones stays empty so the
+        # attribute does not claim membership in a zone that no longer exists.
+        if (
+            associated_zone != zone.ENTITY_ID_HOME
+            and self.hass.states.get(associated_zone) is None
+        ):
+            return attr
+
         attr[ATTR_IN_ZONES] = [
-            zone.ENTITY_ID_HOME,
-            *zone.async_get_enclosing_zones(self.hass, zone.ENTITY_ID_HOME),
+            associated_zone,
+            *zone.async_get_enclosing_zones(self.hass, associated_zone),
         ]
 
         return attr
