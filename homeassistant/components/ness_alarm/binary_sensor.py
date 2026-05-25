@@ -1,5 +1,6 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
 
+from datetime import datetime
 from typing import Any
 
 from nessclient import Client
@@ -125,7 +126,8 @@ class NessPanelConnectivityBinarySensor(BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_alarm_panel")},
         )
-        self._last_seen = dt_util.utcnow()
+        self._last_seen: datetime | None = None
+        self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Hook into nessclient to record when packets are received."""
@@ -144,5 +146,6 @@ class NessPanelConnectivityBinarySensor(BinarySensorEntity):
     async def async_update(self) -> None:
         """Re-evaluate whether the panel is still considered alive."""
         self._attr_is_on = (
-            dt_util.utcnow() - self._last_seen
-        ) < DEFAULT_SCAN_INTERVAL * 2
+            self._last_seen is not None
+            and (dt_util.utcnow() - self._last_seen) < DEFAULT_SCAN_INTERVAL * 2
+        )
