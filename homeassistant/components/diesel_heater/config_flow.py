@@ -227,9 +227,6 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "address_format": "XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX",
-            },
         )
 
     @staticmethod
