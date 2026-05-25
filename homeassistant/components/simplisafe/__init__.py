@@ -146,7 +146,7 @@ SERVICE_CAPTURE_MOTION_IMAGE_SCHEMA = vol.Schema(
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_FILENAME): cv.string,
         vol.Optional(ATTR_IMAGE_WIDTH, default=DEFAULT_IMAGE_WIDTH): vol.All(
-            int, vol.Range(min=240, max=1080)
+            vol.Coerce(int), vol.Range(min=240, max=1080)
         ),
     }
 )
@@ -223,9 +223,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
 
 def _resolve_image_url(url: str, width: int = DEFAULT_IMAGE_WIDTH) -> str:
     """Substitute the {&width} URI template parameter and strip any remaining ones."""
-    LOGGER.debug("image url is a URI template: %s", url)
     url = url.replace("{&width}", f"&width={width}")
-    LOGGER.debug("Resolved image URL: %s", url)
     return re.sub(r"\{[^}]+\}", "", url)
 
 
@@ -245,9 +243,15 @@ def _async_get_camera_serial_and_simplisafe(
     if (camera_device := device_registry.async_get(device_id)) is None:
         raise vol.Invalid("Invalid device ID specified")
 
-    [serial] = [
+    matching_serials = [
         identity[1] for identity in camera_device.identifiers if identity[0] == DOMAIN
     ]
+    if len(matching_serials) != 1:
+        raise HomeAssistantError(
+            f"Expected 1 SimpliSafe identifier for device {device_id}, "
+            f"got {len(matching_serials)}"
+        )
+    serial = matching_serials[0]
 
     entry: SimpliSafeConfigEntry | None
     for entry_id in camera_device.config_entries:
@@ -259,7 +263,9 @@ def _async_get_camera_serial_and_simplisafe(
             continue
         return serial, entry.runtime_data
 
-    raise ValueError(f"No loaded SimpliSafe entry for camera device: {device_id}")
+    raise HomeAssistantError(
+        f"No loaded SimpliSafe entry for camera device: {device_id}"
+    )
 
 
 @callback

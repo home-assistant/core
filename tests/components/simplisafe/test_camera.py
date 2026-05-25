@@ -256,6 +256,29 @@ async def test_async_camera_image_returns_bytes_after_motion(
     assert "&width=720" in url_used
 
 
+async def test_async_camera_image_uses_requested_width(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+    api: Mock,
+) -> None:
+    """async_camera_image passes the requested width to the URL resolver."""
+    api.async_media = AsyncMock(return_value=IMAGE_BYTES)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    event_callback = websocket.add_event_callback.call_args[0][0]
+    event_callback(_make_motion_event())
+    await hass.async_block_till_done()
+
+    await async_get_image(hass, "camera.backyard_outdoor_camera", width=480)
+
+    url_used = api.async_media.call_args[0][0]
+    assert "&width=480" in url_used
+
+
 async def test_async_camera_image_raises_on_api_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

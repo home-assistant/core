@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeConfigEntry, _resolve_image_url
+from . import DEFAULT_IMAGE_WIDTH, SimpliSafe, SimpliSafeConfigEntry, _resolve_image_url
 from .const import LOGGER
 from .entity import SimpliSafeEntity
 
@@ -100,7 +100,10 @@ class SimplisafeCamera(SimpliSafeEntity, Camera):
             return None
         try:
             return await self._simplisafe.async_media(
-                _resolve_image_url(media_urls["image_url"])
+                _resolve_image_url(
+                    media_urls["image_url"],
+                    width if width is not None else DEFAULT_IMAGE_WIDTH,
+                )
             )
         except SimplipyError as err:
             raise HomeAssistantError(
