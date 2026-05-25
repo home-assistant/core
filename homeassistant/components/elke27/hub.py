@@ -27,7 +27,12 @@ from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
 
-_CONNECT_CLEANUP_EXCEPTIONS = (asyncio.CancelledError, Exception)
+_ARM_MODE_BY_NAME = {
+    "ARMED_AWAY": ArmMode.ARMED_AWAY,
+    "ARMED_CUSTOM_BYPASS": ArmMode.ARMED_AWAY,
+    "ARMED_NIGHT": ArmMode.ARMED_NIGHT,
+    "ARMED_STAY": ArmMode.ARMED_STAY,
+}
 
 
 def _raise_command_error(action: str, error: BaseException) -> None:
@@ -121,7 +126,10 @@ class Elke27Hub:
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
-            except _CONNECT_CLEANUP_EXCEPTIONS:
+            except asyncio.CancelledError:
+                await asyncio.shield(self._async_disconnect(log_unavailable=False))
+                raise
+            except Exception:
                 await self._async_disconnect(log_unavailable=False)
                 raise
 
@@ -139,11 +147,11 @@ class Elke27Hub:
         """Disconnect the client and unregister event handlers."""
         was_connected = self._client is not None
         if self._connection_unsubscribe is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 self._connection_unsubscribe()
             self._connection_unsubscribe = None
         if self._client is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._client.async_disconnect()
         self._client = None
         self._clear_typed_subscriptions()
@@ -250,25 +258,7 @@ class Elke27Hub:
             msg = "PIN required to arm areas."
             raise Elke27PinRequiredError(msg)
 
-        if mode is ArmMode.ARMED_STAY or (
-            isinstance(mode, str) and mode.upper() == "ARMED_STAY"
-        ):
-            arm_mode = ArmMode.ARMED_STAY
-        elif mode is ArmMode.ARMED_NIGHT or (
-            isinstance(mode, str) and mode.upper() == "ARMED_NIGHT"
-        ):
-            arm_mode = ArmMode.ARMED_NIGHT
-        elif (
-            mode is ArmMode.ARMED_AWAY
-            or (isinstance(mode, str) and mode.upper() == "ARMED_AWAY")
-            or (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
-        ):
-            # The panel applies custom-bypass behavior by bypassing zones first,
-            # then using the normal away arm command.
-            arm_mode = ArmMode.ARMED_AWAY
-        else:
-            msg = "Arm mode is not supported."
-            raise HomeAssistantError(msg)
+        arm_mode = _normalize_arm_mode(mode)
 
         try:
             await client.async_arm_area(
@@ -436,6 +426,24 @@ def _event_type(event: Any) -> str | None:
 def _set_client_identity(client: Elke27Client, client_identity: dict[str, str]) -> None:
     """Set the client identity used for future connects."""
     client.set_client_identity(client_identity)
+
+
+def _normalize_arm_mode(mode: Any) -> ArmMode:
+    """Normalize supported Home Assistant arm modes to client arm modes."""
+    if isinstance(mode, ArmMode):
+        arm_mode = mode
+    elif isinstance(mode, str):
+        arm_mode = _ARM_MODE_BY_NAME.get(mode.upper())
+    else:
+        arm_mode = None
+    if arm_mode in {
+        ArmMode.ARMED_AWAY,
+        ArmMode.ARMED_NIGHT,
+        ArmMode.ARMED_STAY,
+    }:
+        return arm_mode
+    msg = "Arm mode is not supported."
+    raise HomeAssistantError(msg)
 
 
 def _connection_state(event: Any) -> bool | None:
