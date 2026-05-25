@@ -140,13 +140,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Samsung IR buttons from config entry."""
-    if not (infrared_entity_id := entry.data.get(CONF_INFRARED_EMITTER_ENTITY_ID)):
-        return
-
+    infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == SamsungDeviceType.TV:
         async_add_entities(
-            SamsungIrButton(entry, infrared_entity_id, description)
+            SamsungIrButton(entry, infrared_emitter_entity_id, description)
             for description in TV_BUTTON_DESCRIPTIONS
         )
 
