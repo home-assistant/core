@@ -242,7 +242,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
                 discovered[mac] = DiscoveredDevice(name=name, mac=mac, model="Unknown")
                 _LOGGER.debug("Discovered device: %s (%s)", name, mac)
 
-            except Exception:
+            except ValueError, KeyError:
                 _LOGGER.debug("Error parsing MQTT discovery message", exc_info=True)
 
         unsub = await mqtt.async_subscribe(
