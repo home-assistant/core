@@ -27,6 +27,10 @@ play_media:
             - podcast
             - track
             - radio
+    username:
+      example: "john"
+      selector:
+        text:
     artist:
       example: "Queen"
       selector:

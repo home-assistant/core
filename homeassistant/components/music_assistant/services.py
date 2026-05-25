@@ -51,6 +51,7 @@ from .const import (
     ATTR_TRACKS,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    ATTR_USERNAME,
     DOMAIN,
 )
 from .helpers import get_music_assistant_client
@@ -133,6 +134,7 @@ def register_actions(hass: HomeAssistant) -> None:
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             vol.Required(ATTR_MEDIA_ID): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_USERNAME): cv.string,
             vol.Optional(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
             vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Coerce(QueueOption),
             vol.Optional(ATTR_ARTIST): cv.string,

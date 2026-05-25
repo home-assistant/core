@@ -6,6 +6,7 @@ from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any
 
+from music_assistant_models.auth import UserRole
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -433,6 +434,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue | QueueOption | None = None,
         radio_mode: bool | None = None,
         media_type: str | None = None,
+        username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
         media_uris: list[str] = []
@@ -480,11 +482,25 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         else:
             queue_id = self.player_id
 
+        # verify username availability
+        if username is not None:
+            users = await self.mass.auth.list_users()
+            available_usernames = [
+                user.username
+                for user in users
+                if user.enabled and user.role != UserRole.GUEST
+            ]
+            if username not in available_usernames:
+                raise ServiceValidationError(
+                    f"The username {username} does not exist. Available usernames are {', '.join(available_usernames)}."
+                )
+
         await self.mass.player_queues.play_media(
             queue_id,
             media=media_uris,
             option=self._convert_queueoption_to_media_player_enqueue(enqueue),
             radio_mode=radio_mode or False,
+            username=username,
         )
 
     @catch_musicassistant_error

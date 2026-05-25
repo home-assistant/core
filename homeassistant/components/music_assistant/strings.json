@@ -419,6 +419,10 @@
         "radio_mode": {
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
+        },
+        "username": {
+          "description": "Music Assistant username which will be associated with the play media request to adjust the playlog entry and select a user-mapped provider, should one exist.",
+          "name": "Username"
         }
       },
       "name": "Play media"
