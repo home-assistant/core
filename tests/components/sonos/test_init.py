@@ -589,7 +589,11 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
         ),
         caplog.at_level(logging.DEBUG),
     ):
+        caplog.clear()
         sub_callback(SonosMockEvent(soco, soco.zoneGroupTopology, {}))
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Config entry unloaded while adding speaker" in caplog.text
+    assert any(
+        "Config entry unloaded while adding speaker" in message
+        for message in caplog.messages
+    )
