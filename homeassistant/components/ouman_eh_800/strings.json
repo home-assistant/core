@@ -31,6 +31,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "heating_circuit": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "Automatic",
+              "big_temperature_drop": "Big temperature drop",
+              "temperature_drop": "Temperature drop"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "curve_supply_water_temperature": {
         "name": "Curve supply water temperature"
