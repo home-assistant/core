@@ -183,6 +183,7 @@ def fixture_request(
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
     site_payload: list[dict[str, Any]],
+    speedtest_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
 ) -> Callable[[str], None]:
@@ -211,6 +212,11 @@ def fixture_request(
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+        aioclient_mock.post(
+            f"{url}/api/s/{site_id}/cmd/devmgr",
+            json={"meta": {"rc": "ok"}, "data": []},
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
 
         mock_get_request("/api/self/sites", site_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sta", client_payload)
@@ -224,6 +230,7 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
+        mock_get_request(f"/v2/api/site/{site_id}/speedtest", speedtest_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficroutes", traffic_route_payload)
 
@@ -279,6 +286,12 @@ def fixture_port_forward_data() -> list[dict[str, Any]]:
 def fixture_site_data() -> list[dict[str, Any]]:
     """Site data."""
     return [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}]
+
+
+@pytest.fixture(name="speedtest_payload")
+def fixture_speedtest_data() -> list[dict[str, Any]]:
+    """Speedtest status data."""
+    return []
 
 
 @pytest.fixture(name="system_information_payload")

@@ -22,6 +22,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
+from ..coordinator import UnifiSpeedtestCoordinator
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -47,6 +48,7 @@ class UnifiHub:
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
+        self.speedtest_coordinator = UnifiSpeedtestCoordinator(hass, self)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -91,6 +93,7 @@ class UnifiHub:
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.initialize()
+        await self.speedtest_coordinator.async_config_entry_first_refresh()
         self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
