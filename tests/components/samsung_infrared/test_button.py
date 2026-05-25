@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
 from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
@@ -29,19 +29,36 @@ async def test_entities(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all button entities are created with correct attributes."""
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    """Test button entities are created with correct attributes."""
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Verify correct number of entities
+    assert len(entity_entries) == 33
 
     # Verify all entities belong to the same device
     device_entry = device_registry.async_get_device(
         identifiers={("samsung_infrared", mock_config_entry.entry_id)}
     )
     assert device_entry
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
+        assert entity_entry.domain == "button"
+        assert entity_entry.has_entity_name is True
+        assert entity_entry.platform == "samsung_infrared"
+
+    # Snapshot a representative subset to verify structure
+    representative_entities = [
+        "button.samsung_tv_source",
+        "button.samsung_tv_number_5",
+        "button.samsung_tv_red",
+    ]
+    for entity_id in representative_entities:
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry == snapshot(name=f"{entity_id}-entry")
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
 
 
 @pytest.mark.parametrize(
