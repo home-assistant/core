@@ -27,6 +27,15 @@ ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
 
 
+def _check_for_schedule(active: bool, last_active: str) -> None:
+    """Raise a HAError when no thermostat schedule has been set."""
+    if not active and last_active is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=ERROR_NO_SCHEDULE,
+        )
+
+
 @dataclass
 class PlugwiseClimateExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
@@ -271,16 +280,13 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         current_schedule = self.device.get("select_schedule")
         schedule_is_active = current_schedule not in (None, "off")
+        desired_schedule = self._last_active_schedule or current_schedule
         # Adam only: transition from HVACMode.OFF
         if self.hvac_mode == HVACMode.OFF:
             if hvac_mode == HVACMode.AUTO:
-                if not schedule_is_active and self._last_active_schedule is None:
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key=ERROR_NO_SCHEDULE,
-                    )
+                _check_for_schedule(schedule_is_active, self._last_active_schedule)
                 await self._api.set_schedule_state(
-                    self._location, STATE_ON, self._last_active_schedule
+                    self._location, STATE_ON, desired_schedule
                 )
                 await self._api.set_regulation_mode(self._previous_action_mode)
                 return
@@ -304,14 +310,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             return
 
         # Common - transition to auto = schedule on
-        if self._last_active_schedule is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=ERROR_NO_SCHEDULE,
-            )
-        await self._api.set_schedule_state(
-            self._location, STATE_ON, self._last_active_schedule
-        )
+        _check_for_schedule(schedule_is_active, self._last_active_schedule)
+        await self._api.set_schedule_state(self._location, STATE_ON, desired_schedule)
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
