@@ -123,7 +123,9 @@ async def async_setup_entry(
             MopekaBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class MopekaBluetoothSensorEntity(
