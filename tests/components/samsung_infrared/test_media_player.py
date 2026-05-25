@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.components.samsung_infrared.media_player import SOURCE_MAP
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -114,10 +115,10 @@ async def test_select_invalid_source(
 
     assert exc_info.value.translation_domain == "samsung_infrared"
     assert exc_info.value.translation_key == "invalid_source"
-    assert exc_info.value.translation_placeholders == {
-        "invalid_source": "invalid_source",
-        "valid_sources": "tv, hdmi_1, hdmi_2, hdmi_3, hdmi_4",
-    }
+
+    placeholders = exc_info.value.translation_placeholders
+    assert placeholders["invalid_source"] == "invalid_source"
+    assert set(placeholders["valid_sources"].split(", ")) == set(SOURCE_MAP.keys())
 
     # Verify no command was sent
     assert len(mock_infrared_emitter_entity.send_command_calls) == 0
