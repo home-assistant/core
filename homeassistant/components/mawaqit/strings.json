@@ -102,6 +102,9 @@
       "prayer_jumua_2": {
         "name": "Second Jumua Prayer"
       },
+      "prayer_jumua_3": {
+        "name": "Third Jumua Prayer"
+      },
       "prayer_maghrib": {
         "name": "Maghrib Prayer"
       },

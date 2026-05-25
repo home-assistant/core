@@ -114,6 +114,13 @@ JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_jumua_time(data, "jumua2"),
     ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Jumua 3",
+        translation_key="prayer_jumua_3",
+        icon="mdi:calendar-star",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua3"),
+    ),
 ]
 
 IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
@@ -178,6 +185,8 @@ async def async_setup_entry(
     mosque_coordinator = config_entry.runtime_data.mosque_coordinator
     prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
 
+    prayer_data = prayer_time_coordinator.data
+
     entities: list[SensorEntity] = []
 
     # Mosque Sensor
@@ -196,16 +205,22 @@ async def async_setup_entry(
         [
             MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
             for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
+            if prayer_data and desc.get_value(prayer_data) is not None
         ]
     )
 
     # Register Iqama Prayer Time Sensors
-    entities.extend(
-        [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
-            for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
-        ]
-    )
+    if (
+        prayer_data
+        and prayer_data.get("iqamaEnabled")
+        and prayer_data.get("iqamaCalendar")
+    ):
+        entities.extend(
+            [
+                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+                for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
+            ]
+        )
 
     # Register Next Prayer Sensors
     entities.extend(

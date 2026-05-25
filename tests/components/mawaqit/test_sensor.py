@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.mawaqit.coordinator import (
     MosqueCoordinator,
@@ -32,7 +33,14 @@ MOCK_MOSQUE_DATA = {
 }
 
 
-def _build_prayer_data() -> dict:
+def _build_prayer_data(
+    *,
+    iqama_enabled: bool = True,
+    with_iqama_calendar: bool = True,
+    jumua: str | None = "13:00",
+    jumua2: str | None = "14:00",
+    jumua3: str | None = None,
+) -> dict:
     """Build mock prayer data with calendar for April 10."""
     month_data = {}
     for day in range(1, 32):
@@ -50,11 +58,13 @@ def _build_prayer_data() -> dict:
 
     return {
         "calendar": calendar,
-        "iqamaCalendar": iqama_calendar,
+        "iqamaCalendar": iqama_calendar if with_iqama_calendar else [],
+        "iqamaEnabled": iqama_enabled,
         "timezone": "Europe/Paris",
         "shuruq": "06:45",
-        "jumua": "13:00",
-        "jumua2": "14:00",
+        "jumua": jumua,
+        "jumua2": jumua2,
+        "jumua3": jumua3,
     }
 
 
@@ -91,18 +101,57 @@ async def _setup_integration(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    ("prayer_data_kwargs", "expected_count"),
+    [
+        ({}, 16),  # 1 + 6 + 2 jumua + 5 iqama + 2 = 16
+        ({"iqama_enabled": False}, 11),  # no iqama
+        ({"with_iqama_calendar": False}, 11),  # no iqama
+        ({"jumua2": None}, 15),  # 1 jumua only
+        ({"jumua3": "15:00"}, 17),  # 3 jumua
+        ({"jumua2": None, "iqama_enabled": False}, 10),  # 1 jumua, no iqama
+    ],
+)
 async def test_sensor_setup_creates_entities(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    prayer_data_kwargs: dict,
+    expected_count: int,
 ) -> None:
-    """Test that all sensor entities are created."""
-    await _setup_integration(hass, mock_config_entry)
+    """Test that the correct number of entities is created based on mosque capabilities."""
+    await _setup_integration(
+        hass, mock_config_entry, prayer_data=_build_prayer_data(**prayer_data_kwargs)
+    )
+    assert len(hass.states.async_all("sensor")) == expected_count
 
-    # Check all entities exist by listing them
-    states = hass.states.async_all("sensor")
-    entity_ids = [s.entity_id for s in states]
 
-    # We expect: 1 mosque + 6 prayer + 2 jumua + 5 iqama + 2 next_prayer = 16
-    assert len(entity_ids) == 16
+@freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    ("prayer_data_kwargs", "entity_id", "should_exist"),
+    [
+        ({}, "sensor.fajr_iqama", True),
+        ({"iqama_enabled": False}, "sensor.fajr_iqama", False),
+        ({"with_iqama_calendar": False}, "sensor.fajr_iqama", False),
+        ({}, "sensor.jumua_prayer", True),
+        ({"jumua": None}, "sensor.jumua_prayer", False),
+        ({}, "sensor.second_jumua_prayer", True),
+        ({"jumua2": None}, "sensor.second_jumua_prayer", False),
+        ({"jumua3": "15:00"}, "sensor.third_jumua_prayer", True),
+        ({"jumua3": None}, "sensor.third_jumua_prayer", False),
+    ],
+)
+async def test_conditional_sensor_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    prayer_data_kwargs: dict,
+    entity_id: str,
+    should_exist: bool,
+) -> None:
+    """Test that jumua and iqama sensors are created only when the API reports them."""
+    await _setup_integration(
+        hass, mock_config_entry, prayer_data=_build_prayer_data(**prayer_data_kwargs)
+    )
+    assert (hass.states.get(entity_id) is not None) == should_exist
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
@@ -278,19 +327,6 @@ async def test_jumua_sensor(
     state = hass.states.get("sensor.jumua_prayer")
     assert state is not None
     assert state.state != "unavailable"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_iqama_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test iqama sensor returns valid time."""
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.fajr_iqama")
-    assert state is not None
-    assert state.state != "unavailable"
-    assert state.state != "unknown"
 
 
 # --- Direct unit tests for sensor classes to cover property branches ---
