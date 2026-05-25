@@ -1,26 +1,18 @@
 """Support for Qingping IoT switch entities."""
 
-from __future__ import annotations
-
 import json
 import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_MODEL
+from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    Capability,
-    DEVICE_MODELS,
-    DOMAIN,
-    MQTT_TOPIC_PREFIX,
-    TLV_MODELS,
-)
+from .const import DEVICE_MODELS, DOMAIN, MQTT_TOPIC_PREFIX, TLV_MODELS, Capability
 from .coordinator import QingpingCoordinator
 from .tlv import tlv_encode
 
@@ -93,6 +85,7 @@ class QingpingSwitch(CoordinatorEntity, SwitchEntity):
         tlv_key: int,
         default: bool = False,
     ) -> None:
+        """Initialize the switch entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
         self._mac = mac
@@ -108,14 +101,17 @@ class QingpingSwitch(CoordinatorEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
+        """Return True if the switch is on."""
         return self.coordinator.data.get(self._conf_key, self._default)
 
     async def async_turn_on(self) -> None:
+        """Turn the switch on."""
         self.coordinator.data[self._conf_key] = True
         self.async_write_ha_state()
         await self._send(1)
 
     async def async_turn_off(self) -> None:
+        """Turn the switch off."""
         self.coordinator.data[self._conf_key] = False
         self.async_write_ha_state()
         await self._send(0)
@@ -139,6 +135,7 @@ class QingpingSwitch(CoordinatorEntity, SwitchEntity):
             _LOGGER.debug("[%s] Sent JSON %s=%d", self._mac, self._conf_key, value)
 
     async def async_added_to_hass(self) -> None:
+        """Handle entity added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 

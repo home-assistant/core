@@ -1,10 +1,8 @@
 """Support for Qingping IoT sensors."""
 
-from __future__ import annotations
-
+from datetime import timedelta
 import logging
 import math
-from datetime import timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,7 +18,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    Capability,
     CONCENTRATION,
     CONF_ETVOC_UNIT,
     DB,
@@ -42,6 +39,7 @@ from .const import (
     SENSOR_SIGNAL_STRENGTH,
     SENSOR_TEMPERATURE,
     TLV_MODELS,
+    Capability,
 )
 from .coordinator import QingpingCoordinator
 
@@ -218,12 +216,14 @@ class QingpingStatusSensor(CoordinatorEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+        """Initialize the status sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_status"
         self._attr_device_info = device_info
 
     @property
     def native_value(self) -> str:
+        """Return the online status."""
         return "online" if self.coordinator.is_online else "offline"
 
 
@@ -235,12 +235,14 @@ class QingpingFirmwareSensor(CoordinatorEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+        """Initialize the firmware sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_firmware"
         self._attr_device_info = device_info
 
     @property
     def native_value(self) -> str | None:
+        """Return the firmware version."""
         return self.coordinator.data.get("firmware_version")
 
 
@@ -252,12 +254,14 @@ class QingpingMACSensor(CoordinatorEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+        """Initialize the MAC sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_mac"
         self._attr_device_info = device_info
 
     @property
     def native_value(self) -> str | None:
+        """Return the MAC address."""
         return self.coordinator.data.get("mac")
 
 
@@ -269,12 +273,14 @@ class QingpingBatteryStateSensor(CoordinatorEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+        """Initialize the battery state sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_battery_state"
         self._attr_device_info = device_info
 
     @property
     def native_value(self) -> str:
+        """Return the battery charging state."""
         charging = self.coordinator.data.get("battery_charging")
         if charging == "full":
             return "full"
@@ -315,6 +321,7 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
         device_info: dict,
         entity_category: EntityCategory | None = None,
     ) -> None:
+        """Initialize the sensor entity."""
         super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._is_unavailable = False
@@ -397,12 +404,10 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
         if value is not None:
             self._set_value(value)
 
-    def _set_value(self, value: int | float) -> None:
+    def _set_value(self, value: float) -> None:
         """Convert and set sensor value."""
         try:
-            if self._sensor_type == SENSOR_TEMPERATURE:
-                self._attr_native_value = round(float(value), 1)
-            elif self._sensor_type == SENSOR_HUMIDITY:
+            if self._sensor_type in {SENSOR_TEMPERATURE, SENSOR_HUMIDITY}:
                 self._attr_native_value = round(float(value), 1)
             elif self._sensor_type == SENSOR_PRESSURE:
                 self._attr_native_value = round(float(value), 2)
@@ -438,6 +443,7 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def icon(self) -> str | None:
+        """Return the icon for this sensor."""
         if self._sensor_type == SENSOR_BATTERY:
             charging = self.coordinator.data.get("battery_charging")
             if charging or self._attr_native_value is None:
@@ -452,6 +458,7 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
+        """Return True if the sensor is available."""
         if not self.coordinator.is_online:
             return False
         if self._sensor_type in (SENSOR_PM10, SENSOR_PM25):

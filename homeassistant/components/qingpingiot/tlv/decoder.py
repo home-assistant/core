@@ -1,9 +1,7 @@
 """TLV decoder for Qingping devices with binary protocol."""
 
-from __future__ import annotations
-
-import logging
 from datetime import datetime
+import logging
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
@@ -218,6 +216,89 @@ def decode_sensor_data_v2(byte_array: bytes) -> dict[str, Any]:
     return sensor_data
 
 
+def _decode_utf8_field(payload: bytes, warning_msg: str) -> str | None:
+    """Decode a UTF-8 payload field, returning None on failure."""
+    try:
+        return payload.decode("utf-8")
+    except UnicodeDecodeError:
+        _LOGGER.warning(warning_msg)
+        return None
+
+
+def _decode_simple_field(key: str, payload: bytes) -> tuple[str, Any] | None:
+    """Decode simple single-value fields, returning (field_name, value) or None."""
+    if key == "04" and len(payload) >= 1:
+        return ("reportInterval", bytes_to_int_little_endian(payload))
+    if key == "05" and len(payload) >= 1:
+        return ("collectInterval", bytes_to_int_little_endian(payload))
+    if key == "1d" and len(payload) >= 1:
+        return ("deviceStatus", payload[0])
+    if key in {"64", "09"} and len(payload) >= 1:
+        return ("battery", payload[0])
+    if key == "65" and len(payload) >= 1:
+        return ("signalStrength", bytes_to_int_little_endian(payload))
+    if key == "2c" and len(payload) >= 1:
+        return ("usbPluggedIn", payload[0] == 1)
+    return None
+
+
+_VERSION_FIELDS: dict[str, tuple[str, str]] = {
+    "11": ("version", "Failed to decode version string"),
+    "34": ("versionModel", "Failed to decode version model string"),
+    "35": ("versionMcu", "Failed to decode version MCU string"),
+}
+
+
+def _decode_sub_packs(
+    sub_packs: list[dict[str, Any]], product_id: int
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Decode sub-packs and return (out_data, data_list)."""
+    out_data: dict[str, Any] = {"productId": product_id}
+    data_list: list[dict[str, Any]] = []
+
+    for sub_pack in sub_packs:
+        key = sub_pack["key"]
+        payload = sub_pack["payload"]
+
+        if key == "14":
+            realtime_data = decode_realtime_data(payload, product_id)
+            if realtime_data:
+                out_data["sensorData"] = [realtime_data]
+
+        elif key == "03":
+            history_data = decode_history_data(payload, product_id)
+            if history_data:
+                out_data["sensorData"] = history_data
+
+        elif key == "85":
+            sensor_data = decode_sensor_data_v2(payload)
+            if sensor_data:
+                data_list.append(sensor_data)
+
+        elif key == "61":
+            if len(payload) == 0:
+                out_data["pmModuleConnected"] = False
+            else:
+                out_data["pmModuleConnected"] = True
+                out_data["pmModuleSerial"] = payload.hex()
+
+        elif key in _VERSION_FIELDS:
+            field_name, warning_msg = _VERSION_FIELDS[key]
+            decoded = _decode_utf8_field(payload, warning_msg)
+            if decoded is not None:
+                out_data[field_name] = decoded
+
+        elif key == "2c" and len(payload) >= 1:
+            out_data["batteryCharging"] = payload[0] == 1
+
+        else:
+            simple = _decode_simple_field(key, payload)
+            if simple is not None:
+                out_data[simple[0]] = simple[1]
+
+    return out_data, data_list
+
+
 def tlv_decode(byte_array: bytes) -> dict[str, Any]:
     """Main TLV decoder function."""
     try:
@@ -226,106 +307,18 @@ def tlv_decode(byte_array: bytes) -> dict[str, Any]:
             return {}
 
         unpack_data = tlv_unpack(byte_array)
-        out_data: dict[str, Any] = {"productId": unpack_data["productId"]}
-        data_list: list[dict[str, Any]] = []
-
-        for sub_pack in unpack_data["subPackList"]:
-            key = sub_pack["key"]
-            payload = sub_pack["payload"]
-
-            # Real-time data (key 0x14)
-            if key == "14":
-                realtime_data = decode_realtime_data(payload, unpack_data["productId"])
-                if realtime_data:
-                    out_data["sensorData"] = [realtime_data]
-
-            # History data (key 0x03)
-            elif key == "03":
-                history_data = decode_history_data(payload, unpack_data["productId"])
-                if history_data:
-                    out_data["sensorData"] = history_data
-
-            # Firmware version (key 0x11)
-            elif key == "11":
-                try:
-                    out_data["version"] = payload.decode("utf-8")
-                except UnicodeDecodeError:
-                    _LOGGER.warning("Failed to decode version string")
-
-            # Version model (key 0x34)
-            elif key == "34":
-                try:
-                    out_data["versionModel"] = payload.decode("utf-8")
-                except UnicodeDecodeError:
-                    _LOGGER.warning("Failed to decode version model string")
-
-            # Version MCU (key 0x35)
-            elif key == "35":
-                try:
-                    out_data["versionMcu"] = payload.decode("utf-8")
-                except UnicodeDecodeError:
-                    _LOGGER.warning("Failed to decode version MCU string")
-
-            # Report interval (key 0x04)
-            elif key == "04":
-                if len(payload) >= 1:
-                    report_interval = bytes_to_int_little_endian(payload)
-                    out_data["reportInterval"] = report_interval
-
-            # Collect interval (key 0x05)
-            elif key == "05":
-                if len(payload) >= 1:
-                    collect_interval = bytes_to_int_little_endian(payload)
-                    out_data["collectInterval"] = collect_interval
-
-            # Sensor data v2 (key 0x85)
-            elif key == "85":
-                sensor_data = decode_sensor_data_v2(payload)
-                if sensor_data:
-                    data_list.append(sensor_data)
-
-            # Device running status (key 0x1d)
-            elif key == "1d":
-                if len(payload) >= 1:
-                    out_data["deviceStatus"] = payload[0]
-
-            # Battery percentage (key 0x64)
-            elif key == "64":
-                if len(payload) >= 1:
-                    out_data["battery"] = payload[0]
-
-            # Battery info (key 0x09) - old devices
-            elif key == "09":
-                if len(payload) >= 1:
-                    out_data["battery"] = payload[0]
-
-            # Signal strength (key 0x65)
-            elif key == "65":
-                if len(payload) >= 1:
-                    out_data["signalStrength"] = bytes_to_int_little_endian(payload)
-
-            # USB plug-in / Charging status (key 0x2c)
-            elif key == "2c":
-                if len(payload) >= 1:
-                    out_data["usbPluggedIn"] = payload[0] == 1
-                    out_data["batteryCharging"] = payload[0] == 1
-
-            # PM module serial number (key 0x61)
-            elif key == "61":
-                if len(payload) == 0:
-                    out_data["pmModuleConnected"] = False
-                else:
-                    out_data["pmModuleConnected"] = True
-                    out_data["pmModuleSerial"] = payload.hex()
+        out_data, data_list = _decode_sub_packs(
+            unpack_data["subPackList"], unpack_data["productId"]
+        )
 
         if data_list:
             out_data["sensorData"] = data_list
 
-        return out_data
-
-    except Exception as ex:
-        _LOGGER.error("Error decoding TLV data: %s", ex, exc_info=True)
+    except Exception:
+        _LOGGER.exception("Error decoding TLV data")
         return {}
+    else:
+        return out_data
 
 
 def is_tlv_format(payload: bytes) -> bool:

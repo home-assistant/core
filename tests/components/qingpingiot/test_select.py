@@ -2,12 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
-from homeassistant.components.qingpingiot.const import (
-    CONF_TEMPERATURE_UNIT,
-    DOMAIN,
-)
+from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -40,9 +35,7 @@ async def test_temperature_unit_select_created_for_cgr1w(
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
 
-    select_entities = [
-        e for e in entities if e.unique_id == f"{MAC}_temperature_unit"
-    ]
+    select_entities = [e for e in entities if e.unique_id == f"{MAC}_temperature_unit"]
 
     assert len(select_entities) == 1
 
