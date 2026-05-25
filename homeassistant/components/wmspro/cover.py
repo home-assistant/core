@@ -1,5 +1,6 @@
 """Support for covers connected with WMS WebControl pro."""
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -12,6 +13,7 @@ from wmspro.destination import Destination
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -22,9 +24,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WebControlProConfigEntry
 from .entity import WebControlProGenericEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
+WAREMA_SLAT_CLOSED_ROTATION = 75
+WAREMA_SLAT_OPEN_ROTATION = -75
+WAREMA_SLAT_ROTATION_RANGE = WAREMA_SLAT_CLOSED_ROTATION - WAREMA_SLAT_OPEN_ROTATION
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,6 +43,11 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
+        _LOGGER.debug(
+            "WMSPRO DEST %s actions: %s",
+            dest.name,
+            [action.actionDescription.name for action in dest.actions.values()],
+        )
         if dest.hasAction(ACTION_DESC.AwningDrive):
             entities.append(WebControlProAwning(config_entry.entry_id, dest))
         if dest.hasAction(ACTION_DESC.ValanceDrive):
@@ -130,3 +142,45 @@ class WebControlProSlatBlind(WebControlProCover):
 
     _attr_device_class = CoverDeviceClass.BLIND
     _drive_action_desc = ACTION_DESC.SlatDrive
+    _attr_supported_features = (
+        WebControlProCover._attr_supported_features
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current tilt position of cover."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        if action is None or action["rotation"] is None:
+            return None
+
+        rotation = action["rotation"]
+        return round(
+            (WAREMA_SLAT_CLOSED_ROTATION - rotation)
+            / WAREMA_SLAT_ROTATION_RANGE
+            * 100
+        )
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+
+        rotation = round(
+            WAREMA_SLAT_CLOSED_ROTATION
+            - (tilt_position / 100 * WAREMA_SLAT_ROTATION_RANGE)
+        )
+
+        await action(rotation=rotation)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        await action(rotation=WAREMA_SLAT_OPEN_ROTATION)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        action = self._dest.action(ACTION_DESC.SlatRotate)
+        await action(rotation=WAREMA_SLAT_CLOSED_ROTATION)
