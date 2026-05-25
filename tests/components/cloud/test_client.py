@@ -377,14 +377,13 @@ async def test_google_config_expose_entity(
     )
 
     cloud_client = hass.data[DATA_CLOUD].client
-    state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
-    assert gconf.should_expose(state)
+    assert gconf.should_expose(entity_entry.entity_id)
 
     async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
-    assert not gconf.should_expose(state)
+    assert not gconf.should_expose(entity_entry.entity_id)
 
 
 @pytest.mark.usefixtures("mock_cloud_setup", "mock_cloud_login")

@@ -73,7 +73,7 @@ def async_enable_report_state(
         return bool(
             hass.is_running
             and (new_state := data["new_state"])
-            and google_config.should_expose(new_state)
+            and google_config.should_expose(new_state.entity_id)
             and async_get_google_entity_if_supported_cached(
                 hass, google_config, new_state
             )
