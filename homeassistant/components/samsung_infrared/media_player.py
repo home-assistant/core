@@ -18,6 +18,7 @@ from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
+    SOURCE_DISPLAY_NAMES,
     SOURCE_MAP,
     SamsungDeviceType,
 )
@@ -116,7 +117,9 @@ class SamsungIrTvMediaPlayer(
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": source,
-                    "valid_sources": ", ".join(sorted(SOURCE_MAP)),
+                    "valid_sources": ", ".join(
+                        SOURCE_DISPLAY_NAMES[k] for k in self._attr_source_list
+                    ),
                 },
             )
         await self._send_command(code.to_command())

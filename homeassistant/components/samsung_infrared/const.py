@@ -22,3 +22,11 @@ SOURCE_MAP: dict[str, SamsungTVCode] = {
     "hdmi_3": SamsungTVCode.HDMI_3,
     "hdmi_4": SamsungTVCode.HDMI_4,
 }
+
+SOURCE_DISPLAY_NAMES: dict[str, str] = {
+    "tv": "TV",
+    "hdmi_1": "HDMI 1",
+    "hdmi_2": "HDMI 2",
+    "hdmi_3": "HDMI 3",
+    "hdmi_4": "HDMI 4",
+}
