@@ -289,7 +289,7 @@ async def test_remove_config_entry_device_removes_subdevices(
     assert result is True
 
     sub_device_after = device_registry.async_get(sub_device.id)
-    assert (
-        sub_device_after is None
-        or config_entry.entry_id not in sub_device_after.config_entries
+    assert sub_device_after is None or (
+        config_entry.entry_id not in sub_device_after.config_entries
+        and sub_device_after.via_device_id is None
     )

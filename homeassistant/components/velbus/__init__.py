@@ -154,7 +154,7 @@ async def async_remove_config_entry_device(
                 remove_config_entry_id=config_entry.entry_id,
                 via_device_id=None,
             )
-    return True
+    return config_entry.entry_id in device_entry.config_entries
 
 
 async def async_migrate_entry(
