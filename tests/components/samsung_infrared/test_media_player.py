@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.components.samsung_infrared.media_player import SOURCE_MAP
+from homeassistant.components.samsung_infrared.const import SOURCE_MAP
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
