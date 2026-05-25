@@ -132,10 +132,7 @@
       "message": "Item summary and UID are required."
     },
     "todo_items_lookup_not_found": {
-      "message": "Unable to update to-do item {uid} from list {entity_id}: the cached list items could not be found. Restart and try again."
-    },
-    "todo_list_not_existing": {
-      "message": "To-do list has not been synced to Home Assistant yet. Please restart or try again later."
+      "message": "Unable to update to-do item(s) from list {entity_id}: the cached list items could not be found. Restart and try again."
     }
   },
   "selector": {

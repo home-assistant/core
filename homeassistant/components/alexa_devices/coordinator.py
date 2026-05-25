@@ -19,7 +19,7 @@ from aiohttp import ClientSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -170,13 +170,13 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
         if list_event.list_id not in self._list_items_lookup:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_list_not_existing",
+            _LOGGER.warning(
+                "To-do list has not been synced to Home Assistant yet. Please restart or try again later."
             )
+            return
 
         if list_event.type == AmazonListEventType.DELETED:
-            del self._list_items_lookup[list_event.list_id][list_event.item_id]
+            self._list_items_lookup[list_event.list_id].pop(list_event.item_id)
         elif (
             list_event.type
             in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)

@@ -3,7 +3,11 @@
 import logging
 from typing import TYPE_CHECKING
 
-from aioamazondevices.structures import AmazonListItemStatus, AmazonListType
+from aioamazondevices.structures import (
+    AmazonListInfo,
+    AmazonListItemStatus,
+    AmazonListType,
+)
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -44,19 +48,17 @@ async def async_setup_entry(
     """
     coordinator = entry.runtime_data
 
-    available_lists = coordinator.api.todo_lists
-
     known_list_ids: set[str] = set()
 
     def _check_lists() -> None:
-        current_list_ids = {todo_list.id for todo_list in available_lists}
+        current_list_ids = {todo_list.id for todo_list in coordinator.api.todo_lists}
         new_list_ids = current_list_ids - known_list_ids
         if new_list_ids:
             known_list_ids.update(new_list_ids)
             async_add_entities(
                 [
                     AlexaToDoList(coordinator, alexa_list)
-                    for alexa_list in available_lists
+                    for alexa_list in coordinator.api.todo_lists
                     if alexa_list.id in new_list_ids
                 ]
             )
@@ -190,7 +192,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                     translation_key="todo_item_not_found",
                     translation_placeholders={
                         "uid": uid,
-                        "entitiy_id": self.entity_id,
+                        "entity_id": self.entity_id,
                     },
                 )
             _LOGGER.debug(
@@ -239,7 +241,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if existing_item is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="exceptions.todo_item_not_found",
+                translation_key="todo_item_not_found",
                 translation_placeholders={
                     "uid": item.uid,
                     "entity_id": self.entity_id,
