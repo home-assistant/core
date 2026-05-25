@@ -1487,7 +1487,9 @@ WEATHER_STATION_SERVICE_INFO = BluetoothServiceInfoBleak(
     manufacturer_data={
         2409: b"\xaa\xbb\xcc\xdd\xee\xff\x01\x50\x06\x9a\x23\x00\x00\x00\x00\x00",
     },
-    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"},
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"
+    },
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
