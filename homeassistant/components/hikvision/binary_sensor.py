@@ -45,8 +45,15 @@ DEFAULT_IGNORED = False
 
 
 # Entity descriptions keyed by the friendly sensor_type name pyhik emits in
-# `current_event_states`. Looking the key up through pyhik's SENSOR_MAP keeps
-# us in sync with the library if it ever renames a label.
+# `current_event_states`. We resolve each key via SENSOR_MAP at import time so
+# that if pyhik renames a friendly label (the value side of SENSOR_MAP), the
+# entity description stays attached to the right event without us having to
+# update strings here. The raw SENSOR_MAP keys themselves ("vmd",
+# "linedetection", ...) are treated as pyhik's stable public API; if any of
+# them are renamed or removed in pyhik, this module will fail to import,
+# which is intentional — pyhik is pinned in manifest.json, so a key rename
+# only reaches users via a deliberate dependency bump where the KeyError
+# surfaces in CI.
 BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
     SENSOR_MAP["vmd"]: BinarySensorEntityDescription(
         key="motion",
