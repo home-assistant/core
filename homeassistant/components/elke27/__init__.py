@@ -12,7 +12,7 @@ from elke27_lib.errors import (
 )
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT, Platform
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_LINK_KEYS_JSON
 from .coordinator import Elke27DataUpdateCoordinator
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         await hub.async_connect()
     except Elke27LinkRequiredError as err:
         msg = "Linking credentials are invalid"
-        raise ConfigEntryError(msg) from err
+        raise ConfigEntryAuthFailed(msg) from err
     except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
         _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
         with contextlib.suppress(Exception):

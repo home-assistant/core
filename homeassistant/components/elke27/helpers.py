@@ -64,7 +64,7 @@ def device_info_for_entry(
     panel_serial = get_panel_field(snapshot, hub.panel_name, "serial")
     model = get_panel_field(snapshot, hub.panel_name, "model")
     firmware = get_panel_field(snapshot, hub.panel_name, "firmware")
-    identifier = entry.data.get(CONF_CLIENT_ID, entry.entry_id)
+    identifier = unique_base(hub, coordinator, entry)
     identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, formatted_mac)}

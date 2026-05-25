@@ -139,7 +139,8 @@ class Elke27Hub:
         """Disconnect the client and unregister event handlers."""
         was_connected = self._client is not None
         if self._connection_unsubscribe is not None:
-            self._connection_unsubscribe()
+            with contextlib.suppress(Exception):
+                self._connection_unsubscribe()
             self._connection_unsubscribe = None
         if self._client is not None:
             with contextlib.suppress(Exception):
@@ -291,7 +292,8 @@ class Elke27Hub:
         """Clear typed subscriptions when the client disconnects."""
         for cb, unsubscribe in list(self._typed_callbacks.items()):
             if unsubscribe is not None:
-                unsubscribe()
+                with contextlib.suppress(Exception):
+                    unsubscribe()
             self._typed_callbacks[cb] = None
 
     async def async_disarm_area(
@@ -388,7 +390,7 @@ class Elke27Hub:
                 self._reconnect_attempts = 0
                 return
             self._reconnect_attempts += 1
-            delay = min(300, 2**self._reconnect_attempts)
+            delay = min(300, 2 ** min(self._reconnect_attempts, 9))
             _LOGGER.debug(
                 "Reconnect attempt %s sleeping for %s seconds",
                 self._reconnect_attempts,
