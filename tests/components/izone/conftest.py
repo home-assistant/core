@@ -17,7 +17,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="iZone",
-        data={"host": "192.168.0.1"},
+        data={},
         entry_id="test_entry_id",
         unique_id="test_controller_123",
         version=2,

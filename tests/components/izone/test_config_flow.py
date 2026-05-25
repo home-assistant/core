@@ -177,7 +177,8 @@ async def test_broadcast_skips_already_configured_controller(
     MockConfigEntry(
         domain=IZONE,
         unique_id=configured_controller.device_uid,
-        data={"host": configured_controller.device_ip},
+        data={},
+        version=2,
     ).add_to_hass(hass)
 
     with patch(
@@ -375,7 +376,8 @@ async def test_broadcast_aborts_when_all_discovered_are_configured(
     MockConfigEntry(
         domain=IZONE,
         unique_id=configured_controller.device_uid,
-        data={"host": configured_controller.device_ip},
+        data={},
+        version=2,
     ).add_to_hass(hass)
 
     with patch(
@@ -687,7 +689,8 @@ async def test_homekit_aborts_when_uid_already_configured(
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000001",
-        data={"host": "192.0.2.3"},
+        data={},
+        version=2,
     ).add_to_hass(hass)
 
     with patch(
@@ -714,7 +717,8 @@ async def test_homekit_aborts_when_uid_configured_during_discovery(
         MockConfigEntry(
             domain=IZONE,
             unique_id="000000001",
-            data={"host": "198.51.100.20"},
+            data={},
+            version=2,
         ).add_to_hass(hass)
         return {controller.device_uid: controller}
 
@@ -992,7 +996,8 @@ async def test_runtime_integration_discovery_starts_confirm_flow(
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000001",
-        data={"host": "192.0.2.1"},
+        data={},
+        version=2,
     ).add_to_hass(hass)
     new_ctrl = _make_controller("000000002", "192.0.2.2")
 
@@ -1015,7 +1020,8 @@ async def test_runtime_integration_discovery_skips_yaml_excluded_uid(
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000001",
-        data={"host": "192.0.2.1"},
+        data={},
+        version=2,
     ).add_to_hass(hass)
     excluded_ctrl = _make_controller("000000002", "192.0.2.2")
 
@@ -1035,7 +1041,8 @@ async def test_runtime_integration_discovery_skips_when_uid_already_configured(
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000002",
-        data={"host": "192.0.2.2"},
+        data={},
+        version=2,
     ).add_to_hass(hass)
     ctrl = _make_controller("000000002", "192.0.2.2")
 
@@ -1076,7 +1083,8 @@ async def test_runtime_integration_discovery_skips_during_user_select_controller
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000001",
-        data={"host": "192.0.2.1"},
+        data={},
+        version=2,
     ).add_to_hass(hass)
     first = _make_controller("000000002", "192.0.2.2")
     second = _make_controller("000000003", "192.0.2.3")
