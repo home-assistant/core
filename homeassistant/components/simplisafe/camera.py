@@ -56,6 +56,7 @@ async def async_setup_entry(
 class SimpliSafeCamera(SimpliSafeEntity, Camera):
     """A SimpliSafe outdoor camera."""
 
+    _attr_should_poll = False
     _device: SensorV3
 
     def __init__(

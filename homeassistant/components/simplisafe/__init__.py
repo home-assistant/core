@@ -263,7 +263,7 @@ def _async_get_camera_serial_and_simplisafe(
     device_registry = dr.async_get(hass)
 
     if (camera_device := device_registry.async_get(device_id)) is None:
-        raise vol.Invalid("Invalid device ID specified")
+        raise HomeAssistantError(f"No device found with ID: {device_id}")
 
     matching_serials = [
         identity[1] for identity in camera_device.identifiers if identity[0] == DOMAIN
