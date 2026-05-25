@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
-import pytest
 
 from homeassistant.components.elke27 import async_unload_entry
 from homeassistant.components.elke27.const import (
@@ -157,15 +156,6 @@ async def test_unload_keeps_runtime_when_platform_unload_fails(
     hub.async_disconnect.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.homeassistant.issues.config_entry_reauth.title",
-            "component.homeassistant.issues.config_entry_reauth.description",
-        ]
-    ],
-)
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:
