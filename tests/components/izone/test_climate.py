@@ -280,7 +280,7 @@ async def test_setup_entry_only_adds_entities_for_matching_config_entry(
     entry = MockConfigEntry(
         domain="izone",
         title="iZone",
-        data={"host": "192.0.2.1"},
+        data={},
         unique_id="controller_1",
         entry_id="test_entry_id",
         version=2,
