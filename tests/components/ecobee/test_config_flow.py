@@ -13,6 +13,7 @@ from pyecobee import (
 )
 import pytest
 
+from homeassistant.components.ecobee.config_flow import EcobeeFlowHandler
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
@@ -434,6 +435,16 @@ async def test_mfa_submission_rejects_blank_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
     assert result["errors"]["base"] == "invalid_mfa_code"
+
+
+async def test_mfa_step_aborts_without_challenge(hass: HomeAssistant) -> None:
+    """Test async_step_mfa aborts if reached without an active MFA challenge."""
+    handler = EcobeeFlowHandler()
+    handler.hass = hass
+    result = await handler.async_step_mfa(user_input={"code": "123456"})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_reauth_flow_succeeds(hass: HomeAssistant) -> None:

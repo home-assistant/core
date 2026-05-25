@@ -105,9 +105,12 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Collect an MFA OTP code and complete the login."""
+        if self._mfa_challenge is None:
+            return self.async_abort(reason="unknown")
+
         errors: dict[str, str] = {}
 
-        if user_input is not None and self._mfa_challenge is not None:
+        if user_input is not None:
             code = user_input[CONF_CODE].strip()
             if not code:
                 errors["base"] = "invalid_mfa_code"
@@ -129,9 +132,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="mfa",
             data_schema=_MFA_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "mfa_type": self._mfa_challenge.mfa_type if self._mfa_challenge else ""
-            },
+            description_placeholders={"mfa_type": self._mfa_challenge.mfa_type},
         )
 
     async def async_step_authorize(
