@@ -1,0 +1,185 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Qingping Device",
+        "description": "Select a discovered device or add manually.",
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "confirm": {
+        "title": "Confirm Device",
+        "description": "MAC: {mac}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "model": "[%key:common::config_flow::data::model%]"
+        }
+      },
+      "manual": {
+        "title": "Add Device Manually",
+        "description": "Enter device MAC address and select model.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "mac": "MAC Address",
+          "model": "[%key:common::config_flow::data::model%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Device",
+        "description": "Update settings for {device_name}.",
+        "data": {
+          "model": "[%key:common::config_flow::data::model%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Use 12 hex characters (e.g. AABBCCDDEEFF)."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Qingping Options",
+        "data": {
+          "model": "[%key:common::config_flow::data::model%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "device": {
+      "options": {
+        "manual": "Manually add a device"
+      }
+    },
+    "model": {
+      "options": {
+        "cgr1w": "Qingping Indoor Environment Monitor",
+        "cgf2w": "Qingping Multi-Role Monitor Pro",
+        "cgs2": "Qingping Air Monitor"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "humidity": {
+        "name": "Relative Humidity"
+      },
+      "co2": {
+        "name": "CO2"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "etvoc": {
+        "name": "eTVOC"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "signal_strength": {
+        "name": "Signal Strength"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "online": "Online",
+          "offline": "Offline"
+        }
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "mac": {
+        "name": "MAC Address"
+      },
+      "battery_state": {
+        "name": "Battery State",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "full": "Full",
+          "unknown": "Unknown"
+        }
+      }
+    },
+    "number": {
+      "report_interval": {
+        "name": "Interval of Uploading"
+      },
+      "temperature_offset": {
+        "name": "Temp Compensation"
+      },
+      "humidity_offset": {
+        "name": "Humidity Compensation"
+      },
+      "co2_offset": {
+        "name": "CO2 Compensation"
+      },
+      "pm25_offset": {
+        "name": "PM2.5 Compensation"
+      },
+      "pm10_offset": {
+        "name": "PM10 Compensation"
+      },
+      "noise_offset": {
+        "name": "Noise Compensation"
+      },
+      "tvoc_index_offset": {
+        "name": "eTVOC index Compensation"
+      }
+    },
+    "select": {
+      "etvoc_unit": {
+        "name": "eTVOC Unit",
+        "state": {
+          "index": "VOC Index",
+          "ppb": "ppb",
+          "mg_m3": "mg/m³"
+        }
+      },
+      "temperature_unit": {
+        "name": "Temperature Unit",
+        "state": {
+          "celsius": "°C",
+          "fahrenheit": "°F"
+        }
+      }
+    },
+    "switch": {
+      "co2_asc": {
+        "name": "CO2 Auto Self-Calibration"
+      },
+      "led_indicator": {
+        "name": "Rating Light"
+      }
+    },
+    "button": {
+      "co2_calibration": {
+        "name": "CO2 Manual Calibration"
+      }
+    }
+  }
+}
