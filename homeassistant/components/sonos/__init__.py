@@ -410,7 +410,7 @@ class SonosDiscoveryManager:
                 if self._stop_event.is_set():
                     # Entry was unloaded during IO; skip adding this speaker.
                     _LOGGER.debug(
-                        "Config entry unloaded while adding speaker %s, skipping",
+                        "Config entry unloaded while adding speakers speaker %s, skipping",
                         soco.uid,
                     )
                     return
