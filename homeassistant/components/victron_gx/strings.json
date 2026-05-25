@@ -1621,7 +1621,7 @@
         "name": "Dynamic ESS target SoC"
       },
       "system_ess_batterylife_state_sensor": {
-        "name": "ESS BatteryLife state (detailed)",
+        "name": "ESS BatteryLife state",
         "state": {
           "keep_batteries_charged": "'Keep batteries charged' mode enabled",
           "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
