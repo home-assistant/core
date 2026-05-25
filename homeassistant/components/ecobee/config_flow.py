@@ -104,18 +104,21 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None and self._mfa_challenge is not None:
             code = user_input["code"].strip()
-            try:
-                success = await self.hass.async_add_executor_job(
-                    self._ecobee.submit_mfa_code, self._mfa_challenge, code
-                )
-            except EcobeeAuthFailedError:
+            if not code:
                 errors["base"] = "invalid_mfa_code"
-            except EcobeeAuthUnknownError:
-                errors["base"] = "unknown"
             else:
-                if success:
-                    return self._async_create_or_update_entry()
-                errors["base"] = "login_failed"
+                try:
+                    success = await self.hass.async_add_executor_job(
+                        self._ecobee.submit_mfa_code, self._mfa_challenge, code
+                    )
+                except EcobeeAuthFailedError:
+                    errors["base"] = "invalid_mfa_code"
+                except EcobeeAuthUnknownError:
+                    errors["base"] = "unknown"
+                else:
+                    if success:
+                        return self._async_create_or_update_entry()
+                    errors["base"] = "login_failed"
 
         return self.async_show_form(
             step_id="mfa",

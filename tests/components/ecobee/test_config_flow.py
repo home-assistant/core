@@ -399,6 +399,43 @@ async def test_mfa_submission_errors_recover(
     assert result["errors"]["base"] == expected_error
 
 
+@pytest.mark.parametrize("blank_code", ["", "   ", "\t\n "])
+async def test_mfa_submission_rejects_blank_code(
+    hass: HomeAssistant, blank_code: str
+) -> None:
+    """Test that an empty/whitespace MFA code is rejected before reaching the network."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
+            _mfa_challenge()
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        assert result["step_id"] == "mfa"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": blank_code}
+        )
+
+        flow_instance.submit_mfa_code.assert_not_called()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"]["base"] == "invalid_mfa_code"
+
+
 async def test_reauth_flow_succeeds(hass: HomeAssistant) -> None:
     """Test the reauth flow updates the existing entry with a fresh refresh_token."""
     entry = MockConfigEntry(
