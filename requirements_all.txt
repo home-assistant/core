@@ -654,7 +654,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.9.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.6.0
+bleak-retry-connector==4.6.1
 
 # homeassistant.components.bluetooth
 bleak==3.0.2
