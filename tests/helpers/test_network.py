@@ -591,192 +591,265 @@ async def test_get_url(hass: HomeAssistant) -> None:
         assert get_url(hass, allow_internal=False)
 
 
-async def test_get_url_http_internal_standard_external_custom(
+@pytest.mark.parametrize(
+    (
+        "internal_url",
+        "external_url",
+        "host_header",
+        "request_url",
+        "expected_url",
+        "prefer_external",
+    ),
+    [
+        # Scenario 1: HTTP, internal is standard port (http://example.com), external is custom port (http://example.com:18123)
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com",
+            "http://example.com/test/request",
+            "http://example.com",
+            False,
+            id="http_internal_std_request_std_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com",
+            "http://example.com/test/request",
+            "http://example.com",
+            True,
+            id="http_internal_std_request_std_prefer_external",
+        ),
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com:80",
+            "http://example.com:80/test/request",
+            "http://example.com",
+            False,
+            id="http_internal_std_request_80_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com:80",
+            "http://example.com:80/test/request",
+            "http://example.com",
+            True,
+            id="http_internal_std_request_80_prefer_external",
+        ),
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com:18123",
+            "http://example.com:18123/test/request",
+            "http://example.com:18123",
+            False,
+            id="http_internal_std_request_custom_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com",
+            "http://example.com:18123",
+            "example.com:18123",
+            "http://example.com:18123/test/request",
+            "http://example.com:18123",
+            True,
+            id="http_internal_std_request_custom_prefer_external",
+        ),
+        # Scenario 2: HTTP, internal is custom port (http://example.com:18123), external is standard port (http://example.com)
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com",
+            "http://example.com/test/request",
+            "http://example.com",
+            False,
+            id="http_internal_custom_request_std_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com",
+            "http://example.com/test/request",
+            "http://example.com",
+            True,
+            id="http_internal_custom_request_std_prefer_external",
+        ),
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com:80",
+            "http://example.com:80/test/request",
+            "http://example.com",
+            False,
+            id="http_internal_custom_request_80_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com:80",
+            "http://example.com:80/test/request",
+            "http://example.com",
+            True,
+            id="http_internal_custom_request_80_prefer_external",
+        ),
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com:18123",
+            "http://example.com:18123/test/request",
+            "http://example.com:18123",
+            False,
+            id="http_internal_custom_request_custom_prefer_internal",
+        ),
+        pytest.param(
+            "http://example.com:18123",
+            "http://example.com",
+            "example.com:18123",
+            "http://example.com:18123/test/request",
+            "http://example.com:18123",
+            True,
+            id="http_internal_custom_request_custom_prefer_external",
+        ),
+        # Scenario 3: HTTPS, internal is standard port (https://example.com), external is custom port (https://example.com:18123)
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com",
+            "https://example.com/test/request",
+            "https://example.com",
+            False,
+            id="https_internal_std_request_std_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com",
+            "https://example.com/test/request",
+            "https://example.com",
+            True,
+            id="https_internal_std_request_std_prefer_external",
+        ),
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com:443",
+            "https://example.com:443/test/request",
+            "https://example.com",
+            False,
+            id="https_internal_std_request_443_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com:443",
+            "https://example.com:443/test/request",
+            "https://example.com",
+            True,
+            id="https_internal_std_request_443_prefer_external",
+        ),
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com:18123",
+            "https://example.com:18123/test/request",
+            "https://example.com:18123",
+            False,
+            id="https_internal_std_request_custom_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com",
+            "https://example.com:18123",
+            "example.com:18123",
+            "https://example.com:18123/test/request",
+            "https://example.com:18123",
+            True,
+            id="https_internal_std_request_custom_prefer_external",
+        ),
+        # Scenario 4: HTTPS, internal is custom port (https://example.com:18123), external is standard port (https://example.com)
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com",
+            "https://example.com/test/request",
+            "https://example.com",
+            False,
+            id="https_internal_custom_request_std_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com",
+            "https://example.com/test/request",
+            "https://example.com",
+            True,
+            id="https_internal_custom_request_std_prefer_external",
+        ),
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com:443",
+            "https://example.com:443/test/request",
+            "https://example.com",
+            False,
+            id="https_internal_custom_request_443_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com:443",
+            "https://example.com:443/test/request",
+            "https://example.com",
+            True,
+            id="https_internal_custom_request_443_prefer_external",
+        ),
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com:18123",
+            "https://example.com:18123/test/request",
+            "https://example.com:18123",
+            False,
+            id="https_internal_custom_request_custom_prefer_internal",
+        ),
+        pytest.param(
+            "https://example.com:18123",
+            "https://example.com",
+            "example.com:18123",
+            "https://example.com:18123/test/request",
+            "https://example.com:18123",
+            True,
+            id="https_internal_custom_request_custom_prefer_external",
+        ),
+    ],
+)
+async def test_get_url_host_matching_respects_port(
     hass: HomeAssistant,
+    internal_url: str,
+    external_url: str,
+    host_header: str,
+    request_url: str,
+    expected_url: str,
+    prefer_external: bool,
 ) -> None:
-    """Test get_url matches custom/standard port over HTTP when internal is standard port."""
+    """Test that get_url respects the port when matching the request host."""
     await async_process_ha_core_config(
         hass,
         {
-            "internal_url": "http://example.com",
-            "external_url": "http://example.com:18123",
+            "internal_url": internal_url,
+            "external_url": external_url,
         },
     )
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
+        mock_request.headers = {hdrs.HOST: host_header}
+        mock_request.url = URL(request_url)
         mock_request_context.get.return_value = mock_request
 
-        for prefer_external in (False, True):
-            # Incoming request with no explicit port (default 80) should match internal
-            mock_request.headers = {hdrs.HOST: "example.com"}
-            mock_request.url = URL("http://example.com/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com"
-            )
-
-            # Incoming request with standard port 80 should match internal
-            mock_request.headers = {hdrs.HOST: "example.com:80"}
-            mock_request.url = URL("http://example.com:80/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com"
-            )
-
-            # Incoming request with custom port 18123 should match external
-            mock_request.headers = {hdrs.HOST: "example.com:18123"}
-            mock_request.url = URL("http://example.com:18123/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com:18123"
-            )
-
-
-async def test_get_url_http_internal_custom_external_standard(
-    hass: HomeAssistant,
-) -> None:
-    """Test get_url matches custom/standard port over HTTP when external is standard port."""
-    await async_process_ha_core_config(
-        hass,
-        {
-            "internal_url": "http://example.com:18123",
-            "external_url": "http://example.com",
-        },
-    )
-    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
-        mock_request = Mock()
-        mock_request_context.get.return_value = mock_request
-
-        for prefer_external in (False, True):
-            # Incoming request with no explicit port (default 80) should match external
-            mock_request.headers = {hdrs.HOST: "example.com"}
-            mock_request.url = URL("http://example.com/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com"
-            )
-
-            # Incoming request with standard port 80 should match external
-            mock_request.headers = {hdrs.HOST: "example.com:80"}
-            mock_request.url = URL("http://example.com:80/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com"
-            )
-
-            # Incoming request with custom port 18123 should match internal
-            mock_request.headers = {hdrs.HOST: "example.com:18123"}
-            mock_request.url = URL("http://example.com:18123/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "http://example.com:18123"
-            )
-
-
-async def test_get_url_https_internal_standard_external_custom(
-    hass: HomeAssistant,
-) -> None:
-    """Test get_url matches custom/standard port over HTTPS when internal is standard port."""
-    await async_process_ha_core_config(
-        hass,
-        {
-            "internal_url": "https://example.com",
-            "external_url": "https://example.com:18123",
-        },
-    )
-    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
-        mock_request = Mock()
-        mock_request_context.get.return_value = mock_request
-
-        for prefer_external in (False, True):
-            # Incoming request with no explicit port (default 443) should match internal
-            mock_request.headers = {hdrs.HOST: "example.com"}
-            mock_request.url = URL("https://example.com/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com"
-            )
-
-            # Incoming request with standard port 443 should match internal
-            mock_request.headers = {hdrs.HOST: "example.com:443"}
-            mock_request.url = URL("https://example.com:443/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com"
-            )
-
-            # Incoming request with custom port 18123 should match external
-            mock_request.headers = {hdrs.HOST: "example.com:18123"}
-            mock_request.url = URL("https://example.com:18123/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com:18123"
-            )
-
-
-async def test_get_url_https_internal_custom_external_standard(
-    hass: HomeAssistant,
-) -> None:
-    """Test get_url matches custom/standard port over HTTPS when external is standard port."""
-    await async_process_ha_core_config(
-        hass,
-        {
-            "internal_url": "https://example.com:18123",
-            "external_url": "https://example.com",
-        },
-    )
-    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
-        mock_request = Mock()
-        mock_request_context.get.return_value = mock_request
-
-        for prefer_external in (False, True):
-            # Incoming request with no explicit port (default 443) should match external
-            mock_request.headers = {hdrs.HOST: "example.com"}
-            mock_request.url = URL("https://example.com/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com"
-            )
-
-            # Incoming request with standard port 443 should match external
-            mock_request.headers = {hdrs.HOST: "example.com:443"}
-            mock_request.url = URL("https://example.com:443/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com"
-            )
-
-            # Incoming request with custom port 18123 should match internal
-            mock_request.headers = {hdrs.HOST: "example.com:18123"}
-            mock_request.url = URL("https://example.com:18123/test/request")
-            assert (
-                get_url(
-                    hass, require_current_request=True, prefer_external=prefer_external
-                )
-                == "https://example.com:18123"
-            )
+        assert (
+            get_url(hass, require_current_request=True, prefer_external=prefer_external)
+            == expected_url
+        )
 
 
 async def test_get_request_host_port_with_port(hass: HomeAssistant) -> None:
