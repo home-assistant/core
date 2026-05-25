@@ -1,15 +1,16 @@
 """Common fixtures for the qingpingiot tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.qingpingiot.const import DOMAIN
+from homeassistant.components.qingpingiot import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 TEST_MAC = "AABBCCDDEEFF"
 TEST_MODEL = "cgr1w"
@@ -43,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
-    mqtt_mock: MagicMock,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up the qingpingiot integration for testing."""

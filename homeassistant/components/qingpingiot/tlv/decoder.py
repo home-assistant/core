@@ -10,8 +10,8 @@ _LOGGER = logging.getLogger(__name__)
 def bytes_to_int_little_endian(byte_array: bytes) -> int:
     """Convert little endian bytes to integer."""
     val = 0
-    for i in range(len(byte_array)):
-        val = val | byte_array[i] << i * 8
+    for i, byte in enumerate(byte_array):
+        val = val | byte << i * 8
     return val
 
 
@@ -157,7 +157,7 @@ def decode_sensor_data_v2(byte_array: bytes) -> dict[str, Any]:
         _LOGGER.error("Byte array too short for sensor data v2 decoding")
         return {}
 
-    sensor_data = {}
+    sensor_data: dict[str, Any] = {}
     timestamp = bytes_to_int_little_endian(byte_array[0:4])
     sensor_data["timestamp"] = timestamp
 
@@ -165,53 +165,47 @@ def decode_sensor_data_v2(byte_array: bytes) -> dict[str, Any]:
 
     if sensor_type == 1:  # Temperature + Humidity
         if len(byte_array) >= 9:
-            temperature_val = bytes_to_int_little_endian(byte_array[5:7])
-            humidity_val = bytes_to_int_little_endian(byte_array[7:9])
-            sensor_data["temperature"] = temperature_val / 10.0
-            sensor_data["humidity"] = humidity_val / 10.0
+            sensor_data["temperature"] = (
+                bytes_to_int_little_endian(byte_array[5:7]) / 10.0
+            )
+            sensor_data["humidity"] = bytes_to_int_little_endian(byte_array[7:9]) / 10.0
 
     elif sensor_type == 2:  # Temperature only
         if len(byte_array) >= 7:
-            temperature_val = bytes_to_int_little_endian(byte_array[5:7])
-            sensor_data["temperature"] = temperature_val / 10.0
+            sensor_data["temperature"] = (
+                bytes_to_int_little_endian(byte_array[5:7]) / 10.0
+            )
 
     elif sensor_type == 3:  # Temperature + Humidity + Pressure
         if len(byte_array) >= 11:
-            temperature_val = bytes_to_int_little_endian(byte_array[5:7])
-            humidity_val = bytes_to_int_little_endian(byte_array[7:9])
-            pressure_val = bytes_to_int_little_endian(byte_array[9:11])
-            sensor_data["temperature"] = temperature_val / 10.0
-            sensor_data["humidity"] = humidity_val / 10.0
-            sensor_data["pressure"] = pressure_val / 100.0
+            sensor_data["temperature"] = (
+                bytes_to_int_little_endian(byte_array[5:7]) / 10.0
+            )
+            sensor_data["humidity"] = bytes_to_int_little_endian(byte_array[7:9]) / 10.0
+            sensor_data["pressure"] = (
+                bytes_to_int_little_endian(byte_array[9:11]) / 100.0
+            )
 
     elif sensor_type == 4:  # Temperature + Humidity + CO2
         if len(byte_array) >= 11:
-            temperature_val = bytes_to_int_little_endian(byte_array[5:7])
-            humidity_val = bytes_to_int_little_endian(byte_array[7:9])
-            co2_val = bytes_to_int_little_endian(byte_array[9:11])
-            sensor_data["temperature"] = temperature_val / 10.0
-            sensor_data["humidity"] = humidity_val / 10.0
-            sensor_data["co2"] = co2_val
+            sensor_data["temperature"] = (
+                bytes_to_int_little_endian(byte_array[5:7]) / 10.0
+            )
+            sensor_data["humidity"] = bytes_to_int_little_endian(byte_array[7:9]) / 10.0
+            sensor_data["co2"] = bytes_to_int_little_endian(byte_array[9:11])
 
     elif sensor_type == 10:  # Full environment monitor (CGR1W, CGR1PW)
         if len(byte_array) >= 23:
-            temperature_val = bytes_to_int_little_endian(byte_array[5:7])
-            humidity_val = bytes_to_int_little_endian(byte_array[7:9])
-            co2_val = bytes_to_int_little_endian(byte_array[9:11])
-            pm25_val = bytes_to_int_little_endian(byte_array[11:13])
-            pm10_val = bytes_to_int_little_endian(byte_array[13:15])
-            tvoc_val = bytes_to_int_little_endian(byte_array[15:17])
-            noise_val = bytes_to_int_little_endian(byte_array[17:19])
-            light_val = bytes_to_int_little_endian(byte_array[19:23])
-
-            sensor_data["temperature"] = temperature_val / 10.0
-            sensor_data["humidity"] = humidity_val / 10.0
-            sensor_data["co2"] = co2_val
-            sensor_data["pm25"] = pm25_val
-            sensor_data["pm10"] = pm10_val
-            sensor_data["tvoc"] = tvoc_val
-            sensor_data["noise"] = noise_val
-            sensor_data["light"] = light_val
+            sensor_data["temperature"] = (
+                bytes_to_int_little_endian(byte_array[5:7]) / 10.0
+            )
+            sensor_data["humidity"] = bytes_to_int_little_endian(byte_array[7:9]) / 10.0
+            sensor_data["co2"] = bytes_to_int_little_endian(byte_array[9:11])
+            sensor_data["pm25"] = bytes_to_int_little_endian(byte_array[11:13])
+            sensor_data["pm10"] = bytes_to_int_little_endian(byte_array[13:15])
+            sensor_data["tvoc"] = bytes_to_int_little_endian(byte_array[15:17])
+            sensor_data["noise"] = bytes_to_int_little_endian(byte_array[17:19])
+            sensor_data["light"] = bytes_to_int_little_endian(byte_array[19:23])
 
     return sensor_data
 

@@ -2,7 +2,6 @@
 
 import json
 import time
-from unittest.mock import AsyncMock
 
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
@@ -10,13 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.typing import MqttMockHAClient
 
 MAC = "AABBCCDDEEFF"
 
 
 async def test_sensors_created_for_cgr1w(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test that expected sensors are created for CGR1W model."""
     entry = MockConfigEntry(
@@ -57,7 +57,7 @@ async def test_sensors_created_for_cgr1w(
 
 async def test_sensors_created_for_cgs2_with_battery(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test that battery state sensor is created for CGS2 which has battery capability."""
     entry = MockConfigEntry(
@@ -86,7 +86,7 @@ async def test_sensors_created_for_cgs2_with_battery(
 
 async def test_status_sensor_offline_by_default(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test status sensor shows offline when no data received."""
     entry = MockConfigEntry(
@@ -111,7 +111,7 @@ async def test_status_sensor_offline_by_default(
 
 async def test_temperature_sensor_updates_from_json(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test temperature sensor updates from JSON MQTT message."""
     entry = MockConfigEntry(
@@ -161,7 +161,7 @@ async def test_temperature_sensor_updates_from_json(
 
 async def test_firmware_sensor_updates(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test firmware sensor updates from MQTT message."""
     entry = MockConfigEntry(

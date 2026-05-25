@@ -7,11 +7,15 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_MODEL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -19,7 +23,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_DEVICE, DOMAIN, MODEL_OPTIONS, MQTT_TOPIC_PREFIX
+from .const import DOMAIN, MODEL_OPTIONS, MQTT_TOPIC_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +44,7 @@ class DiscoveredDevice:
     model: str
 
 
-class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Qingping IoT."""
 
     VERSION = 1
@@ -51,7 +55,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step: show discovered devices or manual entry."""
         errors: dict[str, str] = {}
 
@@ -101,7 +105,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovered device and select model."""
         assert self._selected_device is not None
         device = self._selected_device
@@ -109,10 +113,9 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, device.mac),
+                title=device.mac,
                 data={
                     CONF_MAC: device.mac,
-                    CONF_NAME: user_input.get(CONF_NAME, device.mac),
                     CONF_MODEL: user_input.get(CONF_MODEL),
                 },
             )
@@ -121,7 +124,6 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=device.mac): str,
                     vol.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=MODEL_OPTIONS,
@@ -137,7 +139,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle manual device configuration."""
         errors: dict[str, str] = {}
 
@@ -151,10 +153,9 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=mac,
                     data={
                         CONF_MAC: mac,
-                        CONF_NAME: user_input[CONF_NAME],
                         CONF_MODEL: user_input.get(CONF_MODEL),
                     },
                 )
@@ -163,7 +164,6 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME): str,
                     vol.Required(CONF_MAC): str,
                     vol.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
@@ -179,7 +179,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-configuration of a device."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()
@@ -219,7 +219,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not await mqtt.async_wait_for_mqtt_client(self.hass):
                 _LOGGER.debug("MQTT client not available")
                 return
-        except mqtt.MqttError, ConnectionError:
+        except ConnectionError:
             _LOGGER.debug("MQTT not available")
             return
 
@@ -276,18 +276,18 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> QingpingOptionsFlow:
         """Get the options flow for this handler."""
         return QingpingOptionsFlow()
 
 
-class QingpingOptionsFlow(config_entries.OptionsFlowWithReload):
+class QingpingOptionsFlow(OptionsFlowWithReload):
     """Handle options flow for Qingping IoT."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

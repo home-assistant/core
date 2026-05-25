@@ -1,18 +1,17 @@
 """Test the qingpingiot init."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading a config entry."""
@@ -31,7 +30,7 @@ async def test_load_unload_entry(
 
 async def test_runtime_data_set(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that runtime_data is set after setup."""
@@ -48,7 +47,7 @@ async def test_runtime_data_set(
 
 async def test_setup_with_json_model(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test setup with a JSON protocol model (cgs2)."""
     entry = MockConfigEntry(
@@ -77,7 +76,7 @@ async def test_setup_with_json_model(
 
 async def test_mqtt_subscription_started(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that MQTT subscription is started on setup."""

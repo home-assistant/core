@@ -1,20 +1,19 @@
 """Test the qingpingiot select entities."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 MAC = "AABBCCDDEEFF"
 
 
 async def test_temperature_unit_select_created_for_cgr1w(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test temperature unit select entity is created for CGR1W model."""
     entry = MockConfigEntry(
@@ -42,7 +41,7 @@ async def test_temperature_unit_select_created_for_cgr1w(
 
 async def test_temperature_unit_select_options(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test temperature unit select has correct options."""
     entry = MockConfigEntry(
@@ -69,7 +68,7 @@ async def test_temperature_unit_select_options(
 
 async def test_temperature_unit_select_change(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test changing temperature unit select value."""
     entry = MockConfigEntry(
@@ -107,7 +106,7 @@ async def test_temperature_unit_select_change(
 
 async def test_no_etvoc_select_for_cgr1w(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test no eTVOC select for CGR1W (no eTVOC capability)."""
     entry = MockConfigEntry(
