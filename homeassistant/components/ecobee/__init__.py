@@ -115,7 +115,12 @@ class EcobeeData:
                 "ecobee account requires MFA; reauthentication needed"
             ) from err
         except EcobeeAuthFailedError as err:
-            raise ConfigEntryAuthFailed("ecobee rejected stored credentials") from err
+            if self.ecobee.config.get(ECOBEE_USERNAME):
+                raise ConfigEntryAuthFailed(
+                    "ecobee rejected stored credentials"
+                ) from err
+            _LOGGER.error("ecobee rejected stored credentials: %s", err)
+            return False
         except EcobeeAuthUnknownError:
             _LOGGER.exception("Unexpected error refreshing ecobee tokens")
             return False

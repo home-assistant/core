@@ -476,3 +476,43 @@ async def test_reauth_flow_with_mfa_challenge(hass: HomeAssistant) -> None:
     assert entry.data[CONF_REFRESH_TOKEN] == "reauth-refresh-token"
     assert entry.data[CONF_PASSWORD] == "new-password"
     flow_instance.submit_mfa_code.assert_called_once_with(challenge, "123456")
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (EcobeeAuthFailedError("bad creds"), "invalid_auth"),
+        (EcobeeAuthUnknownError("network down"), "unknown"),
+    ],
+)
+async def test_reauth_flow_error_branches(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test that auth errors during reauth keep the user on the reauth form."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username@example.com",
+            CONF_PASSWORD: "stale-password",
+            CONF_REFRESH_TOKEN: "stale-refresh-token",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        mock_flow_ecobee.return_value.refresh_tokens.side_effect = exception
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == expected_error
