@@ -323,6 +323,30 @@ async def test_async_disconnect_suppresses_finished_reconnect_error(
     assert hub._reconnect_task is None
 
 
+async def test_async_disconnect_waits_for_connect_lock(hass: HomeAssistant) -> None:
+    """Verify disconnect is serialized with connect operations."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.83",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+    hub._client = client
+    async with hub._connect_lock:
+        disconnect_task = asyncio.create_task(hub.async_disconnect())
+        await asyncio.sleep(0)
+        assert hub._client is client
+        client.async_disconnect.assert_not_awaited()
+
+    await disconnect_task
+
+    client.async_disconnect.assert_awaited_once()
+    assert hub._client is None
+
+
 async def test_snapshot_and_refresh_paths(hass: HomeAssistant) -> None:
     """Verify snapshot and refresh paths with client."""
     client = SimpleNamespace(
