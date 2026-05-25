@@ -374,7 +374,8 @@ async def test_subscribe_and_unsubscribe_typed_client(hass: HomeAssistant) -> No
     )
     hub._client = client
     assert hub.subscribe(lambda *_: None) == "token"
-    assert hub.unsubscribe_typed(lambda *_: None) is True
+    assert hub.unsubscribe_typed(lambda *_: None) is False
+    client.unsubscribe_typed.assert_not_called()
 
 
 async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
@@ -865,9 +866,10 @@ async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
     assert callable(remove)
     assert callable(remove_duplicate)
     remove()
+    remove()
+    remove_duplicate()
     unsubscribe.assert_called_once()
 
-    hub._client = None
     assert hub.unsubscribe_typed(Mock()) is False
 
 
