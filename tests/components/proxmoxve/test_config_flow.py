@@ -57,6 +57,11 @@ MOCK_USER_AUTH_STEP_TOKEN = {
     CONF_TOKEN_SECRET: "test_token_secret",
 }
 
+MOCK_USER_AUTH_STEP_TOKEN_FULL_ID = {
+    CONF_TOKEN_ID: "test_user@pam!test_token_id",
+    CONF_TOKEN_SECRET: "test_token_secret",
+}
+
 # Other authentication method (e.g. LDAP) with realm
 MOCK_USER_STEP_OTHER = {
     **MOCK_USER_STEP,
@@ -92,6 +97,11 @@ MOCK_USER_FINAL = {
     [
         (MOCK_USER_STEP, MOCK_USER_AUTH_STEP_PASSWORD, MOCK_TEST_CONFIG),
         (MOCK_USER_STEP_TOKEN, MOCK_USER_AUTH_STEP_TOKEN, MOCK_TEST_TOKEN_CONFIG),
+        (
+            MOCK_USER_STEP_TOKEN,
+            MOCK_USER_AUTH_STEP_TOKEN_FULL_ID,
+            MOCK_TEST_TOKEN_CONFIG,
+        ),
         (MOCK_USER_STEP_OTHER, MOCK_USER_AUTH_STEP_OTHER, MOCK_TEST_OTHER_CONFIG),
         (
             MOCK_USER_STEP_OTHER_TOKEN,
