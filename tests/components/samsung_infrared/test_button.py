@@ -44,7 +44,7 @@ async def test_entities(
     assert device_entry
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
-        assert entity_entry.domain == "button"
+        assert entity_entry.domain == BUTTON_DOMAIN
         assert entity_entry.has_entity_name is True
         assert entity_entry.platform == "samsung_infrared"
 

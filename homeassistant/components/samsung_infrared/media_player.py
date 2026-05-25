@@ -123,7 +123,7 @@ class SamsungIrTvMediaPlayer(
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": source,
-                    "valid_sources": ", ".join(SOURCE_MAP.keys()),
+                    "valid_sources": ", ".join(sorted(SOURCE_MAP)),
                 },
             )
         await self._send_command(code.to_command())
