@@ -1,13 +1,18 @@
 """Tests for the Elke27 hub."""
 
 import asyncio
+from collections.abc import Callable
 from enum import Enum
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from elke27_lib import ArmMode, LinkKeys
-from elke27_lib.errors import Elke27InvalidArgument, Elke27LinkRequiredError
+from elke27_lib.errors import (
+    Elke27InvalidArgument,
+    Elke27LinkRequiredError,
+    Elke27PinRequiredError,
+)
 import pytest
 
 from homeassistant.components.elke27.const import READY_TIMEOUT
@@ -21,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 
-def _client_factory(client: AsyncMock) -> callable:
+def _client_factory(client: AsyncMock) -> Callable[..., AsyncMock]:
     def _factory(*args, **kwargs):
         assert not kwargs
         assert len(args) == 1
@@ -357,7 +362,7 @@ async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
         None,
     )
     hub._client = SimpleNamespace(async_disarm_area=AsyncMock(return_value=None))
-    with pytest.raises(Exception, match=r"PIN=.*required to disarm areas"):
+    with pytest.raises(Elke27PinRequiredError, match=r"PIN=.*required to disarm areas"):
         await hub.async_disarm_area(1, None)
     hub._client.async_disarm_area.side_effect = Elke27InvalidArgument(
         "PIN must be a non-empty digit string."

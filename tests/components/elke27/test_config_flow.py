@@ -1,6 +1,7 @@
 """Test the Elke27 config flow."""
 
 import builtins
+from collections.abc import Callable
 from dataclasses import dataclass
 import importlib
 from types import SimpleNamespace
@@ -56,7 +57,7 @@ class FakeSnapshot:
     table_info: FakeTableInfo
 
 
-def _client_factory(instances: list[AsyncMock]) -> callable:
+def _client_factory(instances: list[AsyncMock]) -> Callable[[], AsyncMock]:
     iterator = iter(instances)
 
     def _factory() -> AsyncMock:
