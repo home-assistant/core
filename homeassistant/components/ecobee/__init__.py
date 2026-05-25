@@ -119,7 +119,7 @@ class EcobeeData:
                 raise ConfigEntryAuthFailed(
                     "ecobee rejected stored credentials"
                 ) from err
-            _LOGGER.error("ecobee rejected stored credentials: %s", err)
+            _LOGGER.error("Ecobee rejected stored credentials: %s", err)
             return False
         except EcobeeAuthUnknownError:
             _LOGGER.exception("Unexpected error refreshing ecobee tokens")
