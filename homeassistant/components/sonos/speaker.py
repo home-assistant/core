@@ -1338,7 +1338,9 @@ class SonosSpeaker:
             self._group_volume_unsub = None
             await self._async_update_group_volume()
 
-        self._group_volume_unsub = async_call_later(self.hass, GROUP_VOLUME_REFRESH_DELAY, _do_update)
+        self._group_volume_unsub = async_call_later(
+            self.hass, GROUP_VOLUME_REFRESH_DELAY, _do_update
+        )
 
     async def _async_update_group_volume(self) -> None:
         """Read group volume in executor and push entity states."""
