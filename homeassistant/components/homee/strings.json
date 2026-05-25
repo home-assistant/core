@@ -487,8 +487,14 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication to homee failed."
+    },
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
+    },
+    "connection_failed": {
+      "message": "Connection to homee failed."
     },
     "disarm_not_supported": {
       "message": "Disarm is not supported by homee."
