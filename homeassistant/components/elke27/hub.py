@@ -186,7 +186,7 @@ class Elke27Hub:
         if listener not in self._typed_callbacks:
             self._typed_callbacks[listener] = None
         client = self._client
-        if client is not None:
+        if client is not None and self._typed_callbacks[listener] is None:
             self._typed_callbacks[listener] = client.subscribe_typed(listener)
 
         def _remove() -> None:

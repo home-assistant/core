@@ -143,7 +143,7 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
     """Verify CSM change events are debounced and coalesced."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     hub = _FakeHub(SimpleNamespace(version=1))
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0.05)
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
 
     await coordinator.async_start()
     hub.emit(
@@ -169,7 +169,6 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
         )
     )
 
-    await asyncio.sleep(0.1)
     await hass.async_block_till_done()
 
     assert hub.refresh_domains == ["zone"]
