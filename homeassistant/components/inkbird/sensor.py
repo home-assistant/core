@@ -117,7 +117,9 @@ async def async_setup_entry(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class INKBIRDBluetoothSensorEntity(
