@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -58,45 +59,23 @@ async def test_mosque_coordinator_success(
     assert mock_config_entry.runtime_data.mosque_coordinator.data == mosque_data
 
 
-async def test_mosque_coordinator_bad_credentials(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "mosque_side_effect",
+    [
+        BadCredentialsException,
+        NoMosqueAround,
+        NoMosqueFound,
+        ConnectionError,
+        TimeoutError,
+    ],
+)
+async def test_mosque_coordinator_errors_cause_setup_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mosque_side_effect: type[Exception],
 ) -> None:
-    """Test mosque coordinator with bad credentials causes setup retry."""
-    await _setup_entry(
-        hass, mock_config_entry, mosque_side_effect=BadCredentialsException
-    )
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_mosque_coordinator_no_mosque(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque coordinator when no mosque found causes setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_side_effect=NoMosqueAround)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_mosque_coordinator_no_mosque_found(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque coordinator when NoMosqueFound causes setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_side_effect=NoMosqueFound)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_mosque_coordinator_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque coordinator with connection error causes setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_side_effect=ConnectionError)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_mosque_coordinator_timeout_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque coordinator with timeout error causes setup retry."""
-    await _setup_entry(hass, mock_config_entry, mosque_side_effect=TimeoutError)
+    """Test mosque coordinator errors all cause setup retry."""
+    await _setup_entry(hass, mock_config_entry, mosque_side_effect=mosque_side_effect)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -192,58 +171,22 @@ async def test_prayer_time_coordinator_refresh_after_day(
     assert mock_fetch.call_count == 2
 
 
-async def test_prayer_time_coordinator_bad_credentials(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "prayer_side_effect",
+    [BadCredentialsException, NoMosqueAround, ConnectionError, TimeoutError],
+)
+async def test_prayer_time_coordinator_errors_cause_setup_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    prayer_side_effect: type[Exception],
 ) -> None:
-    """Test prayer time coordinator with bad credentials causes setup retry."""
+    """Test prayer time coordinator errors all cause setup retry."""
     mosque_data = {"name": "Test Mosque", "uuid": "abc"}
     await _setup_entry(
         hass,
         mock_config_entry,
         mosque_data=mosque_data,
-        prayer_side_effect=BadCredentialsException,
-    )
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_prayer_time_coordinator_no_mosque(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test prayer time coordinator when no mosque found causes setup retry."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_entry(
-        hass,
-        mock_config_entry,
-        mosque_data=mosque_data,
-        prayer_side_effect=NoMosqueAround,
-    )
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_prayer_time_coordinator_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test prayer time coordinator with connection error causes setup retry."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_entry(
-        hass,
-        mock_config_entry,
-        mosque_data=mosque_data,
-        prayer_side_effect=ConnectionError,
-    )
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_prayer_time_coordinator_timeout_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test prayer time coordinator with timeout error causes setup retry."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_entry(
-        hass,
-        mock_config_entry,
-        mosque_data=mosque_data,
-        prayer_side_effect=TimeoutError,
+        prayer_side_effect=prayer_side_effect,
     )
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
