@@ -48,14 +48,17 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
     async def async_start(self) -> None:
         """Subscribe to hub events and seed snapshot data."""
         if self._unsubscribe is not None:
-            self._unsubscribe()
+            with contextlib.suppress(Exception):
+                self._unsubscribe()
+            self._unsubscribe = None
         self._unsubscribe = self._hub.subscribe_typed(self._handle_event)
         self._set_snapshot(self._hub.get_snapshot())
 
     async def async_stop(self) -> None:
         """Stop coordinating updates and clean up resources."""
         if self._unsubscribe is not None:
-            self._unsubscribe()
+            with contextlib.suppress(Exception):
+                self._unsubscribe()
             self._unsubscribe = None
         if self._debounce_task is not None:
             self._debounce_task.cancel()
