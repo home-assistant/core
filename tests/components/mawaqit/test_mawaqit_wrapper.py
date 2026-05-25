@@ -69,32 +69,17 @@ async def test_get_mawaqit_api_token_success(mock_client: MagicMock) -> None:
     mock_client.close.assert_called_once()
 
 
-async def test_get_mawaqit_api_token_bad_credentials(mock_client: MagicMock) -> None:
-    """Test API token retrieval with bad credentials."""
-    mock_client.get_api_token.side_effect = BadCredentialsException
-    result = await mawaqit_wrapper.get_mawaqit_api_token(
-        client_instance=mock_client,
-    )
-    assert result is None
-    mock_client.close.assert_called_once()
-
-
-async def test_get_mawaqit_api_token_connection_error(mock_client: MagicMock) -> None:
-    """Test API token retrieval with connection error."""
-    mock_client.get_api_token.side_effect = ConnectionError
-    result = await mawaqit_wrapper.get_mawaqit_api_token(
-        client_instance=mock_client,
-    )
-    assert result is None
-    mock_client.close.assert_called_once()
-
-
-async def test_get_mawaqit_api_token_timeout_error(mock_client: MagicMock) -> None:
-    """Test API token retrieval with timeout error."""
-    mock_client.get_api_token.side_effect = TimeoutError
-    result = await mawaqit_wrapper.get_mawaqit_api_token(
-        client_instance=mock_client,
-    )
+@pytest.mark.parametrize(
+    "side_effect",
+    [BadCredentialsException, ConnectionError, TimeoutError],
+)
+async def test_get_mawaqit_api_token_errors_return_none(
+    mock_client: MagicMock,
+    side_effect: type[Exception],
+) -> None:
+    """Test that any error during token retrieval returns None."""
+    mock_client.get_api_token.side_effect = side_effect
+    result = await mawaqit_wrapper.get_mawaqit_api_token(client_instance=mock_client)
     assert result is None
     mock_client.close.assert_called_once()
 
@@ -132,7 +117,6 @@ async def test_all_mosques_neighborhood_success(
         client_instance=mock_client,
     )
 
-    assert test_all_mosques_by_keyword_success
     assert result == mock_mosques_search_api_wrapper
 
     mock_client.get_api_token.assert_called_once()
@@ -184,7 +168,6 @@ async def test_all_mosques_by_keyword_success(
         client_instance=mock_client,
     )
 
-    assert test_all_mosques_by_keyword_success
     assert result == mock_mosques_search_api_wrapper
 
     mock_client.get_api_token.assert_called_once()
@@ -227,7 +210,6 @@ async def test_all_mosques_by_keyword_creates_client(
             token="tok",
         )
 
-        assert test_all_mosques_by_keyword_success
         assert result == mock_mosques_search_api_wrapper
 
         mock_cls.assert_called_once()
