@@ -26,7 +26,7 @@ from homeassistant.components.waze_travel_time.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_REGION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 
 from .const import MOCK_CONFIG
 
@@ -43,7 +43,7 @@ async def call_service_get_travel_times(
     incl_filter: list[str] | None = None,
     time_delta: dict[str, int] | None = None,
     base_coordinates: dict[str, float] | None = None,
-) -> dict | None:
+) -> ServiceResponse:
     """Call the get_travel_times service."""
     params = {
         "origin": origin,
