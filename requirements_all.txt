@@ -1320,7 +1320,7 @@ ical==13.2.4
 icalendar==6.3.1
 
 # homeassistant.components.ping
-icmplib==3.0
+icmplib==3.0.4
 
 # homeassistant.components.idasen_desk
 idasen-ha==2.6.5
