@@ -73,7 +73,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: f"M1065-LW - {MAC}",
     }
 
 
@@ -189,10 +189,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 2",
+        CONF_NAME: f"M1065-LW - {MAC}",
     }
 
-    assert result["data"][CONF_NAME] == "M1065-LW 2"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {MAC}"
 
 
 async def test_reauth_flow_update_configuration(
@@ -266,7 +266,7 @@ async def test_reconfiguration_flow_update_configuration(
 
 
 @pytest.mark.parametrize(
-    ("source", "discovery_info"),
+    ("source", "discovery_info", "expected_title"),
     [
         (
             SOURCE_DHCP,
@@ -275,6 +275,7 @@ async def test_reconfiguration_flow_update_configuration(
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
             ),
+            f"axis-{MAC}",
         ),
         (
             SOURCE_SSDP,
@@ -314,6 +315,7 @@ async def test_reconfiguration_flow_update_configuration(
                     "presentationURL": f"http://{DEFAULT_HOST}:80/",
                 },
             ),
+            f"AXIS M1065-LW - {MAC}",
         ),
         (
             SOURCE_ZEROCONF,
@@ -329,6 +331,7 @@ async def test_reconfiguration_flow_update_configuration(
                     "macaddress": MAC,
                 },
             ),
+            f"AXIS M1065-LW - {MAC}",
         ),
     ],
 )
@@ -337,6 +340,7 @@ async def test_discovery_flow(
     hass: HomeAssistant,
     source: str,
     discovery_info: BaseServiceInfo,
+    expected_title: str,
 ) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
@@ -362,7 +366,7 @@ async def test_discovery_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == expected_title
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -370,10 +374,10 @@ async def test_discovery_flow(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: "M1065-LW 0",
+        CONF_NAME: expected_title,
     }
 
-    assert result["data"][CONF_NAME] == "M1065-LW 0"
+    assert result["data"][CONF_NAME] == expected_title
 
 
 @pytest.mark.parametrize(

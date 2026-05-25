@@ -2749,6 +2749,26 @@ async def test_test_condition(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test testing a condition."""
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "test_condition",
+            "condition": {
+                "condition": "state",
+                "entity_id": "hello.world",
+                "state": "paulus",
+            },
+            "variables": {"hello": "world"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "In 'state':\n  In 'state' condition: unknown entity hello.world",
+    }
+
     hass.states.async_set("hello.world", "paulus")
 
     await websocket_client.send_json_auto_id(
