@@ -251,6 +251,12 @@ async def test_remove_config_entry_device(
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)
     assert result is True
 
+    stale_device_after = device_registry.async_get(stale_device.id)
+    assert (
+        stale_device_after is None
+        or config_entry.entry_id not in stale_device_after.config_entries
+    )
+
 
 async def test_remove_config_entry_device_removes_subdevices(
     hass: HomeAssistant,
