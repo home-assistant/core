@@ -7,7 +7,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.components.blebox.const import OPEN_STATUS
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -181,7 +181,7 @@ async def test_open_status_sensor_init(open_status_sensor, hass: HomeAssistant) 
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes["options"] == list(OPEN_STATUS.values())
+    assert state.attributes[ATTR_OPTIONS] == list(OPEN_STATUS.values())
     assert state.state == STATE_UNKNOWN
 
 
