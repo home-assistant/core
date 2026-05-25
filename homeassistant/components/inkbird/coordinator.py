@@ -57,6 +57,11 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
             needs_poll_method=self._async_needs_poll,
             poll_method=self._async_poll_data,
             connectable=False,  # Polling only happens if active scanning is disabled
+            # IBS-TH2 broadcasts every ~20-30s and only carries sensor data
+            # in the scan response, so the default 10s active window misses
+            # the device most cycles. 25s covers one full broadcast interval
+            # with margin to absorb jitter.
+            scan_duration=25.0,
         )
 
     async def async_init(self) -> None:
