@@ -26,7 +26,7 @@ from homeassistant.components.waze_travel_time.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_REGION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 
 from .const import MOCK_CONFIG
 
@@ -43,7 +43,7 @@ async def call_service_get_travel_times(
     incl_filter: list[str] | None = None,
     time_delta: dict[str, int] | None = None,
     base_coordinates: dict[str, float] | None = None,
-) -> dict:
+) -> ServiceResponse:
     """Call the get_travel_times service."""
     params = {
         "origin": origin,
@@ -168,7 +168,7 @@ async def test_migrate_entry_v1_to_v2_3(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert (updated_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
@@ -201,7 +201,7 @@ async def test_migrate_entry_v1_to_v2_3(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert (updated_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
@@ -239,7 +239,7 @@ async def test_migrate_entry_v2_1_to_v2_3(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert (updated_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
@@ -310,7 +310,7 @@ async def test_migrate_entry_v2_2_to_v2_3_adds_region_base_coordinates(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert (updated_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
@@ -349,7 +349,7 @@ async def test_migrate_entry_v2_2_to_v2_3_preserves_existing_base_coordinates(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert (updated_entry := hass.config_entries.async_get_entry(mock_entry.entry_id))
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2

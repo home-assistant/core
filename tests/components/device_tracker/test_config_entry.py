@@ -21,7 +21,7 @@ from homeassistant.components.device_tracker.config_entry import (
     ScannerEntity,
     TrackerEntity,
 )
-from homeassistant.components.zone import ATTR_RADIUS
+from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -146,6 +146,7 @@ class MockTrackerEntity(TrackerEntity):
     def __init__(
         self,
         battery_level: int | None = None,
+        in_zones: list[str] | None = None,
         location_name: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
@@ -153,6 +154,7 @@ class MockTrackerEntity(TrackerEntity):
     ) -> None:
         """Initialize entity."""
         self._battery_level = battery_level
+        self._in_zones = in_zones
         self._location_name = location_name
         self._latitude = latitude
         self._longitude = longitude
@@ -170,6 +172,11 @@ class MockTrackerEntity(TrackerEntity):
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
+
+    @property
+    def in_zones(self) -> list[str] | None:
+        """Return the entity_id of zones the device is currently in."""
+        return self._in_zones
 
     @property
     def location_name(self) -> str | None:
@@ -195,6 +202,12 @@ class MockTrackerEntity(TrackerEntity):
 @pytest.fixture(name="battery_level")
 def battery_level_fixture() -> int | None:
     """Return the battery level of the entity for the test."""
+    return None
+
+
+@pytest.fixture(name="in_zones")
+def in_zones_fixture() -> list[str] | None:
+    """Return the in_zones value of the entity for the test."""
     return None
 
 
@@ -226,6 +239,7 @@ def accuracy_fixture() -> float:
 def tracker_entity_fixture(
     entity_id: str,
     battery_level: int | None,
+    in_zones: list[str] | None,
     location_name: str | None,
     latitude: float | None,
     longitude: float | None,
@@ -234,6 +248,7 @@ def tracker_entity_fixture(
     """Create a test tracker entity."""
     entity = MockTrackerEntity(
         battery_level=battery_level,
+        in_zones=in_zones,
         location_name=location_name,
         latitude=latitude,
         longitude=longitude,
@@ -464,6 +479,7 @@ async def test_load_unload_entry_tracker(
 @pytest.mark.parametrize(
     (
         "battery_level",
+        "in_zones",
         "location_name",
         "latitude",
         "longitude",
@@ -471,7 +487,8 @@ async def test_load_unload_entry_tracker(
         "expected_attributes",
     ),
     [
-        (
+        pytest.param(
+            None,
             None,
             None,
             1.0,
@@ -484,8 +501,10 @@ async def test_load_unload_entry_tracker(
                 ATTR_LATITUDE: 1.0,
                 ATTR_LONGITUDE: 2.0,
             },
+            id="lat_long_no_zone",
         ),
-        (
+        pytest.param(
+            None,
             None,
             None,
             50.0,
@@ -498,8 +517,10 @@ async def test_load_unload_entry_tracker(
                 ATTR_LATITUDE: 50.0,
                 ATTR_LONGITUDE: 60.0,
             },
+            id="lat_long_home",
         ),
-        (
+        pytest.param(
+            None,
             None,
             None,
             -50.0,
@@ -512,8 +533,10 @@ async def test_load_unload_entry_tracker(
                 ATTR_LATITUDE: -50.0,
                 ATTR_LONGITUDE: -60.0,
             },
+            id="lat_long_other_zone",
         ),
-        (
+        pytest.param(
+            None,
             None,
             "zen_zone",
             None,
@@ -523,8 +546,10 @@ async def test_load_unload_entry_tracker(
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_IN_ZONES: [],
             },
+            id="location_name",
         ),
-        (
+        pytest.param(
+            None,
             None,
             None,
             None,
@@ -534,9 +559,11 @@ async def test_load_unload_entry_tracker(
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_IN_ZONES: [],
             },
+            id="no_location",
         ),
-        (
+        pytest.param(
             100,
+            None,
             None,
             None,
             None,
@@ -546,6 +573,140 @@ async def test_load_unload_entry_tracker(
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_IN_ZONES: [],
             },
+            id="battery_only",
+        ),
+        pytest.param(
+            None,
+            ["zone.home"],
+            None,
+            None,
+            None,
+            STATE_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.home"],
+            },
+            id="in_zones_home",
+        ),
+        pytest.param(
+            None,
+            ["zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.other_zone"],
+            },
+            id="in_zones_other_zone",
+        ),
+        pytest.param(
+            None,
+            ["zone.other_zone_larger", "zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
+            },
+            id="in_zones_multiple_sorted_by_radius",
+        ),
+        pytest.param(
+            None,
+            ["zone.does_not_exist", "zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.other_zone"],
+            },
+            id="in_zones_filters_missing_zones",
+        ),
+        pytest.param(
+            None,
+            ["zone.does_not_exist"],
+            None,
+            None,
+            None,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
+            id="in_zones_all_missing",
+        ),
+        pytest.param(
+            None,
+            ["zone.passive_small", "zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.passive_small", "zone.other_zone"],
+            },
+            id="in_zones_skips_passive_for_state",
+        ),
+        pytest.param(
+            None,
+            ["zone.passive_small"],
+            None,
+            None,
+            None,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.passive_small"],
+            },
+            id="in_zones_only_passive",
+        ),
+        pytest.param(
+            None,
+            [],
+            None,
+            None,
+            None,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
+            id="in_zones_empty",
+        ),
+        pytest.param(
+            None,
+            ["zone.home"],
+            None,
+            1.0,
+            2.0,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: [],
+                ATTR_LATITUDE: 1.0,
+                ATTR_LONGITUDE: 2.0,
+            },
+            id="in_zones_ignored_when_lat_long_set",
+        ),
+        pytest.param(
+            None,
+            ["zone.home"],
+            "zen_zone",
+            None,
+            None,
+            "zen_zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.home"],
+            },
+            id="location_name_wins_over_in_zones",
         ),
     ],
 )
@@ -574,6 +735,16 @@ async def test_tracker_entity_state(
         "zone.other_zone_larger",
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
+    )
+    hass.states.async_set(
+        "zone.passive_small",
+        "0",
+        {
+            ATTR_LATITUDE: 10.0,
+            ATTR_LONGITUDE: 10.0,
+            ATTR_RADIUS: 50,
+            ATTR_PASSIVE: True,
+        },
     )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.
@@ -674,6 +845,7 @@ def test_tracker_entity() -> None:
     """Test coverage for base TrackerEntity class."""
     entity = TrackerEntity()
     assert entity.source_type is SourceType.GPS
+    assert entity.in_zones is None
     assert entity.latitude is None
     assert entity.longitude is None
     assert entity.location_name is None
