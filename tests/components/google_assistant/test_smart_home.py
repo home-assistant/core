@@ -84,7 +84,7 @@ def registries(
 async def test_async_handle_message(hass: HomeAssistant) -> None:
     """Test the async handle message method."""
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -172,7 +172,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     hass.states.async_set("light.not_expose", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
         entity_config={
             "light.demo_light": {
                 const.CONF_ROOM_HINT: "Living Room",
@@ -1392,7 +1392,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
     hass.states.async_set("lock.has_2fa", "on")
 
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose",
+        should_expose=lambda entity_id: entity_id != "light.not_expose",
     )
 
     user_agent_id = "mock-user-id"
