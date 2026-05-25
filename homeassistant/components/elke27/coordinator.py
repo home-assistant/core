@@ -116,7 +116,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         await asyncio.sleep(self._debounce_seconds)
         async with self._refresh_lock:
             while self._pending_domains:
-                domains = set(self._pending_domains)
+                domains = tuple(self._pending_domains)
                 self._pending_domains.clear()
                 results = await asyncio.gather(
                     *(self._hub.refresh_domain_config(domain) for domain in domains),

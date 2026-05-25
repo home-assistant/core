@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
         with contextlib.suppress(Exception):
             await hub.async_disconnect()
-        msg = "The client did not become ready; check host and port"
+        msg = "Unable to connect to the panel; check host and port"
         raise ConfigEntryNotReady(msg) from err
 
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
