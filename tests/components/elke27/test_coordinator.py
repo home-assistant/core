@@ -84,6 +84,24 @@ async def test_coordinator_subscribes_and_sets_snapshot(hass: HomeAssistant) -> 
     assert hub._subscribe_typed is not None
 
 
+async def test_coordinator_start_suppresses_unsubscribe_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify start suppresses errors from a previous unsubscribe callback."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(SimpleNamespace(version=1))
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    def _raise() -> None:
+        raise RuntimeError("unsubscribe failed")
+
+    coordinator._unsubscribe = _raise
+
+    await coordinator.async_start()
+
+    assert hub._subscribe_typed is not None
+
+
 async def test_domain_csm_change_refreshes_domain(hass: HomeAssistant) -> None:
     """Verify DomainCsmChanged events refresh the domain and update snapshot."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
@@ -184,6 +202,22 @@ async def test_async_stop_cancels_debounce(hass: HomeAssistant) -> None:
     coordinator._debounce_task = asyncio.create_task(asyncio.sleep(0.2))
     await coordinator.async_stop()
     assert coordinator._debounce_task is None
+
+
+async def test_async_stop_suppresses_unsubscribe_error(hass: HomeAssistant) -> None:
+    """Verify stop suppresses unsubscribe callback errors."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(SimpleNamespace(version=1))
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    def _raise() -> None:
+        raise RuntimeError("unsubscribe failed")
+
+    coordinator._unsubscribe = _raise
+
+    await coordinator.async_stop()
+
+    assert coordinator._unsubscribe is None
 
 
 async def test_async_refresh_now_updates_snapshot(hass: HomeAssistant) -> None:
