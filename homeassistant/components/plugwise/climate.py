@@ -280,7 +280,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         current_schedule = self.device.get("select_schedule")
         schedule_is_active = current_schedule not in (None, "off")
-        desired_schedule = self._last_active_schedule or current_schedule
+        desired_schedule = current_schedule if schedule_is_active else self._last_active_schedule
         # Adam only: transition from HVACMode.OFF
         if self.hvac_mode == HVACMode.OFF:
             if hvac_mode == HVACMode.AUTO:
