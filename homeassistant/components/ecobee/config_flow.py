@@ -15,8 +15,13 @@ from pyecobee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import CONF_API_KEY, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
 
@@ -28,7 +33,7 @@ _USER_SCHEMA = vol.Schema(
     }
 )
 
-_MFA_SCHEMA = vol.Schema({vol.Required("code"): str})
+_MFA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
 _REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
@@ -103,7 +108,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None and self._mfa_challenge is not None:
-            code = user_input["code"].strip()
+            code = user_input[CONF_CODE].strip()
             if not code:
                 errors["base"] = "invalid_mfa_code"
             else:
@@ -214,7 +219,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(existing_entry, data=data)
         return self.async_create_entry(title=DOMAIN, data=data)
 
-    def _reauth_entry(self):
+    def _reauth_entry(self) -> ConfigEntry | None:
         """Return the existing config entry if this is a reauth flow."""
         if self.source != SOURCE_REAUTH:
             return None
