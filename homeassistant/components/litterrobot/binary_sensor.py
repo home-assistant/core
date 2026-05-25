@@ -23,7 +23,8 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RobotBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Generic[_WhiskerEntityT]
+    BinarySensorEntityDescription,
+    Generic[_WhiskerEntityT],  # noqa: UP046
 ):
     """A class that describes robot binary sensor entities."""
 
@@ -66,7 +67,7 @@ BINARY_SENSOR_MAP: dict[
             device_class=BinarySensorDeviceClass.PLUG,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            is_on_fn=lambda robot: robot.power_status == "AC",
+            is_on_fn=lambda robot: robot.power_type == "AC",
         ),
     ),
 }

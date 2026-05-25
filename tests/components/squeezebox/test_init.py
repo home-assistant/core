@@ -82,7 +82,7 @@ async def test_init_unauthorized(
             return_value=False,  # async_query returns False on auth failure
         ),
         patch(
-            "homeassistant.components.squeezebox.Server",  # Patch the Server class itself
+            "homeassistant.components.squeezebox.Server",
             autospec=True,
         ) as mock_server_instance,
     ):

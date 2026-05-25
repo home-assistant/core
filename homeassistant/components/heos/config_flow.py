@@ -42,7 +42,10 @@ AUTH_SCHEMA = vol.Schema(
 
 
 async def _validate_host(host: str, errors: dict[str, str]) -> bool:
-    """Validate host is reachable, return True, otherwise populate errors and return False."""
+    """Validate host is reachable.
+
+    Return True, otherwise populate errors and return False.
+    """
     heos = Heos(HeosOptions(host, events=False, heart_beat=False))
     try:
         await heos.connect()
@@ -57,7 +60,10 @@ async def _validate_host(host: str, errors: dict[str, str]) -> bool:
 async def _validate_auth(
     user_input: dict[str, str], entry: HeosConfigEntry, errors: dict[str, str]
 ) -> bool:
-    """Validate authentication by signing in or out, otherwise populate errors if needed."""
+    """Validate authentication by signing in or out.
+
+    Populate errors if needed.
+    """
     can_validate = (
         hasattr(entry, "runtime_data")
         and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
@@ -110,7 +116,7 @@ async def _validate_auth(
 
 def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
     """Get a set of current hosts from the entry."""
-    hosts = set(entry.data[CONF_HOST])
+    hosts = {entry.data[CONF_HOST]}
     if hasattr(entry, "runtime_data"):
         hosts.update(
             player.ip_address
@@ -265,7 +271,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
             self._discovered_host = hostname
             return await self.async_step_confirm_discovery()
 
-        # Only update if the configured host isn't part of the discovered hosts to ensure new players that come online don't trigger a reload
+        # Only update if the configured host isn't part of the
+        # discovered hosts to ensure new players that come online
+        # don't trigger a reload
         if entry.data[CONF_HOST] not in [host.ip_address for host in system_info.hosts]:
             _LOGGER.debug(
                 "Updated host %s to discovered host %s", entry.data[CONF_HOST], hostname

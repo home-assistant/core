@@ -477,7 +477,7 @@ async def test_draft_electrical_measurement_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
+    """Test Draft Electrical Measurement sensors with Yandex Smart Socket."""
     state = hass.states.get("sensor.yndx_00540_power")
     assert state
     assert state.state == "70.0"

@@ -17,10 +17,11 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
 from . import S3ConfigEntry
-from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .helpers import async_list_backups_from_s3
 
 _LOGGER = logging.getLogger(__name__)
@@ -242,8 +243,9 @@ class S3BackupAgent(BackupAgent):
                 finally:
                     view.release()
 
-                # Compact the buffer if the consumed offset has grown large enough. This
-                # avoids unnecessary memory copies when compacting after every part upload.
+                # Compact the buffer if the consumed offset has grown
+                # large enough. This avoids unnecessary memory copies
+                # when compacting after every part upload.
                 if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
                     buffer = bytearray(buffer[offset:])
                     offset = 0
