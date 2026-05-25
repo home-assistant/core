@@ -26,10 +26,10 @@ async def async_setup_entry(
     """Set up SimpliSafe cameras based on a config entry."""
     simplisafe = entry.runtime_data
 
-    cameras: list[SimplisafeCamera] = []
+    cameras: list[SimpliSafeCamera] = []
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.warning("Skipping camera setup for V2 system: %s", system.system_id)
+            LOGGER.debug("Skipping camera setup for V2 system: %s", system.system_id)
             continue
 
         if TYPE_CHECKING:
@@ -46,14 +46,14 @@ async def async_setup_entry(
             [s.serial for s in found],
         )
         cameras.extend(
-            SimplisafeCamera(simplisafe, system, cast(SensorV3, sensor))
+            SimpliSafeCamera(simplisafe, system, cast(SensorV3, sensor))
             for sensor in found
         )
 
     async_add_entities(cameras)
 
 
-class SimplisafeCamera(SimpliSafeEntity, Camera):
+class SimpliSafeCamera(SimpliSafeEntity, Camera):
     """A SimpliSafe outdoor camera."""
 
     _device: SensorV3
@@ -98,10 +98,12 @@ class SimplisafeCamera(SimpliSafeEntity, Camera):
         media_urls = self._simplisafe.camera_media_urls.get(self._device.serial)
         if media_urls is None:
             return None
+        if (image_url := media_urls.get("image_url")) is None:
+            return None
         try:
             return await self._simplisafe.async_media(
                 _resolve_image_url(
-                    media_urls["image_url"],
+                    image_url,
                     width if width is not None else DEFAULT_IMAGE_WIDTH,
                 )
             )

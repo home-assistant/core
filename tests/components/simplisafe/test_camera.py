@@ -221,7 +221,7 @@ async def test_async_camera_image_returns_none_before_motion(
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
 ) -> None:
-    """async_camera_image returns None (HomeAssistantError) when no motion yet."""
+    """async_get_image raises HomeAssistantError when no motion has occurred yet."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -286,7 +286,7 @@ async def test_async_camera_image_raises_on_api_error(
     websocket: Mock,
     api: Mock,
 ) -> None:
-    """async_camera_image returns None (HomeAssistantError) on SimplipyError."""
+    """async_get_image raises HomeAssistantError when the API call fails."""
     api.async_media = AsyncMock(side_effect=SimplipyError("boom"))
 
     await hass.config_entries.async_setup(config_entry.entry_id)

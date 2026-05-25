@@ -232,6 +232,28 @@ def _resolve_clip_url(url: str) -> str:
     return re.sub(r"\{[^}]+\}", "", url)
 
 
+async def _async_fetch_and_write_media(
+    hass: HomeAssistant,
+    simplisafe: SimpliSafe,
+    url: str,
+    filename: str,
+    description: str,
+) -> None:
+    """Fetch media from SimpliSafe and write it to a local file."""
+    if not hass.config.is_allowed_path(filename):
+        raise HomeAssistantError(f"Access to {filename} is not allowed")
+    try:
+        media_bytes = await simplisafe.async_media(url)
+    except SimplipyError as err:
+        raise HomeAssistantError(
+            f"Error fetching {description} from SimpliSafe: {err}"
+        ) from err
+    if media_bytes is None:
+        raise HomeAssistantError(f"No {description} data received from SimpliSafe")
+    LOGGER.debug("Writing %s to %s", description, filename)
+    await hass.async_add_executor_job(Path(filename).write_bytes, media_bytes)
+
+
 @callback
 def _async_get_camera_serial_and_simplisafe(
     hass: HomeAssistant, call: ServiceCall
@@ -419,27 +441,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         media_urls = simplisafe.camera_media_urls.get(serial)
         if not media_urls:
             raise HomeAssistantError("No motion image available for this camera")
-
-        filename: str = call.data[ATTR_FILENAME]
-        if not hass.config.is_allowed_path(filename):
-            raise HomeAssistantError(f"Access to {filename} is not allowed")
-
+        if (image_url := media_urls.get("image_url")) is None:
+            raise HomeAssistantError("No image URL available for this camera")
         width: int = call.data[ATTR_IMAGE_WIDTH]
-        try:
-            image_bytes = await simplisafe.async_media(
-                _resolve_image_url(media_urls["image_url"], width)
-            )
-        except SimplipyError as err:
-            raise HomeAssistantError(
-                f"Error fetching image from SimpliSafe: {err}"
-            ) from err
-
-        if image_bytes is None:
-            raise HomeAssistantError("No image data received from SimpliSafe")
-
-        LOGGER.debug("Saving motion image for camera %s to %s", serial, filename)
-        await hass.async_add_executor_job(
-            lambda: Path(filename).write_bytes(image_bytes)
+        await _async_fetch_and_write_media(
+            hass,
+            simplisafe,
+            _resolve_image_url(image_url, width),
+            call.data[ATTR_FILENAME],
+            "image",
         )
 
     @_verify_domain_control
@@ -449,26 +459,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         media_urls = simplisafe.camera_media_urls.get(serial)
         if not media_urls:
             raise HomeAssistantError("No motion clip available for this camera")
-
-        filename: str = call.data[ATTR_FILENAME]
-        if not hass.config.is_allowed_path(filename):
-            raise HomeAssistantError(f"Access to {filename} is not allowed")
-
-        try:
-            clip_bytes = await simplisafe.async_media(
-                _resolve_clip_url(media_urls["clip_url"])
-            )
-        except SimplipyError as err:
-            raise HomeAssistantError(
-                f"Error fetching clip from SimpliSafe: {err}"
-            ) from err
-
-        if clip_bytes is None:
-            raise HomeAssistantError("No clip data received from SimpliSafe")
-
-        LOGGER.debug("Saving motion clip for camera %s to %s", serial, filename)
-        await hass.async_add_executor_job(
-            lambda: Path(filename).write_bytes(clip_bytes)
+        if (clip_url := media_urls.get("clip_url")) is None:
+            raise HomeAssistantError("No clip URL available for this camera")
+        await _async_fetch_and_write_media(
+            hass,
+            simplisafe,
+            _resolve_clip_url(clip_url),
+            call.data[ATTR_FILENAME],
+            "clip",
         )
 
     @_verify_domain_control
