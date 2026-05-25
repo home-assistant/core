@@ -76,7 +76,7 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    hass.async_create_task(coordinator.async_request_refresh())
+    await coordinator.async_request_refresh()
     return True
 
 
