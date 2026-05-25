@@ -15,12 +15,7 @@ from pyecobee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
@@ -35,19 +30,6 @@ _USER_SCHEMA = vol.Schema(
 
 _MFA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
 _REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
-
-def _extract_mfa_challenge(err: EcobeeAuthMfaRequiredError) -> MfaChallenge | None:
-    """Extract the MfaChallenge payload from an EcobeeAuthMfaRequiredError.
-
-    Prefers a stable ``.challenge`` attribute (coming in pyecobee 0.4.1); falls
-    back to ``err.args[0]`` for the 0.4.0 surface. Returns None if the payload
-    is missing or not an MfaChallenge so the caller can route to an error state.
-    """
-    challenge = getattr(err, "challenge", None)
-    if challenge is None and err.args:
-        challenge = err.args[0]
-    return challenge if isinstance(challenge, MfaChallenge) else None
 
 
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -90,10 +72,8 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                         self._ecobee.refresh_tokens
                     )
                 except EcobeeAuthMfaRequiredError as err:
-                    if (challenge := _extract_mfa_challenge(err)) is not None:
-                        self._mfa_challenge = challenge
-                        return await self.async_step_mfa()
-                    errors["base"] = "unknown"
+                    self._mfa_challenge = err.args[0]
+                    return await self.async_step_mfa()
                 except EcobeeAuthFailedError:
                     errors["base"] = "invalid_auth"
                 except EcobeeAuthUnknownError:
@@ -115,9 +95,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Collect an MFA OTP code and complete the login."""
-        if self._mfa_challenge is None:
-            return self.async_abort(reason="unknown")
-
+        assert self._mfa_challenge is not None
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -196,10 +174,8 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._ecobee.refresh_tokens
                 )
             except EcobeeAuthMfaRequiredError as err:
-                if (challenge := _extract_mfa_challenge(err)) is not None:
-                    self._mfa_challenge = challenge
-                    return await self.async_step_mfa()
-                errors["base"] = "unknown"
+                self._mfa_challenge = err.args[0]
+                return await self.async_step_mfa()
             except EcobeeAuthFailedError:
                 errors["base"] = "invalid_auth"
             except EcobeeAuthUnknownError:
@@ -223,15 +199,8 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._pending_password,
             CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
         }
-        if (existing_entry := self._reauth_entry()) is not None:
-            return self.async_update_reload_and_abort(existing_entry, data=data)
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
         return self.async_create_entry(title=DOMAIN, data=data)
-
-    def _reauth_entry(self) -> ConfigEntry | None:
-        """Return the existing config entry if this is a reauth flow."""
-        if self.source != SOURCE_REAUTH:
-            return None
-        entry_id = self.context.get("entry_id")
-        if entry_id is None:
-            return None
-        return self.hass.config_entries.async_get_entry(entry_id)

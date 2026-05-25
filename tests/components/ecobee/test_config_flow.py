@@ -13,9 +13,8 @@ from pyecobee import (
 )
 import pytest
 
-from homeassistant.components.ecobee.config_flow import EcobeeFlowHandler
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -437,16 +436,6 @@ async def test_mfa_submission_rejects_blank_code(
     assert result["errors"]["base"] == "invalid_mfa_code"
 
 
-async def test_mfa_step_aborts_without_challenge(hass: HomeAssistant) -> None:
-    """Test async_step_mfa aborts if reached without an active MFA challenge."""
-    handler = EcobeeFlowHandler()
-    handler.hass = hass
-    result = await handler.async_step_mfa(user_input={"code": "123456"})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
-
 async def test_reauth_flow_succeeds(hass: HomeAssistant) -> None:
     """Test the reauth flow updates the existing entry with a fresh refresh_token."""
     entry = MockConfigEntry(
@@ -566,34 +555,6 @@ async def test_reauth_flow_error_branches(
     assert result["errors"]["base"] == expected_error
 
 
-async def test_user_step_mfa_exception_without_challenge_payload(
-    hass: HomeAssistant,
-) -> None:
-    """An EcobeeAuthMfaRequiredError carrying no MfaChallenge surfaces as 'unknown'."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ecobee.config_flow.Ecobee"
-    ) as mock_flow_ecobee:
-        mock_flow_ecobee.return_value.refresh_tokens.side_effect = (
-            EcobeeAuthMfaRequiredError()
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_USERNAME: "test-username@example.com",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "unknown"
-
-
 async def test_mfa_step_submit_returns_false(hass: HomeAssistant) -> None:
     """submit_mfa_code returning False (not raising) surfaces invalid_mfa_code."""
     result = await hass.config_entries.flow.async_init(
@@ -655,48 +616,3 @@ async def test_reauth_returns_false_surfaces_login_failed(hass: HomeAssistant) -
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "login_failed"
-
-
-async def test_reauth_entry_lookup_handles_missing_entry_id(
-    hass: HomeAssistant,
-) -> None:
-    """_reauth_entry returns None when context lacks entry_id (defensive guard)."""
-    handler = EcobeeFlowHandler()
-    handler.hass = hass
-    handler.context = {"source": SOURCE_REAUTH}
-    handler.init_data = {}
-
-    assert handler._reauth_entry() is None
-
-
-async def test_reauth_mfa_exception_without_challenge_payload(
-    hass: HomeAssistant,
-) -> None:
-    """An MfaRequired error with no payload during reauth surfaces 'unknown'."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "test-username@example.com",
-            CONF_PASSWORD: "stale-password",
-            CONF_REFRESH_TOKEN: "stale-refresh-token",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.ecobee.config_flow.Ecobee"
-    ) as mock_flow_ecobee:
-        mock_flow_ecobee.return_value.refresh_tokens.side_effect = (
-            EcobeeAuthMfaRequiredError()
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"]["base"] == "unknown"
