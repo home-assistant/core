@@ -136,7 +136,8 @@ async def test_update_refreshes_on_expired_token(hass: HomeAssistant) -> None:
             ECOBEE_API_KEY: "test-api-key",
             ECOBEE_REFRESH_TOKEN: "new-rt",
         }
-        # First .update() raises expired; the call inside refresh() then succeeds.
+        # update() raises ExpiredTokenError; the except branch calls refresh(),
+        # which invokes refresh_tokens() (mocked to succeed).
         ecobee.update.side_effect = ExpiredTokenError("expired")
 
         runtime = EcobeeData(

@@ -37,6 +37,19 @@ _MFA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
 _REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
+def _extract_mfa_challenge(err: EcobeeAuthMfaRequiredError) -> MfaChallenge | None:
+    """Extract the MfaChallenge payload from an EcobeeAuthMfaRequiredError.
+
+    Prefers a stable ``.challenge`` attribute (coming in pyecobee 0.4.1); falls
+    back to ``err.args[0]`` for the 0.4.0 surface. Returns None if the payload
+    is missing or not an MfaChallenge so the caller can route to an error state.
+    """
+    challenge = getattr(err, "challenge", None)
+    if challenge is None and err.args:
+        challenge = err.args[0]
+    return challenge if isinstance(challenge, MfaChallenge) else None
+
+
 class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
@@ -77,10 +90,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                         self._ecobee.refresh_tokens
                     )
                 except EcobeeAuthMfaRequiredError as err:
-                    challenge = getattr(err, "challenge", None)
-                    if challenge is None and err.args:
-                        challenge = err.args[0]
-                    if isinstance(challenge, MfaChallenge):
+                    if (challenge := _extract_mfa_challenge(err)) is not None:
                         self._mfa_challenge = challenge
                         return await self.async_step_mfa()
                     errors["base"] = "unknown"
@@ -186,10 +196,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._ecobee.refresh_tokens
                 )
             except EcobeeAuthMfaRequiredError as err:
-                challenge = getattr(err, "challenge", None)
-                if challenge is None and err.args:
-                    challenge = err.args[0]
-                if isinstance(challenge, MfaChallenge):
+                if (challenge := _extract_mfa_challenge(err)) is not None:
                     self._mfa_challenge = challenge
                     return await self.async_step_mfa()
                 errors["base"] = "unknown"
