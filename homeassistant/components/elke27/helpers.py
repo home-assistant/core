@@ -1,7 +1,7 @@
 """Shared entity helpers for the Elke27 integration."""
 
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from elke27_lib import PanelSnapshot
 
@@ -13,11 +13,9 @@ from homeassistant.helpers.device_registry import (
 )
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from .coordinator import Elke27DataUpdateCoordinator
-    from .hub import Elke27Hub
-    from .models import Elke27ConfigEntry
+from .coordinator import Elke27DataUpdateCoordinator
+from .hub import Elke27Hub
+from .models import Elke27ConfigEntry
 
 _NAME_SAFE_RE = re.compile(r"[^A-Za-z0-9 _-]")
 

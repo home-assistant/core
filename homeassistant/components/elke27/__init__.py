@@ -2,7 +2,6 @@
 
 import contextlib
 import logging
-from typing import TYPE_CHECKING
 
 from elke27_lib.errors import (
     Elke27ConnectionError,
@@ -12,15 +11,13 @@ from elke27_lib.errors import (
 )
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_LINK_KEYS_JSON
 from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 from .models import Elke27ConfigEntry, Elke27RuntimeData
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 """Alarm control panel platform for Elke27 areas."""
 
 import logging
-from typing import TYPE_CHECKING
 
 from elke27_lib import AreaState, ArmMode, PanelSnapshot
 from elke27_lib.errors import Elke27PinRequiredError
@@ -12,18 +11,15 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import Elke27DataUpdateCoordinator
 from .helpers import build_unique_id, device_info_for_entry, sanitize_name, unique_base
+from .hub import Elke27Hub
 from .models import Elke27ConfigEntry
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-    from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,10 @@
 """Data update coordinator for the Elke27 integration."""
 
 import asyncio
+from collections.abc import Callable, Iterable
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from elke27_lib import PanelSnapshot
 from elke27_lib.events import (
@@ -18,12 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
-
-    from .hub import Elke27Hub
-    from .models import Elke27ConfigEntry
+from .hub import Elke27Hub
+from .models import Elke27ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
