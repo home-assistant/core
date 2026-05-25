@@ -567,7 +567,7 @@ class IntegrationSensor(RestoreSensor):
             assert old_timestamp is not None
         elapsed_seconds = Decimal(
             (new_timestamp - old_timestamp).total_seconds()
-            if self._last_integration_trigger == _IntegrationTrigger.StateEvent
+            if self._last_integration_trigger is _IntegrationTrigger.StateEvent
             else (new_timestamp - self._last_integration_time).total_seconds()
         )
 
