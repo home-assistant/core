@@ -27,8 +27,29 @@
   },
   "entity": {
     "sensor": {
+      "auxiliary_pump_0": {
+        "name": "Auxiliary pump 0"
+      },
+      "auxiliary_pump_1": {
+        "name": "Auxiliary pump 1"
+      },
+      "auxiliary_pump_2": {
+        "name": "Auxiliary pump 2"
+      },
+      "boiler_shunt_pump": {
+        "name": "Boiler shunt pump"
+      },
       "boiler_temperature": {
         "name": "Boiler temperature"
+      },
+      "buffer_bottom_0_temperature": {
+        "name": "Buffer 0 bottom temperature"
+      },
+      "buffer_bottom_1_temperature": {
+        "name": "Buffer 1 bottom temperature"
+      },
+      "buffer_bottom_2_temperature": {
+        "name": "Buffer 2 bottom temperature"
       },
       "buffer_bottom_temperature": {
         "name": "Buffer bottom temperature"
@@ -39,14 +60,143 @@
       "buffer_load": {
         "name": "Buffer load"
       },
+      "buffer_top_0_temperature": {
+        "name": "Buffer 0 top temperature"
+      },
+      "buffer_top_1_temperature": {
+        "name": "Buffer 1 top temperature"
+      },
+      "buffer_top_2_temperature": {
+        "name": "Buffer 2 top temperature"
+      },
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
+      },
+      "circuit_0_temp": {
+        "name": "Heating circuit 0 temperature"
+      },
+      "circuit_1_temp": {
+        "name": "Heating circuit 1 temperature"
+      },
+      "circuit_2_temp": {
+        "name": "Heating circuit 2 temperature"
+      },
+      "circuit_3_temp": {
+        "name": "Heating circuit 3 temperature"
+      },
+      "circuit_4_temp": {
+        "name": "Heating circuit 4 temperature"
+      },
+      "circuit_5_temp": {
+        "name": "Heating circuit 5 temperature"
+      },
+      "circuit_6_temp": {
+        "name": "Heating circuit 6 temperature"
+      },
+      "circuit_7_temp": {
+        "name": "Heating circuit 7 temperature"
+      },
+      "circuit_8_temp": {
+        "name": "Heating circuit 8 temperature"
+      },
+      "co2_content": {
+        "name": "Flue CO2 content"
+      },
+      "dhw_pump_0": {
+        "name": "DHW pump 0"
+      },
+      "dhw_pump_1": {
+        "name": "DHW pump 1"
+      },
+      "dhw_pump_2": {
+        "name": "DHW pump 2"
       },
       "domestic_hot_water_0_temperature": {
         "name": "Domestic hot water circuit 0 temperature"
       },
+      "domestic_hot_water_1_temperature": {
+        "name": "Domestic hot water circuit 1 temperature"
+      },
+      "domestic_hot_water_2_temperature": {
+        "name": "Domestic hot water circuit 2 temperature"
+      },
+      "extra_dhw_0_temperature": {
+        "name": "Extra DHW 0 temperature"
+      },
+      "extra_dhw_1_temperature": {
+        "name": "Extra DHW 1 temperature"
+      },
+      "extra_dhw_2_temperature": {
+        "name": "Extra DHW 2 temperature"
+      },
+      "heating_circulation_program_0": {
+        "name": "Heating circuit 0 program"
+      },
+      "heating_circulation_program_1": {
+        "name": "Heating circuit 1 program"
+      },
+      "heating_circulation_program_2": {
+        "name": "Heating circuit 2 program"
+      },
+      "heating_circulation_program_3": {
+        "name": "Heating circuit 3 program"
+      },
+      "heating_circulation_program_4": {
+        "name": "Heating circuit 4 program"
+      },
+      "heating_circulation_program_5": {
+        "name": "Heating circuit 5 program"
+      },
+      "heating_circulation_program_6": {
+        "name": "Heating circuit 6 program"
+      },
+      "heating_circulation_program_7": {
+        "name": "Heating circuit 7 program"
+      },
+      "heating_circulation_program_8": {
+        "name": "Heating circuit 8 program"
+      },
+      "heating_circulation_pump_0": {
+        "name": "Heating circuit 0 pump"
+      },
+      "heating_circulation_pump_1": {
+        "name": "Heating circuit 1 pump"
+      },
+      "heating_circulation_pump_2": {
+        "name": "Heating circuit 2 pump"
+      },
+      "heating_circulation_pump_3": {
+        "name": "Heating circuit 3 pump"
+      },
+      "heating_circulation_pump_4": {
+        "name": "Heating circuit 4 pump"
+      },
+      "heating_circulation_pump_5": {
+        "name": "Heating circuit 5 pump"
+      },
+      "heating_circulation_pump_6": {
+        "name": "Heating circuit 6 pump"
+      },
+      "heating_circulation_pump_7": {
+        "name": "Heating circuit 7 pump"
+      },
+      "heating_circulation_pump_8": {
+        "name": "Heating circuit 8 pump"
+      },
+      "interruption_1": {
+        "name": "Malfunction 1"
+      },
+      "interruption_2": {
+        "name": "Malfunction 2"
+      },
+      "operating_time": {
+        "name": "Operating time"
+      },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
+      },
+      "primary_air": {
+        "name": "Primary air"
       },
       "program": {
         "name": "Program",
@@ -69,8 +219,35 @@
       "room_2_temperature": {
         "name": "Room 2 temperature"
       },
+      "room_3_temperature": {
+        "name": "Room 3 temperature"
+      },
+      "room_4_temperature": {
+        "name": "Room 4 temperature"
+      },
+      "room_5_temperature": {
+        "name": "Room 5 temperature"
+      },
+      "room_6_temperature": {
+        "name": "Room 6 temperature"
+      },
+      "room_7_temperature": {
+        "name": "Room 7 temperature"
+      },
+      "room_8_temperature": {
+        "name": "Room 8 temperature"
+      },
+      "secondary_air": {
+        "name": "Secondary air"
+      },
+      "service_hours": {
+        "name": "Service hours"
+      },
       "status": {
         "name": "Status"
+      },
+      "suction_fan": {
+        "name": "Suction fan"
       }
     }
   }
