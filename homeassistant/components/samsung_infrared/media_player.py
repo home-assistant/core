@@ -118,7 +118,8 @@ class SamsungIrTvMediaPlayer(
                 translation_placeholders={
                     "invalid_source": source,
                     "valid_sources": ", ".join(
-                        SOURCE_DISPLAY_NAMES[k] for k in self._attr_source_list
+                        SOURCE_DISPLAY_NAMES.get(k, k)
+                        for k in self._attr_source_list
                     ),
                 },
             )
