@@ -94,19 +94,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added."""
-        await super().async_added_to_hass()
-
-        if extra_data := await self.async_get_last_extra_data():
-            plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
-                extra_data.as_dict()
-            )
-            self._last_active_schedule = plugwise_extra_data.last_active_schedule
-            self._previous_action_mode = (
-                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
-            )
-
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,
@@ -146,10 +133,18 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             self.device["thermostat"]["resolution"], 0.1
         )
 
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return self.device["sensors"]["temperature"]
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+
+        if extra_data := await self.async_get_last_extra_data():
+            plugwise_extra_data = PlugwiseClimateExtraStoredData.from_dict(
+                extra_data.as_dict()
+            )
+            self._last_active_schedule = plugwise_extra_data.last_active_schedule
+            self._previous_action_mode = (
+                plugwise_extra_data.previous_action_mode or HVACAction.HEATING.value
+            )
 
     @property
     def extra_restore_state_data(self) -> PlugwiseClimateExtraStoredData:
@@ -158,6 +153,11 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
             last_active_schedule=self._last_active_schedule,
             previous_action_mode=self._previous_action_mode,
         )
+
+    @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        return self.device["sensors"]["temperature"]
 
     @property
     def target_temperature(self) -> float:
