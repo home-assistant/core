@@ -6,6 +6,7 @@ import logging
 from elke27_lib.errors import (
     Elke27ConnectionError,
     Elke27DisconnectedError,
+    Elke27Error,
     Elke27LinkRequiredError,
     Elke27TimeoutError,
 )
@@ -64,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         Elke27ConnectionError,
         Elke27TimeoutError,
         Elke27DisconnectedError,
+        Elke27Error,
         HomeAssistantError,
     ) as err:
         _LOGGER.warning(

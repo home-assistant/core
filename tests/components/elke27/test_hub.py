@@ -143,6 +143,32 @@ async def test_connect_failure_cleans_subscriptions(hass: HomeAssistant) -> None
     assert hub._client is None
 
 
+async def test_connect_cancel_cleans_client(hass: HomeAssistant) -> None:
+    """Test hub connect cleans up when cancelled after client creation."""
+    client = AsyncMock()
+    client.async_connect = AsyncMock(side_effect=asyncio.CancelledError)
+    client.set_client_identity = Mock()
+    client.async_disconnect = AsyncMock(return_value=None)
+
+    with patch(
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
+    ):
+        hub = Elke27Hub(
+            hass,
+            "192.168.1.71",
+            2101,
+            LinkKeys("tk", "lk", "lh").to_json(),
+            "112233445566",
+            None,
+        )
+        with pytest.raises(asyncio.CancelledError):
+            await hub.async_connect()
+
+    client.async_disconnect.assert_awaited_once()
+    assert hub._client is None
+
+
 async def test_connect_replaces_client_without_unavailable_log(
     hass: HomeAssistant,
 ) -> None:
