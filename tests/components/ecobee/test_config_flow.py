@@ -3,7 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyecobee import ECOBEE_PASSWORD, ECOBEE_USERNAME
+from pyecobee import (
+    ECOBEE_PASSWORD,
+    ECOBEE_USERNAME,
+    EcobeeAuthFailedError,
+    EcobeeAuthMfaRequiredError,
+    EcobeeAuthUnknownError,
+    MfaChallenge,
+)
 import pytest
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -13,6 +20,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+
+def _mfa_challenge() -> MfaChallenge:
+    """Return a minimal MfaChallenge payload for tests."""
+    return MfaChallenge(
+        challenge_url="https://auth.ecobee.com/u/mfa-otp-challenge?state=abc",
+        state="abc",
+        mfa_type="otp",
+        cookies={},
+        code_verifier="verifier",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -258,3 +276,204 @@ async def test_password_login_error_recovers(
         CONF_PASSWORD: "test-password",
         CONF_REFRESH_TOKEN: "test-token",
     }
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (EcobeeAuthFailedError("bad creds"), "invalid_auth"),
+        (EcobeeAuthUnknownError("network down"), "unknown"),
+    ],
+)
+async def test_password_login_raises_auth_error(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test that pyecobee auth exceptions map to user-facing form errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        mock_flow_ecobee.return_value.refresh_tokens.side_effect = exception
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == expected_error
+
+
+async def test_password_login_with_mfa_challenge_succeeds(hass: HomeAssistant) -> None:
+    """Test the MFA branch: password POST triggers MFA, code completes login."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
+            _mfa_challenge()
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "mfa"
+        assert result["description_placeholders"] == {"mfa_type": "otp"}
+
+        flow_instance.submit_mfa_code.return_value = True
+        flow_instance.refresh_token = "test-token-after-mfa"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "123456"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token-after-mfa",
+    }
+    flow_instance.submit_mfa_code.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (EcobeeAuthFailedError("wrong code"), "invalid_mfa_code"),
+        (EcobeeAuthUnknownError("auth0 hiccup"), "unknown"),
+    ],
+)
+async def test_mfa_submission_errors_recover(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test that errors during MFA submission keep the user on the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
+            _mfa_challenge()
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        assert result["step_id"] == "mfa"
+
+        flow_instance.submit_mfa_code.side_effect = exception
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "999999"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"]["base"] == expected_error
+
+
+async def test_reauth_flow_succeeds(hass: HomeAssistant) -> None:
+    """Test the reauth flow updates the existing entry with a fresh refresh_token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username@example.com",
+            CONF_PASSWORD: "stale-password",
+            CONF_REFRESH_TOKEN: "stale-refresh-token",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["username"] == "test-username@example.com"
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.return_value = True
+        flow_instance.refresh_token = "fresh-refresh-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "new-password",
+        CONF_REFRESH_TOKEN: "fresh-refresh-token",
+    }
+
+
+async def test_reauth_flow_with_mfa_challenge(hass: HomeAssistant) -> None:
+    """Test that reauth surfacing MFA routes through the same mfa step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username@example.com",
+            CONF_PASSWORD: "stale-password",
+            CONF_REFRESH_TOKEN: "stale-refresh-token",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError(
+            _mfa_challenge()
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+        assert result["step_id"] == "mfa"
+
+        flow_instance.submit_mfa_code.return_value = True
+        flow_instance.refresh_token = "reauth-refresh-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "123456"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_REFRESH_TOKEN] == "reauth-refresh-token"
+    assert entry.data[CONF_PASSWORD] == "new-password"

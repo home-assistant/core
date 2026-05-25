@@ -8,12 +8,16 @@ from pyecobee import (
     ECOBEE_REFRESH_TOKEN,
     ECOBEE_USERNAME,
     Ecobee,
+    EcobeeAuthFailedError,
+    EcobeeAuthMfaRequiredError,
+    EcobeeAuthUnknownError,
     ExpiredTokenError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, PLATFORMS
@@ -102,7 +106,21 @@ class EcobeeData:
     async def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
-        if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
+        try:
+            success = await self._hass.async_add_executor_job(
+                self.ecobee.refresh_tokens
+            )
+        except EcobeeAuthMfaRequiredError as err:
+            raise ConfigEntryAuthFailed(
+                "ecobee account requires MFA; reauthentication needed"
+            ) from err
+        except EcobeeAuthFailedError as err:
+            raise ConfigEntryAuthFailed("ecobee rejected stored credentials") from err
+        except EcobeeAuthUnknownError as err:
+            _LOGGER.error("Unexpected error refreshing ecobee tokens: %s", err)
+            return False
+
+        if success:
             data = {}
             if self.ecobee.config.get(ECOBEE_API_KEY):
                 data = {
