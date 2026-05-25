@@ -110,7 +110,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         self._location = device_id
         if (location := self.device.get("location")) is not None:
             self._location = location
-        self._previous_action_mode: str | None = HVACAction.HEATING.value
+        self._previous_action_mode = HVACAction.HEATING.value
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
