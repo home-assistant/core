@@ -831,7 +831,7 @@ async def test_ble_proxy_disconnects_on_setup_failure(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     proxy.connect.assert_awaited_once()
     proxy.disconnect.assert_awaited_once()
     matter_client.disconnect.assert_awaited()
