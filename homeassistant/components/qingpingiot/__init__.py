@@ -1,7 +1,5 @@
 """The Qingping IoT integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +12,8 @@ from .coordinator import QingpingCoordinator
 
 @dataclass
 class QingpingData:
+    """Runtime data for a Qingping config entry."""
+
     coordinator: QingpingCoordinator
 
 

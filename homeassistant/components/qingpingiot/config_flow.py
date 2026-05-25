@@ -1,10 +1,8 @@
 """Config flow for Qingping IoT integration."""
 
-from __future__ import annotations
-
 import asyncio
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -21,12 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_DEVICE,
-    DOMAIN,
-    MODEL_OPTIONS,
-    MQTT_TOPIC_PREFIX,
-)
+from .const import CONF_DEVICE, DOMAIN, MODEL_OPTIONS, MQTT_TOPIC_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,7 +219,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not await mqtt.async_wait_for_mqtt_client(self.hass):
                 _LOGGER.debug("MQTT client not available")
                 return
-        except Exception:
+        except mqtt.MqttError, ConnectionError:
             _LOGGER.debug("MQTT not available")
             return
 
@@ -249,7 +242,7 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 discovered[mac] = DiscoveredDevice(name=name, mac=mac, model="Unknown")
                 _LOGGER.debug("Discovered device: %s (%s)", name, mac)
 
-            except Exception:
+            except ValueError, KeyError:
                 _LOGGER.debug("Error parsing MQTT discovery message", exc_info=True)
 
         unsub = await mqtt.async_subscribe(
@@ -275,14 +268,15 @@ class QingpingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return False
         try:
             int(mac, 16)
-            return True
         except ValueError:
             return False
+        else:
+            return True
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,  # noqa: ARG004
+        config_entry: config_entries.ConfigEntry,
     ) -> QingpingOptionsFlow:
         """Get the options flow for this handler."""
         return QingpingOptionsFlow()

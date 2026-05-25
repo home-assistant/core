@@ -1,8 +1,6 @@
 """Test the qingpingiot init."""
 
-from unittest.mock import AsyncMock, patch
-
-import pytest
+from unittest.mock import AsyncMock
 
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

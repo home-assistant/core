@@ -2,14 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
-from homeassistant.components.qingpingiot.const import (
-    CONF_REPORT_INTERVAL,
-    CONF_TEMPERATURE_OFFSET,
-    CONF_HUMIDITY_OFFSET,
-    DOMAIN,
-)
+from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

@@ -1,27 +1,25 @@
 """Support for Qingping IoT select entities."""
 
-from __future__ import annotations
-
 import json
 import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_MODEL
+from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    Capability,
     CONF_ETVOC_UNIT,
     CONF_TEMPERATURE_UNIT,
     DEVICE_MODELS,
     DOMAIN,
     MQTT_TOPIC_PREFIX,
     TLV_MODELS,
+    Capability,
 )
 from .coordinator import QingpingCoordinator
 from .tlv import tlv_encode
@@ -119,6 +117,7 @@ class QingpingTLVeTVOCUnitSelect(CoordinatorEntity, SelectEntity):
         translation_key: str,
         options: list[str],
     ) -> None:
+        """Initialize the eTVOC unit select entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
         self._mac = mac
@@ -132,9 +131,11 @@ class QingpingTLVeTVOCUnitSelect(CoordinatorEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
+        """Return the current eTVOC unit."""
         return self.coordinator.data.get(self._conf_key, self._attr_options[0])
 
     async def async_select_option(self, option: str) -> None:
+        """Select a new eTVOC unit."""
         self.coordinator.data[self._conf_key] = option
         self.async_write_ha_state()
 
@@ -158,6 +159,7 @@ class QingpingTLVeTVOCUnitSelect(CoordinatorEntity, SelectEntity):
         )
 
     async def async_added_to_hass(self) -> None:
+        """Handle entity added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
@@ -191,6 +193,7 @@ class QingpingTLVTemperatureUnitSelect(CoordinatorEntity, SelectEntity):
         translation_key: str,
         options: list[str],
     ) -> None:
+        """Initialize the temperature unit select entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
         self._mac = mac
@@ -206,9 +209,11 @@ class QingpingTLVTemperatureUnitSelect(CoordinatorEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
+        """Return the current temperature unit."""
         return self.coordinator.data.get(self._conf_key, self._attr_options[0])
 
     async def async_select_option(self, option: str) -> None:
+        """Select a new temperature unit."""
         self.coordinator.data[self._conf_key] = option
         self.async_write_ha_state()
 
@@ -241,6 +246,7 @@ class QingpingTLVTemperatureUnitSelect(CoordinatorEntity, SelectEntity):
         await mqtt.async_publish(self.hass, topic, payload)
 
     async def async_added_to_hass(self) -> None:
+        """Handle entity added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 

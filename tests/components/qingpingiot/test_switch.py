@@ -1,9 +1,6 @@
 """Test the qingpingiot switch entities."""
 
-import json
 from unittest.mock import AsyncMock
-
-import pytest
 
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
@@ -38,7 +35,12 @@ async def test_switches_created_for_cgr1w(
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
 
-    switch_entities = [e for e in entities if e.platform == DOMAIN and "co2_asc" in e.unique_id or "led_indicator" in e.unique_id]
+    switch_entities = [
+        e
+        for e in entities
+        if e.platform == DOMAIN
+        and ("co2_asc" in e.unique_id or "led_indicator" in e.unique_id)
+    ]
 
     assert len(switch_entities) == 2
 
