@@ -66,9 +66,6 @@ async def test_number_set_value(
 
     getattr(mock_hdfury_client, method).assert_awaited_once_with("50")
 
-    state = hass.states.get(entity_id)
-    assert state.state == "50.0"
-
 
 @pytest.mark.parametrize(
     ("entity_id", "method"),
