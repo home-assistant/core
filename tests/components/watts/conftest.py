@@ -83,9 +83,7 @@ def mock_watts_client() -> Generator[AsyncMock]:
             switch_detail_data["deviceId"]: switch_detail,
         }
 
-        async def get_device_side_effect(
-            device_id: str, refresh: bool = False
-        ) -> Device:
+        async def get_device_side_effect(device_id: str) -> Device:
             """Return the appropriate device based on device_id."""
             return device_details.get(device_id, device_detail)
 

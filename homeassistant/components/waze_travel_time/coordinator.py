@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Literal
 
+import httpx
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 
 from homeassistant.config_entries import ConfigEntry
@@ -100,7 +101,8 @@ async def async_get_travel_times(
             )
             if not should_include:
                 _LOGGER.debug(
-                    "Excluding route [%s], because no inclusive filter matched any streetname",
+                    "Excluding route [%s], because no"
+                    " inclusive filter matched any streetname",
                     route.name,
                 )
                 return False
@@ -115,7 +117,9 @@ async def async_get_travel_times(
                 for excl_filter in excl_filters:
                     if excl_filter == street_name:
                         _LOGGER.debug(
-                            "Excluding route, because exclusive filter [%s] matched streetname: %s",
+                            "Excluding route, because"
+                            " exclusive filter [%s]"
+                            " matched streetname: %s",
                             excl_filter,
                             route.name,
                         )
@@ -146,6 +150,8 @@ async def async_get_travel_times(
 
     except WRCError as exp:
         raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
+    except httpx.RequestError as exp:
+        raise UpdateFailed(f"Connection error: {exp}") from exp
 
     else:
         return filtered_routes

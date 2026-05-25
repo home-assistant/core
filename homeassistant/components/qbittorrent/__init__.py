@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry: QBittorrentConfigEntry | None = hass.config_entries.async_get_entry(
             entry_id
         )
-        if entry is None or entry.state != ConfigEntryState.LOADED:
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_entry_id",

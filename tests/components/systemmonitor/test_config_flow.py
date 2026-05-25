@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.systemmonitor.const import CONF_PROCESS, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -32,9 +34,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test abort when already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
