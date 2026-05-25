@@ -144,8 +144,10 @@ async def async_setup_entry(
     device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == SamsungDeviceType.TV:
         async_add_entities(
-            SamsungIrButton(entry, infrared_emitter_entity_id, description)
-            for description in TV_BUTTON_DESCRIPTIONS
+            [
+                SamsungIrButton(entry, infrared_emitter_entity_id, description)
+                for description in TV_BUTTON_DESCRIPTIONS
+            ]
         )
 
 
