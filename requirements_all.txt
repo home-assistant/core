@@ -730,7 +730,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==1.0.1
+cached-ipaddress==1.1.1
 
 # homeassistant.components.caldav
 caldav==2.1.0
@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.3
+dbus-fast==5.0.9
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.2.2
+inkbird-ble==1.2.3
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
