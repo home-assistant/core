@@ -739,7 +739,10 @@ async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
 
     callback = Mock()
     remove = hub.subscribe_typed(callback)
+    remove_duplicate = hub.subscribe_typed(callback)
+    client.subscribe_typed.assert_called_once_with(callback)
     assert callable(remove)
+    assert callable(remove_duplicate)
     remove()
     unsubscribe.assert_called_once()
 
