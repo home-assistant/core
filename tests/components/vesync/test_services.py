@@ -19,6 +19,7 @@ async def test_async_new_device_discovery_no_entry(
     """Service should raise when no config entry exists."""
 
     # Ensure the integration is set up so the service is registered
+    # pylint: disable-next=home-assistant-tests-direct-async-setup
     assert await async_setup(hass, {})
 
     # No entries for the domain, service should raise
@@ -34,6 +35,7 @@ async def test_async_new_device_discovery_entry_not_loaded(
     # Add a config entry but do not set it up (state is not LOADED)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     # Ensure the integration is set up so the service is registered
+    # pylint: disable-next=home-assistant-tests-direct-async-setup
     assert await async_setup(hass, {})
 
     with pytest.raises(ServiceValidationError, match="Entry not loaded"):
