@@ -4,7 +4,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth.scanner import IS_MACOS
+from habluetooth.scanner import IS_MACOS  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components import bluetooth
