@@ -216,7 +216,7 @@ async def test_motion_event_wrong_serial_ignored(
 # ---------------------------------------------------------------------------
 
 
-async def test_async_camera_image_returns_none_before_motion(
+async def test_async_camera_image_raises_before_motion(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     patch_simplisafe_api,

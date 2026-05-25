@@ -18,6 +18,7 @@ capture_motion_image:
         number:
           min: 240
           max: 1080
+          step: 1
           unit_of_measurement: px
 capture_motion_clip:
   fields:
