@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.klik_aan_klik_uit_rc.const import (
+from homeassistant.components.klik_aan_klik_uit.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
     CONF_DIM,
@@ -68,7 +68,7 @@ def mock_dim_config_entry(
 
 
 @pytest.fixture
-async def init_klik_aan_klik_uit_rc(
+async def init_klik_aan_klik_uit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
@@ -80,7 +80,7 @@ async def init_klik_aan_klik_uit_rc(
 
 
 @pytest.fixture
-async def init_klik_aan_klik_uit_rc_dim(
+async def init_klik_aan_klik_uit_dim(
     hass: HomeAssistant,
     mock_dim_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:

@@ -1,10 +1,10 @@
 {
-  "domain": "klik_aan_klik_uit_rc",
-  "name": "KlikAanKlikUit RC",
+  "domain": "klik_aan_klik_uit",
+  "name": "KlikAanKlikUit",
   "codeowners": ["@Phunkafizer"],
   "config_flow": true,
   "dependencies": ["radio_frequency"],
-  "documentation": "https://www.home-assistant.io/integrations/klik_aan_klik_uit_rc",
+  "documentation": "https://www.home-assistant.io/integrations/klik_aan_klik_uit",
   "integration_type": "device",
   "iot_class": "assumed_state",
   "quality_scale": "bronze"

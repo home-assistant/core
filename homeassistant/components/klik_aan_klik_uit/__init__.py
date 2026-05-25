@@ -7,18 +7,18 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_TRANSMITTER
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Setup KlikAanKlikUit RC from a config entry."""
-    transmitter_entity_id = str(entry.data[CONF_TRANSMITTER])
+    transmitter_entity_id = entry.data[CONF_TRANSMITTER]
     if hass.states.get(transmitter_entity_id) is None:
         raise ConfigEntryNotReady(
             f"RF transmitter entity {transmitter_entity_id} is not available"
         )
 
-    entry.runtime_data = transmitter_entity_id
+    entry.runtime_data = {}
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

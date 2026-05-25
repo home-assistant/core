@@ -1,6 +1,6 @@
 """Test the Kaku RC config flow."""
 
-from homeassistant.components.klik_aan_klik_uit_rc.const import (
+from homeassistant.components.klik_aan_klik_uit.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
     CONF_DIM,
@@ -61,7 +61,7 @@ async def test_user_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Kaku ID 123456 CH 1"
+    assert result["title"] == "KlikAanKlikUit ID 123456 CH 1"
     assert result["data"] == user_input
 
 
