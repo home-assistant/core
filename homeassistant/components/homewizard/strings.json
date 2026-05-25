@@ -61,13 +61,14 @@
     },
     "select": {
       "battery_group_mode": {
-        "name": "Battery group mode",
+        "name": "Battery group charging strategy",
         "state": {
+          "predictive": "Smart charging",
           "standby": "Standby",
-          "to_full": "Manual charge mode",
-          "zero": "Zero mode",
-          "zero_charge_only": "Zero mode (charge only)",
-          "zero_discharge_only": "Zero mode (discharge only)"
+          "to_full": "One-time full charge",
+          "zero": "Net zero",
+          "zero_charge_only": "Net zero (charge only)",
+          "zero_discharge_only": "Net zero (discharge only)"
         }
       }
     },

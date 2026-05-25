@@ -191,7 +191,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             )
         )
 
-        if self.positioning_mode != pypck.lcn_defs.MotorPositioningMode.NONE:
+        if self.positioning_mode is not pypck.lcn_defs.MotorPositioningMode.NONE:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         self.motor = pypck.lcn_defs.MotorPort[config[CONF_DOMAIN_DATA][CONF_MOTOR]]
@@ -267,7 +267,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
                 | None,
             ]
         ] = [self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)]
-        if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.BS4:
+        if self.positioning_mode is pypck.lcn_defs.MotorPositioningMode.BS4:
             coros.append(
                 self.device_connection.request_status_motor_position(
                     self.motor, self.positioning_mode, SCAN_INTERVAL.seconds
@@ -282,7 +282,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             self._attr_is_opening = input_obj.is_opening(self.motor.value)
             self._attr_is_closing = input_obj.is_closing(self.motor.value)
 
-            if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE:
+            if self.positioning_mode is pypck.lcn_defs.MotorPositioningMode.NONE:
                 self._attr_is_closed = input_obj.is_assumed_closed(self.motor.value)
             self.async_write_ha_state()
         elif (
