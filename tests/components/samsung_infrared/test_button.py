@@ -34,8 +34,10 @@ async def test_entities(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Verify correct number of entities
-    assert len(entity_entries) == 33
+    # Snapshot the full set of created entities to avoid a brittle hard-coded count
+    assert sorted(entry.entity_id for entry in entity_entries) == snapshot(
+        name="entity_ids"
+    )
 
     # Verify all entities belong to the same device
     device_entry = device_registry.async_get_device(
