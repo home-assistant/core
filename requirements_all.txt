@@ -438,7 +438,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==90
+aiounifi==91
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -1213,7 +1213,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.7.3
+habluetooth==6.7.4
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
