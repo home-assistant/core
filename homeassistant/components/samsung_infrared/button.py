@@ -160,12 +160,12 @@ class SamsungIrButton(SamsungIrEntity, InfraredEmitterConsumerEntity, ButtonEnti
     def __init__(
         self,
         entry: ConfigEntry,
-        infrared_entity_id: str,
+        infrared_emitter_entity_id: str,
         description: SamsungIrButtonEntityDescription,
     ) -> None:
         """Initialize Samsung IR button."""
         super().__init__(entry, unique_id_suffix=description.key)
-        self._infrared_emitter_entity_id = infrared_entity_id
+        self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self.entity_description = description
 
     async def async_press(self) -> None:
