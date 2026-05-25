@@ -118,11 +118,7 @@
     },
     "dev_class": "gateway",
     "firmware": "3.9.0",
-    "gateway_modes": [
-      "away",
-      "full",
-      "vacation"
-    ],
+    "gateway_modes": ["away", "full", "vacation"],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "mac_address": "D40FB201CBA0",
@@ -130,12 +126,7 @@
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": [
-      "bleeding_cold",
-      "heating",
-      "off",
-      "bleeding_hot"
-    ],
+    "regulation_modes": ["bleeding_cold", "heating", "off", "bleeding_hot"],
     "select_gateway_mode": "full",
     "select_regulation_mode": "off",
     "sensors": {
@@ -222,13 +213,7 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Living room",
-    "preset_modes": [
-      "vacation",
-      "no_frost",
-      "asleep",
-      "home",
-      "away"
-    ],
+    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -251,11 +236,7 @@
       "secondary": []
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
@@ -271,13 +252,7 @@
     "dev_class": "climate",
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": [
-      "vacation",
-      "no_frost",
-      "asleep",
-      "home",
-      "away"
-    ],
+    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
     "select_schedule": "Badkamer",
     "select_zone_profile": "passive",
     "sensors": {
@@ -292,18 +267,10 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": [
-        "e2f4322d57924fa090fbbc48b3a140dc"
-      ],
-      "secondary": [
-        "1772a4ea304041adb83f357b751341ff"
-      ]
+      "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
+      "secondary": ["1772a4ea304041adb83f357b751341ff"]
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   }
 }

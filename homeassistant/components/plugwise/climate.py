@@ -118,10 +118,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if (
-            self._api.cooling_present
-            and self._api.smile.name != "Adam"
-        ):
+        if self._api.cooling_present and self._api.smile.name != "Adam":
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
@@ -282,13 +279,17 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                         translation_domain=DOMAIN,
                         translation_key=ERROR_NO_SCHEDULE,
                     )
-                await self._api.set_schedule_state(self._location, STATE_ON, self._last_active_schedule)
+                await self._api.set_schedule_state(
+                    self._location, STATE_ON, self._last_active_schedule
+                )
                 await self._api.set_regulation_mode(self._previous_action_mode)
                 return
 
             # Transition to manual mode
             if schedule_is_active:
-                await self._api.set_schedule_state(self._location, STATE_OFF, current_schedule)
+                await self._api.set_schedule_state(
+                    self._location, STATE_OFF, current_schedule
+                )
                 self._last_active_schedule = current_schedule
             regulation = self._regulation_mode_for_hvac(hvac_mode)
             await self._api.set_regulation_mode(regulation)
@@ -296,7 +297,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
 
         # Common - transition from auto = schedule off
         if self.hvac_mode == HVACMode.AUTO:
-            await self._api.set_schedule_state(self._location, STATE_OFF, current_schedule)
+            await self._api.set_schedule_state(
+                self._location, STATE_OFF, current_schedule
+            )
             self._last_active_schedule = current_schedule
             return
 
@@ -306,7 +309,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
                 translation_domain=DOMAIN,
                 translation_key=ERROR_NO_SCHEDULE,
             )
-        await self._api.set_schedule_state(self._location, STATE_ON, self._last_active_schedule)
+        await self._api.set_schedule_state(
+            self._location, STATE_ON, self._last_active_schedule
+        )
 
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
