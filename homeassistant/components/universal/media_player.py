@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
-    ATTR_ENTITY_PICTURE,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -50,6 +49,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -153,6 +153,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     _attr_should_poll = False
+    _attr_media_image_remotely_accessible = True
 
     def __init__(
         self,
@@ -374,10 +375,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         the url is coming from child entity pictures which have already been
         sent through the API proxy.
         """
-        if self.media_image_remotely_accessible:
-            return self.media_image_url
-
-        return self.media_image_local
+        return self.media_image_url
 
     @property
     def media_title(self):

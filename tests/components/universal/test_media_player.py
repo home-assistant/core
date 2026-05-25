@@ -1,7 +1,7 @@
 """The tests for the Universal Media player platform."""
 
 from copy import copy
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -557,10 +557,9 @@ async def test_media_image_url(hass: HomeAssistant, mock_states) -> None:
     mock_states.mock_mp_1.async_schedule_update_ha_state()
     await hass.async_block_till_done()
     await ump.async_update()
-    # Universal keeps the child picture URL as media_image_url.
-    assert mock_states.mock_mp_1.entity_picture == ump.media_image_url
-    # entity_picture resolves to the universal entity local proxy URL.
-    assert ump.entity_picture == ump.media_image_local
+    # mock_mp_1 will convert the url to the api proxy url. This test
+    # ensures ump passes through the same url without an additional proxy.
+    assert mock_states.mock_mp_1.entity_picture == ump.entity_picture
 
 
 async def test_is_volume_muted_children_only(hass: HomeAssistant, mock_states) -> None:
@@ -610,30 +609,12 @@ async def test_entity_picture_children_and_attr(
 
     ump = universal.UniversalMediaPlayer(hass, config)
 
-    assert ump.entity_picture == ump.media_image_local
-    assert ump.entity_picture != ump.media_image_url
+    assert ump.entity_picture == "/local/picture.png"
 
     hass.states.async_set(
-        mock_states.mock_media_image_url_id, "/local/other_picture.png"
+        mock_states.mock_sound_mode_list_id, "/local/other_picture.png"
     )
-    assert ump.entity_picture == ump.media_image_local
-    assert ump.entity_picture != ump.media_image_url
-
-
-async def test_entity_picture_remotely_accessible(
-    hass: HomeAssistant, config_children_and_attr, mock_states
-) -> None:
-    """Test entity picture property when remotely accessible."""
-    config = validate_config(config_children_and_attr)
-
-    ump = universal.UniversalMediaPlayer(hass, config)
-
-    with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.media_image_remotely_accessible",
-        new_callable=PropertyMock,
-        return_value=True,
-    ):
-        assert ump.entity_picture == ump.media_image_url
+    assert ump.sound_mode_list == "/local/other_picture.png"
 
 
 async def test_source_list_children_and_attr(
@@ -1426,9 +1407,8 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.master_bed_tv").state == "on"
     assert hass.states.get("media_player.master_bed_tv").attributes["source"] == "act2"
     assert (
-        hass.states.get("media_player.master_bed_tv")
-        .attributes["entity_picture"]
-        .startswith("/api/media_player_proxy/media_player.master_bed_tv?")
+        hass.states.get("media_player.master_bed_tv").attributes["entity_picture"]
+        == "/local/picture_remote.png"
     )
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
