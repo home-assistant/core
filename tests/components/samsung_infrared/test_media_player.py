@@ -100,6 +100,12 @@ async def test_media_player_action_sends_correct_code(
         mock_infrared_emitter_entity.send_command_calls[0] == expected_code.to_command()
     )
 
+    # Verify source attribute is updated for SELECT_SOURCE calls
+    if service == SERVICE_SELECT_SOURCE:
+        state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+        assert state is not None
+        assert state.attributes.get("source") == service_data["source"]
+
 
 @pytest.mark.usefixtures("init_integration")
 async def test_select_invalid_source(
