@@ -46,9 +46,23 @@ async def async_setup_entry(
 
     available_lists = coordinator.api.todo_lists
 
-    async_add_entities(
-        [AlexaToDoList(coordinator, alexa_list) for alexa_list in available_lists]
-    )
+    known_list_ids: set[str] = set()
+
+    def _check_lists() -> None:
+        current_list_ids = {todo_list.id for todo_list in available_lists}
+        new_list_ids = current_list_ids - known_list_ids
+        if new_list_ids:
+            known_list_ids.update(new_list_ids)
+            async_add_entities(
+                [
+                    AlexaToDoList(coordinator, alexa_list)
+                    for alexa_list in available_lists
+                    if alexa_list.id in new_list_ids
+                ]
+            )
+
+    _check_lists()
+    entry.async_on_unload(coordinator.async_add_listener(_check_lists))
 
 
 class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
