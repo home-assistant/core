@@ -48,46 +48,46 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
 @pytest.mark.parametrize(
     (
         "fixture_name",
-        "entity_id",
         "unique_id",
         "expected_name",
         "expected_device_class",
         "expected_state",
+        "expected_device_name",
     ),
     [
         pytest.param(
             "rainsensor",
-            "binary_sensor.my_rain_sensor_windrainsensor_0_rain",
             "BleBox-windRainSensor-ea68e74f4f49-0.rain",
             "My rain sensor windRainSensor-0.rain",
             BinarySensorDeviceClass.MOISTURE,
             STATE_ON,
+            "My rain sensor",
             id="moisture",
         ),
         pytest.param(
             "inputsensor",
-            "binary_sensor.my_input_sensor_inputsensord_0_input",
             "BleBox-inputSensorD-aa11bb22cc33-0.input",
             "My input sensor inputSensorD-0.input",
             None,
             STATE_ON,
+            "My input sensor",
             id="input",
         ),
     ],
 )
 async def test_init(
     fixture_name: str,
-    entity_id: str,
     unique_id: str,
     expected_name: str,
     expected_device_class: BinarySensorDeviceClass | None,
     expected_state: str,
+    expected_device_name: str,
     device_registry: dr.DeviceRegistry,
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
 ) -> None:
     """Test binary_sensor initialisation."""
-    request.getfixturevalue(fixture_name)
+    _, entity_id = request.getfixturevalue(fixture_name)
     entry = await async_setup_entity(hass, entity_id)
     assert entry.unique_id == unique_id
 
@@ -97,4 +97,4 @@ async def test_init(
     assert state.state == expected_state
 
     device = device_registry.async_get(entry.device_id)
-    assert device is not None
+    assert device.name == expected_device_name
