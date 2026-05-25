@@ -189,7 +189,13 @@ class Elke27Hub:
         if client is not None and self._typed_callbacks[listener] is None:
             self._typed_callbacks[listener] = client.subscribe_typed(listener)
 
+        removed = False
+
         def _remove() -> None:
+            nonlocal removed
+            if removed:
+                return
+            removed = True
             self.unsubscribe_typed(listener)
 
         return _remove
@@ -202,10 +208,7 @@ class Elke27Hub:
                 with contextlib.suppress(Exception):
                     unsubscribe()
             return True
-        client = self._client
-        if client is None:
-            return False
-        return client.unsubscribe_typed(listener)
+        return False
 
     async def async_set_zone_bypass(
         self, zone_id: int, *, bypassed: bool, pin: str | None = None
