@@ -185,6 +185,14 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     ):
         await area_1.async_alarm_arm_home(code="1234")
 
+    hub.async_arm_area.reset_mock()
+    hub.async_arm_area.side_effect = None
+    hub.async_arm_area.return_value = False
+    with pytest.raises(
+        HomeAssistantError, match="Area arm command was not acknowledged."
+    ):
+        await area_1.async_alarm_arm_away(code="1234")
+
 
 def test_area_state_helpers() -> None:
     """Verify state mapping."""

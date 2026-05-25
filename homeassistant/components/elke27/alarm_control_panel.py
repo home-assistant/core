@@ -138,10 +138,13 @@ class Elke27AreaAlarmControlPanel(
         """Arm the area using the requested mode."""
         code = _normalize_code(code)
         try:
-            await self._hub.async_arm_area(self._area_id, mode, code)
+            armed = await self._hub.async_arm_area(self._area_id, mode, code)
         except Elke27PinRequiredError as err:
             msg = "PIN required to perform this action."
             raise HomeAssistantError(msg) from err
+        if not armed:
+            msg = "Area arm command was not acknowledged."
+            raise HomeAssistantError(msg)
 
     def _log_missing(self) -> None:
         """Log when the area snapshot is missing."""
