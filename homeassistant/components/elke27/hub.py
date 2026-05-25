@@ -347,9 +347,9 @@ class Elke27Hub:
         if self._reconnect_task is not None and not self._reconnect_task.done():
             return
         _LOGGER.debug("Creating reconnect task")
-        self._reconnect_task = self._hass.async_create_task(
-            self._async_reconnect_loop()
-        )
+        task = self._hass.async_create_task(self._async_reconnect_loop())
+        self._reconnect_task = task
+        task.add_done_callback(self._finish_reconnect_task)
 
     @callback
     def _cancel_reconnect(self) -> None:
@@ -367,8 +367,12 @@ class Elke27Hub:
     @callback
     def _finish_reconnect_task(self, task: asyncio.Task[None]) -> None:
         """Consume reconnect task result and clear it when complete."""
-        with contextlib.suppress(asyncio.CancelledError, Exception):
+        try:
             task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            _LOGGER.exception("Unexpected reconnect task failure")
         if self._reconnect_task is task:
             self._reconnect_task = None
 
