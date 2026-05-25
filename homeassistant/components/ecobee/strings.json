@@ -52,6 +52,9 @@
       "compressor_protection_min_temp": {
         "name": "Compressor minimum temperature"
       },
+      "fan_min_on_time": {
+        "name": "Fan minimum on time"
+      },
       "ventilator_min_type_away": {
         "name": "Ventilator minimum time away"
       },
