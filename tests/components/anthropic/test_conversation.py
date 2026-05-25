@@ -6,10 +6,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
 from anthropic.types import (
+    CitationCharLocation,
+    CitationCharLocationParam,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
+    PlainTextSource,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -19,6 +23,8 @@ from anthropic.types import (
     ToolSearchToolResultError,
     ToolSearchToolSearchResultBlock,
     Usage,
+    WebFetchBlock,
+    WebFetchToolResultErrorBlock,
     WebSearchResultBlock,
     WebSearchToolResultError,
 )
@@ -39,6 +45,8 @@ from homeassistant.components.anthropic.const import (
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -74,6 +82,7 @@ from . import (
     create_thinking_block,
     create_tool_search_result_block,
     create_tool_use_block,
+    create_web_fetch_result_block,
     create_web_search_result_block,
 )
 
@@ -155,7 +164,7 @@ async def test_error_handling(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -180,7 +189,7 @@ async def test_template_error(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -221,7 +230,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
@@ -373,7 +382,7 @@ async def test_function_call(
     system_text = " ".join(block["text"] for block in system if "text" in block)
     assert "You are a voice assistant for Home Assistant." in system_text
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -448,7 +457,7 @@ async def test_function_exception(
         agent_id=agent_id,
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -457,7 +466,9 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error":"HomeAssistantError","error_text":"Test tool exception"}',
+                "content": (
+                    '{"error":"HomeAssistantError","error_text":"Test tool exception"}'
+                ),
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -627,7 +638,7 @@ async def test_refusal(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -659,7 +670,7 @@ async def test_stream_wrong_type(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == "Expected a stream of messages"
 
@@ -689,7 +700,7 @@ async def test_double_system_messages(
             agent_id="conversation.claude_conversation",
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -996,7 +1007,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                        cited_text=(
+                            "This release iterates on some of"
+                            " the features we introduced in"
+                            " the last couple of releases,"
+                            " but also..."
+                        ),
                         encrypted_index="AAA==",
                         title="Home Assistant Release",
                         url="https://www.example.com/todays-news",
@@ -1010,7 +1026,12 @@ async def test_web_search(
                 citations=[
                     CitationsWebSearchResultLocation(
                         type="web_search_result_location",
-                        cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                        cited_text=(
+                            "Breaking news from around the"
+                            " world today includes major"
+                            " events in technology, politics,"
+                            " and culture..."
+                        ),
                         encrypted_index="AQE=",
                         title="Breaking News",
                         url="https://www.newssite.com/breaking-news",
@@ -1507,7 +1528,12 @@ async def test_bash_code_execution_error(
             TextEditorCodeExecutionToolResultError(
                 type="text_editor_code_execution_tool_result_error",
                 error_code="unavailable",
-                error_message="Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)",
+                error_message=(
+                    "Tool response parsing error for view:"
+                    " Failed to parse tool response as JSON:"
+                    " unexpected character:"
+                    " line 1 column 1 (char 0)"
+                ),
             ),
         ),
     ],
@@ -1750,6 +1776,182 @@ async def test_tool_search_error(
     assert mock_create_stream.call_args.kwargs["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
+async def test_web_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web fetch."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-haiku-4-5",
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 5,
+        },
+    )
+
+    web_fetch_result = WebFetchBlock(
+        type="web_fetch_result",
+        url="https://www.home-assistant.io/latest-release-notes/",
+        content=DocumentBlock(
+            type="document",
+            citations=None,
+            source=PlainTextSource(
+                type="text",
+                data="Home Assistant new version is out!\nMany new features.\n"
+                "Anthropic integration now supports web fetch tool.\nEnjoy the release!",
+                media_type="text/plain",
+            ),
+            title="Latest Home Assistant Release Notes",
+        ),
+        retrieved_at="2025-10-31T12:00:00.637242Z",
+    )
+
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the latest", " release notes"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "web_fetch",
+                [
+                    '{"url": "https',
+                    "://www.home-",
+                    "assistant.io/latest",
+                    '-release-notes/"}',
+                ],
+            ),
+            *create_web_fetch_result_block(3, "srvtoolu_12345ABC", web_fetch_result),
+            *create_thinking_block(
+                4,
+                ["Great! All clear, let's reply to the user!"],
+            ),
+            *create_content_block(
+                5,
+                ["Here's what's great about the new release:\n"],
+            ),
+            *create_content_block(
+                6,
+                ["1. Many new features\n2. "],
+            ),
+            *create_content_block(
+                7,
+                ["New web fetch tool for Anthropic integration"],
+                citations=[
+                    CitationCharLocation(
+                        type="char_location",
+                        document_index=0,
+                        document_title="Latest Home Assistant Release Notes",
+                        start_char_index=56,
+                        end_char_index=105,
+                        cited_text="Anthropic integration now supports web fetch tool.",
+                    ),
+                ],
+            ),
+            *create_content_block(8, ["\nWhat a release!"]),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's new in Home Assistant? Please check on "
+        "https://www.home-assistant.io/latest-release-notes/",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
+@freeze_time("2025-10-31 12:00:00")
+async def test_web_fetch_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test web fetch error."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CODE_EXECUTION: True,
+            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_WEB_FETCH: True,
+            CONF_WEB_FETCH_MAX_USES: 5,
+        },
+    )
+
+    web_fetch_result = WebFetchToolResultErrorBlock(
+        type="web_fetch_tool_result_error",
+        error_code="url_not_allowed",
+    )
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
+                ["I will fetch the latest", " release notes"],
+            ),
+            *create_content_block(
+                1,
+                ["Sure, let me check that for you!"],
+            ),
+            *create_server_tool_use_block(
+                2,
+                "srvtoolu_12345ABC",
+                "web_fetch",
+                [
+                    '{"url": "https',
+                    "://www.home-",
+                    "assistant.io/latest",
+                    '-release-notes/"}',
+                ],
+            ),
+            *create_web_fetch_result_block(3, "srvtoolu_12345ABC", web_fetch_result),
+            *create_content_block(
+                4,
+                ["I am unable to perform the web fetch at this time."],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's new in Home Assistant?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["messages"] == snapshot
+
+
 async def test_container_reused(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -1888,7 +2090,14 @@ async def test_container_reused(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="To get today's news, I'll perform a web search",
-                thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+                thinking_content=(
+                    "The user is asking about today's news,"
+                    " which requires current, real-time"
+                    " information. This is clearly something"
+                    " that requires recent information beyond"
+                    " my knowledge cutoff. I should use the"
+                    " web_search tool to find today's news."
+                ),
                 native=ContentDetails(thinking_signature="ErU/V+ayA=="),
                 tool_calls=[
                     llm.ToolInput(
@@ -1936,7 +2145,12 @@ async def test_container_reused(
                             citations=[
                                 CitationWebSearchResultLocationParam(
                                     type="web_search_result_location",
-                                    cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                                    cited_text=(
+                                        "This release iterates on some of"
+                                        " the features we introduced in"
+                                        " the last couple of releases,"
+                                        " but also..."
+                                    ),
                                     encrypted_index="AAA==",
                                     title="Home Assistant Release",
                                     url="https://www.example.com/todays-news",
@@ -1949,7 +2163,12 @@ async def test_container_reused(
                             citations=[
                                 CitationWebSearchResultLocationParam(
                                     type="web_search_result_location",
-                                    cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                                    cited_text=(
+                                        "Breaking news from around the"
+                                        " world today includes major"
+                                        " events in technology, politics,"
+                                        " and culture..."
+                                    ),
                                     encrypted_index="AQE=",
                                     title="Breaking News",
                                     url="https://www.newssite.com/breaking-news",
@@ -1960,6 +2179,71 @@ async def test_container_reused(
                                     encrypted_index="AgI=",
                                     title="Breaking News",
                                     url="https://www.newssite.com/breaking-news",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What's new in Home Assistant?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="Sure, let me check that for you!",
+                thinking_content="I need to use the web_fetch tool to fetch the latest release notes from the Home Assistant website.",
+                native=ContentDetails(thinking_signature="ErU/V+ayA=="),
+                tool_calls=[
+                    llm.ToolInput(
+                        id="srvtoolu_12345ABC",
+                        tool_name="web_fetch",
+                        tool_args={
+                            "url": "https://www.home-assistant.io/latest-release-notes/"
+                        },
+                        external=True,
+                    ),
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="srvtoolu_12345ABC",
+                tool_name="web_fetch",
+                tool_result={
+                    "type": "web_fetch_result",
+                    "url": "https://www.home-assistant.io/latest-release-notes/",
+                    "content": {
+                        "type": "document",
+                        "source": {
+                            "type": "text",
+                            "media_type": "text/plain",
+                            "data": "Home Assistant new version is out!\nMany new features.\nAnthropic integration now supports web fetch tool.\nEnjoy the release!",
+                        },
+                        "title": "Latest Home Assistant Release Notes",
+                        "citations": {"enabled": True},
+                    },
+                    "retrieved_at": "2026-04-04T10:30:00Z",
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="Here's what's great about the new release:\n"
+                "1. Lots of new features\n"
+                "2. New web fetch tool for Anthropic integration\n"
+                "Enjoy!",
+                native=ContentDetails(
+                    citation_details=[
+                        CitationDetails(
+                            index=70,
+                            length=44,
+                            citations=[
+                                CitationCharLocationParam(
+                                    type="char_location",
+                                    cited_text="Anthropic integration now supports web fetch tool.",
+                                    document_index=0,
+                                    document_title="Latest Home Assistant Release Notes",
+                                    start_char_index=56,
+                                    end_char_index=105,
                                 ),
                             ],
                         ),

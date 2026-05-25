@@ -21,3 +21,6 @@ OPEN_STATUS: dict[int, str] = {
     3: "closed_but_unlocked",
     4: "closed",
 }
+
+LIGHT_MAX_KELVINS = 6500  # 154 Mireds
+LIGHT_MIN_KELVINS = 2700  # 370 Mireds

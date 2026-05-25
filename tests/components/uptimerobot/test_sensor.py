@@ -36,6 +36,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
         "not_checked_yet",
         "pause",
         "seems_down",
+        "started",
         "up",
     ]
 

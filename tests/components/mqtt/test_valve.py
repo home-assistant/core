@@ -270,9 +270,10 @@ async def test_state_via_state_topic_through_position(
 ) -> None:
     """Test the controlling state via topic through position.
 
-    Test is still possible to process a `opening` or `closing` state update.
-    Additional we test json messages can be processed containing both position and state.
-    Incoming rendered positions are clamped between 0..100.
+    Test is still possible to process a `opening` or `closing`
+    state update. Additional we test json messages can be
+    processed containing both position and state. Incoming
+    rendered positions are clamped between 0..100.
     """
     await mqtt_mock_entry()
 
@@ -307,7 +308,8 @@ async def test_opening_closing_state_is_reset(
 ) -> None:
     """Test the controlling state via topic through position.
 
-    Test  a `opening` or `closing` state update is reset correctly after sequential updates.
+    Test a `opening` or `closing` state update is reset
+    correctly after sequential updates.
     """
     await mqtt_mock_entry()
 
@@ -380,7 +382,8 @@ async def test_invalid_state_updates(
 ) -> None:
     """Test the controlling state via topic through position.
 
-    Test  a `opening` or `closing` state update is reset correctly after sequential updates.
+    Test a `opening` or `closing` state update is reset
+    correctly after sequential updates.
     """
     await mqtt_mock_entry()
 
@@ -435,10 +438,11 @@ async def test_state_via_state_trough_position_with_alt_range(
     asserted_state: str,
     valve_position: int | None,
 ) -> None:
-    """Test the controlling state via topic through position and an alternative range.
+    """Test controlling state via position with alternative range.
 
-    Test is still possible to process a `opening` or `closing` state update.
-    Additional we test json messages can be processed containing both position and state.
+    Test is still possible to process a `opening` or `closing`
+    state update. Additional we test json messages can be
+    processed containing both position and state.
     Incoming rendered positions are clamped between 0..100.
     """
     await mqtt_mock_entry()
@@ -499,7 +503,7 @@ async def test_controlling_valve_by_state(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -654,7 +658,7 @@ async def test_controlling_valve_by_state_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -705,7 +709,7 @@ async def test_controlling_valve_by_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -752,7 +756,7 @@ async def test_controlling_valve_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -806,7 +810,7 @@ async def test_controlling_valve_optimistic_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -856,7 +860,7 @@ async def test_controlling_valve_with_alt_range_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -907,7 +911,7 @@ async def test_controlling_valve_with_alt_range_by_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -971,7 +975,7 @@ async def test_controlling_valve_by_position_optimistic(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -1029,7 +1033,7 @@ async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", asserted_message, 0, False
+        "command-topic", asserted_message, 0, False, message_expiry_interval=None
     )
 
     state = hass.states.get("valve.test")
@@ -1484,6 +1488,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

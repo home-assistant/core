@@ -742,6 +742,71 @@
       }
     },
     {
+      "deviceURL": "rts://1234-5678-3293/16757826",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [],
+      "label": "Kitchen Pergola",
+      "subsystemId": 0,
+      "attributes": [],
+      "enabled": true,
+      "controllableName": "rts:BioclimaticPergolaRTSComponent",
+      "definition": {
+        "states": [],
+        "widgetName": "UpDownBioclimaticPergola",
+        "type": "ACTUATOR",
+        "attributes": [],
+        "commands": [
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltPositive",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "my",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stop",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 2,
+            "commandName": "tiltNegative",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "down",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "open",
+            "paramsSig": "*p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "up",
+            "paramsSig": "*p1"
+          }
+        ],
+        "uiClass": "Pergola"
+      }
+    },
+    {
       "creationTime": 1686173907452,
       "deviceURL": "rts://1234-5678-3293/16757362",
       "available": true,
@@ -817,7 +882,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "subsystemId": 0,
       "attributes": [
         {
@@ -882,7 +947,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "TaHoma Alarm"
         },
         {
           "type": 3,
@@ -905,7 +970,7 @@
           "value": 30
         }
       ],
-      "label": "**",
+      "label": "TaHoma",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1274,7 +1339,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "TaHoma"
         },
         {
           "type": 3,
@@ -1302,7 +1367,7 @@
           "value": "online"
         }
       ],
-      "label": "** **",
+      "label": "TaHoma Premium",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -1413,7 +1478,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Hallway Light"
         },
         {
           "type": 3,
@@ -1431,7 +1496,7 @@
           "value": 60
         }
       ],
-      "label": "** **",
+      "label": "Hallway Light",
       "subsystemId": 0,
       "attributes": [
         {
@@ -1609,6 +1674,942 @@
         ],
         "uiClass": "Light"
       }
+    },
+    {
+      "creationTime": 1590511973000,
+      "lastUpdateTime": 1590511973000,
+      "label": "Light Terras RGB",
+      "deviceURL": "io://1234-5678-3293/14608095",
+      "shortcut": false,
+      "controllableName": "io:DimmableRGBLightIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setIntensity",
+            "nparams": 1
+          },
+          {
+            "commandName": "setIntensityWithTimer",
+            "nparams": 3
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRGB",
+            "nparams": 3
+          },
+          {
+            "commandName": "setRGBWithTimer",
+            "nparams": 4
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:BlueColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:GreenColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LightIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "values": ["off", "on"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RedColorIntensityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "values": ["available", "unavailable"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DimmerRGBColouredLight",
+        "uiClass": "Light",
+        "qualifiedName": "io:DimmableRGBLightIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Light Terras RGB"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 28.0
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:LightIntensityState",
+          "type": 1,
+          "value": 59
+        },
+        {
+          "name": "core:RedColorIntensityState",
+          "type": 1,
+          "value": 128
+        },
+        {
+          "name": "core:GreenColorIntensityState",
+          "type": 1,
+          "value": 64
+        },
+        {
+          "name": "core:BlueColorIntensityState",
+          "type": 1,
+          "value": 200
+        }
+      ],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "widget": "DimmerRGBColouredLight",
+      "type": 1,
+      "uiClass": "Light"
+    },
+    {
+      "deviceURL": "io://1234-5678-3293/12745774",
+      "available": true,
+      "synced": true,
+      "type": 1,
+      "states": [
+        {
+          "type": 3,
+          "name": "core:StatusState",
+          "value": "available"
+        },
+        {
+          "type": 11,
+          "name": "core:CommandLockLevelsState",
+          "value": []
+        },
+        {
+          "type": 3,
+          "name": "core:DiscreteRSSILevelState",
+          "value": "good"
+        },
+        {
+          "type": 1,
+          "name": "core:RSSILevelState",
+          "value": 100
+        },
+        {
+          "type": 3,
+          "name": "core:OpenClosedUnknownState",
+          "value": "closed"
+        },
+        {
+          "type": 3,
+          "name": "core:NameState",
+          "value": "Garage Door Rollixo"
+        },
+        {
+          "type": 1,
+          "name": "core:PriorityLockTimerState",
+          "value": 0
+        },
+        {
+          "type": 3,
+          "name": "io:PriorityLockOriginatorState",
+          "value": "unknown"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5105491C15"
+        }
+      ],
+      "enabled": true,
+      "label": "Garage Door Rollixo",
+      "controllableName": "io:DiscreteGarageOpenerIOComponent",
+      "subsystemId": 0,
+      "definition": {
+        "commands": [
+          {
+            "nparams": 0,
+            "commandName": "up"
+          },
+          {
+            "nparams": 0,
+            "commandName": "close"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "resetLockLevels"
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "unpairAllOneWayControllers"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stopIdentify"
+          },
+          {
+            "nparams": 0,
+            "commandName": "startIdentify"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 0,
+            "commandName": "sendIOKey"
+          },
+          {
+            "nparams": 0,
+            "commandName": "unpairAllOneWayControllersAndDeleteNode"
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 0,
+            "commandName": "getName"
+          },
+          {
+            "nparams": 0,
+            "commandName": "stop"
+          },
+          {
+            "nparams": 0,
+            "commandName": "open"
+          },
+          {
+            "nparams": 0,
+            "commandName": "keepOneWayControllersAndDeleteNode"
+          },
+          {
+            "nparams": 0,
+            "commandName": "identify"
+          },
+          {
+            "nparams": 0,
+            "commandName": "down"
+          }
+        ],
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:OpenClosedUnknownState"
+          }
+        ],
+        "widgetName": "DiscretePositionableGarageDoor",
+        "uiClass": "GarageDoor",
+        "type": "ACTUATOR"
+      }
+    },
+    {
+      "attributes": [
+        {
+          "name": "zigbee:Role",
+          "type": 3,
+          "value": "endDevice"
+        },
+        {
+          "name": "core:ManufacturerId",
+          "type": 3,
+          "value": 4640
+        },
+        {
+          "name": "zigbee:NotificationEnable",
+          "type": 6,
+          "value": true
+        },
+        {
+          "name": "zigbee:InputClusters",
+          "type": 10,
+          "value": ["identify", "scenes", "windowCovering"]
+        },
+        {
+          "name": "core:OrientationPhysicalUpperBound",
+          "type": 1,
+          "value": 90
+        },
+        {
+          "name": "core:Compatibilities",
+          "type": 10,
+          "value": ["homekit"]
+        },
+        {
+          "name": "zigbee:SomfyEndProduct",
+          "type": 3,
+          "value": "2DInteriorBlind"
+        },
+        {
+          "name": "core:MacAddress",
+          "type": 3,
+          "value": "dXsY/v8Gwkw="
+        },
+        {
+          "name": "core:OrientationPhysicalLowerBound",
+          "type": 1,
+          "value": -90
+        }
+      ],
+      "available": true,
+      "definition": {
+        "uiClass": "VenetianBlind",
+        "commands": [
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "setPositionByStep",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetFactoryDefaultsAndConfiguration",
+            "nparams": 0
+          },
+          {
+            "commandName": "storeCurrentPositionToMy",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "leaveNetworkOnly",
+            "nparams": 0
+          },
+          {
+            "commandName": "ping",
+            "nparams": 0
+          },
+          {
+            "commandName": "setTiltingRangeConfiguration",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "addLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "unbind",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPositionNoLimit",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "reverseDirection",
+            "nparams": 0
+          },
+          {
+            "commandName": "bind",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPositionLimitation",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "setClosureAndOrientation",
+            "nparams": 2,
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1,
+            "paramsSig": "p1"
+          }
+        ],
+        "type": "ACTUATOR",
+        "widgetName": "PositionableVenetianBlind",
+        "states": [
+          {
+            "name": "core:OperationalStatusState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "zigbee:DirectionState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "zigbee:EncoderLiftState"
+          },
+          {
+            "name": "core:OrientationOperationalStatusState"
+          },
+          {
+            "name": "core:TargetOrientationState"
+          },
+          {
+            "name": "zigbee:EncoderTiltState"
+          },
+          {
+            "name": "core:OpenLimitTiltState"
+          },
+          {
+            "name": "core:ClosedLimitTiltState"
+          },
+          {
+            "name": "zigbee:MotorRunModeState"
+          },
+          {
+            "name": "core:ClosureOperationalStatusState"
+          },
+          {
+            "name": "core:OpenLimitLiftState"
+          },
+          {
+            "name": "zigbee:MotorRunningModeState"
+          },
+          {
+            "name": "core:ErrorState"
+          },
+          {
+            "name": "core:ConfigStatusState"
+          },
+          {
+            "name": "zigbee:MotorLEDFeedbackState"
+          },
+          {
+            "name": "zigbee:ControlTiltState"
+          },
+          {
+            "name": "zigbee:ControlLiftState"
+          },
+          {
+            "name": "zigbee:ReversalLiftState"
+          },
+          {
+            "name": "zigbee:NetworkOnlineState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:ClosedLimitLiftState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "zigbee:LinkQualityIndicatorState"
+          },
+          {
+            "name": "zigbee:ZigbeeUpdateDownloadProgressState"
+          },
+          {
+            "name": "zigbee:ZigbeeUpdateState"
+          },
+          {
+            "name": "core:FirmwareRevisionState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:ProductSoftwareVersionState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:ProductHardwareVersionState"
+          },
+          {
+            "name": "zigbee:PowerSourceState"
+          },
+          {
+            "name": "core:ManufacturerNameState"
+          },
+          {
+            "name": "core:ProductSoftwareBuildIdState"
+          },
+          {
+            "name": "core:MotorBoardSoftwareVersionState"
+          },
+          {
+            "name": "core:MotorBoardSoftwareBuildIdState"
+          },
+          {
+            "name": "core:MotorBoardHardwareVersionState"
+          },
+          {
+            "name": "core:ProductModelNameState"
+          }
+        ],
+        "attributes": [
+          {
+            "name": "zigbee:Role"
+          },
+          {
+            "name": "core:ManufacturerId"
+          },
+          {
+            "name": "zigbee:NotificationEnable"
+          },
+          {
+            "name": "zigbee:InputClusters"
+          },
+          {
+            "name": "core:OrientationPhysicalUpperBound"
+          },
+          {
+            "name": "core:Compatibilities"
+          },
+          {
+            "name": "zigbee:SomfyEndProduct"
+          },
+          {
+            "name": "core:MacAddress"
+          },
+          {
+            "name": "core:OrientationPhysicalLowerBound"
+          },
+          {
+            "name": "zigbee:OutputClusters"
+          }
+        ]
+      },
+      "controllableName": "zigbee:SomfyVenetianBlindComponent",
+      "deviceURL": "zigbee://1234-5678-3293/16730099",
+      "states": [
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:ClosureOperationalStatusState",
+          "type": 3,
+          "value": "not moving"
+        },
+        {
+          "name": "core:OrientationOperationalStatusState",
+          "type": 3,
+          "value": "not moving"
+        },
+        {
+          "name": "core:OperationalStatusState",
+          "type": 3,
+          "value": "not moving"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "verylow"
+        },
+        {
+          "name": "zigbee:LinkQualityIndicatorState",
+          "type": 1,
+          "value": 54
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": -86
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "zigbee:MotorRunningModeState",
+          "type": 3,
+          "value": "motor is running normally"
+        },
+        {
+          "name": "zigbee:MotorLEDFeedbackState",
+          "type": 3,
+          "value": "LEDs are off"
+        },
+        {
+          "name": "zigbee:DirectionState",
+          "type": 3,
+          "value": "counterClockwise"
+        },
+        {
+          "name": "zigbee:MotorRunModeState",
+          "type": 3,
+          "value": "run in normal mode"
+        },
+        {
+          "name": "zigbee:EncoderTiltState",
+          "type": 3,
+          "value": "encoder controlled"
+        },
+        {
+          "name": "core:ConfigStatusState",
+          "type": 3,
+          "value": "operational"
+        },
+        {
+          "name": "zigbee:ControlLiftState",
+          "type": 3,
+          "value": "lift control is closed loop"
+        },
+        {
+          "name": "zigbee:ReversalLiftState",
+          "type": 3,
+          "value": "not reversal lift commands"
+        },
+        {
+          "name": "zigbee:EncoderLiftState",
+          "type": 3,
+          "value": "encoder controlled"
+        },
+        {
+          "name": "zigbee:NetworkOnlineState",
+          "type": 3,
+          "value": "online"
+        },
+        {
+          "name": "zigbee:ControlTiltState",
+          "type": 3,
+          "value": "tilt control is closed loop"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Living Room Venetian Blind"
+        },
+        {
+          "name": "core:TargetOrientationState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:ErrorState",
+          "type": 3,
+          "value": "no error"
+        }
+      ],
+      "label": "Living Room Venetian Blind",
+      "enabled": true,
+      "subsystemId": 0,
+      "synced": true,
+      "type": 1
     }
   ]
 }

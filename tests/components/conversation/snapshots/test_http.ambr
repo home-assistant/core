@@ -463,7 +463,6 @@
             'value': 'my cool light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -488,7 +487,6 @@
             'value': 'my cool light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOff',
         }),
@@ -518,7 +516,6 @@
             'value': 'light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -554,7 +551,6 @@
             'value': 'on',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassGetState',
         }),
@@ -589,7 +585,6 @@
           }),
         }),
         'file': 'en/beer.yaml',
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'OrderBeer',
         }),
@@ -630,7 +625,6 @@
             'value': 'test light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
@@ -662,7 +656,6 @@
             'value': 'test light',
           }),
         }),
-        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
