@@ -1,5 +1,6 @@
 """Config flow for the Elke27 integration."""
 
+from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, is_dataclass
 from typing import Any
@@ -75,7 +76,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthentication."""
         self._selected_host = entry_data[CONF_HOST]
         self._selected_port = entry_data[CONF_PORT]
