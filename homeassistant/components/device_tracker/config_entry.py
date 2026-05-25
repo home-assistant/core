@@ -357,6 +357,23 @@ class BaseScannerEntity(BaseTrackerEntity):
         """Return true if the device is connected."""
         raise NotImplementedError
 
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the device state attributes."""
+        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr.update(super().state_attributes)
+
+        if not self.is_connected:
+            return attr
+
+        attr[ATTR_IN_ZONES] = [
+            zone.ENTITY_ID_HOME,
+            *zone.async_get_enclosing_zones(self.hass, zone.ENTITY_ID_HOME),
+        ]
+
+        return attr
+
 
 class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
@@ -484,9 +501,12 @@ class ScannerEntity(
         # Do this last or else the entity registry update listener has been installed
         await super().async_internal_added_to_hass()
 
-    @final
+    # BaseScannerEntity.state_attributes is @final to keep external subclasses
+    # from tampering with it; ScannerEntity is an in-tree subclass that
+    # intentionally extends it with ip/mac/hostname.
+    @final  # type: ignore[misc]
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr = super().state_attributes
 
