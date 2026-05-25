@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from enum import Enum
+import logging
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -495,6 +496,34 @@ async def test_schedule_reconnect_creates_task(hass: HomeAssistant) -> None:
     hub._hass.async_create_task = Mock(side_effect=lambda coro: (coro.close(), task)[1])
     hub._schedule_reconnect()
     assert hub._reconnect_task is task
+    task.add_done_callback.assert_called_once_with(hub._finish_reconnect_task)
+
+
+async def test_schedule_reconnect_clears_failed_task(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify scheduled reconnect tasks are cleaned up when they fail."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.92",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+
+    async def _raise() -> None:
+        raise RuntimeError("reconnect failed")
+
+    hub._async_reconnect_loop = Mock(return_value=_raise())
+    with caplog.at_level(logging.ERROR, logger="homeassistant.components.elke27.hub"):
+        hub._schedule_reconnect()
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    assert hub._reconnect_task is None
+    assert "Unexpected reconnect task failure" in caplog.text
 
 
 async def test_log_unavailable_skips_when_logged(hass: HomeAssistant) -> None:
