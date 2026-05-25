@@ -12,7 +12,11 @@ from elke27_lib.errors import (
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import CONF_LINK_KEYS_JSON
 from .coordinator import Elke27DataUpdateCoordinator
@@ -53,8 +57,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         raise ConfigEntryNotReady(msg) from err
 
     coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
-    await coordinator.async_start()
-    await coordinator.async_refresh_now()
+    try:
+        await coordinator.async_start()
+        await coordinator.async_refresh_now()
+    except (
+        Elke27ConnectionError,
+        Elke27TimeoutError,
+        Elke27DisconnectedError,
+        HomeAssistantError,
+    ) as err:
+        _LOGGER.warning(
+            "Failed to refresh initial data from %s:%s: %s", host, port, err
+        )
+        with contextlib.suppress(Exception):
+            await coordinator.async_stop()
+        with contextlib.suppress(Exception):
+            await hub.async_disconnect()
+        msg = "Unable to refresh initial panel data"
+        raise ConfigEntryNotReady(msg) from err
 
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
