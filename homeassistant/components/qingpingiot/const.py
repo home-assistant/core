@@ -4,23 +4,18 @@ from enum import StrEnum
 from typing import Final, TypedDict
 
 from homeassistant.const import Platform
+from homeassistant.helpers.selector import SelectOptionDict
 
 # Integration
 DOMAIN: Final = "qingpingiot"
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
-    Platform.BUTTON,
 ]
-
-# Config keys
-CONF_MAC: Final = "mac"
-CONF_NAME: Final = "name"
-CONF_MODEL: Final = "model"
-CONF_DEVICE: Final = "device"
 
 # MQTT
 MQTT_TOPIC_PREFIX: Final = "qingping"
@@ -69,11 +64,9 @@ class Protocol(StrEnum):
     MQTT = "mqtt"
 
 
-PERCENTAGE: Final = "%"
 PPM: Final = "ppm"
 PPB: Final = "ppb"
 INDEX: Final = "VOC index"
-CONCENTRATION: Final = "µg/m³"
 DB: Final = "dB"
 MG_PER_M3: Final = "mg/m³"
 
@@ -86,9 +79,6 @@ CONF_REPORT_MODE: Final = "report_mode"
 # VOC unit config
 CONF_TVOC_UNIT: Final = "tvoc_unit"
 CONF_ETVOC_UNIT: Final = "etvoc_unit"
-
-# Temperature unit config (TLV)
-CONF_TEMPERATURE_UNIT: Final = "temperature_unit"
 
 # Online/offline timeouts (seconds)
 OFFLINE_TIMEOUT_REALTIME: Final = 900
@@ -203,7 +193,8 @@ DEVICE_MODELS: dict[str, DeviceModelInfo] = {
 
 # Options for config_flow dropdown
 MODEL_OPTIONS: Final = [
-    {"value": model, "label": info["name"]} for model, info in DEVICE_MODELS.items()
+    SelectOptionDict(value=model, label=info["name"])
+    for model, info in DEVICE_MODELS.items()
 ]
 
 # JSON protocol devices

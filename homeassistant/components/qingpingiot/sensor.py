@@ -10,22 +10,25 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONCENTRATION,
     CONF_ETVOC_UNIT,
     DB,
     DEVICE_MODELS,
     DOMAIN,
     ETVOC_UNIT_DISPLAY_MAP,
     INDEX,
-    PERCENTAGE,
     PPM,
     SENSOR_BATTERY,
     SENSOR_CO2,
@@ -72,14 +75,14 @@ CAPABILITY_SENSOR_MAP: dict[Capability, dict] = {
     Capability.PM25: {
         "sensor_type": SENSOR_PM25,
         "translation_key": "pm25",
-        "unit": CONCENTRATION,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "device_class": SensorDeviceClass.PM25,
         "state_class": SensorStateClass.MEASUREMENT,
     },
     Capability.PM10: {
         "sensor_type": SENSOR_PM10,
         "translation_key": "pm10",
-        "unit": CONCENTRATION,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         "device_class": SensorDeviceClass.PM10,
         "state_class": SensorStateClass.MEASUREMENT,
     },
@@ -135,7 +138,7 @@ CAPABILITY_SENSOR_MAP: dict[Capability, dict] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Qingping sensors from a config entry."""
     coordinator: QingpingCoordinator = config_entry.runtime_data.coordinator
@@ -147,7 +150,7 @@ async def async_setup_entry(
     model_info = DEVICE_MODELS[model]
     capabilities = model_info["capabilities"]
 
-    device_info = {
+    device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, mac)},
         "name": name,
         "manufacturer": "Qingping",
@@ -208,14 +211,16 @@ async def async_setup_entry(
 # -- Diagnostic Sensors --
 
 
-class QingpingStatusSensor(CoordinatorEntity, SensorEntity):
+class QingpingStatusSensor(CoordinatorEntity[QingpingCoordinator], SensorEntity):
     """Device online/offline status."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+    def __init__(
+        self, coordinator: QingpingCoordinator, device_info: DeviceInfo
+    ) -> None:
         """Initialize the status sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_status"
@@ -227,14 +232,16 @@ class QingpingStatusSensor(CoordinatorEntity, SensorEntity):
         return "online" if self.coordinator.is_online else "offline"
 
 
-class QingpingFirmwareSensor(CoordinatorEntity, SensorEntity):
+class QingpingFirmwareSensor(CoordinatorEntity[QingpingCoordinator], SensorEntity):
     """Device firmware version."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "firmware"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+    def __init__(
+        self, coordinator: QingpingCoordinator, device_info: DeviceInfo
+    ) -> None:
         """Initialize the firmware sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_firmware"
@@ -246,14 +253,16 @@ class QingpingFirmwareSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.get("firmware_version")
 
 
-class QingpingMACSensor(CoordinatorEntity, SensorEntity):
+class QingpingMACSensor(CoordinatorEntity[QingpingCoordinator], SensorEntity):
     """Device MAC address."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "mac"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+    def __init__(
+        self, coordinator: QingpingCoordinator, device_info: DeviceInfo
+    ) -> None:
         """Initialize the MAC sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_mac"
@@ -265,14 +274,16 @@ class QingpingMACSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.get("mac")
 
 
-class QingpingBatteryStateSensor(CoordinatorEntity, SensorEntity):
+class QingpingBatteryStateSensor(CoordinatorEntity[QingpingCoordinator], SensorEntity):
     """Battery charging state."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "battery_state"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: QingpingCoordinator, device_info: dict) -> None:
+    def __init__(
+        self, coordinator: QingpingCoordinator, device_info: DeviceInfo
+    ) -> None:
         """Initialize the battery state sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac}_battery_state"
@@ -294,7 +305,7 @@ class QingpingBatteryStateSensor(CoordinatorEntity, SensorEntity):
 # -- Main Sensor Entity --
 
 
-def _get_eTvoc_device_class(unit: str | None) -> SensorDeviceClass:
+def _get_eTvoc_device_class(unit: str | None) -> SensorDeviceClass | None:
     """Get appropriate device class for VOC sensor based on unit."""
     if unit == "index":
         return None
@@ -305,7 +316,7 @@ def _get_eTvoc_device_class(unit: str | None) -> SensorDeviceClass:
     return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
 
 
-class QingpingSensor(CoordinatorEntity, SensorEntity):
+class QingpingSensor(CoordinatorEntity[QingpingCoordinator], SensorEntity):
     """Generic Qingping sensor entity."""
 
     _attr_has_entity_name = True
@@ -318,7 +329,7 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
         unit: str | None,
         device_class: SensorDeviceClass,
         state_class: SensorStateClass,
-        device_info: dict,
+        device_info: DeviceInfo,
         entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the sensor entity."""
@@ -449,7 +460,7 @@ class QingpingSensor(CoordinatorEntity, SensorEntity):
             if charging or self._attr_native_value is None:
                 return "mdi:battery-charging"
             if self._attr_native_value is not None:
-                level = int(self._attr_native_value)
+                level = int(float(str(self._attr_native_value)))
                 bucket = max(10, (level // 10) * 10) if level > 0 else 10
                 if bucket >= 100:
                     return "mdi:battery"
