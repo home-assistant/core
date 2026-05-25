@@ -139,7 +139,7 @@
   },
   "exceptions": {
     "invalid_source": {
-      "message": "Cannot select input source \"{invalid_source}\" for media player. Valid sources: {valid_sources}."
+      "message": "Cannot select input source '{invalid_source}' for media player. Valid sources: {valid_sources}."
     }
   },
   "selector": {
