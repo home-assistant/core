@@ -660,7 +660,7 @@ bleak-retry-connector==4.6.1
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.3
+blebox-uniapi==2.5.4
 
 # homeassistant.components.blink
 blinkpy==0.25.2
@@ -678,7 +678,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==2.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.3
+bluetooth-auto-recovery==1.6.4
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -730,7 +730,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==1.0.1
+cached-ipaddress==1.1.1
 
 # homeassistant.components.caldav
 caldav==2.1.0
@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.3
+dbus-fast==5.0.9
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.2.2
+inkbird-ble==1.2.3
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -2614,7 +2614,7 @@ python-dropbox-api==0.1.3
 python-duco-connectivity==0.5.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.3.2
+python-ecobee-api==0.4.0
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
@@ -2808,7 +2808,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.3.4
+pywmspro==0.3.5
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -3280,7 +3280,7 @@ viaggiatreno_ha==0.2.4
 victron-ble-ha-parser==0.7.0
 
 # homeassistant.components.victron_gx
-victron-mqtt==2026.4.17
+victron-mqtt==2026.5.4
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
