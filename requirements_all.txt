@@ -233,7 +233,7 @@ aiocentriconnect==0.2.3
 aiocomelit==2.0.3
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.2.6
+aiodhcpwatcher==1.2.7
 
 # homeassistant.components.dhcp
 aiodiscover==3.2.3
@@ -3018,7 +3018,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.7
 
 # homeassistant.components.sonos
-soco==0.30.15
+soco==0.31.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
