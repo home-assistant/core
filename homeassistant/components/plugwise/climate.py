@@ -27,7 +27,7 @@ ERROR_NO_SCHEDULE = "set_schedule_first"
 PARALLEL_UPDATES = 0
 
 
-def _check_for_schedule(active: bool, last_active: str) -> None:
+def _check_for_schedule(active: bool, last_active: str | None) -> None:
     """Raise a HAError when no thermostat schedule has been set."""
     if not active and last_active is None:
         raise HomeAssistantError(
