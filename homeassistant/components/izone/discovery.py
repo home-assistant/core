@@ -86,7 +86,7 @@ class DiscoveryService(pizone.Listener):
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
 
-async def async_start_discovery_service(hass: HomeAssistant):
+async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService:
     """Set up the pizone internal discovery."""
     if disco := hass.data.get(DATA_DISCOVERY_SERVICE):
         # Already started
@@ -186,7 +186,7 @@ async def async_maybe_stop_discovery_service(hass: HomeAssistant) -> None:
     disco.async_schedule_idle_stop()
 
 
-async def async_stop_discovery_service(hass: HomeAssistant):
+async def async_stop_discovery_service(hass: HomeAssistant) -> None:
     """Stop the discovery service."""
     if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
