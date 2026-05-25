@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug(
             "Send magic packet to mac %s (secureon: %s, broadcast: %s, port: %s)",
             mac_address,
-            secureon_password,
+            secureon_password is not None,
             broadcast_address,
             broadcast_port,
         )

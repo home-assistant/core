@@ -78,7 +78,7 @@ class WolButton(ButtonEntity):
         _LOGGER.debug(
             "Send magic packet to mac %s (secureon: %s, broadcast: %s, port: %s)",
             self._mac_address,
-            self._secureon_password,
+            self._secureon_password is not None,
             self._broadcast_address,
             self._broadcast_port,
         )
