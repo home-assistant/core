@@ -130,7 +130,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                total_info["invTodayPpv"] = total_info["current_power"]
+                # V1 API returns current_power in kW, convert to W
+                total_info["invTodayPpv"] = total_info["current_power"] * 1000
             else:
                 # Classic API: use plant_info as before
                 total_info = self.api.plant_info(self.device_id)

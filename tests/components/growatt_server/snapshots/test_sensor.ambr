@@ -3881,7 +3881,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2500',
+    'state': '2500.0',
   })
 # ---
 # name: test_min_sensors_v1_api[sensor.test_plant_total_total_money_today-entry]
@@ -15939,7 +15939,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2500',
+    'state': '2500.0',
   })
 # ---
 # name: test_sph_sensors_v1_api[sensor.test_plant_total_total_money_today-entry]
