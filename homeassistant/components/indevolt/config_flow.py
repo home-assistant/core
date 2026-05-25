@@ -118,16 +118,17 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery — probe the device to confirm it is an Indevolt device."""
         host = str(discovery_info.ip_address)
+        sn = discovery_info.hostname.removesuffix(".local.")
+
+        await self.async_set_unique_id(sn)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host}, reload_on_update=True
+        )
 
         try:
             device_data = await self._async_get_device_data(host)
         except OSError, ClientError, KeyError:
             return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(device_data[CONF_SERIAL_NUMBER])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host}, reload_on_update=True
-        )
 
         self.context["title_placeholders"] = {"model": device_data[CONF_MODEL]}
         self._discovered_host = host

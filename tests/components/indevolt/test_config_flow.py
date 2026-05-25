@@ -34,7 +34,7 @@ def _make_zeroconf_discovery(ip: str) -> ZeroconfServiceInfo:
         ip_address=IPv4Address(ip),
         ip_addresses=[IPv4Address(ip)],
         port=80,
-        hostname="3300003082.local.",
+        hostname=f"{TEST_DEVICE_SN_GEN2}.local.",
         type="_http._tcp.local.",
         name="IGEN_FW._http._tcp.local.",
         properties={},
