@@ -260,6 +260,23 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         return self.device.target_temperature
 
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature based on current mode."""
+        if self.hvac_mode == HVACMode.COOL:
+            return 18.0  # 64°F for cooling
+        if self.hvac_mode == HVACMode.HEAT:
+            # Allow 10C/50F to support Daikin's Leave Home anti-freeze mode
+            return 10.0
+        return 16.0  # Standard fallback
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature based on current mode."""
+        if self.hvac_mode == HVACMode.HEAT:
+            return 30.0  # 86°F maximum for heating
+        return 32.0  # 90°F maximum for cooling
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._set(kwargs)
