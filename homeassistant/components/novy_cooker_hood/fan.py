@@ -1,6 +1,5 @@
 """Fan platform for the Novy Cooker Hood (calibrated speed control)."""
 
-import asyncio
 import math
 from typing import Any
 
@@ -25,9 +24,6 @@ from .entity import NovyCookerHoodEntity
 PARALLEL_UPDATES = 1
 
 _SPEED_RANGE = (1, SPEED_COUNT)
-
-# Novy hood expects at least 150ms between RF commands
-_COMMAND_DELAY = 0.2
 
 
 async def async_setup_entry(
@@ -108,7 +104,8 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         """Bump speed up by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
         plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
-        await self._async_send_repeated(plus, steps)
+        for _ in range(steps):
+            await self._async_send(plus)
         self._level = min(SPEED_COUNT, self._level + steps)
         self.async_write_ha_state()
 
@@ -116,7 +113,8 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
         """Bump speed down by N hardware levels (no recalibration)."""
         steps = self._steps_from_percentage(percentage_step)
         minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
-        await self._async_send_repeated(minus, steps)
+        for _ in range(steps):
+            await self._async_send(minus)
         self._level = max(0, self._level - steps)
         self.async_write_ha_state()
 
@@ -130,22 +128,14 @@ class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     async def _async_set_level(self, level: int) -> None:
         """Reset to off with `SPEED_COUNT` minus presses, then climb to level."""
         minus = NovyCookerHoodButton.MINUS.to_command(channel=self._code)
-        await self._async_send_repeated(minus, SPEED_COUNT)
+        for _ in range(SPEED_COUNT):
+            await self._async_send(minus)
         if level > 0:
-            await asyncio.sleep(_COMMAND_DELAY)
             plus = NovyCookerHoodButton.PLUS.to_command(channel=self._code)
-            await self._async_send_repeated(plus, level)
+            for _ in range(level):
+                await self._async_send(plus)
         self._level = level
         self.async_write_ha_state()
-
-    async def _async_send_repeated(
-        self, command: NovyCookerHoodCommand, count: int
-    ) -> None:
-        """Send the same RF command N times, pausing between presses."""
-        for i in range(count):
-            if i > 0:
-                await asyncio.sleep(_COMMAND_DELAY)
-            await self._async_send(command)
 
     async def _async_send(self, command: NovyCookerHoodCommand) -> None:
         """Send a single RF command via the configured transmitter."""

@@ -1,8 +1,5 @@
 """Common fixtures for the Novy Cooker Hood tests."""
 
-from collections.abc import Iterator
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
@@ -14,13 +11,6 @@ from tests.common import MockConfigEntry
 from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 TRANSMITTER_ENTITY_ID = "radio_frequency.test_rf_transmitter"
-
-
-@pytest.fixture(autouse=True)
-def mock_command_delay() -> Iterator[None]:
-    """Drop the inter-command delay so tests don't spend real time waiting."""
-    with patch("homeassistant.components.novy_cooker_hood.fan._COMMAND_DELAY", 0):
-        yield
 
 
 @pytest.fixture
