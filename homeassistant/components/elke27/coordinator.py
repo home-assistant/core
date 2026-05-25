@@ -68,8 +68,9 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
 
     async def async_refresh_now(self) -> None:
         """Perform a full CSM refresh and update the snapshot."""
-        await self._hub.refresh_csm()
-        self._set_snapshot(self._hub.get_snapshot())
+        async with self._refresh_lock:
+            await self._hub.refresh_csm()
+            self._set_snapshot(self._hub.get_snapshot())
 
     def _handle_event(self, event: Any) -> None:
         """Handle hub events on the Home Assistant event loop."""

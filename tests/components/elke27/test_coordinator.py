@@ -229,6 +229,36 @@ async def test_async_refresh_now_updates_snapshot(hass: HomeAssistant) -> None:
     assert hub.refresh_csm_calls == 1
 
 
+async def test_async_refresh_now_serializes_refreshes(hass: HomeAssistant) -> None:
+    """Verify concurrent full refreshes do not overlap."""
+
+    class SlowHub(_FakeHub):
+        def __init__(self, snapshot: Any) -> None:
+            super().__init__(snapshot)
+            self.active_refreshes = 0
+            self.max_active_refreshes = 0
+
+        async def refresh_csm(self) -> None:
+            self.active_refreshes += 1
+            self.max_active_refreshes = max(
+                self.max_active_refreshes, self.active_refreshes
+            )
+            await asyncio.sleep(0)
+            self.refresh_csm_calls += 1
+            self.active_refreshes -= 1
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = SlowHub(SimpleNamespace(version=1))
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    await asyncio.gather(
+        coordinator.async_refresh_now(), coordinator.async_refresh_now()
+    )
+
+    assert hub.refresh_csm_calls == 2
+    assert hub.max_active_refreshes == 1
+
+
 async def test_queue_domain_refresh_handles_exception(hass: HomeAssistant) -> None:
     """Verify exceptions in refresh domain are handled."""
 

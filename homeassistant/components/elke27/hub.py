@@ -136,12 +136,13 @@ class Elke27Hub:
     async def async_disconnect(self) -> None:
         """Disconnect the client and unregister event handlers."""
         self._stopping = True
-        if self._reconnect_task is not None:
-            self._reconnect_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError, Exception):
-                await self._reconnect_task
-            self._reconnect_task = None
-        await self._async_disconnect()
+        async with self._connect_lock:
+            if self._reconnect_task is not None:
+                self._reconnect_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await self._reconnect_task
+                self._reconnect_task = None
+            await self._async_disconnect()
 
     async def _async_disconnect(self, *, log_unavailable: bool = True) -> None:
         """Disconnect the client and unregister event handlers."""
