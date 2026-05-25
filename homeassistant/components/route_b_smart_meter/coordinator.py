@@ -105,7 +105,32 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
 
     async def _async_update_data(self) -> BRouteData:
         """Update data."""
+
+        def fetch_with_reopen() -> BRouteData:
+            try:
+                return self._get_data()
+            except RuntimeError as err:
+                if "not open" in str(err):
+                    _LOGGER.info(
+                        "Route-B API is closed (likely from a previous recovery). "
+                        "Reopening session"
+                    )
+                    self.api.open()
+                    return self._get_data()
+                raise
+
         try:
-            return await self.hass.async_add_executor_job(self._get_data)
-        except MomongaError as error:
+            return await self.hass.async_add_executor_job(fetch_with_reopen)
+        except (MomongaError, RuntimeError) as error:
+            _LOGGER.warning(
+                "Route-B poll failed. Attempting to force-close the serial port to "
+                "prevent lockup"
+            )
+            try:
+                await self.hass.async_add_executor_job(self.api.close)
+                _LOGGER.warning(
+                    "Serial port closed cleanly; ready for the next polling cycle"
+                )
+            except Exception as close_error:  # noqa: BLE001
+                _LOGGER.error("Could not close serial port: %s", close_error)
             raise UpdateFailed(error) from error
