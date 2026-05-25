@@ -473,6 +473,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 await self.coordinator.heos.set_group(new_members)
                 return
 
+    @catch_action_error("remove from queue")
     async def async_remove_from_queue(self, queue_ids: list[int]) -> None:
         """Remove items from the queue."""
         await self._player.remove_from_queue(queue_ids)
