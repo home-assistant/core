@@ -15,7 +15,7 @@ from homeassistant.helpers.network import (
     _get_cloud_url,
     _get_external_url,
     _get_internal_url,
-    _get_request_host,
+    _get_request_host_port,
     get_supervisor_network_url,
     get_url,
     is_hass_url,
@@ -63,7 +63,8 @@ async def test_get_url_internal(hass: HomeAssistant) -> None:
         _get_internal_url(hass, require_current_request=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.local", 8123),
     ):
         assert (
             _get_internal_url(hass, require_current_request=True)
@@ -80,8 +81,8 @@ async def test_get_url_internal(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="no_match.example.local",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("no_match.example.local", 8123),
         ),
         pytest.raises(NoURLAvailableError),
     ):
@@ -162,7 +163,8 @@ async def test_get_url_internal(hass: HomeAssistant) -> None:
         _get_internal_url(hass, allow_ip=False)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("192.168.0.1", 8123),
     ):
         assert (
             _get_internal_url(hass, require_current_request=True)
@@ -266,7 +268,8 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         _get_external_url(hass, require_current_request=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.com"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.com", 8123),
     ):
         assert (
             _get_external_url(hass, require_current_request=True)
@@ -283,8 +286,8 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="no_match.example.com",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("no_match.example.com", 8123),
         ),
         pytest.raises(NoURLAvailableError),
     ):
@@ -352,7 +355,8 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         _get_external_url(hass, require_ssl=True)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="192.168.0.1"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("192.168.0.1", 443),
     ):
         assert (
             _get_external_url(hass, require_current_request=True)
@@ -393,8 +397,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
             _get_cloud_url(hass, require_current_request=True)
 
         with patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="example.nabu.casa",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("example.nabu.casa", 443),
         ):
             assert (
                 _get_cloud_url(hass, require_current_request=True)
@@ -403,8 +407,8 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
 
         with (
             patch(
-                "homeassistant.helpers.network._get_request_host",
-                return_value="no_match.nabu.casa",
+                "homeassistant.helpers.network._get_request_host_port",
+                return_value=("no_match.nabu.casa", 443),
             ),
             pytest.raises(NoURLAvailableError),
         ):
@@ -535,8 +539,8 @@ async def test_get_url(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="example.com",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("example.com", 443),
         ),
         patch("homeassistant.helpers.http.current_request"),
     ):
@@ -551,8 +555,8 @@ async def test_get_url(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="example.local",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("example.local", 80),
         ),
         patch("homeassistant.helpers.http.current_request"),
     ):
@@ -566,8 +570,8 @@ async def test_get_url(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="no_match.example.com",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("no_match.example.com", 80),
         ),
         pytest.raises(NoURLAvailableError),
     ):
@@ -587,10 +591,68 @@ async def test_get_url(hass: HomeAssistant) -> None:
         assert get_url(hass, allow_internal=False)
 
 
-async def test_get_request_host_with_port(hass: HomeAssistant) -> None:
-    """Test getting the host of the current web request from the request context."""
+@pytest.mark.parametrize(
+    ("scheme", "default_port"),
+    [
+        ("http", "80"),
+        ("https", "443"),
+    ],
+)
+@pytest.mark.parametrize("prefer_external", [False, True])
+@pytest.mark.parametrize(
+    ("internal_url", "external_url"),
+    [
+        ("{scheme}://example.com", "{scheme}://example.com:18123"),
+        ("{scheme}://example.com:18123", "{scheme}://example.com"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("host_header", "expected_url"),
+    [
+        ("example.com", "{scheme}://example.com"),
+        ("example.com:DEFAULT_PORT", "{scheme}://example.com"),
+        ("example.com:18123", "{scheme}://example.com:18123"),
+    ],
+)
+async def test_get_url_host_matching_respects_port(
+    hass: HomeAssistant,
+    scheme: str,
+    default_port: str,
+    internal_url: str,
+    external_url: str,
+    host_header: str,
+    expected_url: str,
+    prefer_external: bool,
+) -> None:
+    """Test that get_url respects the port when matching the request host."""
+    host_header_formatted = host_header.replace("DEFAULT_PORT", default_port)
+    int_url = internal_url.format(scheme=scheme)
+    ext_url = external_url.format(scheme=scheme)
+    exp_url = expected_url.format(scheme=scheme)
+
+    await async_process_ha_core_config(
+        hass,
+        {
+            "internal_url": int_url,
+            "external_url": ext_url,
+        },
+    )
+    with patch("homeassistant.helpers.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = {hdrs.HOST: host_header_formatted}
+        mock_request.url = URL(f"{scheme}://{host_header_formatted}/test/request")
+        mock_request_context.get.return_value = mock_request
+
+        assert (
+            get_url(hass, require_current_request=True, prefer_external=prefer_external)
+            == exp_url
+        )
+
+
+async def test_get_request_host_port_with_port(hass: HomeAssistant) -> None:
+    """Test getting the host and port of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
-        _get_request_host()
+        _get_request_host_port()
 
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
@@ -601,13 +663,13 @@ async def test_get_request_host_with_port(hass: HomeAssistant) -> None:
         mock_request.host = "example.com:8123"
         mock_request_context.get = Mock(return_value=mock_request)
 
-        assert _get_request_host() == "example.com"
+        assert _get_request_host_port() == ("example.com", 8123)
 
 
-async def test_get_request_host_without_port(hass: HomeAssistant) -> None:
-    """Test getting the host of the current web request from the request context."""
+async def test_get_request_host_port_without_port(hass: HomeAssistant) -> None:
+    """Test getting the host and port of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
-        _get_request_host()
+        _get_request_host_port()
 
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
@@ -616,13 +678,13 @@ async def test_get_request_host_without_port(hass: HomeAssistant) -> None:
         mock_request.host = "example.com"
         mock_request_context.get = Mock(return_value=mock_request)
 
-        assert _get_request_host() == "example.com"
+        assert _get_request_host_port() == ("example.com", 80)
 
 
 async def test_get_request_ipv6_address(hass: HomeAssistant) -> None:
-    """Test getting the ipv6 host of the current web request."""
+    """Test getting the ipv6 host and port of the current web request."""
     with pytest.raises(NoURLAvailableError):
-        _get_request_host()
+        _get_request_host_port()
 
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
@@ -631,13 +693,13 @@ async def test_get_request_ipv6_address(hass: HomeAssistant) -> None:
         mock_request.host = "[::1]:8123"
         mock_request_context.get = Mock(return_value=mock_request)
 
-        assert _get_request_host() == "::1"
+        assert _get_request_host_port() == ("::1", 8123)
 
 
 async def test_get_request_ipv6_address_without_port(hass: HomeAssistant) -> None:
-    """Test getting the ipv6 host of the current web request."""
+    """Test getting the ipv6 host and port of the current web request."""
     with pytest.raises(NoURLAvailableError):
-        _get_request_host()
+        _get_request_host_port()
 
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
@@ -646,13 +708,13 @@ async def test_get_request_ipv6_address_without_port(hass: HomeAssistant) -> Non
         mock_request.host = "[::1]"
         mock_request_context.get = Mock(return_value=mock_request)
 
-        assert _get_request_host() == "::1"
+        assert _get_request_host_port() == ("::1", 80)
 
 
-async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
-    """Test getting the host of the current web request from the request context."""
+async def test_get_request_host_port_no_host_header(hass: HomeAssistant) -> None:
+    """Test getting the host and port of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
-        _get_request_host()
+        _get_request_host_port()
 
     with patch("homeassistant.helpers.http.current_request") as mock_request_context:
         mock_request = Mock()
@@ -660,7 +722,7 @@ async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
         mock_request.url = URL("/test/request")
         mock_request_context.get = Mock(return_value=mock_request)
 
-        assert _get_request_host() is None
+        assert _get_request_host_port() == (None, None)
 
 
 @patch("homeassistant.helpers.hassio.is_hassio", Mock(return_value=True))
@@ -680,7 +742,8 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure we accept localhost
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="localhost"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("localhost", 8123),
     ):
         assert get_url(hass, require_current_request=True) == "http://localhost:8123"
         with pytest.raises(NoURLAvailableError):
@@ -690,7 +753,8 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure we accept local loopback ip (e.g., 127.0.0.1)
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="127.0.0.8"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("127.0.0.8", 8123),
     ):
         assert get_url(hass, require_current_request=True) == "http://127.0.0.8:8123"
         with pytest.raises(NoURLAvailableError):
@@ -700,8 +764,8 @@ async def test_get_current_request_url_with_known_host(
     mock_component(hass, "hassio")
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="homeassistant.local",
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("homeassistant.local", 8123),
     ):
         assert (
             get_url(hass, require_current_request=True)
@@ -709,8 +773,8 @@ async def test_get_current_request_url_with_known_host(
         )
 
     with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="homeassistant",
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("homeassistant", 8123),
     ):
         assert (
             get_url(hass, require_current_request=True) == "http://homeassistant:8123"
@@ -718,8 +782,8 @@ async def test_get_current_request_url_with_known_host(
 
     with (
         patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="unknown.local",
+            "homeassistant.helpers.network._get_request_host_port",
+            return_value=("unknown.local", 8123),
         ),
         pytest.raises(NoURLAvailableError),
     ):
