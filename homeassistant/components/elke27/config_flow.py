@@ -17,7 +17,7 @@ from elke27_lib.errors import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import selector
@@ -71,6 +71,33 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        self._selected_host = entry_data[CONF_HOST]
+        self._selected_port = entry_data[CONF_PORT]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._selected_host = user_input[CONF_HOST]
+            return await self._async_link_and_create_entry(
+                access_code=user_input[CONF_ACCESS_CODE],
+                passphrase=user_input[CONF_PASSPHRASE],
+                errors=errors,
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+            )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
@@ -160,6 +187,13 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = _panel_name(panel_info) or host
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data=data,
+                options=options,
+            )
+
         result = self.async_create_entry(title=title, data=data, options=options)
         if "title" not in result:
             result["title"] = title

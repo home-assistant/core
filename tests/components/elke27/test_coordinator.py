@@ -238,6 +238,8 @@ async def test_connection_state_event_triggers_refresh(
         connected=True,
     )
     coordinator._process_event(event)
+    assert coordinator.data is hub.get_snapshot()
+    assert coordinator.data is hub.get_snapshot()
     await hass.async_block_till_done()
     coordinator.async_refresh_now.assert_awaited_once()
 
