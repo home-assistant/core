@@ -45,6 +45,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    ATTR_USERNAME,
     DOMAIN,
 )
 from homeassistant.components.music_assistant.services import (
@@ -72,6 +73,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -411,6 +413,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        sort_by=None,
+        username=None,
     )
 
     # test simple play_media call with URI and enqueue specified
@@ -433,6 +437,8 @@ async def test_media_player_play_media_action(
         option=QueueOption.ADD,
         radio_mode=False,
         start_item=None,
+        sort_by=None,
+        username=None,
     )
 
     # test basic play_media call with URL and radio mode specified
@@ -455,6 +461,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=True,
         start_item=None,
+        sort_by=None,
+        username=None,
     )
 
     # test play_media call with media id and media type specified
@@ -482,6 +490,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        sort_by=None,
+        username=None,
     )
 
     # test play_media call by name
@@ -513,7 +523,49 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        sort_by=None,
+        username=None,
     )
+
+    # test with username
+    # valid name
+    music_assistant_client.send_command.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_MEDIA_ENQUEUE: "add",
+            ATTR_USERNAME: "user_user",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=QueueOption.ADD,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        username="user_user",
+    )
+    # invalid username
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "spotify://track/1234",
+                ATTR_MEDIA_ENQUEUE: "add",
+                ATTR_USERNAME: "non_existing_username",
+            },
+            blocking=True,
+        )
 
 
 async def test_media_player_play_announcement_action(

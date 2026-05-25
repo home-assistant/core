@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.api import MassEvent
+from music_assistant_models.auth import User
 from music_assistant_models.enums import EventType
 from music_assistant_models.media_items import (
     Album,
@@ -73,6 +74,9 @@ async def setup_integration_from_fixtures(
     library_podcasts = create_library_podcasts_from_fixture()
     music.get_library_podcasts = AsyncMock(return_value=library_podcasts)
     music.get_item_by_uri = AsyncMock()
+
+    users = create_list_users_from_fixture()
+    music_assistant_client.auth.list_users = AsyncMock(return_value=users)
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -152,6 +156,12 @@ def create_library_podcasts_from_fixture() -> list[Podcast]:
     """Create MA Podcasts from fixture."""
     fixture_data = load_and_parse_fixture("library_podcasts")
     return [Podcast.from_dict(radio_data) for radio_data in fixture_data]
+
+
+def create_list_users_from_fixture() -> list[User]:
+    """Create MA Users from fixture."""
+    fixture_data = load_and_parse_fixture("users")
+    return [User.from_dict(user_data) for user_data in fixture_data]
 
 
 async def trigger_subscription_callback(
