@@ -1384,7 +1384,7 @@ async def test_attr_location_name_deprecation_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that setting _attr_location_name logs a deprecation warning."""
-    error_message = "is setting the deprecated _attr_location_name property"
+    error_message = "is setting the deprecated _attr_location_name attribute"
 
     # No warning when _attr_location_name is unset (default None)
     entity_no_attr = TrackerEntity()
@@ -1425,7 +1425,7 @@ def test_location_name_override_deprecation_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that overriding location_name in a subclass logs a warning."""
-    error_message = "is overriding the deprecated location_name method"
+    error_message = "is overriding the deprecated location_name property"
 
     caplog.clear()
 

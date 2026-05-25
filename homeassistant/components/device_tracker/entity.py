@@ -240,7 +240,7 @@ class TrackerEntity(
             )
             _LOGGER.warning(
                 (
-                    "%s::%s is overriding the deprecated location_name method on "
+                    "%s::%s is overriding the deprecated location_name property on "
                     "an instance of TrackerEntity, this will be unsupported from "
                     "Home Assistant 2027.6, please %s"
                 ),
@@ -290,7 +290,7 @@ class TrackerEntity(
                 )
                 _LOGGER.warning(
                     (
-                        "%s::%s is setting the deprecated _attr_location_name property "
+                        "%s::%s is setting the deprecated _attr_location_name attribute "
                         "on an instance of TrackerEntity, this will be unsupported from "
                         "Home Assistant 2027.6, please %s"
                     ),
