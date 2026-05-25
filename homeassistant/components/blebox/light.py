@@ -85,7 +85,8 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     def _color_temp_to_native_scale(self, x: int) -> int:
         """Convert color temperature from Kelvin to native BleBox scale (0-255).
 
-        BleBox native scale is inverted relative to Kelvin: 0=warm (2700K), 255=cold (6500K).
+        BleBox native scale is inverted:
+        0=warm (2700K), 255=cold (6500K).
         """
         scaled = (
             (self._attr_max_color_temp_kelvin - x)
@@ -103,7 +104,8 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     def _color_temp_from_native_scale(self, x: int) -> int:
         """Convert color temperature from native BleBox scale (0-255) to Kelvin.
 
-        BleBox native scale is inverted relative to Kelvin: 0=warm (2700K), 255=cold (6500K).
+        BleBox native scale is inverted:
+        0=warm (2700K), 255=cold (6500K).
         """
         scaled = self._attr_max_color_temp_kelvin - (x / 255) * (
             self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
@@ -205,6 +207,10 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
                 )
             else:
                 value = feature.apply_brightness(value, brightness)
+
+        if isinstance(value, (list, tuple)) and not any(value):
+            await self._feature.async_off()
+            return
 
         try:
             await self._feature.async_on(value)

@@ -171,6 +171,7 @@ class ReolinkHost:
                     translation_placeholders={"name": self._config_entry.title},
                 )
 
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
                 "Reolink password contains incompatible special character or "
                 "is too long, please change the password to only contain characters: "
@@ -192,9 +193,11 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise ReolinkSetupException("Could not get mac address")
 
         if not self._api.is_admin:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
                 f"User '{self._api.username}' has authorization level "
                 f"'{self._api.user_level}', only admin users can change camera settings"
@@ -679,7 +682,7 @@ class ReolinkHost:
                 self._api.host,
                 sub_type,
             )
-            if sub_type == SubType.push:
+            if sub_type is SubType.push:
                 await self.subscribe()
                 return
 
@@ -739,6 +742,7 @@ class ReolinkHost:
                 self._base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
                 self.unregister_webhook()
+                # pylint: disable-next=home-assistant-exception-not-translated
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available"

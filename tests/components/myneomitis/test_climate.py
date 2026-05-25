@@ -217,7 +217,7 @@ async def test_set_temperature_sub_device_missing_parents(
     mock_config_entry: MockConfigEntry,
     mock_pyaxenco_client: AsyncMock,
 ) -> None:
-    """Missing parents/rfid for sub-device should fail temperature set without API call."""
+    """Missing parents/rfid should fail temp set without API call."""
     bad_sub = {**CLIMATE_SUB_DEVICE, "parents": {}, "rfid": None}
     mock_pyaxenco_client.get_devices.return_value = [bad_sub]
 
@@ -403,7 +403,7 @@ async def test_ntd_changeover_sets_cool(
     mock_config_entry: MockConfigEntry,
     mock_pyaxenco_client: AsyncMock,
 ) -> None:
-    """NTD devices with changeOverUser==1 should expose COOL and OFF modes and start in COOL."""
+    """NTD with changeOverUser==1 should expose COOL/OFF and start COOL."""
     mock_pyaxenco_client.get_devices.return_value = [CLIMATE_NTD_COOL]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

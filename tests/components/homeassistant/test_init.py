@@ -212,8 +212,8 @@ async def test_turn_on_skips_domains_without_service(
         "context": service_call.context,
     }
     assert (
-        "The service homeassistant.turn_on does not support entities binary_sensor.blub, sensor.bla"
-        in caplog.text
+        "The service homeassistant.turn_on does not support"
+        " entities binary_sensor.blub, sensor.bla" in caplog.text
     )
 
 
@@ -340,8 +340,8 @@ async def test_not_allowing_recursion(
             blocking=True,
         )
         assert (
-            f"Called service homeassistant.{service} with invalid entities homeassistant.light"
-            in caplog.text
+            f"Called service homeassistant.{service} with"
+            " invalid entities homeassistant.light" in caplog.text
         ), service
 
 
@@ -612,7 +612,8 @@ async def test_reload_all(
         pytest.raises(
             HomeAssistantError,
             match=(
-                "Cannot quick reload all YAML configurations because the configuration is "
+                "Cannot quick reload all YAML configurations"
+                " because the configuration is "
                 "not valid: Oh no, drama!"
             ),
         ),

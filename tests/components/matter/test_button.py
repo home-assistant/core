@@ -113,7 +113,7 @@ async def test_heiman_temporary_mute_button(
 async def test_heiman_temporary_mute_button_not_discovered_without_muting_command(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the temporary mute button is not created when MutingSensor is absent from AcceptedCommandList."""
+    """Test mute button not created when MutingSensor absent from commands."""
     assert hass.states.get("button.smoke_sensor_temporary_mute") is None
 
 

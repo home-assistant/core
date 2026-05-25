@@ -51,7 +51,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from . import device_registry as dr, storage
+from . import area_registry as ar, device_registry as dr, storage
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -481,6 +481,7 @@ def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
 def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
+    area_id: str | None | UndefinedType = UNDEFINED,
     device_id: str | None,
     fallback: str,
     has_entity_name: bool,
@@ -493,11 +494,11 @@ def _async_get_full_entity_name(
 ) -> str:
     """Get full name for an entity.
 
-    This includes the device name if appropriate.
+    This includes the device and area name if appropriate.
     Used for both full entity name and entity ID.
     """
     if name is None and overridden_name is not None:
-        name = overridden_name
+        full_name = overridden_name
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
@@ -507,7 +508,19 @@ def _async_get_full_entity_name(
         ):
             device_name = device.name_by_user or device.name
 
-        if name is None:
+            if area_id is None:
+                area_id = device.area_id
+
+        area_name: str | None = None
+        if (
+            area_id is not UNDEFINED
+            and area_id is not None
+            and (area := ar.async_get(hass).async_get_area(area_id)) is not None
+        ):
+            area_name = area.name
+
+        entity_name = name
+        if entity_name is None:
             if original_name_unprefixed is UNDEFINED:
                 original_name_unprefixed = (
                     _async_strip_prefix_from_entity_name(original_name, device_name)
@@ -515,7 +528,7 @@ def _async_get_full_entity_name(
                     else None
                 )
 
-            name = (
+            entity_name = (
                 original_name_unprefixed
                 if original_name_unprefixed is not None
                 else original_name
@@ -523,17 +536,19 @@ def _async_get_full_entity_name(
         elif unprefix_name:
             unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
             if unprefixed_name is not None:
-                name = unprefixed_name
+                entity_name = unprefixed_name
 
-        if not name:
-            name = device_name
-        elif device_name:
-            name = f"{device_name} {name}"
+        full_name = " ".join(
+            part for part in (area_name, device_name, entity_name) if part
+        )
 
-    if not name:
+    else:
+        full_name = name
+
+    if not full_name:
         return fallback
 
-    return name
+    return full_name
 
 
 @callback
@@ -1230,6 +1245,7 @@ class EntityRegistry(BaseRegistry):
     def _async_generate_entity_id(
         self,
         *,
+        area_id: str | None = None,
         current_entity_id: str | None,
         device_id: str | None,
         domain: str,
@@ -1256,6 +1272,7 @@ class EntityRegistry(BaseRegistry):
         """
         object_id = _async_get_full_entity_name(
             self.hass,
+            area_id=area_id,
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
             has_entity_name=has_entity_name,
@@ -1285,6 +1302,7 @@ class EntityRegistry(BaseRegistry):
         `reserved_entity_ids`.
         """
         return self._async_generate_entity_id(
+            area_id=entry.area_id,
             current_entity_id=entry.entity_id,
             device_id=entry.device_id,
             domain=entry.domain,
@@ -1429,6 +1447,7 @@ class EntityRegistry(BaseRegistry):
 
         if entity_id is None:
             entity_id = self._async_generate_entity_id(
+                area_id=area_id,
                 current_entity_id=None,
                 device_id=device_id,
                 domain=domain,
@@ -1938,7 +1957,7 @@ class EntityRegistry(BaseRegistry):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
-        if new_config_entry_id == UNDEFINED and old.config_entry_id is not None:
+        if new_config_entry_id is UNDEFINED and old.config_entry_id is not None:
             raise ValueError(
                 f"new_config_entry_id required because {entity_id} is already linked "
                 "to a config entry"
