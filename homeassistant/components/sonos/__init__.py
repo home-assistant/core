@@ -407,6 +407,13 @@ class SonosDiscoveryManager:
                 sub = None
                 if soco.uid == zgs_subscription_uid and zgs_subscription:
                     sub = zgs_subscription
+                if self._stop_event.is_set():
+                    # Entry was unloaded during IO; skip adding this speaker.
+                    _LOGGER.debug(
+                        "Config entry unloaded while adding speaker %s, skipping",
+                        soco.uid,
+                    )
+                    return
                 self._add_speaker(soco, sub)
 
         async with self.creation_lock:
