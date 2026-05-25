@@ -78,11 +78,11 @@ def device_info_for_entry(
 
 def unique_base(entry: Elke27ConfigEntry) -> str:
     """Return the stable unique ID base for this config entry."""
+    if entry.unique_id:
+        return entry.unique_id
     client_id = entry.data.get(CONF_CLIENT_ID)
     if client_id:
         return str(client_id)
-    if entry.unique_id:
-        return entry.unique_id
     return entry.entry_id
 
 

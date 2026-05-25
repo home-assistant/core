@@ -842,6 +842,26 @@ async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
     assert hub.unsubscribe_typed(Mock()) is False
 
 
+async def test_unsubscribe_typed_suppresses_unsubscribe_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Verify typed unsubscribe cleanup suppresses callback errors."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.77",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    callback = Mock()
+    unsubscribe = Mock(side_effect=RuntimeError("already gone"))
+    hub._typed_callbacks = {callback: unsubscribe}
+
+    assert hub.unsubscribe_typed(callback) is True
+    unsubscribe.assert_called_once()
+
+
 async def test_handle_connection_event_triggers_reconnect(
     hass: HomeAssistant,
 ) -> None:

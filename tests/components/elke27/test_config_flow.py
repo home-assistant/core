@@ -81,6 +81,11 @@ def test_panel_helpers() -> None:
     """Verify panel info helpers."""
     assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
     assert config_flow._panel_name({"serial": "1234"}) == "1234"
+    assert config_flow._panel_unique_id({"serial": "ABC-123"}) == "abc123"
+    assert config_flow._panel_unique_id({"mac": "AA:BB:CC:DD:EE:FF"}) == (
+        "aabbccddeeff"
+    )
+    assert config_flow._panel_unique_id({}) is None
 
 
 def test_create_client() -> None:
@@ -245,7 +250,10 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
         ),
-        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.elke27.async_setup_entry",
+            AsyncMock(return_value=True),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -265,6 +273,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "Test Panel"
+        assert result2["result"].unique_id == "1234"
         assert result2["data"][CONF_HOST] == "192.168.1.10"
         assert (
             result2["data"][CONF_LINK_KEYS_JSON] == LinkKeys("tk", "lk", "lh").to_json()
@@ -311,7 +320,10 @@ async def test_reauth_preserves_client_id(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
         ),
-        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.elke27.async_setup_entry",
+            AsyncMock(return_value=True),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -355,7 +367,10 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
         ),
-        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.elke27.async_setup_entry",
+            AsyncMock(return_value=True),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -387,7 +402,10 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
             "homeassistant.components.elke27.config_flow._create_client",
             side_effect=_client_factory([client]),
         ),
-        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.elke27.async_setup_entry",
+            AsyncMock(return_value=True),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

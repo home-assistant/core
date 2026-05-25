@@ -88,6 +88,10 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     assert device_info["identifiers"] == {("elke27", "entryclientid")}
     assert unique_base(entry) == "entryclientid"
 
+    hass.config_entries.async_update_entry(entry, unique_id="entry-unique")
+    assert unique_base(entry) == "entry-unique"
+
+    hass.config_entries.async_update_entry(entry, unique_id=None)
     coordinator.async_set_updated_data(_snapshot())
     assert unique_base(entry) == "entryclientid"
 
