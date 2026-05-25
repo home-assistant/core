@@ -150,11 +150,26 @@ async def test_excl_filter(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 300
 
 
-@pytest.mark.usefixtures("mock_update_wrcerror")
-async def test_sensor_failed_wrcerror(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("error_fixture", "log_message"),
+    [
+        pytest.param(
+            "mock_update_wrcerror", "Error on retrieving data: ", id="wrcerror"
+        ),
+        pytest.param(
+            "mock_update_connect_error", "Connection error: ", id="connect_error"
+        ),
+    ],
+)
+async def test_sensor_failed(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    error_fixture: str,
+    log_message: str,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test that sensor update fails with log message."""
+    request.getfixturevalue(error_fixture)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
@@ -167,24 +182,4 @@ async def test_sensor_failed_wrcerror(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Error on retrieving data: " in caplog.text
-
-
-@pytest.mark.usefixtures("mock_update_connect_error")
-async def test_sensor_failed_connect_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that sensor update fails with log message on connection error."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_CONFIG,
-        options=DEFAULT_OPTIONS,
-        entry_id="test",
-        version=WazeConfigFlow.VERSION,
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Connection error: " in caplog.text
+    assert log_message in caplog.text

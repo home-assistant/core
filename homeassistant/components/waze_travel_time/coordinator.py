@@ -150,7 +150,7 @@ async def async_get_travel_times(
 
     except WRCError as exp:
         raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
-    except httpx.ConnectError as exp:
+    except httpx.RequestError as exp:
         raise UpdateFailed(f"Connection error: {exp}") from exp
 
     else:
