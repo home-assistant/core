@@ -12,18 +12,40 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import (
+    FIRMWARE_VERSION,
+    HOST,
+    MAC,
+    MANUFACTURER,
+    MODEL,
+    NAME,
+    PASSWORD,
+    PORT,
+    SERIAL_NUMBER,
+    USERNAME,
+    setup_mock_onvif_camera,
+)
+
 from tests.common import MockConfigEntry
 
 
-def _build_onvif_test_objects():
-    """Build common ONVIF mock objects for PTZ service tests."""
-    ptz_service = MagicMock()
-    ptz_service.ContinuousMove = AsyncMock()
-    ptz_service.Stop = AsyncMock()
-    ptz_service.GetPresets = AsyncMock()
+def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:
+    """Configure the patched ONVIFCamera class for PTZ tests.
 
+    Builds on the shared `setup_mock_onvif_camera` helper and only adds the
+    extra mocks needed for `ONVIFDevice.async_setup` to complete end-to-end
+    with PTZ capability. Returns the ptz_service mock so callers can assert
+    against ContinuousMove/Stop calls.
+    """
+    setup_mock_onvif_camera(mock_onvif_camera_cls)
+
+    # Override GetProfiles with a profile that has the attributes the PTZ
+    # code path reads from (PTZConfiguration, VideoSourceConfiguration,
+    # Resolution width/height, and a stable Name for entity_id generation).
     media_service = MagicMock()
-    media_service.GetServiceCapabilities = AsyncMock()
+    media_service.GetServiceCapabilities = AsyncMock(
+        return_value=SimpleNamespace(SnapshotUri=False)
+    )
     media_service.GetProfiles = AsyncMock(
         return_value=[
             SimpleNamespace(
@@ -38,73 +60,91 @@ def _build_onvif_test_objects():
             )
         ]
     )
+    mock_onvif_camera_cls.create_media_service = AsyncMock(return_value=media_service)
 
-    devicemgmt_service = MagicMock()
-    devicemgmt_service.GetSystemDateAndTime = AsyncMock()
-    devicemgmt_service.GetNetworkInterfaces = AsyncMock()
-    devicemgmt_service.GetDeviceInformation = AsyncMock(
+    ptz_service = MagicMock()
+    ptz_service.ContinuousMove = AsyncMock()
+    ptz_service.Stop = AsyncMock()
+    ptz_service.GetPresets = AsyncMock(return_value=[])
+    mock_onvif_camera_cls.create_ptz_service = AsyncMock(return_value=ptz_service)
+    mock_onvif_camera_cls.create_imaging_service = AsyncMock(return_value=MagicMock())
+    mock_onvif_camera_cls.create_pullpoint_manager = AsyncMock(return_value=MagicMock())
+    mock_onvif_camera_cls.get_snapshot = AsyncMock(return_value=False)
+    mock_onvif_camera_cls.get_capabilities = AsyncMock(
+        return_value={
+            "Media": {"XAddr": "http://media"},
+            "PTZ": {"XAddr": "http://ptz"},
+            "Imaging": {"XAddr": "http://imaging"},
+            "Events": {
+                "XAddr": None,
+                "WSPullPointSupport": False,
+                "WSSubscriptionPolicySupport": False,
+            },
+        }
+    )
+
+    # Short-circuit async_check_date_and_time by returning None, and return
+    # serializable device information so the device registry entry can be
+    # persisted (the shared helper only sets SerialNumber).
+    devicemgmt = mock_onvif_camera_cls.create_devicemgmt_service.return_value
+    devicemgmt.GetSystemDateAndTime = AsyncMock(return_value=None)
+    devicemgmt.GetDeviceInformation = AsyncMock(
         return_value=SimpleNamespace(
-            Manufacturer="Mock",
-            Model="MockCam",
-            FirmwareVersion="1.0",
-            SerialNumber="123",
-            HardwareId="abc",
+            Manufacturer=MANUFACTURER,
+            Model=MODEL,
+            FirmwareVersion=FIRMWARE_VERSION,
+            SerialNumber=SERIAL_NUMBER,
         )
     )
 
-    onvif_capabilities = {
-        "Media": {"XAddr": "http://media"},
-        "PTZ": {"XAddr": "http://ptz"},
-        "Imaging": {"XAddr": "http://imaging"},
-        "Events": {
-            "XAddr": None,
-            "WSPullPointSupport": False,
-            "WSSubscriptionPolicySupport": False,
-        },
-    }
+    return ptz_service
 
-    imaging_service = MagicMock()
 
-    mock_camera = MagicMock()
-    mock_camera.xaddrs = {}
-    mock_camera.update_xaddrs = AsyncMock()
-    mock_camera.close = AsyncMock()
-    mock_camera.get_capabilities = AsyncMock(return_value=onvif_capabilities)
-    mock_camera.create_devicemgmt_service = AsyncMock(return_value=devicemgmt_service)
-    mock_camera.create_media_service = AsyncMock(return_value=media_service)
-    mock_camera.create_ptz_service = AsyncMock(return_value=ptz_service)
-    mock_camera.create_imaging_service = AsyncMock(return_value=imaging_service)
-    mock_camera.create_pullpoint_manager = AsyncMock(return_value=MagicMock())
-    mock_camera.get_snapshot = AsyncMock(return_value=False)
-
-    entry = MockConfigEntry(
+def _make_entry() -> MockConfigEntry:
+    """Build a config entry suitable for the PTZ tests."""
+    return MockConfigEntry(
         domain="onvif",
-        title="Mock Title",
-        unique_id="test-onvif-unique-id",
+        title=NAME,
+        unique_id=MAC,
         data={
-            CONF_NAME: "Mock Title",
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 80,
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         },
     )
 
-    return entry, mock_camera, ptz_service
+
+async def _call_ptz(hass: HomeAssistant, continuous_duration: float) -> None:
+    """Call the onvif.ptz service with the given continuous_duration."""
+    await hass.services.async_call(
+        "onvif",
+        "ptz",
+        {
+            "entity_id": "camera.testcamera_mainstream",
+            "move_mode": "ContinuousMove",
+            "pan": "LEFT",
+            "tilt": "DOWN",
+            "speed": 1,
+            "distance": 1,
+            "continuous_duration": continuous_duration,
+        },
+        blocking=True,
+    )
 
 
 async def test_ptz_continuous_move_calls_stop_when_duration_nonzero(
     hass: HomeAssistant,
 ) -> None:
     """Test ONVIF PTZ ContinuousMove calls Stop when duration is nonzero."""
-    entry, mock_camera, ptz_service = _build_onvif_test_objects()
+    entry = _make_entry()
     entry.add_to_hass(hass)
 
     with (
         patch(
-            "homeassistant.components.onvif.device.ONVIFCamera",
-            return_value=mock_camera,
-        ),
+            "homeassistant.components.onvif.device.ONVIFCamera"
+        ) as mock_onvif_camera_cls,
         patch(
             "homeassistant.components.onvif.device.asyncio.sleep",
             new=AsyncMock(),
@@ -114,25 +154,14 @@ async def test_ptz_continuous_move_calls_stop_when_duration_nonzero(
             new=AsyncMock(return_value=False),
         ),
     ):
+        ptz_service = _setup_ptz_camera_mocks(mock_onvif_camera_cls)
+
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         mock_sleep.reset_mock()
 
-        await hass.services.async_call(
-            "onvif",
-            "ptz",
-            {
-                "entity_id": "camera.mock_title_mainstream",
-                "move_mode": "ContinuousMove",
-                "pan": "LEFT",
-                "tilt": "DOWN",
-                "speed": 1,
-                "distance": 1,
-                "continuous_duration": 1,
-            },
-            blocking=True,
-        )
+        await _call_ptz(hass, continuous_duration=1)
 
     ptz_service.ContinuousMove.assert_awaited_once()
     ptz_service.Stop.assert_awaited_once()
@@ -143,14 +172,13 @@ async def test_ptz_continuous_move_does_not_call_stop_when_duration_zero(
     hass: HomeAssistant,
 ) -> None:
     """Test ONVIF PTZ ContinuousMove does not call Stop when duration is zero."""
-    entry, mock_camera, ptz_service = _build_onvif_test_objects()
+    entry = _make_entry()
     entry.add_to_hass(hass)
 
     with (
         patch(
-            "homeassistant.components.onvif.device.ONVIFCamera",
-            return_value=mock_camera,
-        ),
+            "homeassistant.components.onvif.device.ONVIFCamera"
+        ) as mock_onvif_camera_cls,
         patch(
             "homeassistant.components.onvif.device.asyncio.sleep",
             new=AsyncMock(),
@@ -160,25 +188,14 @@ async def test_ptz_continuous_move_does_not_call_stop_when_duration_zero(
             new=AsyncMock(return_value=False),
         ),
     ):
+        ptz_service = _setup_ptz_camera_mocks(mock_onvif_camera_cls)
+
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         mock_sleep.reset_mock()
 
-        await hass.services.async_call(
-            "onvif",
-            "ptz",
-            {
-                "entity_id": "camera.mock_title_mainstream",
-                "move_mode": "ContinuousMove",
-                "pan": "LEFT",
-                "tilt": "DOWN",
-                "speed": 1,
-                "distance": 1,
-                "continuous_duration": 0,
-            },
-            blocking=True,
-        )
+        await _call_ptz(hass, continuous_duration=0)
 
     ptz_service.ContinuousMove.assert_awaited_once()
     ptz_service.Stop.assert_not_called()
