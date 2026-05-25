@@ -74,7 +74,7 @@ class Elke27AreaAlarmControlPanel(
         self._area_id = area.area_id
         self._attr_name = sanitize_name(area.name) or f"Area {area.area_id}"
         self._attr_unique_id = build_unique_id(
-            unique_base(hub, coordinator, entry),
+            unique_base(entry),
             area.area_id,
         )
         self._attr_device_info = device_info_for_entry(hub, coordinator, entry)

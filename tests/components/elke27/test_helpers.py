@@ -86,22 +86,22 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     assert device_info["name"] == "Panel A"
     assert device_info["serial_number"] == "1234"
     assert device_info["identifiers"] == {("elke27", "entryclientid")}
-    assert unique_base(hub, coordinator, entry) == "entryclientid"
+    assert unique_base(entry) == "entryclientid"
 
     coordinator.async_set_updated_data(_snapshot())
-    assert unique_base(hub, coordinator, entry) == "entryclientid"
+    assert unique_base(entry) == "entryclientid"
 
     hass.config_entries.async_update_entry(entry, unique_id="entry-unique")
     hass.config_entries.async_update_entry(
         entry,
         data={CONF_HOST: entry.data[CONF_HOST]},
     )
-    assert unique_base(hub, coordinator, entry) == "entry-unique"
+    assert unique_base(entry) == "entry-unique"
     device_info = device_info_for_entry(hub, coordinator, entry)
     assert device_info["identifiers"] == {("elke27", "entry-unique")}
 
     hass.config_entries.async_update_entry(entry, unique_id=None)
-    assert unique_base(hub, coordinator, entry) == entry.entry_id
+    assert unique_base(entry) == entry.entry_id
 
 
 def test_build_unique_id() -> None:
