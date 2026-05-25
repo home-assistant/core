@@ -18,6 +18,14 @@ from .entity import SamsungIrEntity
 
 PARALLEL_UPDATES = 1
 
+SOURCE_MAP: dict[str, SamsungTVCode] = {
+    "tv": SamsungTVCode.TV,
+    "hdmi_1": SamsungTVCode.HDMI_1,
+    "hdmi_2": SamsungTVCode.HDMI_2,
+    "hdmi_3": SamsungTVCode.HDMI_3,
+    "hdmi_4": SamsungTVCode.HDMI_4,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,7 +59,7 @@ class SamsungIrTvMediaPlayer(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
-    _attr_source_list = ["tv", "hdmi_1", "hdmi_2", "hdmi_3", "hdmi_4"]
+    _attr_source_list = list(SOURCE_MAP.keys())
     _attr_translation_key = "samsung_ir_tv"
 
     def __init__(self, entry: ConfigEntry, infrared_emitter_entity_id: str) -> None:
@@ -102,12 +110,5 @@ class SamsungIrTvMediaPlayer(
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        source_map = {
-            "hdmi_1": SamsungTVCode.HDMI_1,
-            "hdmi_2": SamsungTVCode.HDMI_2,
-            "hdmi_3": SamsungTVCode.HDMI_3,
-            "hdmi_4": SamsungTVCode.HDMI_4,
-            "tv": SamsungTVCode.TV,
-        }
-        if code := source_map.get(source):
+        if code := SOURCE_MAP.get(source):
             await self._send_command(code.to_command())
