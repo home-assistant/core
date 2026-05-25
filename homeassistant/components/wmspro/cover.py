@@ -10,7 +10,12 @@ from wmspro.const import (
 )
 from wmspro.destination import Destination
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -48,6 +53,12 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
 
     _drive_action_desc: ACTION_DESC
     _attr_name = None
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     @property
     def current_cover_position(self) -> int | None:
