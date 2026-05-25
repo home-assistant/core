@@ -75,10 +75,10 @@ class SwitcherBaseCoverEntity(SwitcherEntity, CoverEntity):
         self._attr_current_cover_position = data.position[self._cover_id]
         self._attr_is_closed = data.position[self._cover_id] == 0
         self._attr_is_closing = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_DOWN
+            data.direction[self._cover_id] is ShutterDirection.SHUTTER_DOWN
         )
         self._attr_is_opening = (
-            data.direction[self._cover_id] == ShutterDirection.SHUTTER_UP
+            data.direction[self._cover_id] is ShutterDirection.SHUTTER_UP
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
