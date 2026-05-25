@@ -21,7 +21,7 @@ from homeassistant.components.device_tracker.config_entry import (
     ScannerEntity,
     TrackerEntity,
 )
-from homeassistant.components.zone import ATTR_RADIUS
+from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -603,7 +603,7 @@ async def test_load_unload_entry_tracker(
         ),
         pytest.param(
             None,
-            ["zone.other_zone", "zone.other_zone_larger"],
+            ["zone.other_zone_larger", "zone.other_zone"],
             None,
             None,
             None,
@@ -612,7 +612,59 @@ async def test_load_unload_entry_tracker(
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
             },
-            id="in_zones_multiple",
+            id="in_zones_multiple_sorted_by_radius",
+        ),
+        pytest.param(
+            None,
+            ["zone.does_not_exist", "zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.other_zone"],
+            },
+            id="in_zones_filters_missing_zones",
+        ),
+        pytest.param(
+            None,
+            ["zone.does_not_exist"],
+            None,
+            None,
+            None,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
+            id="in_zones_all_missing",
+        ),
+        pytest.param(
+            None,
+            ["zone.passive_small", "zone.other_zone"],
+            None,
+            None,
+            None,
+            "other zone",
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.passive_small", "zone.other_zone"],
+            },
+            id="in_zones_skips_passive_for_state",
+        ),
+        pytest.param(
+            None,
+            ["zone.passive_small"],
+            None,
+            None,
+            None,
+            STATE_NOT_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: ["zone.passive_small"],
+            },
+            id="in_zones_only_passive",
         ),
         pytest.param(
             None,
@@ -683,6 +735,16 @@ async def test_tracker_entity_state(
         "zone.other_zone_larger",
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
+    )
+    hass.states.async_set(
+        "zone.passive_small",
+        "0",
+        {
+            ATTR_LATITUDE: 10.0,
+            ATTR_LONGITUDE: 10.0,
+            ATTR_RADIUS: 50,
+            ATTR_PASSIVE: True,
+        },
     )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.

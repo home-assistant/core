@@ -6,6 +6,7 @@ from typing import Any, final
 from propcache.api import cached_property
 
 from homeassistant.components import zone
+from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -245,7 +246,9 @@ class TrackerEntity(
     def in_zones(self) -> list[str] | None:
         """Return the entity_id of zones the device is currently in.
 
-        Ignored if latitude and longitude are both set.
+        The list may be in any order; the base class sorts it by zone radius
+        and discards zones which do not exist. Ignored if latitude and
+        longitude are both set.
         """
         return self._attr_in_zones
 
@@ -279,10 +282,23 @@ class TrackerEntity(
             self.__active_zone, self.__in_zones = zone.async_in_zones(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )
+        elif (zones := self.in_zones) is not None:
+            zone_states = sorted(
+                (
+                    zone_state
+                    for entity_id in zones
+                    if (zone_state := self.hass.states.get(entity_id)) is not None
+                ),
+                key=lambda z: z.attributes[ATTR_RADIUS],
+            )
+            self.__active_zone = next(
+                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                None,
+            )
+            self.__in_zones = [z.entity_id for z in zone_states]
         else:
-            zones = self.in_zones
-            self.__active_zone = None if not zones else self.hass.states.get(zones[0])
-            self.__in_zones = zones
+            self.__active_zone = None
+            self.__in_zones = None
         super()._async_write_ha_state()
 
     @property
