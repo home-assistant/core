@@ -18,13 +18,19 @@ from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_EMITTER_ENTITY_ID,
     DOMAIN,
-    SOURCE_DISPLAY_NAMES,
-    SOURCE_MAP,
     SamsungDeviceType,
 )
 from .entity import SamsungIrEntity
 
 PARALLEL_UPDATES = 1
+
+SOURCE_MAP: dict[str, SamsungTVCode] = {
+    "tv": SamsungTVCode.TV,
+    "hdmi_1": SamsungTVCode.HDMI_1,
+    "hdmi_2": SamsungTVCode.HDMI_2,
+    "hdmi_3": SamsungTVCode.HDMI_3,
+    "hdmi_4": SamsungTVCode.HDMI_4,
+}
 
 
 async def async_setup_entry(
@@ -117,10 +123,7 @@ class SamsungIrTvMediaPlayer(
                 translation_key="invalid_source",
                 translation_placeholders={
                     "invalid_source": source,
-                    "valid_sources": ", ".join(
-                        SOURCE_DISPLAY_NAMES.get(k, k)
-                        for k in self._attr_source_list
-                    ),
+                    "valid_sources": ", ".join(self._attr_source_list),
                 },
             )
         await self._send_command(code.to_command())
