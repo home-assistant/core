@@ -169,7 +169,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         await self.hass.async_add_executor_job(self.poll_state)
         self.async_write_ha_state()
 
-    @soco_error()
     def poll_state(self) -> None:
         """Poll the device for the current state."""
         self.speaker.update_group_volume()
