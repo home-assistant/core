@@ -2,6 +2,8 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from pathlib import Path
+import re
 from typing import Any
 
 from simplipy import API
@@ -88,10 +90,13 @@ from .typing import SystemType
 
 type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
 
+DEFAULT_IMAGE_WIDTH = 720
+
 ATTR_CATEGORY = "category"
+ATTR_FILENAME = "filename"
+ATTR_IMAGE_WIDTH = "width"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
-ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_MESSAGE = "message"
 ATTR_PIN_LABEL = "label"
@@ -110,6 +115,7 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -121,14 +127,35 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
+SERVICE_NAME_CAPTURE_MOTION_IMAGE = "capture_motion_image"
+SERVICE_NAME_CAPTURE_MOTION_CLIP = "capture_motion_clip"
 SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICES = (
+    SERVICE_NAME_CAPTURE_MOTION_IMAGE,
+    SERVICE_NAME_CAPTURE_MOTION_CLIP,
     SERVICE_NAME_REMOVE_PIN,
     SERVICE_NAME_SET_PIN,
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+)
+
+SERVICE_CAPTURE_MOTION_IMAGE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_FILENAME): cv.string,
+        vol.Optional(ATTR_IMAGE_WIDTH, default=DEFAULT_IMAGE_WIDTH): vol.All(
+            int, vol.Range(min=240, max=1080)
+        ),
+    }
+)
+
+SERVICE_CAPTURE_MOTION_CLIP_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_FILENAME): cv.string,
+    }
 )
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
@@ -192,6 +219,47 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_SENSOR_PAIRED_AND_NAMED,
     EVENT_USER_INITIATED_TEST,
 ]
+
+
+def _resolve_image_url(url: str, width: int = DEFAULT_IMAGE_WIDTH) -> str:
+    """Substitute the {&width} URI template parameter and strip any remaining ones."""
+    LOGGER.debug("image url is a URI template: %s", url)
+    url = url.replace("{&width}", f"&width={width}")
+    LOGGER.debug("Resolved image URL: %s", url)
+    return re.sub(r"\{[^}]+\}", "", url)
+
+
+def _resolve_clip_url(url: str) -> str:
+    """Strip any unresolved URI template parameters from a clip URL."""
+    return re.sub(r"\{[^}]+\}", "", url)
+
+
+@callback
+def _async_get_camera_serial_and_simplisafe(
+    hass: HomeAssistant, call: ServiceCall
+) -> tuple[str, SimpliSafe]:
+    """Get the camera serial number and SimpliSafe data for a service call."""
+    device_id = call.data[ATTR_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if (camera_device := device_registry.async_get(device_id)) is None:
+        raise vol.Invalid("Invalid device ID specified")
+
+    [serial] = [
+        identity[1] for identity in camera_device.identifiers if identity[0] == DOMAIN
+    ]
+
+    entry: SimpliSafeConfigEntry | None
+    for entry_id in camera_device.config_entries:
+        if (
+            (entry := hass.config_entries.async_get_entry(entry_id)) is None
+            or entry.domain != DOMAIN
+            or entry.state is not ConfigEntryState.LOADED
+        ):
+            continue
+        return serial, entry.runtime_data
+
+    raise ValueError(f"No loaded SimpliSafe entry for camera device: {device_id}")
 
 
 @callback
@@ -339,6 +407,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         return wrapper
 
     @_verify_domain_control
+    async def async_capture_motion_image(call: ServiceCall) -> None:
+        """Save the most recent motion-triggered image to a file."""
+        serial, simplisafe = _async_get_camera_serial_and_simplisafe(hass, call)
+        media_urls = simplisafe.camera_media_urls.get(serial)
+        if not media_urls:
+            raise HomeAssistantError("No motion image available for this camera")
+
+        filename: str = call.data[ATTR_FILENAME]
+        if not hass.config.is_allowed_path(filename):
+            raise HomeAssistantError(f"Access to {filename} is not allowed")
+
+        width: int = call.data[ATTR_IMAGE_WIDTH]
+        try:
+            image_bytes = await simplisafe.async_media(
+                _resolve_image_url(media_urls["image_url"], width)
+            )
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f"Error fetching image from SimpliSafe: {err}"
+            ) from err
+
+        if image_bytes is None:
+            raise HomeAssistantError("No image data received from SimpliSafe")
+
+        LOGGER.debug("Saving motion image for camera %s to %s", serial, filename)
+        await hass.async_add_executor_job(
+            lambda: Path(filename).write_bytes(image_bytes)
+        )
+
+    @_verify_domain_control
+    async def async_capture_motion_clip(call: ServiceCall) -> None:
+        """Save the most recent motion-triggered video clip to a file."""
+        serial, simplisafe = _async_get_camera_serial_and_simplisafe(hass, call)
+        media_urls = simplisafe.camera_media_urls.get(serial)
+        if not media_urls:
+            raise HomeAssistantError("No motion clip available for this camera")
+
+        filename: str = call.data[ATTR_FILENAME]
+        if not hass.config.is_allowed_path(filename):
+            raise HomeAssistantError(f"Access to {filename} is not allowed")
+
+        try:
+            clip_bytes = await simplisafe.async_media(
+                _resolve_clip_url(media_urls["clip_url"])
+            )
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f"Error fetching clip from SimpliSafe: {err}"
+            ) from err
+
+        if clip_bytes is None:
+            raise HomeAssistantError("No clip data received from SimpliSafe")
+
+        LOGGER.debug("Saving motion clip for camera %s to %s", serial, filename)
+        await hass.async_add_executor_job(
+            lambda: Path(filename).write_bytes(clip_bytes)
+        )
+
+    @_verify_domain_control
     @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
@@ -364,6 +491,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         )
 
     for service, method, schema in (
+        (
+            SERVICE_NAME_CAPTURE_MOTION_IMAGE,
+            async_capture_motion_image,
+            SERVICE_CAPTURE_MOTION_IMAGE_SCHEMA,
+        ),
+        (
+            SERVICE_NAME_CAPTURE_MOTION_CLIP,
+            async_capture_motion_clip,
+            SERVICE_CAPTURE_MOTION_CLIP_SCHEMA,
+        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
@@ -423,6 +560,7 @@ class SimpliSafe:
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self._websocket_task: asyncio.Task | None = None
+        self.camera_media_urls: dict[str, dict[str, str]] = {}
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.subscription_data: dict[int, Any] = api.subscription_data
@@ -563,6 +701,10 @@ class SimpliSafe:
                 ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
             },
         )
+
+    async def async_media(self, url: str) -> bytes | None:
+        """Fetch raw bytes for a media URL from the SimpliSafe API."""
+        return await self._api.async_media(url)
 
     async def async_init(self) -> None:
         """Initialize the SimpliSafe "manager" class."""

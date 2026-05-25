@@ -1,5 +1,11 @@
 {
   "services": {
+    "capture_motion_clip": {
+      "service": "mdi:video"
+    },
+    "capture_motion_image": {
+      "service": "mdi:camera-image"
+    },
     "remove_pin": {
       "service": "mdi:alarm-panel-outline"
     },
