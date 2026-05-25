@@ -20,6 +20,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -95,3 +96,28 @@ async def test_media_player_action_sends_correct_code(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_invalid_source(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test selecting an invalid source raises ServiceValidationError."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, "source": "invalid_source"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == "samsung_infrared"
+    assert exc_info.value.translation_key == "invalid_source"
+    assert exc_info.value.translation_placeholders == {
+        "invalid_source": "invalid_source",
+        "valid_sources": "tv, hdmi_1, hdmi_2, hdmi_3, hdmi_4",
+    }
+
+    # Verify no command was sent
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 0

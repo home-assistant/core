@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_EMITTER_ENTITY_ID, SamsungDeviceType
@@ -110,5 +111,13 @@ class SamsungIrTvMediaPlayer(
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if code := SOURCE_MAP.get(source):
-            await self._send_command(code.to_command())
+        if (code := SOURCE_MAP.get(source)) is None:
+            raise ServiceValidationError(
+                translation_domain="samsung_infrared",
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "valid_sources": ", ".join(SOURCE_MAP.keys()),
+                },
+            )
+        await self._send_command(code.to_command())

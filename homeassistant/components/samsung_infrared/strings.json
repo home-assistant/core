@@ -137,6 +137,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_source": {
+      "message": "Cannot select input source \"{invalid_source}\" for media player. Valid sources: {valid_sources}."
+    }
+  },
   "selector": {
     "device_type": {
       "options": {
