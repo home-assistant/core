@@ -162,6 +162,14 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     ):
         await area_1.async_alarm_disarm()
 
+    hub.async_disarm_area.reset_mock()
+    hub.async_disarm_area.side_effect = None
+    hub.async_disarm_area.return_value = False
+    with pytest.raises(
+        HomeAssistantError, match="Area disarm command was not acknowledged."
+    ):
+        await area_1.async_alarm_disarm(code="1234")
+
     hub.async_set_zone_bypass.reset_mock()
     hub.async_arm_area.reset_mock()
     hub.async_set_zone_bypass.side_effect = None

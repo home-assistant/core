@@ -71,12 +71,10 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency:
-    status: exempt
-    comment: Dependencies are not introduced in Milestone 0.
+  async-dependency: done
   inject-websession:
     status: exempt
-    comment: Web session injection will be added with the client library.
+    comment: The Elke27 client library uses a local TCP socket protocol, not an HTTP web session.
   strict-typing:
     status: exempt
     comment: Strict typing will be added in a later milestone.

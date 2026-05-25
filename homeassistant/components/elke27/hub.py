@@ -130,7 +130,7 @@ class Elke27Hub:
         self._stopping = True
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._reconnect_task
             self._reconnect_task = None
         await self._async_disconnect()

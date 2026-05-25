@@ -230,6 +230,28 @@ async def test_async_disconnect_cancels_reconnect_task(hass: HomeAssistant) -> N
     assert hub._reconnect_task is None
 
 
+async def test_async_disconnect_suppresses_finished_reconnect_error(
+    hass: HomeAssistant,
+) -> None:
+    """Verify disconnect suppresses reconnect task errors during cleanup."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.83",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+
+    async def _raise() -> None:
+        raise RuntimeError("reconnect failed")
+
+    hub._reconnect_task = asyncio.create_task(_raise())
+    await asyncio.sleep(0)
+    await hub.async_disconnect()
+    assert hub._reconnect_task is None
+
+
 async def test_snapshot_and_refresh_paths(hass: HomeAssistant) -> None:
     """Verify snapshot and refresh paths with client."""
     client = SimpleNamespace(

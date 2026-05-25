@@ -129,10 +129,13 @@ class Elke27AreaAlarmControlPanel(
         """Disarm the area."""
         code = _normalize_code(code)
         try:
-            await self._hub.async_disarm_area(self._area_id, code)
+            disarmed = await self._hub.async_disarm_area(self._area_id, code)
         except Elke27PinRequiredError as err:
             msg = "PIN required to perform this action."
             raise HomeAssistantError(msg) from err
+        if not disarmed:
+            msg = "Area disarm command was not acknowledged."
+            raise HomeAssistantError(msg)
 
     async def _async_arm(self, mode: ArmMode | str, code: str | None) -> None:
         """Arm the area using the requested mode."""
