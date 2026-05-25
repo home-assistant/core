@@ -143,7 +143,10 @@ class WebControlProSlatBlind(WebControlProCover):
     _attr_device_class = CoverDeviceClass.BLIND
     _drive_action_desc = ACTION_DESC.SlatDrive
     _attr_supported_features = (
-        WebControlProCover._attr_supported_features
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.SET_TILT_POSITION
