@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
         msg = "Linking credentials are invalid"
         raise ConfigEntryAuthFailed(msg) from err
     except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
-        _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
+        _LOGGER.warning("Failed to set up connection to %s:%s: %s", host, port, err)
         with contextlib.suppress(Exception):
             await hub.async_disconnect()
         msg = "Unable to connect to the panel; check host and port"

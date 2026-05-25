@@ -276,6 +276,73 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         client.async_disconnect.assert_awaited_once()
 
 
+async def test_reauth_preserves_client_id(hass: HomeAssistant) -> None:
+    """Test reauth updates credentials without changing the client ID."""
+    existing_client_id = "existingclientid"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.10",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("oldtk", "oldlk", "oldlh").to_json(),
+            CONF_CLIENT_ID: existing_client_id,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.async_execute = AsyncMock(return_value=SimpleNamespace(ok=True))
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel=FakePanelInfo(
+            panel_name="Test Panel",
+            mac="aa:bb:cc:dd:ee:ff",
+            panel_serial="1234",
+        ),
+        table_info=FakeTableInfo(areas=8, zones=16),
+    )
+
+    with (
+        patch(
+            "homeassistant.components.elke27.config_flow._create_client",
+            side_effect=_client_factory([client]),
+        ),
+        patch("homeassistant.components.elke27.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.10",
+                "access_code": "1234",
+                "passphrase": "test-pass",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data[CONF_CLIENT_ID] == existing_client_id
+    assert entry.data[CONF_LINK_KEYS_JSON] == LinkKeys("tk", "lk", "lh").to_json()
+    assert client.async_link.await_args.kwargs["client_identity"] == (
+        config_flow.build_client_identity(existing_client_id)
+    )
+    client.async_disconnect.assert_awaited_once()
+
+
 async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
     """Test invalid auth returns a form error."""
     client = AsyncMock()
