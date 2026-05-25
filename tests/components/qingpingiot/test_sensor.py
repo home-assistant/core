@@ -2,20 +2,14 @@
 
 import json
 import time
-
 from unittest.mock import AsyncMock
 
-import pytest
-
-from homeassistant.components.qingpingiot.const import (
-    CONF_REPORT_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "AABBCCDDEEFF"
 
@@ -86,8 +80,8 @@ async def test_sensors_created_for_cgs2_with_battery(
 
     entity_keys = {e.unique_id for e in entities}
 
-    assert f"112233445566_battery_state" in entity_keys
-    assert f"112233445566_battery" in entity_keys
+    assert "112233445566_battery_state" in entity_keys
+    assert "112233445566_battery" in entity_keys
 
 
 async def test_status_sensor_offline_by_default(
@@ -110,7 +104,7 @@ async def test_status_sensor_offline_by_default(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.test_device_status")
+    state = hass.states.get("sensor.test_device_status")
     assert state is not None
     assert state.state == "offline"
 
@@ -152,8 +146,6 @@ async def test_temperature_sensor_updates_from_json(
             ],
         }
     ).encode()
-
-    from tests.common import async_fire_mqtt_message
 
     async_fire_mqtt_message(hass, "qingping/112233445566/up", payload)
     await hass.async_block_till_done()

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.qingpingiot.config_flow import (
     MANUAL_ENTRY_STRING,
     QingpingConfigFlow,
@@ -156,10 +157,9 @@ async def test_discovered_device_flow(
             "homeassistant.components.qingpingiot.config_flow.mqtt.async_subscribe",
         ) as mock_subscribe,
     ):
+
         async def fake_subscribe(hass, topic, callback, qos, **kwargs):
             # Simulate a discovered device message
-            from homeassistant.components.mqtt.models import ReceiveMessage
-
             msg = ReceiveMessage(
                 topic="qingping/aa:bb:cc:dd:ee:ff/up",
                 payload=b"test",
@@ -220,9 +220,8 @@ async def test_user_select_manual_from_discovered_list(
             "homeassistant.components.qingpingiot.config_flow.mqtt.async_subscribe",
         ) as mock_subscribe,
     ):
-        async def fake_subscribe(hass, topic, callback, qos, **kwargs):
-            from homeassistant.components.mqtt.models import ReceiveMessage
 
+        async def fake_subscribe(hass, topic, callback, qos, **kwargs):
             msg = ReceiveMessage(
                 topic="qingping/aa:bb:cc:dd:ee:ff/up",
                 payload=b"test",

@@ -1,26 +1,18 @@
 """Support for Qingping IoT button entities."""
 
-from __future__ import annotations
-
 import json
 import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_MODEL
+from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    Capability,
-    DEVICE_MODELS,
-    DOMAIN,
-    MQTT_TOPIC_PREFIX,
-    TLV_MODELS,
-)
+from .const import DEVICE_MODELS, DOMAIN, MQTT_TOPIC_PREFIX, TLV_MODELS, Capability
 from .coordinator import QingpingCoordinator
 from .tlv import tlv_encode
 
@@ -92,6 +84,7 @@ class QingpingButton(CoordinatorEntity, ButtonEntity):
         tlv_key: int,
         tlv_value: int,
     ) -> None:
+        """Initialize the button entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
         self._mac = mac
@@ -105,6 +98,7 @@ class QingpingButton(CoordinatorEntity, ButtonEntity):
         self._attr_entity_category = EntityCategory.CONFIG
 
     async def async_press(self) -> None:
+        """Send the button press command to the device."""
         topic = f"{MQTT_TOPIC_PREFIX}/{self._mac}/down"
         if self._is_tlv:
             packets = {self._tlv_key: bytes([self._tlv_value])}
