@@ -92,22 +92,35 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         """Latest version available for install."""
         return self._feature.latest_version
 
+    def _cancel_poll(self) -> None:
+        if self._poll_cancel is not None:
+            self._poll_cancel()
+            self._poll_cancel = None
+
+    def _reset_progress(self) -> None:
+        self._in_progress_old_version = None
+        self._poll_attempts = 0
+        self.async_write_ha_state()
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        self._cancel_poll()
         self._in_progress_old_version = self._feature.installed_version
         self._poll_attempts = 0
-        await self._feature.async_install()
+        try:
+            await self._feature.async_install()
+        except Error:
+            self._reset_progress()
+            raise
         self._poll_cancel = async_call_later(
             self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending poll timer when the entity is removed."""
-        if self._poll_cancel is not None:
-            self._poll_cancel()
-            self._poll_cancel = None
+        self._cancel_poll()
 
     async def _poll_until_updated(self, _now: Any) -> None:
         """Poll device until the installed version changes after OTA reboot."""
@@ -118,8 +131,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         except BleBoxConnectionError:
             pass
         except Error:
-            self._in_progress_old_version = None
-            self.async_write_ha_state()
+            self._reset_progress()
             return
         else:
             self._sync_sw_version()
@@ -128,5 +140,4 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
                 self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
             )
         else:
-            self._in_progress_old_version = None
-            self.async_write_ha_state()
+            self._reset_progress()
