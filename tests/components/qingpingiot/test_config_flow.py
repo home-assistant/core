@@ -4,18 +4,19 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mqtt.models import ReceiveMessage
+from homeassistant.components.mqtt import ReceiveMessage
+from homeassistant.components.qingpingiot import DOMAIN
 from homeassistant.components.qingpingiot.config_flow import (
     MANUAL_ENTRY_STRING,
     QingpingConfigFlow,
 )
-from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -48,7 +49,6 @@ async def test_manual_flow_creates_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "My Device",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_MODEL: "cgr1w",
         },
@@ -56,10 +56,9 @@ async def test_manual_flow_creates_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Device"
+    assert result["title"] == "AABBCCDDEEFF"
     assert result["data"][CONF_MAC] == "AABBCCDDEEFF"
     assert result["data"][CONF_MODEL] == "cgr1w"
-    assert result["data"][CONF_NAME] == "My Device"
 
 
 async def test_manual_flow_invalid_mac(hass: HomeAssistant) -> None:
@@ -71,7 +70,6 @@ async def test_manual_flow_invalid_mac(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Bad Device",
             CONF_MAC: "invalid",
             CONF_MODEL: "cgr1w",
         },
@@ -84,7 +82,6 @@ async def test_manual_flow_invalid_mac(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Good Device",
             CONF_MAC: "AABBCCDDEEFF",
             CONF_MODEL: "cgr1w",
         },
@@ -103,7 +100,6 @@ async def test_manual_flow_short_mac(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Short MAC",
             CONF_MAC: "AABB",
             CONF_MODEL: "cgr1w",
         },
@@ -121,9 +117,8 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
         data={
             CONF_MAC: "AABBCCDDEEFF",
             CONF_MODEL: "cgr1w",
-            CONF_NAME: "Existing Device",
         },
-        title="Existing Device",
+        title="AABBCCDDEEFF",
     )
     entry.add_to_hass(hass)
 
@@ -134,7 +129,6 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "New Device",
             CONF_MAC: "AABBCCDDEEFF",
             CONF_MODEL: "cgr1w",
         },
@@ -158,7 +152,7 @@ async def test_discovered_device_flow(
         ) as mock_subscribe,
     ):
 
-        async def fake_subscribe(hass, topic, callback, qos, **kwargs):
+        async def fake_subscribe(hass: HomeAssistant, topic, callback, qos, **kwargs):
             # Simulate a discovered device message
             msg = ReceiveMessage(
                 topic="qingping/aa:bb:cc:dd:ee:ff/up",
@@ -197,7 +191,6 @@ async def test_discovered_device_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "My Qingping",
             CONF_MODEL: "cgr1w",
         },
     )
@@ -221,7 +214,7 @@ async def test_user_select_manual_from_discovered_list(
         ) as mock_subscribe,
     ):
 
-        async def fake_subscribe(hass, topic, callback, qos, **kwargs):
+        async def fake_subscribe(hass: HomeAssistant, topic, callback, qos, **kwargs):
             msg = ReceiveMessage(
                 topic="qingping/aa:bb:cc:dd:ee:ff/up",
                 payload=b"test",
@@ -257,7 +250,7 @@ async def test_user_select_manual_from_discovered_list(
 
 async def test_reconfigure_flow(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reconfigure flow updates the model."""

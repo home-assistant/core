@@ -6,10 +6,10 @@ import logging
 from homeassistant.components import mqtt
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_MODELS, DOMAIN, MQTT_TOPIC_PREFIX, TLV_MODELS, Capability
@@ -27,16 +27,16 @@ CAPABILITY_BUTTON_MAP: dict[Capability, tuple[str, int, int]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Qingping button entities from a config entry."""
     mac = config_entry.data[CONF_MAC]
     model = config_entry.data[CONF_MODEL]
     coordinator: QingpingCoordinator = config_entry.runtime_data.coordinator
 
-    device_info = {
+    device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, mac)},
-        "name": config_entry.data[CONF_NAME],
+        "name": config_entry.title,
         "manufacturer": "Qingping",
         "model": model,
     }
@@ -79,7 +79,7 @@ class QingpingButton(CoordinatorEntity, ButtonEntity):
         config_entry: ConfigEntry,
         mac: str,
         model: str,
-        device_info: dict,
+        device_info: DeviceInfo,
         translation_key: str,
         tlv_key: int,
         tlv_value: int,
@@ -102,7 +102,7 @@ class QingpingButton(CoordinatorEntity, ButtonEntity):
         topic = f"{MQTT_TOPIC_PREFIX}/{self._mac}/down"
         if self._is_tlv:
             packets = {self._tlv_key: bytes([self._tlv_value])}
-            payload = tlv_encode(0x32, packets)
+            payload: bytes | str = tlv_encode(0x32, packets)
             await mqtt.async_publish(self.hass, topic, payload)
             _LOGGER.debug(
                 "[%s] Sent TLV button %s (key=0x%02X, val=%d)",

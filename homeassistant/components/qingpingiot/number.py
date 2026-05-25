@@ -6,10 +6,10 @@ import logging
 from homeassistant.components import mqtt
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -67,22 +67,22 @@ OFFSET_DEFS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Qingping number entities from a config entry."""
     mac = config_entry.data[CONF_MAC]
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     coordinator: QingpingCoordinator = config_entry.runtime_data.coordinator
 
-    device_info = {
+    device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, mac)},
         "name": name,
         "manufacturer": "Qingping",
         "model": model,
     }
 
-    entities = [
+    entities: list[NumberEntity] = [
         QingpingReportIntervalNumber(
             coordinator, config_entry, mac, model, device_info
         ),
@@ -139,7 +139,7 @@ class QingpingReportIntervalNumber(CoordinatorEntity, NumberEntity):
         config_entry: ConfigEntry,
         mac: str,
         model: str,
-        device_info: dict,
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize the report interval number entity."""
         super().__init__(coordinator)
@@ -148,7 +148,12 @@ class QingpingReportIntervalNumber(CoordinatorEntity, NumberEntity):
         self._model = model
         self._is_tlv = model in TLV_MODELS
 
-        ri_config = DEVICE_MODELS.get(model, {}).get("report_interval", {})
+        model_info = DEVICE_MODELS.get(model)
+        ri_config = (
+            model_info["report_interval"]
+            if model_info
+            else {"default": 15, "min": 1, "unit": "min"}
+        )
         self._ri_default = ri_config.get("default", 15)
         ri_unit = ri_config.get("unit", "min")
 
@@ -192,7 +197,7 @@ class QingpingReportIntervalNumber(CoordinatorEntity, NumberEntity):
                 0x04: int_to_bytes_little_endian(int_value, 2),
                 0x05: int_to_bytes_little_endian(sample_interval, 2),
             }
-            payload = tlv_encode(0x32, packets)
+            payload: bytes | str = tlv_encode(0x32, packets)
             _LOGGER.debug(
                 "[%s] Sending TLV report_interval=%d min, sample_interval=%d s",
                 self._mac,
@@ -244,7 +249,7 @@ class QingpingOffsetNumber(CoordinatorEntity, NumberEntity):
         config_entry: ConfigEntry,
         mac: str,
         model: str,
-        device_info: dict,
+        device_info: DeviceInfo,
         conf_key: str,
         translation_key: str,
         unit: str,
@@ -303,6 +308,7 @@ class QingpingOffsetNumber(CoordinatorEntity, NumberEntity):
         else:
             device_value = int(value)
 
+        assert self._tlv_key is not None
         packets = {
             self._tlv_key: int_to_bytes_little_endian(device_value, 2, signed=True)
         }

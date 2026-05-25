@@ -1,20 +1,19 @@
 """Test the qingpingiot number entities."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 MAC = "AABBCCDDEEFF"
 
 
 async def test_numbers_created_for_cgr1w(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test that expected number entities are created for CGR1W model."""
     entry = MockConfigEntry(
@@ -44,7 +43,7 @@ async def test_numbers_created_for_cgr1w(
 
 async def test_report_interval_default_value(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test report interval has correct default for CGR1W."""
     entry = MockConfigEntry(
@@ -69,7 +68,7 @@ async def test_report_interval_default_value(
 
 async def test_report_interval_set_value(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test setting report interval value."""
     entry = MockConfigEntry(
@@ -107,7 +106,7 @@ async def test_report_interval_set_value(
 
 async def test_offset_default_value(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test offset number entities default to 0."""
     entry = MockConfigEntry(

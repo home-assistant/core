@@ -101,11 +101,16 @@ class QingpingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _handle_message(self, message: mqtt.ReceiveMessage) -> None:
         """Route incoming MQTT messages."""
+        payload: bytes = (
+            message.payload.encode()
+            if isinstance(message.payload, str)
+            else bytes(message.payload)
+        )
         try:
-            if is_tlv_format(message.payload):
-                self._handle_tlv_message(message.payload)
+            if is_tlv_format(payload):
+                self._handle_tlv_message(payload)
             else:
-                self._handle_json_message(message.payload)
+                self._handle_json_message(payload)
         except json.JSONDecodeError:
             _LOGGER.error("[%s] Invalid JSON in MQTT message", self.mac)
         except (ValueError, KeyError, TypeError) as e:

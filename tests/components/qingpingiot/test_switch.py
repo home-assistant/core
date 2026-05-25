@@ -1,20 +1,19 @@
 """Test the qingpingiot switch entities."""
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.qingpingiot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 MAC = "AABBCCDDEEFF"
 
 
 async def test_switches_created_for_cgr1w(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test that expected switches are created for CGR1W model."""
     entry = MockConfigEntry(
@@ -51,7 +50,7 @@ async def test_switches_created_for_cgr1w(
 
 async def test_switch_turn_on(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test turning on a switch."""
     entry = MockConfigEntry(
@@ -90,7 +89,7 @@ async def test_switch_turn_on(
 
 async def test_switch_default_value(
     hass: HomeAssistant,
-    mqtt_mock: AsyncMock,
+    mqtt_mock: MqttMockHAClient,
 ) -> None:
     """Test switch defaults to on when no data."""
     entry = MockConfigEntry(

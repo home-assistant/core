@@ -3,10 +3,10 @@
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
-from .const import PLATFORMS
+from .const import DOMAIN as DOMAIN, PLATFORMS
 from .coordinator import QingpingCoordinator
 
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> 
     """Set up Qingping IoT from a config entry."""
     mac = entry.data[CONF_MAC]
     model = entry.data[CONF_MODEL]
-    name = entry.data[CONF_NAME]
+    name = entry.title
 
     coordinator = QingpingCoordinator(hass, entry, mac, model, name)
     await coordinator.async_config_entry_first_refresh()
