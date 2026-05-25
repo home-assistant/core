@@ -251,7 +251,12 @@ async def _async_fetch_and_write_media(
     if media_bytes is None:
         raise HomeAssistantError(f"No {description} data received from SimpliSafe")
     LOGGER.debug("Writing %s to %s", description, filename)
-    await hass.async_add_executor_job(Path(filename).write_bytes, media_bytes)
+    try:
+        await hass.async_add_executor_job(Path(filename).write_bytes, media_bytes)
+    except OSError as err:
+        raise HomeAssistantError(
+            f"Could not write {description} to {filename}: {err}"
+        ) from err
 
 
 @callback
