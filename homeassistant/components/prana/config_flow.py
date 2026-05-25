@@ -94,7 +94,7 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         device_info = await client.get_device_info()
 
         if device_info is None:
-            raise PranaApiCommunicationError("Device returned no data (404)")
+            raise PranaApiCommunicationError("Device returned no data")
 
         if not device_info.isValid:
             raise ValueError("invalid_device")
