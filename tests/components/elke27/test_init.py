@@ -205,6 +205,32 @@ async def test_unload_keeps_runtime_when_platform_unload_fails(
     hub.async_disconnect.assert_not_awaited()
 
 
+async def test_unload_suppresses_cleanup_errors(hass: HomeAssistant) -> None:
+    """Test unload suppresses cleanup errors after platforms unload."""
+    hub = SimpleNamespace(
+        async_disconnect=AsyncMock(side_effect=RuntimeError("disconnect failed")),
+    )
+    coordinator = SimpleNamespace(
+        async_stop=AsyncMock(side_effect=RuntimeError("stop failed")),
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.17"},
+    )
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        AsyncMock(return_value=True),
+    ):
+        assert await async_unload_entry(hass, entry)
+
+    coordinator.async_stop.assert_awaited_once()
+    hub.async_disconnect.assert_awaited_once()
+
+
 async def test_setup_link_required_raises_auth_failed(
     hass: HomeAssistant,
 ) -> None:

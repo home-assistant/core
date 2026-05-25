@@ -85,6 +85,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> b
     """Unload an Elke27 config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.coordinator.async_stop()
-        await entry.runtime_data.hub.async_disconnect()
+        with contextlib.suppress(Exception):
+            await entry.runtime_data.coordinator.async_stop()
+        with contextlib.suppress(Exception):
+            await entry.runtime_data.hub.async_disconnect()
     return unload_ok
