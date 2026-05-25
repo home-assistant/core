@@ -518,7 +518,7 @@ async def test_hmip_passage_detector_delta_counter(
 async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     hass: HomeAssistant, default_mock_hap_factory: HomematicipHAP
 ) -> None:
-    """Test HomematicipFloorTerminalBlockMechanicChannelValve Channel 1 HmIP-FALMOT-C12."""
+    """Test FloorTerminalBlockMechanicChannelValve Ch 1 FALMOT-C12."""
     entity_id = "sensor.fussbodenheizungsaktor_heizkreislauf_1_og_bad_r"
     entity_name = "Fußbodenheizungsaktor Heizkreislauf (1) OG Bad r"
     device_model = "HmIP-FALMOT-C12"
@@ -807,7 +807,7 @@ async def test_hmip_water_valve_current_water_flow(
 ) -> None:
     """Test HomematicipCurrentWaterFlow."""
     entity_id = "sensor.bewaesserungsaktor_currentwaterflow"
-    entity_name = "Bewaesserungsaktor currentWaterFlow"
+    entity_name = "Bewaesserungsaktor CurrentWaterFlow"
     device_model = "ELV-SH-WSM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewaesserungsaktor"]
@@ -830,7 +830,7 @@ async def test_hmip_water_valve_water_volume(
 ) -> None:
     """Test HomematicipWaterVolume."""
     entity_id = "sensor.bewaesserungsaktor_watervolume"
-    entity_name = "Bewaesserungsaktor waterVolume"
+    entity_name = "Bewaesserungsaktor WaterVolume"
     device_model = "ELV-SH-WSM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewaesserungsaktor"]
@@ -850,7 +850,7 @@ async def test_hmip_water_valve_water_volume_since_open(
 ) -> None:
     """Test HomematicipWaterVolumeSinceOpen."""
     entity_id = "sensor.bewaesserungsaktor_watervolumesinceopen"
-    entity_name = "Bewaesserungsaktor waterVolumeSinceOpen"
+    entity_name = "Bewaesserungsaktor WaterVolumeSinceOpen"
     device_model = "ELV-SH-WSM"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewaesserungsaktor"]
@@ -870,7 +870,7 @@ async def test_hmip_smoke_detector_dirt_level(
 ) -> None:
     """Test HomematicipSmokeDetectorDirtLevel."""
     entity_id = "sensor.rauchwarnmelder_dirt_level"
-    entity_name = "Rauchwarnmelder Dirt_level"
+    entity_name = "Rauchwarnmelder Dirt level"
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
@@ -910,7 +910,7 @@ async def test_hmip_smoke_detector_alarm_counter(
 ) -> None:
     """Test HomematicipSmokeDetectorAlarmCounter."""
     entity_id = "sensor.rauchwarnmelder_smoke_alarm_counter"
-    entity_name = "Rauchwarnmelder Smoke_alarm_counter"
+    entity_name = "Rauchwarnmelder Alarm counter"
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
@@ -947,7 +947,7 @@ async def test_hmip_smoke_detector_test_counter(
 ) -> None:
     """Test HomematicipSmokeDetectorTestCounter."""
     entity_id = "sensor.rauchwarnmelder_smoke_test_counter"
-    entity_name = "Rauchwarnmelder Smoke_test_counter"
+    entity_name = "Rauchwarnmelder Test counter"
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads

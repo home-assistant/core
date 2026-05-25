@@ -1,4 +1,4 @@
-"""Tests for the Denon RS232 media player platform."""
+"""Tests for the Denon RS-232 media player platform."""
 
 from pathlib import Path
 from typing import Literal
@@ -38,7 +38,7 @@ from .conftest import MockReceiver, MockState, _default_state
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ZoneName = Literal["main", "zone_2", "zone_3"]
+type ZoneName = Literal["main", "zone_2", "zone_3"]
 
 MAIN_ENTITY_ID = "media_player.avr_3805"
 ZONE_2_ENTITY_ID = "media_player.avr_3805_zone_2"

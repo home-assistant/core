@@ -111,7 +111,10 @@ async def test_garage_door_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test garage door trigger fires for binary_sensor entities with device_class garage_door."""
+    """Test garage door trigger fires for binary_sensor entities.
+
+    Specifically for entities with device_class garage_door.
+    """
     await assert_trigger_behavior_any(
         hass,
         target_entities=target_binary_sensors,

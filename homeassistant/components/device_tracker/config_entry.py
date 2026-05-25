@@ -6,6 +6,7 @@ from typing import Any, final
 from propcache.api import cached_property
 
 from homeassistant.components import zone
+from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -166,7 +167,11 @@ def _async_register_mac(
 
 
 class BaseTrackerEntity(Entity):
-    """Represent a tracked device."""
+    """Represent a tracked device.
+
+    Not intended to be directly inherited by integrations. Integrations should
+    inherit TrackerEntity, BaseScannerEntity or ScannerEntity instead.
+    """
 
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -203,6 +208,7 @@ class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
+    "in_zones",
     "latitude",
     "location_accuracy",
     "location_name",
@@ -216,6 +222,7 @@ class TrackerEntity(
     """Base class for a tracked device."""
 
     entity_description: TrackerEntityDescription
+    _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
     _attr_location_name: str | None = None
@@ -234,6 +241,16 @@ class TrackerEntity(
     def force_update(self) -> bool:
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
+
+    @cached_property
+    def in_zones(self) -> list[str] | None:
+        """Return the entity_id of zones the device is currently in.
+
+        The list may be in any order; the base class sorts it by zone radius
+        and discards zones which do not exist. Ignored if latitude and
+        longitude are both set.
+        """
+        return self._attr_in_zones
 
     @cached_property
     def location_accuracy(self) -> float:
@@ -265,6 +282,20 @@ class TrackerEntity(
             self.__active_zone, self.__in_zones = zone.async_in_zones(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )
+        elif (zones := self.in_zones) is not None:
+            zone_states = sorted(
+                (
+                    zone_state
+                    for entity_id in zones
+                    if (zone_state := self.hass.states.get(entity_id)) is not None
+                ),
+                key=lambda z: z.attributes[ATTR_RADIUS],
+            )
+            self.__active_zone = next(
+                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                None,
+            )
+            self.__in_zones = [z.entity_id for z in zone_states]
         else:
             self.__active_zone = None
             self.__in_zones = None
@@ -276,7 +307,9 @@ class TrackerEntity(
         if self.location_name is not None:
             return self.location_name
 
-        if self.latitude is not None and self.longitude is not None:
+        if (
+            self.latitude is not None and self.longitude is not None
+        ) or self.__in_zones is not None:
             zone_state = self.__active_zone
             if zone_state is None:
                 state = STATE_NOT_HOME
@@ -292,14 +325,52 @@ class TrackerEntity(
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr: dict[str, Any] = {ATTR_IN_ZONES: self.__in_zones or []}
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[ATTR_IN_ZONES] = self.__in_zones or []
             attr[ATTR_LATITUDE] = self.latitude
             attr[ATTR_LONGITUDE] = self.longitude
             attr[ATTR_GPS_ACCURACY] = self.location_accuracy
+
+        return attr
+
+
+class BaseScannerEntity(BaseTrackerEntity):
+    """Base class for a tracked device that can be connected or disconnected.
+
+    Unlike ScannerEntity, this entity does not make assumptions about MAC
+    addresses being used to identify the device.
+    """
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of the device."""
+        if self.is_connected is None:
+            return None
+        if self.is_connected:
+            return STATE_HOME
+        return STATE_NOT_HOME
+
+    @property
+    def is_connected(self) -> bool | None:
+        """Return true if the device is connected."""
+        raise NotImplementedError
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the device state attributes."""
+        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr.update(super().state_attributes)
+
+        if not self.is_connected:
+            return attr
+
+        attr[ATTR_IN_ZONES] = [
+            zone.ENTITY_ID_HOME,
+            *zone.async_get_enclosing_zones(self.hass, zone.ENTITY_ID_HOME),
+        ]
 
         return attr
 
@@ -316,7 +387,7 @@ CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
 
 
 class ScannerEntity(
-    BaseTrackerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
+    BaseScannerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
 ):
     """Base class for a tracked device that is on a scanned network."""
 
@@ -340,18 +411,6 @@ class ScannerEntity(
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._attr_hostname
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self.is_connected:
-            return STATE_HOME
-        return STATE_NOT_HOME
-
-    @property
-    def is_connected(self) -> bool:
-        """Return true if the device is connected to the network."""
-        raise NotImplementedError
 
     @property
     def unique_id(self) -> str | None:
@@ -442,9 +501,12 @@ class ScannerEntity(
         # Do this last or else the entity registry update listener has been installed
         await super().async_internal_added_to_hass()
 
-    @final
+    # BaseScannerEntity.state_attributes is @final to keep external subclasses
+    # from tampering with it; ScannerEntity is an in-tree subclass that
+    # intentionally extends it with ip/mac/hostname.
+    @final  # type: ignore[misc]
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr = super().state_attributes
 

@@ -66,7 +66,8 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         if device_data.mode_set == FanMode.off:
             return None
 
-        # If in auto mode (sensor mode with auto speed), return None (handled by fan entity preset mode)
+        # If in auto mode (sensor mode with auto speed),
+        # return None (handled by fan entity preset mode)
         if (
             device_data.speed_set == FanSpeed.auto_get
             and device_data.mode_set == FanMode.sensor

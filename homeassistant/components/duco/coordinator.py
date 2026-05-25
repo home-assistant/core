@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 import logging
 
-from duco import DucoClient
-from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, Node
+from duco_connectivity import DucoClient
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
+from duco_connectivity.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -60,7 +60,11 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
-            raise ConfigEntryError(f"Duco API error: {err}") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
