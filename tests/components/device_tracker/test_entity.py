@@ -1446,31 +1446,6 @@ def test_location_name_override_deprecation_warning(
     assert error_message not in caplog.text
 
 
-def test_battery_level_override_deprecation_warning(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that overriding battery_level in a subclass logs a warning."""
-    error_message = "is overriding the deprecated battery_level method"
-
-    caplog.clear()
-
-    class _SubclassWithOverride(TrackerEntity):
-        @property
-        def battery_level(self) -> int | None:
-            return 50
-
-    assert error_message in caplog.text
-    assert _SubclassWithOverride.__name__ in caplog.text
-
-    # No warning for a subclass that does not override battery_level
-    caplog.clear()
-
-    class _SubclassWithoutOverride(TrackerEntity):
-        pass
-
-    assert error_message not in caplog.text
-
-
 @pytest.mark.parametrize(
     ("mac_address", "unique_id"), [(TEST_MAC_ADDRESS, f"{TEST_MAC_ADDRESS}_yo1")]
 )
