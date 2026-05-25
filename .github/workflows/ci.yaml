@@ -1421,7 +1421,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1592,7 +1592,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }} # zizmor: ignore[secrets-outside-env]
@@ -1620,7 +1620,7 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
         with:
           report_type: test_results
           fail_ci_if_error: true
