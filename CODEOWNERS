@@ -1421,6 +1421,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/qbus/ @Qbus-iot @thomasddn
 /homeassistant/components/qingping/ @bdraco
 /tests/components/qingping/ @bdraco
+/homeassistant/components/qingpingiot/ @qingping
+/tests/components/qingpingiot/ @qingping
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
