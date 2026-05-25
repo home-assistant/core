@@ -119,12 +119,6 @@ class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
 
     _attr_translation_key = "rotation"
 
-    def __init__(self, config_entry_id: str, dest: Destination) -> None:
-        """Initialize the entity with destination channel."""
-        super().__init__(config_entry_id, dest)
-        if self._attr_unique_id:
-            self._attr_unique_id += "-rotation"
-
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
@@ -157,12 +151,6 @@ class WebControlProSlatRotationRaw(WebControlProSlatRotation):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "rotation-raw"
-
-    def __init__(self, config_entry_id: str, dest: Destination) -> None:
-        """Initialize the entity with destination channel."""
-        super().__init__(config_entry_id, dest)
-        if self._attr_unique_id:
-            self._attr_unique_id += "-raw"
 
     @property
     def native_min_value(self) -> float:

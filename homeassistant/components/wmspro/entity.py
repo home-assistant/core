@@ -20,6 +20,8 @@ class WebControlProGenericEntity(Entity):
         dest_id_str = str(dest.id)
         self._dest = dest
         self._attr_unique_id = dest_id_str
+        if self.translation_key:
+            self._attr_unique_id += f"-{self.translation_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, dest_id_str)},
             manufacturer=MANUFACTURER,

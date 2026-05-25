@@ -8,7 +8,6 @@ from wmspro.const import (
     WMS_WebControl_pro_API_actionType,
     WMS_WebControl_pro_API_responseType,
 )
-from wmspro.destination import Destination
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -107,15 +106,9 @@ class WebControlProAwning(WebControlProCover):
 class WebControlProValance(WebControlProCover):
     """Representation of a WMS based valance."""
 
-    _attr_translation_key = "valance"
     _attr_device_class = CoverDeviceClass.SHADE
+    _attr_translation_key = "valance"
     _drive_action_desc = ACTION_DESC.ValanceDrive
-
-    def __init__(self, config_entry_id: str, dest: Destination) -> None:
-        """Initialize the entity with destination channel."""
-        super().__init__(config_entry_id, dest)
-        if self._attr_unique_id:
-            self._attr_unique_id += "-valance"
 
 
 class WebControlProRollerShutter(WebControlProCover):
