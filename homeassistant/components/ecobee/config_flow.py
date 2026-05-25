@@ -150,7 +150,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Start reauth when the runtime path raises EcobeeAuthMfaRequiredError."""
+        """Perform reauth upon an ecobee authentication error."""
         self._pending_username = entry_data.get(CONF_USERNAME)
         self._pending_password = entry_data.get(CONF_PASSWORD)
         return await self.async_step_reauth_confirm()
