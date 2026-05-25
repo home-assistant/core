@@ -14,6 +14,8 @@ from .const import TEST_DEVICE_1_SN, TEST_VOCAL_RECORD_EVENT
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+ENTITY_ID = "event.echo_test_voice_event"
+
 
 async def test_all_entities(
     hass: HomeAssistant,
@@ -46,7 +48,7 @@ async def test_history_event_is_fired(
     )
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("event.echo_test_voice_event"))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes == snapshot
 
 
@@ -64,6 +66,6 @@ async def test_no_vocal_record_skips_event_trigger(
     await coordinator.history_state_event_handler({})
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("event.echo_test_voice_event"))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("event_type") is None

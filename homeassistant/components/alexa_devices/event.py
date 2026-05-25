@@ -20,7 +20,7 @@ EVENTS: Final = {
     ),
 }
 
-EVENT_TYPE = "alexa_voice_event"
+EVENT_TYPE = "triggered"
 
 
 async def async_setup_entry(
@@ -78,8 +78,6 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
         self._trigger_event(
             EVENT_TYPE,
             {
-                "device_name": self.device.account_name,
-                "device_serial_number": self.device.serial_number,
                 "intent": vocal_record.intent,
                 "voice_command": vocal_record.title,
                 "voice_reply": vocal_record.sub_title,

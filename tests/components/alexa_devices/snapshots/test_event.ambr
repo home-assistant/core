@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'alexa_voice_event',
+        'triggered',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -45,7 +45,7 @@
     'attributes': ReadOnlyDict({
       'event_type': None,
       'event_types': list([
-        'alexa_voice_event',
+        'triggered',
       ]),
       'friendly_name': 'Echo Test Voice event',
     }),
@@ -59,11 +59,9 @@
 # ---
 # name: test_history_event_is_fired
   ReadOnlyDict({
-    'device_name': 'Echo Test',
-    'device_serial_number': 'echo_test_serial_number',
-    'event_type': 'alexa_voice_event',
+    'event_type': 'triggered',
     'event_types': list([
-      'alexa_voice_event',
+      'triggered',
     ]),
     'friendly_name': 'Echo Test Voice event',
     'intent': 'PlayMusicIntent',
