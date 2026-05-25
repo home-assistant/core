@@ -4526,7 +4526,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '150',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_daily_production-entry]
