@@ -93,6 +93,9 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         client = PranaLocalApiClient(host=self._host, port=80)
         device_info = await client.get_device_info()
 
+        if device_info is None:
+            raise PranaApiCommunicationError("Device returned no data (404)")
+
         if not device_info.isValid:
             raise ValueError("invalid_device")
 
