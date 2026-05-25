@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
+    SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -69,6 +70,11 @@ async def test_entities(
         (SERVICE_MEDIA_PLAY, {}, SamsungTVCode.PLAY),
         (SERVICE_MEDIA_PAUSE, {}, SamsungTVCode.PAUSE),
         (SERVICE_MEDIA_STOP, {}, SamsungTVCode.STOP),
+        (SERVICE_SELECT_SOURCE, {"source": "tv"}, SamsungTVCode.TV),
+        (SERVICE_SELECT_SOURCE, {"source": "hdmi_1"}, SamsungTVCode.HDMI_1),
+        (SERVICE_SELECT_SOURCE, {"source": "hdmi_2"}, SamsungTVCode.HDMI_2),
+        (SERVICE_SELECT_SOURCE, {"source": "hdmi_3"}, SamsungTVCode.HDMI_3),
+        (SERVICE_SELECT_SOURCE, {"source": "hdmi_4"}, SamsungTVCode.HDMI_4),
     ],
 )
 @pytest.mark.usefixtures("init_integration")

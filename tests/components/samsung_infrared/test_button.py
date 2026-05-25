@@ -47,9 +47,6 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.samsung_tv_power", SamsungTVCode.POWER),
-        ("button.samsung_tv_power_on", SamsungTVCode.POWER_ON),
-        ("button.samsung_tv_power_off", SamsungTVCode.POWER_OFF),
         ("button.samsung_tv_source", SamsungTVCode.SOURCE),
         ("button.samsung_tv_settings", SamsungTVCode.SETTINGS),
         ("button.samsung_tv_info", SamsungTVCode.INFO),
@@ -66,10 +63,6 @@ async def test_entities(
         ("button.samsung_tv_right", SamsungTVCode.NAV_RIGHT),
         ("button.samsung_tv_ok", SamsungTVCode.OK),
         ("button.samsung_tv_previous_channel", SamsungTVCode.PREVIOUS_CHANNEL),
-        ("button.samsung_tv_hdmi_1", SamsungTVCode.HDMI_1),
-        ("button.samsung_tv_hdmi_2", SamsungTVCode.HDMI_2),
-        ("button.samsung_tv_hdmi_3", SamsungTVCode.HDMI_3),
-        ("button.samsung_tv_hdmi_4", SamsungTVCode.HDMI_4),
         ("button.samsung_tv_number_0", SamsungTVCode.NUM_0),
         ("button.samsung_tv_number_1", SamsungTVCode.NUM_1),
         ("button.samsung_tv_number_2", SamsungTVCode.NUM_2),
@@ -85,7 +78,6 @@ async def test_entities(
         ("button.samsung_tv_record", SamsungTVCode.RECORD),
         ("button.samsung_tv_tools", SamsungTVCode.TOOLS),
         ("button.samsung_tv_browser", SamsungTVCode.BROWSER),
-        ("button.samsung_tv_tv", SamsungTVCode.TV),
         ("button.samsung_tv_ad_subtitle", SamsungTVCode.AD_SUBTITLE),
         ("button.samsung_tv_e_manual", SamsungTVCode.E_MANUAL),
     ],
@@ -116,5 +108,5 @@ async def test_button_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
-    entity_id = "button.samsung_tv_power"
+    entity_id = "button.samsung_tv_source"
     await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)

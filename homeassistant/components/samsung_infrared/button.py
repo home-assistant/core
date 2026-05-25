@@ -25,17 +25,6 @@ class SamsungIrButtonEntityDescription(ButtonEntityDescription):
 
 TV_BUTTON_DESCRIPTIONS: tuple[SamsungIrButtonEntityDescription, ...] = (
     SamsungIrButtonEntityDescription(
-        key="power", translation_key="power", command_code=SamsungTVCode.POWER
-    ),
-    SamsungIrButtonEntityDescription(
-        key="power_on", translation_key="power_on", command_code=SamsungTVCode.POWER_ON
-    ),
-    SamsungIrButtonEntityDescription(
-        key="power_off",
-        translation_key="power_off",
-        command_code=SamsungTVCode.POWER_OFF,
-    ),
-    SamsungIrButtonEntityDescription(
         key="source", translation_key="source", command_code=SamsungTVCode.SOURCE
     ),
     SamsungIrButtonEntityDescription(
@@ -86,18 +75,6 @@ TV_BUTTON_DESCRIPTIONS: tuple[SamsungIrButtonEntityDescription, ...] = (
         command_code=SamsungTVCode.PREVIOUS_CHANNEL,
     ),
     SamsungIrButtonEntityDescription(
-        key="hdmi_1", translation_key="hdmi_1", command_code=SamsungTVCode.HDMI_1
-    ),
-    SamsungIrButtonEntityDescription(
-        key="hdmi_2", translation_key="hdmi_2", command_code=SamsungTVCode.HDMI_2
-    ),
-    SamsungIrButtonEntityDescription(
-        key="hdmi_3", translation_key="hdmi_3", command_code=SamsungTVCode.HDMI_3
-    ),
-    SamsungIrButtonEntityDescription(
-        key="hdmi_4", translation_key="hdmi_4", command_code=SamsungTVCode.HDMI_4
-    ),
-    SamsungIrButtonEntityDescription(
         key="num_0", translation_key="num_0", command_code=SamsungTVCode.NUM_0
     ),
     SamsungIrButtonEntityDescription(
@@ -143,9 +120,6 @@ TV_BUTTON_DESCRIPTIONS: tuple[SamsungIrButtonEntityDescription, ...] = (
     ),
     SamsungIrButtonEntityDescription(
         key="browser", translation_key="browser", command_code=SamsungTVCode.BROWSER
-    ),
-    SamsungIrButtonEntityDescription(
-        key="tv", translation_key="tv", command_code=SamsungTVCode.TV
     ),
     SamsungIrButtonEntityDescription(
         key="ad_subtitle",
