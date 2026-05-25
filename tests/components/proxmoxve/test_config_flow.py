@@ -13,13 +13,18 @@ from homeassistant.components.proxmoxve import CONF_AUTH_METHOD, CONF_HOST, CONF
 from homeassistant.components.proxmoxve.const import (
     CONF_NODE,
     CONF_NODES,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
