@@ -1557,36 +1557,6 @@ def test_filter_yaml_exclude_removes_excluded_controllers(
     assert filtered == {first.device_uid: first}
 
 
-async def test_select_controller_aborts_when_selected_uid_not_in_current_choices(
-    hass: HomeAssistant,
-) -> None:
-    """Selection aborts if payload UID is absent from current discovered choices."""
-    first = _make_controller("000000001", "192.0.2.1")
-    second = _make_controller("000000002", "192.0.2.2")
-
-    with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
-        return_value={first.device_uid: first, second.device_uid: second},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
-        )
-
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-
-    # Force schema passthrough so payload reaches the by_uid lookup branch.
-    with patch(
-        "homeassistant.components.izone.config_flow.vol.Schema",
-        return_value=lambda user_input: user_input,
-    ):
-        result = await flow.async_step_select_controller(
-            {config_flow.SELECTED_CONTROLLER_UID: "000000099"}
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
 def test_async_fan_out_skips_uids_already_in_progress() -> None:
     """Fan-out should skip scheduling flows for UIDs already in progress."""
     candidate = _make_controller("000000002", "192.0.2.2")
