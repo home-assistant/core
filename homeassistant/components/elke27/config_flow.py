@@ -124,7 +124,15 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        client_id = derive_client_id(self.flow_id)
+        reauth_entry = (
+            self._get_reauth_entry() if self.source == SOURCE_REAUTH else None
+        )
+        if reauth_entry is not None:
+            client_id = reauth_entry.data.get(
+                CONF_CLIENT_ID, derive_client_id(self.flow_id)
+            )
+        else:
+            client_id = derive_client_id(self.flow_id)
         client_identity = build_client_identity(client_id)
         client = _create_client()
         link_keys: LinkKeys | None = None
@@ -190,9 +198,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = _panel_name(panel_info) or host
-        if self.source == SOURCE_REAUTH:
+        if reauth_entry is not None:
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
+                reauth_entry,
                 data=data,
                 options=options,
             )
