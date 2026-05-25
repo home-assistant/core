@@ -730,7 +730,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==1.0.1
+cached-ipaddress==1.1.1
 
 # homeassistant.components.caldav
 caldav==2.1.0
