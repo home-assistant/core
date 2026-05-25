@@ -27,6 +27,8 @@ class CheckKind(StrEnum):
     RELEASE_PIPELINE = "release_pipeline"
     PR_LINK = "pr_link"
     ASYNC_BLOCKING = "async_blocking"
+    YANKED = "yanked"
+    VULNERABILITIES = "vulnerabilities"
 
 
 @dataclass(slots=True)

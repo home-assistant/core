@@ -178,12 +178,33 @@ async def test_diagnostics(
                     "timings": {},
                 },
                 "all_history": [],
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {
+                        "00:00:00:00:00:02": {
+                            "failed_window": False,
+                            "name": "hci1 (00:00:00:00:00:02)",
+                            "next_event_at": ANY,
+                            "next_sweep_at": ANY,
+                            "sweep_last_completed": ANY,
+                            "warned_no_fallback": False,
+                            "window_end": 0.0,
+                        },
+                    },
+                },
                 "connectable_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connect_completed_total": 0,
+                        "connect_failed_total": 0,
+                        "connect_failures": {},
+                        "connect_in_progress": {},
                         "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
+                        "last_connect_completed_time": 0.0,
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -202,6 +223,11 @@ async def test_diagnostics(
                     },
                     {
                         "adapter": "hci1",
+                        "connect_completed_total": 0,
+                        "connect_failed_total": 0,
+                        "connect_failures": {},
+                        "connect_in_progress": {},
+                        "last_connect_completed_time": 0.0,
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
@@ -229,11 +255,11 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                 ],
@@ -334,6 +360,12 @@ async def test_diagnostics_macos(
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
+                },
                 "all_history": [
                     {
                         "address": "44:44:33:11:23:45",
@@ -397,7 +429,12 @@ async def test_diagnostics_macos(
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
+                        "connect_completed_total": 0,
+                        "connect_failed_total": 0,
+                        "connect_failures": {},
+                        "connect_in_progress": {},
                         "connectable": True,
+                        "last_connect_completed_time": 0.0,
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
@@ -539,6 +576,12 @@ async def test_diagnostics_remote_adapter(
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
                 },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
+                },
                 "all_history": [
                     {
                         "address": "44:44:33:11:23:45",
@@ -602,8 +645,13 @@ async def test_diagnostics_remote_adapter(
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connect_completed_total": 0,
+                        "connect_failed_total": 0,
+                        "connect_failures": {},
+                        "connect_in_progress": {},
                         "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
+                        "last_connect_completed_time": 0.0,
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -621,9 +669,14 @@ async def test_diagnostics_remote_adapter(
                         },
                     },
                     {
+                        "connect_completed_total": 0,
+                        "connect_failed_total": 0,
+                        "connect_failures": {},
+                        "connect_in_progress": {},
                         "connectable": True,
                         "current_mode": None,
                         "requested_mode": None,
+                        "last_connect_completed_time": 0.0,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {
