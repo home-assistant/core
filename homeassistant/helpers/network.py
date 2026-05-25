@@ -167,6 +167,8 @@ def get_url(
             if require_cloud:
                 raise NoURLAvailableError
 
+    # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
+    # the Supervisor hostname and localhost transparently
     request_host, request_port = _get_request_host_port()
     if (
         require_current_request
