@@ -107,7 +107,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-climate"
 
-        gateway_id: str = coordinator.api.gateway_id
+        self._api = coordinator.api
+        gateway_id: str = self._api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
         self._last_active_schedule: str | None = None
         self._location = device_id
@@ -118,8 +119,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if (
-            self.coordinator.api.cooling_present
-            and coordinator.api.smile.name != "Adam"
+            self._api.cooling_present
+            and self._api.smile.name != "Adam"
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -196,7 +197,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if self.device.get("available_schedules"):
             hvac_modes.append(HVACMode.AUTO)
 
-        if self.coordinator.api.cooling_present:
+        if self._api.cooling_present:
             if "regulation_modes" in self._gateway_data:
                 if "heating" in self._gateway_data["regulation_modes"]:
                     hvac_modes.append(HVACMode.HEAT)
@@ -246,7 +247,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
-        await self.coordinator.api.set_temperature(self._location, data)
+        await self._api.set_temperature(self._location, data)
 
     def _regulation_mode_for_hvac(self, hvac_mode: HVACMode) -> str:
         """Return the API regulation value for a manual HVAC mode, or None.
@@ -310,4 +311,4 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     @plugwise_command
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        await self.coordinator.api.set_preset(self._location, preset_mode)
+        await self._api.set_preset(self._location, preset_mode)
