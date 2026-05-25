@@ -1453,7 +1453,7 @@ class IntentResponse:
 
         response_data: dict[str, Any] = {}
 
-        if self.response_type == IntentResponseType.ERROR:
+        if self.response_type is IntentResponseType.ERROR:
             assert self.error_code is not None, "error code is required"
             response_data["code"] = self.error_code.value
         else:
