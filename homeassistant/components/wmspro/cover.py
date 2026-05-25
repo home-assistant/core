@@ -1,7 +1,7 @@
 """Support for covers connected with WMS WebControl pro."""
 
-import logging
 from datetime import timedelta
+import logging
 from typing import Any
 
 from wmspro.const import (
@@ -32,6 +32,7 @@ PARALLEL_UPDATES = 1
 WAREMA_SLAT_CLOSED_ROTATION = 75
 WAREMA_SLAT_OPEN_ROTATION = -75
 WAREMA_SLAT_ROTATION_RANGE = WAREMA_SLAT_CLOSED_ROTATION - WAREMA_SLAT_OPEN_ROTATION
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -161,9 +162,7 @@ class WebControlProSlatBlind(WebControlProCover):
 
         rotation = action["rotation"]
         return round(
-            (WAREMA_SLAT_CLOSED_ROTATION - rotation)
-            / WAREMA_SLAT_ROTATION_RANGE
-            * 100
+            (WAREMA_SLAT_CLOSED_ROTATION - rotation) / WAREMA_SLAT_ROTATION_RANGE * 100
         )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
