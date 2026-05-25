@@ -916,6 +916,9 @@ async def test_cancel_reconnect(hass: HomeAssistant) -> None:
         None,
     )
     hub._cancel_reconnect()
-    hub._reconnect_task = Mock()
-    hub._reconnect_task.done.return_value = False
+    hub._reconnect_task = asyncio.create_task(asyncio.sleep(60))
     hub._cancel_reconnect()
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert hub._reconnect_task is None
+    assert hub._reconnect_attempts == 0

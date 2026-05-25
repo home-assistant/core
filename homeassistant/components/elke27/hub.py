@@ -27,15 +27,17 @@ from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
 
+_CONNECT_CLEANUP_EXCEPTIONS = (asyncio.CancelledError, Exception)
+
 
 def _raise_command_error(action: str, error: BaseException) -> None:
     """Raise a Home Assistant error for a failed client command."""
-    message = (
+    detail = (
         getattr(error, "user_message", None)
         or getattr(error, "message", None)
         or str(error)
-        or f"{action} failed."
     )
+    message = f"{action} failed: {detail}" if detail else f"{action} failed."
     raise HomeAssistantError(message) from error
 
 
@@ -119,10 +121,7 @@ class Elke27Hub:
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
-            except asyncio.CancelledError:
-                await self._async_disconnect(log_unavailable=False)
-                raise
-            except Exception:
+            except _CONNECT_CLEANUP_EXCEPTIONS:
                 await self._async_disconnect(log_unavailable=False)
                 raise
 
@@ -355,12 +354,23 @@ class Elke27Hub:
     @callback
     def _cancel_reconnect(self) -> None:
         """Cancel any scheduled reconnection attempts."""
-        if self._reconnect_task is None:
+        task = self._reconnect_task
+        if task is None:
             return
-        if not self._reconnect_task.done():
-            self._reconnect_task.cancel()
-        self._reconnect_task = None
+        if task.done():
+            self._finish_reconnect_task(task)
+        else:
+            task.cancel()
+            task.add_done_callback(self._finish_reconnect_task)
         self._reconnect_attempts = 0
+
+    @callback
+    def _finish_reconnect_task(self, task: asyncio.Task[None]) -> None:
+        """Consume reconnect task result and clear it when complete."""
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            task.result()
+        if self._reconnect_task is task:
+            self._reconnect_task = None
 
     def _log_unavailable(self) -> None:
         """Log the panel as unavailable once."""
