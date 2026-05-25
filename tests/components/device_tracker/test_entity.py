@@ -1383,7 +1383,7 @@ def test_battery_level_override_deprecation_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that overriding battery_level in a subclass logs a warning."""
-    error_message = "is overriding the deprecated battery_level method"
+    error_message = "is overriding the deprecated battery_level property"
 
     caplog.clear()
 
