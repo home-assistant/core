@@ -171,6 +171,13 @@ async def test_contact_sensor_button_event(
     mock_entry_factory: Callable[[str], MockConfigEntry],
 ) -> None:
     """Test contact sensor button event fires on button_count changes and wrap-around."""
+    # Make each press's timestamp distinct so the entity's state value (which is
+    # the iso-formatted timestamp at millisecond resolution) differs between
+    # presses, ensuring state_changed fires for each. We avoid the `freezer`
+    # fixture here because it patches time.monotonic, which warps loop.time
+    # forward and causes the bluetooth manager's pre-scheduled unavailability
+    # check to fire immediately and mark the injected device unavailable.
+    # The same workaround is used in test_keypad_vision_pro_doorbell_event.
     timestamps = (
         datetime(2026, 1, 1, tzinfo=UTC) + timedelta(seconds=i) for i in count()
     )
