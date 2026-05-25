@@ -170,7 +170,6 @@ class SwitchInfo(TypedDict):
     """FRITZ!Box switch info class."""
 
     description: str
-    friendly_name: str
     icon: str
     type: str
     callback_update: Callable
