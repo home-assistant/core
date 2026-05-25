@@ -13,6 +13,7 @@ from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinato
 from .entity import GardenaBluetoothEntity
 
 FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
+_WATERING_COMMAND_SOURCE = "18"
 
 
 async def async_setup_entry(
@@ -115,17 +116,21 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
             self.coordinator.get_cached(self._service.manual_watering_duration)
             or FALLBACK_WATERING_TIME_IN_SECONDS
         )
-        await self.coordinator.client.start_watering(self._service, duration)
+        await self.coordinator.write(
+            self._service.start_watering,
+            {0: _WATERING_COMMAND_SOURCE, 1: str(duration)},
+        )
         self._attr_is_on = True
         self.async_write_ha_state()
-        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.coordinator.client.stop_watering(self._service)
+        await self.coordinator.write(
+            self._service.stop_watering,
+            {0: _WATERING_COMMAND_SOURCE},
+        )
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self.coordinator.async_refresh()
 
 
 class GardenaBluetoothValve1Switch(GardenaBluetoothValveXSwitch):

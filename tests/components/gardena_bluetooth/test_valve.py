@@ -138,12 +138,11 @@ async def test_valvex_switching(
     service_info: BluetoothServiceInfo,
     service: type[ValveX],
 ) -> None:
-    """Open/close on the new Smart Water Control family calls start/stop_watering."""
+    """Open/close on the Smart Water Control family writes the LWM2M payload."""
 
     mock_entry = get_config_entry(service_info)
     await setup_entry(hass, mock_entry, [Platform.VALVE], service_info=service_info)
 
-    # Exactly one ValveEntity should have been created for the Valve1/2 service.
     valve_states = [s for s in hass.states.async_all() if s.domain == "valve"]
     assert len(valve_states) == 1
     entity_id = valve_states[0].entity_id
@@ -161,5 +160,7 @@ async def test_valvex_switching(
         blocking=True,
     )
 
-    assert mock_client.start_watering.mock_calls == [call(service, 1800)]
-    assert mock_client.stop_watering.mock_calls == [call(service)]
+    assert mock_client.write_char.mock_calls == [
+        call(service.start_watering, {0: "18", 1: "1800"}),
+        call(service.stop_watering, {0: "18"}),
+    ]

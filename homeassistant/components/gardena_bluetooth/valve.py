@@ -16,6 +16,7 @@ from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinato
 from .entity import GardenaBluetoothEntity
 
 FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
+_WATERING_COMMAND_SOURCE = "18"
 
 
 async def async_setup_entry(
@@ -84,12 +85,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
 
 
 class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
-    """Base for the Smart Water Control family (Valve1/Valve2 GATT services).
-
-    Subclasses bind ``_service`` to the concrete ValveX class. Actuation is
-    delegated to ``Client.start_watering`` / ``Client.stop_watering`` in the
-    gardena_bluetooth library, which encode the LWM2M Execute payload.
-    """
+    """Base for the Smart Water Control family (Valve1/Valve2 GATT services)."""
 
     _service: type[ValveX]
     characteristics: set[str]
@@ -125,17 +121,21 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
             self.coordinator.get_cached(self._service.manual_watering_duration)
             or FALLBACK_WATERING_TIME_IN_SECONDS
         )
-        await self.coordinator.client.start_watering(self._service, duration)
+        await self.coordinator.write(
+            self._service.start_watering,
+            {0: _WATERING_COMMAND_SOURCE, 1: str(duration)},
+        )
         self._attr_is_closed = False
         self.async_write_ha_state()
-        await self.coordinator.async_refresh()
 
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
-        await self.coordinator.client.stop_watering(self._service)
+        await self.coordinator.write(
+            self._service.stop_watering,
+            {0: _WATERING_COMMAND_SOURCE},
+        )
         self._attr_is_closed = True
         self.async_write_ha_state()
-        await self.coordinator.async_refresh()
 
 
 class GardenaBluetoothValve1(GardenaBluetoothValveX):
