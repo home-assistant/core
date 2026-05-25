@@ -261,7 +261,7 @@ async def test_remove_config_entry_device(
     )
 
 
-async def test_remove_config_entry_device_removes_subdevices(
+async def test_remove_config_entry_device_detaches_subdevices(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
