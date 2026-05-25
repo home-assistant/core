@@ -167,9 +167,7 @@ def get_url(
             if require_cloud:
                 raise NoURLAvailableError
 
-    # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
-    # the Supervisor hostname and localhost transparently
-    request_host, _ = _get_request_host_port()
+    request_host, request_port = _get_request_host_port()
     if (
         require_current_request
         and request_host is not None
@@ -177,7 +175,7 @@ def get_url(
     ):
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
-            scheme=scheme, host=request_host, port=hass.config.api.port
+            scheme=scheme, host=request_host, port=request_port
         )
 
         known_hostnames = ["localhost"]
@@ -237,15 +235,26 @@ def _get_request_host_port() -> tuple[str | None, int | None]:
     if "[" in host:
         host_part, _, port_part = host.partition("[")[2].partition("]")
         port_str = port_part[1:] if port_part.startswith(":") else ""
+        has_port = port_part.startswith(":")
     # partition the host to remove the port
     # because the raw host header can contain the port
     elif ":" in host:
         host_part, _, port_str = host.partition(":")
+        has_port = True
     else:
         host_part, port_str = host, ""
+        has_port = False
 
-    port = int(port_str) if port_str.isdigit() else None
-    if port is None:
+    port = None
+    if has_port:
+        if port_str.isdigit():
+            with suppress(ValueError):
+                val = int(port_str)
+                if 1 <= val <= 65535:
+                    port = val
+        if port is None:
+            return None, None
+    else:
         port = 443 if request.url.scheme == "https" else 80
 
     return host_part, port
