@@ -331,7 +331,7 @@ class BaseScannerEntity(BaseTrackerEntity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr: dict[str, Any] = {ATTR_IN_ZONES: []}
         attr.update(super().state_attributes)
@@ -478,7 +478,7 @@ class ScannerEntity(
     # intentionally extends it with ip/mac/hostname.
     @final  # type: ignore[misc]
     @property
-    def state_attributes(self) -> dict[str, StateType]:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr = super().state_attributes
 
