@@ -119,7 +119,8 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         if has_brightness and not has_color:
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
             if self.device_data.get("type") == "switch":
-                if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
+                modes = self._attr_supported_color_modes or set()
+                if ColorMode.BRIGHTNESS in modes:
                     await client.async_switch_brightness(self._device_id, brightness)
                 else:
                     await client.async_switch_on(self._device_id)
