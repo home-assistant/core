@@ -2,7 +2,6 @@
 
 from functools import partial
 import logging
-from typing import TYPE_CHECKING
 
 import voluptuous as vol
 import wakeonlan
@@ -36,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
-        mac_address = call.data.get(CONF_MAC)
+        mac_address: str = call.data[CONF_MAC]
         secureon_password = call.data.get(CONF_SECUREON_PASSWORD)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
         broadcast_port = call.data.get(CONF_BROADCAST_PORT)
@@ -54,9 +53,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             broadcast_address,
             broadcast_port,
         )
-
-        if TYPE_CHECKING:
-            assert isinstance(mac_address, str)
 
         if secureon_password:
             mac_address += f"/{secureon_password}"
