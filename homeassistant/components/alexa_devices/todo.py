@@ -138,7 +138,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if not item.summary:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="exceptions.todo_item_summary_empty",
+                translation_key="todo_item_summary_empty",
             )
 
         await self._coordinator.api.add_todo_list_item(self._list.id, item.summary)
@@ -163,8 +163,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if list_items_lookup is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="exceptions.todo_items_lookup_not_found",
-                translation_placeholders={"entitiy_id": self.entity_id},
+                translation_key="todo_items_lookup_not_found",
+                translation_placeholders={"entity_id": self.entity_id},
             )
 
         for uid in uids:
@@ -173,7 +173,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             if existing_item is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="exceptions.todo_item_not_found",
+                    translation_key="todo_item_not_found",
                     translation_placeholders={
                         "uid": uid,
                         "entitiy_id": self.entity_id,
@@ -208,7 +208,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if not item.summary or not item.uid:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="exceptions.todo_item_summary_uid_required",
+                translation_key="todo_item_summary_uid_required",
             )
 
         list_items_lookup = self._coordinator.todo_items_lookup.get(self._list.id)
@@ -216,8 +216,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         if list_items_lookup is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="exceptions.todo_items_lookup_not_found",
-                translation_placeholders={"entitiy_id": self.entity_id},
+                translation_key="todo_items_lookup_not_found",
+                translation_placeholders={"entity_id": self.entity_id},
             )
 
         existing_item = list_items_lookup.get(item.uid)
@@ -228,7 +228,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="exceptions.todo_item_not_found",
                 translation_placeholders={
                     "uid": item.uid,
-                    "entitiy_id": self.entity_id,
+                    "entity_id": self.entity_id,
                 },
             )
 
