@@ -96,7 +96,9 @@ async def test_media_player_action_sends_correct_code(
     )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
-    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
+    assert (
+        mock_infrared_emitter_entity.send_command_calls[0] == expected_code.to_command()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

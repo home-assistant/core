@@ -50,7 +50,6 @@
       'assumed_state': True,
       'device_class': 'tv',
       'friendly_name': 'Samsung TV',
-      'source': 'tv',
       'source_list': list([
         'tv',
         'hdmi_1',

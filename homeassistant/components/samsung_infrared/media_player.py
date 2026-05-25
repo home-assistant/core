@@ -68,7 +68,7 @@ class SamsungIrTvMediaPlayer(
         super().__init__(entry, unique_id_suffix="media_player")
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._attr_state = MediaPlayerState.ON
-        self._attr_source = self._attr_source_list[0]
+        self._attr_source = None
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
