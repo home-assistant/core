@@ -88,7 +88,7 @@ async def test_energy_preferences_migration_from_old_version(
 async def test_battery_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:
-    """Test that battery with inverted power_config sets stat_rate to generated entity_id."""
+    """Test battery with inverted power_config sets stat_rate."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
     manager.data = manager.default_preferences()

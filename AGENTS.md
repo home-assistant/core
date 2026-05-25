@@ -8,12 +8,14 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Pull Requests
 
-- When opening a pull request, use the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`). Do not remove any sections from the template.
+- When opening a pull request, use the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`). NEVER REMOVE ANYTHING from the template.
 - Do not remove checkboxes that are not checked — leave all unchecked checkboxes in place so reviewers can see which options were not selected.
 
 ## Development Commands
 
-.vscode/tasks.json contains useful commands used for development.
+- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing.
+- .vscode/tasks.json contains useful commands used for development.
+- After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
 
 ## Python Syntax Notes
 

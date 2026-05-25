@@ -250,7 +250,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                         clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                     )
                 await self.write_attribute(
-                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=matter_attribute,
                 )
             return
@@ -259,7 +259,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # multi setpoint control - low setpoint (heat)
             if self.target_temperature_low != target_temperature_low:
                 await self.write_attribute(
-                    value=int(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
                 )
 
@@ -267,7 +267,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # multi setpoint control - high setpoint (cool)
             if self.target_temperature_high != target_temperature_high:
                 await self.write_attribute(
-                    value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
