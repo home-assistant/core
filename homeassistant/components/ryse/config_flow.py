@@ -84,6 +84,10 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = self._discovered_devices.get(address)
 
             if name is None:
+                _LOGGER.warning(
+                    "Address %s not found in discovered devices; re-running discovery",
+                    address,
+                )
                 errors["base"] = "device_not_selected"
             else:
                 await self.async_set_unique_id(address, raise_on_progress=False)

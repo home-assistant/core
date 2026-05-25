@@ -64,6 +64,7 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
+        await super().async_added_to_hass()
 
         # Register the callback safely
         self._device.update_callback = self._update_position
@@ -73,6 +74,7 @@ class RyseCoverEntity(CoverEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup before entity removal."""
+        await super().async_will_remove_from_hass()
         self._clear_callback()
 
     def _clear_callback(self) -> None:
@@ -147,7 +149,9 @@ class RyseCoverEntity(CoverEntity):
                 await self._device.send_get_position()
 
         except (TimeoutError, OSError) as err:
-            _LOGGER.error("BLE communication error while reading device data: %s", err)
+            _LOGGER.warning(
+                "BLE communication error while reading device data: %s", err
+            )
             self._attr_available = False
         except Exception:
             _LOGGER.exception("Unexpected error while reading device data")

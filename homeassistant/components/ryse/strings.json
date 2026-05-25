@@ -8,7 +8,7 @@
       "bluetooth_error": "Bluetooth error occurred during pairing. Please ensure the device is in range and try again.",
       "cannot_connect": "Cannot connect.",
       "device_not_selected": "No device selected. Please choose a RYSE device before pairing.",
-      "no_devices_found": "No RYSE BLE gear found.",
+      "no_devices_found": "No RYSE devices found.",
       "unexpected_error": "An unexpected error occurred during pairing. Please try again later.",
       "unknown": "Unknown"
     },
@@ -19,10 +19,10 @@
       },
       "user": {
         "data": {
-          "address": "RYSE devices"
+          "address": "Device"
         },
         "data_description": {
-          "address": "Device Address"
+          "address": "Select a device"
         },
         "description": "Please click Submit to start pairing.",
         "submit": "Submit",
