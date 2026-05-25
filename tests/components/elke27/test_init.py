@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
-from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
+from elke27_lib.errors import Elke27Error, Elke27LinkRequiredError, Elke27TimeoutError
 
 from homeassistant.components.elke27 import async_unload_entry
 from homeassistant.components.elke27.const import (
@@ -175,6 +175,48 @@ async def test_setup_initial_refresh_error_cleans_up_and_returns_not_ready(
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
     forward_entry_setups.assert_not_called()
+
+
+async def test_setup_initial_refresh_elke27_error_returns_not_ready(
+    hass: HomeAssistant,
+) -> None:
+    """Test base Elke27 refresh errors clean up setup resources."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(
+            side_effect=Elke27Error("refresh failed", code=1, is_transient=True)
+        ),
+        async_stop=AsyncMock(return_value=None),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.13",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_CLIENT_ID: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator.async_stop.assert_awaited_once()
+    hub.async_disconnect.assert_awaited_once()
 
 
 async def test_unload_keeps_runtime_when_platform_unload_fails(

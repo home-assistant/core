@@ -119,6 +119,9 @@ class Elke27Hub:
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
+            except asyncio.CancelledError:
+                await self._async_disconnect(log_unavailable=False)
+                raise
             except Exception:
                 await self._async_disconnect(log_unavailable=False)
                 raise
