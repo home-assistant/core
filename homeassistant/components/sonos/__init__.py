@@ -72,6 +72,7 @@ CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
 DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 ZGS_SUBSCRIPTION_TIMEOUT = 2
+SHUTDOWN_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -193,7 +194,7 @@ class SonosDiscoveryManager:
         # network IO), so acquiring it here serializes cleanup after creation.
         # Bound the wait so shutdown stays responsive under poor network conditions.
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(SHUTDOWN_TIMEOUT):
                 async with self.creation_lock:
                     pass
         except TimeoutError:
