@@ -81,19 +81,22 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            name = self._discovered_devices[address]
+            name = self._discovered_devices.get(address)
 
-            await self.async_set_unique_id(address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
+            if name is None:
+                errors["base"] = "device_not_selected"
+            else:
+                await self.async_set_unique_id(address, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
 
-            try:
-                success = await pair_with_ble_device(name, address)
-                if success:
-                    return self.async_create_entry(title=name, data={})
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                try:
+                    success = await pair_with_ble_device(name, address)
+                    if success:
+                        return self.async_create_entry(title=name, data={})
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         current_ids = self._async_current_ids(include_ignore=False)
 
