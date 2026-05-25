@@ -178,8 +178,8 @@ class BaseTrackerEntity(Entity):
             )
             _LOGGER.warning(
                 (
-                    "%s::%s is overriding the deprecated battery_level method on "
-                    "an instance of TrackerEntity, this will be unsupported from "
+                    "%s::%s is overriding the deprecated battery_level property on "
+                    "a subclass of BaseTrackerEntity, this will be unsupported from "
                     "Home Assistant 2027.6, please %s"
                 ),
                 cls.__module__,
