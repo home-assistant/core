@@ -119,7 +119,10 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         if has_brightness and not has_color:
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
             if self.device_data.get("type") == "switch":
-                await client.async_switch_brightness(self._device_id, brightness)
+                if ColorMode.BRIGHTNESS in self._attr_supported_color_modes:
+                    await client.async_switch_brightness(self._device_id, brightness)
+                else:
+                    await client.async_switch_on(self._device_id)
             else:
                 await client.async_brite_brightness(self._device_id, brightness)
         # Adjust HS color
