@@ -1,10 +1,10 @@
 """Test bluetooth diagnostics."""
 
+import sys
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth.scanner import IS_MACOS  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components import bluetooth
@@ -44,6 +44,7 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
         }
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux Bluetooth stack")
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 @pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_diagnostics(
@@ -256,11 +257,7 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": (
-                                "<BluetoothScanningMode.ACTIVE: 'active'>"
-                                if IS_MACOS
-                                else "<BluetoothScanningMode.PASSIVE: 'passive'>"
-                            ),
+                            "repr": "<BluetoothScanningMode.PASSIVE: 'passive'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
