@@ -1,5 +1,6 @@
 """Tests the Indevolt config flow."""
 
+from dataclasses import replace
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
@@ -368,6 +369,21 @@ async def test_zeroconf_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_zeroconf_unexpected_hostname(
+    hass: HomeAssistant, mock_indevolt: AsyncMock
+) -> None:
+    """Test zeroconf discovery aborts without probing when hostname is not in {sn}.local. form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(ZEROCONF_DISCOVERY, hostname="unexpected-hostname"),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    mock_indevolt.get_config.assert_not_called()
 
 
 async def test_dhcp_registered_device_ip_change(

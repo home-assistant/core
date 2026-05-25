@@ -118,7 +118,13 @@ class IndevoltConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery — probe the device to confirm it is an Indevolt device."""
         host = str(discovery_info.ip_address)
-        sn = discovery_info.hostname.removesuffix(".local.")
+
+        # The mDNS hostname encodes the SN as "{sn}.local." — if it is not in
+        # that form, this is not a recognisable Indevolt device; abort without probing.
+        if (
+            sn := discovery_info.hostname.removesuffix(".local.")
+        ) == discovery_info.hostname:
+            return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(sn)
         self._abort_if_unique_id_configured(
