@@ -25,6 +25,68 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "acid_tank": {
+        "name": "Acid tank"
+      },
+      "backwash_status": {
+        "name": "Backwash"
+      },
+      "cd_module_installed": {
+        "name": "Conductivity module"
+      },
+      "cl_module_installed": {
+        "name": "Chlorine module"
+      },
+      "cl_pump_status": {
+        "name": "Chlorine pump"
+      },
+      "electrolysis_low": {
+        "name": "Electrolysis low"
+      },
+      "filtration_status": {
+        "name": "Filtration"
+      },
+      "heating_status": {
+        "name": "Heating"
+      },
+      "hidro_cover_reduction": {
+        "name": "Hidro cover reduction"
+      },
+      "hidro_fl2_status": {
+        "name": "Hidro FL2"
+      },
+      "hidro_flow_status": {
+        "name": "Hidro flow"
+      },
+      "hidro_module_installed": {
+        "name": "Hidro module"
+      },
+      "hydrolysis_low": {
+        "name": "Hydrolysis low"
+      },
+      "io_module_installed": {
+        "name": "IO module"
+      },
+      "ph_acid_pump": {
+        "name": "pH acid pump"
+      },
+      "ph_base_pump": {
+        "name": "pH base pump"
+      },
+      "ph_module_installed": {
+        "name": "pH module"
+      },
+      "ph_pump_alarm": {
+        "name": "pH pump"
+      },
+      "rx_module_installed": {
+        "name": "Redox module"
+      },
+      "rx_pump_status": {
+        "name": "Redox pump"
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
