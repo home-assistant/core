@@ -27,6 +27,11 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
 
         self._mac = mac
         self._is_box = node.general.node_type == NodeType.BOX
+        device_name = (
+            node.general.name or coordinator.board_info.box_name
+            if self._is_box
+            else node.general.name or f"Node {node.node_id}"
+        )
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier(mac, node.node_id))},
@@ -36,11 +41,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
                 if self._is_box
                 else node.general.node_type
             ),
-            name=(
-                (node.general.name or coordinator.board_info.box_name)
-                if self._is_box
-                else (node.general.name or f"Node {node.node_id}")
-            ),
+            name=device_name,
             configuration_url=self._configuration_url(),
         )
         if self._is_box:
@@ -74,8 +75,13 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Return the device configuration URL when it is unambiguous."""
         host = self.coordinator.config_entry.data[CONF_HOST]
 
+        try:
+            base_url = URL.build(scheme="http", host=host)
+        except ValueError:
+            base_url = URL(f"http://{host}")
+
         if self._is_box:
-            return str(URL.build(scheme="http", host=host))
+            return str(base_url)
 
         if (
             zone_group := self.coordinator.data.node_zone_groups.get(self._node_id)
@@ -84,15 +90,10 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
 
         zone_id, group_id = zone_group
         return str(
-            URL.build(
-                scheme="http",
-                host=host,
-                path="/nodeconfig.html",
-                query=[
-                    ("node", str(self._node_id)),
-                    ("zone", str(zone_id)),
-                    ("group", str(group_id)),
-                ],
+            base_url.with_path("/nodeconfig.html").update_query(
+                node=str(self._node_id),
+                zone=str(zone_id),
+                group=str(group_id),
             )
         )
 

@@ -174,6 +174,8 @@ async def test_new_node_added_dynamically(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+    # The refresh schedules entity creation work that is only observable after
+    # the next loop drain on slower runners.
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(expected_entity_id)
@@ -355,6 +357,8 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+    # The refresh schedules entity creation work that is only observable after
+    # the next loop drain on slower runners.
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.future_sensor")

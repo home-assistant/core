@@ -20,7 +20,7 @@ import pytest
 
 from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -201,6 +201,40 @@ async def test_devices_registered_with_expected_metadata(
     )
     assert unmatched_child_device is not None
     assert unmatched_child_device.configuration_url is None
+
+
+async def test_devices_registered_with_expected_metadata_for_host_with_port(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that device visit links preserve the configured port."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_HOST: f"{TEST_HOST}:8080",
+        },
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    box_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_1")}
+    )
+    assert box_device is not None
+    assert box_device.configuration_url == f"http://{TEST_HOST}:8080"
+
+    child_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_MAC}_2")}
+    )
+    assert child_device is not None
+    assert (
+        child_device.configuration_url
+        == f"http://{TEST_HOST}:8080/nodeconfig.html?node=2&zone=1&group=1"
+    )
 
 
 async def test_box_device_name_falls_back_to_box_name_when_node_name_empty(
