@@ -14,10 +14,8 @@ import time
 import pytest
 
 from homeassistant.components.sandbox_v2.manager import (
-    DEFAULT_GROUP_CONFIGS,
     SandboxConfig,
     SandboxFailedError,
-    SandboxGroupConfig,
     SandboxManager,
     SandboxStartError,
 )
@@ -150,66 +148,22 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
     assert mgr.get("broken").state == "failed"  # type: ignore[union-attr]
 
 
-async def test_default_group_config_posture(hass: HomeAssistant) -> None:
-    """built-in and main share by default; custom is locked down."""
-    mgr = SandboxManager(hass)
-    assert mgr.group_config("built-in") == DEFAULT_GROUP_CONFIGS["built-in"]
-    assert mgr.group_config("built-in").share_states is True
-    assert mgr.group_config("main").share_states is True
-    # Custom has no entry → falls back to the all-off default.
-    assert mgr.group_config("custom") == SandboxGroupConfig()
-    assert mgr.group_config("custom").share_states is False
-
-
-async def test_group_config_override(hass: HomeAssistant) -> None:
-    """Manager honours the group_configs override map."""
-    mgr = SandboxManager(
-        hass,
-        group_configs={
-            "custom": SandboxGroupConfig(share_states=True),
-            "built-in": SandboxGroupConfig(),
-        },
-    )
-    assert mgr.group_config("custom").share_states is True
-    assert mgr.group_config("built-in").share_states is False
-
-
-async def test_default_command_includes_token_and_share_flags(
+async def test_default_command_includes_token(
     hass: HomeAssistant,
 ) -> None:
-    """ensure_started awaits the token factory and folds flags into argv."""
-    tokens_seen: list[str] = []
+    """The default command embeds the cached scoped token in argv."""
 
     async def fake_token(group: str) -> str:
-        tokens_seen.append(group)
         return f"token-{group}"
 
-    mgr = SandboxManager(
-        hass,
-        token_factory=fake_token,
-        group_configs={
-            "built-in": SandboxGroupConfig(
-                share_states=True, share_entity_registry=True, share_areas=False
-            ),
-            "custom": SandboxGroupConfig(),
-        },
-    )
+    mgr = SandboxManager(hass, token_factory=fake_token)
     # Prime the token cache without actually launching a subprocess.
-    await mgr._token_factory("built-in")  # type: ignore[misc]
     mgr._tokens["built-in"] = "token-built-in"
-    mgr._tokens["custom"] = "token-custom"
 
     builtin_argv = mgr._default_command("built-in")
     assert "token-built-in" in builtin_argv
-    assert "--share-states" in builtin_argv
-    assert "--share-entity-registry" in builtin_argv
-    assert "--share-areas" not in builtin_argv
-
-    custom_argv = mgr._default_command("custom")
-    assert "token-custom" in custom_argv
-    assert "--share-states" not in custom_argv
-    assert "--share-entity-registry" not in custom_argv
-    assert "--share-areas" not in custom_argv
+    assert "--group" in builtin_argv
+    assert "built-in" in builtin_argv
 
 
 async def test_ensure_started_awaits_token_factory(hass: HomeAssistant) -> None:

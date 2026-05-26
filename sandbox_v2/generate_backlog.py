@@ -106,7 +106,8 @@ BUCKET_BLURB: dict[str, str] = {
     "dependencies-not-shared": (
         "Integration depends on a main-side service or piece of state that"
         " opt-in sharing doesn't expose. Tracked alongside the unfinished"
-        " `share_states=True` consumer (see CLAUDE.md)."
+        " state-sharing consumer (see"
+        " `sandbox_v2/docs/design-share-states.md`)."
     ),
     "unknown": (
         "Catch-all bucket of last resort. Every entry here means the"

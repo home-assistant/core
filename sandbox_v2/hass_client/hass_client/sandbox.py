@@ -21,7 +21,6 @@ main asks for a graceful shutdown over the channel — see Phase 9's
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
 import contextlib
-from dataclasses import dataclass
 import json
 import logging
 import os
@@ -54,23 +53,6 @@ ChannelFactory = Callable[[], Awaitable[Channel | None]]
 READY_MARKER = "sandbox_v2:ready"
 
 
-@dataclass(frozen=True)
-class SharingConfig:
-    """Opt-in data-sharing flags handed in on the CLI (Phase 7).
-
-    The flags decide whether the sandbox runtime subscribes to main's
-    bus / registries. All default ``False`` so a sandbox starts in the
-    locked-down posture; the integration's ``SandboxGroupConfig`` flips
-    them on per-group (``built-in`` defaults to all-on, ``custom`` stays
-    off). When ``share_states`` is ``False``, ``hass.states.async_all()``
-    inside the sandbox sees only the integration's own entities.
-    """
-
-    share_states: bool = False
-    share_entity_registry: bool = False
-    share_areas: bool = False
-
-
 class SandboxRuntime:
     """Phase 4 runtime: stdout-marker handshake + JSON-line control channel.
 
@@ -88,22 +70,16 @@ class SandboxRuntime:
         group: str,
         config_dir: str | None = None,
         channel_factory: ChannelFactory | None = None,
-        sharing: SharingConfig | None = None,
     ) -> None:
         """Initialise the runtime with its main-HA connection parameters.
 
         ``channel_factory`` returns the live control channel — defaults to
         opening one over the process's stdin/stdout. Tests pass a factory
         that returns ``None`` (no channel) or an in-memory pair.
-
-        ``sharing`` decides which of main's data streams the sandbox
-        subscribes to. Defaults to everything off — the sandbox sees only
-        its own entities/services/events.
         """
         self.url = url
         self.token = token
         self.group = group
-        self.sharing = sharing if sharing is not None else SharingConfig()
         self._config_dir = config_dir
         self._channel_factory = channel_factory or self._default_channel_factory
         self._shutdown: asyncio.Event | None = None
@@ -383,4 +359,4 @@ async def _handle_ping(_payload: object) -> dict[str, str]:
     return {"pong": "sandbox_v2"}
 
 
-__all__ = ["READY_MARKER", "SandboxRuntime", "SharingConfig"]
+__all__ = ["READY_MARKER", "SandboxRuntime"]

@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import pytest_asyncio
 
-from hass_client.sandbox import SandboxRuntime, SharingConfig
+from hass_client.sandbox import SandboxRuntime
 from hass_client.testing._autotag import install_mock_config_entry_autotag
 from hass_client.testing._inproc import make_inproc_channel_pair
 
@@ -138,7 +138,6 @@ async def async_setup_inprocess_sandbox(
     *,
     group: str = DEFAULT_GROUP,
     config_dir: str | None = None,
-    sharing: SharingConfig | None = None,
 ) -> InProcessSandbox:
     """Set up ``sandbox_v2`` and run a sandbox runtime in-process.
 
@@ -172,7 +171,6 @@ async def async_setup_inprocess_sandbox(
         group=group,
         config_dir=config_dir,
         channel_factory=_one_shot_channel_factory(rt_channel),
-        sharing=sharing or SharingConfig(),
     )
     runtime_task = asyncio.create_task(
         runtime.run(), name=f"sandbox_v2_inproc[{group}]"

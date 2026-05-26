@@ -1259,6 +1259,183 @@ touched** — in-tree test counts unchanged from Phase 17 (134 + 51).
     historical-shape string literal — all narrative or auto-draft text,
     not live code.
 
+### Phase 19 — Device registry bridging ✅ COMPLETE
+
+Sandbox entities that carry `device_info` now land in main's
+`device_registry` and have their entity_registry rows linked through
+`device_id`, so area assignment works identically for sandboxed and
+local integrations. The sandbox-side serialiser
+(`hass_client/entity_bridge._serialise_device_info`) flattens the
+`DeviceInfo` TypedDict's set/tuple/enum shapes into JSON
+(`identifiers`/`connections` → list-of-pairs, `via_device` → pair,
+`entry_type` → StrEnum value, `configuration_url` → string). Main
+rebuilds the typed shapes in
+`SandboxEntityDescription.from_payload` via the new
+`_deserialise_device_info` helper, then `_handle_register_entity`
+calls `dr.async_get_or_create(config_entry_id=description.entry_id,
+**device_info)` once up front to pin a known `device_id` onto the
+description; the proxy then sets `_attr_device_info` so
+`EntityPlatform.async_add_entities` reuses the same `DeviceEntry`
+(idempotent on `(identifiers, connections)`) and sets
+`entity.device_entry`. **No new core HA changes** — Phase 5's
+`async_register_remote_platform` hook plus `device_registry`'s
+public API cover the whole bridge.
+
+- [x] Sandbox side (`hass_client/entity_bridge.py`): when building the
+  register_entity payload, extract `entity.device_info` (handle both
+  the `DeviceInfo` dataclass and the legacy dict shape) and include
+  it under a `device_info` key. Keep the payload JSON-safe (identifiers
+  is a list of tuples → list of lists on the wire).
+- [x] Protocol (`protocol.py` on both sides): document the new
+  `device_info` key in `MSG_REGISTER_ENTITY`'s payload shape. No new
+  message type needed — bundling with entity registration keeps the
+  round-trip count constant. *(Single doc home — the HA-side module
+  docstring carries the catalogue and the sandbox-side `protocol.py`
+  is a constants-only mirror that points at the HA file. Added the
+  device_info paragraph there.)*
+- [x] Main side (`homeassistant/components/sandbox_v2/bridge.py`):
+  - [x] In `_handle_register_entity`, if the payload includes
+    `device_info`, call `dr.async_get_or_create(config_entry_id=
+    description.entry_id, **device_info)` *before* instantiating the
+    proxy. Store the returned `device_id` on the proxy so its
+    `device_info` / `device_id` property reflects it.
+  - [x] Update `SandboxEntityDescription` with `device_info: dict | None`
+    + `device_id: str | None` fields.
+  - [x] When unregistering an entity that was the last one tied to a
+    given device, leave the device behind (matches HA's standard
+    "device lingers until config entry unloads" behaviour). *(No code
+    change needed — the existing `_handle_unregister_entity` path
+    calls `component.async_remove_entity(entity_id)` which only
+    touches the entity_registry/state machine; HA already leaves
+    `DeviceEntry`s in place until the owning entry unloads.)*
+- [x] Tests:
+  - [x] Synthetic sandboxed entity with `device_info=DeviceInfo(
+    identifiers={(DOMAIN, "abc")}, name="My Device")` → main's
+    device_registry has a matching DeviceEntry linked to the
+    sandboxed entry_id
+    (`test_phase19_devices.test_register_entity_creates_device_entry`).
+  - [x] Proxy entity reports the correct device_id and main's
+    entity_registry shows `device_id` set
+    (`..._propagates_device_id_to_proxy` plus
+    `..._creates_device_entry`'s entity_registry assertion).
+  - [x] Area assignment: assign device to area, the sandboxed entity
+    inherits the area_id (standard HA behaviour, just verifying
+    nothing is broken) (`..._area_assignment_propagates_to_proxy`).
+  - [ ] Compat-sweep regression: run a small slice (e.g. one
+    integration known to use `device_info`) through `run_compat.py`
+    and confirm the device_registry now correctly reflects the
+    sandboxed entry's devices.
+    *(Deferred — the in-process plugin tests already exercise the
+    full `register_entity` → `dr.async_get_or_create` → entity_registry
+    `device_id` chain end-to-end against a real `HomeAssistant`. The
+    compat-sweep slice would only confirm the same thing through a
+    real integration's setup path; that's worth doing once Phase 20
+    closes the share_states work, since `device_info`-bearing
+    integrations and the broader sweep both benefit from the
+    refreshed COMPAT_FULL.md run.)*
+- [x] Verify: `cd /home/paulus/dev/hass/core && uv run pytest
+  tests/components/sandbox_v2/ --no-cov -q` and `uv run pytest
+  /home/paulus/dev/hass/core/sandbox_v2/hass_client/ -q` both green;
+  no new core HA changes (device_registry already exposes
+  `async_get_or_create` as a public API). *(140 + 54 passed.)*
+
+### Phase 20 — Drop unwired share_* config + design doc for sync states ✅ COMPLETE
+
+The Phase 7 `SharingConfig` / `SandboxGroupConfig` / `--share-*` /
+`DEFAULT_GROUP_CONFIGS` surface is gone. ~40 LOC removed across
+`sandbox.py`, `__main__.py`, `manager.py`, `pytest_plugin.py`, plus
+the whole `test_sharing_config.py` file; the unwired
+`runtime.sharing` assertions in `test_sandbox_runtime.py` are dropped
+and the test docstring repointed at the new design doc. The locked-
+down posture is now a property of the runtime itself rather than a
+config flag — that was already the behaviour today, just minus the
+dead surface that suggested otherwise. The replacement is a focused
+design doc at `sandbox_v2/docs/design-share-states.md` covering the
+entity_id alignment constraint, the `share/subscribe_*` protocol
+shape, the per-sandbox allow-list filter on main's send-side, and the
+open questions (one-way vs bidirectional, read-only mirror, fan-out
+performance). `OVERVIEW.md`, `CLAUDE.md`, and `docs/FOLLOWUPS.md`
+all repoint at the design doc instead of just naming the deferral;
+`auth.py`'s docstring no longer references the deleted flags.
+**No core HA files touched.**
+
+- [x] Delete:
+  - [x] `SharingConfig` dataclass + import + `__all__` entry in
+    `sandbox_v2/hass_client/hass_client/sandbox.py`.
+  - [x] The `sharing=` constructor parameter on `SandboxRuntime` and
+    its assignment to `self.sharing`. *(No `if self.sharing` branch
+    existed — the field was carried but never read.)*
+  - [x] `--share-states` / `--share-entity-registry` / `--share-areas`
+    args in `sandbox_v2/hass_client/hass_client/sandbox_v2/__main__.py`
+    and the corresponding `SharingConfig(...)` construction.
+  - [x] `SandboxGroupConfig`, `DEFAULT_GROUP_CONFIGS`, the
+    `group_config(...)` accessor, and the `--share-*` flag expansion
+    in `homeassistant/components/sandbox_v2/manager.py`.
+  - [x] `sharing` plumbing through
+    `sandbox_v2/hass_client/hass_client/testing/pytest_plugin.py`.
+  - [x] `sandbox_v2/hass_client/tests/test_sharing_config.py` (whole
+    file).
+  - [x] Docstring mentions in
+    `homeassistant/components/sandbox_v2/auth.py` and the backlog
+    bucket description in `sandbox_v2/generate_backlog.py` repointed
+    at the design doc. *(The Phase 7 `test_sandbox_runtime.py`
+    runtime test's docstring + the unwired `sharing` asserts were
+    also dropped; the test now documents the locked-down posture as
+    a property of the runtime itself.)*
+- [x] Write `sandbox_v2/docs/design-share-states.md` covering:
+  - [x] **Goal** — sandboxed integrations can react to state changes
+    that originated in main, so automation/script/template logic
+    written inside a sandbox behaves the same as if it ran in main.
+  - [x] **Key constraint: entity_id alignment.** Mechanism written
+    up: main's entity_registry is mirrored as a read-only view,
+    entity_id is canonical on both sides, sandbox-owned entities
+    still flow through the existing Phase 5 entity bridge with its
+    `_entities` mapping.
+  - [x] **Mechanism sketch** — sandbox opens a websocket back to
+    main using the Phase 7 scoped `RefreshToken` plus a single new
+    `share/subscribe` exact-match scope; sandbox calls
+    `share/subscribe_states` / `..._entity_registry` / `..._areas`;
+    main pushes initial snapshot + deltas; sandbox applies each
+    delta locally.
+  - [x] **Filtering on main's send-side** — per-sandbox allow-list
+    set at startup; coarse domain-level granularity is fine for v3;
+    defaults table mirrors what Phase 7 had (built-in/main on,
+    custom off).
+  - [x] **Open questions** — one-way vs bidirectional (lean
+    one-way); write-through behaviour on the mirror (read-only,
+    error on writes); device + area registries follow the same
+    pattern (Phase 19 precursor); performance fan-out (send-side
+    filter is the cheap fix).
+  - [x] **Non-goals** — full read-write registry mirroring,
+    bidirectional device targeting (service mirror already covers
+    that), frontend surfacing of the allow-list.
+  - [x] **Why now (link to v1 limitation)** — v1 saw all of main's
+    data via the system-user token; Phase 7 locked v2 down; this
+    doc captures the controlled opt-in we still owe.
+  - [x] Referenced from `sandbox_v2/CLAUDE.md`'s "Open follow-ups",
+    `sandbox_v2/OVERVIEW.md`'s "Future work", and
+    `sandbox_v2/docs/FOLLOWUPS.md`'s "Still open" section so future
+    readers find it.
+- [x] Update `OVERVIEW.md`, `sandbox_v2/CLAUDE.md`,
+  `sandbox_v2/docs/FOLLOWUPS.md` so the "share_states subscription
+  consumer" follow-up entry points at `docs/design-share-states.md`
+  instead of just naming the deferral.
+- [x] Verify:
+  - [x] `cd /home/paulus/dev/hass/core && uv run pytest
+    tests/components/sandbox_v2/ --no-cov -q` — 138 passed (drop of
+    2 from the deleted `group_config` / argv assertion tests).
+  - [x] `uv run pytest /home/paulus/dev/hass/core/sandbox_v2/hass_client/ -q`
+    — 47 passed (drop of 7 from `test_sharing_config.py`).
+  - [x] `grep -rn 'SharingConfig\|SandboxGroupConfig\|share_states\|share_entity_registry\|share_areas\|--share-' sandbox_v2/hass_client/hass_client/ homeassistant/components/sandbox_v2/ tests/components/sandbox_v2/`
+    → no matches. Doc matches in FOLLOWUPS.md / OVERVIEW.md /
+    CLAUDE.md / `design-share-states.md` / STATUS files /
+    `auth-scoping-decision.md` / `plan.md` are historical narrative
+    (expected).
+  - [x] `uv run prek run --files <changed files>` clean (ruff +
+    mypy + pylint + prettier all pass; the single codespell hit on
+    `plan.md:1278` is pre-existing Phase 19 content and unrelated
+    to Phase 20).
+
 ## Verification (project-wide)
 
 Run after each phase touching Python code:

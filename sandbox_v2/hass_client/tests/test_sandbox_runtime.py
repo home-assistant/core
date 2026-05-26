@@ -42,11 +42,12 @@ def test_cli_parser_requires_group_url_and_token() -> None:
 async def test_runtime_starts_in_locked_down_sharing_posture(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Phase 7: default SharingConfig is everything-off (no main subscription).
+    """The sandbox HA sees only its own entities — no subscription to main.
 
-    The sandbox HA brought up by ``run()`` therefore only sees the states
-    its own integrations create — verified here by asserting an empty
-    ``async_all()`` after the runtime is up.
+    Phase 20 dropped the unwired ``share_*`` config surface; the
+    locked-down posture is now a property of the runtime itself rather
+    than a config flag. See ``sandbox_v2/docs/design-share-states.md``
+    for the future opt-in design.
     """
     runtime = SandboxRuntime(
         url="ws://x",
@@ -54,9 +55,6 @@ async def test_runtime_starts_in_locked_down_sharing_posture(
         group="custom",
         channel_factory=_noop_channel_factory,
     )
-    assert runtime.sharing.share_states is False
-    assert runtime.sharing.share_entity_registry is False
-    assert runtime.sharing.share_areas is False
 
     task = asyncio.create_task(runtime.run())
     loop = asyncio.get_event_loop()

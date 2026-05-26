@@ -12,8 +12,9 @@ scoped token is still issued and passed on the CLI so that:
 
 * the manager and runtime agree on a real credential rather than a
   placeholder, and
-* future phases that subscribe to main's bus (``share_states=True``)
-  inherit the same scope without a separate code path.
+* the opt-in subscription consumer designed in
+  ``sandbox_v2/docs/design-share-states.md`` inherits the same scope
+  without a separate code path.
 """
 
 import logging

@@ -66,40 +66,6 @@ class SandboxConfig:
     shutdown_grace: float = DEFAULT_SHUTDOWN_GRACE
 
 
-@dataclass(frozen=True)
-class SandboxGroupConfig:
-    """Per-group data-sharing knobs (Phase 7).
-
-    All flags default to ``False`` — the sandbox sees nothing of main's
-    state, registries, or areas unless explicitly opted in. The
-    integration's ``async_setup`` flips ``share_states`` to ``True`` for
-    the ``built-in`` group so existing built-in integrations behave the
-    same as if they ran locally; the ``custom`` group stays locked down.
-
-    The flags are wire-only today — the sandbox runtime reads them from
-    its CLI and decides whether to subscribe to main's bus. Filtering on
-    the main side happens at subscription time and is a follow-up once
-    the sandbox actually opens that subscription.
-    """
-
-    share_states: bool = False
-    share_entity_registry: bool = False
-    share_areas: bool = False
-
-
-# Default sharing posture per group. ``custom`` stays locked down; the
-# ``built-in`` and ``main`` groups inherit main's state stream so
-# integrations that read from ``hass.states`` continue to work.
-DEFAULT_GROUP_CONFIGS: dict[str, SandboxGroupConfig] = {
-    "built-in": SandboxGroupConfig(
-        share_states=True, share_entity_registry=True, share_areas=True
-    ),
-    "main": SandboxGroupConfig(
-        share_states=True, share_entity_registry=True, share_areas=True
-    ),
-}
-
-
 class SandboxProcess:
     """One supervised sandbox subprocess.
 
@@ -452,7 +418,6 @@ class SandboxManager:
         on_channel_ready: Callable[[str, Channel], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
         token_factory: TokenFactory | None = None,
-        group_configs: dict[str, SandboxGroupConfig] | None = None,
     ) -> None:
         """Initialise the manager.
 
@@ -469,10 +434,6 @@ class SandboxManager:
         cached on :attr:`_tokens`. Without one, ``_default_command``
         falls back to a placeholder so tests that don't care about auth
         still work.
-
-        ``group_configs`` overrides the per-group data-sharing posture
-        (Phase 7). Missing groups fall back to :data:`DEFAULT_GROUP_CONFIGS`
-        and finally to ``SandboxGroupConfig()`` (everything off).
         """
         self._hass = hass
         self._command_factory = command_factory or self._default_command
@@ -481,18 +442,9 @@ class SandboxManager:
         self._on_channel_ready = on_channel_ready
         self._on_shutdown_reply = on_shutdown_reply
         self._token_factory = token_factory
-        self._group_configs: dict[str, SandboxGroupConfig] = dict(
-            group_configs or DEFAULT_GROUP_CONFIGS
-        )
         self._tokens: dict[str, str] = {}
         self._sandboxes: dict[str, SandboxProcess] = {}
         self._locks: dict[str, asyncio.Lock] = {}
-
-    def group_config(self, group: str) -> SandboxGroupConfig:
-        """Return the data-sharing config for ``group``."""
-        if (override := self._group_configs.get(group)) is not None:
-            return override
-        return SandboxGroupConfig()
 
     @property
     def shutdown_grace(self) -> float:
@@ -590,8 +542,7 @@ class SandboxManager:
         the runtime does not consume it today.
         """
         token = self._tokens.get(group, "sandbox_v2_placeholder")
-        cfg = self.group_config(group)
-        argv = [
+        return [
             sys.executable,
             "-m",
             "hass_client.sandbox_v2",
@@ -602,22 +553,13 @@ class SandboxManager:
             "--token",
             token,
         ]
-        if cfg.share_states:
-            argv.append("--share-states")
-        if cfg.share_entity_registry:
-            argv.append("--share-entity-registry")
-        if cfg.share_areas:
-            argv.append("--share-areas")
-        return argv
 
 
 __all__ = [
-    "DEFAULT_GROUP_CONFIGS",
     "READY_MARKER",
     "CommandFactory",
     "SandboxConfig",
     "SandboxFailedError",
-    "SandboxGroupConfig",
     "SandboxManager",
     "SandboxProcess",
     "SandboxStartError",
