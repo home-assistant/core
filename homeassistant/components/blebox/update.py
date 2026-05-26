@@ -1,7 +1,6 @@
 """BleBox update entities implementation."""
 
 from datetime import timedelta
-import logging
 from typing import Any, Final
 
 from blebox_uniapi.error import ConnectionError as BleBoxConnectionError, Error
@@ -13,14 +12,13 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=1)
 
@@ -78,8 +76,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         try:
             await self._feature.async_update()
         except Error as ex:
-            _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
-            return
+            raise HomeAssistantError(ex) from ex
         self._sync_sw_version()
 
     @property

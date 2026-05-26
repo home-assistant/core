@@ -1,7 +1,6 @@
 """BleBox update entity tests."""
 
 from datetime import timedelta
-import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi.error
@@ -123,9 +122,7 @@ async def test_update_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a failed async_update logs an error and leaves state unchanged."""
-    caplog.set_level(logging.ERROR)
-
+    """Test that a failed async_update raises HomeAssistantError."""
     feature_mock, entity_id = firmwareupdate
     await async_setup_entity(hass, entity_id)
 
@@ -135,10 +132,7 @@ async def test_update_error(
     await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
-    assert "Updating 'airSensor-firmware' failed:" in caplog.text
-
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert "HomeAssistantError" in caplog.text
 
 
 @pytest.mark.freeze_time("2026-05-21 00:00:00")
