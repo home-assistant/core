@@ -98,9 +98,11 @@ class SimpliSafeCamera(SimpliSafeEntity, Camera):
         """Return the last captured motion image."""
         media_urls = self._simplisafe.camera_media_urls.get(self._device.serial)
         if media_urls is None:
-            return None
+            raise HomeAssistantError(
+                f"No motion snapshot available yet for {self.name}"
+            )
         if (image_url := media_urls.get("image_url")) is None:
-            return None
+            raise HomeAssistantError(f"No image URL in motion data for {self.name}")
         try:
             return await self._simplisafe.async_media(
                 _resolve_image_url(

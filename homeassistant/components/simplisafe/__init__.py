@@ -196,11 +196,13 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
+_URI_TEMPLATE_RE = re.compile(r"\{[^}]+\}")
+
 
 def _resolve_image_url(url: str, width: int = DEFAULT_IMAGE_WIDTH) -> str:
     """Substitute the {&width} URI template parameter and strip any remaining ones."""
     url = url.replace("{&width}", f"&width={width}")
-    return re.sub(r"\{[^}]+\}", "", url)
+    return _URI_TEMPLATE_RE.sub("", url)
 
 
 @callback
