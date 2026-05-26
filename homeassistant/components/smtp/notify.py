@@ -24,6 +24,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RECIPIENT,
@@ -44,7 +45,6 @@ from homeassistant.util.ssl import create_client_context
 from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
-    CONF_DEBUG,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,

@@ -3,7 +3,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiodns==4.0.3
+aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -22,7 +22,7 @@ certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
 cryptography==48.0.0
-fnv-hash-fast==2.0.2
+fnv-hash-fast==2.0.3
 ha-ffmpeg==3.2.2
 hass-nabucasa==2.2.0
 hassil==3.5.0
@@ -30,7 +30,7 @@ home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.5.5
 httpx==0.28.1
 ifaddr==0.2.0
-infrared-protocols==5.4.0
+infrared-protocols==5.6.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.47.0
@@ -47,18 +47,18 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
-rf-protocols==3.2.0
+rf-protocols==4.0.0
 securetar==2026.4.1
 SQLAlchemy==2.0.49
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
-ulid-transform==2.2.0
+ulid-transform==2.2.1
 urllib3>=2.0
 uv==0.11.14
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.23.0
-zeroconf==0.148.0
+yarl==1.24.2
+zeroconf==0.149.16
