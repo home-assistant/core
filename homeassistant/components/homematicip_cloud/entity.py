@@ -87,8 +87,15 @@ class HomematicipGenericEntity(Entity):
         channel_real_index: int | None = None,
         *,
         feature_id: str,
+        use_description_name: bool = False,
     ) -> None:
-        """Initialize the generic entity."""
+        """Initialize the generic entity.
+
+        When ``use_description_name`` is True, leave ``_attr_name`` unset so
+        HA's standard name resolution (``EntityDescription.name``,
+        ``device_class``, ``translation_key`` + placeholders) drives the
+        entity name. Default False keeps the legacy channel/post composition.
+        """
         self._hap = hap
         self._home: AsyncHome = hap.home
         self._device = device
@@ -118,7 +125,7 @@ class HomematicipGenericEntity(Entity):
             # Legacy mode (groups, special entities): compose the full name
             # including device/group label and home prefix.
             self._attr_name = self._compute_legacy_name()
-        else:
+        elif not use_description_name:
             self._setup_entity_name()
 
     @property
