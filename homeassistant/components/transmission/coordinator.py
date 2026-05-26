@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import override
@@ -13,6 +13,7 @@ from transmission_rpc.session import SessionStats
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -99,7 +100,9 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._event_listeners.pop(listener_id, None)
 
     @callback
-    def _async_notify_event_listeners(self, event: TransmissionEventData) -> None:
+    def _async_notify_event_listeners(
+        self, event: TransmissionEventData, _: datetime
+    ) -> None:
         """Notify event listeners in the event loop."""
         for listener in list(self._event_listeners.values()):
             listener(event)
@@ -144,6 +147,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             torrent for torrent in self.torrents if torrent.status == "seeding"
         ]
 
+        delay: float = 0.0
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -163,7 +167,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                async_call_later(
+                    self.hass,
+                    delay,
+                    partial(self._async_notify_event_listeners, event),
+                )
+                delay += 0.1
 
         self._completed_torrents = current_completed_torrents
 
@@ -175,6 +184,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             torrent for torrent in self.torrents if torrent.status == "downloading"
         ]
 
+        delay: float = 0.0
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -194,7 +204,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                async_call_later(
+                    self.hass,
+                    delay,
+                    partial(self._async_notify_event_listeners, event),
+                )
+                delay += 0.1
 
         self._started_torrents = current_started_torrents
 
@@ -202,6 +217,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         """Get removed torrent functionality."""
         current_torrents = {torrent.id for torrent in self.torrents}
 
+        delay: float = 0.0
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
                 # Once event triggers are out of labs we can remove the bus event
@@ -221,7 +237,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                     download_path=torrent.download_dir or "",
                     labels=torrent.labels,
                 )
-                self._async_notify_event_listeners(event)
+                async_call_later(
+                    self.hass,
+                    delay,
+                    partial(self._async_notify_event_listeners, event),
+                )
+                delay += 0.1
 
         self._all_torrents = self.torrents.copy()
 
