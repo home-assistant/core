@@ -50,8 +50,6 @@ class OPNsenseDeviceTrackerEntity(
 ):
     """Representation of a tracked device."""
 
-    _attr_should_poll = False
-
     def __init__(
         self,
         coordinator: OPNsenseDeviceTrackerCoordinator,
