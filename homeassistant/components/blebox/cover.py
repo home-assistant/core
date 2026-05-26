@@ -3,7 +3,7 @@
 from typing import Any
 
 import blebox_uniapi.cover
-from blebox_uniapi.cover import BleboxCoverState
+from blebox_uniapi.cover import BleboxCoverState, UnifiedCoverType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -23,6 +23,19 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "gate": CoverDeviceClass.GATE,
     "gatebox": CoverDeviceClass.DOOR,
     "shutter": CoverDeviceClass.SHUTTER,
+}
+
+UNIFIED_COVER_TYPE_TO_DEVICE_CLASS = {
+    UnifiedCoverType.AWNING: CoverDeviceClass.AWNING,
+    UnifiedCoverType.BLIND: CoverDeviceClass.BLIND,
+    UnifiedCoverType.CURTAIN: CoverDeviceClass.CURTAIN,
+    UnifiedCoverType.DAMPER: CoverDeviceClass.DAMPER,
+    UnifiedCoverType.DOOR: CoverDeviceClass.DOOR,
+    UnifiedCoverType.GARAGE: CoverDeviceClass.GARAGE,
+    UnifiedCoverType.GATE: CoverDeviceClass.GATE,
+    UnifiedCoverType.SHADE: CoverDeviceClass.SHADE,
+    UnifiedCoverType.SHUTTER: CoverDeviceClass.SHUTTER,
+    UnifiedCoverType.WINDOW: CoverDeviceClass.WINDOW,
 }
 
 BLEBOX_TO_HASS_COVER_STATES = {
@@ -59,7 +72,6 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     def __init__(self, feature: blebox_uniapi.cover.Cover) -> None:
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
@@ -83,6 +95,13 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
                 | CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.STOP
             )
+
+    @property
+    def device_class(self) -> CoverDeviceClass | None:
+        """Return the device class based on cover type when available."""
+        if (cover_type := self._feature.cover_type) is not None:
+            return UNIFIED_COVER_TYPE_TO_DEVICE_CLASS[cover_type]
+        return BLEBOX_TO_COVER_DEVICE_CLASSES[self._feature.device_class]
 
     @property
     def current_cover_position(self) -> int | None:
