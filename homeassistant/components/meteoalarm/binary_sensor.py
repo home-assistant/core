@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,10 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by MeteoAlarm"
 
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_COUNTRY = "country"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_LANGUAGE = "language"
 CONF_PROVINCE = "province"
 
 DEFAULT_NAME = "meteoalarm"

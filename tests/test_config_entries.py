@@ -2714,7 +2714,7 @@ async def test_subentry_flow(
         result = await manager.subentries.async_init(
             (entry.entry_id, "test"), context={"source": "user"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
         assert entry.data == {"first": True}
         assert entry.options == {}
@@ -3403,7 +3403,7 @@ async def test_entry_reload_error(
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
 
-    assert entry.state == state
+    assert entry.state is state
 
 
 async def test_entry_disable_succeed(
@@ -3722,7 +3722,7 @@ async def test_unique_id_existing_entry(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     entries = hass.config_entries.async_entries("comp")
     assert len(entries) == 1
@@ -4106,7 +4106,7 @@ async def test_unique_id_in_progress(
         result = await manager.flow.async_init(
             "comp", context={"source": existing_flow_source, "entry_id": entry.entry_id}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -4145,14 +4145,14 @@ async def test_finish_flow_aborts_progress(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # Will finish and cancel other one.
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}, data={}
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
@@ -4196,7 +4196,7 @@ async def test_unique_id_ignore(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         result2 = await manager.flow.async_init(
             "comp",
@@ -4204,7 +4204,7 @@ async def test_unique_id_ignore(
             data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # assert len(hass.config_entries.flow.async_progress()) == 0
 
@@ -4267,7 +4267,7 @@ async def test_manual_add_overrides_ignored_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 0
@@ -4473,7 +4473,7 @@ async def test_update_discovery_keys(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == flow_result
+    assert result["type"] is flow_result
     assert entry.data == {}
     assert entry.discovery_keys == updated_discovery_keys
     assert len(async_reload.mock_calls) == 0
@@ -4556,7 +4556,7 @@ async def test_update_discovery_keys_2(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == flow_result
+    assert result["type"] is flow_result
     assert entry.data == {}
     assert entry.discovery_keys == updated_discovery_keys
     assert len(async_reload.mock_calls) == 0
@@ -4731,7 +4731,7 @@ async def test_partial_flows_hidden(
         # async_progress and have triggered
         # discovery notifications
         result = await init_task
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert len(hass.config_entries.flow.async_progress()) == 1
 
 
@@ -4940,7 +4940,7 @@ async def test_flow_with_default_discovery(
         result = await manager.flow.async_init(
             "comp", context={"source": discovery_source[0]}, data=discovery_source[1]
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1
@@ -4953,7 +4953,7 @@ async def test_flow_with_default_discovery(
         result2 = await manager.flow.async_configure(
             result["flow_id"], user_input={"fake": "data"}
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
@@ -4989,7 +4989,7 @@ async def test_flow_with_default_discovery_with_unique_id(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -5016,7 +5016,7 @@ async def test_default_discovery_abort_existing_entries(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -5047,13 +5047,13 @@ async def test_default_discovery_in_progress(
             context={"source": config_entries.SOURCE_DISCOVERY},
             data={"unique_id": "mock-unique-id"},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # Second discovery without a unique ID
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is data_entry_flow.FlowResultType.ABORT
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -5086,7 +5086,7 @@ async def test_default_discovery_abort_on_new_unique_flow(
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
 
         # Second discovery brings in a unique ID
         result = await manager.flow.async_init(
@@ -5094,7 +5094,7 @@ async def test_default_discovery_abort_on_new_unique_flow(
             context={"source": config_entries.SOURCE_DISCOVERY},
             data={"unique_id": "mock-unique-id"},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     # Ensure the first one is cancelled and we end up with just the last one
     flows = hass.config_entries.flow.async_progress()
@@ -5133,7 +5133,7 @@ async def test_default_discovery_abort_on_user_flow_complete(
         flow1 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
         )
-        assert flow1["type"] == data_entry_flow.FlowResultType.FORM
+        assert flow1["type"] is data_entry_flow.FlowResultType.FORM
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 1
@@ -5142,14 +5142,14 @@ async def test_default_discovery_abort_on_user_flow_complete(
         flow2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert flow2["type"] == data_entry_flow.FlowResultType.FORM
+        assert flow2["type"] is data_entry_flow.FlowResultType.FORM
 
         flows = hass.config_entries.flow.async_progress()
         assert len(flows) == 2
 
         # Complete the manual flow
         result = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # Ensure the first flow is gone now
     flows = hass.config_entries.flow.async_progress()
@@ -5213,7 +5213,7 @@ async def test_flow_same_device_multiple_sources(
         result2 = await manager.flow.async_configure(
             flows[0]["flow_id"], user_input={"fake": "data"}
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
@@ -7025,7 +7025,7 @@ async def test_update_entry_and_reload(
     assert entry.unique_id == expected_unique_id
     assert entry.data == expected_data
     assert entry.options == expected_options
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     if raises:
         assert isinstance(err, raises)
     else:
@@ -7167,7 +7167,7 @@ async def test_update_entry_without_reload(
     assert entry.unique_id == "5678"
     assert entry.data == {"vendor": "data2"}
     assert entry.options == {"vendor": "options2"}
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     # Assert entry is not reloaded
@@ -8028,7 +8028,7 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # Add a config entry
         entry = MockConfigEntry(
@@ -8044,7 +8044,7 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         result = await manager.flow.async_configure(
             result["flow_id"], user_input={"host": "127.0.0.1"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
         assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
@@ -8112,18 +8112,18 @@ async def test_in_progress_get_canceled_when_entry_is_created(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # Will be canceled
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is data_entry_flow.FlowResultType.FORM
 
         result = await manager.flow.async_configure(
             result["flow_id"], user_input={"host": "127.0.0.1"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert len(manager.flow.async_progress()) == 0
     assert len(manager.async_entries()) == 1
@@ -8802,7 +8802,7 @@ async def test_async_has_matching_discovery_flow(
             context={"source": config_entries.SOURCE_HOMEKIT},
             data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
-    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["type"] is data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_one"
     assert len(manager.flow.async_progress()) == 1
     assert len(manager.flow.async_progress_by_handler("test")) == 1
@@ -10128,7 +10128,7 @@ async def test_config_flow_abort_with_next_flow(hass: HomeAssistant) -> None:
             "test", context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "provision_successful"
     assert "next_flow" in result
     assert result["next_flow"][0] == config_entries.FlowType.CONFIG_FLOW
@@ -10246,7 +10246,7 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
             "test", context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Entry"
     assert "next_flow" in result
     assert result["next_flow"][0] == config_entries.FlowType.CONFIG_FLOW
@@ -10322,7 +10322,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
                 type="_tcp.local.",
             ),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "confirm"
 
         # Before user interaction, dismiss_protected should not be set
@@ -10331,7 +10331,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
 
         # User configures the flow
         result = await manager.flow.async_configure(result["flow_id"])
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # After user interaction, dismiss_protected should be set
         context = _get_flow_context(manager, result["flow_id"])
@@ -10341,7 +10341,7 @@ async def test_discovery_flow_dismiss_protected_on_configure(
         result = await manager.flow.async_configure(
             result["flow_id"], user_input={"fake": "data"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_not_dismiss_protected_on_configure(
@@ -10376,13 +10376,13 @@ async def test_user_flow_not_dismiss_protected_on_configure(
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # User configures the flow
         result = await manager.flow.async_configure(
             result["flow_id"], user_input={"fake": "data"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
 
         # User flows should not be marked as dismiss protected
         context = _get_flow_context(manager, result["flow_id"])

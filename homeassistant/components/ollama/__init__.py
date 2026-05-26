@@ -8,7 +8,13 @@ import httpx
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MODEL,
+    CONF_PROMPT,
+    CONF_URL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,9 +32,7 @@ from homeassistant.util.ssl import get_default_context
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
-    CONF_PROMPT,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
