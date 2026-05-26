@@ -534,7 +534,7 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         return CLOSED_POSITION
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         return self.positions.tilt
 
@@ -581,8 +581,10 @@ class PowerViewShadeDualRailBase(PowerViewShadeBase):
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
+        if self.positions.primary is None or self.positions.secondary is None:
+            return None
         return self.positions.primary + self.positions.secondary
 
 
@@ -699,8 +701,10 @@ class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
+        if self.positions.primary is None or self.positions.secondary is None:
+            return None
         # poskind 1 represents the second half of the shade in hass
         # front must be fully closed before rear can move
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
@@ -930,7 +934,7 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         # poskind 1 represents the second half of the shade in hass
         # front must be fully closed before rear can move
