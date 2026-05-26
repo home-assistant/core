@@ -53,28 +53,28 @@ async def test_setup(
             "reeflex_mock",
             [
                 (
-                    "binary_sensor.mock_reeflex_light",
+                    "binary_sensor.mock_aquarium_mock_reeflex_light",
                     "reeflex_data",
                     "isLighting",
                     True,
                     "on",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_light",
+                    "binary_sensor.mock_aquarium_mock_reeflex_light",
                     "reeflex_data",
                     "isLighting",
                     False,
                     "off",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_uvc_lamp_connected",
+                    "binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected",
                     "reeflex_data",
                     "isUVCConnected",
                     True,
                     "on",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_uvc_lamp_connected",
+                    "binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected",
                     "reeflex_data",
                     "isUVCConnected",
                     False,

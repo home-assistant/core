@@ -191,7 +191,7 @@ async def test_numeric_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
 
     assert state
     assert state.state == "61.0"
@@ -219,7 +219,7 @@ async def test_numeric_sensor(
 
     express_controls_ezmultipli.receive_event(event)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.hsm200_illuminance")
+    state = hass.states.get("sensor.basement_hsm200_illuminance")
     assert state
     assert state.state == STATE_UNKNOWN
 
