@@ -235,6 +235,7 @@ async def test_device_class_from_unified_cover_type(
         state=None,
         has_stop=True,
         has_tilt=False,
+        tilt_only=False,
         is_slider=True,
         is_position_inverted=True,
         cover_type=cover_type,
