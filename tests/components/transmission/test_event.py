@@ -92,6 +92,8 @@ async def test_event_updates_state(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     state = hass.states.get("event.transmission_torrent")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == expected_event_type
