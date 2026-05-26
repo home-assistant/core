@@ -22,9 +22,6 @@ CONF_PASSIVE = "passive"
 
 DEFAULT_MODE = BluetoothScanningMode.AUTO.value
 
-
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_SOURCE: Final = "source"
 CONF_SOURCE_DOMAIN: Final = "source_domain"
 CONF_SOURCE_MODEL: Final = "source_model"
 CONF_SOURCE_CONFIG_ENTRY_ID: Final = "source_config_entry_id"

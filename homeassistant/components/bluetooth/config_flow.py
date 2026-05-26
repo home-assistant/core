@@ -22,6 +22,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -40,7 +41,6 @@ from .const import (
     CONF_DETAILS,
     CONF_MODE,
     CONF_PASSIVE,
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,

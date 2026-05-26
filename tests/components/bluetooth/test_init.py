@@ -28,7 +28,6 @@ from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_MODE,
     CONF_PASSIVE,
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
@@ -47,7 +46,11 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_UUID,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
