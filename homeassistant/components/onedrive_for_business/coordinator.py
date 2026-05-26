@@ -1,7 +1,5 @@
 """Coordinator for OneDrive for Business."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta

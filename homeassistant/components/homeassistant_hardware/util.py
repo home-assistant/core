@@ -1,7 +1,5 @@
 """Utility functions for Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Sequence
@@ -14,7 +12,13 @@ from universal_silabs_flasher.const import ApplicationType as FlasherApplication
 from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
 
-from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    HassioNotReadyError,
+    get_apps_list,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -26,6 +30,8 @@ from .const import (
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
+    Z2M_ADDON_NAME,
+    Z2M_ADDON_SLUG_REGEX,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -84,6 +90,17 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
     )
 
 
+@callback
+def get_z2m_addon_manager(hass: HomeAssistant, slug: str) -> WaitingAddonManager:
+    """Get the Z2M add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        Z2M_ADDON_NAME,
+        slug,
+    )
+
+
 @dataclass(kw_only=True)
 class OwningAddon:
     """Owning add-on."""
@@ -107,7 +124,7 @@ class OwningAddon:
         except AddonError:
             return False
         else:
-            return addon_info.state == AddonState.RUNNING
+            return addon_info.state is AddonState.RUNNING
 
     @asynccontextmanager
     async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
@@ -120,7 +137,7 @@ class OwningAddon:
             yield
             return
 
-        if addon_info.state != AddonState.RUNNING:
+        if addon_info.state is not AddonState.RUNNING:
             yield
             return
 
@@ -156,7 +173,7 @@ class OwningIntegration:
             yield
             return
 
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             yield
             return
 
@@ -196,7 +213,7 @@ async def get_otbr_addon_firmware_info(
     except AddonError:
         return None
 
-    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+    if otbr_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     if (otbr_path := otbr_addon_info.options.get("device")) is None:
@@ -212,6 +229,32 @@ async def get_otbr_addon_firmware_info(
     )
 
 
+async def get_z2m_addon_firmware_info(
+    hass: HomeAssistant, z2m_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from a Z2M add-on."""
+    try:
+        z2m_addon_info = await z2m_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if z2m_addon_info.state is AddonState.NOT_INSTALLED:
+        return None
+
+    serial = z2m_addon_info.options.get("serial")
+
+    if not isinstance(serial, dict) or (z2m_port := serial.get("port")) is None:
+        return None
+
+    return FirmwareInfo(
+        device=z2m_port,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source=f"zigbee2mqtt ({z2m_addon_manager.addon_slug})",
+        owners=[OwningAddon(slug=z2m_addon_manager.addon_slug)],
+    )
+
+
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
@@ -221,46 +264,58 @@ async def guess_hardware_owners(
     async for firmware_info in hass.data[DATA_COMPONENT].iter_firmware_info():
         device_guesses[firmware_info.device].append(firmware_info)
 
+    if not is_hassio(hass):
+        return device_guesses.get(device_path, [])
+
     # It may be possible for the OTBR addon to be present without the integration
-    if is_hassio(hass):
-        otbr_addon_manager = get_otbr_addon_manager(hass)
-        otbr_addon_fw_info = await get_otbr_addon_firmware_info(
-            hass, otbr_addon_manager
-        )
-        otbr_path = (
-            otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
-        )
+    otbr_addon_manager = get_otbr_addon_manager(hass)
+    otbr_addon_fw_info = await get_otbr_addon_firmware_info(hass, otbr_addon_manager)
+    otbr_path = otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
 
-        # Only create a new entry if there are no existing OTBR ones
-        if otbr_path is not None and not any(
-            info.source == "otbr" for info in device_guesses[otbr_path]
-        ):
-            assert otbr_addon_fw_info is not None
-            device_guesses[otbr_path].append(otbr_addon_fw_info)
+    # Only create a new entry if there are no existing OTBR ones
+    if otbr_path is not None and not any(
+        info.source == "otbr" for info in device_guesses[otbr_path]
+    ):
+        assert otbr_addon_fw_info is not None
+        device_guesses[otbr_path].append(otbr_addon_fw_info)
 
-    if is_hassio(hass):
-        multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
+    multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
-        try:
-            multipan_addon_info = await multipan_addon_manager.async_get_addon_info()
-        except AddonError:
-            pass
-        else:
-            if multipan_addon_info.state != AddonState.NOT_INSTALLED:
-                multipan_path = multipan_addon_info.options.get("device")
+    try:
+        multipan_addon_info = await multipan_addon_manager.async_get_addon_info()
+    except AddonError:
+        pass
+    else:
+        if multipan_addon_info.state is not AddonState.NOT_INSTALLED:
+            multipan_path = multipan_addon_info.options.get("device")
 
-                if multipan_path is not None:
-                    device_guesses[multipan_path].append(
-                        FirmwareInfo(
-                            device=multipan_path,
-                            firmware_type=ApplicationType.CPC,
-                            firmware_version=None,
-                            source="multiprotocol",
-                            owners=[
-                                OwningAddon(slug=multipan_addon_manager.addon_slug)
-                            ],
-                        )
+            if multipan_path is not None:
+                device_guesses[multipan_path].append(
+                    FirmwareInfo(
+                        device=multipan_path,
+                        firmware_type=ApplicationType.CPC,
+                        firmware_version=None,
+                        source="multiprotocol",
+                        owners=[OwningAddon(slug=multipan_addon_manager.addon_slug)],
                     )
+                )
+
+    # Z2M can be provided by one of many add-ons, we match them by name
+    try:
+        apps_list = get_apps_list(hass)
+    except HassioNotReadyError:
+        apps_list = []
+    for app_info in apps_list:
+        slug = app_info.get("slug")
+
+        if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:
+            continue
+
+        z2m_addon_manager = get_z2m_addon_manager(hass, slug)
+        z2m_fw_info = await get_z2m_addon_firmware_info(hass, z2m_addon_manager)
+
+        if z2m_fw_info is not None:
+            device_guesses[z2m_fw_info.device].append(z2m_fw_info)
 
     return device_guesses.get(device_path, [])
 

@@ -1,7 +1,5 @@
 """Config flow to configure Motionblinds using their WLAN API."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

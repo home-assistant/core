@@ -1,7 +1,5 @@
 """Config flow for Aranet integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aranet4.client import Aranet4Advertisement, Version as AranetVersion

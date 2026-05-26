@@ -30,6 +30,8 @@ MOCK_CONFIG = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
     "event_message_data": ["text", "headers"],
+    "ssl_cipher_list": "python_default",
+    "verify_ssl": True,
 }
 
 MOCK_OPTIONS = {
@@ -301,7 +303,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
 
 
 async def test_options_form(hass: HomeAssistant) -> None:
-    """Test we show the options form."""
+    """Test the options form."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -381,7 +383,7 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("advanced_options", "assert_result"),
+    ("test_options", "assert_result"),
     [
         ({"max_message_size": 8192}, FlowResultType.CREATE_ENTRY),
         ({"max_message_size": 1024}, FlowResultType.FORM),
@@ -407,12 +409,12 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         "enable_push_false",
     ],
 )
-async def test_advanced_options_form(
+async def test_options_flow_when_connection_fails(
     hass: HomeAssistant,
-    advanced_options: dict[str, str],
+    test_options: dict[str, str],
     assert_result: FlowResultType,
 ) -> None:
-    """Test we show the advanced options."""
+    """Test the options flow when the connection fails."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -420,14 +422,14 @@ async def test_advanced_options_form(
 
     result = await hass.config_entries.options.async_init(
         entry.entry_id,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     new_config = MOCK_OPTIONS.copy()
-    new_config.update(advanced_options)
+    new_config.update(test_options)
 
     try:
         with patch(
@@ -438,7 +440,7 @@ async def test_advanced_options_form(
             result2 = await hass.config_entries.options.async_configure(
                 result["flow_id"], new_config
             )
-            assert result2["type"] == assert_result
+            assert result2["type"] is assert_result
 
             if result2.get("errors") is not None:
                 assert assert_result is FlowResultType.FORM
@@ -462,7 +464,7 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
     config["verify_ssl"] = verify_ssl
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -494,7 +496,7 @@ async def test_config_flow_with_event_message_data(
     config["event_message_data"] = event_message_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -517,16 +519,14 @@ async def test_config_flow_with_event_message_data(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_flow_from_with_advanced_settings(
+async def test_cipher_settings_in_config_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test if advanced settings show correctly."""
+    """Test cipher settings in config flow."""
     config = MOCK_CONFIG.copy()
-    config["ssl_cipher_list"] = "python_default"
-    config["verify_ssl"] = True
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None

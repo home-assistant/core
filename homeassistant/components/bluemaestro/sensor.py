@@ -1,7 +1,5 @@
 """Support for BlueMaestro sensors."""
 
-from __future__ import annotations
-
 from bluemaestro_ble import (
     SensorDeviceClass as BlueMaestroSensorDeviceClass,
     SensorUpdate,
@@ -126,7 +124,9 @@ async def async_setup_entry(
             BlueMaestroBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class BlueMaestroBluetoothSensorEntity(

@@ -152,9 +152,9 @@ def patch_file_upload(return_value=PATH_FIXTURE, side_effect=None):
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_v1(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     config_url: dict[str, Any],
@@ -223,9 +223,9 @@ async def test_setup_v1(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_v1_ssl_cert(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     config_url: dict[str, Any],
@@ -291,9 +291,9 @@ async def test_setup_v1_ssl_cert(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_v2(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     get_write_api: Any,
@@ -352,9 +352,9 @@ async def test_setup_v2(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_v2_ssl_cert(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     get_write_api: Any,
@@ -510,9 +510,9 @@ async def test_setup_v2_ssl_cert(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_setup_connection_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     api_version: str,
@@ -569,9 +569,9 @@ async def test_setup_connection_error(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_instance(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     get_write_api: Any,
@@ -615,9 +615,9 @@ async def test_single_instance(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     get_write_api: Any,
@@ -719,9 +719,9 @@ async def test_import_connection_error(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_instance_import(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     config_base: dict[str, Any],
     get_write_api: Any,
@@ -783,12 +783,45 @@ async def test_single_instance_import(
             },
             "new_db (newhost)",
         ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_DB_NAME: "home_assistant",
+                CONF_SSL: False,
+                CONF_PATH: None,
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_URL: "https://newhost:9999",
+                CONF_VERIFY_SSL: True,
+                CONF_DB_NAME: "new_db",
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_pass",
+            },
+            {
+                CONF_API_VERSION: DEFAULT_API_VERSION,
+                CONF_HOST: "newhost",
+                CONF_PORT: 9999,
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_pass",
+                CONF_DB_NAME: "new_db",
+                CONF_SSL: True,
+                CONF_PATH: "/",
+                CONF_VERIFY_SSL: True,
+            },
+            "new_db (newhost)",
+        ),
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_v1(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
@@ -851,9 +884,9 @@ async def test_reconfigure_v1(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_v2(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
@@ -912,9 +945,9 @@ async def test_reconfigure_v2(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_v1_ssl_cert(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
@@ -968,9 +1001,9 @@ async def test_reconfigure_v1_ssl_cert(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_v2_ssl_cert(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
@@ -1045,9 +1078,9 @@ async def test_reconfigure_v2_ssl_cert(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_preserves_existing_cert(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
@@ -1147,9 +1180,9 @@ async def test_reconfigure_preserves_existing_cert(
     ],
     indirect=["mock_client"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_connection_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     entry_data: dict[str, Any],
     user_input: dict[str, Any],
