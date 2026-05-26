@@ -6,9 +6,9 @@ import voluptuous as vol
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
-    PLATFORMS,
     async_validate_config_section,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -20,7 +20,24 @@ from tests.common import assert_platform_setup_creates_issue
 
 @pytest.mark.parametrize(
     "platform_domain",
-    PLATFORMS,
+    [
+        Platform.ALARM_CONTROL_PANEL,
+        Platform.BINARY_SENSOR,
+        Platform.BUTTON,
+        Platform.COVER,
+        Platform.EVENT,
+        Platform.FAN,
+        Platform.IMAGE,
+        Platform.LIGHT,
+        Platform.LOCK,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.UPDATE,
+        Platform.VACUUM,
+        Platform.WEATHER,
+    ],
 )
 async def test_platform_config_creates_issue(
     hass: HomeAssistant,

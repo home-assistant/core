@@ -35,25 +35,42 @@ from .trigger_entity import TriggerEntity
 
 DEFAULT_NAME = "Template Device Tracker"
 
+CONF_IN_ZONES = "in_zones"
 CONF_LOCATION_ACCURACY = "location_accuracy"
+
+
+def _validate_in_zones_or_lat_and_lon(obj: dict) -> dict:
+    if CONF_IN_ZONES not in obj:
+        if CONF_LATITUDE not in obj or CONF_LONGITUDE not in obj:
+            raise vol.Invalid(
+                "Either 'in_zones' or both 'latitude' and 'longitude' must be specified"
+            )
+
+    return obj
+
 
 TRACKER_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_LATITUDE): cv.template,
+        vol.Optional(CONF_IN_ZONES): cv.template,
+        vol.Optional(CONF_LATITUDE): cv.template,
         vol.Optional(CONF_LOCATION_ACCURACY): cv.template,
-        vol.Required(CONF_LONGITUDE): cv.template,
+        vol.Optional(CONF_LONGITUDE): cv.template,
     }
 )
 
-TRACKER_YAML_SCHEMA = TRACKER_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(
-        DEVICE_TRACKER_DOMAIN, DEFAULT_NAME
-    ).schema
+
+TRACKER_YAML_SCHEMA = vol.All(
+    _validate_in_zones_or_lat_and_lon,
+    TRACKER_COMMON_SCHEMA.extend(
+        make_template_entity_common_modern_schema(
+            DEVICE_TRACKER_DOMAIN, DEFAULT_NAME
+        ).schema
+    ),
 )
 
-
-TRACKER_CONFIG_ENTRY_SCHEMA = TRACKER_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+TRACKER_CONFIG_ENTRY_SCHEMA = vol.All(
+    _validate_in_zones_or_lat_and_lon,
+    TRACKER_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
 )
 
 
@@ -118,6 +135,11 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
         """Initialize the features."""
 
         self.setup_template(
+            CONF_IN_ZONES,
+            "_attr_in_zones",
+            template_validators.list_of_strings(self, CONF_IN_ZONES),
+        )
+        self.setup_template(
             CONF_LATITUDE,
             "_attr_latitude",
             template_validators.number(self, CONF_LATITUDE, -90.0, 90.0),
@@ -134,11 +156,13 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
             none_on_template_error=False,
         )
 
+        self._location_accuracy_validator = template_validators.number(
+            self, CONF_LOCATION_ACCURACY, 0.0
+        )
+
     def _update_location_accuracy(self, value: float | None) -> None:
         """Update the location accuracy."""
-        self._attr_location_accuracy = (
-            template_validators.number(self, CONF_LOCATION_ACCURACY, 0.0)(value) or 0.0
-        )
+        self._attr_location_accuracy = self._location_accuracy_validator(value) or 0.0
 
 
 class StateTrackerEntity(TemplateEntity, AbstractTemplateTracker):

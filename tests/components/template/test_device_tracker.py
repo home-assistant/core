@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import device_tracker, template
+from homeassistant.components import device_tracker, template, zone
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -57,6 +57,26 @@ TEST_TRACKER_CONFIG = {
 }
 
 
+async def setup_zones(hass: HomeAssistant) -> None:
+    """Set up zone integration."""
+    assert await async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {"name": "Home", "latitude": 32.87336, "longitude": -117.22743},
+                {
+                    "name": "Work",
+                    "latitude": 32.8768333,
+                    "longitude": -117.2273295,
+                    "radius": 250,
+                },
+            ]
+        },
+    )
+    assert len(hass.states.async_entity_ids("zone")) == 2
+
+
 @pytest.fixture
 async def setup_tracker(
     hass: HomeAssistant,
@@ -65,6 +85,7 @@ async def setup_tracker(
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of device_tracker integration."""
+    await setup_zones(hass)
     await setup_entity(hass, TEST_TRACKER, style, 1, config, extra_config=extra_config)
 
 
@@ -77,6 +98,7 @@ async def setup_single_attribute_tracker(
     attribute_template: str,
 ) -> None:
     """Do setup of device_tracker integration testing a single attribute."""
+    await setup_zones(hass)
     await setup_entity(
         hass,
         TEST_TRACKER,
@@ -98,7 +120,7 @@ async def test_setup_config_entry(
     await async_trigger(
         hass,
         TEST_STATE_ENTITY_ID,
-        "single",
+        "anything",
         {},
     )
 
@@ -176,6 +198,56 @@ async def test_syntax_error(hass: HomeAssistant) -> None:
     """Test template latitude and longitude with render error."""
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("config", "attribute"),
+    [({}, "in_zones")],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected_value", "expected_state"),
+    [
+        ("{{ [] }}", [], STATE_NOT_HOME),
+        ("{{ ['zone.home'] }}", ["zone.home"], STATE_HOME),
+        (
+            "{{ ['zone.work'] }}",
+            ["zone.work"],
+            "Work",
+        ),
+        (
+            "{{ ['zone.home', 'zone.work'] }}",
+            ["zone.home", "zone.work"],
+            STATE_HOME,
+        ),
+        (
+            "{{ ['zone.work', 'zone.home'] }}",
+            ["zone.home", "zone.work"],
+            STATE_HOME,
+        ),
+        ("{{ ['zone.something'] }}", [], STATE_NOT_HOME),
+        ("{{ None }}", [], STATE_UNKNOWN),
+        ("{{ 110 }}", [], STATE_UNKNOWN),
+        ("{{ -110 }}", [], STATE_UNKNOWN),
+        ("{{ 'on' }}", [], STATE_UNKNOWN),
+        ("{{ x - 1 }}", [], STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_tracker")
+async def test_in_zones(
+    hass: HomeAssistant,
+    attribute: str,
+    expected_value: float | None,
+    expected_state: str,
+) -> None:
+    """Test template latitude."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_TRACKER.entity_id)
+    assert state.state == expected_state
+    assert state.attributes.get(attribute) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -347,7 +419,6 @@ async def test_entity_picture_and_icon_templates(
 @pytest.mark.usefixtures("setup_tracker")
 async def test_template_updates(hass: HomeAssistant) -> None:
     """Test template device_tracker updates with entity."""
-    await async_setup_component(hass, "homeassistant", {})
     await async_trigger(
         hass, TEST_STATE_ENTITY_ID, "anything", {"latitude": 10.0, "longitude": 10.0}
     )

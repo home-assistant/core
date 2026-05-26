@@ -76,7 +76,7 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
-from .device_tracker import async_create_preview_tracker
+from .device_tracker import CONF_IN_ZONES, async_create_preview_tracker
 from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
     CONF_OFF_ACTION,
@@ -231,8 +231,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
-            vol.Required(CONF_LATITUDE): selector.TemplateSelector(),
-            vol.Required(CONF_LONGITUDE): selector.TemplateSelector(),
+            vol.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
+            vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
+            vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
         }
 
     if domain == Platform.EVENT:
