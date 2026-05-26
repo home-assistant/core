@@ -1,18 +1,23 @@
 # Sandbox v2 — Architecture overview
 
-> **Status:** Complete through Phase 17. The follow-up phases (12–17)
-> closed every Phase 5–10 deferral except the `share_states=True`
-> subscription consumer: the concurrent channel dispatcher (Phase 12),
-> all 32 domain proxies (Phase 13), `data_schema` / service-schema
-> marshalling + `unique_id` propagation + the 200-light perf benchmark
-> + the `async_unload_entry` core hook (Phase 14), the v1-baseline
-> compat sweep (Phase 15), the 807-integration cross-sweep + categorised
-> backlog (Phase 16), and the `ConfigEntry.sandbox` field that lifted
-> the test-level pass rate above the 99.5 % v1-removal threshold
-> (Phase 17). v1 (`../sandbox/`) is kept around for reference until v2
+> **Status:** Complete through Phase 20. The follow-up phases (12–20)
+> closed every Phase 5–10 deferral; what remains of the original
+> `share_states=True` deferral is now an explicit design
+> ([`docs/design-share-states.md`](docs/design-share-states.md))
+> rather than a wired-but-unused config flag. The chain: the concurrent
+> channel dispatcher (Phase 12), all 32 domain proxies (Phase 13),
+> `data_schema` / service-schema marshalling + `unique_id` propagation
+> + the 200-light perf benchmark + the `async_unload_entry` core hook
+> (Phase 14), the v1-baseline compat sweep (Phase 15), the
+> 807-integration cross-sweep + categorised backlog (Phase 16), the
+> `ConfigEntry.sandbox` field that lifted the test-level pass rate
+> above the 99.5 % v1-removal threshold (Phase 17), the docs
+> reconciliation pass (Phase 18), device-registry bridging (Phase 19),
+> and the unwired `share_*` deletion + state-sharing design doc
+> (Phase 20). v1 (`../sandbox/`) is kept around for reference until v2
 > has shipped at least one stable release. See [`plan.md`](plan.md) for
 > the phase-by-phase task list, [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md)
-> for the narrative history of Phases 12–17, and the per-phase
+> for the narrative history of Phases 12+, and the per-phase
 > `STATUS-phase-N.md` files for what each phase shipped, what it
 > deferred, and what it flagged forward.
 
@@ -40,7 +45,7 @@ inside the sandbox.
 | Entity bridge | Bespoke `sandbox/update_state` + `sandbox/entity_command_result` (Option A) | Shared `sandbox_v2/call_service` (Option B) — see [`docs/entity-bridge-decision.md`](docs/entity-bridge-decision.md) |
 | Config flow | Forwarded through host integration | Runs inside the sandbox; main owns the canonical `ConfigEntry` store |
 | Auth | System-user token, full HA scope | Scoped `RefreshToken` (`{"sandbox_v2/", "auth/current_user"}`); dispatcher rejects out-of-scope calls |
-| Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in `share_states` / `share_entity_registry` / `share_areas` per group |
+| Data sharing | Sandbox sees all of main's state | Default locked-down; opt-in state/registry/area sharing per group is a future feature ([`docs/design-share-states.md`](docs/design-share-states.md)) |
 | Store routing | None — sandbox writes to its own tempdir | `RemoteStore` proxies every `Store(...)` to main; main writes to `<config>/.storage/sandbox_v2/<group>/<key>` |
 | Shutdown | Best-effort | Graceful `sandbox_v2/shutdown` round-trip; sandbox unloads entries + dumps `RestoreEntity` state; main persists it for next boot |
 | Custom integrations | Out of scope | First-class — they route to the `custom` group |
@@ -116,11 +121,17 @@ Rule order (first match wins):
 
 Three sandbox groups ship out of the box:
 
-| Group | Hosts | Default sharing |
-|---|---|---|
-| `main` | nothing — anything in `ALWAYS_MAIN` or matching a deny-listed platform runs directly on main, no sandbox process | n/a |
-| `built-in` | every other built-in integration | `share_states`, `share_entity_registry`, `share_areas` all `True` |
-| `custom` | every custom (HACS / user) integration | all sharing `False` (locked down) |
+| Group | Hosts |
+|---|---|
+| `main` | nothing — anything in `ALWAYS_MAIN` or matching a deny-listed platform runs directly on main, no sandbox process |
+| `built-in` | every other built-in integration |
+| `custom` | every custom (HACS / user) integration |
+
+State / entity-registry / area-registry sharing into the sandbox is a
+future feature — Phase 7 added per-group `share_*` defaults but Phase
+20 deleted them because nothing consumed them. See
+[`docs/design-share-states.md`](docs/design-share-states.md) for the
+design that will replace them.
 
 The check uses `Integration.platforms_exists()` so the classifier never
 imports the integration to make the call.
@@ -137,8 +148,7 @@ is:
 python -m hass_client.sandbox_v2 \
     --group <group> \
     --url ws://localhost:8123/api/websocket \
-    --token <scoped sandbox access token> \
-    [--share-states] [--share-entity-registry] [--share-areas]
+    --token <scoped sandbox access token>
 ```
 
 The runtime prints `sandbox_v2:ready` on stdout once its
@@ -360,16 +370,16 @@ sandboxed integration cannot call `light.turn_on`, `auth/sign_path`,
 or any other non-`sandbox_v2/` command — the dispatcher rejects with
 `ERR_UNAUTHORIZED` before the handler runs.
 
-Opt-in data sharing lands as `SandboxGroupConfig` with three flags
-(`share_states`, `share_entity_registry`, `share_areas`). Defaults:
-`built-in` and `main` everything on; `custom` everything off. The
-runtime accepts matching `--share-*` CLI flags into a `SharingConfig`
-dataclass. The sandbox→main subscription consumer that hangs off these
-flags is **not yet implemented** — the locked-down posture is enforced
-trivially today (no subscription code exists). Filtering on main's
-side is owed in the same PR.
+Opt-in data sharing (state stream, entity registry, area registry)
+into the sandbox is a future feature. Phase 7 added unwired
+`SharingConfig` / `SandboxGroupConfig` defaults; Phase 20 deleted them
+because no consumer existed and replaced the surface with a design doc
+([`docs/design-share-states.md`](docs/design-share-states.md)). The
+locked-down posture stays — defaults are everything-off; the opt-in
+subscription consumer lands behind whatever config surface the design
+doc settles on.
 
-The full decision rationale lives in
+The full decision rationale for the auth side lives in
 [`docs/auth-scoping-decision.md`](docs/auth-scoping-decision.md).
 
 ## Store routing
@@ -444,10 +454,14 @@ v2 itself stays reviewable. The closed-since-Phase-11 items are listed
 in [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) with the causal chain to
 the phase that resolved each one.
 
-- **`share_states=True` subscription consumer + main-side filtering.**
-  The config flag is wired; the consumer that opens a subscription
-  back to main and the filtering on main's emit path are owed in the
-  same PR.
+- **State-sharing subscription consumer + main-side filtering.**
+  Phase 20 deleted the unwired `SharingConfig` / `SandboxGroupConfig`
+  surface and replaced it with a design
+  ([`docs/design-share-states.md`](docs/design-share-states.md))
+  covering the entity_id alignment constraint, the
+  `share/subscribe_*` protocol, the main-side filter, and the
+  remaining open questions. The actual consumer + main-side handlers
+  are owed in a future phase against that design.
 - **Non-idempotent service handlers** (`ai_task` and friends).
   Punted to `ALWAYS_MAIN` for v2; a v3 spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
@@ -473,6 +487,27 @@ the phase that resolved each one.
   17b: a clock-pinning fixture autouse on the compat plugin (~30
   LOC, sketched in `BACKLOG.md`) would also mask the `created_at`
   drift driving ~70 of the 112 residual failures.
+- **Cross-sandbox in-process dependencies (ESPHome serial / BLE
+  proxy).** Some integration pairs are coupled in-process: an ESPHome
+  device exposing a serial-over-TCP proxy that a downstream
+  integration (ZHA, zwave_js, deCONZ, …) connects to, or ESPHome BLE
+  proxy advertisements being forwarded to the `bluetooth`
+  integration. Today these only work if both integrations end up in
+  the same sandbox group — the setup-time coordination (proxy
+  enumeration, port handoff, BLE advert forwarding) happens via
+  Python calls/events the bridge doesn't cross. The current
+  classifier puts all built-in integrations into one `built-in`
+  sandbox, so the pure-built-in case is fine; the trip wire is a
+  built-in integration paired with a custom variant of the consumer,
+  which would split across the `built-in` / `custom` groups. Fix
+  shape: either a "co-locate with X" classifier hint for known
+  coupled pairs, or extend the Phase 6 event mirror beyond
+  `<owned_domain>_*` to cover the coordination hooks. IR / RF
+  (Broadlink-style command remotes) are simpler — one-way command
+  flows with no setup-time enumeration or bidirectional stream — but
+  still need dedicated cross-sandbox support to route the consumer's
+  send-call to the producer. Worth a small spec before any real split
+  trips it.
 
 ## Where to look in the code
 

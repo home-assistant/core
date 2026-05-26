@@ -260,10 +260,13 @@ These are the items that survived Phase 17 — see
 same list with deeper context, and [`../BACKLOG.md`](../BACKLOG.md)
 for the per-failure-category remediation table.
 
-- **`share_states=True` subscription consumer + main-side filtering.**
-  The config knob is wired; the consumer that opens a subscription
-  back to main and the filtering on main's emit path are owed in the
-  same PR. Carried untouched from Phase 7.
+- **State-sharing subscription consumer + main-side filtering.**
+  Phase 20 deleted the unwired `SharingConfig` / `SandboxGroupConfig`
+  surface and replaced it with a design doc
+  ([`design-share-states.md`](design-share-states.md)) covering the
+  entity_id alignment constraint, the `share/subscribe_*` protocol,
+  the main-side filter, and the open questions. The actual consumer
+  is owed in a future phase against that design.
 - **v1 removal.** The numeric gate (Phase 11) is now satisfied —
   Phase 17 cleared the 99.5 % threshold. Remaining condition is "v2
   has shipped at least one stable release," a release-process step
@@ -284,6 +287,22 @@ for the per-failure-category remediation table.
   `ALWAYS_MAIN` punt for v2; v3 spec on service-handler-level
   interception or sandbox-aware integration hooks. See the Phase 1
   spike doc.
+- **Cross-sandbox in-process dependencies (ESPHome serial / BLE
+  proxy).** Some integration pairs are coupled in-process — e.g. an
+  ESPHome device exposing a serial proxy that another integration
+  (ZHA, zwave_js, deCONZ, …) connects to. Today this only works if
+  both integrations end up in the same sandbox group, because the
+  setup-time coordination happens via Python calls/events the bridge
+  doesn't forward. The classifier routes by built-in / custom / system,
+  so a built-in ESPHome paired with a custom consumer would split
+  across sandboxes and break. Fix shapes: (a) a "co-locate with X"
+  classifier hint for known coupled pairs, or (b) extend the Phase 6
+  event mirror beyond `<owned_domain>_*` to cover the coordination
+  hooks. BLE proxy has the same shape. IR / RF (Broadlink-style) are
+  simpler — one-way command flows with no setup-time enumeration —
+  but still need dedicated cross-sandbox support to route the
+  consumer's send-call to the producer. Worth a small spec before any
+  cross-sandbox split actually trips this.
 
 For per-failure remediation (residual `test-only` failures, the rare
 `unknown` bucket entries, environmental rows) see

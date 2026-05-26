@@ -14,12 +14,15 @@ v1** while working in this directory.
 - [`OVERVIEW.md`](OVERVIEW.md) — full architecture: routing,
   lifecycle, flow forwarding, entity bridge, service/event mirror,
   scoped auth, store routing, shutdown, test infra.
-- [`plan.md`](plan.md) — phase-by-phase task list. Phases 0–17 are
+- [`plan.md`](plan.md) — phase-by-phase task list. Phases 0–20 are
   all ✅ COMPLETE; the follow-up phases (12 concurrent dispatcher,
   13 remaining domain proxies, 14 schema/unique_id/unload-hook/perf,
   15 v1-baseline sweep, 16 cross-integration sweep + backlog,
-  17 `ConfigEntry.sandbox` field) closed every Phase 5–10 deferral
-  except the `share_states=True` subscription consumer. See
+  17 `ConfigEntry.sandbox` field, 19 device-registry bridging,
+  20 drop unwired `share_*` + design doc) closed every Phase 5–10
+  deferral; the state-sharing consumer is now an explicit design
+  ([`docs/design-share-states.md`](docs/design-share-states.md))
+  rather than dead-flag carrying. See
   [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) for the narrative.
 - [`STATUS-phase-N.md`](.) — the authoritative landing notes for each
   phase. **Always check the latest STATUS file before assuming
@@ -34,6 +37,11 @@ v1** while working in this directory.
   why `scopes` lives on `RefreshToken` itself, the
   `_scope_allows` grammar, and what's deferred until the sandbox
   websocket back to main is wired up.
+- [`docs/design-share-states.md`](docs/design-share-states.md) —
+  design for the post-v2 state-sharing consumer that replaces the
+  Phase 7 `share_*` flags Phase 20 deleted. Covers entity_id
+  alignment, the `share/subscribe_*` protocol, main-side filtering,
+  and the open questions.
 
 ## Repository layout
 
@@ -83,10 +91,14 @@ The Phase 5–10 list of deferred items is mostly closed. See
 [`docs/FOLLOWUPS.md`](docs/FOLLOWUPS.md) for the narrative chain that
 took the codebase from Phase 11 to Phase 17. What's still open:
 
-- **`share_states=True` subscription consumer + main-side
-  filtering.** The config knob is wired; the consumer that opens a
-  subscription back to main and the filtering on main's emit path
-  are owed in the same PR.
+- **State-sharing subscription consumer + main-side filtering.**
+  Phase 20 deleted the unwired `SharingConfig` /
+  `SandboxGroupConfig` surface and replaced it with a design
+  ([`docs/design-share-states.md`](docs/design-share-states.md))
+  covering the entity_id alignment constraint, the
+  `share/subscribe_*` protocol, the main-side filter, and the
+  remaining open questions. The actual consumer + main-side
+  handlers are owed in a future phase against that design.
 - **v1 removal.** The numeric gate (Phase 11) is **now satisfied** —
   Phase 17 cleared the 99.5 % v1-removal threshold (99.67 % full
   sweep, 99.97 % v1 baseline). The remaining condition is "v2 has
@@ -109,6 +121,27 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   `ALWAYS_MAIN` punt for v2; v3 spec on service-handler-level
   interception or sandbox-aware integration hooks is the long-term
   fix. See the Phase 1 spike doc.
+- **Cross-sandbox in-process dependencies (ESPHome serial / BLE
+  proxy).** Some integration pairs are coupled in-process — e.g. an
+  ESPHome device acting as a serial proxy that another integration
+  (ZHA, zwave_js, deCONZ, …) connects to. Today this only works if
+  both integrations land in the *same* sandbox group, because the
+  setup-time coordination (proxy enumeration, port lookup) happens
+  via Python calls/events that the bridge doesn't cross. The classifier
+  routes by built-in / custom / system, so a built-in ESPHome + custom
+  consumer would split across sandboxes and break. The fix shape is
+  either (a) a "co-locate with X" hint that overrides classifier
+  output for known coupled pairs, or (b) routing the coordination
+  events through the service/event mirror Phase 6 built — currently
+  the mirror only forwards events whose name starts with
+  `<owned_domain>_`, which catches `esphome_*` but not the consuming
+  side's discovery hooks. BLE proxy has the same shape. IR / RF (e.g.
+  Broadlink) are simpler — they're one-way command flows, so a
+  consumer just needs to *send* commands; no setup-time enumeration
+  or bidirectional stream — but still need dedicated cross-sandbox
+  support since the consumer's send-call has to reach the producer.
+  Worth a small spec before any cross-sandbox split actually trips
+  this.
 
 ## Tests
 
