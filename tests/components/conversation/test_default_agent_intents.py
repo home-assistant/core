@@ -88,7 +88,7 @@ async def test_cover_set_position(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Opening"
     assert len(calls) == 1
     call = calls[0]
@@ -102,7 +102,7 @@ async def test_cover_set_position(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Closing"
     assert len(calls) == 1
     call = calls[0]
@@ -116,7 +116,7 @@ async def test_cover_set_position(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Position set"
     assert len(calls) == 1
     call = calls[0]
@@ -144,7 +144,7 @@ async def test_cover_device_class(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Opening the garage"
     assert len(calls) == 1
     call = calls[0]
@@ -168,7 +168,7 @@ async def test_valve_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Opening"
     assert len(calls) == 1
     call = calls[0]
@@ -182,7 +182,7 @@ async def test_valve_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Closing"
     assert len(calls) == 1
     call = calls[0]
@@ -196,7 +196,7 @@ async def test_valve_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Position set"
     assert len(calls) == 1
     call = calls[0]
@@ -229,7 +229,7 @@ async def test_vacuum_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Started"
     assert len(calls) == 1
     call = calls[0]
@@ -243,7 +243,7 @@ async def test_vacuum_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Returning"
     assert len(calls) == 1
     call = calls[0]
@@ -275,7 +275,7 @@ async def test_media_player_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Paused"
     assert len(calls) == 1
     call = calls[0]
@@ -294,7 +294,7 @@ async def test_media_player_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Resumed"
     assert len(calls) == 1
     call = calls[0]
@@ -313,7 +313,7 @@ async def test_media_player_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Playing next"
     assert len(calls) == 1
     call = calls[0]
@@ -329,7 +329,7 @@ async def test_media_player_intents(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "Volume set"
     assert len(calls) == 1
     call = calls[0]
@@ -399,7 +399,7 @@ async def test_turn_floor_lights_on_off(
     )
 
     assert len(on_calls) == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert {s.entity_id for s in result.response.matched_states} == {
         kitchen_light.entity_id,
         living_room_light.entity_id,
@@ -411,7 +411,7 @@ async def test_turn_floor_lights_on_off(
     )
 
     assert len(on_calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert {s.entity_id for s in result.response.matched_states} == {
         bedroom_light.entity_id
     }
@@ -422,7 +422,7 @@ async def test_turn_floor_lights_on_off(
     )
 
     assert len(off_calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert {s.entity_id for s in result.response.matched_states} == {
         bedroom_light.entity_id
     }
@@ -474,7 +474,7 @@ async def test_date_time(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "September 17th, 2013"
 
     result = await conversation.async_converse(
@@ -483,5 +483,5 @@ async def test_date_time(
     await hass.async_block_till_done()
 
     response = result.response
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech["plain"]["speech"] == "1:02 AM"

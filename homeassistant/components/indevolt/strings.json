@@ -12,10 +12,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "discovery_confirm": {
-        "description": "Do you want to add {model} ({host}) to Home Assistant?",
-        "title": "Discovered Indevolt {model}"
-      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -35,6 +31,10 @@
         },
         "description": "Enter the connection details for your Indevolt device.",
         "title": "Connect to Indevolt device"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add {model} ({host}) to Home Assistant?",
+        "title": "Discovered Indevolt {model}"
       }
     }
   },
@@ -295,6 +295,9 @@
       "main_current": {
         "name": "Main current"
       },
+      "main_mos_temperature": {
+        "name": "Main MOS temperature"
+      },
       "main_serial_number": {
         "name": "Main serial number"
       },
@@ -373,6 +376,9 @@
     }
   },
   "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Device config retrieval failed: {error}"
+    },
     "energy_mode_change_unavailable_outdoor_portable": {
       "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
     },
@@ -399,6 +405,9 @@
     },
     "soc_below_minimum": {
       "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    },
+    "update_failed": {
+      "message": "Device update failed: {error}"
     },
     "write_error": {
       "message": "Cannot update value for {name}"
