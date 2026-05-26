@@ -34,24 +34,6 @@ TANK_MODULE_PATHS = (
 )
 
 
-def _coerce_to_bool(value: Any) -> bool | None:
-    """Coerce a coordinator value to bool.
-
-    The Vistapool API returns some numeric fields as strings (for example
-    `"0"` / `"1"`), so a plain `bool(value)` would treat the string `"0"` as
-    truthy. Strings are normalized via `int` first; anything unparsable is
-    treated as missing data and reported as unknown.
-    """
-    if value is None:
-        return None
-    if isinstance(value, str):
-        try:
-            value = int(value)
-        except ValueError:
-            return None
-    return bool(value)
-
-
 @dataclass(frozen=True, kw_only=True)
 class VistapoolBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Vistapool binary sensor entity."""
@@ -196,16 +178,12 @@ async def async_setup_entry(
                     if isinstance(description.exists_path, str)
                     else description.exists_path
                 )
-                if not all(
-                    _coerce_to_bool(coordinator.get_value(path)) for path in required
-                ):
+                if not all(coordinator.get_value(path) for path in required):
                     continue
             entities.append(VistapoolBinarySensor(coordinator, description))
 
-        if _coerce_to_bool(coordinator.get_value(PATH_HASHIDRO)):
-            is_electrolysis = _coerce_to_bool(
-                coordinator.get_value("hidro.is_electrolysis")
-            )
+        if coordinator.get_value(PATH_HASHIDRO):
+            is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
             entities.append(
                 VistapoolBinarySensor(
                     coordinator,
@@ -221,7 +199,7 @@ async def async_setup_entry(
             )
 
         if any(
-            _coerce_to_bool(coordinator.get_value(path))
+            coordinator.get_value(path)
             for path in (PATH_HASCD, PATH_HASCL, PATH_HASPH, PATH_HASRX)
         ):
             entities.append(VistapoolDosingTankBinarySensor(coordinator))
@@ -247,9 +225,10 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return _coerce_to_bool(
-            self.coordinator.get_value(self.entity_description.value_path)
-        )
+        value = self.coordinator.get_value(self.entity_description.value_path)
+        if value is None:
+            return None
+        return value in (True, "1")
 
 
 class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
@@ -266,11 +245,11 @@ class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if any tank is low, or None if no tank data is available."""
-        values: list[bool] = []
+        values: list[Any] = []
         for path in TANK_MODULE_PATHS:
-            coerced = _coerce_to_bool(self.coordinator.get_value(path))
-            if coerced is not None:
-                values.append(coerced)
+            value = self.coordinator.get_value(path)
+            if value is not None:
+                values.append(value)
         if not values:
             return None
-        return any(values)
+        return any(value in (True, "1") for value in values)
