@@ -36,7 +36,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResult
 
     def _prepare_result_json(self, result: _FlowResultT) -> dict[str, Any]:
         """Convert result to JSON serializable dict."""
-        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
             assert "result" not in result
             return {
                 key: val

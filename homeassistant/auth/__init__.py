@@ -134,7 +134,7 @@ class AuthManagerFlowManager(
         """
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != FlowResultType.CREATE_ENTRY:
+        if result["type"] is not FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result

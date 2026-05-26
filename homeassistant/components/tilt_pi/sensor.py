@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -23,7 +23,6 @@ from .entity import TiltEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
-ATTR_TEMPERATURE = "temperature"
 ATTR_GRAVITY = "gravity"
 
 
