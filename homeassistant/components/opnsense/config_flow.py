@@ -199,30 +199,22 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.validate()
             interfaces_resp = await client.get_interfaces()
         except OPNsenseInvalidURL:
-            return self._abort_import(reason="invalid_url", url=import_data[CONF_URL])
+            return self._abort_import(reason="invalid_url")
         except OPNsenseInvalidAuth:
-            return self._abort_import(reason="invalid_auth", url=import_data[CONF_URL])
+            return self._abort_import(reason="invalid_auth")
         except OPNsensePrivilegeMissing:
-            return self._abort_import(
-                reason="privilege_missing", url=import_data[CONF_URL]
-            )
+            return self._abort_import(reason="privilege_missing")
         except OPNsenseSSLError:
-            return self._abort_import(reason="ssl_error", url=import_data[CONF_URL])
+            return self._abort_import(reason="ssl_error")
         except OPNsenseConnectionError, OPNsenseTimeoutError:
-            return self._abort_import(
-                reason="cannot_connect", url=import_data[CONF_URL]
-            )
+            return self._abort_import(reason="cannot_connect")
         except OPNsenseUnknownFirmware:
-            return self._abort_import(
-                reason="unknown_version", url=import_data[CONF_URL]
-            )
+            return self._abort_import(reason="unknown_version")
         except OPNsenseBelowMinFirmware:
-            return self._abort_import(
-                reason="invalid_version", url=import_data[CONF_URL]
-            )
+            return self._abort_import(reason="invalid_version")
         except Exception:  # Allowed in config flows
             _LOGGER.exception("Unexpected exception during import")
-            return self._abort_import(reason="unknown", url=import_data[CONF_URL])
+            return self._abort_import(reason="unknown")
 
         unique_id = await client.get_device_unique_id()
         if unique_id:
@@ -296,7 +288,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             title=verified_data[CONF_URL], data=verified_data
         )
 
-    def _abort_import(self, reason: str, url: str) -> ConfigFlowResult:
+    def _abort_import(self, reason: str) -> ConfigFlowResult:
         """Create an issue for import errors and abort the import."""
         async_create_issue(
             self.hass,
