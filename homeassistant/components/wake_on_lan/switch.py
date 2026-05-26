@@ -143,7 +143,7 @@ class WolSwitch(SwitchEntity):
             self.schedule_update_ha_state()
 
     def update(self) -> None:
-        """Check if device is on and update the state. Only called if assumed state is false."""
+        """Check if device is on and update the state."""
         ping_cmd = [
             "ping",
             "-c",

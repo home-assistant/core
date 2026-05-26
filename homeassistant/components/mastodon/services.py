@@ -19,7 +19,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera, image
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_NAME
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -49,7 +49,6 @@ from .const import (
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
-    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,

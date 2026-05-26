@@ -317,7 +317,7 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
 async def test_emergency_ssl_certificate_when_invalid(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test http can startup with an emergency self signed cert when the current one is broken."""
+    """Test http starts with emergency self-signed cert on invalid cert."""
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
@@ -338,8 +338,9 @@ async def test_emergency_ssl_certificate_when_invalid(
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
-        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
-        in caplog.text
+        "Home Assistant is running in recovery mode with an emergency"
+        " self signed ssl certificate because the configured SSL"
+        " certificate was not usable" in caplog.text
     )
 
     assert hass.http.site is not None
@@ -365,7 +366,7 @@ async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
 async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
+    """Test http falls back to no ssl when emergency cert creation fails.
 
     Ensure we can still start of we cannot determine the external url as well.
     """
@@ -392,8 +393,9 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     assert len(mock_get_url.mock_calls) == 1
     assert (
-        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
-        in caplog.text
+        "Home Assistant is running in recovery mode with an emergency"
+        " self signed ssl certificate because the configured SSL"
+        " certificate was not usable" in caplog.text
     )
 
     assert hass.http.site is not None
@@ -402,7 +404,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 async def test_invalid_ssl_and_cannot_create_emergency_cert(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken."""
+    """Test http falls back to no ssl on emergency cert creation failure."""
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
@@ -433,7 +435,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
 async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test http falls back to no ssl when an emergency cert cannot be created when the configured one is broken.
+    """Test no-ssl fallback with peer cert when emergency cert fails.
 
     When there is a peer cert verification and we cannot create
     an emergency cert (probably will never happen since this means
