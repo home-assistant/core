@@ -92,6 +92,8 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
 )
 async def test_coordinator_update_failure_marks_unavailable(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     exception_type: type[DucoError],
@@ -104,7 +106,12 @@ async def test_coordinator_update_failure_marks_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.office_co2")
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_2_co2"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -119,6 +126,8 @@ async def test_coordinator_update_failure_marks_unavailable(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_lan_info_failures_keep_node_entities_available(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
@@ -130,11 +139,21 @@ async def test_lan_info_failures_keep_node_entities_available(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.office_co2")
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_2_co2"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "405"
 
-    state = hass.states.get("sensor.living")
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_1_rssi_wifi"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "-60"
 
