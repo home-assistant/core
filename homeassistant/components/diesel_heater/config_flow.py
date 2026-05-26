@@ -160,7 +160,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Accept device if any method matches
             if has_service_uuid or is_heater_name or has_heater_manufacturer:
                 self._discovered_devices[address] = discovery_info
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Found potential diesel heater: %s (%s)", address, device_name
                 )
 

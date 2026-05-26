@@ -27,7 +27,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import (
     ABBA_NOTIFY_UUID,
@@ -39,8 +38,6 @@ from .const import (
     DEFAULT_PIN,
     DEFAULT_TEMPERATURE_OFFSET,
     DOMAIN,
-    MAX_HEATER_OFFSET,
-    MIN_HEATER_OFFSET,
     PROTOCOL_HEADER_AA77,
     PROTOCOL_HEADER_ABBA,
     PROTOCOL_HEADER_CBFF,
@@ -693,13 +690,6 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if success:
             await self.async_request_refresh()
 
-    async def async_set_level(self, level: int) -> None:
-        """Set heater level (1-10)."""
-        level = max(1, min(10, level))
-        success = await self._send_command(4, level)
-        if success:
-            await self.async_request_refresh()
-
     async def async_set_temperature(self, temperature: int) -> None:
         """Set target temperature (8-36 C)."""
         temperature = max(8, min(36, temperature))
@@ -713,120 +703,6 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         success = await self._send_command(4, command_temp)
         if success:
             await self.async_request_refresh()
-
-    async def async_set_mode(self, mode: int) -> None:
-        """Set running mode (0=Manual, 1=Level, 2=Temperature, 3=Ventilation)."""
-        # Ventilation mode (ABBA only)
-        if mode == 3:
-            if self._protocol_mode != 5:
-                self._logger.warning(
-                    "Ventilation mode is only available for ABBA devices"
-                )
-                return
-            running_step = self.data.get("running_step", 0)
-            if running_step not in (0, 6):
-                self._logger.warning(
-                    "Ventilation mode only available when heater is off (current step: %d)",
-                    running_step,
-                )
-                return
-            success = await self._send_command(101, 0)
-            if success:
-                await self.async_request_refresh()
-            return
-
-        mode = max(0, min(2, mode))
-        success = await self._send_command(2, mode)
-        if success:
-            await self.async_request_refresh()
-
-    async def async_set_auto_start_stop(self, enabled: bool) -> None:
-        """Set Automatic Start/Stop mode (cmd 18)."""
-        success = await self._send_command(18, 1 if enabled else 0)
-        if success:
-            await self.async_request_refresh()
-
-    async def async_sync_time(self) -> None:
-        """Sync heater time with Home Assistant time (cmd 10)."""
-        now = dt_util.now()
-        time_value = 60 * now.hour + now.minute
-        await self._send_command(10, time_value)
-
-    async def async_set_heater_offset(self, offset: int) -> None:
-        """Set temperature offset on the heater (cmd 20)."""
-        offset = max(MIN_HEATER_OFFSET, min(MAX_HEATER_OFFSET, offset))
-        success = await self._send_command(20, offset)
-        if success:
-            self.data["heater_offset"] = offset
-            await self.async_request_refresh()
-
-    async def async_set_language(self, language: int) -> None:
-        """Set voice notification language (cmd 14)."""
-        success = await self._send_command(14, language)
-        if success:
-            self.data["language"] = language
-            await self.async_request_refresh()
-
-    async def async_set_temp_unit(self, use_fahrenheit: bool) -> None:
-        """Set temperature unit (cmd 15)."""
-        value = 1 if use_fahrenheit else 0
-        success = await self._send_command(15, value)
-        if success:
-            self.data["temp_unit"] = value
-            self._heater_uses_fahrenheit = use_fahrenheit
-            await self.async_request_refresh()
-
-    async def async_set_altitude_unit(self, use_feet: bool) -> None:
-        """Set altitude unit (cmd 19)."""
-        value = 1 if use_feet else 0
-        success = await self._send_command(19, value)
-        if success:
-            self.data["altitude_unit"] = value
-            await self.async_request_refresh()
-
-    async def async_set_high_altitude(self, enabled: bool) -> None:
-        """Toggle high altitude mode (ABBA-only, cmd 99)."""
-        if not self._is_abba_device:
-            self._logger.warning(
-                "High altitude mode is only available for ABBA/HeaterCC devices"
-            )
-            return
-        success = await self._send_command(99, 0)
-        if success:
-            self.data["high_altitude"] = 1 if enabled else 0
-            await self.async_request_refresh()
-
-    async def async_set_tank_volume(self, volume_index: int) -> None:
-        """Set tank volume by index (cmd 16)."""
-        volume_index = max(0, min(10, volume_index))
-        success = await self._send_command(16, volume_index)
-        if success:
-            self.data["tank_volume"] = volume_index
-            await self.async_request_refresh()
-
-    async def async_set_pump_type(self, pump_type: int) -> None:
-        """Set oil pump type (cmd 17)."""
-        pump_type = max(0, min(3, pump_type))
-        success = await self._send_command(17, pump_type)
-        if success:
-            self.data["pump_type"] = pump_type
-            await self.async_request_refresh()
-
-    async def async_set_backlight(self, level: int) -> None:
-        """Set display backlight brightness (cmd 21)."""
-        level = max(0, min(100, level))
-        success = await self._send_command(21, level)
-        if success:
-            self.data["backlight"] = level
-            await self.async_request_refresh()
-
-    async def async_send_raw_command(self, command: int, argument: int) -> bool:
-        """Send a raw command to the heater for debugging purposes."""
-        self._logger.debug("Sending raw command: cmd=%d, arg=%d", command, argument)
-        success = await self._send_command(command, argument)
-        if success:
-            await self.async_request_refresh()
-        return success
 
     async def async_shutdown(self) -> None:
         """Shutdown coordinator."""
