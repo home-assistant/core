@@ -19,15 +19,3 @@ async def setup_integration(
     await hass.async_block_till_done()
 
     mock_openai_client.chat.completions.create.reset_mock()
-
-
-def get_subentry_id(mock_config_entry: MockConfigEntry, subentry_type: str) -> str:
-    """Get the subentry ID for a given subentry type."""
-    ids = [
-        subentry_id
-        for subentry_id, subentry in mock_config_entry.subentries.items()
-        if subentry.subentry_type == subentry_type
-    ]
-    if not ids:
-        raise ValueError(f"No subentry found for type {subentry_type}")
-    return ids[0]
