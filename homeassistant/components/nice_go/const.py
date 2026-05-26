@@ -8,8 +8,6 @@ DOMAIN = "nice_go"
 
 # Configuration
 CONF_SITE_ID = "site_id"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_DEVICE_ID = "device_id"
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_REFRESH_TOKEN_CREATION_TIME = "refresh_token_creation_time"
 

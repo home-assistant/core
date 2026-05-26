@@ -5,6 +5,3 @@ ATTR_URL = "color_extract_url"
 
 DOMAIN = "color_extractor"
 DEFAULT_NAME = "Color extractor"
-
-# pylint: disable-next=home-assistant-duplicate-const
-SERVICE_TURN_ON = "turn_on"

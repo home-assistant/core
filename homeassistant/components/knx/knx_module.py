@@ -258,7 +258,7 @@ class KNXModule:
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
-        self.connected = state == XknxConnectionState.CONNECTED
+        self.connected = state is XknxConnectionState.CONNECTED
         for device in self.xknx.devices:
             device.after_update()
 

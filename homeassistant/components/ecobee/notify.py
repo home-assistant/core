@@ -24,7 +24,6 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     """Implement the notification entity for the Ecobee thermostat."""
 
     _attr_name = None
-    _attr_has_entity_name = True
 
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""
