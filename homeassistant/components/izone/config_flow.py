@@ -134,14 +134,6 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     _user_discovered_controllers: list[pizone.Controller] | None = None
     _discovered_controller_ip: str | None = None
 
-    @callback
-    def _async_is_ignored_uid(self, uid: str) -> bool:
-        """Return True when *uid* has an ignore entry."""
-        return any(
-            entry.unique_id == uid and entry.source == config_entries.SOURCE_IGNORE
-            for entry in self.hass.config_entries.async_entries(IZONE)
-        )
-
     def is_matching(self, other_flow: Self) -> bool:
         """Match in-progress flows for the same controller UID."""
         self_uid = _flow_uid_for_matching(self)
@@ -285,9 +277,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
 
         device_uid = model.split(" ", 1)[1]
 
-        if device_uid in _yaml_excluded_uids(self.hass) or self._async_is_ignored_uid(
-            device_uid
-        ):
+        if device_uid in _yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
         if self.hass.config_entries.async_entry_for_domain_unique_id(IZONE, device_uid):
@@ -330,7 +320,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         host = discovery_info.get(CONF_HOST)
         if not isinstance(uid, str) or not isinstance(host, str):
             return self.async_abort(reason="no_devices_found")
-        if uid in _yaml_excluded_uids(self.hass) or self._async_is_ignored_uid(uid):
+        if uid in _yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(uid)
