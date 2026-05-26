@@ -10,11 +10,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "call_in_progress": {
-        "name": "Call in progress"
-      }
-    },
     "select": {
       "pipeline": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
