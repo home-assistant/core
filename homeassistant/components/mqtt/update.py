@@ -1,7 +1,7 @@
 """Configure update platform in a device through MQTT topic."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -100,16 +100,19 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
 
+    @override
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         return self._attr_entity_picture
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
@@ -229,6 +232,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         if isinstance(latest_version, str) and latest_version != "":
             self._attr_latest_version = latest_version
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -252,10 +256,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             {"_attr_latest_version"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -263,6 +269,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         payload = self._config[CONF_PAYLOAD_INSTALL]
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
+    @override
     @property
     def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""

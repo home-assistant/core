@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -148,11 +148,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _topic: dict[str, str | None]
     _optimistic: bool
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -304,6 +306,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             with suppress(KeyError):
                 self._attr_effect = cast(str, values["effect"])
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -324,6 +327,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -382,6 +386,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             and color_mode in self.supported_color_modes
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
@@ -504,6 +509,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

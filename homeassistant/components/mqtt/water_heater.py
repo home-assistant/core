@@ -1,7 +1,7 @@
 """Support for MQTT water heater devices."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -188,11 +188,13 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_operation_list = config[CONF_MODE_LIST]
@@ -282,6 +284,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
                 assert isinstance(payload, str)
             self._attr_current_operation = payload
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -294,6 +297,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         # add subscriptions for MqttTemperatureControlEntity
         self.prepare_subscribe_topics()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         operation_mode: str | None
@@ -301,6 +305,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             await self.async_set_operation_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](operation_mode)
@@ -310,6 +315,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if CONF_POWER_COMMAND_TOPIC in self._config:
@@ -318,6 +324,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             )
             await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_POWER_COMMAND_TOPIC in self._config:

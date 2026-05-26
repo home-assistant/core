@@ -11,7 +11,7 @@ import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
 from cryptography.hazmat.primitives.serialization import (
@@ -3986,6 +3986,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
 
+    @override
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -3994,6 +3995,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {CONF_DEVICE: MQTTSubentryFlowHandler}
 
+    @override
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -4117,6 +4119,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 translation_placeholders={"addon": addon_manager.addon_name},
             )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -4291,6 +4294,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         return await self.async_step_broker()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

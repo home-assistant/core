@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -199,6 +200,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         None
     )
 
+    @override
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
         last_state: State | None
@@ -236,6 +238,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 remain_seconds,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove expire triggers."""
         if self._expiration_trigger:
@@ -245,11 +248,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._expired = False
         await MqttEntity.async_will_remove_from_hass(self)
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -369,6 +374,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
             self._update_last_reset(msg)
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -378,6 +384,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             {"_attr_native_value", "_attr_last_reset", "_expired"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -389,6 +396,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._expired = True
         self.async_write_ha_state()
 
+    @override
     @property
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""

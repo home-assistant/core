@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -162,11 +162,13 @@ class MqttValve(MqttEntity, ValveEntity):
     _range: tuple[int, int]
     _tilt_optimistic: bool
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """Set up valve from config."""
         self._attr_reports_position = config[CONF_REPORTS_POSITION]
@@ -334,6 +336,7 @@ class MqttValve(MqttEntity, ValveEntity):
         else:
             self._process_binary_valve_update(msg, state_payload)
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -348,10 +351,12 @@ class MqttValve(MqttEntity, ValveEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_open_valve(self) -> None:
         """Move the valve up.
 
@@ -366,6 +371,7 @@ class MqttValve(MqttEntity, ValveEntity):
             self._update_state(ValveState.OPEN)
             self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self) -> None:
         """Move the valve down.
 
@@ -380,6 +386,7 @@ class MqttValve(MqttEntity, ValveEntity):
             self._update_state(ValveState.CLOSED)
             self.async_write_ha_state()
 
+    @override
     async def async_stop_valve(self) -> None:
         """Stop valve positioning.
 
@@ -388,6 +395,7 @@ class MqttValve(MqttEntity, ValveEntity):
         payload = self._command_template(self._config[CONF_PAYLOAD_STOP])
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         percentage_position = position

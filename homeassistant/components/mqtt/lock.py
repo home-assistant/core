@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -138,11 +138,13 @@ class MqttLock(MqttEntity, LockEntity):
     ]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
+    @override
     @staticmethod
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         if (
@@ -198,6 +200,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
             self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -214,10 +217,12 @@ class MqttLock(MqttEntity, LockEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.
 
@@ -233,6 +238,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._attr_is_locked = True
             self.async_write_ha_state()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device.
 
@@ -248,6 +254,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._attr_is_locked = False
             self.async_write_ha_state()
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch.
 

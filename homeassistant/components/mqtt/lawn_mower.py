@@ -3,6 +3,7 @@
 from collections.abc import Callable
 import contextlib
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -102,11 +103,13 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _command_topics: dict[str, str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_assumed_state = config[CONF_OPTIMISTIC]
@@ -165,6 +168,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             )
             return
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -175,6 +179,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -193,14 +198,17 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             self.async_write_ha_state()
         await self.async_publish_with_config(self._command_topics[option], payload)
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
         await self._async_operate("start_mowing", LawnMowerActivity.MOWING)
 
+    @override
     async def async_dock(self) -> None:
         """Dock the mower."""
         await self._async_operate("dock", LawnMowerActivity.DOCKED)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self._async_operate("pause", LawnMowerActivity.PAUSED)

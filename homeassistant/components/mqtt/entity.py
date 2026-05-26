@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
 import voluptuous as vol
 
@@ -488,6 +488,7 @@ class MqttAttributesMixin(Entity):
             self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
         self._attributes_config = config
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
@@ -549,6 +550,7 @@ class MqttAttributesMixin(Entity):
         """(Re)Subscribe to topics."""
         async_subscribe_topics_internal(self.hass, self._attributes_sub_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._attributes_sub_state = async_unsubscribe_topics(
@@ -596,6 +598,7 @@ class MqttAvailabilityMixin(Entity):
         self._available_latest: bool = False
         self._availability_setup_from_config(config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
@@ -698,12 +701,14 @@ class MqttAvailabilityMixin(Entity):
         if not self.hass.is_stopping:
             self.async_write_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._availability_sub_state = async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
 
+    @override
     @property
     def available(self) -> bool:
         """Return if the device is available."""
@@ -1011,6 +1016,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
@@ -1198,6 +1204,7 @@ class MqttDiscoveryUpdateMixin(Entity):
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
                 send_discovery_done(self.hass, self._discovery_data)
 
+    @override
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
         if not self._removed_from_hass and self._discovery_data is not None:
@@ -1209,6 +1216,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
+    @override
     @final
     async def add_to_platform_finish(self) -> None:
         """Finish adding entity to platform."""
@@ -1218,6 +1226,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         if self._discovery_data is not None:
             send_discovery_done(self.hass, self._discovery_data)
 
+    @override
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
@@ -1239,6 +1248,7 @@ class MqttDiscoveryUpdateMixin(Entity):
             send_discovery_done(self.hass, self._discovery_data)
         super().add_to_platform_abort()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""
         self._cleanup_discovery_on_remove()
@@ -1349,6 +1359,7 @@ class MqttEntityDeviceInfo(Entity):
                 config_entry_id=config_entry_id, **device_info
             )
 
+    @override
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
@@ -1465,6 +1476,7 @@ class MqttEntity(
                 discovery_data[ATTR_DISCOVERY_HASH]
             ] = (entity_platform, DOMAIN, self.unique_id)
 
+    @override
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -1531,6 +1543,7 @@ class MqttEntity(
         await self._subscribe_topics()
         self.async_write_ha_state()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._sub_state = subscription.async_unsubscribe_topics(
@@ -1618,6 +1631,7 @@ class MqttEntity(
                 return True
         return False
 
+    @override
     @callback
     def _message_callback(
         self,
