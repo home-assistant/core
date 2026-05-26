@@ -15,6 +15,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.network import NoURLAvailableError
 
 from . import setup_integration
 
@@ -293,10 +294,6 @@ async def test_generate_data_with_attachments(
             ],
         ),
         patch("pathlib.Path.exists", return_value=True),
-        patch(
-            "homeassistant.components.open_router.entity.guess_file_type",
-            return_value=("image/jpeg", None),
-        ),
         patch("pathlib.Path.read_bytes", return_value=b"fake_image_data"),
     ):
         result = await ai_task.async_generate_data(
@@ -337,3 +334,187 @@ async def test_generate_data_with_attachments(
             "image_url": {"url": "data:application/pdf;base64,ZmFrZV9pbWFnZV9kYXRh"},
         },
     ]
+
+
+async def test_generate_data_with_video_attachment_local(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task data generation with a local video attachment."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="Video processed",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="x-ai/grok-3",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=2, prompt_tokens=8, total_tokens=10
+            ),
+        )
+    )
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="/local/clip.mp4",
+                mime_type="video/mp4",
+                path=Path("/tmp/clip.mp4"),
+            ),
+        ),
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.read_bytes", return_value=b"fake_video_data"),
+    ):
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Describe the video",
+            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+        )
+
+    assert result.data == "Video processed"
+
+    call_args = mock_openai_client.chat.completions.create.call_args
+    user_message = call_args[1]["messages"][-2]
+    assert user_message["content"] == [
+        {"type": "text", "text": "Describe the video"},
+        {
+            "type": "video_url",
+            "video_url": {"url": "data:video/mp4;base64,ZmFrZV92aWRlb19kYXRh"},
+        },
+    ]
+
+
+async def test_generate_data_with_video_attachment_remote(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task data generation with a non-local video using a signed URL."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="stop",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content="Video processed via URL",
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=None,
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="x-ai/grok-3",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=3, prompt_tokens=8, total_tokens=11
+            ),
+        )
+    )
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            side_effect=[
+                # First call: from ai_task._resolve_attachments
+                media_source.PlayMedia(
+                    url="/local/clip.mp4",
+                    mime_type="video/mp4",
+                    path=Path("/tmp/clip.mp4"),
+                ),
+                # Second call: from entity.py non-local video handler
+                media_source.PlayMedia(
+                    url="/local/clip.mp4",
+                    mime_type="video/mp4",
+                    path=Path("/tmp/clip.mp4"),
+                ),
+            ],
+        ),
+        patch("pathlib.Path.exists", return_value=False),
+        patch(
+            "homeassistant.components.open_router.entity.async_sign_path",
+            return_value="/local/clip.mp4?authSig=xxx",
+        ),
+        patch(
+            "homeassistant.components.open_router.entity.get_url",
+            return_value="http://ha.example.com",
+        ),
+    ):
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Describe the video",
+            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+        )
+
+    assert result.data == "Video processed via URL"
+
+    call_args = mock_openai_client.chat.completions.create.call_args
+    user_message = call_args[1]["messages"][-2]
+    assert user_message["content"] == [
+        {"type": "text", "text": "Describe the video"},
+        {
+            "type": "video_url",
+            "video_url": {"url": "http://ha.example.com/local/clip.mp4?authSig=xxx"},
+        },
+    ]
+
+
+async def test_generate_data_with_video_attachment_remote_no_external_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test that a HomeAssistantError is raised when no external URL is configured."""
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="/local/clip.mp4",
+                mime_type="video/mp4",
+                path=Path("/tmp/clip.mp4"),
+            ),
+        ),
+        patch("pathlib.Path.exists", return_value=False),
+        patch(
+            "homeassistant.components.open_router.entity.get_url",
+            side_effect=NoURLAvailableError,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="An external URL must be configured to serve non-local video files to OpenRouter",
+        ),
+    ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Describe the video",
+            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+        )

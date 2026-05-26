@@ -2,10 +2,11 @@
 
 import base64
 from collections.abc import AsyncGenerator, Callable
+from datetime import timedelta
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import openai
 from openai.types.chat import (
@@ -25,7 +26,8 @@ from openai.types.shared_params.response_format_json_schema import JSONSchema
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, media_source
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -33,11 +35,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from . import OpenRouterConfigEntry
 from .const import CONF_WEB_SEARCH, DOMAIN, LOGGER
 
 MAX_TOOL_ITERATIONS = 10
+
+
+class VideoUrlParam(TypedDict):
+    """Content part for a video URL input (OpenRouter extension)."""
+
+    type: Literal["video_url"]
+    video_url: dict[str, str]
 
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
@@ -172,40 +182,71 @@ async def _transform_response(
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[tuple[Path, str | None]]
-) -> list[ChatCompletionContentPartImageParam]:
-    """Append files to a prompt.
+    hass: HomeAssistant,
+    attachments: list[conversation.Attachment],
+) -> list[ChatCompletionContentPartImageParam | VideoUrlParam]:
+    """Prepare files for use in a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
+    content: list[ChatCompletionContentPartImageParam | VideoUrlParam] = []
 
-    def append_files_to_content() -> list[ChatCompletionContentPartImageParam]:
-        content: list[ChatCompletionContentPartImageParam] = []
+    for attachment in attachments:
+        file_path = attachment.path
+        mime_type = attachment.mime_type or guess_file_type(file_path)[0] or ""
 
-        for file_path, mime_type in files:
-            if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+        if mime_type.startswith("video/"):
+            if file_path.exists():
+                def encode_video(
+                    path: Path = file_path, mime: str = mime_type
+                ) -> VideoUrlParam:
+                    base64_file = base64.b64encode(path.read_bytes()).decode("utf-8")
+                    return VideoUrlParam(
+                        type="video_url",
+                        video_url={"url": f"data:{mime};base64,{base64_file}"},
+                    )
 
-            if mime_type is None:
-                mime_type = guess_file_type(file_path)[0]
-
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
-                raise HomeAssistantError(
-                    "Only images and PDF are supported by the OpenRouter API, "
-                    f"`{file_path}` is not an image file or PDF"
+                content.append(await hass.async_add_executor_job(encode_video))
+            else:
+                try:
+                    external_url = get_url(
+                        hass, prefer_external=True, allow_internal=False
+                    )
+                except NoURLAvailableError as err:
+                    raise HomeAssistantError(
+                        "An external URL must be configured to serve non-local video files to OpenRouter"
+                    ) from err
+                media = await media_source.async_resolve_media(
+                    hass, attachment.media_content_id, None
                 )
-
-            base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:{mime_type};base64,{base64_file}"},
-                }
+                signed_path = async_sign_path(
+                    hass, media.url, timedelta(hours=1), use_content_user=True
+                )
+                content.append(
+                    VideoUrlParam(
+                        type="video_url",
+                        video_url={"url": f"{external_url}{signed_path}"},
+                    )
+                )
+        elif mime_type.startswith(("image/", "application/pdf")):
+            def encode_image(
+                path: Path = file_path, mime: str = mime_type
+            ) -> ChatCompletionContentPartImageParam:
+                if not path.exists():
+                    raise HomeAssistantError(f"`{path}` does not exist")
+                encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+                return ChatCompletionContentPartImageParam(
+                    type="image_url",
+                    image_url={"url": f"data:{mime};base64,{encoded}"},
+                )
+            content.append(await hass.async_add_executor_job(encode_image))
+        else:
+            raise HomeAssistantError(
+                "Only images, PDF, and video are supported by the OpenRouter API, "
+                f"`{file_path}` has unsupported type: {mime_type}"
             )
 
-        return content
-
-    return await hass.async_add_executor_job(append_files_to_content)
+    return content
 
 
 class OpenRouterEntity(Entity):
@@ -276,7 +317,7 @@ class OpenRouterEntity(Entity):
             # Encode files with base64 and append them to the text prompt
             files = await async_prepare_files_for_prompt(
                 self.hass,
-                [(a.path, a.mime_type) for a in last_content.attachments],
+                list(last_content.attachments),
             )
             last_message["content"] = [
                 {"type": "text", "text": last_message["content"]},
