@@ -132,7 +132,7 @@
       "message": "Item summary and UID are required."
     },
     "todo_items_lookup_not_found": {
-      "message": "Unable to update to-do item(s) from list {entity_id}: the cached list items could not be found. Restart and try again."
+      "message": "Unable to update or delete to-do item(s) from list {entity_id}: the cached list items could not be found. Restart and try again."
     }
   },
   "selector": {
