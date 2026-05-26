@@ -76,6 +76,14 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
                 | CoverEntityFeature.CLOSE_TILT
             )
 
+        if feature.tilt_only:
+            self._attr_supported_features &= ~(
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.SET_POSITION
+                | CoverEntityFeature.STOP
+            )
+
     @property
     def current_cover_position(self) -> int | None:
         """Return the current cover position."""
