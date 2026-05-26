@@ -354,6 +354,7 @@ from .const import (
     CONF_TILT_STATE_OPTIMISTIC,
     CONF_TILT_STATUS_TEMPLATE,
     CONF_TILT_STATUS_TOPIC,
+    CONF_TIMEZONE,
     CONF_TLS_INSECURE,
     CONF_TRANSITION,
     CONF_TRANSPORT,
@@ -461,6 +462,8 @@ SUBENTRY_PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -472,6 +475,7 @@ SUBENTRY_PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
@@ -485,6 +489,10 @@ PWD_NOT_CHANGED = "__**password_not_changed**__"
 
 DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+TZ_ZONE_ABBR_URL = (
+    "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+    "#Time_zone_abbreviations"
+)
 
 INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
 TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
@@ -504,6 +512,7 @@ TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
     "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
     "naming_entities_url": NAMING_ENTITIES_URL,
     "registry_properties_url": REGISTRY_PROPERTIES_URL,
+    "tz_abbr_url": TZ_ZONE_ABBR_URL,
 }
 
 # Common selectors
@@ -1237,6 +1246,8 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.BUTTON: None,
     Platform.CLIMATE: validate_climate_platform_config,
     Platform.COVER: validate_cover_platform_config,
+    Platform.DATE: None,
+    Platform.DATETIME: None,
     Platform.FAN: validate_fan_platform_config,
     Platform.IMAGE: None,
     Platform.LIGHT: validate_light_platform_config,
@@ -1248,6 +1259,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.SIREN: None,
     Platform.SWITCH: None,
     Platform.TEXT: validate_text_platform_config,
+    Platform.TIME: None,
     Platform.VALVE: None,
     Platform.WATER_HEATER: validate_water_heater_platform_config,
 }
@@ -1413,6 +1425,8 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
         ),
     },
+    Platform.DATE: {},
+    Platform.DATETIME: {},
     Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -1517,6 +1531,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
         ),
     },
     Platform.TEXT: {},
+    Platform.TIME: {},
     Platform.VALVE: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=VALVE_DEVICE_CLASS_SELECTOR, required=False, default=None
@@ -2365,6 +2380,61 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
             section="cover_tilt_settings",
         ),
+    },
+    Platform.DATE: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.DATETIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_TIMEZONE: PlatformField(selector=TEXT_SELECTOR, required=False),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
     Platform.FAN: {
         CONF_COMMAND_TOPIC: PlatformField(
@@ -3472,6 +3542,33 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             error="invalid_regular_expression",
             section="text_advanced_settings",
         ),
+    },
+    Platform.TIME: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
     Platform.VALVE: {
         CONF_COMMAND_TOPIC: PlatformField(
