@@ -25,7 +25,7 @@
       'translation_placeholders': dict({
         'country': 'DE',
         'remove_holidays': '2024-08-15',
-        'title': 'Mock Title',
+        'title': 'Workday Sensor DE BW',
       }),
     }),
     tuple(
@@ -52,7 +52,7 @@
       'translation_placeholders': dict({
         'country': 'DE',
         'remove_holidays': '2025-08-15',
-        'title': 'Mock Title',
+        'title': 'Workday Sensor DE BW',
       }),
     }),
   })
