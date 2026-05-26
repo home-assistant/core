@@ -1455,6 +1455,9 @@ lektricowifi==0.1
 # homeassistant.components.letpot
 letpot==0.7.0
 
+# homeassistant.components.lg_tv_rs232
+lg-rs232-tv==1.2.0
+
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
 
@@ -1748,6 +1751,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
+# homeassistant.components.ovhcloud_ai_endpoints
 openai==2.21.0
 
 # homeassistant.components.openerz
