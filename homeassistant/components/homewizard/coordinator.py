@@ -2,14 +2,21 @@
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
-from homewizard_energy.models import CombinedModels as DeviceResponseEntry
+from homewizard_energy.models import Batteries, CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+    LOGGER,
+    UPDATE_INTERVAL,
+    battery_mode_cloud_issue_id,
+)
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
 
@@ -37,6 +44,34 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+
+    def _update_battery_mode_cloud_repair_issue(
+        self, data: DeviceResponseEntry
+    ) -> None:
+        """Update repair issue for incompatible battery mode and cloud state."""
+        battery_mode_cloud_issue_active = (
+            data.batteries is not None
+            and data.system is not None
+            and data.batteries.mode == Batteries.Mode.PREDICTIVE.value
+            and data.system.cloud_enabled is False
+        )
+        issue_id = battery_mode_cloud_issue_id(self.config_entry.entry_id)
+        issue_exists = (
+            ir.async_get(self.hass).async_get_issue(DOMAIN, issue_id) is not None
+        )
+        if battery_mode_cloud_issue_active and not issue_exists:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=True,
+                is_persistent=False,
+                translation_key=ISSUE_BATTERY_MODE_CLOUD_DISABLED,
+                severity=ir.IssueSeverity.WARNING,
+                data={"entry_id": self.config_entry.entry_id},
+            )
+        elif not battery_mode_cloud_issue_active and issue_exists:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
@@ -70,6 +105,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise ConfigEntryAuthFailed from ex
 
         self.api_disabled = False
+        self._update_battery_mode_cloud_repair_issue(data)
 
         self.data = data
         return data
