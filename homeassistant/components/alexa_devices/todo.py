@@ -82,8 +82,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 key=alexa_list.id, translation_key=alexa_list.list_type.lower()
             )
 
-        self._attr_unique_id = alexa_list.id
-
         super().__init__(coordinator, entity_description)
 
         _LOGGER.debug(

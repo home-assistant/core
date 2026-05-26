@@ -1,6 +1,6 @@
 """Test Alexa Devices todo entities."""
 
-from typing import cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, patch
 
 from aioamazondevices.structures import (
@@ -98,7 +98,7 @@ async def test_add_todo_item(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_todo_lists,
+    mock_todo_lists: list[AmazonListInfo],
 ) -> None:
     """Test adding a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
@@ -124,8 +124,8 @@ async def test_delete_todo_item(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_todo_lists,
-    mock_todo_items,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
 ) -> None:
     """Test deleting a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
