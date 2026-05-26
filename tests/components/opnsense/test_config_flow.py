@@ -290,6 +290,9 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
         with (
             patch(patch_target, side_effect=exc),
             patch(patch_interfaces),
+            patch(
+                "homeassistant.components.opnsense.config_flow.async_create_issue"
+            ) as mock_issue,
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -298,6 +301,8 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
             )
             assert result["type"] == data_entry_flow.FlowResultType.ABORT
             assert result["reason"] == reason
+            issue_ids = [call.args[2] for call in mock_issue.call_args_list]
+            assert f"import_failed_{reason}" in issue_ids
 
 
 async def test_import_empty_tracker_interfaces(
@@ -342,28 +347,6 @@ async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
         assert result["reason"] == "import_failed_missing_interfaces"
         issue_ids = [call.args[2] for call in mock_issue.call_args_list]
         assert "import_failed_missing_interfaces" in issue_ids
-
-
-async def test_abort_import_helper(hass: HomeAssistant) -> None:
-    """Test import abort behavior creates an issue."""
-    with (
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
-            side_effect=OPNsenseInvalidURL,
-        ),
-        patch(
-            "homeassistant.components.opnsense.config_flow.async_create_issue"
-        ) as mock_issue,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONFIG_DATA_IMPORT,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "invalid_url"
-        issue_ids = [call.args[2] for call in mock_issue.call_args_list]
-        assert "import_failed_invalid_url" in issue_ids
 
 
 async def test_on_unknown_error(hass: HomeAssistant) -> None:
