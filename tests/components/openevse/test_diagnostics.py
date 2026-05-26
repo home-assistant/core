@@ -108,16 +108,20 @@ async def test_entry_diagnostics_exceptions(
         custom_key_obj: "obj_key",
     }
 
-    # Delete status so it's not present
-    if hasattr(mock_charger, "status"):
-        delattr(mock_charger, "status")
-
-    # Patch charging_voltage to raise ValueError
-    with patch.object(
-        type(mock_charger),
-        "charging_voltage",
-        PropertyMock(side_effect=ValueError("Connection error")),
-        create=True,
+    # Patch charging_voltage to raise ValueError and status to raise AttributeError
+    with (
+        patch.object(
+            type(mock_charger),
+            "charging_voltage",
+            PropertyMock(side_effect=ValueError("Connection error")),
+            create=True,
+        ),
+        patch.object(
+            type(mock_charger),
+            "status",
+            PropertyMock(side_effect=AttributeError("Attribute not found")),
+            create=True,
+        ),
     ):
         diagnostics = await get_diagnostics_for_config_entry(
             hass, hass_client, mock_config_entry
@@ -193,7 +197,7 @@ async def test_entry_diagnostics_cancelled_error(
         patch.object(
             type(mock_charger),
             "status",
-            PropertyMock(side_effect=asyncio.CancelledError),
+            PropertyMock(side_effect=asyncio.CancelledError()),
             create=True,
         ),
         pytest.raises(asyncio.CancelledError),
