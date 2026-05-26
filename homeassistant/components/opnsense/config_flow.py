@@ -262,6 +262,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         self.hass,
                         DOMAIN,
                         "import_failed_missing_interfaces",
+                        breaks_in_ha_version="2026.12.0",
                         is_fixable=False,
                         severity=IssueSeverity.ERROR,
                         translation_key="import_failed_missing_interfaces",
