@@ -194,7 +194,13 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
+        try:
+            mac_address = await _async_mac_address_from_discovery(
+                self.hass, discovery_info
+            )
+        except ValueError as err:
+            LOGGER.debug("Invalid UPnP discovery location, ignoring: %s", err)
+            return self.async_abort(reason="invalid_discovery_info")
         host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address and other data for older entries.

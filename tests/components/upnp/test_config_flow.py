@@ -149,6 +149,24 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "non_igd_device"
 
 
+async def test_flow_ssdp_invalid_discovery_location(hass: HomeAssistant) -> None:
+    """Test config flow aborts invalid SSDP discovery location."""
+    test_discovery = deepcopy(TEST_DISCOVERY)
+    bad_location = "http://fe80::1/rootDesc.xml"
+    test_discovery.ssdp_location = bad_location
+    test_discovery.ssdp_all_locations = {bad_location}
+    test_discovery.upnp["location"] = bad_location
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=test_discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
 @pytest.mark.usefixtures(
     "ssdp_instant_discovery",
     "mock_setup_entry",
