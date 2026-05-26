@@ -69,7 +69,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         http2_task.set_result(None)
         client.start_http2_processing = AsyncMock(return_value=http2_task)
         client.send_sound_notification = AsyncMock()
-        client.on_todo_event = AsyncMock()
+        client.on_todo_event = MagicMock()
         client.on_todo_event.append = Mock()
         client.on_todo_event.freeze = Mock()
         yield client
