@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from roborock.data import UserData
 from roborock.exceptions import (
@@ -50,6 +51,7 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_AUTO,
     REGION_CUSTOM,
     REGION_OPTIONS,
 )
@@ -82,7 +84,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             if region == REGION_CUSTOM:
                 return await self.async_step_custom_url()
             base_url = None
-            if region != "auto":
+            if region != REGION_AUTO:
                 base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
                 username,
@@ -117,14 +119,19 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self._username
         if user_input is not None:
-            self._client = RoborockApiClient(
-                self._username,
-                base_url=user_input[CONF_ROBOROCK_SERVER_URL],
-                session=async_get_clientsession(self.hass),
-            )
-            errors = await self._request_code()
-            if not errors:
-                return await self.async_step_code()
+            url = user_input[CONF_ROBOROCK_SERVER_URL]
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                errors[CONF_ROBOROCK_SERVER_URL] = "invalid_url_format"
+            else:
+                self._client = RoborockApiClient(
+                    self._username,
+                    base_url=url,
+                    session=async_get_clientsession(self.hass),
+                )
+                errors = await self._request_code()
+                if not errors:
+                    return await self.async_step_code()
 
         return self.async_show_form(
             step_id="custom_url",

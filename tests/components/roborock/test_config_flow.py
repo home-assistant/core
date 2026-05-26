@@ -588,3 +588,32 @@ async def test_config_flow_custom_url_failures(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        pytest.param("not-a-url", id="no_scheme"),
+        pytest.param("ftp://example.com", id="wrong_scheme"),
+        pytest.param("https://", id="missing_host"),
+    ],
+)
+async def test_config_flow_custom_url_invalid_format(
+    hass: HomeAssistant,
+    invalid_url: str,
+) -> None:
+    """Show a field error when the URL has an invalid format."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "custom"}
+    )
+    assert result["step_id"] == "custom_url"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ROBOROCK_SERVER_URL: invalid_url}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_url"
+    assert result["errors"] == {CONF_ROBOROCK_SERVER_URL: "invalid_url_format"}
