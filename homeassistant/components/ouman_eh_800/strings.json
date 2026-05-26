@@ -51,6 +51,43 @@
         "name": "Water out minimum temperature"
       }
     },
+    "select": {
+      "home_away_mode": {
+        "name": "Home/Away mode",
+        "state": {
+          "away": "[%key:common::state::not_home%]",
+          "home": "[%key:common::state::home%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "automatic": "[%key:common::state::auto%]",
+          "big_temperature_drop": "[%key:component::ouman_eh_800::entity::number::big_temperature_drop::name%]",
+          "manual_valve_control": "Manual valve control",
+          "normal_temperature": "Nominal temperature",
+          "shutdown": "[%key:common::state::standby%]",
+          "temperature_drop": "[%key:component::ouman_eh_800::entity::number::temperature_drop::name%]"
+        }
+      },
+      "relay_control": {
+        "name": "Relay control",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "relay_pump_summer_stop_control": {
+        "name": "Pump summer stop",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "run": "Run",
+          "stop": "[%key:common::action::stop%]"
+        }
+      }
+    },
     "sensor": {
       "curve_supply_water_temperature": {
         "name": "Curve supply water temperature"
