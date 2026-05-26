@@ -23,8 +23,6 @@ from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
 
 if TYPE_CHECKING:
-    from aioamazondevices.structures import AmazonListInfo
-
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
