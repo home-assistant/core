@@ -154,15 +154,15 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
         (
             "uuid",
             ["bla", "blu"],
-            "bla,blu",
-            "foo,  ,  bar ",
+            ["bla", "blu"],
+            ["foo", " ", "  bar "],
             ["foo", "bar"],
         ),
         (
             "ignore_cec",
             ["cast1", "cast2"],
-            "cast1,cast2",
-            "other_cast,  ,  some_cast ",
+            ["cast1", "cast2"],
+            ["other_cast", " ", "  some_cast "],
             ["other_cast", "some_cast"],
         ),
     ],
@@ -211,7 +211,7 @@ async def test_option_flow(
     for other_param in extra_parameters:
         if other_param == parameter:
             continue
-        assert get_schema_suggested_value(more_options_schema, other_param) == ""
+        assert get_schema_suggested_value(more_options_schema, other_param) == []
     if parameter in extra_parameters:
         assert get_schema_suggested_value(more_options_schema, parameter) == suggested
 
