@@ -1,7 +1,5 @@
 """Support for EnOcean devices."""
 
-import contextlib
-
 from enocean_async import Gateway
 import voluptuous as vol
 
@@ -16,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -58,8 +56,10 @@ async def async_setup_entry(
     try:
         await gateway.start()
     except ConnectionError as err:
-        with contextlib.suppress(Exception):
+        try:
             await gateway.stop()
+        except Exception as stop_err:  # noqa: BLE001
+            LOGGER.debug("Error stopping gateway after failed start: %s", stop_err)
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
@@ -75,6 +75,8 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry: stop the gateway."""
 
-    with contextlib.suppress(Exception):
+    try:
         await config_entry.runtime_data.stop()
+    except Exception as err:  # noqa: BLE001
+        LOGGER.debug("Error stopping gateway during unload: %s", err)
     return True
