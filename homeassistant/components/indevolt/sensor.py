@@ -794,9 +794,58 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    # Battery Pack Cycles
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.MAIN_CYCLES,
+        generation=(2,),
+        translation_key="main_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_1_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_1_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_2_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_2_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_3_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_3_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_4_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_4_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_5_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_5_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
-# Sensors per battery pack (SN, SOC, Temperature, MOS Temperature, Voltage, Current)
+# Sensors per battery pack (SN, SOC, Temperature, MOS Temperature, Voltage, Current, Cycles)
 BATTERY_PACK_SENSOR_KEYS = [
     (
         IndevoltBattery.PACK_1_SERIAL_NUMBER,
@@ -805,6 +854,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_1_MOS_TEMPERATURE,
         IndevoltBattery.PACK_1_VOLTAGE,
         IndevoltBattery.PACK_1_CURRENT,
+        IndevoltBattery.PACK_1_CYCLES,
     ),
     (
         IndevoltBattery.PACK_2_SERIAL_NUMBER,
@@ -813,6 +863,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_2_MOS_TEMPERATURE,
         IndevoltBattery.PACK_2_VOLTAGE,
         IndevoltBattery.PACK_2_CURRENT,
+        IndevoltBattery.PACK_2_CYCLES,
     ),
     (
         IndevoltBattery.PACK_3_SERIAL_NUMBER,
@@ -821,6 +872,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_3_MOS_TEMPERATURE,
         IndevoltBattery.PACK_3_VOLTAGE,
         IndevoltBattery.PACK_3_CURRENT,
+        IndevoltBattery.PACK_3_CYCLES,
     ),
     (
         IndevoltBattery.PACK_4_SERIAL_NUMBER,
@@ -829,6 +881,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_4_MOS_TEMPERATURE,
         IndevoltBattery.PACK_4_VOLTAGE,
         IndevoltBattery.PACK_4_CURRENT,
+        IndevoltBattery.PACK_4_CYCLES,
     ),
     (
         IndevoltBattery.PACK_5_SERIAL_NUMBER,
@@ -837,6 +890,7 @@ BATTERY_PACK_SENSOR_KEYS = [
         IndevoltBattery.PACK_5_MOS_TEMPERATURE,
         IndevoltBattery.PACK_5_VOLTAGE,
         IndevoltBattery.PACK_5_CURRENT,
+        IndevoltBattery.PACK_5_CYCLES,
     ),
 ]
 

@@ -118,6 +118,9 @@
       "battery_pack_1_current": {
         "name": "Battery pack 1 current"
       },
+      "battery_pack_1_cycles": {
+        "name": "Battery pack 1 cycle count"
+      },
       "battery_pack_1_mos_temperature": {
         "name": "Battery pack 1 MOS temperature"
       },
@@ -135,6 +138,9 @@
       },
       "battery_pack_2_current": {
         "name": "Battery pack 2 current"
+      },
+      "battery_pack_2_cycles": {
+        "name": "Battery pack 2 cycle count"
       },
       "battery_pack_2_mos_temperature": {
         "name": "Battery pack 2 MOS temperature"
@@ -154,6 +160,9 @@
       "battery_pack_3_current": {
         "name": "Battery pack 3 current"
       },
+      "battery_pack_3_cycles": {
+        "name": "Battery pack 3 cycle count"
+      },
       "battery_pack_3_mos_temperature": {
         "name": "Battery pack 3 MOS temperature"
       },
@@ -172,6 +181,9 @@
       "battery_pack_4_current": {
         "name": "Battery pack 4 current"
       },
+      "battery_pack_4_cycles": {
+        "name": "Battery pack 4 cycle count"
+      },
       "battery_pack_4_mos_temperature": {
         "name": "Battery pack 4 MOS temperature"
       },
@@ -189,6 +201,9 @@
       },
       "battery_pack_5_current": {
         "name": "Battery pack 5 current"
+      },
+      "battery_pack_5_cycles": {
+        "name": "Battery pack 5 cycle count"
       },
       "battery_pack_5_mos_temperature": {
         "name": "Battery pack 5 MOS temperature"
@@ -227,7 +242,7 @@
         "name": "Cumulative production"
       },
       "cycle_count": {
-        "name": "Cycle count"
+        "name": "Equivalent Full Cycles"
       },
       "daily_production": {
         "name": "Daily production"
@@ -294,6 +309,9 @@
       },
       "main_current": {
         "name": "Main current"
+      },
+      "main_cycles": {
+        "name": "Main cycle count"
       },
       "main_mos_temperature": {
         "name": "Main MOS temperature"
