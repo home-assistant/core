@@ -128,37 +128,43 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
                 await client.async_brite_brightness(self._device_id, brightness)
         # Adjust HS color
         if ATTR_HS_COLOR in kwargs:
-            hue, saturation = kwargs[ATTR_HS_COLOR]
-            status = self.device_data["status"]
-            lightness = status.get("lightness", 50)
-            cur_brightness = status.get("brightness", 100)
-            if ATTR_BRIGHTNESS in kwargs:
-                lightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-                cur_brightness = lightness
-            await client.async_brite_color(
-                self._device_id,
-                {
-                    "colortype": 0,
-                    "hue": round(hue),
-                    "saturation": round(saturation),
-                    "lightness": lightness,
-                    "brightness": cur_brightness,
-                },
-            )
+            if self.device_data.get("type") == "switch":
+                await client.async_switch_on(self._device_id)
+            else:
+                hue, saturation = kwargs[ATTR_HS_COLOR]
+                status = self.device_data["status"]
+                lightness = status.get("lightness", 50)
+                cur_brightness = status.get("brightness", 100)
+                if ATTR_BRIGHTNESS in kwargs:
+                    lightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+                    cur_brightness = lightness
+                await client.async_brite_color(
+                    self._device_id,
+                    {
+                        "colortype": 0,
+                        "hue": round(hue),
+                        "saturation": round(saturation),
+                        "lightness": lightness,
+                        "brightness": cur_brightness,
+                    },
+                )
         # Adjust color temperature
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            status = self.device_data["status"]
-            cur_brightness = status.get("brightness", 100)
-            if ATTR_BRIGHTNESS in kwargs:
-                cur_brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            await client.async_brite_color(
-                self._device_id,
-                {
-                    "colortype": 1,
-                    "temperature": kwargs[ATTR_COLOR_TEMP_KELVIN],
-                    "brightness": cur_brightness,
-                },
-            )
+            if self.device_data.get("type") == "switch":
+                await client.async_switch_on(self._device_id)
+            else:
+                status = self.device_data["status"]
+                cur_brightness = status.get("brightness", 100)
+                if ATTR_BRIGHTNESS in kwargs:
+                    cur_brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+                await client.async_brite_color(
+                    self._device_id,
+                    {
+                        "colortype": 1,
+                        "temperature": kwargs[ATTR_COLOR_TEMP_KELVIN],
+                        "brightness": cur_brightness,
+                    },
+                )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""

@@ -86,7 +86,14 @@ async def test_light_switch_turn_on_off(
 ) -> None:
     """Test turning on and off a switch as light."""
     get_device_by_id(mock_api_client, "dev_light_001")["type"] = "switch"
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.xthings_cloud.PLATFORMS",
+        [Platform.LIGHT, Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Ensure it's not also created as a switch
+    assert hass.states.get("switch.bedroom_light") is None
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

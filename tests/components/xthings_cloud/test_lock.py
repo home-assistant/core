@@ -90,7 +90,7 @@ async def test_updating_state(
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == LockState.LOCKED
+    assert state.state == LockState.LOCKED.value
 
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
@@ -104,4 +104,4 @@ async def test_updating_state(
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
-    assert state.state == LockState.UNLOCKED
+    assert state.state == LockState.UNLOCKED.value
