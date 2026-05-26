@@ -34,7 +34,7 @@ _DEPRECATED_TrackerEntityDescription = DeprecatedAlias(
     "2027.6",
 )
 _DEPRECATED_SourceType = DeprecatedAlias(
-    _SourceType, "homeassistant.components.device_tracker.const.SourceType", "2027.6"
+    _SourceType, "homeassistant.components.device_tracker.SourceType", "2027.6"
 )
 
 # These can be removed if no deprecated aliases are in this module anymore

@@ -11,14 +11,12 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    DOMAIN,
-    SourceType,
-)
-from homeassistant.components.device_tracker.config_entry import (
     CONNECTED_DEVICE_REGISTERED,
+    DOMAIN,
     BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
+    SourceType,
     TrackerEntity,
 )
 from homeassistant.components.zone import ATTR_RADIUS
