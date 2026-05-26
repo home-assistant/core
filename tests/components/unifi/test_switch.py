@@ -54,9 +54,18 @@ def _assert_request_call(
     aioclient_mock: AiohttpClientMocker, method: str, url: str, data: dict[str, Any]
 ) -> None:
     """Assert a matching request call was made."""
-    assert any(
-        call_method == method and str(call_url) == url and call_data == data
+    expected_method = method.lower()
+    if any(
+        call_method.lower() == expected_method
+        and str(call_url) == url
+        and call_data == data
         for call_method, call_url, call_data, _headers in aioclient_mock.mock_calls
+    ):
+        return
+
+    raise AssertionError(
+        f"Expected {expected_method.upper()} request to {url} with {data!r}; "
+        f"recorded calls: {aioclient_mock.mock_calls!r}"
     )
 
 
@@ -1419,9 +1428,12 @@ async def test_object_oriented_network_configs(
         f"/object-oriented-network-config/{config['id']}"
     )
 
-    # Disable Policy Engine rule
-    aioclient_mock.put(config_url, json={}, headers={"content-type": CONTENT_TYPE_JSON})
+    for _ in range(2):
+        aioclient_mock.put(
+            config_url, json={}, headers={"content-type": CONTENT_TYPE_JSON}
+        )
 
+    # Disable Policy Engine rule
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
