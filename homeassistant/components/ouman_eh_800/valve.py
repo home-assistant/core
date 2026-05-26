@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
-from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
+from .coordinator import OumanEh800ConfigEntry
 from .entity import OumanEh800Entity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 1
@@ -70,15 +70,6 @@ class OumanEh800ValveEntity(OumanEh800Entity, ValveEntity):
         | ValveEntityFeature.OPEN
         | ValveEntityFeature.CLOSE
     )
-
-    def __init__(
-        self,
-        coordinator: OumanEh800Coordinator,
-        endpoint: IntControlOumanEndpoint,
-        description: OumanEh800ValveEntityDescription,
-    ) -> None:
-        """Initialize the valve entity."""
-        super().__init__(coordinator, endpoint, description)
 
     @property
     def current_valve_position(self) -> int:
