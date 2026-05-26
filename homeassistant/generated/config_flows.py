@@ -535,6 +535,7 @@ FLOWS = {
         "opengarage",
         "openhome",
         "openrgb",
+        "opensensemap",
         "opensky",
         "opentherm_gw",
         "openuv",
