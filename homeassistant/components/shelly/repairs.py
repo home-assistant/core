@@ -53,10 +53,9 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
 
     if supports_scripts and device.model not in (MODEL_PLUG_S_G3, MODEL_OUT_PLUG_S_G3):
         firmware = AwesomeVersion(device.shelly["ver"])
-        if (
-            firmware < BLE_SCANNER_MIN_FIRMWARE
-            and entry.options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE
-        ):
+        if firmware < BLE_SCANNER_MIN_FIRMWARE and entry.options.get(
+            CONF_BLE_SCANNER_MODE
+        ) in (BLEScannerMode.ACTIVE, BLEScannerMode.AUTO):
             ir.async_create_issue(
                 hass,
                 DOMAIN,

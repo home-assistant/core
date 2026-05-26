@@ -260,7 +260,7 @@ class _GlobalTaskContext:
         await self._wait_zone.wait()
         await asyncio.sleep(self._cool_down)  # Allow context switch
         self._on_wait_task = None
-        if self.state != _State.TIMEOUT:
+        if self.state is not _State.TIMEOUT:
             return
         self._cancel_task()
 

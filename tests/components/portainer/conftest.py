@@ -31,6 +31,8 @@ MOCK_TEST_CONFIG = {
 
 TEST_ENTRY = "portainer_test_entry_123"
 TEST_INSTANCE_ID = "299ab403-70a8-4c05-92f7-bf7a994d50df"
+TEST_CONTAINER_NAME = "practical_morse"
+TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
 
 
 @pytest.fixture
@@ -93,6 +95,7 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.stop_container = AsyncMock(return_value=None)
         client.start_stack = AsyncMock(return_value=None)
         client.stop_stack = AsyncMock(return_value=None)
+        client.container_recreate = AsyncMock(return_value=None)
 
         yield client
 

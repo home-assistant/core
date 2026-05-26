@@ -52,7 +52,6 @@ TEST_STATE_ENTITY_ID = "number.test_state"
 TEST_STEP_ENTITY_ID = "sensor.step"
 TEST_NUMBER = TemplatePlatformSetup(
     number.DOMAIN,
-    None,
     "template_number",
     make_test_trigger(
         TEST_AVAILABILITY_ENTITY_ID,

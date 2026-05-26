@@ -18,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -186,7 +185,7 @@ class AbstractConfig(ABC):
         """
 
     @abstractmethod
-    def should_expose(self, state) -> bool:
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
 
     @abstractmethod
@@ -533,7 +532,7 @@ class GoogleEntity:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
+        return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
 
     @callback
     def traits(self) -> list[trait._Trait]:
@@ -550,7 +549,7 @@ class GoogleEntity:
     @callback
     def should_expose(self):
         """If entity should be exposed."""
-        return self.config.should_expose(self.state)
+        return self.config.should_expose(self.entity_id)
 
     @callback
     def should_expose_local(self) -> bool:
@@ -734,7 +733,7 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                f"Unable to execute {command} for {self.state.entity_id}",
+                f"Unable to execute {command} for {self.entity_id}",
             )
 
     @callback
@@ -803,8 +802,6 @@ def async_get_entities(
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
         entity_id = state.entity_id
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here
