@@ -371,9 +371,9 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     @property
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
-        primary = self.positions.primary or 0
-        tilt = self.positions.tilt or 0
-        return primary + tilt
+        primary = self.positions.primary
+        tilt = self.positions.tilt
+        return (0 if primary is None else primary) + (0 if tilt is None else tilt)
 
     @property
     def open_tilt_position(self) -> ShadePosition:
