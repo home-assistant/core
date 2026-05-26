@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
-import serial
+import serialx
 import ultraheat_api
 import voluptuous as vol
 
@@ -103,7 +103,7 @@ class LandisgyrConfigFlow(ConfigFlow, domain=DOMAIN):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
 
-        except (TimeoutError, serial.SerialException) as err:
+        except (OSError, TimeoutError, serialx.SerialException) as err:
             _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 

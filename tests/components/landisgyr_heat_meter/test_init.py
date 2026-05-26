@@ -69,6 +69,14 @@ async def test_migrate_entry(
         suggested_object_id="heat_meter_measuring_range",
         config_entry=mock_entry,
     )
+    # Entity already using the new unique ID format (no migration needed)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "12345_heat_usage_gj",
+        suggested_object_id="heat_meter_heat_usage_gj",
+        config_entry=mock_entry,
+    )
 
     assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
