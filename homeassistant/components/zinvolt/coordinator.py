@@ -54,7 +54,7 @@ class ZinvoltDeviceCoordinator(DataUpdateCoordinator[ZinvoltData]):
             _LOGGER,
             config_entry=config_entry,
             name=f"Zinvolt {battery.identifier}",
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(seconds=30),
         )
         self.battery = battery
         self.client = client
