@@ -14,6 +14,7 @@ from homeassistant.components.diesel_heater.climate import (
     VevorHeaterClimate,
     async_setup_entry,
 )
+from homeassistant.exceptions import ServiceValidationError
 
 
 def create_mock_coordinator() -> MagicMock:
@@ -557,30 +558,28 @@ class TestClimateAsyncSetPresetMode:
         assert callable(climate.async_set_preset_mode)
 
     @pytest.mark.asyncio
-    async def test_async_set_preset_mode_sets_current_preset(self):
-        """Test async_set_preset_mode sets _current_preset."""
+    async def test_async_set_preset_mode_unsupported_raises(self):
+        """Unsupported preset mode raises ServiceValidationError."""
         coordinator = create_mock_coordinator()
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        # Call with a string value
-        await climate.async_set_preset_mode("test_preset")
-
-        # _current_preset should be set to the passed value
-        assert climate._current_preset == "test_preset"
+        with pytest.raises(ServiceValidationError, match="Unsupported preset mode"):
+            await climate.async_set_preset_mode("not_a_real_preset")
 
 
 class TestClimateAsyncSetHvacMode:
     """Tests for async_set_hvac_mode method."""
 
     @pytest.mark.asyncio
-    async def test_async_set_hvac_mode_method_callable(self):
-        """Test async_set_hvac_mode is callable."""
+    async def test_async_set_hvac_mode_unsupported_raises(self):
+        """Unsupported HVAC mode raises ServiceValidationError."""
         coordinator = create_mock_coordinator()
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert callable(climate.async_set_hvac_mode)
+        with pytest.raises(ServiceValidationError, match="Unsupported HVAC mode"):
+            await climate.async_set_hvac_mode(HVACMode.COOL)
 
 
 # ---------------------------------------------------------------------------
