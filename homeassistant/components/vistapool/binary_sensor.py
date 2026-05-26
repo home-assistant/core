@@ -1,6 +1,7 @@
 """Vistapool Binary Sensor entities."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -31,6 +32,24 @@ TANK_MODULE_PATHS = (
     "modules.cl.tank",
     "modules.cd.tank",
 )
+
+
+def _coerce_to_bool(value: Any) -> bool | None:
+    """Coerce a coordinator value to bool.
+
+    The Vistapool API returns some numeric fields as strings (for example
+    `"0"` / `"1"`), so a plain `bool(value)` would treat the string `"0"` as
+    truthy. Strings are normalized via `int` first; anything unparseable is
+    treated as missing data and reported as unknown.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        try:
+            value = int(value)
+        except ValueError:
+            return None
+    return bool(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -224,10 +243,9 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        value = self.coordinator.get_value(self.entity_description.value_path)
-        if value is None:
-            return None
-        return bool(value)
+        return _coerce_to_bool(
+            self.coordinator.get_value(self.entity_description.value_path)
+        )
 
 
 class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
@@ -245,10 +263,11 @@ class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if any tank is low, or None if no tank data is available."""
         values = [
-            value
+            coerced
             for path in TANK_MODULE_PATHS
-            if (value := self.coordinator.get_value(path)) is not None
+            if (coerced := _coerce_to_bool(self.coordinator.get_value(path)))
+            is not None
         ]
         if not values:
             return None
-        return any(bool(value) for value in values)
+        return any(values)

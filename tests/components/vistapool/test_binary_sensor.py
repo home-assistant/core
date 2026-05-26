@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vistapool.const import DOMAIN
-from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -97,6 +97,26 @@ async def test_binary_sensors_dosing_tank_unknown_when_no_data(
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.my_pool_dosing_tank").state == STATE_UNKNOWN
+
+
+async def test_binary_sensors_string_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the Vistapool API's numeric-as-string values are coerced correctly."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"version": 1},
+        "filtration": {"status": "1"},
+        "backwash": {"status": "0"},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.my_pool_filtration").state == STATE_ON
+    assert hass.states.get("binary_sensor.my_pool_backwash").state == STATE_OFF
 
 
 async def test_binary_sensors_fl2_requires_hidro(
