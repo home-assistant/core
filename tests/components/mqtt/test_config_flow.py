@@ -46,6 +46,8 @@ from .common import (
     MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA,
     MOCK_CLIMATE_SUBENTRY_DATA,
     MOCK_COVER_SUBENTRY_DATA,
+    MOCK_DATE_SUBENTRY_DATA,
+    MOCK_DATETIME_SUBENTRY_DATA,
     MOCK_FAN_SUBENTRY_DATA,
     MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA,
     MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL,
@@ -66,6 +68,7 @@ from .common import (
     MOCK_SIREN_SUBENTRY_DATA,
     MOCK_SWITCH_SUBENTRY_DATA,
     MOCK_TEXT_SUBENTRY_DATA,
+    MOCK_TIME_SUBENTRY_DATA,
     MOCK_VALVE_SUBENTRY_DATA_POSITION,
     MOCK_VALVE_SUBENTRY_DATA_STATE,
     MOCK_WATER_HEATER_SUBENTRY_DATA,
@@ -3164,6 +3167,65 @@ async def test_migrate_of_incompatible_config_entry(
             id="cover",
         ),
         pytest.param(
+            MOCK_DATE_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Delivery day"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Delivery day",
+            id="date",
+        ),
+        pytest.param(
+            MOCK_DATETIME_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Maintenance service"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "timezone": "GMT",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Maintenance service",
+            id="datetime",
+        ),
+        pytest.param(
             MOCK_FAN_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Breezer"},
@@ -3849,6 +3911,35 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier MOTD",
             id="text",
+        ),
+        pytest.param(
+            MOCK_TIME_SUBENTRY_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Happy hour"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Happy hour",
+            id="time",
         ),
         pytest.param(
             MOCK_VALVE_SUBENTRY_DATA_STATE,
