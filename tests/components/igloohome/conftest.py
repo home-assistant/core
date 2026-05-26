@@ -57,7 +57,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 async def mock_auth() -> Generator[AsyncMock]:
-    """Set up the mock usages of the igloohome_api.Auth class. Defaults to always successfully operate."""
+    """Set up mock igloohome_api.Auth class, defaulting to success."""
     with patch(
         "homeassistant.components.igloohome.config_flow.IgloohomeAuth.async_get_access_token",
         return_value="mock_access_token",

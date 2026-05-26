@@ -23,7 +23,7 @@ async def test_user_menu_display(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
     assert set(result["menu_options"]) == {"start_discovery", "edit"}
 
@@ -62,7 +62,7 @@ async def test_edit_flow_success(
         result["flow_id"], user_input
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.2)"
     assert result["data"][CONF_HOST] == "192.168.1.2"
     assert result["data"][CONF_MAC] == expected_mac
@@ -113,7 +113,7 @@ async def test_edit_flow_errors(
         result["flow_id"], user_input
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
     mock_s20.side_effect = None
@@ -124,7 +124,7 @@ async def test_edit_flow_errors(
         {CONF_HOST: "192.168.1.2", CONF_MAC: "ac:cf:23:12:34:56"},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.2)"
     assert result["data"][CONF_HOST] == "192.168.1.2"
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
@@ -136,12 +136,12 @@ async def test_discovery_success(hass: HomeAssistant, mock_discover) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "start_discovery"}
     )
-    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_discovery"
     assert result["progress_action"] == "start_discovery"
 
@@ -149,14 +149,14 @@ async def test_discovery_success(hass: HomeAssistant, mock_discover) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_switch"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_SWITCH_LIST: "192.168.1.100"}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.100)"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_MAC] == "ac:cf:23:12:34:56"
@@ -167,7 +167,7 @@ async def test_discovery_success(hass: HomeAssistant, mock_discover) -> None:
 async def test_discovery_no_devices(
     hass: HomeAssistant, mock_discover, mock_s20
 ) -> None:
-    """Discovery with no found devices should go to discovery_failed and recover via edit."""
+    """Discovery with no devices goes to discovery_failed."""
     mock_discover.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
@@ -181,14 +181,14 @@ async def test_discovery_no_devices(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_failed"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "edit"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "edit"
 
     mock_s20.return_value._mac = b"\xaa\xbb\xcc\xdd\xee\xff"
@@ -198,7 +198,7 @@ async def test_discovery_no_devices(
         {CONF_HOST: "192.168.1.10", CONF_MAC: "aa:bb:cc:dd:ee:ff"},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.10)"
     assert result["data"][CONF_HOST] == "192.168.1.10"
     assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
@@ -224,7 +224,7 @@ async def test_import_flow_success(
     expected_mac: str,
     mock_mac_bytes: bytes | None,
 ) -> None:
-    """Test importing configuration.yaml entry succeeds with provided or discovered MAC."""
+    """Test importing config entry with provided or discovered MAC."""
     mock_s20.return_value._mac = mock_mac_bytes
     mock_discover.return_value = {"192.168.1.5": {"mac": b"\x11\x22\x33\x44\x55\x66"}}
 
@@ -232,7 +232,7 @@ async def test_import_flow_success(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=import_data
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.5"
     assert result["data"][CONF_MAC] == expected_mac
 
@@ -267,7 +267,7 @@ async def test_import_flow_errors(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=import_data
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
 
 
@@ -295,7 +295,7 @@ async def test_discover_skips_existing_and_invalid_mac(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_switch"
 
     schema = result["data_schema"].schema
@@ -320,11 +320,11 @@ async def test_start_discovery_shows_progress(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": "start_discovery"}
         )
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result["type"] == FlowResultType.SHOW_PROGRESS
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "start_discovery"
 
     await hass.async_block_till_done()
@@ -348,5 +348,5 @@ async def test_discovery_flow_task_exception(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_failed"

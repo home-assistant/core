@@ -1804,6 +1804,177 @@
     'state': '0',
   })
 # ---
+# name: test_sensor[1][sensor.bk1600_real_time_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charging',
+        'discharging',
+        'standby',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bk1600_real_time_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Real-time mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_command',
+    'unique_id': 'BK1600-12345678_6107',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_real_time_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'BK1600 Real-time mode',
+      'options': list([
+        'charging',
+        'discharging',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bk1600_real_time_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_real_time_power_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bk1600_real_time_power_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time power limit',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Real-time power limit',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_power_limit',
+    'unique_id': 'BK1600-12345678_6109',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_real_time_power_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'BK1600 Real-time power limit',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bk1600_real_time_power_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_real_time_target_soc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bk1600_real_time_target_soc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time target SOC',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Real-time target SOC',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_target_soc',
+    'unique_id': 'BK1600-12345678_6108',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[1][sensor.bk1600_real_time_target_soc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BK1600 Real-time target SOC',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bk1600_real_time_target_soc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_sensor[1][sensor.bk1600_total_ac_input_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2310,7 +2481,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_mos_temperature',
-    'unique_id': 'SolidFlex2000-87654321_11042',
+    'unique_id': 'SolidFlex2000-87654321_9085',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2327,7 +2498,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32.1',
+    'state': '31.5',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_sn-entry]
@@ -2647,7 +2818,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_mos_temperature',
-    'unique_id': 'SolidFlex2000-87654321_9085',
+    'unique_id': 'SolidFlex2000-87654321_9101',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2664,7 +2835,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.5',
+    'state': '32.8',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_sn-entry]
@@ -2984,7 +3155,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_mos_temperature',
-    'unique_id': 'SolidFlex2000-87654321_9101',
+    'unique_id': 'SolidFlex2000-87654321_9117',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3001,7 +3172,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32.8',
+    'state': '31.9',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_sn-entry]
@@ -3321,7 +3492,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_mos_temperature',
-    'unique_id': 'SolidFlex2000-87654321_9117',
+    'unique_id': 'SolidFlex2000-87654321_9133',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3338,7 +3509,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.9',
+    'state': '33.0',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_sn-entry]
@@ -3658,7 +3829,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_mos_temperature',
-    'unique_id': 'SolidFlex2000-87654321_9133',
+    'unique_id': 'SolidFlex2000-87654321_9270',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3675,7 +3846,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33.0',
+    'state': '31.2',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_sn-entry]
@@ -4340,7 +4511,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cycle_count',
-    'unique_id': 'SolidFlex2000-87654321_9003',
+    'unique_id': 'SolidFlex2000-87654321_8646',
     'unit_of_measurement': None,
   })
 # ---
@@ -5470,6 +5641,64 @@
     'state': '15.2',
   })
 # ---
+# name: test_sensor[2][sensor.cms_sf2000_main_mos_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.cms_sf2000_main_mos_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Main MOS temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Main MOS temperature',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'main_mos_temperature',
+    'unique_id': 'SolidFlex2000-87654321_11042',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_main_mos_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CMS-SF2000 Main MOS temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_main_mos_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.1',
+  })
+# ---
 # name: test_sensor[2][sensor.cms_sf2000_main_serial_number-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5863,6 +6092,177 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.79',
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charging',
+        'discharging',
+        'standby',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cms_sf2000_real_time_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Real-time mode',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_command',
+    'unique_id': 'SolidFlex2000-87654321_6107',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'CMS-SF2000 Real-time mode',
+      'options': list([
+        'charging',
+        'discharging',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_real_time_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_power_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cms_sf2000_real_time_power_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time power limit',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Real-time power limit',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_power_limit',
+    'unique_id': 'SolidFlex2000-87654321_6109',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_power_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'CMS-SF2000 Real-time power limit',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_real_time_power_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_target_soc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cms_sf2000_real_time_target_soc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Real-time target SOC',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Real-time target SOC',
+    'platform': 'indevolt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'realtime_target_soc',
+    'unique_id': 'SolidFlex2000-87654321_6108',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[2][sensor.cms_sf2000_real_time_target_soc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CMS-SF2000 Real-time target SOC',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cms_sf2000_real_time_target_soc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_total_ac_input_energy-entry]

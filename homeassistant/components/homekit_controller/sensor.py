@@ -700,7 +700,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_accessory(accessory: Accessory) -> bool:
-        if conn.pairing.transport != Transport.BLE:
+        if conn.pairing.transport is not Transport.BLE:
             return False
 
         accessory_info = accessory.services.first(

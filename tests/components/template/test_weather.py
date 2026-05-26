@@ -78,7 +78,6 @@ TEST_SENSORS = (
 )
 TEST_WEATHER = TemplatePlatformSetup(
     WEATHER_DOMAIN,
-    None,
     "template_weather",
     make_test_trigger(TEST_STATE_ENTITY_ID, *TEST_SENSORS),
 )
@@ -104,19 +103,6 @@ async def setup_weather(
 ) -> None:
     """Do setup of number integration."""
     await setup_entity(hass, TEST_WEATHER, style, 1, config)
-
-
-@pytest.mark.parametrize(
-    ("style", "config"),
-    [(ConfigurationStyle.LEGACY, TEST_LEGACY_REQUIRED)],
-)
-@pytest.mark.usefixtures("setup_weather")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("weather")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -147,7 +133,9 @@ async def test_template_state_exception(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.MODERN,
             {
-                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                "apparent_temperature_template": (
+                    "{{ states('sensor.apparent_temperature') }}"
+                ),
                 "attribution_template": "{{ states('sensor.attribution') }}",
                 "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
                 "condition_template": "{{ states('sensor.condition') }}",
@@ -167,7 +155,9 @@ async def test_template_state_exception(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.TRIGGER,
             {
-                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                "apparent_temperature_template": (
+                    "{{ states('sensor.apparent_temperature') }}"
+                ),
                 "attribution_template": "{{ states('sensor.attribution') }}",
                 "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
                 "condition_template": "{{ states('sensor.condition') }}",
@@ -264,15 +254,23 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     "config",
     [
         {
-            "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-            "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
-            "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+            "forecast_daily_template": (
+                "{{ state_attr('sensor.forecast', 'forecast') }}"
+            ),
+            "forecast_hourly_template": (
+                "{{ state_attr('sensor.forecast', 'forecast') }}"
+            ),
+            "forecast_twice_daily_template": (
+                "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+            ),
             **TEST_LEGACY_REQUIRED,
         },
         {
             "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
             "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
-            "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+            "forecast_twice_daily": (
+                "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+            ),
             **TEST_MODERN_REQUIRED,
         },
     ],
@@ -365,36 +363,60 @@ async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
         (
             ConfigurationStyle.MODERN,
             {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily_template": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly_template": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily_template": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily_template": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly_template": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily_template": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.MODERN,
             {
-                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_MODERN_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
-                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_MODERN_REQUIRED,
             },
         ),
@@ -507,36 +529,60 @@ async def test_forecasts_invalid(
         (
             ConfigurationStyle.MODERN,
             {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily_template": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly_template": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily_template": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
-                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily_template": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly_template": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily_template": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.MODERN,
             {
-                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_MODERN_REQUIRED,
             },
         ),
         (
             ConfigurationStyle.TRIGGER,
             {
-                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
-                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
-                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                "forecast_daily": (
+                    "{{ state_attr('sensor.forecast_daily', 'forecast') }}"
+                ),
+                "forecast_hourly": (
+                    "{{ state_attr('sensor.forecast_hourly', 'forecast') }}"
+                ),
+                "forecast_twice_daily": (
+                    "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}"
+                ),
                 **TEST_MODERN_REQUIRED,
             },
         ),
@@ -635,7 +681,9 @@ SAVED_EXTRA_DATA_WITH_FUTURE_KEY = {
                 "weather": {
                     "name": "test",
                     "condition_template": "{{ trigger.event.data.condition }}",
-                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_template": (
+                        "{{ trigger.event.data.temperature | float }}"
+                    ),
                     "temperature_unit": "°C",
                     "humidity_template": "{{ trigger.event.data.humidity | float }}",
                 },
@@ -712,7 +760,9 @@ async def test_trigger_entity_restore_state(
                     "action": [
                         {
                             "variables": {
-                                "my_variable": "{{ trigger.event.data.temperature + 1 }}"
+                                "my_variable": (
+                                    "{{ trigger.event.data.temperature + 1 }}"
+                                )
                             },
                         },
                     ],
@@ -760,7 +810,9 @@ async def test_restore_weather_save_state(
                 "weather": {
                     "name": "test",
                     "condition_template": "{{ trigger.event.data.condition }}",
-                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_template": (
+                        "{{ trigger.event.data.temperature | float }}"
+                    ),
                     "temperature_unit": "°C",
                     "humidity_template": "{{ trigger.event.data.humidity | float }}",
                 },
@@ -853,7 +905,9 @@ async def test_trigger_entity_restore_state_fail(
                 "weather": {
                     "name": "test",
                     "condition_template": "{{ trigger.event.data.condition }}",
-                    "temperature_template": "{{ trigger.event.data.temperature | float }}",
+                    "temperature_template": (
+                        "{{ trigger.event.data.temperature | float }}"
+                    ),
                     "temperature_unit": "°C",
                     "humidity_template": "{{ trigger.event.data.humidity | float }}",
                 },
@@ -879,7 +933,10 @@ async def test_trigger_entity_restore_state_fail(
     [
         (
             {
-                CONF_ICON: "{% if states.weather.test_state.state == 'sunny' %}mdi:check{% endif %}",
+                CONF_ICON: (
+                    "{% if states.weather.test_state.state =="
+                    " 'sunny' %}mdi:check{% endif %}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
             ATTR_ICON,
@@ -887,7 +944,10 @@ async def test_trigger_entity_restore_state_fail(
         ),
         (
             {
-                CONF_PICTURE: "{% if states.weather.test_state.state == 'sunny' %}check.jpg{% endif %}",
+                CONF_PICTURE: (
+                    "{% if states.weather.test_state.state =="
+                    " 'sunny' %}check.jpg{% endif %}"
+                ),
                 **TEST_LEGACY_REQUIRED,
             },
             ATTR_ENTITY_PICTURE,
