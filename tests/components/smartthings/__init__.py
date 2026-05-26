@@ -36,6 +36,7 @@ DEVICE_FIXTURES = [
     "da_ac_cac_01001",
     "multipurpose_sensor",
     "contact_sensor",
+    "copper_water_meter_v03",
     "base_electric_meter",
     "smart_plug",
     "vd_stv_2017_k",
