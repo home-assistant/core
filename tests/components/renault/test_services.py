@@ -434,7 +434,7 @@ async def test_service_get_vehicle_picture_small(
 async def test_service_get_vehicle_picture_invalid_size(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
-    """Test that service raises when no picture is available."""
+    """Test that service raises when an invalid picture size is requested."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
