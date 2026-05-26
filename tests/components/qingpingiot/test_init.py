@@ -86,7 +86,7 @@ async def test_mqtt_subscription_started(
     await hass.async_block_till_done()
 
     subscribed_topics = [
-        call.args[1] for call in mqtt_mock.async_subscribe.call_args_list
+        call.args[0] for call in mqtt_mock.async_subscribe.call_args_list
     ]
     assert "qingping/AABBCCDDEEFF/up" in subscribed_topics
 

@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "invalid_mac": "Invalid MAC address format. Use 12 hex characters (e.g. AABBCCDDEEFF)."
@@ -11,6 +12,9 @@
         "data": {
           "model": "Model",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "model": "Select the device model."
         },
         "description": "MAC: {mac}",
         "title": "Confirm Device"
@@ -22,7 +26,8 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "mac": "The 12-character hex MAC address of the device (e.g. AABBCCDDEEFF)."
+          "mac": "The 12-character hex MAC address of the device (e.g. AABBCCDDEEFF).",
+          "model": "Select the device model."
         },
         "description": "Enter device MAC address and select model.",
         "title": "Add Device Manually"

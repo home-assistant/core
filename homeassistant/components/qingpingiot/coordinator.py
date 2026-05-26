@@ -44,10 +44,10 @@ class QingpingCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"qingping_{mac}",
             update_interval=None,
         )
-        self.config_entry = entry
         self.mac = mac
         self.model = model
         self.name = name

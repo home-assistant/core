@@ -154,7 +154,7 @@ async def test_temperature_sensor_updates_from_json(
     assert state is not None
     assert state.state == "25.3"
 
-    state = hass.states.get("sensor.air_monitor_humidity")
+    state = hass.states.get("sensor.air_monitor_relative_humidity")
     assert state is not None
     assert state.state == "55.1"
 
