@@ -147,7 +147,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if self.positions.primary is None:
-            return None
+            return False
         return self.positions.primary <= CLOSED_POSITION
 
     @property
