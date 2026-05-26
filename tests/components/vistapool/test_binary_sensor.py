@@ -1,5 +1,6 @@
 """Tests for the Vistapool binary_sensor platform."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -12,6 +13,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def _only_binary_sensor_platform() -> Generator[None]:
+    """Restrict integration setup to the binary_sensor platform for these tests."""
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -36,11 +46,8 @@ async def test_all_entities(
     )
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.vistapool.PLATFORMS", [Platform.BINARY_SENSOR]
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
