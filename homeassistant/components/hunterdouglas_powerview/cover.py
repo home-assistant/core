@@ -144,10 +144,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.positions.primary is None:
-            return False
+            return None
         return self.positions.primary <= CLOSED_POSITION
 
     @property
