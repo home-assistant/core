@@ -3,6 +3,7 @@
 DOMAIN = "kiosker"
 
 # Configuration keys
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_API_TOKEN = "api_token"
 
 # Default values

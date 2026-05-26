@@ -23,8 +23,8 @@ def setup_button_platform_only():
 @pytest.mark.parametrize(
     ("object_id", "method"),
     [
-        ("mock_title_cancel_job", "cancel_job"),
-        ("mock_title_pause_job", "pause_job"),
+        ("workshop_mock_title_cancel_job", "cancel_job"),
+        ("workshop_mock_title_pause_job", "pause_job"),
     ],
 )
 async def test_button_pause_cancel(
@@ -70,8 +70,8 @@ async def test_button_pause_cancel(
 @pytest.mark.parametrize(
     ("object_id", "method"),
     [
-        ("mock_title_cancel_job", "cancel_job"),
-        ("mock_title_resume_job", "resume_job"),
+        ("workshop_mock_title_cancel_job", "cancel_job"),
+        ("workshop_mock_title_resume_job", "resume_job"),
     ],
 )
 async def test_button_resume_cancel(
@@ -126,7 +126,7 @@ async def test_button_continue(
     mock_job_api_attention,
 ) -> None:
     """Test continue button is enabled in ATTENTION state and calls continue_job."""
-    entity_id = "button.mock_title_continue_job"
+    entity_id = "button.workshop_mock_title_continue_job"
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get(entity_id)
     assert state is not None
@@ -169,6 +169,6 @@ async def test_button_continue_unavailable_when_printing(
 ) -> None:
     """Continue button is unavailable when printer is not in ATTENTION state."""
     assert await async_setup_component(hass, "prusalink", {})
-    state = hass.states.get("button.mock_title_continue_job")
+    state = hass.states.get("button.workshop_mock_title_continue_job")
     assert state is not None
     assert state.state == "unavailable"

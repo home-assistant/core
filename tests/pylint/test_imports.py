@@ -62,55 +62,55 @@ def test_good_import(
             "homeassistant.components.pylint_test.sensor",
             "homeassistant.components.pylint_test.const",
             "CONSTANT",
-            "hass-relative-import",
+            "home-assistant-relative-import",
         ),
         (
             "homeassistant.components.pylint_test.sensor",
             "..const",
             "CONSTANT",
-            "hass-absolute-import",
+            "home-assistant-absolute-import",
         ),
         (
             "homeassistant.components.pylint_test.sensor",
             "...const",
             "CONSTANT",
-            "hass-absolute-import",
+            "home-assistant-absolute-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "homeassistant.components.pylint_test.api.const",
             "CONSTANT",
-            "hass-relative-import",
+            "home-assistant-relative-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "...const",
             "CONSTANT",
-            "hass-absolute-import",
+            "home-assistant-absolute-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "homeassistant.components",
             "pylint_test",
-            "hass-relative-import",
+            "home-assistant-relative-import",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "homeassistant.components.pylint_test.const",
             "CONSTANT",
-            "hass-relative-import",
+            "home-assistant-relative-import",
         ),
         (
             "tests.components.pylint_test.api.hub",
             "tests.components.pylint_test.const",
             "CONSTANT",
-            "hass-relative-import",
+            "home-assistant-relative-import",
         ),
         (
             "tests.components.pylint_test.api.hub",
             "...const",
             "CONSTANT",
-            "hass-absolute-import",
+            "home-assistant-absolute-import",
         ),
     ],
 )
@@ -245,7 +245,7 @@ def test_bad_root_import(
     with assert_adds_messages(
         linter,
         pylint.testutils.MessageTest(
-            msg_id="hass-component-root-import",
+            msg_id="home-assistant-component-root-import",
             node=node,
             args=None,
             line=1,
@@ -275,7 +275,10 @@ def test_bad_root_import(
             ),
         ),
         (
-            "from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry",
+            (
+                "from homeassistant.helpers.issue_registry"
+                " import async_get as async_get_issue_registry"
+            ),
             "tests.components.pylint_test.climate",
             (
                 "async_get",
@@ -305,7 +308,7 @@ def test_bad_namespace_import(
     with assert_adds_messages(
         linter,
         pylint.testutils.MessageTest(
-            msg_id="hass-helper-namespace-import",
+            msg_id="home-assistant-helper-namespace-import",
             node=node,
             args=expected_args,
             line=1,
@@ -351,7 +354,7 @@ def test_domain_alias(
     if end_col_offset > 0:
         expected_messages.append(
             pylint.testutils.MessageTest(
-                msg_id="hass-import-constant-alias",
+                msg_id="home-assistant-import-constant-alias",
                 node=import_node,
                 args=("DOMAIN", "DOMAIN", "OTHER_DOMAIN"),
                 line=1,

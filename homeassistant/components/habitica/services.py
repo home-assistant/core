@@ -1,7 +1,7 @@
 """Actions for the Habitica integration."""
 
 from dataclasses import asdict
-from datetime import UTC, date, datetime, time
+from datetime import UTC, datetime, time
 import logging
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID, uuid4
@@ -740,7 +740,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             reminders.extend(
                 Reminders(
                     id=uuid4(),
-                    time=datetime.combine(date.today(), r, tzinfo=UTC),
+                    time=datetime.combine(dt_util.now().date(), r, tzinfo=UTC),
                 )
                 for r in add_reminders
                 if r not in existing_reminder_times
@@ -806,10 +806,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
             data["daysOfMonth"] = [start_date.day]
             data["weeksOfMonth"] = []
 
-    if interval := call.data.get(ATTR_INTERVAL):
+    if (interval := call.data.get(ATTR_INTERVAL)) is not None:
         data["everyX"] = interval
 
-    if streak := call.data.get(ATTR_STREAK):
+    if (streak := call.data.get(ATTR_STREAK)) is not None:
         data["streak"] = streak
 
     try:

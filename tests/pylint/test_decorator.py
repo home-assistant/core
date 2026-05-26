@@ -50,7 +50,7 @@ def test_bad_callback(linter: UnittestLinter, decorator_checker: BaseChecker) ->
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-async-callback-decorator",
+            msg_id="home-assistant-async-callback-decorator",
             line=5,
             node=root_node.body[1],
             args=None,
@@ -152,7 +152,7 @@ def test_bad_fixture_session_scope(
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope `session`", "use `package` or lower"),
@@ -199,7 +199,7 @@ def test_bad_fixture_package_scope(
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope `package`", "use `module` or lower"),
@@ -253,7 +253,7 @@ def test_bad_fixture_autouse(
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-pytest-fixture-decorator",
+            msg_id="home-assistant-pytest-fixture-decorator",
             line=10,
             node=root_node.body[2].decorators.nodes[0],
             args=("scope/autouse combination", "set `autouse=True` or reduce scope"),

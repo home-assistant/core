@@ -239,13 +239,16 @@ def mock_ouman_client(registry_set: OumanRegistrySet) -> Generator[AsyncMock]:
 
         # Simulate the device: a successful write changes what subsequent
         # reads return, so the coordinator's post-write refresh keeps the
-        # new value instead of reverting. Tests can override by replacing
-        # ``set_endpoint_value.side_effect``.
+        # new value instead of reverting. The API library parses numeric
+        # responses as floats via ``NumberOumanEndpoint.parse_value``, so
+        # we mirror that here so int writes round-trip as floats. Tests can
+        # override by replacing ``set_endpoint_value.side_effect``.
         def _set_endpoint_value(
             endpoint: OumanEndpoint, value: OumanValues
         ) -> OumanValues:
-            values[endpoint] = value
-            return value
+            stored: OumanValues = float(value) if isinstance(value, int) else value
+            values[endpoint] = stored
+            return stored
 
         client.set_endpoint_value.side_effect = _set_endpoint_value
         yield client

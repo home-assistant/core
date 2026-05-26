@@ -145,10 +145,12 @@ async def test_platform_loading(
                         "server_reachable": system_health.async_check_can_reach_url(
                             hass, "http://example.com/status"
                         ),
-                        "server_fail_reachable": system_health.async_check_can_reach_url(
-                            hass,
-                            "http://example.com/status_fail",
-                            more_info="http://more-info-url.com",
+                        "server_fail_reachable": (
+                            system_health.async_check_can_reach_url(
+                                hass,
+                                "http://example.com/status_fail",
+                                more_info="http://more-info-url.com",
+                            )
                         ),
                         "server_timeout": system_health.async_check_can_reach_url(
                             hass,
