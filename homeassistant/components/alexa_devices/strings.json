@@ -99,10 +99,10 @@
     },
     "todo": {
       "shop": {
-        "name": "Shopping List"
+        "name": "Shopping list"
       },
       "todo": {
-        "name": "To-do List"
+        "name": "To-do list"
       }
     }
   },

@@ -79,7 +79,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             if routine.domain == Platform.BUTTON
         }
 
-        self._list_items_lookup: dict[str, dict[str, AmazonListItem]] = {}
+        self._todo_list_items: dict[str, dict[str, AmazonListItem]] = {}
 
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
@@ -169,34 +169,34 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def sync_todo_list_items(self) -> None:
         """Sync todo items. Only used for initial sync."""
         for todo_list in self.api.todo_lists:
-            self._list_items_lookup[todo_list.id] = await self.api.get_todo_list_items(
+            self._todo_list_items[todo_list.id] = await self.api.get_todo_list_items(
                 todo_list.id
             )
 
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
-        if list_event.list_id not in self._list_items_lookup:
+        if list_event.list_id not in self._todo_list_items:
             _LOGGER.warning(
                 "To-do list has not been synced to Home Assistant yet. Please restart or try again later"
             )
             return
 
         if list_event.type == AmazonListEventType.DELETED:
-            self._list_items_lookup[list_event.list_id].pop(list_event.item_id, None)
+            self._todo_list_items[list_event.list_id].pop(list_event.item_id, None)
         elif (
             list_event.type
             in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
         ) and list_event.items:
-            self._list_items_lookup[list_event.list_id][list_event.item_id] = (
+            self._todo_list_items[list_event.list_id][list_event.item_id] = (
                 list_event.items
             )
 
         self.async_update_listeners()
 
     @property
-    def todo_items_lookup(self) -> dict[str, dict[str, AmazonListItem]]:
+    def todo_list_items(self) -> dict[str, dict[str, AmazonListItem]]:
         "Current todo_items."
-        return self._list_items_lookup
+        return self._todo_list_items
 
     async def sync_history_state(self) -> None:
         """Sync history state."""

@@ -1,6 +1,5 @@
 """Platform for Alexa To-do integration."""
 
-import logging
 from typing import TYPE_CHECKING
 
 from aioamazondevices.structures import (
@@ -18,7 +17,7 @@ from homeassistant.components.todo import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonServiceEntity
 
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
@@ -36,14 +34,7 @@ async def async_setup_entry(
     entry: AmazonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Alexa To-do Lists platform.
-
-    Args:
-        hass: The Home Assistant instance.
-        entry: The config entry.
-        async_add_entities: The callback to add entities.
-
-    """
+    """Set up the Alexa To-do Lists platform."""
     coordinator = entry.runtime_data
 
     known_list_ids: set[str] = set()
@@ -78,24 +69,13 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     def __init__(
         self, coordinator: AmazonDevicesCoordinator, alexa_list: AmazonListInfo
     ) -> None:
-        """Initialize an AlexaTodoList.
+        """Initialize an AlexaTodoList."""
+        self._coordinator = coordinator
+        self._list = alexa_list
 
-        Args:
-            coordinator: The coordinator for this entity.
-            alexa_list: The Alexa list information.
-
-        """
-        self._coordinator: AmazonDevicesCoordinator = coordinator
-        self._list: AmazonListInfo = alexa_list
-
-        if alexa_list.list_type == AmazonListType.SHOP:
+        if alexa_list.list_type in AmazonListType:
             entity_description = EntityDescription(
-                key=alexa_list.id, translation_key="shop"
-            )
-
-        elif alexa_list.list_type == AmazonListType.TODO:
-            entity_description = EntityDescription(
-                key=alexa_list.id, translation_key="todo"
+                key=alexa_list.id, translation_key=alexa_list.list_type.lower()
             )
         else:
             # Custom list -> Use actual name
@@ -105,10 +85,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
         self._attr_unique_id = alexa_list.id
 
-        super().__init__(
-            coordinator,
-            entity_description,
-        )
+        super().__init__(coordinator, entity_description)
 
         _LOGGER.debug(
             "Created todo entity for list: %s (ID: %s)", self._list.name, self._list.id
@@ -116,13 +93,9 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
     @property
     def todo_items(self) -> list[TodoItem]:
-        """All Todo items in the list.
+        """All Todo items in the list."""
 
-        Returns:
-            List of TodoItems in the list.
-        """
-
-        todo_items = self._coordinator.todo_items_lookup.get(self._list.id, {}).values()
+        todo_items = self._coordinator.todo_list_items.get(self._list.id, {}).values()
 
         return [
             TodoItem(
@@ -136,15 +109,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
-        """Add an item to the To-do list.
-
-        Args:
-            item: The item to add.
-
-        Raises:
-            ServiceValidationError: If the item summary is missing.
-
-        """
+        """Add an item to the To-do list."""
         _LOGGER.debug(
             "Creating todo item: %s for list: %s", item.summary, self._list.name
         )
@@ -164,15 +129,10 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Delete items from the to-do list.
-
-        Args:
-            uids: The unique IDs of the items to delete.
-
-        """
+        """Delete items from the to-do list."""
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
 
-        list_items_lookup = self._coordinator.todo_items_lookup.get(self._list.id)
+        list_items_lookup = self._coordinator.todo_list_items.get(self._list.id)
 
         if list_items_lookup is None:
             raise ServiceValidationError(
@@ -210,22 +170,14 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item in the To-do list.
-
-        Args:
-            item: The item to update.
-
-        Raises:
-            ServiceValidationError: If the item summary or UID is missing.
-
-        """
+        """Update an item in the To-do list."""
         if not item.summary or not item.uid:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="todo_item_summary_uid_required",
             )
 
-        list_items_lookup = self._coordinator.todo_items_lookup.get(self._list.id)
+        list_items_lookup = self._coordinator.todo_list_items.get(self._list.id)
 
         if list_items_lookup is None:
             raise ServiceValidationError(
