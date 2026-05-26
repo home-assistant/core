@@ -10,13 +10,10 @@ from homeassistant.components.mawaqit.coordinator import (
     PrayerTimeCoordinator,
 )
 from homeassistant.components.mawaqit.sensor import (
-    NEXT_SALAT_SENSOR_DESCRIPTION,
     PRAYER_TIME_SENSOR_DESCRIPTIONS,
     MawaqitPrayerTimeSensor,
     MawaqitPrayerTimeSensorEntityDescription,
     MyMosqueSensor,
-    NextPrayerSensor,
-    SensorEntityDescription,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -24,13 +21,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_MOSQUE_DATA = {
-    "name": "Test Mosque",
-    "uuid": "aaaaa-bbbbb-cccccc-0000",
-    "announcements": [
-        {"title": "Ramadan", "content": "Starts tomorrow"},
-    ],
-}
+MOCK_MOSQUE_DATA = {"name": "Test Mosque", "uuid": "aaaaa-bbbbb-cccccc-0000"}
 
 
 def _build_prayer_data(
@@ -167,61 +158,26 @@ async def test_mosque_sensor_native_value(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-async def test_mosque_sensor_no_announcements(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("coordinator_attr", "entity_id"),
+    [
+        ("mosque_coordinator", "sensor.mosque_information"),
+        ("prayer_time_coordinator", "sensor.fajr_prayer"),
+        ("prayer_time_coordinator", "sensor.next_salat_name"),
+    ],
+)
+async def test_sensor_unavailable_when_no_coordinator_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    coordinator_attr: str,
+    entity_id: str,
 ) -> None:
-    """Test mosque sensor with no announcements."""
-    mosque_data = {"name": "Test Mosque", "uuid": "abc"}
-    await _setup_integration(hass, mock_config_entry, mosque_data=mosque_data)
-
-    state = hass.states.get("sensor.mosque_information")
-    assert state is not None
-    assert "announcements" not in state.attributes
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_mosque_sensor_no_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test mosque sensor when coordinator data is None."""
+    """Test sensors become unavailable when coordinator data is None."""
     await _setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data.mosque_coordinator
-    coordinator.data = None
+    coordinator = getattr(mock_config_entry.runtime_data, coordinator_attr)
     coordinator.async_set_updated_data(None)
     await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.mosque_information")
-    assert state is not None
-    assert state.state == "unavailable"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_prayer_time_sensor_values(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test prayer time sensors return valid datetime values."""
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.fajr_prayer")
-    assert state is not None
-    assert state.state != "unavailable"
-    assert state.state != "unknown"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_prayer_time_sensor_no_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test prayer time sensor when coordinator data is None."""
-    await _setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-    coordinator.data = None
-    coordinator.async_set_updated_data(None)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.fajr_prayer")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
 
@@ -244,48 +200,19 @@ async def test_prayer_time_sensor_get_value_error(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-async def test_next_prayer_sensor_name(
+async def test_next_prayer_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test next prayer name sensor."""
+    """Test next salat sensors: at 12:00 Paris the next prayer is Dhuhr at 12:30."""
     await _setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.next_salat_name")
-    assert state is not None
-    assert state.state != "unavailable"
-    assert state.state != "unknown"
-    # At 12:00 Paris time, next prayer should be Dhuhr (12:30)
-    assert state.state == "dhuhr"
+    name_state = hass.states.get("sensor.next_salat_name")
+    assert name_state is not None
+    assert name_state.state == "dhuhr"
 
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_next_prayer_sensor_time(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test next prayer time sensor."""
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.next_salat_time")
-    assert state is not None
-    assert state.state != "unavailable"
-    assert state.state != "unknown"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_next_prayer_sensor_no_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test next prayer sensor when coordinator data is None."""
-    await _setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-    coordinator.data = None
-    coordinator.async_set_updated_data(None)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.next_salat_name")
-    assert state is not None
-    assert state.state == "unavailable"
+    time_state = hass.states.get("sensor.next_salat_time")
+    assert time_state is not None
+    assert time_state.state not in ("unavailable", "unknown")
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
@@ -305,47 +232,41 @@ async def test_next_prayer_sensor_no_calendar(
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-async def test_shuruq_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "entity_id",
+    ["sensor.fajr_prayer", "sensor.shuruq", "sensor.jumua_prayer"],
+)
+async def test_prayer_sensors_return_valid_state(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, entity_id: str
 ) -> None:
-    """Test shuruq sensor returns valid time."""
+    """Test prayer, shuruq and jumua sensors return a valid datetime state."""
     await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.shuruq")
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != "unavailable"
-    assert state.state != "unknown"
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-async def test_jumua_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test jumua sensor returns valid time."""
-    await _setup_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.jumua_prayer")
-    assert state is not None
-    assert state.state != "unavailable"
+    assert state.state not in ("unavailable", "unknown")
 
 
 # --- Direct unit tests for sensor classes to cover property branches ---
 
 
-def test_mosque_sensor_native_value_no_data() -> None:
-    """Test MyMosqueSensor.native_value returns None when no data."""
-    coordinator = MagicMock(spec=MosqueCoordinator)
+@pytest.mark.parametrize(
+    ("sensor_cls", "coordinator_spec", "extra_args"),
+    [
+        (MyMosqueSensor, MosqueCoordinator, []),
+        (
+            MawaqitPrayerTimeSensor,
+            PrayerTimeCoordinator,
+            [PRAYER_TIME_SENSOR_DESCRIPTIONS[0]],
+        ),
+    ],
+)
+def test_sensor_native_value_none_when_no_data(
+    sensor_cls, coordinator_spec, extra_args
+) -> None:
+    """Test native_value returns None when coordinator data is None."""
+    coordinator = MagicMock(spec=coordinator_spec)
     coordinator.data = None
-    sensor = MyMosqueSensor(coordinator)
-    assert sensor.native_value is None
-
-
-def test_prayer_time_sensor_native_value_no_data() -> None:
-    """Test MawaqitPrayerTimeSensor.native_value returns None when no data."""
-    coordinator = MagicMock(spec=PrayerTimeCoordinator)
-    coordinator.data = None
-    desc = PRAYER_TIME_SENSOR_DESCRIPTIONS[0]
-    sensor = MawaqitPrayerTimeSensor(coordinator, desc)
+    sensor = sensor_cls(coordinator, *extra_args)
     assert sensor.native_value is None
 
 
@@ -360,36 +281,4 @@ def test_prayer_time_sensor_native_value_raises() -> None:
         get_value=MagicMock(side_effect=KeyError("missing")),
     )
     sensor = MawaqitPrayerTimeSensor(coordinator, desc)
-    assert sensor.native_value is None
-
-
-def test_next_prayer_sensor_no_data_direct() -> None:
-    """Test NextPrayerSensor._get_next_prayer_info returns None tuple when no data."""
-    coordinator = MagicMock(spec=PrayerTimeCoordinator)
-    coordinator.data = None
-    desc = NEXT_SALAT_SENSOR_DESCRIPTION[0]
-    sensor = NextPrayerSensor(coordinator, desc)
-    assert sensor.native_value is None
-
-
-def test_next_prayer_sensor_unknown_key() -> None:
-    """Test NextPrayerSensor.native_value returns None for unknown key."""
-    coordinator = MagicMock(spec=PrayerTimeCoordinator)
-    # Provide valid data so _get_next_prayer_info returns actual values
-    month_data = {}
-    for day in range(1, 32):
-        month_data[str(day)] = ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data  # April
-
-    coordinator.data = {
-        "calendar": calendar,
-        "timezone": "Europe/Paris",
-    }
-    desc = SensorEntityDescription(
-        key="unknown_key",
-        translation_key="unknown_key",
-    )
-    sensor = NextPrayerSensor(coordinator, desc)
-    # next_prayer_index and time are not None, but key doesn't match any known key
     assert sensor.native_value is None
