@@ -55,8 +55,12 @@ async def test_binary_sensors_default_modules(
 
     # Diagnostic module-installed entities are disabled by default.
     for entity_id in (
+        "binary_sensor.my_pool_chlorine_module",
+        "binary_sensor.my_pool_conductivity_module",
         "binary_sensor.my_pool_hidro_module",
         "binary_sensor.my_pool_io_module",
+        "binary_sensor.my_pool_ph_module",
+        "binary_sensor.my_pool_redox_module",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
