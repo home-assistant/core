@@ -381,8 +381,15 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         await self._device.set_shutter_level_async(HMIP_COVER_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        await self._device.set_shutter_level_async(HMIP_COVER_CLOSED)
+        """Close the cover.
+
+        Use setSlatsLevel instead of setShutterLevel so HMIP Cloud does
+        not reset slats to 0 (horizontal) on blind-capable group members
+        (e.g. HmIP-FBL with firmware >= 1.10.16). See issue #114266.
+        """
+        await self._device.set_slats_level_async(
+            slatsLevel=HMIP_SLATS_CLOSED, shutterLevel=HMIP_COVER_CLOSED
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the group if in motion."""

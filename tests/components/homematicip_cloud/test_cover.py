@@ -507,8 +507,8 @@ async def test_hmip_cover_shutter_group(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 5
-    assert hmip_device.mock_calls[-1][0] == "set_shutter_level_async"
-    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert hmip_device.mock_calls[-1][0] == "set_slats_level_async"
+    assert hmip_device.mock_calls[-1][2] == {"slatsLevel": 1, "shutterLevel": 1}
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == CoverState.CLOSED
