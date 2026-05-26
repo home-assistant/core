@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,3 +25,23 @@ async def test_sensor(
         await setup_integration_deferred()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_sensor_gauge_unit_applied(
+    hass: HomeAssistant, setup_integration: None
+) -> None:
+    """Test gauge sensor uses reported unit."""
+
+    entity = hass.states.get("sensor.garage_energie")
+    assert entity
+    assert entity.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Wh"
+
+
+async def test_sensor_gauge_unit_missing(
+    hass: HomeAssistant, setup_integration: None
+) -> None:
+    """Test gauge sensor falls back to description default."""
+
+    entity = hass.states.get("sensor.tuin_luchtkwaliteit")
+    assert entity
+    assert entity.attributes[ATTR_UNIT_OF_MEASUREMENT] == "ppm"
