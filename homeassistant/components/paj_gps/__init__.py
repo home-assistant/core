@@ -7,7 +7,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
 
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
