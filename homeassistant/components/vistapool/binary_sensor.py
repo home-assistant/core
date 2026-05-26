@@ -38,7 +38,7 @@ class VistapoolBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Vistapool binary sensor entity."""
 
     value_path: str
-    exists_path: str | None = None
+    exists_path: str | tuple[str, ...] | None = None
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] = (
@@ -79,7 +79,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
         translation_key="hidro_fl2_status",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_path="hidro.fl2",
-        exists_path=PATH_HASCL,
+        exists_path=(PATH_HASHIDRO, PATH_HASCL),
     ),
     VistapoolBinarySensorEntityDescription(
         key="cl_pump_status",
@@ -177,10 +177,14 @@ async def async_setup_entry(
 
     for coordinator in entry.runtime_data.coordinators.values():
         for description in BINARY_SENSOR_DESCRIPTIONS:
-            if description.exists_path is not None and not coordinator.get_value(
-                description.exists_path
-            ):
-                continue
+            if description.exists_path is not None:
+                required = (
+                    (description.exists_path,)
+                    if isinstance(description.exists_path, str)
+                    else description.exists_path
+                )
+                if not all(coordinator.get_value(path) for path in required):
+                    continue
             entities.append(VistapoolBinarySensor(coordinator, description))
 
         if coordinator.get_value(PATH_HASHIDRO):

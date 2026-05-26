@@ -134,6 +134,25 @@ async def test_binary_sensors_acid_tank_low(
     assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "on"
 
 
+async def test_binary_sensors_fl2_requires_hidro(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test hidro_fl2 is not created when hasCL is set but hasHidro is not."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasCL": 1, "hasHidro": 0, "version": 1},
+        "modules": {"cl": {"pump_status": 0, "tank": 0}},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.my_pool_hidro_fl2") is None
+    assert hass.states.get("binary_sensor.my_pool_chlorine_pump") is not None
+
+
 async def test_binary_sensors_multi_pool(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
