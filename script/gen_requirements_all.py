@@ -97,7 +97,7 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful
 # for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.10.0
+anyio==4.13.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -117,7 +117,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.2
+pydantic==2.13.4
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

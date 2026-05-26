@@ -29,7 +29,6 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -973,7 +972,7 @@ async def google_assistant_get(
         return
 
     entity = google_helpers.GoogleEntity(hass, gconf, state)
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+    if not entity.is_supported():
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -1075,9 +1074,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
-        hass, entity_id
-    ):
+    if not entity_supported_by_alexa(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,

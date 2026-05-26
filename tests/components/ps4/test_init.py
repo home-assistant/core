@@ -114,6 +114,7 @@ MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
 
 async def test_ps4_integration_setup(hass: HomeAssistant) -> None:
     """Test PS4 integration is setup."""
+    # pylint: disable-next=home-assistant-tests-direct-async-setup
     await ps4.async_setup(hass, {})
     await hass.async_block_till_done()
     assert hass.data[PS4_DATA].protocol is not None
