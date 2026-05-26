@@ -537,15 +537,29 @@ async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == CoverState.OPENING
 
 
-async def test_open_tilt(shutterbox, hass: HomeAssistant) -> None:
-    """Test closing tilt."""
+@pytest.mark.parametrize(
+    ("is_tilt_180", "expected_tilt_position", "expected_tilt_reported"),
+    [
+        pytest.param(False, 0, 100, id="tilt_90"),
+        pytest.param(True, 50, 50, id="tilt_180"),
+    ],
+)
+async def test_open_tilt(
+    shutterbox,
+    hass: HomeAssistant,
+    is_tilt_180: bool,
+    expected_tilt_position: int,
+    expected_tilt_reported: int,
+) -> None:
+    """Test opening tilt for 90-degree and 180-degree tilt shutters."""
     feature_mock, entity_id = shutterbox
+    feature_mock.is_tilt_180 = is_tilt_180
 
     def initial_update():
         feature_mock.tilt_current = 100
 
     def set_tilt_position(tilt_position):
-        assert tilt_position == 0
+        assert tilt_position == expected_tilt_position
         feature_mock.tilt_current = tilt_position
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
@@ -561,7 +575,9 @@ async def test_open_tilt(shutterbox, hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100  # inverted
+    assert (
+        state.attributes[ATTR_CURRENT_TILT_POSITION] == expected_tilt_reported
+    )  # inverted
 
 
 async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
