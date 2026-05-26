@@ -97,9 +97,9 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
             else:
                 if not self.unique_id:
-                    if (serial := self._get_serial_number(api)) is None:
+                    if (serial := self._get_formatted_serial(api)) is None:
                         return self.async_abort(reason="no_serial_number")
-                    await self.async_set_unique_id(format_mac(serial))
+                    await self.async_set_unique_id(serial)
 
                 config = {
                     CONF_PROTOCOL: user_input[CONF_PROTOCOL],
@@ -264,16 +264,16 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     @staticmethod
-    def _get_serial_number(api: axis.AxisDevice) -> str | None:
+    def _get_formatted_serial(api: axis.AxisDevice) -> str | None:
         """Retrieve the device serial number from the Axis API.
 
         Tries basic_device_info first, then property_handler. Returns None if not found.
         """
         vapix = api.vapix
         if vapix.basic_device_info.initialized:
-            return vapix.basic_device_info["0"].serial_number
+            return format_mac(vapix.basic_device_info["0"].serial_number)
         if vapix.params.property_handler.initialized:
-            return vapix.params.property_handler["0"].system_serial_number
+            return format_mac(vapix.params.property_handler["0"].system_serial_number)
         return None
 
 
