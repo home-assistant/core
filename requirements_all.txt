@@ -1516,6 +1516,9 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
+matter-ble-proxy==0.7.1
+
+# homeassistant.components.matter
 matter-python-client==0.7.1
 
 # homeassistant.components.maxcube
@@ -1745,6 +1748,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
+# homeassistant.components.ovhcloud_ai_endpoints
 openai==2.21.0
 
 # homeassistant.components.openerz
@@ -2452,7 +2456,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.14
 
 # homeassistant.components.prusalink
-pyprusalink==2.2.0
+pyprusalink==3.0.0
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2650,7 +2654,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -3117,7 +3121,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.0
+teltasync==0.3.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5

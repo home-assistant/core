@@ -13,13 +13,14 @@ from aioamazondevices.structures import (
     AmazonListEvent,
     AmazonListEventType,
     AmazonListItem,
+    AmazonVocalRecord,
 )
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -82,6 +83,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
         self.api.on_todo_event.append(self.todo_event_handler)
         self.api.on_todo_event.freeze()
+
+        self._vocal_records: dict[str, AmazonVocalRecord] = {}
+
+        self.api.on_history_event.append(self.history_state_event_handler)
+        self.api.on_history_event.freeze()
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -191,3 +197,38 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def todo_items_lookup(self) -> dict[str, dict[str, AmazonListItem]]:
         "Current todo_items."
         return self._list_items_lookup
+
+    async def sync_history_state(self) -> None:
+        """Sync history state."""
+        try:
+            self._vocal_records = await self.api.sync_history_state()
+        except CannotAuthenticate as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(e)},
+            ) from e
+        except CannotConnect as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(e)},
+            ) from e
+        except BaseException as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
+                translation_placeholders={"error": repr(e)},
+            ) from e
+
+    async def history_state_event_handler(
+        self, vocal_records: dict[str, AmazonVocalRecord]
+    ) -> None:
+        """Handle pushed vocal record events."""
+        self._vocal_records = {**self._vocal_records, **vocal_records}
+        self.async_update_listeners()
+
+    @property
+    def vocal_records(self) -> dict[str, AmazonVocalRecord]:
+        """Vocal records of devices."""
+        return self._vocal_records
