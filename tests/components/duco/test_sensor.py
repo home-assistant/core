@@ -140,16 +140,16 @@ async def test_lan_info_failures_keep_node_entities_available(
 
 
 @pytest.mark.parametrize(
-    ("node_id", "expected_entity_id", "expected_state"),
+    ("node_id", "expected_unique_id_suffix", "expected_state"),
     [
         (
             200,
-            "sensor.new_rh_sensor",
+            "200_humidity",
             "55.0",
         ),
         (
             201,
-            "sensor.new_valve",
+            "201_co2",
             "575",
         ),
     ],
@@ -160,13 +160,16 @@ async def test_new_node_added_dynamically(
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     dynamic_sensor_nodes: dict[int, Node],
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     node_id: int,
-    expected_entity_id: str,
+    expected_unique_id_suffix: str,
     expected_state: str,
 ) -> None:
     """Test a new node appearing in coordinator data creates entities automatically."""
-    assert hass.states.get(expected_entity_id) is None
+    unique_id = f"{mock_config_entry.unique_id}_{expected_unique_id_suffix}"
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id) is None
 
     new_node = dynamic_sensor_nodes[node_id]
     mock_duco_client.async_get_nodes.return_value = [*mock_sensor_nodes, new_node]
@@ -178,7 +181,10 @@ async def test_new_node_added_dynamically(
     # the next loop drain on slower runners.
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(expected_entity_id)
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
 
@@ -312,6 +318,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test UNKNOWN type node is retried and gets entities once the type resolves."""
@@ -347,7 +354,8 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.future_sensor") is None
+    unique_id = f"{mock_config_entry.unique_id}_{node_id}_humidity"
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id) is None
 
     # Second poll: type now resolved — entities must be created.
     mock_duco_client.async_get_nodes.return_value = [
@@ -361,7 +369,10 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     # the next loop drain on slower runners.
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.future_sensor")
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "62.0"
 
