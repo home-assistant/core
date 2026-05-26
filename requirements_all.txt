@@ -718,7 +718,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.17.0
+bthome-ble==3.23.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1263,7 +1263,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.96
+holidays==0.97
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260429.4
@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.4.3
+inkbird-ble==1.4.4
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -1517,6 +1517,9 @@ lxml==6.0.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
+
+# homeassistant.components.matter
+matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
 matter-python-client==0.7.1
@@ -1748,6 +1751,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
+# homeassistant.components.ovhcloud_ai_endpoints
 openai==2.21.0
 
 # homeassistant.components.openerz
@@ -2455,7 +2459,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.14
 
 # homeassistant.components.prusalink
-pyprusalink==2.2.0
+pyprusalink==3.0.0
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2653,7 +2657,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -2820,7 +2824,7 @@ pyws66i==1.1
 pyxeoma==1.4.2
 
 # homeassistant.components.yardian
-pyyardian==1.1.1
+pyyardian==1.3.3
 
 # homeassistant.components.qrcode
 pyzbar==0.1.9
@@ -3120,7 +3124,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.0
+teltasync==0.3.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
@@ -3230,7 +3234,7 @@ uhooapi==1.2.8
 uiprotect==10.5.0
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.5.7
+ultraheat-api==0.6.0
 
 # homeassistant.components.unifi_discovery
 unifi-discovery==1.4.0
@@ -3409,6 +3413,9 @@ yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
 yolink-api==0.6.5
+
+# homeassistant.components.yoto
+yoto-api==3.1.3
 
 # homeassistant.components.youless
 youless-api==2.2.0

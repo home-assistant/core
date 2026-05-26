@@ -1,0 +1,85 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register custom service actions.
+  appropriate-polling:
+    status: done
+    comment: 5 minute interval. MQTT carries live state; polling is what surfaces the online -> offline transition since the broker doesn't push disconnect events.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Real-time updates are dispatched through the coordinator, not via per-entity event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not register custom service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration supports local DHCP discovery (via hostname pattern), but does not implement a separate discovery update handling flow.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: Only the media_player entity ships in this PR; no diagnostic entities yet.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Only the media_player entity ships in this PR; no entities are disabled by default.
+  entity-translations:
+    status: exempt
+    comment: The media_player uses the device name; no translatable strings yet.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: No custom icon translations are needed yet.
+  reconfiguration-flow:
+    status: exempt
+    comment: Authorization is the only configuration; reauth covers re-linking the account.
+  repair-issues:
+    status: exempt
+    comment: No repair issues are raised yet.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

@@ -5199,6 +5199,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "ovhcloud_ai_endpoints": {
+      "name": "OVHcloud AI Endpoints",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ovo_energy": {
       "name": "OVO Energy",
       "integration_type": "service",
@@ -8217,6 +8223,12 @@
     },
     "yolink": {
       "name": "YoLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
+    "yoto": {
+      "name": "Yoto",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
