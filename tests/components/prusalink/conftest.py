@@ -123,11 +123,14 @@ def mock_get_status_printing() -> Generator[dict[str, Any]]:
 
 
 @pytest.fixture
-def mock_job_api_idle() -> Generator[dict[str, Any]]:
-    """Mock PrusaLink job API having no job."""
-    resp = {}
-    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
-        yield resp
+def mock_job_api_idle() -> Generator[None]:
+    """Mock PrusaLink job API having no job.
+
+    pyprusalink >= 3.0.0 returns `None` from `get_job()` on HTTP 204 when
+    no job is running, rather than an empty dict as in 2.x.
+    """
+    with patch("pyprusalink.PrusaLink.get_job", return_value=None):
+        yield None
 
 
 @pytest.fixture
@@ -206,6 +209,6 @@ def mock_api(
     mock_info_api: dict[str, Any],
     mock_get_legacy_printer: dict[str, Any],
     mock_get_status_idle: dict[str, Any],
-    mock_job_api_idle: dict[str, Any],
+    mock_job_api_idle: None,
 ) -> None:
     """Mock PrusaLink API."""
