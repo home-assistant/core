@@ -26,8 +26,10 @@ PARALLEL_UPDATES = 1
 
 _SPEED_RANGE = (1, SPEED_COUNT)
 
-# Gap between RF presses so ESPHome-based proxies don't merge them.
-_COMMAND_DELAY = 0.2
+# Minimum gap the hood needs to register consecutive presses as distinct
+# button events. Without it, low-latency transmitters collapse rapid presses
+# into a single one.
+_COMMAND_DELAY = 0.5
 
 
 async def async_setup_entry(
