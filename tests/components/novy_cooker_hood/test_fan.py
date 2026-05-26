@@ -273,7 +273,7 @@ async def test_set_percentage_sleeps_between_presses(
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
     """A delay is awaited between every RF press, including between sequences."""
-    delay = 0.2
+    delay = 0.5
     with (
         patch("homeassistant.components.novy_cooker_hood.fan._COMMAND_DELAY", delay),
         patch(
