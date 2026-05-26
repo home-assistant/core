@@ -216,6 +216,21 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during import")
             return self._abort_import(reason="unknown")
 
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "OPNsense",
+            },
+        )
+
         unique_id = await client.get_device_unique_id()
         if unique_id:
             await self.async_set_unique_id(unique_id)
@@ -270,20 +285,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             "import_failed_missing_interfaces",
         )
 
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2026.11.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "OPNsense",
-            },
-        )
         return self.async_create_entry(
             title=verified_data[CONF_URL], data=verified_data
         )
