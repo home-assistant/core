@@ -107,14 +107,6 @@ async def _push_media_state(
     await event_handler({TEST_DEVICE_1_SN: media_state})
 
 
-async def _clear_media_state(
-    mock_amazon_devices_client: AsyncMock,
-) -> None:
-    """Clear coordinator media state via the registered event handler."""
-    event_handler = _get_media_state_event_callback(mock_amazon_devices_client)
-    await event_handler({})
-
-
 async def _push_volume_state(
     mock_amazon_devices_client: AsyncMock,
     volume_state: AmazonVolumeState,
