@@ -327,11 +327,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if flow and flow.deprecated_show_progress:
             if (cur_step := flow.cur_step) and cur_step[
                 "type"
-            ] == FlowResultType.SHOW_PROGRESS:
+            ] is FlowResultType.SHOW_PROGRESS:
                 # Allow the progress task to finish before we call the flow handler
                 await asyncio.sleep(0)
 
-        while not result or result["type"] == FlowResultType.SHOW_PROGRESS_DONE:
+        while not result or result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
             result = await self._async_configure(flow_id, user_input)
             flow = self._progress.get(flow_id)
             if flow and flow.deprecated_show_progress:
@@ -375,7 +375,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 ) from ex
 
         # Handle a menu navigation choice
-        if cur_step["type"] == FlowResultType.MENU and user_input:
+        if cur_step["type"] is FlowResultType.MENU and user_input:
             result = await self._async_handle_step(
                 flow, user_input["next_step_id"], None
             )
@@ -388,7 +388,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             FlowResultType.EXTERNAL_STEP,
             FlowResultType.SHOW_PROGRESS,
         ):
-            if cur_step["type"] == FlowResultType.EXTERNAL_STEP and result[
+            if cur_step["type"] is FlowResultType.EXTERNAL_STEP and result[
                 "type"
             ] not in (
                 FlowResultType.EXTERNAL_STEP,
@@ -398,7 +398,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     "External step can only transition to "
                     "external step or external step done."
                 )
-            if cur_step["type"] == FlowResultType.SHOW_PROGRESS and result[
+            if cur_step["type"] is FlowResultType.SHOW_PROGRESS and result[
                 "type"
             ] not in (
                 FlowResultType.SHOW_PROGRESS,
@@ -415,7 +415,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             # - The step is same but result type is SHOW_PROGRESS and progress_action
             #   or description_placeholders has changed
             if cur_step["step_id"] != result.get("step_id") or (
-                result["type"] == FlowResultType.SHOW_PROGRESS
+                result["type"] is FlowResultType.SHOW_PROGRESS
                 and (
                     cur_step["progress_action"] != result.get("progress_action")
                     or cur_step["description_placeholders"]
@@ -492,8 +492,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
         if flow.flow_id not in self._progress:
             # The flow was removed during the step, raise UnknownFlow
-            # unless the result is an abort
-            if result["type"] != FlowResultType.ABORT:
+            # unless the result is an abort. Uses `!=` (not `is not`) because
+            # this runs before the legacy-string normalization below, and
+            # out-of-tree flow handlers may still return raw "abort".
+            if result["type"] != FlowResultType.ABORT:  # type: ignore[ha-enum-identity-compare,unused-ignore]
                 raise UnknownFlow
             return result
 
@@ -510,7 +512,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         if (
-            result["type"] == FlowResultType.SHOW_PROGRESS
+            result["type"] is FlowResultType.SHOW_PROGRESS
             # Mypy does not agree with using pop on _FlowResultT
             and (progress_task := result.pop("progress_task", None))  # type: ignore[arg-type]
             and progress_task != flow.async_get_progress_task()
@@ -527,7 +529,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             progress_task.add_done_callback(schedule_configure)  # type: ignore[attr-defined]
             flow.async_set_progress_task(progress_task)  # type: ignore[arg-type]
 
-        elif result["type"] != FlowResultType.SHOW_PROGRESS:
+        elif result["type"] is not FlowResultType.SHOW_PROGRESS:
             flow.async_cancel_progress_task()
 
         if result["type"] in STEP_ID_OPTIONAL_STEPS:
@@ -552,7 +554,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         # _async_finish_flow may change result type, check it again
-        if result["type"] == FlowResultType.FORM:
+        if result["type"] is FlowResultType.FORM:
             flow.cur_step = result
             return result
 
@@ -665,15 +667,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """
         schema = {}
         for key, val in data_schema.schema.items():
-            if isinstance(key, vol.Marker):
-                # Exclude advanced field
-                if (
-                    key.description
-                    and key.description.get("advanced")
-                    and not self.show_advanced_options
-                ):
-                    continue
-
             # Process the section schema options
             if (
                 suggested_values is not None

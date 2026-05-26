@@ -555,7 +555,7 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 
