@@ -54,9 +54,13 @@ async def test_binary_sensors_default_modules(
     assert hass.states.get("binary_sensor.my_pool_chlorine_pump") is None
 
     # Diagnostic module-installed entities are disabled by default.
-    entry = entity_registry.async_get("binary_sensor.my_pool_hidro_module")
-    assert entry is not None
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    for entity_id in (
+        "binary_sensor.my_pool_hidro_module",
+        "binary_sensor.my_pool_io_module",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_binary_sensors_hydrolysis_branch(
