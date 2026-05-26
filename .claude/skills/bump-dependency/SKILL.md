@@ -10,10 +10,6 @@ Follow these systematic steps to successfully bump a python package requirement 
 ## Gotchas & Non-Obvious Constraints
 
 - **PR Template Integrity**: Follow Home Assistant's Pull Request template (`.github/PULL_REQUEST_TEMPLATE.md`) exactly as written, including any instructions inside the template itself. Preserve all sections, comments, and unchecked checkboxes unless the template explicitly says otherwise; the only allowed removal is the **Breaking change** section when the template instructs you to remove it if not applicable.
-- **Lazy Translation Resolution**: Home Assistant tests do NOT read translations directly from `strings.json` but from the generated `translations/en.json`. If you have modified an integration's `strings.json` file, compile/regenerate translations specifically for the modified integration:
-  ```bash
-  uv run python3 -m script.translations develop --integration <integration_name>
-  ```
 - **GitHub Tag Volatility**: Release tags on GitHub are highly inconsistent (e.g., `v1.2.3` vs `1.2.3` vs `release-1.2.3`). Always use the automated resolver `resolve_dependency.py` to check HEAD status for correct tags before hardcoding comparison URLs.
 
 ## Step-by-Step Workflow Checklist
@@ -40,45 +36,41 @@ Follow these systematic steps to successfully bump a python package requirement 
   uv run python3 -m script.gen_requirements_all
   ```
 - [ ] **8. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
-- [ ] **9. Regenerate Translations (If `strings.json` was modified)**: Compile/generate translations for the modified integration:
-  ```bash
-  uv run python3 -m script.translations develop --integration <integration_name>
-  ```
-- [ ] **10. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
+- [ ] **9. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
   ```bash
   uv pip install "<package>==<version>"
   ```
 
 ### Phase C: Validation Loop (Tests & Lint)
-- [ ] **11. Run Integration Tests**: Execute the pytest suite for all integrations that consume the bumped package:
+- [ ] **10. Run Integration Tests**: Execute the pytest suite for all integrations that consume the bumped package:
   ```bash
   uv run pytest tests/components/<integration_name>
   ```
   - *Validation Loop*: If tests fail, analyze the error, apply appropriate fixes, and re-run pytest until all tests pass cleanly.
-- [ ] **12. Run prek Lint Checks**: Run the local prek hooks on modified files:
+- [ ] **11. Run prek Lint Checks**: Run the local prek hooks on modified files:
   ```bash
   uv run prek run
   ```
   - *Validation Loop*: If prek checks report any formatting or linting violations, fix them and repeat `uv run prek run` until it passes completely without errors.
 
 ### Phase D: User Confirmation & PR Creation
-- [ ] **13. Commit Changes**: Commit the clean changes:
+- [ ] **12. Commit Changes**: Commit the clean changes:
   ```bash
   git add <modified_files>
   git commit -m "Bump <package> to <version>"
   ```
-- [ ] **14. Push Branch**: Push the local branch to your origin remote:
+- [ ] **13. Push Branch**: Push the local branch to your origin remote:
   ```bash
   git push origin bump-<package>-to-<version>
   ```
-- [ ] **15. PR Description Preparation**: Generate the pull request body from `.github/PULL_REQUEST_TEMPLATE.md`:
+- [ ] **14. PR Description Preparation**: Generate the pull request body from `.github/PULL_REQUEST_TEMPLATE.md`:
   - **Proposed change**: Describe the package, old version, new version, target/source branches, and insert the resolved PyPI, changelog, and comparison diff links.
   - **Type of change**: Check only 1 box in this section, and mark the `Dependency upgrade` checkbox as checked: `[x] Dependency upgrade`.
   - **Breaking change**: You may remove the "Breaking change" section entirely from the template.
   - **Validation checklists**: Mark `The code change is tested` checkbox as checked: `[x] The code change is tested`.
   - **Keep remaining template intact**: Do NOT remove any other commented-out blocks, headers, or unchecked checkboxes in the template.
-- [ ] **16. Mandatory Review Presentation**: Format the PR proposal using the **PR Presentation Template** below and display it to the user. **Stop and wait for the user to review and explicitly confirm/approve the PR template and draft details before creating the PR.**
-- [ ] **17. Raise Pull Request**: Once the user approves, create the Pull Request using the GitHub CLI:
+- [ ] **15. Mandatory Review Presentation**: Format the PR proposal using the **PR Presentation Template** below and display it to the user. **Stop and wait for the user to review and explicitly confirm/approve the PR template and draft details before creating the PR.**
+- [ ] **16. Raise Pull Request**: Once the user approves, create the Pull Request using the GitHub CLI:
   ```bash
   gh pr create --repo home-assistant/core --base dev --head <username>:bump-<package>-to-<version> --title "Bump <package> to <version>" --body-file <pr_body_file>
   ```
