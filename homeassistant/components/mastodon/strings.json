@@ -283,6 +283,14 @@
           "description": "Select the Mastodon account to update the profile of.",
           "name": "[%key:component::mastodon::services::post::fields::config_entry_id::name%]"
         },
+        "delete_avatar": {
+          "description": "Permanently removes your current profile picture.",
+          "name": "Delete profile picture"
+        },
+        "delete_header": {
+          "description": "Permanently removes your current header picture.",
+          "name": "Delete header picture"
+        },
         "discoverable": {
           "description": "Whether your profile should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",
           "name": "Discoverable"
