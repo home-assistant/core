@@ -3653,21 +3653,43 @@ async def test_unique_id_non_string(
 
 
 @pytest.mark.parametrize(
-    ("create_kwargs", "migrate_kwargs", "new_subentry_id"),
+    ("create_kwargs", "migrate_kwargs", "new_subentry_id", "match"),
     [
-        ({}, {}, None),
-        ({"config_subentry_id": None}, {}, None),
-        ({}, {"new_config_subentry_id": None}, None),
-        ({}, {"new_config_subentry_id": "mock-subentry-id-2"}, "mock-subentry-id-2"),
+        (
+            {},
+            {},
+            None,
+            "Unique id '1234' is already in use by 'light.light'",
+        ),
+        (
+            {"config_subentry_id": None},
+            {},
+            None,
+            "Unique id '1234' is already in use by 'light.light'",
+        ),
+        (
+            {},
+            {"new_config_subentry_id": None},
+            None,
+            "Unique id '1234' is already in use by 'light.light'",
+        ),
+        (
+            {},
+            {"new_config_subentry_id": "mock-subentry-id-2"},
+            "mock-subentry-id-2",
+            "Can't change config entry without changing subentry",
+        ),
         (
             {"config_subentry_id": "mock-subentry-id-1"},
             {"new_config_subentry_id": None},
             None,
+            "Unique id '1234' is already in use by 'light.light'",
         ),
         (
             {"config_subentry_id": "mock-subentry-id-1"},
             {"new_config_subentry_id": "mock-subentry-id-2"},
             "mock-subentry-id-2",
+            "Can't change config entry without changing subentry",
         ),
     ],
 )
@@ -3677,6 +3699,7 @@ def test_migrate_entity_to_new_platform(
     create_kwargs: dict,
     migrate_kwargs: dict,
     new_subentry_id: str | None,
+    match: str,
 ) -> None:
     """Test migrate_entity_to_new_platform."""
     orig_config_entry = MockConfigEntry(
@@ -3749,7 +3772,7 @@ def test_migrate_entity_to_new_platform(
     assert new_entry.platform == "hue2"
 
     # Test nonexisting entity
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="'light.not_a_real_light'"):
         entity_registry.async_update_entity_platform(
             "light.not_a_real_light",
             "hue2",
@@ -3758,15 +3781,16 @@ def test_migrate_entity_to_new_platform(
         )
 
     # Test migrate entity without new config entry ID
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="new_config_entry_id required because light.light is already linked to a config entry",
+    ):
         entity_registry.async_update_entity_platform(
             "light.light",
             "hue3",
         )
 
-    # Test entity with a state
-    hass.states.async_set("light.light", "on")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=match):
         entity_registry.async_update_entity_platform(
             "light.light",
             "hue2",
