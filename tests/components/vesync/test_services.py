@@ -12,10 +12,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.usefixtures("manager")
 async def test_async_new_device_discovery_no_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    manager: VeSync,
 ) -> None:
     """Service should raise when no config entry exists."""
 
@@ -30,10 +30,10 @@ async def test_async_new_device_discovery_no_entry(
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
 
 
+@pytest.mark.usefixtures("manager")
 async def test_async_new_device_discovery_entry_not_loaded(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    manager: VeSync,
 ) -> None:
     """Service should raise when entry exists but is not loaded."""
 
