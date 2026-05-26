@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.7.0
+aioamazondevices==13.8.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -236,7 +236,7 @@ aiocomelit==2.0.3
 aiodhcpwatcher==1.2.7
 
 # homeassistant.components.dhcp
-aiodiscover==3.2.3
+aiodiscover==3.2.4
 
 # homeassistant.components.dnsip
 aiodns==4.0.4
@@ -718,7 +718,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.17.0
+bthome-ble==3.23.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.11
+dbus-fast==5.0.14
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1263,7 +1263,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.96
+holidays==0.97
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260429.4
@@ -1314,7 +1314,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.2.4
+ical==13.2.5
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1350,7 +1350,7 @@ imgw_pib==2.2.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.1
+indevolt-api==1.8.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.2.3
+inkbird-ble==1.4.4
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -1514,6 +1514,9 @@ lxml==6.0.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
+
+# homeassistant.components.matter
+matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
 matter-python-client==0.7.1
@@ -1731,7 +1734,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.4
+onvif-zeep-async==4.1.0
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -2542,7 +2545,7 @@ pysmarty2==0.10.3
 pysmhi==2.0.0
 
 # homeassistant.components.edl21
-pysml==0.1.5
+pysml==0.1.7
 
 # homeassistant.components.smlight
 pysmlight==0.3.2
@@ -2650,7 +2653,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -2696,7 +2699,7 @@ python-picnic-api2==1.3.4
 python-pooldose==0.9.1
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.10.0
+python-qube-heatpump==1.11.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2817,7 +2820,7 @@ pyws66i==1.1
 pyxeoma==1.4.2
 
 # homeassistant.components.yardian
-pyyardian==1.1.1
+pyyardian==1.3.3
 
 # homeassistant.components.qrcode
 pyzbar==0.1.9
@@ -3117,7 +3120,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.0
+teltasync==0.3.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
@@ -3227,7 +3230,7 @@ uhooapi==1.2.8
 uiprotect==10.5.0
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.5.7
+ultraheat-api==0.6.0
 
 # homeassistant.components.unifi_discovery
 unifi-discovery==1.4.0
@@ -3406,6 +3409,9 @@ yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
 yolink-api==0.6.5
+
+# homeassistant.components.yoto
+yoto-api==3.1.3
 
 # homeassistant.components.youless
 youless-api==2.2.0
