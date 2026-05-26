@@ -10,11 +10,7 @@ Follow these systematic steps to successfully bump a python package requirement 
 ## Gotchas & Non-Obvious Constraints
 
 - **PR Template Integrity**: Follow Home Assistant's Pull Request template (`.github/PULL_REQUEST_TEMPLATE.md`) exactly as written, including any instructions inside the template itself. Preserve all sections, comments, and unchecked checkboxes unless the template explicitly says otherwise; the only allowed removal is the **Breaking change** section when the template instructs you to remove it if not applicable.
-- **Lazy Translation Resolution**: Home Assistant tests do NOT read translations directly from `strings.json` but from the generated `translations/en.json`. After any manifest modification or dependency change, compile/regenerate translations using:
-  ```bash
-  uv run python3 -m script.translations develop --all
-  ```
-  Or for a specific integration:
+- **Lazy Translation Resolution**: Home Assistant tests do NOT read translations directly from `strings.json` but from the generated `translations/en.json`. If you have modified an integration's `strings.json` file, compile/regenerate translations specifically for the modified integration:
   ```bash
   uv run python3 -m script.translations develop --integration <integration_name>
   ```
@@ -44,9 +40,9 @@ Follow these systematic steps to successfully bump a python package requirement 
   uv run python3 -m script.gen_requirements_all
   ```
 - [ ] **8. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
-- [ ] **9. Regenerate Translations**: Compile/generate the translations for the modified integrations:
+- [ ] **9. Regenerate Translations (If `strings.json` was modified)**: Compile/generate translations for the modified integration:
   ```bash
-  uv run script/translations/develop.py --all
+  uv run python3 -m script.translations develop --integration <integration_name>
   ```
 - [ ] **10. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
   ```bash

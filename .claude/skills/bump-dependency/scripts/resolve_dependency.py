@@ -32,9 +32,12 @@ def find_github_repo(info):
     for u in urls:
         if not u:
             continue
-        m = re.search(r"https?://(?:www\.)?github\.com/([^/]+)/([^/]+?)(?:\.git|/)?$", u, re.IGNORECASE)
+        cleaned_url = u.replace("git+", "")
+        m = re.search(r"https?://(?:www\.)?github\.com/([^/]+)/([^/]+)", cleaned_url, re.IGNORECASE)
         if m:
             owner, repo = m.groups()
+            repo = repo.replace(".git", "")
+            repo = repo.split("/")[0]
             return f"https://github.com/{owner}/{repo}"
     return None
 
