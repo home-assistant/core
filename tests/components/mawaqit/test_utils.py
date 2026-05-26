@@ -13,16 +13,10 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 # --- _to_utc ---
 
 
-def test_to_utc_empty_string() -> None:
-    """Test _to_utc returns None for empty time string."""
-    result = utils._to_utc("Europe/Paris", date(2025, 4, 10), "")
-    assert result is None
-
-
-def test_to_utc_none_string() -> None:
-    """Test _to_utc returns None for None time string."""
-    result = utils._to_utc("Europe/Paris", date(2025, 4, 10), None)
-    assert result is None
+@pytest.mark.parametrize("time_str", ["", None])
+def test_to_utc_falsy_time_string_returns_none(time_str) -> None:
+    """Test _to_utc returns None for odd inputs."""
+    assert utils._to_utc("Europe/Paris", date(2025, 4, 10), time_str) is None
 
 
 # --- compute_islamic_midnight ---
@@ -83,34 +77,34 @@ def test_compute_islamic_midnight_fajr_localization_fails() -> None:
 # --- save_mosque ---
 
 
-def test_save_mosque_success() -> None:
-    """Test saving mosque data successfully."""
+@pytest.mark.parametrize(
+    ("kwargs", "expected_data"),
+    [
+        (
+            {"lat": 48.0, "longi": 2.0},
+            {
+                CONF_API_KEY: "token",
+                CONF_UUID: "uuid1",
+                CONF_LATITUDE: 48.0,
+                CONF_LONGITUDE: 2.0,
+            },
+        ),
+        (
+            {},
+            {CONF_API_KEY: "token", CONF_UUID: "uuid1"},
+        ),
+    ],
+)
+def test_save_mosque(kwargs: dict, expected_data: dict) -> None:
+    """Test saving mosque data with and without coordinates."""
     title, data = utils.save_mosque(
         mosque_display_name="My Mosque",
         mosque_id="uuid1",
         mawaqit_token="token",
-        lat=48.0,
-        longi=2.0,
+        **kwargs,
     )
-
     assert title == "MAWAQIT - My Mosque"
-    assert data[CONF_API_KEY] == "token"
-    assert data[CONF_UUID] == "uuid1"
-    assert data[CONF_LATITUDE] == 48.0
-    assert data[CONF_LONGITUDE] == 2.0
-
-
-def test_save_mosque_no_coords() -> None:
-    """Test saving mosque data without coordinates."""
-    title, data = utils.save_mosque(
-        mosque_display_name="My Mosque",
-        mosque_id="uuid1",
-        mawaqit_token="token",
-    )
-
-    assert title == "MAWAQIT - My Mosque"
-    assert CONF_LATITUDE not in data
-    assert CONF_LONGITUDE not in data
+    assert data == expected_data
 
 
 def test_save_mosque_no_token() -> None:
@@ -126,58 +120,52 @@ def test_save_mosque_no_token() -> None:
 # --- extract_time_from_calendar ---
 
 
-def test_extract_time_valid() -> None:
-    """Test extracting a valid prayer time from calendar."""
-    month_data = {"10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}
+@pytest.mark.parametrize(
+    ("month_data", "mode_iqama", "expected"),
+    [
+        (
+            {"10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]},
+            False,
+            "05:30",
+        ),
+        ({"10": ["+10", "+15", "+10", "+5", "+10"]}, True, "+10"),
+    ],
+)
+def test_extract_time_from_calendar_success(month_data, mode_iqama, expected) -> None:
+    """Test successful time extraction for standard and iqama modes."""
     calendar = [{} for _ in range(12)]
-    calendar[3] = month_data  # April (month 4, index 3)
-    target_date = date(2025, 4, 10)
-    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
-    assert result == "05:30"
-
-
-def test_extract_time_iqama_mode() -> None:
-    """Test extracting iqama time from calendar."""
-    month_data = {"10": ["+10", "+15", "+10", "+5", "+10"]}
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data
+    calendar[3] = month_data  # April (index 3)
     target_date = date(2025, 4, 10)
     result = utils.extract_time_from_calendar(
-        calendar, "Fajr", target_date, mode_iqama=True
+        calendar, "Fajr", target_date, mode_iqama=mode_iqama
     )
-    assert result == "+10"
+    assert result == expected
 
 
-def test_extract_time_invalid_prayer_name() -> None:
-    """Test extracting time with invalid prayer name."""
-    calendar = [{"1": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}]
-    target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(calendar, "InvalidPrayer", target_date)
-    assert result is None
-
-
-def test_extract_time_missing_month() -> None:
-    """Test extracting time when month data is missing."""
-    calendar = []  # Empty calendar
-    target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
-    assert result is None
-
-
-def test_extract_time_missing_day() -> None:
-    """Test extracting time when day data is missing."""
-    calendar = [{}]  # Month with no days
-    target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
-    assert result is None
-
-
-def test_extract_time_incomplete_times() -> None:
-    """Test extracting time when times array is incomplete."""
-    calendar = [{"1": ["05:30"]}]  # Only 1 time instead of 6
-    target_date = date(2025, 1, 1)
-    result = utils.extract_time_from_calendar(calendar, "Fajr", target_date)
-    assert result is None
+@pytest.mark.parametrize(
+    ("calendar", "prayer_name", "target_date", "mode_iqama"),
+    [
+        (
+            [{"1": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}],
+            "InvalidPrayer",
+            date(2025, 1, 1),
+            False,
+        ),
+        ([], "Fajr", date(2025, 1, 1), False),
+        ([{}], "Fajr", date(2025, 1, 1), False),
+        ([{"1": ["05:30"]}], "Fajr", date(2025, 1, 1), False),
+    ],
+)
+def test_extract_time_from_calendar_returns_none(
+    calendar, prayer_name, target_date, mode_iqama
+) -> None:
+    """Test extraction returns None for invalid/missing/incomplete data."""
+    assert (
+        utils.extract_time_from_calendar(
+            calendar, prayer_name, target_date, mode_iqama=mode_iqama
+        )
+        is None
+    )
 
 
 # --- time_with_timezone ---
@@ -201,50 +189,39 @@ def test_time_with_timezone_invalid() -> None:
 
 def test_add_minutes_to_time_valid() -> None:
     """Test adding minutes to time."""
-    result = utils.add_minutes_to_time("12:30", "+15")
-    assert result == "12:45"
+    assert utils.add_minutes_to_time("12:30", "+15") == "12:45"
 
 
-def test_add_minutes_to_time_none_inputs() -> None:
-    """Test adding minutes with None inputs raises ValueError."""
-    with pytest.raises(ValueError, match="Both time_str and minutes_str must be"):
-        utils.add_minutes_to_time(None, "+15")
-
-    with pytest.raises(ValueError, match="Both time_str and minutes_str must be"):
-        utils.add_minutes_to_time("12:30", None)
-
-
-def test_add_minutes_to_time_invalid_format() -> None:
-    """Test adding minutes with invalid format raises ValueError."""
-    with pytest.raises(ValueError, match="Invalid minutes format"):
-        utils.add_minutes_to_time("12:30", "15")
-
-    with pytest.raises(ValueError, match="Invalid minutes format"):
-        utils.add_minutes_to_time("12:30", "+abc")
+@pytest.mark.parametrize(
+    ("time_str", "minutes_str", "match"),
+    [
+        (None, "+15", "Both time_str and minutes_str must be"),
+        ("12:30", None, "Both time_str and minutes_str must be"),
+        ("12:30", "15", "Invalid minutes format"),
+        ("12:30", "+abc", "Invalid minutes format"),
+    ],
+)
+def test_add_minutes_to_time_errors(time_str, minutes_str, match) -> None:
+    """Test error cases for add_minutes_to_time."""
+    with pytest.raises(ValueError, match=match):
+        utils.add_minutes_to_time(time_str, minutes_str)
 
 
 # --- get_next_friday ---
 
 
-@freeze_time("2025-04-07")  # Monday
-def test_get_next_friday_from_monday() -> None:
-    """Test getting next Friday from a Monday."""
-    result = utils.get_next_friday()
-    assert result == date(2025, 4, 11)
-
-
-@freeze_time("2025-04-11")  # Friday
-def test_get_next_friday_from_friday() -> None:
-    """Test getting next Friday from a Friday returns next week's Friday."""
-    result = utils.get_next_friday()
-    assert result == date(2025, 4, 18)
-
-
-@freeze_time("2025-04-12")  # Saturday
-def test_get_next_friday_from_saturday() -> None:
-    """Test getting next Friday from a Saturday."""
-    result = utils.get_next_friday()
-    assert result == date(2025, 4, 18)
+@pytest.mark.parametrize(
+    ("frozen_date", "expected_date"),
+    [
+        ("2025-04-07", date(2025, 4, 11)),  # Monday
+        ("2025-04-11", date(2025, 4, 18)),  # Friday → next week
+        ("2025-04-12", date(2025, 4, 18)),  # Saturday
+    ],
+)
+def test_get_next_friday(frozen_date: str, expected_date: date) -> None:
+    """Test getting next Friday from various test cases."""
+    with freeze_time(frozen_date):
+        assert utils.get_next_friday() == expected_date
 
 
 # --- get_prayer_times_for_two_days ---
@@ -329,59 +306,51 @@ def test_find_next_prayer_invalid_timezone() -> None:
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_regular_prayer_time_success() -> None:
-    """Test getting regular prayer time successfully."""
-    month_data = {
-        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
-    }
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data
-
-    prayer_data = {"calendar": calendar, "timezone": "Europe/Paris"}
+@pytest.mark.parametrize(
+    ("prayer_data", "expect_datetime"),
+    [
+        (
+            {
+                "calendar": [
+                    {"10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}
+                    for _ in range(12)
+                ],
+                "timezone": "Europe/Paris",
+            },
+            True,
+        ),  # we manually generate a calendar here we'll be moving this to conftest.py later
+        ({}, False),
+        ({"calendar": [{}], "timezone": "Europe/Paris"}, False),
+    ],
+)
+def test_get_regular_prayer_time(prayer_data, expect_datetime) -> None:
+    """Test get_regular_prayer_time with valid and missing data."""
     result = utils.get_regular_prayer_time(prayer_data, "Fajr")
-    assert result is not None
-    assert isinstance(result, datetime)
-
-
-def test_get_regular_prayer_time_missing_data() -> None:
-    """Test getting regular prayer time with missing data."""
-    result = utils.get_regular_prayer_time({}, "Fajr")
-    assert result is None
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_regular_prayer_time_no_time_found() -> None:
-    """Test getting regular prayer time when time not found in calendar."""
-    calendar = [{}]  # Empty month data
-    prayer_data = {"calendar": calendar, "timezone": "Europe/Paris"}
-    result = utils.get_regular_prayer_time(prayer_data, "Fajr")
-    assert result is None
+    if expect_datetime:
+        assert isinstance(result, datetime)
+    else:
+        assert result is None
 
 
 # --- get_shuruq_time ---
 
 
+@pytest.mark.parametrize(
+    ("prayer_data", "expected_none"),
+    [
+        ({"timezone": "Europe/Paris", "shuruq": "06:45"}, False),
+        ({"shuruq": "06:45"}, True),
+        ({"timezone": "Europe/Paris"}, True),
+    ],
+)
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_shuruq_time_success() -> None:
-    """Test getting shuruq time successfully."""
-    prayer_data = {"timezone": "Europe/Paris", "shuruq": "06:45"}
+def test_get_shuruq_time(prayer_data, expected_none) -> None:
+    """Test get_shuruq_time with valid data and missing fields."""
     result = utils.get_shuruq_time(prayer_data)
-    assert result is not None
-    assert isinstance(result, datetime)
-
-
-def test_get_shuruq_time_no_timezone() -> None:
-    """Test getting shuruq time without timezone."""
-    prayer_data = {"shuruq": "06:45"}
-    result = utils.get_shuruq_time(prayer_data)
-    assert result is None
-
-
-def test_get_shuruq_time_no_shuruq() -> None:
-    """Test getting shuruq time without shuruq data."""
-    prayer_data = {"timezone": "Europe/Paris"}
-    result = utils.get_shuruq_time(prayer_data)
-    assert result is None
+    if expected_none:
+        assert result is None
+    else:
+        assert isinstance(result, datetime)
 
 
 # --- get_jumua_time ---
@@ -412,141 +381,95 @@ def test_get_jumua_time_no_jumua() -> None:
 # --- parse_iqama_time ---
 
 
-def test_parse_iqama_time_offset_format() -> None:
-    """Test parse_iqama_time with +xx offset format."""
-    result = utils.parse_iqama_time("05:30", "+10")
-    assert result == "05:40"
+@pytest.mark.parametrize(
+    ("prayer_time", "iqama_time", "expected"),
+    [
+        ("05:30", "+10", "05:40"),  # offset
+        ("05:30", "+0", "05:30"),  # zero offset
+        ("05:30", "06:15", "06:15"),  # absolute
+        ("20:00", "06:15", "06:15"),  # absolute ignores prayer_time
+    ],
+)
+def test_parse_iqama_time_valid(prayer_time, iqama_time, expected) -> None:
+    """Test parse_iqama_time with valid formats."""
+    assert utils.parse_iqama_time(prayer_time, iqama_time) == expected
 
 
-def test_parse_iqama_time_offset_zero() -> None:
-    """Test parse_iqama_time with +0 offset."""
-    result = utils.parse_iqama_time("05:30", "+0")
-    assert result == "05:30"
-
-
-def test_parse_iqama_time_absolute_format() -> None:
-    """Test parse_iqama_time with HH:MM absolute time format."""
-    result = utils.parse_iqama_time("05:30", "06:15")
-    assert result == "06:15"
-
-
-def test_parse_iqama_time_absolute_ignores_prayer_time() -> None:
-    """Test that absolute format does not use prayer_time at all."""
-    # Different prayer_time shouldn't affect the result
-    assert utils.parse_iqama_time("05:30", "06:15") == utils.parse_iqama_time(
-        "20:00", "06:15"
-    )
-
-
-def test_parse_iqama_time_empty_string() -> None:
-    """Test parse_iqama_time with empty string."""
-    result = utils.parse_iqama_time("05:30", "")
-    assert result is None
-
-
-def test_parse_iqama_time_unrecognised_format() -> None:
-    """Test parse_iqama_time with unrecognised format logs error and returns None."""
-    result = utils.parse_iqama_time("05:30", "invalid")
-    assert result is None
-
-
-def test_parse_iqama_time_unrecognised_format_partial_match() -> None:
-    """Test parse_iqama_time rejects partial HH:MM matches like '5:30' or '05:3'."""
-    assert utils.parse_iqama_time("05:30", "5:30") is None  # single digit hour
-    assert utils.parse_iqama_time("05:30", "05:3") is None  # single digit minute
+@pytest.mark.parametrize(
+    "iqama_time",
+    [
+        "",
+        "invalid",
+        "5:30",  # single digit hour
+        "05:3",  # single digit minute
+    ],
+)
+def test_parse_iqama_time_returns_none(iqama_time) -> None:
+    """Test parse_iqama_time with invalid/empty formats returns None."""
+    assert utils.parse_iqama_time("05:30", iqama_time) is None
 
 
 # --- get_iqama_time ---
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_absolute_format() -> None:
-    """Test getting iqama time when iqama calendar uses HH:MM absolute times."""
-    month_data = {
-        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
-    }
-    iqama_month_data = {
-        "10": ["05:45", "13:00", "16:00", "19:00", "21:00"],  # absolute times
-    }
+@pytest.mark.parametrize(
+    ("iqama_day_data", "expected_hour", "expected_minute"),
+    [
+        (
+            ["05:45", "13:00", "16:00", "19:00", "21:00"],
+            3,
+            45,
+        ),  # absolute: 05:45 Paris = 03:45 UTC
+        (
+            ["+10", "+15", "+10", "+5", "+10"],
+            3,
+            40,
+        ),  # offset: 05:30+10m Paris = 03:40 UTC
+    ],
+)
+def test_get_iqama_time_formats(iqama_day_data, expected_hour, expected_minute) -> None:
+    """Test get_iqama_time with absolute and offset iqama formats."""
     calendar = [{} for _ in range(12)]
-    calendar[3] = month_data
+    calendar[3] = {"10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}
     iqama_calendar = [{} for _ in range(12)]
-    iqama_calendar[3] = iqama_month_data
-
+    iqama_calendar[3] = {"10": iqama_day_data}
     prayer_data = {
         "calendar": calendar,
         "iqamaCalendar": iqama_calendar,
         "timezone": "Europe/Paris",
     }
     result = utils.get_iqama_time(prayer_data, "Fajr")
-    assert result is not None
     assert isinstance(result, datetime)
-    # 05:45 Paris (UTC+2) = 03:45 UTC
-    assert result.hour == 3
-    assert result.minute == 45
+    assert result.hour == expected_hour
+    assert result.minute == expected_minute
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_offset_format() -> None:
-    """Test getting iqama time when iqama is in offset format Successfully."""
-    month_data = {
-        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
-    }
-    iqama_month_data = {
-        "10": ["+10", "+15", "+10", "+5", "+10"],
-    }
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data
-    iqama_calendar = [{} for _ in range(12)]
-    iqama_calendar[3] = iqama_month_data
-
-    prayer_data = {
-        "calendar": calendar,
-        "iqamaCalendar": iqama_calendar,
-        "timezone": "Europe/Paris",
-    }
-    result = utils.get_iqama_time(prayer_data, "Fajr")
-    assert result is not None
-    assert isinstance(result, datetime)
-
-
-def test_get_iqama_time_missing_data() -> None:
-    """Test getting iqama time with missing calendar data."""
-    result = utils.get_iqama_time({}, "Fajr")
-    assert result is None
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_no_prayer_time() -> None:
-    """Test getting iqama time when prayer time not found."""
-    calendar = [{}]
-    iqama_calendar = [{}]
-    prayer_data = {
-        "calendar": calendar,
-        "iqamaCalendar": iqama_calendar,
-        "timezone": "Europe/Paris",
-    }
-    result = utils.get_iqama_time(prayer_data, "Fajr")
-    assert result is None
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_iqama_time_no_iqama_offset() -> None:
-    """Test getting iqama time when iqama offset not found."""
-    month_data = {
-        "10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"],
-    }
-    calendar = [{} for _ in range(12)]
-    calendar[3] = month_data
-    iqama_calendar = [{}]  # No iqama data
-
-    prayer_data = {
-        "calendar": calendar,
-        "iqamaCalendar": iqama_calendar,
-        "timezone": "Europe/Paris",
-    }
-    result = utils.get_iqama_time(prayer_data, "Fajr")
-    assert result is None
+@pytest.mark.parametrize(
+    "prayer_data",
+    [
+        {},  # missing all fields
+        {
+            "calendar": [{}],
+            "iqamaCalendar": [{}],
+            "timezone": "Europe/Paris",
+        },  # no day data in either calendar
+        {  # prayer time found, iqama data missing
+            "calendar": [
+                {"10": ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]}
+                if i == 3
+                else {}
+                for i in range(12)
+            ],
+            "iqamaCalendar": [{}],
+            "timezone": "Europe/Paris",
+        },
+    ],
+)
+def test_get_iqama_time_returns_none(prayer_data) -> None:
+    """Test get_iqama_time returns None when required data is absent."""
+    assert utils.get_iqama_time(prayer_data, "Fajr") is None
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
