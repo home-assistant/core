@@ -117,10 +117,8 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
 
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve for the configured manual watering duration."""
-        duration = (
-            self.coordinator.get_cached(self._service.manual_watering_duration)
-            or FALLBACK_WATERING_TIME_IN_SECONDS
-        )
+        cached = self.coordinator.get_cached(self._service.manual_watering_duration)
+        duration = cached if cached is not None else FALLBACK_WATERING_TIME_IN_SECONDS
         await self.coordinator.write(
             self._service.start_watering,
             {0: WATERING_COMMAND_SOURCE, 1: str(duration)},

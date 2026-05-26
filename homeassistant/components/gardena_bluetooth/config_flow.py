@@ -33,7 +33,7 @@ _SUPPORTED_PRODUCT_TYPES = {
 }
 
 
-def _is_supported(discovery_info: BluetoothServiceInfo):
+def _is_supported(discovery_info: BluetoothServiceInfo) -> bool:
     """Check if device is supported.
 
     Accepts any device carrying Gardena manufacturer data (company id 0x0426).
