@@ -110,12 +110,6 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         if device.configuration_url == configuration_url:
             return
 
-        # Home Assistant only applies entity device_info during registration.
-        device_info = self._attr_device_info
-        if device_info is None:
-            return
-
-        device_info["configuration_url"] = configuration_url
         device_registry.async_update_device(
             device_id=device.id,
             configuration_url=configuration_url,
