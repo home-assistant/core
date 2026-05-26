@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     systems = [
         {
             "online": coordinator.system.online,
-            "data": coordinator.system.data,
+            "data": {k: v for k, v in coordinator.system.data.items() if k != "name"},
             "devices": {
                 name: {"class": obj.__class__.__name__, "data": obj.data}
                 for name, obj in (

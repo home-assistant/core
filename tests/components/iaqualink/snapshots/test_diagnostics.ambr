@@ -4,7 +4,6 @@
     'systems': list([
       dict({
         'data': dict({
-          'name': 'Pool',
           'serial_number': '**REDACTED**',
         }),
         'devices': dict({
