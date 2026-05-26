@@ -9,7 +9,6 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.cloud import CloudNotAvailable
-from homeassistant.components.mobile_app import _async_cleanup_live_activity_tokens
 from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME,
     CONF_CLOUDHOOK_URL,
@@ -22,6 +21,9 @@ from homeassistant.components.mobile_app.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
+)
+from homeassistant.components.mobile_app.live_activity import (
+    async_cleanup_expired_tokens,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
@@ -641,7 +643,7 @@ async def test_unload_preserves_live_activity_tokens(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -667,7 +669,7 @@ async def test_remove_entry_cleans_live_activity_tokens(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -714,8 +716,8 @@ async def test_live_activity_expired_tokens_cleaned_at_startup(
 ) -> None:
     """Test that expired tokens are dropped at startup and the store is saved."""
     now = dt_util.utcnow().timestamp()
-    expired_ts = now - LIVE_ACTIVITY_TOKEN_TTL_SECONDS - 1
-    valid_ts = now
+    expired_ts = now - 1
+    valid_ts = now + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
 
     hass_storage[STORAGE_KEY] = {
         "key": STORAGE_KEY,
@@ -725,8 +727,8 @@ async def test_live_activity_expired_tokens_cleaned_at_startup(
             DATA_DELETED_IDS: [],
             DATA_LIVE_ACTIVITY_TOKENS: {
                 "wh-1": {
-                    "expired_tag": {"token": "old", "stored_at": expired_ts},
-                    "valid_tag": {"token": "new", "stored_at": valid_ts},
+                    "expired_tag": {"token": "old", "expires_at": expired_ts},
+                    "valid_tag": {"token": "new", "expires_at": valid_ts},
                 },
             },
         },
@@ -765,13 +767,13 @@ async def test_live_activity_cleanup_task_removes_expired_tokens(
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    expired_ts = dt_util.utcnow().timestamp() - LIVE_ACTIVITY_TOKEN_TTL_SECONDS - 1
+    expired_ts = dt_util.utcnow().timestamp() - 1
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["wh-test"] = {
-        "tag1": {"token": "abc", "stored_at": expired_ts},
+        "tag1": {"token": "abc", "expires_at": expired_ts},
     }
 
     with patch.object(hass.data[DOMAIN][DATA_STORE], "async_save") as mock_save:
-        await _async_cleanup_live_activity_tokens(hass)
+        await async_cleanup_expired_tokens(hass)
 
     assert "wh-test" not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     mock_save.assert_called_once()

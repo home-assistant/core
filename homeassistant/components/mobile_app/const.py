@@ -9,9 +9,9 @@ DOMAIN = "mobile_app"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
+STORAGE_SAVE_DELAY = 10
 
 LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
-LIVE_ACTIVITY_SAVE_DELAY = 10
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_REMOTE_UI_URL = "remote_ui_url"
@@ -21,6 +21,7 @@ CONF_USER_ID = "user_id"
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
+DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
@@ -34,7 +35,6 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_NO_LEGACY_ENCRYPTION = "no_legacy_encryption"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
-ATTR_PUSH_TAG = "tag"
 ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
@@ -48,9 +48,7 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
-ATTR_LIVE_ACTIVITY_TAG = "live_activity_tag"
-DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
-DATA_LIVE_ACTIVITY_CLEANUP = "live_activity_cleanup"
+ATTR_TAG = "tag"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"

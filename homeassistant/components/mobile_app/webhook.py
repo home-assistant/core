@@ -60,7 +60,6 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
-    ATTR_LIVE_ACTIVITY_TAG,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_PUSH_TOKEN,
@@ -77,6 +76,7 @@ from .const import (
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
     ATTR_SUPPORTS_ENCRYPTION,
+    ATTR_TAG,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
     ATTR_WEBHOOK_DATA,
@@ -90,7 +90,6 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_LIVE_ACTIVITY_CLEANUP,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_STORE,
@@ -99,12 +98,12 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
-    LIVE_ACTIVITY_SAVE_DELAY,
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SCHEMA_APP_DATA,
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
+    STORAGE_SAVE_DELAY,
 )
 from .device_tracker import LOCATION_UPDATE_SCHEMA
 from .helpers import (
@@ -118,6 +117,7 @@ from .helpers import (
     savable_state,
     webhook_response,
 )
+from .live_activity import async_schedule_next_cleanup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -786,7 +786,7 @@ async def webhook_scan_tag(
 @WEBHOOK_COMMANDS.register("live_activity_token")
 @validate_schema(
     {
-        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+        vol.Required(ATTR_TAG): cv.string,
         vol.Required(ATTR_PUSH_TOKEN): cv.string,
     }
 )
@@ -795,23 +795,20 @@ async def webhook_update_live_activity_token(
 ) -> Response:
     """Store a Live Activity APNs token sent by the iOS app."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
-    stored_at = dt_util.utcnow().timestamp()
+    activity_tag = data[ATTR_TAG]
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    # Empty-before-add means no cleanup loop is running; start one.
+    was_empty = not live_activity_tokens
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         "token": data[ATTR_PUSH_TOKEN],
-        "stored_at": stored_at,
+        "expires_at": dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     }
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        partial(savable_state, hass), LIVE_ACTIVITY_SAVE_DELAY
+        partial(savable_state, hass), STORAGE_SAVE_DELAY
     )
-
-    if hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] is None:
-        # Local import to avoid a circular import with __init__.
-        from . import _schedule_token_cleanup  # noqa: PLC0415
-
-        _schedule_token_cleanup(hass, stored_at + LIVE_ACTIVITY_TOKEN_TTL_SECONDS)
+    if was_empty:
+        async_schedule_next_cleanup(hass)
 
     return empty_okay_response()
 
@@ -819,7 +816,7 @@ async def webhook_update_live_activity_token(
 @WEBHOOK_COMMANDS.register("live_activity_dismissed")
 @validate_schema(
     {
-        vol.Required(ATTR_LIVE_ACTIVITY_TAG): cv.string,
+        vol.Required(ATTR_TAG): cv.string,
     }
 )
 async def webhook_live_activity_dismissed(
@@ -827,7 +824,7 @@ async def webhook_live_activity_dismissed(
 ) -> Response:
     """Remove a stored Live Activity token when the activity ends on device."""
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_LIVE_ACTIVITY_TAG]
+    activity_tag = data[ATTR_TAG]
 
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     if webhook_id in live_activity_tokens:
@@ -836,7 +833,7 @@ async def webhook_live_activity_dismissed(
         if not live_activity_tokens[webhook_id]:
             del live_activity_tokens[webhook_id]
         hass.data[DOMAIN][DATA_STORE].async_delay_save(
-            partial(savable_state, hass), LIVE_ACTIVITY_SAVE_DELAY
+            partial(savable_state, hass), STORAGE_SAVE_DELAY
         )
 
     return empty_okay_response()

@@ -18,7 +18,6 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mobile_app.const import (
     CONF_SECRET,
     DATA_DEVICES,
-    DATA_LIVE_ACTIVITY_CLEANUP,
     DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
     LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
@@ -1427,7 +1426,7 @@ async def test_webhook_update_live_activity_token(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -1443,7 +1442,7 @@ async def test_webhook_update_live_activity_token(
     assert tokens[webhook_id]["washer_cycle"]["token"] == (
         "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     )
-    assert isinstance(tokens[webhook_id]["washer_cycle"]["stored_at"], float)
+    assert isinstance(tokens[webhook_id]["washer_cycle"]["expires_at"], float)
 
 
 async def test_webhook_update_live_activity_token_stores_only_push_token(
@@ -1458,7 +1457,7 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "ev_charge",
+                "tag": "ev_charge",
                 "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
             },
         },
@@ -1471,7 +1470,7 @@ async def test_webhook_update_live_activity_token_stores_only_push_token(
     assert stored["token"] == (
         "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
     )
-    assert isinstance(stored["stored_at"], float)
+    assert isinstance(stored["expires_at"], float)
 
 
 async def test_webhook_live_activity_token_schedules_cleanup(
@@ -1488,7 +1487,7 @@ async def test_webhook_live_activity_token_schedules_cleanup(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -1497,7 +1496,6 @@ async def test_webhook_live_activity_token_schedules_cleanup(
 
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     assert webhook_id in tokens
-    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_CLEANUP] is not None
 
     freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS + 1))
     async_fire_time_changed(hass)
@@ -1520,7 +1518,7 @@ async def test_webhook_live_activity_dismissed(
         json={
             "type": "live_activity_token",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
             },
         },
@@ -1537,7 +1535,7 @@ async def test_webhook_live_activity_dismissed(
         json={
             "type": "live_activity_dismissed",
             "data": {
-                "live_activity_tag": "washer_cycle",
+                "tag": "washer_cycle",
             },
         },
     )
@@ -1563,7 +1561,7 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
         json={
             "type": "live_activity_dismissed",
             "data": {
-                "live_activity_tag": "nonexistent_activity",
+                "tag": "nonexistent_activity",
             },
         },
     )

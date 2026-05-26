@@ -46,16 +46,15 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
-    ATTR_PUSH_TAG,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_TAG,
     ATTR_WEBHOOK_ID,
     DATA_CONFIG_ENTRIES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
-    LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
@@ -248,7 +247,7 @@ class MobileAppNotificationService(BaseNotificationService):
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
-        tag = notification_data.get(ATTR_PUSH_TAG)
+        tag = notification_data.get(ATTR_TAG)
         if not tag:
             return None
 
@@ -256,12 +255,10 @@ class MobileAppNotificationService(BaseNotificationService):
         webhook_id = entry.data[ATTR_WEBHOOK_ID]
         live_activity_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
         device_tokens = live_activity_tokens.get(webhook_id, {})
-        if stored := device_tokens.get(tag):
-            if (
-                dt_util.utcnow().timestamp() - stored["stored_at"]
-                < LIVE_ACTIVITY_TOKEN_TTL_SECONDS
-            ):
-                return stored["token"]
+        if (stored := device_tokens.get(tag)) and stored[
+            "expires_at"
+        ] > dt_util.utcnow().timestamp():
+            return stored["token"]
 
         # Push-to-start token — start a new activity remotely (iOS 17.2+).
         app_data = entry.data[ATTR_APP_DATA]
