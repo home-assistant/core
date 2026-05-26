@@ -5703,17 +5703,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Equivalent Full Cycles',
+    'object_id_base': 'Equivalent full cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Equivalent Full Cycles',
+    'original_name': 'Equivalent full cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cycle_count',
+    'translation_key': 'equivalent_full_cycles',
     'unique_id': 'SolidFlex2000-87654321_8646',
     'unit_of_measurement': None,
   })
@@ -5721,7 +5721,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_equivalent_full_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Equivalent Full Cycles',
+      'friendly_name': 'CMS-SF2000 Equivalent full cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
