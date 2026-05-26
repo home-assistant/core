@@ -53,7 +53,8 @@ async def test_binary_sensors_default_modules(
     assert hass.states.get("binary_sensor.my_pool_hidro_fl2") is None
     assert hass.states.get("binary_sensor.my_pool_chlorine_pump") is None
 
-    # Diagnostic module-installed entities are disabled by default.
+    # Diagnostic module-installed entities are created for every module
+    # regardless of the has* flag and are disabled by default.
     for entity_id in (
         "binary_sensor.my_pool_chlorine_module",
         "binary_sensor.my_pool_conductivity_module",
