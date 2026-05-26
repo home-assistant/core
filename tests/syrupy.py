@@ -359,7 +359,7 @@ def _merge_serialized_report(report: SnapshotReport, json_data: dict[str, Any]) 
     for collected_item in json_data["_collected_items"]:
         custom_item = _FakePytestItem(collected_item)
         if not any(
-            t.nodeid == custom_item.nodeid and t.name == custom_item.nodeid
+            t.nodeid == custom_item.nodeid and t.name == custom_item.name
             for t in report.collected_items
         ):
             report.collected_items.add(custom_item)
