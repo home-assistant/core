@@ -48,14 +48,14 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         super().__init__(coordinator, heater)
         self._attr_unique_id = heater.serial_no
 
-    @override
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
-    @override
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._heater.is_tapping:
@@ -68,8 +68,8 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
             return self._heater.heater_temp
         return max(self._heater.heater_temp, self._heater.tap_temp)
 
-    @override
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         return self._heater.display_text

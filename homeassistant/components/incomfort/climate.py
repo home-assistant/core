@@ -75,28 +75,28 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
                 coordinator.config_entry.entry_id,
             )
 
-    @override
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {"status": self._room.status}
 
-    @override
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
-    @override
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the actual current HVAC action."""
         if self._heater.is_burning and self._heater.is_pumping:
             return HVACAction.HEATING
         return HVACAction.IDLE
 
-    @override
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the (override)temperature we try to reach.
 
