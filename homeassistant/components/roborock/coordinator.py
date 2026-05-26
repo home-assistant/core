@@ -164,7 +164,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             # Force a map refresh on first setup

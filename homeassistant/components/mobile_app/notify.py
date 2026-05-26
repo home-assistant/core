@@ -158,8 +158,8 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         return
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
-    resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
+    resets_at = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
+    resets_at_time = dt_util.parse_datetime(resets_at) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -172,7 +172,7 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
