@@ -253,8 +253,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    @override
     @property
+    @override
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185

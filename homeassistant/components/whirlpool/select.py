@@ -66,8 +66,8 @@ class WhirlpoolSelectEntity(WhirlpoolEntity, SelectEntity):
         super().__init__(appliance, unique_id_suffix=f"-{description.key}")
         self.entity_description: WhirlpoolSelectDescription = description
 
-    @override
     @property
+    @override
     def current_option(self) -> str | None:
         """Retrieve currently selected option."""
         return self.entity_description.value_fn(self._appliance)

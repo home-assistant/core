@@ -274,8 +274,8 @@ class MqttSiren(MqttEntity, SirenEntity):
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    @override
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         extra_attributes = (

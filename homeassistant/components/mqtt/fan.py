@@ -457,8 +457,8 @@ class MqttFan(MqttEntity, FanEntity):
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    @override
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         # The default for FanEntity is to compute it based on percentage

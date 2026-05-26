@@ -100,8 +100,8 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
 
-    @override
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         return self._attr_entity_picture
@@ -269,8 +269,8 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         payload = self._config[CONF_PAYLOAD_INSTALL]
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
 
-    @override
     @property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
         support = UpdateEntityFeature(UpdateEntityFeature.PROGRESS)
