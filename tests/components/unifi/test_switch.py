@@ -1,5 +1,6 @@
 """UniFi Network switch platform tests."""
 
+from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
@@ -51,20 +52,36 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _assert_request_call(
-    aioclient_mock: AiohttpClientMocker, method: str, url: str, data: dict[str, Any]
+    aioclient_mock: AiohttpClientMocker,
+    method: str,
+    url: str,
+    data: dict[str, Any],
+    headers: Mapping[str, Any] | None = None,
 ) -> None:
     """Assert a matching request call was made."""
     expected_method = method.lower()
+    expected_headers = (
+        {key.lower(): value for key, value in headers.items()}
+        if headers is not None
+        else None
+    )
     if any(
         call_method.lower() == expected_method
         and str(call_url) == url
         and call_data == data
-        for call_method, call_url, call_data, _headers in aioclient_mock.mock_calls
+        and (
+            expected_headers is None
+            or {key.lower(): value for key, value in (call_headers or {}).items()}
+            == expected_headers
+        )
+        for call_method, call_url, call_data, call_headers in aioclient_mock.mock_calls
     ):
         return
 
+    headers_message = "" if expected_headers is None else f" and headers {headers!r}"
     raise AssertionError(
-        f"Expected {expected_method.upper()} request to {url} with {data!r}; "
+        f"Expected {expected_method.upper()} request to {url} with {data!r}"
+        f"{headers_message}; "
         f"recorded calls: {aioclient_mock.mock_calls!r}"
     )
 
@@ -1402,8 +1419,8 @@ async def test_firewall_policies(
 
 
 @pytest.mark.parametrize(
-    ("object_oriented_network_config_payload"),
-    [([OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG])],
+    "object_oriented_network_config_payload",
+    [[OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG]],
 )
 async def test_object_oriented_network_configs(
     hass: HomeAssistant,
@@ -1414,6 +1431,9 @@ async def test_object_oriented_network_configs(
     """Test control of UniFi Policy Engine rules."""
     entity_id = "switch.unifi_network_nintendo_switch_block_internet"
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    # This route config has "secure" set to null, which exercises the TypeError
+    # guard in async_object_oriented_network_config_supported_fn during setup.
+    assert object_oriented_network_config_payload[1]["secure"] is None
     assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
 
     # Validate state object
@@ -1444,7 +1464,9 @@ async def test_object_oriented_network_configs(
     expected_disable_call["enabled"] = False
     handler = config_entry_setup.runtime_data.api.object_oriented_network_configs
 
-    _assert_request_call(aioclient_mock, "put", config_url, expected_disable_call)
+    _assert_request_call(
+        aioclient_mock, "put", config_url, expected_disable_call, headers={}
+    )
     handler.process_raw([expected_disable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -1460,7 +1482,9 @@ async def test_object_oriented_network_configs(
     expected_enable_call = deepcopy(config)
     expected_enable_call["enabled"] = True
 
-    _assert_request_call(aioclient_mock, "put", config_url, expected_enable_call)
+    _assert_request_call(
+        aioclient_mock, "put", config_url, expected_enable_call, headers={}
+    )
     handler.process_raw([expected_enable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
