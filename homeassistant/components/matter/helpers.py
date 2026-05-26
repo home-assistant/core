@@ -154,7 +154,7 @@ def get_endpoint_from_device_entry(
     server_info = matter_client.server_info
 
     if server_info is None:
-        raise RuntimeError("Matter server information is not available")
+        return None
 
     matched = next(
         (

@@ -352,7 +352,11 @@ def _async_setup_name_sync(hass: HomeAssistant, entry: MatterConfigEntry) -> Non
         """Backfill labels whenever options are saved with sync enabled."""
         if not entry.options.get(CONF_SYNC_NAMES):
             return
-        await _async_backfill_node_labels(hass, entry)
+        entry.async_create_background_task(
+            hass,
+            _async_backfill_node_labels(hass, entry),
+            "matter_sync_node_label_backfill",
+        )
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 

@@ -128,12 +128,11 @@ async def test_rename_syncs_bridged_endpoint_node_label(
     bridged_endpoint_id = next(
         ep.endpoint_id for ep in node.endpoints.values() if ep.is_bridged_device
     )
+    bridged_suffix = f"-{bridged_endpoint_id}"
     bridged_device = next(
         d
         for d in _matter_devices_for_entry(hass, entry.entry_id)
-        if any(
-            f"-{bridged_endpoint_id}" in identifier[1] for identifier in d.identifiers
-        )
+        if any(identifier[1].endswith(bridged_suffix) for identifier in d.identifiers)
     )
     dr.async_get(hass).async_update_device(
         bridged_device.id, name_by_user="Hallway Light"
@@ -164,9 +163,9 @@ async def test_enabling_option_backfills_existing_devices(
     await hass.async_block_till_done()
 
     assert matter_client.write_attribute.call_count >= 1
-    assert (
-        matter_client.write_attribute.call_args.kwargs["attribute_path"]
-        == BASIC_INFO_NODE_LABEL_PATH
+    assert any(
+        call.kwargs["attribute_path"] == BASIC_INFO_NODE_LABEL_PATH
+        for call in matter_client.write_attribute.call_args_list
     )
 
 
