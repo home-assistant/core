@@ -233,27 +233,30 @@ class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
                 return
             start = hourly_usage[0].start_time
             LOGGER.debug("Getting statistics at: %s", start)
-            for end in (start + timedelta(seconds=1), None):
-                stats = await get_instance(self.hass).async_add_executor_job(
-                    statistics_during_period,
-                    self.hass,
-                    start,
-                    end,
-                    {
-                        cost_statistic_id,
-                        consumption_statistic_id,
-                    },
-                    "hour",
-                    None,
-                    {"sum"},
-                )
-                if stats:
-                    break
-                if end:
-                    LOGGER.debug(
-                        "Not found. Trying to find the oldest statistic after %s",
+
+            def _find_baseline_stats() -> dict:
+                for end in (start + timedelta(seconds=1), None):
+                    result = statistics_during_period(
+                        self.hass,
                         start,
+                        end,
+                        {cost_statistic_id, consumption_statistic_id},
+                        "hour",
+                        None,
+                        {"sum"},
                     )
+                    if result:
+                        return result
+                    if end:
+                        LOGGER.debug(
+                            "Not found. Trying to find the oldest statistic after %s",
+                            start,
+                        )
+                return {}
+
+            stats = await get_instance(self.hass).async_add_executor_job(
+                _find_baseline_stats
+            )
 
             def _safe_get_first(
                 records: list[Any], key: str, default: float | None
@@ -373,26 +376,21 @@ class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
                 start_date = start_date or (end_date - timedelta(days=31)).replace(
                     hour=0, minute=0, second=0, microsecond=0
                 )
-                results = [
-                    u
-                    for u in map(
-                        Usage.from_tuple,
-                        await self.hass.async_add_executor_job(
-                            self._client.usage,
-                            start_date,
-                            end_date,
-                            self._is_time_of_use,
-                        ),
-                    )
-                    if u is not None
-                ]
-                # Filter out any results that are outside the requested date range because the SRP API only uses dates,
-                # not times, so the actual data we receive may be outside the requested range.
-                results = [
-                    result
-                    for result in results
-                    if result.start_time >= start_date and result.end_time <= end_date
-                ]
+
+                def _fetch_and_parse() -> list[Usage]:
+                    # Filter out results outside the requested range — the SRP API
+                    # only accepts dates so the returned window may be wider.
+                    return [
+                        u
+                        for raw in self._client.usage(
+                            start_date, end_date, self._is_time_of_use
+                        )
+                        if (u := Usage.from_tuple(raw)) is not None
+                        and u.start_time >= start_date
+                        and u.end_time <= end_date
+                    ]
+
+                results = await self.hass.async_add_executor_job(_fetch_and_parse)
                 LOGGER.debug(
                     "async_read_data: Received %s record(s) from %s to %s",
                     len(results) if results else "None",
