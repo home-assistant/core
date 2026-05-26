@@ -49,14 +49,9 @@ def _resolve_integration_async_setup_entry(call: nodes.Call) -> _SetupKind | Non
         case _:
             return None
 
-    try:
-        inferred_values = func.infer()
-    except astroid.exceptions.InferenceError, astroid.exceptions.AstroidError:
-        return None
-
     seen_qnames: set[str] = set()
     try:
-        for inferred in inferred_values:
+        for inferred in func.infer():
             if inferred is astroid.Uninferable:
                 continue
             if not isinstance(inferred, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
