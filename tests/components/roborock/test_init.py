@@ -632,7 +632,11 @@ async def test_disabled_device_no_coordinator(
     device_registry: DeviceRegistry,
     fake_devices: list[FakeDevice],
 ) -> None:
-    """Test that a disabled device is registered but no coordinator is created."""
+    """Test that a disabled device is registered but no coordinator is created.
+
+    Also verifies that close() is called on disabled devices to cancel their
+    background reconnect loops and prevent MQTT session disruption.
+    """
     # Pre-create the first device as disabled so that async_get_or_create
     # finds it already disabled when async_setup_entry runs.
     first_device = fake_devices[0]
@@ -644,6 +648,11 @@ async def test_disabled_device_no_coordinator(
         disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
+    first_device.close = AsyncMock()
+    # Track close() calls on enabled devices to verify they are NOT closed.
+    for device in fake_devices[1:]:
+        device.close = AsyncMock()
+
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
@@ -654,6 +663,14 @@ async def test_disabled_device_no_coordinator(
     )
     assert disabled_device_entry is not None
     assert disabled_device_entry.disabled
+
+    # close() should have been called on the disabled device to stop its
+    # background reconnect loop from disrupting the MQTT session.
+    first_device.close.assert_called_once()
+
+    # close() should NOT have been called on enabled devices.
+    for device in fake_devices[1:]:
+        device.close.assert_not_called()
 
     # No coordinator should have been created for the disabled device,
     # so no entities should exist for it.
