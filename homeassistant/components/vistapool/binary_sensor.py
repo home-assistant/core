@@ -39,7 +39,7 @@ def _coerce_to_bool(value: Any) -> bool | None:
 
     The Vistapool API returns some numeric fields as strings (for example
     `"0"` / `"1"`), so a plain `bool(value)` would treat the string `"0"` as
-    truthy. Strings are normalized via `int` first; anything unparseable is
+    truthy. Strings are normalized via `int` first; anything unparsable is
     treated as missing data and reported as unknown.
     """
     if value is None:
