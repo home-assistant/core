@@ -171,7 +171,10 @@ def async_object_oriented_network_config_supported_fn(
 ) -> bool:
     """Check if Policy Engine rule can be controlled as a switch."""
     config = hub.api.object_oriented_network_configs[obj_id]
-    secure = config.secure
+    secure = config.raw.get("secure")
+    if not secure:
+        return False
+
     internet = secure.get("internet")
     return (
         secure.get("enabled") is True

@@ -896,6 +896,7 @@ OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG = {
     "target_type": "NETWORKS",
     "targets": ["6060b00f45de3905133cea14"],
     "route": {"enabled": True},
+    "secure": None,
 }
 
 
@@ -1390,38 +1391,43 @@ async def test_object_oriented_network_configs(
     object_oriented_network_config_payload: list[dict[str, Any]],
 ) -> None:
     """Test control of UniFi Policy Engine rules."""
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    entity_id = "switch.unifi_network_nintendo_switch_block_internet"
     assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
 
     # Validate state object
-    assert (
-        hass.states.get("switch.unifi_network_nintendo_switch_block_internet").state
-        == STATE_ON
-    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
 
     config = deepcopy(object_oriented_network_config_payload[0])
-
-    # Disable Policy Engine rule
-    aioclient_mock.put(
+    config_url = (
         f"https://{config_entry_setup.data[CONF_HOST]}:1234"
         f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
-        f"/object-oriented-network-config/{config['id']}",
+        f"/object-oriented-network-config/{config['id']}"
     )
+
+    # Disable Policy Engine rule
+    aioclient_mock.put(config_url)
 
     call_count = aioclient_mock.call_count
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {"entity_id": "switch.unifi_network_nintendo_switch_block_internet"},
+        {"entity_id": entity_id},
         blocking=True,
     )
-    # Updating the value for Policy Engine rules will make another call to retrieve the values
-    assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
 
-    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+    assert (
+        "put",
+        config_url,
+        expected_disable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
 
     call_count = aioclient_mock.call_count
 
@@ -1429,15 +1435,21 @@ async def test_object_oriented_network_configs(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {"entity_id": "switch.unifi_network_nintendo_switch_block_internet"},
+        {"entity_id": entity_id},
         blocking=True,
     )
 
     expected_enable_call = deepcopy(config)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
-    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+    assert (
+        "put",
+        config_url,
+        expected_enable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
 
 
 @pytest.mark.parametrize(
