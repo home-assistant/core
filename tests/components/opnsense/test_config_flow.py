@@ -88,7 +88,7 @@ async def test_import_unique_id_already_configured(
     # First, create a config entry with the same unique ID
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**CONFIG_DATA_IMPORT, "unique_id": existing_unique_id},
+        data=CONFIG_DATA_IMPORT,
         unique_id=existing_unique_id,
     )
     existing_entry.add_to_hass(hass)
