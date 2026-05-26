@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.11
+dbus-fast==5.0.14
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1353,7 +1353,7 @@ imgw_pib==2.2.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.1
+indevolt-api==1.8.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1365,7 +1365,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.4.0
+inkbird-ble==1.4.3
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
@@ -1734,7 +1734,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.4
+onvif-zeep-async==4.1.0
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -2545,7 +2545,7 @@ pysmarty2==0.10.3
 pysmhi==2.0.0
 
 # homeassistant.components.edl21
-pysml==0.1.5
+pysml==0.1.7
 
 # homeassistant.components.smlight
 pysmlight==0.3.2

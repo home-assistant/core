@@ -52,6 +52,7 @@ def shutterbox_fixture():
         has_tilt=True,
         is_slider=True,
         is_position_inverted=True,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
@@ -73,6 +74,7 @@ def gatebox_fixture():
         has_stop=False,
         is_slider=False,
         is_position_inverted=False,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
@@ -94,6 +96,7 @@ def gate_fixture():
         has_stop=True,
         is_slider=True,
         is_position_inverted=True,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
@@ -394,6 +397,43 @@ async def test_with_no_stop(gatebox, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert not supported_features & CoverEntityFeature.STOP
+
+
+async def test_tilt_only_supported_features(shutterbox, hass: HomeAssistant) -> None:
+    """Test that tilt_only removes position/open/close/stop features."""
+
+    feature_mock, entity_id = shutterbox
+    feature_mock.tilt_only = True
+
+    await async_setup_entity(hass, entity_id)
+
+    supported_features = hass.states.get(entity_id).attributes[ATTR_SUPPORTED_FEATURES]
+    assert not supported_features & CoverEntityFeature.OPEN
+    assert not supported_features & CoverEntityFeature.CLOSE
+    assert not supported_features & CoverEntityFeature.SET_POSITION
+    assert not supported_features & CoverEntityFeature.STOP
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
+async def test_tilt_with_position_supported_features(
+    shutterbox, hass: HomeAssistant
+) -> None:
+    """Test that has_tilt without tilt_only keeps both position and tilt features."""
+
+    await async_setup_entity(hass, shutterbox[1])
+
+    supported_features = hass.states.get(shutterbox[1]).attributes[
+        ATTR_SUPPORTED_FEATURES
+    ]
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.SET_POSITION
+    assert supported_features & CoverEntityFeature.STOP
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert supported_features & CoverEntityFeature.SET_TILT_POSITION
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
