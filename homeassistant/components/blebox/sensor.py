@@ -39,8 +39,6 @@ SCAN_INTERVAL = timedelta(seconds=5)
 class BleBoxSensorEntityDescription(SensorEntityDescription):
     """Describes a BleBox sensor entity."""
 
-    indexed_translation_key: str | None = None
-
 
 SENSOR_TYPES = (
     BleBoxSensorEntityDescription(
@@ -60,7 +58,7 @@ SENSOR_TYPES = (
     ),
     BleBoxSensorEntityDescription(
         key="temperature",
-        indexed_translation_key="temperature_n",
+        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
@@ -89,51 +87,48 @@ SENSOR_TYPES = (
     BleBoxSensorEntityDescription(
         key="forwardActiveEnergy",
         translation_key="forward_active_energy",
-        indexed_translation_key="forward_active_energy_n",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     BleBoxSensorEntityDescription(
         key="reverseActiveEnergy",
         translation_key="reverse_active_energy",
-        indexed_translation_key="reverse_active_energy_n",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     BleBoxSensorEntityDescription(
         key="reactivePower",
-        indexed_translation_key="reactive_power_n",
+        translation_key="reactive_power",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     BleBoxSensorEntityDescription(
         key="activePower",
         translation_key="active_power",
-        indexed_translation_key="active_power_n",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     BleBoxSensorEntityDescription(
         key="apparentPower",
-        indexed_translation_key="apparent_power_n",
+        translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
     ),
     BleBoxSensorEntityDescription(
         key="voltage",
-        indexed_translation_key="voltage_n",
+        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     BleBoxSensorEntityDescription(
         key="current",
-        indexed_translation_key="current_n",
+        translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
     ),
     BleBoxSensorEntityDescription(
         key="frequency",
-        indexed_translation_key="frequency_n",
+        translation_key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
@@ -177,8 +172,8 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         self.entity_description = description
         if feature.name:
             self._attr_name = feature.name
-        elif index is not None and description.indexed_translation_key:
-            self._attr_translation_key = description.indexed_translation_key
+        elif index is not None and description.translation_key:
+            self._attr_translation_key = f"{description.translation_key}_n"
             self._attr_translation_placeholders = {"index": str(index)}
 
     @property

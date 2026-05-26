@@ -36,16 +36,22 @@
     "sensor": {
       "active_power": { "name": "Active power" },
       "active_power_n": { "name": "Active power {index}" },
+      "apparent_power": { "name": "Apparent power" },
       "apparent_power_n": { "name": "Apparent power {index}" },
+      "current": { "name": "Current" },
       "current_n": { "name": "Current {index}" },
       "forward_active_energy": { "name": "Forward active energy" },
       "forward_active_energy_n": { "name": "Forward active energy {index}" },
+      "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
-      "power_consumption": { "name": "Energy (last 1 h)" },
+      "power_consumption": { "name": "Energy last hour" },
+      "reactive_power": { "name": "Reactive power" },
       "reactive_power_n": { "name": "Reactive power {index}" },
       "reverse_active_energy": { "name": "Reverse active energy" },
       "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
+      "temperature": { "name": "Temperature" },
       "temperature_n": { "name": "Temperature {index}" },
+      "voltage": { "name": "Voltage" },
       "voltage_n": { "name": "Voltage {index}" }
     }
   }
