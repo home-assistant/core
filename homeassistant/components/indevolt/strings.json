@@ -295,6 +295,9 @@
       "main_current": {
         "name": "Main current"
       },
+      "main_mos_temperature": {
+        "name": "Main MOS temperature"
+      },
       "main_serial_number": {
         "name": "Main serial number"
       },
