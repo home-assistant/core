@@ -633,6 +633,19 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.measurement.cycles,
     ),
     HomeWizardSensorEntityDescription(
+        key="battery_group_target_power_w",
+        translation_key="battery_group_target_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.target_power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
         device_class=SensorDeviceClass.UPTIME,

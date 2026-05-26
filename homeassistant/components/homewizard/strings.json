@@ -106,6 +106,9 @@
       "any_power_fail_count": {
         "name": "Power failures detected"
       },
+      "battery_group_target_power_w": {
+        "name": "Battery group target power"
+      },
       "cycles": {
         "name": "Battery cycles"
       },
