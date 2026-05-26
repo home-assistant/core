@@ -9,7 +9,11 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonMediaState, AmazonVolumeState
+from aioamazondevices.structures import (
+    AmazonMediaControls,
+    AmazonMediaState,
+    AmazonVolumeState,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -510,7 +514,6 @@ async def test_media_transport_commands(
     media_state: AmazonMediaState,
 ) -> None:
     """Each transport service sends the correct AmazonMediaControls command."""
-    from aioamazondevices.structures import AmazonMediaControls  # noqa: PLC0415
 
     await _setup_media_player_platform(hass, mock_config_entry)
 
