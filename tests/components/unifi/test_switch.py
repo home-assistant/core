@@ -1432,7 +1432,6 @@ async def test_object_oriented_network_configs(
 ) -> None:
     """Test control of UniFi Policy Engine rules."""
     entity_id = "switch.unifi_network_nintendo_switch_block_internet"
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
     # This route config has "secure" set to null, which exercises the TypeError
     # guard in async_object_oriented_network_config_supported_fn during setup.
     assert object_oriented_network_config_payload[1]["secure"] is None
@@ -1465,6 +1464,12 @@ async def test_object_oriented_network_configs(
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
     handler = config_entry_setup.runtime_data.api.object_oriented_network_configs
+    assert (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            handler
+        )
+        is not None
+    )
 
     _assert_request_call(
         aioclient_mock, "put", config_url, expected_disable_call, headers={}
@@ -1490,6 +1495,28 @@ async def test_object_oriented_network_configs(
     handler.process_raw([expected_enable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "object_oriented_network_config_payload",
+    [[OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG]],
+)
+async def test_object_oriented_network_configs_unsupported(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    object_oriented_network_config_payload: list[dict[str, Any]],
+) -> None:
+    """Test unsupported UniFi Policy Engine rules do not enable polling."""
+    assert object_oriented_network_config_payload[0]["secure"] is None
+    assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
+
+    handler = config_entry_setup.runtime_data.api.object_oriented_network_configs
+    assert (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            handler
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
