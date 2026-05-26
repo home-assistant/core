@@ -46,8 +46,8 @@ async def test_binary_sensors_default_modules(
     assert hass.states.get("binary_sensor.my_pool_electrolysis_low").state == STATE_OFF
     assert hass.states.get("binary_sensor.my_pool_hydrolysis_low") is None
 
-    # Acid tank: any-of CD/CL/PH/RX — present because hasPH and hasRX.
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_OFF
+    # Dosing tank: any-of CD/CL/PH/RX — present because hasPH and hasRX.
+    assert hass.states.get("binary_sensor.my_pool_dosing_tank").state == STATE_OFF
 
     # Module-gated and absent in the fixture (hasCD=0, hasCL=0).
     assert hass.states.get("binary_sensor.my_pool_hidro_fl2") is None
@@ -119,17 +119,17 @@ async def test_binary_sensors_all_modules_enabled(
         "binary_sensor.my_pool_chlorine_pump",
         "binary_sensor.my_pool_redox_pump",
         "binary_sensor.my_pool_ph_pump",
-        "binary_sensor.my_pool_acid_tank",
+        "binary_sensor.my_pool_dosing_tank",
     ):
         assert hass.states.get(entity_id) is not None
 
 
-async def test_binary_sensors_acid_tank_low(
+async def test_binary_sensors_dosing_tank_low(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test the acid-tank sensor reports `on` when any installed tank is low."""
+    """Test the dosing-tank sensor reports `on` when any installed tank is low."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"hasPH": 1, "version": 1},
         "modules": {"ph": {"tank": 1}},
@@ -139,15 +139,15 @@ async def test_binary_sensors_acid_tank_low(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_ON
+    assert hass.states.get("binary_sensor.my_pool_dosing_tank").state == STATE_ON
 
 
-async def test_binary_sensors_acid_tank_unknown_when_no_data(
+async def test_binary_sensors_dosing_tank_unknown_when_no_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test the acid-tank sensor reports unknown when no tank values are available."""
+    """Test the dosing-tank sensor reports unknown when no tank values are available."""
     mock_vistapool_client.fetch_pool_data.return_value = {
         "main": {"hasPH": 1, "version": 1},
     }
@@ -156,7 +156,7 @@ async def test_binary_sensors_acid_tank_unknown_when_no_data(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.my_pool_dosing_tank").state == STATE_UNKNOWN
 
 
 async def test_binary_sensors_fl2_requires_hidro(

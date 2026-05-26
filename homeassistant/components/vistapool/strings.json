@@ -26,9 +26,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "acid_tank": {
-        "name": "Acid tank"
-      },
       "backwash": {
         "name": "Backwash"
       },
@@ -40,6 +37,9 @@
       },
       "conductivity_module": {
         "name": "Conductivity module"
+      },
+      "dosing_tank": {
+        "name": "Dosing tank"
       },
       "electrolysis_low": {
         "name": "Electrolysis low"

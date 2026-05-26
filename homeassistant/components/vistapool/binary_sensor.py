@@ -207,7 +207,7 @@ async def async_setup_entry(
             coordinator.get_value(path)
             for path in (PATH_HASCD, PATH_HASCL, PATH_HASPH, PATH_HASRX)
         ):
-            entities.append(VistapoolAcidTankBinarySensor(coordinator))
+            entities.append(VistapoolDosingTankBinarySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -236,16 +236,16 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
         return bool(value)
 
 
-class VistapoolAcidTankBinarySensor(VistapoolEntity, BinarySensorEntity):
-    """Acid-tank low-level sensor: on if any installed dosing module reports low."""
+class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
+    """Dosing-tank low-level sensor: on if any installed dosing module reports low."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
-    _attr_translation_key = "acid_tank"
+    _attr_translation_key = "dosing_tank"
 
     def __init__(self, coordinator: VistapoolDataUpdateCoordinator) -> None:
-        """Initialize the acid-tank binary sensor."""
+        """Initialize the dosing-tank binary sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = self.build_unique_id("acid_tank")
+        self._attr_unique_id = self.build_unique_id("dosing_tank")
 
     @property
     def is_on(self) -> bool | None:
