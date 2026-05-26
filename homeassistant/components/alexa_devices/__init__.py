@@ -17,6 +17,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.EVENT,
+    Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -42,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     await coordinator.sync_todo_list_items()
     await coordinator.sync_history_state()
+    await coordinator.sync_media_state()
 
     async def _on_http2_reauth_required() -> None:
         entry.async_start_reauth(hass)
