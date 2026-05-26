@@ -27,6 +27,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
+    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -1407,7 +1408,7 @@ async def test_object_oriented_network_configs(
     )
 
     # Disable Policy Engine rule
-    aioclient_mock.put(config_url)
+    aioclient_mock.put(config_url, json={}, headers={"content-type": CONTENT_TYPE_JSON})
 
     call_count = aioclient_mock.call_count
 
@@ -1419,6 +1420,7 @@ async def test_object_oriented_network_configs(
     )
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
+    handler = config_entry_setup.runtime_data.api.object_oriented_network_configs
 
     assert (
         "put",
@@ -1428,6 +1430,9 @@ async def test_object_oriented_network_configs(
         (method, str(url), data)
         for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
     )
+    handler.process_raw([expected_disable_call])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     call_count = aioclient_mock.call_count
 
@@ -1450,6 +1455,9 @@ async def test_object_oriented_network_configs(
         (method, str(url), data)
         for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
     )
+    handler.process_raw([expected_enable_call])
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize(

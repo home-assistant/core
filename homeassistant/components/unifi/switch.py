@@ -75,6 +75,8 @@ PARALLEL_UPDATES = 1
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
+POLICY_ENGINE_INTERNET_MODE_TURN_OFF = "TURN_OFF_INTERNET"
+
 
 @callback
 def async_block_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
@@ -171,14 +173,16 @@ def async_object_oriented_network_config_supported_fn(
 ) -> bool:
     """Check if Policy Engine rule can be controlled as a switch."""
     config = hub.api.object_oriented_network_configs[obj_id]
-    if not (secure := config.raw.get("secure")):
+    try:
+        secure = config.secure
+    except TypeError:
         return False
 
     internet = secure.get("internet")
     return (
         secure.get("enabled") is True
         and internet is not None
-        and internet.get("mode") == "TURN_OFF_INTERNET"
+        and internet.get("mode") == POLICY_ENGINE_INTERNET_MODE_TURN_OFF
     )
 
 
