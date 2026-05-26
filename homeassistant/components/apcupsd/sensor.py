@@ -438,8 +438,7 @@ async def async_setup_entry(
     # as unknown initially.
     #
     # We also sort the resources to ensure the order of entities
-    # created is deterministic since "APCMODEL" and "MODEL"
-    # resources map to the same "Model" name.
+    # created is deterministic
     for resource in sorted(available_resources | {LAST_S_TEST}):
         if resource in IGNORED_SENSORS:
             continue
