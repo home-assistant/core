@@ -40,6 +40,7 @@ from .entity import (  # noqa: F401
     BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
+    ScannerEntityDescription,
     TrackerEntity,
     TrackerEntityDescription,
 )
