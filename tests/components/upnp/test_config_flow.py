@@ -1,8 +1,8 @@
 """Test UPnP/IGD config flow."""
 
 import copy
-import logging
 from copy import deepcopy
+import logging
 from unittest.mock import patch
 
 import pytest
