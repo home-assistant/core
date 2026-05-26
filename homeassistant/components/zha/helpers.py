@@ -107,6 +107,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
     Platform,
@@ -134,7 +135,6 @@ from .const import (
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
-    ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_NEIGHBORS,
     ATTR_NWK,
@@ -1267,19 +1267,6 @@ def async_add_entities(
     entities.clear()
 
 
-def _clean_serial_port_path(path: str) -> str:
-    """Clean the serial port path, applying corrections where necessary."""
-
-    if path.startswith("socket://"):
-        path = path.strip()
-
-    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
-    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
-        path = path.replace("[", "").replace("]", "")
-
-    return path
-
-
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
@@ -1317,18 +1304,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # ensure that we have the necessary HA configuration data
     assert ha_zha_data.config_entry is not None
     assert ha_zha_data.yaml_config is not None
-
-    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
-    # This will be removed in 2023.11.0
-    path = ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-    cleaned_path = _clean_serial_port_path(path)
-
-    if path != cleaned_path:
-        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
-        ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
-        hass.config_entries.async_update_entry(
-            ha_zha_data.config_entry, data=ha_zha_data.config_entry.data
-        )
 
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library

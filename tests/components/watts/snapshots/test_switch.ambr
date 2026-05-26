@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[switch.living_room_switch-entry]
+# name: test_entities[switch.living_room_living_room_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.living_room_switch',
+    'entity_id': 'switch.living_room_living_room_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.living_room_switch-state]
+# name: test_entities[switch.living_room_living_room_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living Room Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.living_room_switch',
+    'entity_id': 'switch.living_room_living_room_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
