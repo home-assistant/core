@@ -1317,6 +1317,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/overkiz/ @imicknl
 /homeassistant/components/overseerr/ @joostlek @AmGarera
 /tests/components/overseerr/ @joostlek @AmGarera
+/homeassistant/components/ovhcloud_ai_endpoints/ @Crocmagnon
+/tests/components/ovhcloud_ai_endpoints/ @Crocmagnon
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -2056,6 +2058,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2
 /tests/components/yolink/ @matrixd2
+/homeassistant/components/yoto/ @cdnninja @piitaya
+/tests/components/yoto/ @cdnninja @piitaya
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/youtube/ @joostlek
