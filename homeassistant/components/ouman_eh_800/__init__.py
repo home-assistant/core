@@ -8,6 +8,7 @@ from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
 _PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.SENSOR,
+    Platform.VALVE,
 ]
 
 

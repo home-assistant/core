@@ -62,6 +62,9 @@
         "name": "Supply water temperature setpoint"
       },
       "valve_position": { "name": "Valve position" }
+    },
+    "valve": {
+      "valve_position_setpoint": { "name": "Valve position setpoint" }
     }
   }
 }
