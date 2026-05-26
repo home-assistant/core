@@ -72,14 +72,14 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         self._coordinator = coordinator
         self._list = alexa_list
 
-        if alexa_list.list_type in AmazonListType:
-            entity_description = EntityDescription(
-                key=alexa_list.id, translation_key=alexa_list.list_type.lower()
-            )
-        else:
+        if alexa_list.list_type == AmazonListType.CUSTOM:
             # Custom list -> Use actual name
             entity_description = EntityDescription(
                 key=alexa_list.id, name=alexa_list.name
+            )
+        else:
+            entity_description = EntityDescription(
+                key=alexa_list.id, translation_key=alexa_list.list_type.lower()
             )
 
         self._attr_unique_id = alexa_list.id
