@@ -101,6 +101,7 @@ Every check has a code following the
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
+| `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
 
 
 ## `home_assistant_logger` checker
@@ -364,3 +365,21 @@ the platform is loaded via the normal Home Assistant flow.
 
 See [epic #77](https://github.com/home-assistant/epics/issues/77).
 
+
+## `home_assistant_tests_direct_async_setup` checker
+
+Detects tests that call an integration's `async_setup` directly.
+
+### `W7422`: `home-assistant-tests-direct-async-setup`
+
+Tests should not invoke an integration's `async_setup` from
+`__init__.py` directly. Instead, tests should let Home Assistant drive
+the setup through the normal pipeline:
+
+* For integrations with config entries, add a `MockConfigEntry` and
+  call `await hass.config_entries.async_setup(entry.entry_id)`.
+* For integrations without config entries (system integrations), use
+  `await async_setup_component(hass, DOMAIN, {...})` from
+  `homeassistant.setup`.
+
+See [epic #79](https://github.com/home-assistant/epics/issues/79).
