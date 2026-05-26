@@ -97,7 +97,8 @@ def _is_location_already_configured(
                 continue
             # A more accurate way is to use the haversine formula, but for simplicity
             # we use a simple distance check. The epsilon value is small anyway.
-            # This is mostly to capture cases where the user has slightly moved the location pin.
+            # This is mostly to capture cases where the user
+            # has slightly moved the location pin.
             if (
                 abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
                 and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])
@@ -236,7 +237,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}

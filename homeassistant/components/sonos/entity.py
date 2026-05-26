@@ -107,7 +107,7 @@ class SonosEntity(Entity):
 
 
 class SonosPollingEntity(SonosEntity):
-    """Representation of a Sonos entity which may not support updating by subscriptions."""
+    """Representation of a Sonos entity without subscription support."""
 
     @abstractmethod
     def poll_state(self) -> None:

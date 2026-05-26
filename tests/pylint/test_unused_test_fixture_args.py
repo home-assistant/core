@@ -108,7 +108,9 @@ def test_unused_multiple_args(
     """Test that multiple unused fixture args are all flagged."""
     root_node = astroid.parse(
         """
-def test_something(hass: HomeAssistant, enable_bluetooth: None, socket_enabled: None) -> None:
+def test_something(
+    hass: HomeAssistant, enable_bluetooth: None, socket_enabled: None
+) -> None:
     assert hass.state
 """,
         "tests.components.test_integration.test_init",

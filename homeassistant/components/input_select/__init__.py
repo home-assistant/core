@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
+# pylint: disable-next=home-assistant-duplicate-const
 CONF_OPTIONS = "options"
 
 SERVICE_SET_OPTIONS = "set_options"
@@ -297,7 +298,8 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         """Select new option."""
         if option not in self.options:
             raise HomeAssistantError(
-                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
+                f"Invalid option: {option} (possible options:"
+                f" {', '.join(self.options)})"
             )
         self._attr_current_option = option
         self.async_write_ha_state()

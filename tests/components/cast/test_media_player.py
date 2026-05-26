@@ -1263,9 +1263,14 @@ async def test_entity_play_media_cast_invalid(
 
     # Play_media - media_type cast with unsupported app
     quick_play_mock.side_effect = NotImplementedError()
-    await common.async_play_media(hass, "cast", '{"app_name": "unknown"}', entity_id)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await common.async_play_media(
+            hass, "cast", '{"app_name": "unknown"}', entity_id
+        )
+    assert exc_info.value.translation_domain == "cast"
+    assert exc_info.value.translation_key == "app_not_supported"
+    assert exc_info.value.translation_placeholders == {"app_name": "unknown"}
     quick_play_mock.assert_called_once_with(ANY, "unknown", {})
-    assert "App unknown not supported" in caplog.text
 
 
 async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock) -> None:

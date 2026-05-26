@@ -50,7 +50,8 @@ class RfxtrxEntity(RestoreEntity):
         self._device = device
         self._event = event
         self._device_id = device_id
-        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # If id_string is 213c7f2:1, the group_id is 213c7f2,
+        # and the device will respond to
         # group events regardless of their group indices.
         (self._group_id, _, _) = device_id.id_string.partition(":")
 
