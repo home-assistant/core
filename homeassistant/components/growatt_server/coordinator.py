@@ -235,6 +235,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 **storage_info_detail["storageDetailBean"],
                 **storage_energy_overview,
             }
+            _LOGGER.debug(
+                "storage_info_detail for device %s: %r",
+                self.device_id,
+                storage_info_detail,
+            )
+            _LOGGER.debug(
+                "storage_energy_overview for device %s: %r",
+                self.device_id,
+                storage_energy_overview,
+            )
         elif self.device_type == "sph":
             try:
                 sph_detail = self.api.sph_detail(self.device_id)
@@ -300,6 +310,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 **mix_detail,
                 **dashboard_values_for_mix,
             }
+            _LOGGER.debug(
+                "mix data for device %s: %r",
+                self.device_id,
+                self.data,
+            )
         _LOGGER.debug(
             "Finished updating data for %s (%s)",
             self.device_id,
