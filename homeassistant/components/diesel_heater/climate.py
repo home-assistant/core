@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -80,8 +81,8 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         )
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.address)},
-            "name": "Diesel heater",
-            "manufacturer": "Diesel heater",
+            "name": "Diesel Heater",
+            "manufacturer": "Diesel Heater",
             "model": "Multi-brand",
         }
         self._attr_unique_id = f"{coordinator.address}_climate"
@@ -182,14 +183,14 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self._current_preset = preset_mode
-
         if preset_mode == PRESET_AWAY:
+            self._current_preset = preset_mode
             self._user_cleared_preset = False  # Clear the "None" flag
             temp = self._get_away_temp()
             _LOGGER.debug("Setting preset to Away (%d°C)", temp)
             await self.coordinator.async_set_temperature(temp)
         elif preset_mode == PRESET_COMFORT:
+            self._current_preset = preset_mode
             self._user_cleared_preset = False  # Clear the "None" flag
             temp = self._get_comfort_temp()
             _LOGGER.debug("Setting preset to Comfort (%d°C)", temp)
@@ -201,6 +202,8 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
             self._user_cleared_preset = True  # User explicitly selected "None"
             # Persist the state change
             self.async_write_ha_state()
+        else:
+            raise ServiceValidationError(f"Unsupported preset mode: {preset_mode}")
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -231,6 +234,8 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         elif hvac_mode == HVACMode.OFF:
             _LOGGER.debug("Turning heater OFF")
             await self.coordinator.async_turn_off()
+        else:
+            raise ServiceValidationError(f"Unsupported HVAC mode: {hvac_mode}")
 
     async def async_turn_on(self) -> None:
         """Turn on the heater."""
