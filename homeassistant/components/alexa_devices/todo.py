@@ -59,7 +59,6 @@ async def async_setup_entry(
 class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     """Representation of an Alexa To-do List."""
 
-    _attr_has_entity_name = True
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
