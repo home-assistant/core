@@ -31,6 +31,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "heating_circuit": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "big_temperature_drop": "[%key:component::ouman_eh_800::entity::number::big_temperature_drop::name%]",
+              "temperature_drop": "[%key:component::ouman_eh_800::entity::number::temperature_drop::name%]"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "big_temperature_drop": { "name": "Big temperature drop" },
       "constant_temp_setpoint": { "name": "Constant temperature setpoint" },
