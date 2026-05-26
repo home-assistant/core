@@ -9,7 +9,7 @@ Support for controlling Policy Engine rules.
 """
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -174,14 +174,16 @@ def async_object_oriented_network_config_supported_fn(
     """Check if Policy Engine rule can be controlled as a switch."""
     config = hub.api.object_oriented_network_configs[obj_id]
     try:
-        secure = config.secure
+        secure: Any = config.secure
     except TypeError:
+        return False
+    if not isinstance(secure, Mapping):
         return False
 
     internet = secure.get("internet")
     return (
         secure.get("enabled") is True
-        and internet is not None
+        and isinstance(internet, Mapping)
         and internet.get("mode") == POLICY_ENGINE_INTERNET_MODE_TURN_OFF
     )
 
