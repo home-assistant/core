@@ -165,10 +165,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         if not self._discovered_devices:
-            _LOGGER.warning(
-                "No diesel heaters found. Make sure the heater is powered on and within Bluetooth range. "
-                "If using ESPHome Bluetooth Proxy, ensure it has available connection slots (max 3 connections)"
-            )
+            _LOGGER.debug("No diesel heaters discovered, falling back to manual entry")
             # Allow manual entry if no devices found
             return await self.async_step_manual()
 
