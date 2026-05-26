@@ -43,7 +43,11 @@ async def async_setup_platform(
         try:
             device = parse_message(msg.topic, event)
         except Exception:  # noqa: BLE001
-            _LOGGER.debug("Failed to parse ARWN message on topic %s", msg.topic)
+            _LOGGER.debug(
+                "Failed to parse ARWN message on topic %s",
+                msg.topic,
+                exc_info=True,
+            )
             return
 
         if device is None:
@@ -71,6 +75,15 @@ async def async_setup_platform(
                     if reading.device_class
                     else None
                 )
+            except ValueError:
+                _LOGGER.debug(
+                    "Unknown device_class=%s for sensor %s",
+                    reading.device_class,
+                    reading.sensor_name,
+                )
+                device_class = None
+
+            try:
                 state_class = (
                     SensorStateClass(reading.state_class)
                     if reading.state_class
@@ -78,12 +91,10 @@ async def async_setup_platform(
                 )
             except ValueError:
                 _LOGGER.debug(
-                    "Unknown device_class=%s or state_class=%s for sensor %s",
-                    reading.device_class,
+                    "Unknown state_class=%s for sensor %s",
                     reading.state_class,
                     reading.sensor_name,
                 )
-                device_class = None
                 state_class = None
 
             if unique_id not in store:

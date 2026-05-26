@@ -70,7 +70,7 @@ async def test_temperature_sensor_updates(
     assert state.state == "25.0"
 
 
-async def test_rain_rate_exposed_total_not(
+async def test_rain_rate_exposed_total_suppressed(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
@@ -184,3 +184,28 @@ async def test_unknown_topic_ignored(
     await hass.async_block_till_done()
 
     assert hass.data.get("arwn") is None
+
+
+async def test_wind_direction_state_class(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+) -> None:
+    """Test wind direction sensor has measurement_angle state class."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {"sensor": {"platform": "arwn"}},
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "arwn/wind",
+        json.dumps({"speed": 12.3, "gust": 18.0, "direction": 270, "units": "mph"}),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.wind_direction")
+    assert state is not None
+    assert state.state == "270"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT_ANGLE
