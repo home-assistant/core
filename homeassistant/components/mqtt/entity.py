@@ -1359,8 +1359,8 @@ class MqttEntityDeviceInfo(Entity):
                 config_entry_id=config_entry_id, **device_info
             )
 
-    @override
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return device_info_from_specifications(self._device_specifications)
