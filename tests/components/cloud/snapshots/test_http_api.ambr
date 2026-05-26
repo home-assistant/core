@@ -87,6 +87,13 @@
   
   </details>
   
+  ## Latency by location
+  
+  Location | Latency (ms)
+  --- | ---
+  Earth | 13.37
+  Moon | N/A
+  
   ## Installed packages
   
   <details><summary>Installed packages</summary>

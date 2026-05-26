@@ -137,9 +137,7 @@ async def test_services_invalid_entry(
     # Set up at least one entry so the service gets registered
     await setup_integration(hass, aioclient_mock)
 
-    with pytest.raises(
-        ServiceValidationError, match='Config entry for integration "radarr" not found'
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -147,6 +145,7 @@ async def test_services_invalid_entry(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 @pytest.mark.parametrize(
@@ -165,9 +164,7 @@ async def test_services_entry_not_loaded(
     # Now create a second entry that isn't loaded
     unloaded_entry = create_entry(hass)
 
-    with pytest.raises(
-        ServiceValidationError, match='Config entry "Mock Title" is not loaded'
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -175,3 +172,4 @@ async def test_services_entry_not_loaded(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"

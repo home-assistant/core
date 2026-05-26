@@ -1,10 +1,14 @@
 """Tests for the Growatt server config flow."""
 
+from collections.abc import Callable
 from copy import deepcopy
+from typing import Any
+from unittest.mock import MagicMock
 
 import growattServer
 import pytest
 import requests
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.growatt_server.const import (
@@ -13,14 +17,23 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
-    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
+    SERVER_URLS_NAMES,
+    V1_API_ERROR_NO_PRIVILEGE,
+    V1_API_ERROR_RATE_LIMITED,
 )
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -128,8 +141,9 @@ async def test_auth_form_display(
         assert field in result["data_schema"].schema
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_incorrect_login(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with incorrect credentials, then recovery."""
     # Simulate incorrect login
@@ -168,6 +182,43 @@ async def test_password_auth_incorrect_login(
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT_PASSWORD[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_password_auth_account_locked(
+    hass: HomeAssistant, mock_growatt_classic_api: MagicMock
+) -> None:
+    """Test password authentication when account is locked out."""
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": "Account locked",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Test recovery after lockout expires
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    mock_growatt_classic_api.plant_list.return_value = GROWATT_PLANT_LIST_RESPONSE
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_password_auth_no_plants(
@@ -216,8 +267,9 @@ async def test_token_auth_no_plants(hass: HomeAssistant, mock_growatt_v1_api) ->
     assert result["reason"] == ABORT_NO_PLANTS
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -245,8 +297,9 @@ async def test_password_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -299,11 +352,18 @@ async def test_password_auth_multiple_plants(
 # Token authentication tests
 
 
+@pytest.mark.parametrize(
+    ("error_code", "expected_error"),
+    [
+        (V1_API_ERROR_NO_PRIVILEGE, ERROR_INVALID_AUTH),
+        (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_api_error(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api, error_code: int, expected_error: str
 ) -> None:
-    """Test token authentication with API error, then recovery."""
-
+    """Test token authentication with V1 API error maps to correct error type."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -312,9 +372,9 @@ async def test_token_auth_api_error(
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    # Any GrowattV1ApiError during token verification should result in invalid_auth
-    error = growattServer.GrowattV1ApiError("API error")
-    error.error_code = 100
+    error = growattServer.GrowattV1ApiError(
+        message="API error", error_code=error_code, error_msg="API error"
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
 
     result = await hass.config_entries.flow.async_configure(
@@ -323,9 +383,9 @@ async def test_token_auth_api_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "token_auth"
-    assert result["errors"] == {"base": ERROR_INVALID_AUTH}
+    assert result["errors"] == {"base": expected_error}
 
-    # Test recovery - reset side_effect and set normal return value
+    # Test recovery
     mock_growatt_v1_api.plant_list.side_effect = None
     mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
 
@@ -339,8 +399,9 @@ async def test_token_auth_api_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with network error, then recovery."""
 
@@ -379,8 +440,9 @@ async def test_token_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with invalid response format, then recovery."""
 
@@ -416,8 +478,9 @@ async def test_token_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -444,8 +507,9 @@ async def test_token_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -539,8 +603,9 @@ async def test_token_auth_existing_plant_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with connection error, then recovery."""
     # Simulate connection error on first attempt
@@ -581,8 +646,9 @@ async def test_password_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid response format, then recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -621,8 +687,9 @@ async def test_password_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with plant list connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -648,8 +715,9 @@ async def test_password_auth_plant_list_error(
     assert result["reason"] == ERROR_CANNOT_CONNECT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_invalid_format(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid plant list format."""
     result = await hass.config_entries.flow.async_init(
@@ -668,6 +736,606 @@ async def test_password_auth_plant_list_invalid_format(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
     )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ERROR_CANNOT_CONNECT
+
+
+# Reauthentication flow tests
+
+
+@pytest.mark.parametrize(
+    ("stored_url", "user_input", "expected_region"),
+    [
+        (
+            SERVER_URLS_NAMES["other_regions"],
+            FIXTURE_USER_INPUT_PASSWORD,
+            "other_regions",
+        ),
+        (
+            SERVER_URLS_NAMES["north_america"],
+            {
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+                CONF_REGION: "north_america",
+            },
+            "north_america",
+        ),
+    ],
+)
+async def test_reauth_password_success(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    stored_url: str,
+    user_input: dict[str, str],
+    expected_region: str,
+) -> None:
+    """Test successful reauthentication with password auth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: stored_url,
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    region_key = next(
+        k
+        for k in result["data_schema"].schema
+        if isinstance(k, vol.Required) and k.schema == CONF_REGION
+    )
+    assert region_key.default() == expected_region
+
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == {
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+        CONF_NAME: "Test Plant",
+        CONF_PASSWORD: user_input[CONF_PASSWORD],
+        CONF_PLANT_ID: "123456",
+        CONF_URL: SERVER_URLS_NAMES[user_input[CONF_REGION]],
+        CONF_USERNAME: user_input[CONF_USERNAME],
+    }
+
+
+@pytest.mark.parametrize(
+    ("login_side_effect", "expected_error"),
+    [
+        (
+            lambda *args, **kwargs: {"msg": LOGIN_INVALID_AUTH_CODE, "success": False},
+            ERROR_INVALID_AUTH,
+        ),
+        (
+            requests.exceptions.ConnectionError("Connection failed"),
+            ERROR_CANNOT_CONNECT,
+        ),
+    ],
+)
+async def test_reauth_password_error_then_recovery(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    login_side_effect: Callable[..., Any] | Exception,
+    expected_error: str,
+) -> None:
+    """Test password reauth shows error then allows recovery."""
+    mock_config_entry_classic.add_to_hass(hass)
+
+    result = await mock_config_entry_classic.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_growatt_classic_api.login.side_effect = login_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover with correct credentials
+    mock_growatt_classic_api.login.side_effect = None
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_token_success(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reauthentication with token auth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_AUTH_TYPE: AUTH_API_TOKEN,
+        CONF_NAME: "Test Plant",
+        CONF_PLANT_ID: "123456",
+        CONF_TOKEN: FIXTURE_USER_INPUT_TOKEN[CONF_TOKEN],
+        CONF_URL: SERVER_URLS_NAMES[FIXTURE_USER_INPUT_TOKEN[CONF_REGION]],
+        "user_id": "12345",
+    }
+
+
+def _make_no_privilege_error() -> growattServer.GrowattV1ApiError:
+    return growattServer.GrowattV1ApiError(
+        message="No privilege access",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="No privilege access",
+    )
+
+
+@pytest.mark.parametrize(
+    ("plant_list_side_effect", "expected_error"),
+    [
+        (_make_no_privilege_error(), ERROR_INVALID_AUTH),
+        (requests.exceptions.ConnectionError("Network error"), ERROR_CANNOT_CONNECT),
+    ],
+)
+async def test_reauth_token_error_then_recovery(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    plant_list_side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test token reauth shows error then allows recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_growatt_v1_api.plant_list.side_effect = plant_list_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover with a valid token
+    mock_growatt_v1_api.plant_list.side_effect = None
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_token_non_auth_api_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth token with non-auth V1 API error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    error = growattServer.GrowattV1ApiError(
+        message="Rate limit exceeded",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Rate limit exceeded",
+    )
+    mock_growatt_v1_api.plant_list.side_effect = error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+
+async def test_reauth_password_invalid_response(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test reauth password flow with non-dict login response, then recovery."""
+    mock_config_entry_classic.add_to_hass(hass)
+    result = await mock_config_entry_classic.start_reauth_flow(hass)
+
+    mock_growatt_classic_api.login.return_value = "not_a_dict"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Recover with correct credentials
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_password_non_auth_login_failure(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test reauth password flow when login fails with a non-auth error."""
+    mock_config_entry_classic.add_to_hass(hass)
+    result = await mock_config_entry_classic.start_reauth_flow(hass)
+
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": "server_maintenance",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Recover with correct credentials
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry_classic.data == {
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+        CONF_NAME: "Test Plant",
+        CONF_PASSWORD: FIXTURE_USER_INPUT_PASSWORD[CONF_PASSWORD],
+        CONF_PLANT_ID: "123456",
+        CONF_URL: SERVER_URLS_NAMES[FIXTURE_USER_INPUT_PASSWORD[CONF_REGION]],
+        CONF_USERNAME: FIXTURE_USER_INPUT_PASSWORD[CONF_USERNAME],
+    }
+
+
+async def test_reauth_password_exception(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+) -> None:
+    """Test reauth password flow with unexpected exception from login, then recovery."""
+    mock_config_entry_classic.add_to_hass(hass)
+    result = await mock_config_entry_classic.start_reauth_flow(hass)
+
+    mock_growatt_classic_api.login.side_effect = ValueError("Unexpected error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Recover with correct credentials
+    mock_growatt_classic_api.login.side_effect = None
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry_classic.data == {
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+        CONF_NAME: "Test Plant",
+        CONF_PASSWORD: FIXTURE_USER_INPUT_PASSWORD[CONF_PASSWORD],
+        CONF_PLANT_ID: "123456",
+        CONF_URL: SERVER_URLS_NAMES[FIXTURE_USER_INPUT_PASSWORD[CONF_REGION]],
+        CONF_USERNAME: FIXTURE_USER_INPUT_PASSWORD[CONF_USERNAME],
+    }
+
+
+async def test_reauth_token_exception(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth token flow with unexpected exception, then recovery."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_growatt_v1_api.plant_list.side_effect = ValueError("Unexpected error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    # Recover with a valid token
+    mock_growatt_v1_api.plant_list.side_effect = None
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_AUTH_TYPE: AUTH_API_TOKEN,
+        CONF_NAME: "Test Plant",
+        CONF_PLANT_ID: "123456",
+        CONF_TOKEN: FIXTURE_USER_INPUT_TOKEN[CONF_TOKEN],
+        CONF_URL: SERVER_URLS_NAMES[FIXTURE_USER_INPUT_TOKEN[CONF_REGION]],
+        "user_id": "12345",
+    }
+
+
+async def test_reauth_unknown_auth_type(hass: HomeAssistant) -> None:
+    """Test reauth aborts immediately when the config entry has an unknown auth type."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: "unknown_type",
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    # The flow aborts immediately without showing a form
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ERROR_CANNOT_CONNECT
+
+
+# Reconfiguration flow tests
+
+
+@pytest.mark.parametrize(
+    ("stored_url", "user_input", "expected_region"),
+    [
+        (
+            SERVER_URLS_NAMES["other_regions"],
+            FIXTURE_USER_INPUT_PASSWORD,
+            "other_regions",
+        ),
+        (
+            SERVER_URLS_NAMES["north_america"],
+            {
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+                CONF_REGION: "north_america",
+            },
+            "north_america",
+        ),
+    ],
+)
+async def test_reconfigure_password_success(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    stored_url: str,
+    user_input: dict[str, str],
+    expected_region: str,
+) -> None:
+    """Test successful reconfiguration with password auth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: stored_url,
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    region_key = next(
+        k
+        for k in result["data_schema"].schema
+        if isinstance(k, vol.Required) and k.schema == CONF_REGION
+    )
+    assert region_key.default() == expected_region
+
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+        CONF_NAME: "Test Plant",
+        CONF_PASSWORD: user_input[CONF_PASSWORD],
+        CONF_PLANT_ID: "123456",
+        CONF_URL: SERVER_URLS_NAMES[user_input[CONF_REGION]],
+        CONF_USERNAME: user_input[CONF_USERNAME],
+    }
+
+
+@pytest.mark.parametrize(
+    ("login_side_effect", "expected_error"),
+    [
+        (
+            lambda *args, **kwargs: {"msg": LOGIN_INVALID_AUTH_CODE, "success": False},
+            ERROR_INVALID_AUTH,
+        ),
+        (
+            requests.exceptions.ConnectionError("Connection failed"),
+            ERROR_CANNOT_CONNECT,
+        ),
+    ],
+)
+async def test_reconfigure_password_error_then_recovery(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    login_side_effect: Callable[..., Any] | Exception,
+    expected_error: str,
+) -> None:
+    """Test password reconfigure shows error then allows recovery."""
+    mock_config_entry_classic.add_to_hass(hass)
+
+    result = await mock_config_entry_classic.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_growatt_classic_api.login.side_effect = login_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover with correct credentials
+    mock_growatt_classic_api.login.side_effect = None
+    mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_token_success(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration with token auth."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_AUTH_TYPE: AUTH_API_TOKEN,
+        CONF_NAME: "Test Plant",
+        CONF_PLANT_ID: "123456",
+        CONF_TOKEN: FIXTURE_USER_INPUT_TOKEN[CONF_TOKEN],
+        CONF_URL: SERVER_URLS_NAMES[FIXTURE_USER_INPUT_TOKEN[CONF_REGION]],
+        "user_id": "12345",
+    }
+
+
+@pytest.mark.parametrize(
+    ("plant_list_side_effect", "expected_error"),
+    [
+        (_make_no_privilege_error(), ERROR_INVALID_AUTH),
+        (requests.exceptions.ConnectionError("Network error"), ERROR_CANNOT_CONNECT),
+    ],
+)
+async def test_reconfigure_token_error_then_recovery(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    plant_list_side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test token reconfigure shows error then allows recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_growatt_v1_api.plant_list.side_effect = plant_list_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+
+    # Recover with a valid token
+    mock_growatt_v1_api.plant_list.side_effect = None
+    mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_unknown_auth_type(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts with unknown auth type."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: "unknown_type",
+            CONF_PLANT_ID: "123456",
+            CONF_NAME: "Test Plant",
+        },
+        unique_id="123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == ERROR_CANNOT_CONNECT

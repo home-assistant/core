@@ -366,7 +366,7 @@
       'media_class': 'directory',
       'media_content_id': '',
       'media_content_type': 'favorites',
-      'thumbnail': 'https://brands.home-assistant.io/_/sonos/logo.png',
+      'thumbnail': '/api/brands/integration/sonos/logo.png',
       'title': 'Favorites',
     }),
     dict({
@@ -377,8 +377,42 @@
       'media_class': 'directory',
       'media_content_id': '',
       'media_content_type': 'library',
-      'thumbnail': 'https://brands.home-assistant.io/_/sonos/logo.png',
+      'thumbnail': '/api/brands/integration/sonos/logo.png',
       'title': 'Music Library',
     }),
   ])
+# ---
+# name: test_search_media
+  dict({
+    'result': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children': list([
+        ]),
+        'children_media_class': None,
+        'media_class': 'track',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3',
+        'media_content_type': 'track',
+        'not_shown': 0,
+        'thumbnail': 'http://example.com/abbey_road.jpg',
+        'title': 'Come Together',
+      }),
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children': list([
+        ]),
+        'children_media_class': None,
+        'media_class': 'track',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+        'media_content_type': 'track',
+        'not_shown': 0,
+        'thumbnail': 'http://example.com/abbey_road.jpg',
+        'title': 'Something',
+      }),
+    ]),
+  })
 # ---

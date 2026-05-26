@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt
@@ -41,8 +39,10 @@ from .const import (
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
-from .event import EventManager
+from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+type ONVIFConfigEntry = ConfigEntry[ONVIFDevice]
 
 
 class ONVIFDevice:
@@ -165,7 +165,7 @@ class ONVIFDevice:
         # Bind the listener to the ONVIFDevice instance since
         # async_update_listener only creates a weak reference to the listener
         # and we need to make sure it doesn't get garbage collected since only
-        # the ONVIFDevice instance is stored in hass.data
+        # the ONVIFDevice instance is stored in config_entry.runtime_data
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(self._async_update_listener)
         )
@@ -218,8 +218,9 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-            # Some cameras don't support setting the timezone and will throw an IndexError
-            # if we try to set it. If we get an error, try again without the timezone.
+            # Some cameras don't support setting the timezone
+            # and will throw an IndexError if we try to set it.
+            # If we get an error, try again without the timezone.
             except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
@@ -333,8 +334,9 @@ class ONVIFDevice:
         try:
             device_info = await device_mgmt.GetDeviceInformation()
         except (XMLParseError, XMLSyntaxError, TransportError) as ex:
-            # Some cameras have invalid UTF-8 in their device information (TransportError)
-            # and others have completely invalid XML (XMLParseError, XMLSyntaxError)
+            # Some cameras have invalid UTF-8 in their device
+            # information (TransportError) and others have
+            # completely invalid XML (XMLParseError, XMLSyntaxError)
             LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
         else:
             manufacturer = device_info.Manufacturer

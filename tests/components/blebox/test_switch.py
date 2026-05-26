@@ -42,7 +42,7 @@ def switchbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My switch box")
     type(product).model = PropertyMock(return_value="switchBox")
-    return (feature, "switch.switchbox_0_relay")
+    return (feature, "switch.my_switch_box_switchbox_0_relay")
 
 
 async def test_switchbox_init(
@@ -57,7 +57,7 @@ async def test_switchbox_init(
     assert entry.unique_id == "BleBox-switchBox-1afe34e750b8-0.relay"
 
     state = hass.states.get(entity_id)
-    assert state.name == "switchBox-0.relay"
+    assert state.name == "My switch box switchBox-0.relay"
 
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
 
@@ -188,7 +188,10 @@ def switchbox_d_fixture():
     type(relay1).product = product
     type(relay2).product = product
 
-    return (features, ["switch.switchboxd_0_relay", "switch.switchboxd_1_relay"])
+    return (
+        features,
+        ["switch.my_relays_switchboxd_0_relay", "switch.my_relays_switchboxd_1_relay"],
+    )
 
 
 async def test_switchbox_d_init(
@@ -206,7 +209,7 @@ async def test_switchbox_d_init(
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-0.relay"
 
     state = hass.states.get(entity_ids[0])
-    assert state.name == "switchBoxD-0.relay"
+    assert state.name == "My relays switchBoxD-0.relay"
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 
@@ -222,7 +225,7 @@ async def test_switchbox_d_init(
     assert entry.unique_id == "BleBox-switchBoxD-1afe34e750b8-1.relay"
 
     state = hass.states.get(entity_ids[1])
-    assert state.name == "switchBoxD-1.relay"
+    assert state.name == "My relays switchBoxD-1.relay"
     assert state.attributes[ATTR_DEVICE_CLASS] == SwitchDeviceClass.SWITCH
     assert state.state == STATE_UNKNOWN
 

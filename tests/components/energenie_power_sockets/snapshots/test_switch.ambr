@@ -15,8 +15,9 @@
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_0].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -65,8 +66,9 @@
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_2].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -165,8 +168,9 @@
 # ---
 # name: test_switch_setup[mockedusbdevice_socket_3].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

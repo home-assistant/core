@@ -1,7 +1,5 @@
 """Tests for the seventeentrack sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pyseventeentrack.errors import SeventeenTrackError

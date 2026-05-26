@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.switch import SCAN_INTERVAL
 from homeassistant.const import (
@@ -13,7 +14,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -58,7 +58,7 @@ async def test_switch_update(
     assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
     assert len(mock_hub_status_prod_load_switch.mock_calls) >= 2
 
-    entity = hass.states.get("switch.heizung_links")
+    entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
     assert entity == snapshot
 
@@ -86,7 +86,7 @@ async def test_switch_turn_on_and_off(
     assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
     assert len(mock_hub_status_prod_load_switch.mock_calls) >= 1
 
-    entity = hass.states.get("switch.heizung_links")
+    entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
     assert entity.state == STATE_OFF
 
@@ -97,13 +97,13 @@ async def test_switch_turn_on_and_off(
         before = len(mock_hub_status_prod_load_switch.mock_calls)
 
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("switch.heizung_links")
+        entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_ON
         assert len(mock_hub_status_prod_load_switch.mock_calls) == before
@@ -115,13 +115,13 @@ async def test_switch_turn_on_and_off(
         before = len(mock_hub_status_prod_load_switch.mock_calls)
 
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("switch.heizung_links")
+        entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert len(mock_hub_status_prod_load_switch.mock_calls) == before

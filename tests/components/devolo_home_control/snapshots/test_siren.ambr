@@ -9,7 +9,7 @@
       'supported_features': <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -18,8 +18,9 @@
 # ---
 # name: test_siren.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'available_tones': list([
@@ -33,7 +34,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -66,7 +67,7 @@
       'supported_features': <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -75,8 +76,9 @@
 # ---
 # name: test_siren_change_default_tone.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'available_tones': list([
@@ -90,7 +92,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,7 +125,7 @@
       'supported_features': <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -132,8 +134,9 @@
 # ---
 # name: test_siren_switching.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'available_tones': list([
@@ -147,7 +150,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.test',
+    'entity_id': 'siren.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,

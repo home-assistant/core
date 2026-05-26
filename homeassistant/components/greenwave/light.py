@@ -1,7 +1,5 @@
 """Support for Greenwave Reality (TCP Connected) lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import os
@@ -74,17 +72,12 @@ class GreenwaveLight(LightEntity):
         """Initialize a Greenwave Reality Light."""
         self._did = int(light["did"])
         self._attr_name = light["name"]
-        self._state = int(light["state"])
+        self._attr_is_on = bool(int(light["state"]))
         self._attr_brightness = greenwave.hass_brightness(light)
         self._host = host
         self._attr_available = greenwave.check_online(light)
         self._token = token
         self._gatewaydata = gatewaydata
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -101,7 +94,7 @@ class GreenwaveLight(LightEntity):
         self._gatewaydata.update()
         bulbs = self._gatewaydata.greenwave
 
-        self._state = int(bulbs[self._did]["state"])
+        self._attr_is_on = bool(int(bulbs[self._did]["state"]))
         self._attr_brightness = greenwave.hass_brightness(bulbs[self._did])
         self._attr_available = greenwave.check_online(bulbs[self._did])
         self._attr_name = bulbs[self._did]["name"]

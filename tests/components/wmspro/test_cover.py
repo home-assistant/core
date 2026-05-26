@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.cover import SCAN_INTERVAL
 from homeassistant.const import (
@@ -16,7 +17,6 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_OPEN,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -61,7 +61,7 @@ async def test_cover_update(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
-    entity = hass.states.get("cover.markise")
+    entity = hass.states.get("cover.terrasse_markise")
     assert entity is not None
     assert entity == snapshot
 
@@ -79,17 +79,17 @@ async def test_cover_update(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )
@@ -124,7 +124,7 @@ async def test_cover_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -143,7 +143,7 @@ async def test_cover_open_and_close(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -162,17 +162,17 @@ async def test_cover_open_and_close(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )
@@ -207,7 +207,7 @@ async def test_cover_open_to_pos(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, "position": 50},
             blocking=True,
@@ -226,17 +226,17 @@ async def test_cover_open_to_pos(
         (
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
-            "cover.markise",
+            "cover.terrasse_markise",
         ),
         (
             "mock_hub_configuration_prod_awning_valance",
             "mock_hub_status_prod_valance",
-            "cover.markise_2",
+            "cover.raum_0_markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
-            "cover.wohnebene_alle",
+            "cover.wohnbereich_wohnebene_alle",
         ),
     ],
 )
@@ -271,7 +271,7 @@ async def test_cover_open_and_stop(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, "position": 80},
             blocking=True,
@@ -290,7 +290,7 @@ async def test_cover_open_and_stop(
         before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
-            Platform.COVER,
+            COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,

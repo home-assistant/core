@@ -3,13 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from hdfury import (
-    OPERATION_MODES,
-    TX0_INPUT_PORTS,
-    TX1_INPUT_PORTS,
-    HDFuryAPI,
-    HDFuryError,
-)
+from hdfury import OPERATION_MODES, TX0_INPUT_PORTS, TX1_INPUT_PORTS, HDFuryError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -27,7 +21,7 @@ PARALLEL_UPDATES = 1
 class HDFurySelectEntityDescription(SelectEntityDescription):
     """Description for HDFury select entities."""
 
-    set_value_fn: Callable[[HDFuryAPI, str], Awaitable[None]]
+    set_value_fn: Callable[[HDFuryCoordinator, str], Awaitable[None]]
 
 
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (

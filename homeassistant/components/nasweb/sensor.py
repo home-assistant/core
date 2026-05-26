@@ -1,7 +1,5 @@
 """Platform for NASweb sensors."""
 
-from __future__ import annotations
-
 import logging
 import time
 
@@ -15,7 +13,7 @@ from webio_api.const import (
 )
 
 from homeassistant.components.sensor import (
-    DOMAIN as DOMAIN_SENSOR,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -70,7 +68,7 @@ async def async_setup_entry(
         for index in removed:
             unique_id = f"{DOMAIN}.{config.unique_id}.input.{index}"
             if entity_id := entity_registry.async_get_entity_id(
-                DOMAIN_SENSOR, DOMAIN, unique_id
+                SENSOR_DOMAIN, DOMAIN, unique_id
             ):
                 entity_registry.async_remove(entity_id)
                 current_inputs.remove(index)
@@ -115,7 +113,8 @@ class BaseSensorEntity(SensorEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
 

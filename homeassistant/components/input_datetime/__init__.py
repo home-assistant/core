@@ -1,7 +1,5 @@
 """Support to select a date and/or a time."""
 
-from __future__ import annotations
-
 import datetime as py_datetime
 import logging
 from typing import Any, Self
@@ -100,7 +98,7 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
-        return py_datetime.datetime.combine(py_datetime.date.today(), time)
+        return py_datetime.datetime.combine(dt_util.now().date(), time)
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -158,8 +156,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            conf = {DOMAIN: {}}
         await yaml_collection.async_load(
             [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
@@ -265,7 +261,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
+        default_value = dt_util.now().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -288,9 +284,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         elif (time := dt_util.parse_time(old_state.state)) is None:
             current_datetime = dt_util.parse_datetime(default_value)
         else:
-            current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
-            )
+            current_datetime = py_datetime.datetime.combine(dt_util.now().date(), time)
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.get_default_time_zone()
@@ -312,7 +306,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_HAS_TIME]
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
@@ -339,9 +333,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         }
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_EDITABLE: self.editable,
         }
 

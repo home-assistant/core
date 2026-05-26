@@ -103,7 +103,7 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (

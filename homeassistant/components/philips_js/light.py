@@ -1,7 +1,5 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -96,7 +94,11 @@ class AmbilightEffect:
         if self.mode == EFFECT_MODE:
             return f"{EFFECT_MODE}{EFFECT_PARTITION}{self.style}"
         if self.mode == EFFECT_EXPERT:
-            return f"{self.style}{EFFECT_PARTITION}{self.algorithm}{EFFECT_PARTITION}{EFFECT_EXPERT}"
+            return (
+                f"{self.style}{EFFECT_PARTITION}"
+                f"{self.algorithm}{EFFECT_PARTITION}"
+                f"{EFFECT_EXPERT}"
+            )
         return f"{self.style}{EFFECT_PARTITION}{self.algorithm}"
 
 
@@ -135,12 +137,12 @@ def _average_pixels(data):
 class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_effect: str
     _attr_translation_key = "ambilight"
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(
-        self,
-        coordinator: PhilipsTVDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: PhilipsTVDataUpdateCoordinator) -> None:
         """Initialize light."""
         self._tv = coordinator.api
         self._hs = None
@@ -149,8 +151,6 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._last_selected_effect: AmbilightEffect | None = None
         super().__init__(coordinator)
 
-        self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
-        self._attr_supported_features = LightEntityFeature.EFFECT
         self._attr_unique_id = coordinator.unique_id
 
         self._update_from_coordinator()
@@ -213,10 +213,10 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the light is turned on."""
         if self._tv.on:
-            effect = AmbilightEffect.from_str(self.effect)
+            effect = AmbilightEffect.from_str(self._attr_effect)
             return effect.is_on(self._tv.powerstate)
 
         return False
@@ -249,7 +249,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
                 *_average_pixels(self._tv.ambilight_cached)
             )
             self._attr_hs_color = hsv_h, hsv_s
-            self._attr_brightness = hsv_v * 255.0 / 100.0
+            self._attr_brightness = round(hsv_v * 255.0 / 100.0)
         else:
             self._attr_hs_color = None
             self._attr_brightness = None
@@ -293,7 +293,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
             "color": {
                 "hue": round(hs_color[0] * 255.0 / 360.0),
                 "saturation": round(hs_color[1] * 255.0 / 100.0),
-                "brightness": round(brightness),
+                "brightness": brightness,
             },
             "colorDelta": {
                 "hue": 0,

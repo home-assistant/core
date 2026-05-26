@@ -24,7 +24,7 @@ from homeassistant.util.percentage import (
 async def test_ranged_value_to_int_range_large(
     input_val: float, output_val: int
 ) -> None:
-    """Test a large range of low and high values convert a single value to a percentage."""
+    """Test large range low/high values convert a value to a percentage."""
     source_range = (1, 255)
     dest_range = (1, 100)
 
@@ -71,7 +71,7 @@ async def test_scale_to_ranged_value_large(
 async def test_scale_ranged_value_to_int_range_small(
     input_val: float, output_val: int
 ) -> None:
-    """Test a small range of low and high values convert a single value to a percentage."""
+    """Test small range low/high values convert a value to a percentage."""
     source_range = (1, 6)
     dest_range = (1, 100)
 

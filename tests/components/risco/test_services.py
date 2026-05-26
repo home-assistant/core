@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.risco import DOMAIN
-from homeassistant.components.risco.const import SERVICE_SET_TIME
+from homeassistant.components.risco.const import DOMAIN, SERVICE_SET_TIME
+from homeassistant.components.risco.models import CloudData, RiscoData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_TIME
 from homeassistant.core import HomeAssistant
@@ -61,10 +61,11 @@ async def test_set_time_service_with_invalid_entry(
         ATTR_CONFIG_ENTRY_ID: "invalid_entry_id",
     }
 
-    with pytest.raises(ServiceValidationError, match="Config entry not found"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_set_time_service_with_not_loaded_entry(
@@ -80,10 +81,11 @@ async def test_set_time_service_with_not_loaded_entry(
         ATTR_CONFIG_ENTRY_ID: local_config_entry.entry_id,
     }
 
-    with pytest.raises(ServiceValidationError, match="is not loaded"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_set_time_service_with_cloud_entry(
@@ -97,6 +99,9 @@ async def test_set_time_service_with_cloud_entry(
     )
     cloud_entry.add_to_hass(hass)
     cloud_entry.mock_state(hass, ConfigEntryState.LOADED)
+    cloud_entry.runtime_data = RiscoData(
+        cloud_data=CloudData(coordinator=None, events_coordinator=None)  # type: ignore[arg-type]
+    )
 
     data = {
         ATTR_CONFIG_ENTRY_ID: cloud_entry.entry_id,

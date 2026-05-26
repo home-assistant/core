@@ -1,7 +1,5 @@
 """Matter binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -15,23 +13,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter binary sensor from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
@@ -60,6 +57,9 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
             value = cast(bool | None, value)
         self._attr_is_on = value
 
+
+_PUMP_STATUS = clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap
+_VALVE_FAULT = clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
@@ -175,6 +175,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockActuatorEnabledSensor",
+            translation_key="actuator",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -367,11 +377,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # DeviceFault or SupplyFault bit enabled
             device_to_ha=lambda x: bool(
-                x
-                & (
-                    clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
-                    | clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault
-                )
+                x & (_PUMP_STATUS.kDeviceFault | _PUMP_STATUS.kSupplyFault)
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -386,10 +392,7 @@ DISCOVERY_SCHEMAS = [
             key="PumpStatusRunning",
             translation_key="pump_running",
             device_class=BinarySensorDeviceClass.RUNNING,
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
-            ),
+            device_to_ha=lambda x: bool(x & _PUMP_STATUS.kRunning),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -435,10 +438,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # GeneralFault bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kGeneralFault),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -454,10 +454,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Blocked bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kBlocked),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -473,10 +470,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # Leaking bit from ValveFault attribute
-            device_to_ha=lambda x: bool(
-                x
-                & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
-            ),
+            device_to_ha=lambda x: bool(x & _VALVE_FAULT.kLeaking),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -521,8 +515,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # LocalTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature  # Calculated Local Temperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kLocalTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -537,8 +530,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # OutdoorTemperature bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature  # OutdoorTemperature is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOutdoorTemperature
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -556,8 +548,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             # Occupancy bit from RemoteSensing attribute
             device_to_ha=lambda x: bool(
-                x
-                & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy  # Occupancy is derived from a remote node
+                x & clusters.Thermostat.Bitmaps.RemoteSensingBitmap.kOccupancy
             ),
         ),
         entity_class=MatterBinarySensor,

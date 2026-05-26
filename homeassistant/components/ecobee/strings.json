@@ -4,6 +4,8 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "login_failed": "Error authenticating with ecobee; please verify your credentials are correct.",
       "pin_request_failed": "Error requesting PIN from ecobee; please verify API key is correct.",
       "token_request_failed": "Error requesting tokens from ecobee; please try again."
     },
@@ -34,6 +36,9 @@
     "number": {
       "compressor_protection_min_temp": {
         "name": "Compressor minimum temperature"
+      },
+      "fan_min_on_time": {
+        "name": "Fan minimum on time"
       },
       "ventilator_min_type_away": {
         "name": "Ventilator minimum time away"

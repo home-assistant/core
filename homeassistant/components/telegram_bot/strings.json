@@ -87,11 +87,13 @@
   "config_subentries": {
     "allowed_chat_ids": {
       "abort": {
-        "already_configured": "Chat already configured"
+        "already_configured": "Chat already configured",
+        "entry_not_loaded": "[%key:component::telegram_bot::exceptions::entry_not_loaded::message%]"
       },
       "entry_type": "Allowed chat ID",
       "error": {
-        "chat_not_found": "Chat not found"
+        "chat_not_found": "Chat not found",
+        "telegram_error": "[%key:component::telegram_bot::config::error::telegram_error%]"
       },
       "initiate_flow": {
         "user": "Add allowed chat ID"
@@ -104,7 +106,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
-          "description": "To get your chat ID, follow these steps:\n\n1. Open Telegram and start a chat with [{getidsbot_username}]({getidsbot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `id` field of the bot's response.",
+          "description": "Before you proceed, send any message to your bot: [{bot_username}]({bot_url}). This is required because Telegram prevents bots from initiating chats with users.\n\nThen follow these steps to get your chat ID:\n\n1. Open Telegram and start a chat with [{id_bot_username}]({id_bot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `ID` field of the bot's response.\n\nMost recent chat: {most_recent_chat}",
           "title": "Add chat"
         }
       }
@@ -186,6 +188,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "entry_not_loaded": {
+      "message": "{telegram_bot} is not loaded"
+    },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
     },
@@ -195,6 +200,12 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_directory_path": {
+      "message": "Invalid directory path: {directory_path}. The path must not contain `~` or `..`."
+    },
+    "invalid_file_name": {
+      "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
+    },
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
     },
@@ -203,9 +214,6 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
-    },
-    "missing_config_entry": {
-      "message": "No config entries found or setup failed. Please set up the Telegram Bot first."
     },
     "missing_input": {
       "message": "{field} is required."
@@ -275,6 +283,18 @@
         "upload_video": "Uploading video",
         "upload_video_note": "Uploading video note",
         "upload_voice": "Uploading voice"
+      }
+    },
+    "media": {
+      "fields": {
+        "authentication": "Authentication",
+        "caption": "Caption",
+        "file": "File",
+        "media_type": "Media type",
+        "password": "Password",
+        "url": "URL",
+        "username": "Username",
+        "verify_ssl": "Verify SSL"
       }
     },
     "media_type": {
@@ -347,8 +367,8 @@
       },
       "name": "Delete message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -405,8 +425,8 @@
       },
       "name": "Edit caption",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -452,8 +472,8 @@
       },
       "name": "Edit message",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -515,8 +535,8 @@
       },
       "name": "Edit message media",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -549,8 +569,8 @@
       },
       "name": "Edit reply markup",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -572,8 +592,8 @@
       },
       "name": "Leave chat",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -651,8 +671,8 @@
       },
       "name": "Send animation",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -685,8 +705,8 @@
       },
       "name": "Send chat action",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -764,8 +784,8 @@
       },
       "name": "Send document",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -822,8 +842,55 @@
       },
       "name": "Send location",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
+        }
+      }
+    },
+    "send_media_group": {
+      "description": "Sends a group of photos, videos, documents or audios as an album. Documents and audio files can only be grouped in an album with messages of the same type.",
+      "fields": {
+        "chat_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::chat_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the media group.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "disable_notification": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "media": {
+          "description": "A list of media to be sent.",
+          "name": "Media"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "protect_content": {
+          "description": "Protects the contents of the sent message from forwarding and saving.",
+          "name": "Protect content"
+        },
+        "reply_to_message_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        }
+      },
+      "name": "Send media group",
+      "sections": {
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -885,8 +952,47 @@
       },
       "name": "Send message",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "Additional options"
+        }
+      }
+    },
+    "send_message_draft": {
+      "description": "Shows a partial message (draft) in Telegram while the full message is still being generated.",
+      "fields": {
+        "chat_id": {
+          "description": "One or more pre-authorized chat IDs to send the message draft to.",
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the message draft.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "draft_id": {
+          "description": "Unique identifier of the message draft. Changes of drafts with the same identifier are animated.",
+          "name": "Draft ID"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "message": {
+          "description": "Available part of the message for temporary notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message::name%]"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        }
+      },
+      "name": "Send message draft",
+      "sections": {
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -964,8 +1070,8 @@
       },
       "name": "Send photo",
       "sections": {
-        "advanced": {
-          "name": "Advanced"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "URL options"
@@ -1022,8 +1128,8 @@
       },
       "name": "Send poll",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     },
@@ -1097,8 +1203,8 @@
       },
       "name": "Send sticker",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1179,8 +1285,8 @@
       },
       "name": "Send video",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1257,8 +1363,8 @@
       },
       "name": "Send voice",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         },
         "url_options": {
           "name": "[%key:component::telegram_bot::services::send_photo::sections::url_options::name%]"
@@ -1295,8 +1401,8 @@
       },
       "name": "Set message reaction",
       "sections": {
-        "advanced": {
-          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        "additional_fields": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::additional_fields::name%]"
         }
       }
     }

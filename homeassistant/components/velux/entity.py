@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, ParamSpec
+from typing import Any
 
 from pyvlx import Node, PyVLXException
 
@@ -15,10 +15,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-P = ParamSpec("P")
 
-
-def wrap_pyvlx_call_exceptions(
+def wrap_pyvlx_call_exceptions[**P](
     func: Callable[P, Coroutine[Any, Any, None]],
 ) -> Callable[P, Coroutine[Any, Any, None]]:
     """Decorate pyvlx calls to handle exceptions.
@@ -56,7 +54,6 @@ class VeluxEntity(Entity):
         self.node = node
         unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
         self._attr_unique_id = unique_id
-        self.unsubscribe = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -70,7 +67,7 @@ class VeluxEntity(Entity):
             via_device=(DOMAIN, f"gateway_{config_entry_id}"),
         )
 
-    async def after_update_callback(self, node) -> None:
+    async def after_update_callback(self, _: Node) -> None:
         """Call after device was updated."""
         self._attr_available = self.node.pyvlx.get_connected()
         if not self._attr_available:

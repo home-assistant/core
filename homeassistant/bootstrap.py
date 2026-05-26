@@ -1,7 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -19,7 +17,8 @@ from time import monotonic
 from typing import TYPE_CHECKING, Any
 
 # Import cryptography early since import openssl is not thread-safe
-# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+# _frozen_importlib._DeadlockError: deadlock detected by
+# _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
@@ -70,7 +69,7 @@ from .const import (
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
-from .exceptions import HomeAssistantError
+from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from .helpers import (
     area_registry,
     category_registry,
@@ -167,10 +166,14 @@ FRONTEND_INTEGRATIONS = {
     # visible in frontend
     "frontend",
 }
-# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
-# The substage containing recorder should have no timeout, as it could cancel a database migration.
-# Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
+# Stage 0 is divided into substages. Each substage has a name,
+# a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it
+# could cancel a database migration.
+# Recorder freezes "recorder" timeout during a migration, but it
+# does not freeze other timeouts.
+# If we add timeouts to the frontend substages, we should make sure
+# they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
@@ -210,6 +213,7 @@ DEFAULT_INTEGRATIONS = {
     "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
+    "brands",
     "frontend",
     "hardware",
     "labs",
@@ -235,9 +239,31 @@ DEFAULT_INTEGRATIONS = {
     "input_text",
     "schedule",
     "timer",
+    #
+    # Base platforms:
+    # Note: Calendar and todo are not included to prevent them from registering
+    # their frontend panels when there are no calendar or todo integrations.
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
+    #
+    # Integrations providing triggers and conditions for base platforms:
+    "air_quality",
+    "battery",
+    "door",
+    "garage_door",
+    "gate",
+    "humidity",
+    "illuminance",
+    "moisture",
+    "motion",
+    "occupancy",
+    "power",
+    "temperature",
+    "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
+    "backup",
+    "cloud",
     "frontend",
 }
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
@@ -432,32 +458,57 @@ def _init_blocking_io_modules_in_executor() -> None:
     is_docker_env()
 
 
-async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and modules that will do blocking I/O."""
+async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
+    """Load the registries and modules that will do blocking I/O.
+
+    Return whether loading succeeded.
+    """
     if DATA_REGISTRIES_LOADED in hass.data:
-        return
+        return True
+
     hass.data[DATA_REGISTRIES_LOADED] = None
     entity.async_setup(hass)
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
-    await asyncio.gather(
-        create_eager_task(get_internal_store_manager(hass).async_initialize()),
-        create_eager_task(area_registry.async_load(hass)),
-        create_eager_task(category_registry.async_load(hass)),
-        create_eager_task(device_registry.async_load(hass)),
-        create_eager_task(entity_registry.async_load(hass)),
-        create_eager_task(floor_registry.async_load(hass)),
-        create_eager_task(issue_registry.async_load(hass)),
-        create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-        create_eager_task(template.async_load_custom_templates(hass)),
-        create_eager_task(restore_state.async_load(hass)),
-        create_eager_task(hass.config_entries.async_initialize()),
-        create_eager_task(async_get_system_info(hass)),
-        create_eager_task(condition.async_setup(hass)),
-        create_eager_task(trigger.async_setup(hass)),
-    )
+
+    recovery = hass.config.recovery_mode
+    device_registry.async_setup(hass)
+    try:
+        await asyncio.gather(
+            create_eager_task(get_internal_store_manager(hass).async_initialize()),
+            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+            create_eager_task(template.async_load_custom_templates(hass)),
+            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+            create_eager_task(hass.config_entries.async_initialize()),
+            create_eager_task(async_get_system_info(hass)),
+            create_eager_task(condition.async_setup(hass)),
+            create_eager_task(trigger.async_setup(hass)),
+        )
+    except UnsupportedStorageVersionError as err:
+        # If we're already in recovery mode, we don't want to handle the exception
+        # and activate recovery mode again, as that would lead to an infinite loop.
+        if recovery:
+            raise
+
+        _LOGGER.error(
+            "Storage file %s was created by a newer version of Home Assistant"
+            " (storage version %s > %s); activating recovery mode; on-disk data"
+            " is preserved; upgrade Home Assistant or restore from a backup",
+            err.storage_key,
+            err.found_version,
+            err.max_supported_version,
+        )
+        return False
+
+    return True
 
 
 async def async_from_config_dict(
@@ -474,7 +525,9 @@ async def async_from_config_dict(
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
     await loader.async_get_custom_components(hass)
-    await async_load_base_functionality(hass)
+
+    if not await async_load_base_functionality(hass):
+        return None
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)

@@ -89,7 +89,7 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         supports_vacation_mode = any(
-            supported_mode.mode == AOSmithOperationMode.VACATION
+            supported_mode.mode is AOSmithOperationMode.VACATION
             for supported_mode in self.device.supported_modes
         )
 
@@ -120,9 +120,9 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         return MODE_AOSMITH_TO_HA.get(self.device.status.current_mode, STATE_OFF)
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool:
         """Return True if away mode is on."""
-        return self.device.status.current_mode == AOSmithOperationMode.VACATION
+        return self.device.status.current_mode is AOSmithOperationMode.VACATION
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""

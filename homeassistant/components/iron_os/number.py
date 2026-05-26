@@ -1,7 +1,5 @@
 """Number platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -286,11 +284,16 @@ PINECIL_NUMBER_DESCRIPTIONS_V223: tuple[IronOSNumberEntityDescription, ...] = (
 )
 
 """
-The `device_class` attribute was removed from the `setpoint_temperature`, `sleep_temperature`, and `boost_temp` entities.
-These entities represent user-defined input values, not measured temperatures, and their
-interpretation depends on the device's current unit configuration. Applying a device_class
-results in automatic unit conversions, which introduce rounding errors due to the use of integers.
-This can prevent the correct value from being set, as the input is modified during synchronization with the device.
+The `device_class` attribute was removed from the
+`setpoint_temperature`, `sleep_temperature`, and
+`boost_temp` entities. These entities represent user-defined
+input values, not measured temperatures, and their
+interpretation depends on the device's current unit
+configuration. Applying a device_class results in automatic
+unit conversions, which introduce rounding errors due to the
+use of integers. This can prevent the correct value from
+being set, as the input is modified during synchronization
+with the device.
 """
 PINECIL_TEMP_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
     IronOSNumberEntityDescription(
@@ -358,7 +361,7 @@ PINECIL_SETPOINT_NUMBER_DESCRIPTION = IronOSNumberEntityDescription(
     native_max_value=MAX_TEMP,
     native_min_value_f=MIN_TEMP_F,
     native_max_value_f=MAX_TEMP_F,
-    native_step=5,
+    native_step=1,
 )
 
 

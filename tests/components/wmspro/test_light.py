@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.light import SCAN_INTERVAL
 from homeassistant.const import (
@@ -14,7 +14,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -59,7 +58,7 @@ async def test_light_update(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) == 2
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity == snapshot
 
@@ -85,7 +84,7 @@ async def test_light_turn_on_and_off(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -97,13 +96,13 @@ async def test_light_turn_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
@@ -116,13 +115,13 @@ async def test_light_turn_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -143,7 +142,7 @@ async def test_light_dimm_on_and_off(
     assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_dimmer.mock_calls) >= 1
 
-    entity = hass.states.get("light.licht")
+    entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
     assert entity.attributes[ATTR_BRIGHTNESS] is None
@@ -155,13 +154,13 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
@@ -174,13 +173,13 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_BRIGHTNESS: 128},
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] == 128
@@ -193,13 +192,13 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
-        entity = hass.states.get("light.licht")
+        entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None

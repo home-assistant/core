@@ -65,7 +65,7 @@
     'manufacturer': 'https://lyrion.org/ / Ralph Irving & Adrian Smith',
     'model': 'Lyrion Music Server/SqueezeLite',
     'model_id': 'LMS',
-    'name': '1.2.3.4',
+    'name': '1.1.1.1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

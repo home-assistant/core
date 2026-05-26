@@ -1,13 +1,11 @@
 """Support for Nest devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from http import HTTPStatus
 import logging
 
-from aiohttp import ClientError, ClientResponseError, web
+from aiohttp import ClientError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
@@ -43,6 +41,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
     Unauthorized,
 )
 from homeassistant.helpers import (
@@ -71,6 +71,7 @@ from .media_source import (
     async_get_media_source_devices,
     async_get_transcoder,
 )
+from .services import async_setup_services
 from .types import DevicesAddedListener, NestConfigEntry, NestData
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,6 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
+    async_setup_services(hass)
     return True
 
 
@@ -253,11 +255,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     auth = await api.new_auth(hass, entry)
     try:
         await auth.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="reauth_required"
-            ) from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="reauth_required"
+        ) from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="auth_server_error"
         ) from err

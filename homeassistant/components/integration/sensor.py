@@ -1,7 +1,5 @@
 """Numeric integration of data coming from a source sensor over time."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -246,7 +244,8 @@ async def async_setup_entry(
     )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
+        # Before we had support for optional selectors,
+        # "none" was used for selecting nothing
         unit_prefix = None
 
     if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
@@ -392,7 +391,9 @@ class IntegrationSensor(RestoreSensor):
             source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
         )
         if self._attr_device_class:
-            self._attr_icon = None  # Remove this sensors icon default and allow to fallback to the device class default
+            # Remove this sensors icon default and allow
+            # to fallback to the device class default
+            self._attr_icon = None
         else:
             self._attr_icon = "mdi:chart-histogram"
 
@@ -566,7 +567,7 @@ class IntegrationSensor(RestoreSensor):
             assert old_timestamp is not None
         elapsed_seconds = Decimal(
             (new_timestamp - old_timestamp).total_seconds()
-            if self._last_integration_trigger == _IntegrationTrigger.StateEvent
+            if self._last_integration_trigger is _IntegrationTrigger.StateEvent
             else (new_timestamp - self._last_integration_time).total_seconds()
         )
 

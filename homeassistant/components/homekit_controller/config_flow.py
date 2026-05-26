@@ -1,7 +1,5 @@
 """Config flow to configure homekit_controller."""
 
-from __future__ import annotations
-
 import logging
 import re
 from typing import TYPE_CHECKING, Any, Self, cast
@@ -164,7 +162,8 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required("device"): vol.In(
                         {
                             key: (
-                                f"{key} ({formatted_category(discovery.description.category)})"
+                                f"{key} ("
+                                f"{formatted_category(discovery.description.category)})"
                             )
                             for key, discovery in self.devices.items()
                         }
@@ -460,6 +459,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
             except Exception as err:
@@ -490,6 +495,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")

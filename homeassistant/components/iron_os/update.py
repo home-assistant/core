@@ -1,7 +1,5 @@
 """Update platform for IronOS integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     UpdateDeviceClass,
@@ -9,6 +7,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -22,6 +21,7 @@ PARALLEL_UPDATES = 0
 UPDATE_DESCRIPTION = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 

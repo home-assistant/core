@@ -17,15 +17,20 @@ ENTITY_ID = "sensor.illuminance_sensor_0000_20"
 
 
 @pytest.fixture
-def mock_devices(mock_illuminance_device: MagicMock) -> list[MagicMock]:
-    """Override mock_devices to use illuminance sensor only."""
-    return [mock_illuminance_device]
+def mock_devices(
+    mock_illuminance_device: MagicMock, mock_light_device: MagicMock
+) -> list[MagicMock]:
+    """Override mock_devices to use illuminance sensor and light device."""
+    return [mock_illuminance_device, mock_light_device]
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify which platforms to test."""
     return [Platform.SENSOR]
+
+
+ENERGY_ENTITY_ID = "sensor.dimmer_0000_02_energy"
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -42,8 +47,11 @@ async def test_setup_entry(
         entity_registry, mock_config_entry.entry_id
     )
 
-    assert len(entity_entries) == 1
-    assert entity_entries[0].entity_id == ENTITY_ID
+    # Should have illuminance sensor and energy sensor
+    assert len(entity_entries) == 2
+    entity_ids = {entry.entity_id for entry in entity_entries}
+    assert ENTITY_ID in entity_ids
+    assert ENERGY_ENTITY_ID in entity_ids
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -127,5 +135,61 @@ async def test_availability(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_energy_callback(
+    hass: HomeAssistant,
+    mock_light_device: MagicMock,
+) -> None:
+    """Test EnergySensor handles energy report callback correctly."""
+    callback = find_device_listener(mock_light_device, CallbackEventType.ENERGY_REPORT)
+
+    # Update energy value
+    callback(123.45)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert float(state.state) == 123.45
+
+    # Update to new value
+    callback(200.0)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert float(state.state) == 200.0
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_energy_initial_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test EnergySensor initial state is unknown."""
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_energy_availability(
+    hass: HomeAssistant,
+    mock_light_device: MagicMock,
+) -> None:
+    """Test availability changes are reflected in energy sensor state."""
+    trigger_availability_callback(mock_light_device, False)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    trigger_availability_callback(mock_light_device, True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENERGY_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE

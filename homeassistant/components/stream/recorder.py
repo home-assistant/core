@@ -1,7 +1,5 @@
 """Provide functionality to record stream."""
 
-from __future__ import annotations
-
 from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
@@ -82,10 +80,12 @@ class RecorderOutput(StreamOutput):
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""
             # fmt: off
-            nonlocal output, output_v, output_a, last_stream_id, running_duration, last_sequence
+            nonlocal output, output_v, output_a
+            nonlocal last_stream_id, running_duration, last_sequence
             # fmt: on
-            # Because the stream_worker is in a different thread from the record service,
-            # the lookback segments may still have some overlap with the recorder segments
+            # Because the stream_worker is in a different
+            # thread from the record service, the lookback
+            # segments may still overlap with recorder ones
             if segment.sequence <= last_sequence:
                 return
             last_sequence = segment.sequence
@@ -169,11 +169,7 @@ class RecorderOutput(StreamOutput):
                     out_file.write(chunk)
             os.remove(video_path + ".tmp")
 
-        def finish_writing(
-            segments: deque[Segment],
-            output: av.container.OutputContainer | None,
-            video_path: str,
-        ) -> None:
+        def finish_writing(segments: deque[Segment]) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
             while segments:
@@ -183,14 +179,14 @@ class RecorderOutput(StreamOutput):
                 return
             output.close()
             try:
-                write_transform_matrix_and_rename(video_path)
+                write_transform_matrix_and_rename(self.video_path)
             except FileNotFoundError:
                 _LOGGER.error(
                     (
                         "Error writing to '%s'. There are likely multiple recordings"
                         " writing to the same file"
                     ),
-                    video_path,
+                    self.video_path,
                 )
 
         # Write lookback segments
@@ -208,6 +204,4 @@ class RecorderOutput(StreamOutput):
                 write_segment, self._segments.popleft()
             )
         # Write remaining segments and close output
-        await self._hass.async_add_executor_job(
-            finish_writing, self._segments, output, self.video_path
-        )
+        await self._hass.async_add_executor_job(finish_writing, self._segments)

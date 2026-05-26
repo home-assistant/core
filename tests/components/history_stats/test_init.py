@@ -1,7 +1,5 @@
 """Test History stats component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +14,7 @@ from homeassistant.components.history_stats.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
@@ -122,7 +121,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the history_stats config entry is removed when the source entity is removed."""
+    """Test config entry is removed when source entity is removed."""
     assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -172,7 +171,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the history_stats config entry is removed when the source entity is removed."""
+    """Test config entry is removed when source entity is removed."""
     # Add another config entry to the sensor device
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
@@ -419,7 +418,58 @@ async def test_migration_1_1(
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert history_stats_config_entry.version == 1
-    assert history_stats_config_entry.minor_version == 2
+    assert (
+        history_stats_config_entry.minor_version
+        == HistoryStatsConfigFlowHandler.MINOR_VERSION
+    )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_1_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    sensor_entity_entry: er.RegistryEntry,
+    sensor_device: dr.DeviceEntry,
+) -> None:
+    """Test migration from v1.2 sets state_class to measurement."""
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+        },
+        title="My history stats",
+        version=1,
+        minor_version=2,
+    )
+    history_stats_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert history_stats_config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        history_stats_config_entry.options.get(CONF_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
+    assert history_stats_config_entry.version == 1
+    assert (
+        history_stats_config_entry.minor_version
+        == HistoryStatsConfigFlowHandler.MINOR_VERSION
+    )
+
+    assert hass.states.get("sensor.my_history_stats") is not None
+    assert (
+        hass.states.get("sensor.my_history_stats").attributes.get(CONF_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
 
 
 @pytest.mark.usefixtures("recorder_mock")

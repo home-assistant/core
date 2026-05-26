@@ -25,7 +25,7 @@
       "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
       "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
       "read_hw_settings_error": "Failed to read hardware settings",
-      "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device.",
+      "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or app is currently trying to communicate with the device.",
       "write_hw_settings_error": "Failed to write hardware settings",
       "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
       "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]"

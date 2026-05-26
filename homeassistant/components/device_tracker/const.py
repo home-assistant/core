@@ -1,7 +1,5 @@
 """Device tracker constants."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 import logging
@@ -43,6 +41,7 @@ ATTR_BATTERY: Final = "battery"
 ATTR_DEV_ID: Final = "dev_id"
 ATTR_GPS: Final = "gps"
 ATTR_HOST_NAME: Final = "host_name"
+ATTR_IN_ZONES: Final = "in_zones"
 ATTR_LOCATION_NAME: Final = "location_name"
 ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"

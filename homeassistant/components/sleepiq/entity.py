@@ -11,9 +11,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ENTITY_TYPES, ICON_OCCUPIED
-from .coordinator import SleepIQDataUpdateCoordinator, SleepIQPauseUpdateCoordinator
+from .coordinator import (
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+    SleepIQSleepDataCoordinator,
+)
 
-type _DataCoordinatorType = SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator
+type _DataCoordinatorType = (
+    SleepIQDataUpdateCoordinator
+    | SleepIQPauseUpdateCoordinator
+    | SleepIQSleepDataCoordinator
+)
 
 
 def device_from_bed(bed: SleepIQBed) -> DeviceInfo:

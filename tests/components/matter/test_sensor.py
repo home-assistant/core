@@ -6,7 +6,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -310,6 +310,19 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "789.0"
 
+    # Nitrogen Dioxide
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["device_class"] == "nitrogen_dioxide"
+
+    set_node_attribute(matter_node, 1, 1043, 0, 12.5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
+    assert state
+    assert state.state == "12.5"
+
     # PM1
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm1")
     assert state
@@ -345,6 +358,65 @@ async def test_air_quality_sensor(
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm10")
     assert state
     assert state.state == "50.0"
+
+    # Radon
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
+    assert state
+    assert state.state == "60.0"
+
+    set_node_attribute(matter_node, 1, 1071, 0, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_radon_concentration")
+    assert state
+    assert state.state == "50.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+async def test_tvoc_level_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test TVOC level sensor (LevelIndication feature)."""
+    # TVOC Level - initial state is low (attribute 10 = 1 in fixture)
+    state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
+    assert state
+    assert state.state == "low"
+    assert state.attributes["device_class"] == "enum"
+    assert state.attributes["options"] == ["low", "medium", "high", "critical"]
+
+    # Test changing to medium level (2)
+    set_node_attribute(matter_node, 2, 1070, 10, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
+    assert state
+    assert state.state == "medium"
+
+    # Test changing to high level (3)
+    set_node_attribute(matter_node, 2, 1070, 10, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
+    assert state
+    assert state.state == "high"
+
+    # Test changing to critical level (4)
+    set_node_attribute(matter_node, 2, 1070, 10, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
+    assert state
+    assert state.state == "critical"
+
+    # Test changing to unknown level (0)
+    set_node_attribute(matter_node, 2, 1070, 10, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_air_purifier_tvoc_level")
+    assert state
+    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_dishwasher"])
@@ -405,7 +477,7 @@ async def test_draft_electrical_measurement_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
+    """Test Draft Electrical Measurement sensors with Yandex Smart Socket."""
     state = hass.states.get("sensor.yndx_00540_power")
     assert state
     assert state.state == "70.0"
@@ -764,3 +836,52 @@ async def test_valve(
     state = hass.states.get("sensor.mock_valve_auto_close_time")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
+async def test_aqara_thermostat_w500_entity_exists_and_unknown(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Ensure the Aqara W500 entity is created and its state is unknown.
+
+    This test helps prevent regressions if allow_none_value=True is removed.
+    """
+    state = hass.states.get("sensor.floor_heating_thermostat_active_current")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])
+async def test_bridged_device_reachable_updates_availability(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test bridged endpoint availability follows Reachable updates."""
+    entity_ids = (
+        "sensor.electricity_monitor_ac_energy",
+        "sensor.electricity_monitor_ac_power",
+    )
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+    set_node_attribute(matter_node, 29, 57, 17, True)
+    await trigger_subscription_callback(hass, matter_client)
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE

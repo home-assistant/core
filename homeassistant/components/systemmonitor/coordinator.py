@@ -1,7 +1,5 @@
 """DataUpdateCoordinators for the System monitor integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -9,7 +7,7 @@ import os
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
-from psutil._common import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._ntuples import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -19,6 +17,7 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_PROCESS, PROCESS_ERRORS
+from .util import get_all_pressure_info
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
@@ -40,6 +39,7 @@ class SensorData:
     io_counters: dict[str, snetio]
     load: tuple[float, float, float]
     memory: VirtualMemory
+    pressure: dict[str, Any]
     process_fds: dict[str, int]
     processes: list[Process]
     swap: sswap
@@ -73,6 +73,7 @@ class SensorData:
             "io_counters": io_counters,
             "load": str(self.load),
             "memory": str(self.memory),
+            "pressure": self.pressure,
             "process_fds": self.process_fds,
             "processes": str(self.processes),
             "swap": str(self.swap),
@@ -141,6 +142,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ("io_counters", ""): set(),
             ("load", ""): set(),
             ("memory", ""): set(),
+            ("pressure", ""): set(),
             ("processes", ""): set(),
             ("swap", ""): set(),
             ("temperatures", ""): set(),
@@ -173,6 +175,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             io_counters=_data["io_counters"],
             load=load,
             memory=_data["memory"],
+            pressure=_data["pressure"],
             process_fds=_data["process_fds"],
             processes=_data["processes"],
             swap=_data["swap"],
@@ -289,6 +292,11 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide battery sensors")
 
+        pressure: dict[str, Any] = {}
+        if self.update_subscribers[("pressure", "")] or self._initial_update:
+            pressure = get_all_pressure_info()
+            _LOGGER.debug("pressure: %s", pressure)
+
         return {
             "addresses": addresses,
             "battery": battery,
@@ -297,6 +305,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "fan_speed": fan_speed,
             "io_counters": io_counters,
             "memory": memory,
+            "pressure": pressure,
             "process_fds": process_fds,
             "processes": selected_processes,
             "swap": swap,

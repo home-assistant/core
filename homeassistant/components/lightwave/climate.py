@@ -1,7 +1,5 @@
 """Support for LightwaveRF TRVs."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -63,7 +61,8 @@ class LightwaveTrv(ClimateEntity):
         self._lwlink = lwlink
         self._serial = serial
         self._attr_unique_id = f"{serial}-trv"
-        # inhibit is used to prevent race condition on update.  If non zero, skip next update cycle.
+        # inhibit is used to prevent race condition on update.
+        # If non zero, skip next update cycle.
         self._inhibit = 0
 
     def update(self) -> None:
@@ -90,7 +89,7 @@ class LightwaveTrv(ClimateEntity):
                 self._attr_hvac_action = HVACAction.OFF
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Target room temperature."""
         if self._inhibit > 0:
             # If we get an update before the new temp has

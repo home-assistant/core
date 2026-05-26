@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 import pytest
 from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
@@ -18,7 +18,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -96,7 +100,9 @@ async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "unlock_return_activities": _unlock_return_activities_side_effect
         },
     )
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
 
     with pytest.raises(
         HomeAssistantError,
@@ -126,7 +132,9 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "lock_return_activities": _lock_return_activities_side_effect
         },
     )
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
     with pytest.raises(
         HomeAssistantError,
         match=(
@@ -143,7 +151,9 @@ async def test_open_throws_hass_service_not_supported_error(
     """Test open throws correct error on entity does not support this service error."""
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
     await _create_august_with_devices(hass, [mocked_lock_detail])
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
 
@@ -156,10 +166,10 @@ async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:
         hass, [august_operative_lock, august_inoperative_lock]
     )
 
-    lock_abc_name = hass.states.get("lock.abc_name")
+    lock_abc_name = hass.states.get("lock.abc_name_abc_name")
     assert lock_abc_name is None
     lock_a6697750d607098bae8d6baa11ef8063_name = hass.states.get(
-        "lock.a6697750d607098bae8d6baa11ef8063_name"
+        "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
     )
     assert lock_a6697750d607098bae8d6baa11ef8063_name.state == LockState.LOCKED
 
@@ -171,11 +181,11 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [doorsenselock, nodoorsenselock])
 
     binary_sensor_online_with_doorsense_name_open = hass.states.get(
-        "binary_sensor.online_with_doorsense_name_door"
+        "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
     )
     assert binary_sensor_online_with_doorsense_name_open.state == STATE_ON
     binary_sensor_missing_doorsense_id_name_open = hass.states.get(
-        "binary_sensor.missing_with_doorsense_name_door"
+        "binary_sensor.missing_with_doorsense_name_missing_with_doorsense_name_door"
     )
     assert binary_sensor_missing_doorsense_id_name_open is None
 
@@ -199,7 +209,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 async def test_load_triggers_ble_discovery(
     hass: HomeAssistant, mock_discovery: Mock
 ) -> None:
-    """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
+    """Test loading a lock with offline BLE passes keys to yalexe_ble."""
 
     august_lock_with_key = await _mock_lock_with_offline_key(hass)
     august_lock_without_key = await _mock_operative_august_lock_detail(hass)
@@ -230,7 +240,9 @@ async def test_device_remove_devices(
     assert await async_setup_component(hass, "config", {})
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
     config_entry, _ = await _create_august_with_devices(hass, [august_operative_lock])
-    entity = entity_registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
+    entity = entity_registry.entities[
+        "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    ]
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
@@ -299,6 +311,62 @@ async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.august.async_get_config_entry_implementation",
         side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_token_request_reauth_error(hass: HomeAssistant) -> None:
+    """Test OAuth token request reauth error starts a reauth flow."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=401,
+            domain=DOMAIN,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "pick_implementation"
+    assert flows[0]["context"]["source"] == "reauth"
+
+
+async def test_oauth_token_request_transient_error_is_retryable(
+    hass: HomeAssistant,
+) -> None:
+    """Test OAuth token transient request error marks entry for setup retry."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=500,
+            domain=DOMAIN,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_client_error_is_retryable(hass: HomeAssistant) -> None:
+    """Test OAuth transport client errors mark entry for setup retry."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientError("connection error"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -1,7 +1,5 @@
 """Support for showing the date and the time."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging

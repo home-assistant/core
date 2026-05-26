@@ -11,14 +11,16 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
-from ..const import DOMAIN
+from ..const import DOMAIN, KNX_MODULE_KEY
+from . import migration
 from .const import CONF_DATA
-from .migration import migrate_1_to_2, migrate_2_1_to_2_2
+from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
+from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 2
-STORAGE_VERSION_MINOR: Final = 2
+STORAGE_VERSION_MINOR: Final = 4
 STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
@@ -31,6 +33,8 @@ class KNXConfigStoreModel(TypedDict):
     """Represent KNX configuration store data."""
 
     entities: KNXEntityStoreModel
+    expose: KNXExposeStoreModel
+    time_server: KNXTimeServerStoreModel
 
 
 class PlatformControllerBase(ABC):
@@ -56,11 +60,19 @@ class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
         """Migrate to the new version."""
         if old_major_version == 1:
             # version 2.1 introduced in 2025.8
-            migrate_1_to_2(old_data)
+            migration.migrate_1_to_2(old_data)
 
         if old_major_version <= 2 and old_minor_version < 2:
             # version 2.2 introduced in 2025.9.2
-            migrate_2_1_to_2_2(old_data)
+            migration.migrate_2_1_to_2_2(old_data)
+
+        if old_major_version <= 2 and old_minor_version < 3:
+            # version 2.3 introduced in 2026.3
+            migration.migrate_2_2_to_2_3(old_data)
+
+        if old_major_version <= 2 and old_minor_version < 4:
+            # version 2.4 introduced in 2026.5
+            migration.migrate_2_3_to_2_4(old_data)
 
         return old_data
 
@@ -79,7 +91,11 @@ class KNXConfigStore:
         self._store = _KNXConfigStoreStorage(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         )
-        self.data = KNXConfigStoreModel(entities={})
+        self.data = KNXConfigStoreModel(  # initialize with default structure
+            entities={},
+            expose={},
+            time_server={},
+        )
         self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
     async def load_data(self) -> None:
@@ -89,6 +105,10 @@ class KNXConfigStore:
             _LOGGER.debug(
                 "Loaded KNX config data from storage. %s entity platforms",
                 len(self.data["entities"]),
+            )
+            _LOGGER.debug(
+                "Loaded KNX config data from storage. %s exposes",
+                len(self.data["expose"]),
             )
 
     def add_platform(
@@ -173,6 +193,67 @@ class KNXConfigStore:
             )
             if registry_entry.unique_id in unique_ids
         ]
+
+    def get_exposes(self) -> KNXExposeStoreModel:
+        """Return KNX entity state expose configuration."""
+        return self.data["expose"]
+
+    def get_expose_groups(self) -> dict[str, list[str]]:
+        """Return KNX entity state exposes and their group addresses."""
+        return {
+            entity_id: [option["ga"]["write"] for option in config["options"]]
+            for entity_id, config in self.data["expose"].items()
+        }
+
+    def get_expose_config(self, entity_id: str) -> KNXExposeStoreConfigModel:
+        """Return KNX entity state expose configuration and notes for an entity."""
+        return self.data["expose"].get(entity_id, KNXExposeStoreConfigModel(options=[]))
+
+    async def update_expose(
+        self, entity_id: str, expose_config: KNXExposeStoreConfigModel
+    ) -> None:
+        """Update KNX expose configuration for an entity.
+
+        Args:
+            entity_id: The entity ID to configure.
+            expose_config: Expose configuration with options and optional notes.
+        """
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        expose_controller = knx_module.ui_expose_controller
+
+        expose_controller.update_entity_expose(
+            self.hass, knx_module.xknx, entity_id, expose_config
+        )
+
+        self.data["expose"][entity_id] = expose_config
+        await self._store.async_save(self.data)
+
+    async def delete_expose(self, entity_id: str) -> None:
+        """Delete KNX expose configuration for an entity."""
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        expose_controller = knx_module.ui_expose_controller
+        expose_controller.remove_entity_expose(entity_id)
+
+        try:
+            del self.data["expose"][entity_id]
+        except KeyError as err:
+            raise ConfigStoreException(
+                f"Entity not found in expose configuration: {entity_id}"
+            ) from err
+        await self._store.async_save(self.data)
+
+    @callback
+    def get_time_server_config(self) -> KNXTimeServerStoreModel:
+        """Return KNX time server configuration."""
+        return self.data["time_server"]
+
+    async def update_time_server_config(self, config: KNXTimeServerStoreModel) -> None:
+        """Update time server configuration."""
+        self.data["time_server"] = config
+        knx_module = self.hass.data[KNX_MODULE_KEY]
+        if knx_module:
+            knx_module.ui_time_server_controller.start(knx_module.xknx, config)
+        await self._store.async_save(self.data)
 
 
 class ConfigStoreException(Exception):

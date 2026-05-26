@@ -1,7 +1,5 @@
 """Support for tracking MQTT enabled devices identified."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -55,7 +53,9 @@ def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
         raise vol.Invalid(
-            f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
+            f"Invalid device tracker config, missing"
+            f" {CONF_STATE_TOPIC} or"
+            f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
     return config
 
@@ -163,8 +163,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             latitude: float | None
             longitude: float | None
             gps_accuracy: float
-            # Reset manually set location to allow automatic zone detection
-            self._attr_location_name = None
             if isinstance(
                 latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
             ) and isinstance(

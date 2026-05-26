@@ -1,7 +1,5 @@
 """Camera that loads a picture from a local file."""
 
-from __future__ import annotations
-
 import logging
 import mimetypes
 
@@ -69,6 +67,7 @@ class LocalFile(Camera):
         try:
             with open(self._file_path, "rb") as file:
                 return file.read()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except FileNotFoundError:
             _LOGGER.warning(
                 "Could not read camera %s image from file: %s",

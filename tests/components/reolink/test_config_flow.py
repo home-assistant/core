@@ -16,7 +16,6 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
     CONF_BC_ONLY,
@@ -25,6 +24,7 @@ from homeassistant.components.reolink.const import (
     CONF_USE_HTTPS,
     DOMAIN,
 )
+from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
 from homeassistant.components.reolink.host import DEFAULT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
@@ -61,9 +61,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 pytestmark = pytest.mark.usefixtures("reolink_host")
 
 
-async def test_config_flow_manual_success(
-    hass: HomeAssistant, mock_setup_entry: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -100,8 +99,9 @@ async def test_config_flow_manual_success(
     assert result["result"].unique_id == TEST_MAC
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_privacy_success(
-    hass: HomeAssistant, reolink_host: MagicMock, mock_setup_entry: MagicMock
+    hass: HomeAssistant, reolink_host: MagicMock
 ) -> None:
     """Successful flow when privacy mode is turned on."""
     reolink_host.baichuan.privacy_mode.return_value = True
@@ -154,8 +154,9 @@ async def test_config_flow_privacy_success(
     assert result["result"].unique_id == TEST_MAC
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_baichuan_only(
-    hass: HomeAssistant, reolink_host: MagicMock, mock_setup_entry: MagicMock
+    hass: HomeAssistant, reolink_host: MagicMock
 ) -> None:
     """Successful flow manually initialized by the user for baichuan only device."""
     reolink_host.baichuan_only = True
@@ -195,9 +196,8 @@ async def test_config_flow_baichuan_only(
     assert result["result"].unique_id == TEST_MAC
 
 
-async def test_config_flow_errors(
-    hass: HomeAssistant, reolink_host: MagicMock, mock_setup_entry: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) -> None:
     """Successful flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -357,7 +357,8 @@ async def test_config_flow_errors(
     }
 
 
-async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -397,7 +398,8 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
     }
 
 
-async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -442,8 +444,9 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_abort_unique_id_mismatch(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, reolink_host: MagicMock
+    hass: HomeAssistant, reolink_host: MagicMock
 ) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
@@ -491,7 +494,8 @@ async def test_reauth_abort_unique_id_mismatch(
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
-async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Successful flow from DHCP discovery."""
     dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST,
@@ -608,6 +612,33 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
     assert config_entry.data[CONF_HOST] == TEST_HOST
 
 
+async def test_dhcp_ip_update_aborted_if_no_host(hass: HomeAssistant) -> None:
+    """Test dhcp discovery does not update the IP if the config entry has no host."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={},
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    dhcp_data = DhcpServiceInfo(
+        ip=TEST_HOST2,
+        hostname="Reolink",
+        macaddress=DHCP_FORMATTED_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("attr", "value", "expected", "host_call_list"),
     [
@@ -635,7 +666,7 @@ async def test_dhcp_ip_update(
     expected: str,
     host_call_list: list[str],
 ) -> None:
-    """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
+    """Test dhcp discovery aborts if already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -711,7 +742,7 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
     reolink_host_class: MagicMock,
     reolink_host: MagicMock,
 ) -> None:
-    """Test dhcp discovery is ignored when the camera is still properly connected to HA."""
+    """Test dhcp discovery is ignored when camera is connected."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -771,7 +802,8 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
     assert config_entry.data[CONF_HOST] == TEST_HOST
 
 
-async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfig(hass: HomeAssistant) -> None:
     """Test a reconfiguration flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -817,8 +849,9 @@ async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> Non
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfig_abort_unique_id_mismatch(
-    hass: HomeAssistant, mock_setup_entry: MagicMock, reolink_host: MagicMock
+    hass: HomeAssistant, reolink_host: MagicMock
 ) -> None:
     """Test a reconfiguration flow aborts if the unique id does not match."""
     config_entry = MockConfigEntry(

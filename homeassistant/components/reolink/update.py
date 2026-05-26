@@ -1,7 +1,5 @@
 """Update entities for Reolink devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,13 +16,14 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DEVICE_UPDATE_INTERVAL_MIN, DEVICE_UPDATE_INTERVAL_PER_CAM
 from .const import DOMAIN
+from .coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    DEVICE_UPDATE_INTERVAL_PER_CAM,
+    ReolinkCoordinator,
+)
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -94,9 +93,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkUpdateBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[None]], UpdateEntity
-):
+class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntity):
     """Base update entity class for Reolink."""
 
     _attr_release_url = "https://reolink.com/download-center/"
@@ -105,7 +102,7 @@ class ReolinkUpdateBaseEntity(
         self,
         reolink_data: ReolinkData,
         channel: int | None,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: ReolinkCoordinator,
     ) -> None:
         """Initialize Reolink update entity."""
         CoordinatorEntity.__init__(self, coordinator)
@@ -215,12 +212,12 @@ class ReolinkUpdateBaseEntity(
             self._installing = False
 
     async def _pause_update_coordinator(self) -> None:
-        """Pause updating the states using the data update coordinator (during reboots)."""
+        """Pause updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
     async def _resume_update_coordinator(self, *args: Any) -> None:
-        """Resume updating the states using the data update coordinator (after reboots)."""
+        """Resume updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = max(
             DEVICE_UPDATE_INTERVAL_MIN,
             DEVICE_UPDATE_INTERVAL_PER_CAM * self._host.api.num_cameras,

@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
@@ -108,13 +108,17 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
             _ = self.default_language
         except AttributeError as err:
             raise AttributeError(
-                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+                "TTS entities must either set the"
+                " '_attr_default_language' attribute or override"
+                " the 'default_language' property"
             ) from err
         try:
             _ = self.supported_languages
         except AttributeError as err:
             raise AttributeError(
-                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+                "TTS entities must either set the"
+                " '_attr_supported_languages' attribute or"
+                " override the 'supported_languages' property"
             ) from err
         state = await self.async_get_last_state()
         if (
@@ -134,7 +138,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
     ) -> None:
         """Speak via a Media Player."""
         await self.hass.services.async_call(
-            DOMAIN_MP,
+            MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_entity_id,

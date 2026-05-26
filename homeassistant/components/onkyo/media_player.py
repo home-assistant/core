@@ -1,10 +1,8 @@
 """Media player platform."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
@@ -14,11 +12,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.hass_dict import HassKey
 
-from . import OnkyoConfigEntry
 from .const import (
     DOMAIN,
     LEGACY_HDMI_OUTPUT_MAPPING,
@@ -31,10 +29,15 @@ from .const import (
     VolumeResolution,
 )
 from .receiver import ReceiverManager
-from .services import DATA_MP_ENTITIES
 from .util import get_meaning
 
+if TYPE_CHECKING:
+    from . import OnkyoConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
+
+
+DATA_MP_ENTITIES: HassKey[dict[str, dict[Zone, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 
 SUPPORTED_FEATURES_BASE = (
@@ -95,7 +98,7 @@ async def async_setup_entry(
     entry: OnkyoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up MediaPlayer for config entry."""
+    """Set up media player platform for config entry."""
     data = entry.runtime_data
 
     manager = data.manager
@@ -103,6 +106,12 @@ async def async_setup_entry(
 
     entities: dict[Zone, OnkyoMediaPlayer] = {}
     all_entities[entry.entry_id] = entities
+
+    @callback
+    def del_mp_entities() -> None:
+        del all_entities[entry.entry_id]
+
+    entry.async_on_unload(del_mp_entities)
 
     volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
@@ -132,7 +141,8 @@ async def async_setup_entry(
             if entity.enabled:
                 entity.process_update(message)
         elif not isinstance(message, status.NotAvailable):
-            # When we receive a valid status for a zone, then that zone is available on the receiver,
+            # When we receive a valid status for a zone, then
+            # that zone is available on the receiver,
             # so we create the entity for it.
             _LOGGER.debug(
                 "Discovered %s on %s (%s)",
@@ -187,7 +197,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
         name = manager.info.model_name
         identifier = manager.info.identifier
-        self._attr_name = f"{name}{' ' + ZONES[zone] if zone != Zone.MAIN else ''}"
+        self._attr_name = f"{name}{' ' + ZONES[zone] if zone is not Zone.MAIN else ''}"
         self._attr_unique_id = f"{identifier}_{zone.value}"
 
         self._volume_resolution = volume_resolution
@@ -216,7 +226,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_sound_mode_list = list(self._rev_sound_mode_mapping)
 
         self._attr_supported_features = SUPPORTED_FEATURES_BASE
-        if zone == Zone.MAIN:
+        if zone is Zone.MAIN:
             self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
             self._supports_volume = True
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -249,7 +259,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         await self._manager.write(query.TunerPreset(self._zone))
         if self._supports_sound_mode is not None:
             await self._manager.write(query.ListeningMode(self._zone))
-        if self._zone == Zone.MAIN:
+        if self._zone is Zone.MAIN:
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
@@ -376,7 +386,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_volume_level = min(1, volume_level)
 
             case status.Muting(param=muting):
-                self._attr_is_volume_muted = bool(muting == status.Muting.Param.ON)
+                self._attr_is_volume_muted = bool(muting is status.Muting.Param.ON)
 
             case status.InputSource(param=source):
                 if source in self._source_mapping:
@@ -384,7 +394,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 else:
                     source_meaning = get_meaning(source)
                     _LOGGER.warning(
-                        'Input source "%s" for entity: %s is not in the list. Check integration options',
+                        'Input source "%s" for entity: %s is not'
+                        " in the list. Check integration options",
                         source_meaning,
                         self.entity_id,
                     )
@@ -404,7 +415,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 else:
                     sound_mode_meaning = get_meaning(sound_mode)
                     _LOGGER.warning(
-                        'Listening mode "%s" for entity: %s is not in the list. Check integration options',
+                        'Listening mode "%s" for entity: %s is'
+                        " not in the list. Check integration"
+                        " options",
                         sound_mode_meaning,
                         self.entity_id,
                     )

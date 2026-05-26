@@ -1,7 +1,5 @@
 """Support for Qwikswitch Relays and Dimmers."""
 
-from __future__ import annotations
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +28,7 @@ class QSLight(QSToggleEntity, LightEntity):
     """Light based on a Qwikswitch relay/dimmer module."""
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
         return self.device.value if self.device.is_dimmer else None
 

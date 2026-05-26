@@ -72,12 +72,6 @@
     }
   },
   "exceptions": {
-    "config_entry_not_found": {
-      "message": "Config entry not found. Please check that the config entry ID is correct."
-    },
-    "config_entry_not_loaded": {
-      "message": "Config entry is not loaded. Please ensure the Risco integration is set up correctly."
-    },
     "not_local_entry": {
       "message": "This service only works with local Risco connections."
     }
@@ -97,9 +91,16 @@
       "init": {
         "data": {
           "code_arm_required": "Require PIN to arm",
-          "code_disarm_required": "Require PIN to disarm",
-          "concurrency": "Maximum concurrent requests in Risco local",
-          "scan_interval": "How often to poll Risco Cloud (in seconds)"
+          "code_disarm_required": "Require PIN to disarm"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "concurrency": "Maximum concurrent requests in Risco local",
+              "scan_interval": "How often to poll Risco Cloud (in seconds)"
+            },
+            "name": "More options"
+          }
         },
         "title": "Configure options"
       },
