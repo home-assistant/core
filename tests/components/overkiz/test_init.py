@@ -53,7 +53,9 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
-            # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
+            # This entity will be removed since
+            # "io://1234-5678-1234/3541212-core:TargetClosureState"
+            # already exists
             ENTITY_SENSOR_TARGET_CLOSURE_STATE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",

@@ -28,7 +28,7 @@ def async_create_client(
         options=ClientOptions(
             verify_ssl=verify_ssl,
             session=async_get_clientsession(hass),
-            timeout=ClientTimeout(total=10),
+            timeout=ClientTimeout(total=30),
         ),
     )
 

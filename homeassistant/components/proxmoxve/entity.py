@@ -55,7 +55,11 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
             ),
         )
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{node_data.node['id']}"
+            f"_{entity_description.key}"
+        )
 
     @property
     def available(self) -> bool:
@@ -99,7 +103,11 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
             ),
         )
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self._node_name}_{self.device_id}"
+            f"_{entity_description.key}"
+        )
 
     @property
     def available(self) -> bool:
@@ -149,7 +157,10 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
             ),
         )
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.device_id}_{entity_description.key}"
+        )
 
     @property
     def available(self) -> bool:
@@ -202,7 +213,10 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
             ),
         )
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.device_id}_{entity_description.key}"
+        )
 
     @property
     def available(self) -> bool:

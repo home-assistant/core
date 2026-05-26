@@ -52,7 +52,7 @@ async def test_config_entry_not_ready_info_api_fail(
     mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a failure in the info API."""
+    """Test config entry not ready due to info API failure."""
     mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -76,7 +76,7 @@ async def test_config_entry_not_ready_devices_api_fail(
     mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a failure in the devices API."""
+    """Test config entry not ready due to devices API failure."""
     mock_lunatone_devices.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -102,7 +102,7 @@ async def test_config_entry_not_ready_sensors_api_fail(
     mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a failure in the sensors API."""
+    """Test config entry not ready due to sensors API failure."""
     mock_lunatone_sensors.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -178,7 +178,7 @@ async def test_config_entry_not_ready_no_serial_number(
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a missing serial number."""
+    """Test config entry not ready due to missing serial number."""
     mock_lunatone_info.serial_number = None
 
     await setup_integration(hass, mock_config_entry)

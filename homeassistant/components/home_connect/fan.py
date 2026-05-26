@@ -21,9 +21,21 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+_FAN_SPEED_PERCENTAGE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+)
+_FAN_SPEED_MODE_KEY = (
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+)
+
 FAN_SPEED_MODE_OPTIONS = {
-    "auto": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-    "manual": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    "auto": (
+        "HeatingVentilationAirConditioning"
+        ".AirConditioner.EnumType.FanSpeedMode.Automatic"
+    ),
+    "manual": (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual"
+    ),
 }
 FAN_SPEED_MODE_OPTIONS_INVERTED = {v: k for k, v in FAN_SPEED_MODE_OPTIONS.items()}
 
@@ -111,8 +123,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
     def update_native_value(self) -> None:
         """Set the speed percentage and speed mode values."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_PERCENTAGE_KEY)):
             option_value = event.value
         self._attr_percentage = (
             cast(int, option_value) if option_value is not None else None
@@ -137,8 +148,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
     def update_preset_mode(self) -> None:
         """Set the preset mode value."""
         option_value = None
-        option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
-        if event := self.appliance.events.get(EventKey(option_key)):
+        if event := self.appliance.events.get(EventKey(_FAN_SPEED_MODE_KEY)):
             option_value = event.value
         self._attr_preset_mode = (
             FAN_SPEED_MODE_OPTIONS_INVERTED.get(cast(str, option_value))

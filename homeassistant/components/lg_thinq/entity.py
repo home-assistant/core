@@ -44,7 +44,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=COMPANY,
-            model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
+            model=(
+                f"{coordinator.api.device.model_name}"
+                f" ({self.coordinator.api.device.device_type})"
+            ),
             name=coordinator.device_name,
         )
         self._attr_unique_id = (
@@ -102,6 +105,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
+            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise ServiceValidationError(
                 exc.message, translation_domain=DOMAIN, translation_key=exc.code
             ) from exc

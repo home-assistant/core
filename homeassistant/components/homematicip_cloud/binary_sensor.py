@@ -2,7 +2,12 @@
 
 from typing import Any
 
-from homematicip.base.enums import LockState, SmokeDetectorAlarmType, WindowState
+from homematicip.base.enums import (
+    BinaryBehaviorType,
+    LockState,
+    SmokeDetectorAlarmType,
+    WindowState,
+)
 from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
@@ -175,27 +180,24 @@ async def async_setup_entry(
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP cloud connection sensor."""
 
+    _attr_translation_key = "cloud_connection"
+
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
         super().__init__(hap, hap.home, feature_id="cloud_connection")
 
     @property
-    def name(self) -> str:
-        """Return the name cloud connection entity."""
-
-        name = "Cloud Connection"
-        # Add a prefix to the name if the homematic ip home has a name.
-        return name if not self._home.name else f"{self._home.name} {name}"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        # Adds a sensor to the existing HAP device
+        # Merges into the existing HAP device registered in __init__.py.
+        # Name must match __init__.py logic for has_entity_name to work.
+        label = self._home.label or ""
         return DeviceInfo(
             identifiers={
                 # Serial numbers of Homematic IP device
                 (DOMAIN, self._home.id)
-            }
+            },
+            name=label,
         )
 
     @property
@@ -352,7 +354,22 @@ class HomematicipFullFlushLockControllerLocked(
 
     @property
     def is_on(self) -> bool:
-        """Return true if the controlled lock is locked."""
+        """Return true if the controlled lock is unlocked.
+
+        Per HA's BinarySensorDeviceClass.LOCK contract, ON means
+        unlocked / open and OFF means locked / closed.
+
+        The mapping from the firmware-reported ``lockState`` depends on
+        the channel's ``binaryBehaviorType``. With the default
+        ``NORMALLY_OPEN`` wiring, the input goes ACTIVE (and lockState
+        flips to ``LOCKED``) when the contact closes — i.e. when a
+        magnetic door contact registers the door as closed. With
+        ``NORMALLY_CLOSE`` the same physical event puts the input into
+        the IDLE state (lockState ``UNLOCKED``). To present the same
+        HA semantics regardless of which way the user wired the
+        contact, ``lockState`` is interpreted relative to the
+        configured behavior.
+        """
         channel = _get_channel_by_role(
             self._device,
             "MULTI_MODE_LOCK_INPUT_CHANNEL",
@@ -361,7 +378,15 @@ class HomematicipFullFlushLockControllerLocked(
         if channel is None:
             return False
         lock_state = getattr(channel, "lockState", None)
-        return getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        is_locked_state = (
+            getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        )
+        binary_behavior = getattr(channel, "binaryBehaviorType", None)
+        normally_close = (
+            getattr(binary_behavior, "name", binary_behavior)
+            == BinaryBehaviorType.NORMALLY_CLOSE.name
+        )
+        return is_locked_state if normally_close else not is_locked_state
 
 
 class HomematicipFullFlushLockControllerGlassBreak(
@@ -551,6 +576,7 @@ class HomematicipPluggableMainsFailureSurveillanceSensor(
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP security zone sensor group."""
 
+    _attr_has_entity_name = False
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(
