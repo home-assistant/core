@@ -1,9 +1,11 @@
 """Test Alexa Devices todo entities."""
 
 from typing import Any, cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioamazondevices.structures import (
+    AmazonListEvent,
+    AmazonListEventType,
     AmazonListInfo,
     AmazonListItem,
     AmazonListItemStatus,
@@ -332,3 +334,91 @@ async def test_dynamic_lists(
 
     assert hass.states.get(f"{ENTITY_ID_PREFIX}_shopping_list") is not None
     assert hass.states.get(f"{ENTITY_ID_PREFIX}_concerts") is not None
+
+
+async def test_todo_event_handler(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_todo_lists: list[AmazonListInfo],
+) -> None:
+    """Test todo event handler."""
+    mock_amazon_devices_client.todo_lists = mock_todo_lists
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    # Seed _todo_list_items
+    list_id = "todo_list_id"
+    item_id = "item_1"
+    item = AmazonListItem(
+        id=item_id,
+        name="Original Task",
+        status=AmazonListItemStatus.ACTIVE,
+        version=1,
+    )
+    coordinator.todo_list_items[list_id] = {item_id: item}
+
+    # Add a listener to check if data is updated
+    listener = MagicMock()
+    coordinator.async_add_listener(listener)
+
+    # Test CREATED
+    new_item_id = "item_2"
+    new_item = AmazonListItem(
+        id=new_item_id,
+        name="New Task",
+        status=AmazonListItemStatus.ACTIVE,
+        version=1,
+    )
+    created_event = AmazonListEvent(
+        list_id=list_id,
+        item_id=new_item_id,
+        type=AmazonListEventType.CREATED,
+        items=new_item,
+    )
+    await coordinator.todo_event_handler(created_event)
+    assert coordinator.todo_list_items[list_id][new_item_id] == new_item
+    listener.assert_called_once()
+    listener.reset_mock()
+
+    # Test UPDATED
+    updated_item = AmazonListItem(
+        id=item_id,
+        name="Updated Task",
+        status=AmazonListItemStatus.COMPLETE,
+        version=2,
+    )
+    updated_event = AmazonListEvent(
+        list_id=list_id,
+        item_id=item_id,
+        type=AmazonListEventType.UPDATED,
+        items=updated_item,
+    )
+    await coordinator.todo_event_handler(updated_event)
+    assert coordinator.todo_list_items[list_id][item_id] == updated_item
+    listener.assert_called_once()
+    listener.reset_mock()
+
+    # Test DELETED
+    deleted_event = AmazonListEvent(
+        list_id=list_id,
+        item_id=item_id,
+        type=AmazonListEventType.DELETED,
+        items=None,
+    )
+    await coordinator.todo_event_handler(deleted_event)
+    assert item_id not in coordinator.todo_list_items[list_id]
+    listener.assert_called_once()
+    listener.reset_mock()
+
+    # Test event for unknown list (should log warning and return)
+    unknown_event = AmazonListEvent(
+        list_id="unknown_list",
+        item_id="some_id",
+        type=AmazonListEventType.CREATED,
+        items=None,
+    )
+    await coordinator.todo_event_handler(unknown_event)
+    listener.assert_not_called()
