@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 
 from tests.common import MockConfigEntry
 
