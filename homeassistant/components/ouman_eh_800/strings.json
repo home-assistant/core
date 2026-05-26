@@ -36,7 +36,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "automatic": "Automatic",
+              "automatic": "[%key:common::state::auto%]",
               "big_temperature_drop": "Big temperature drop",
               "temperature_drop": "Temperature drop"
             }
