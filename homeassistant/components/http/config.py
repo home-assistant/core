@@ -1,5 +1,6 @@
 """User-managed HTTP configuration store."""
 
+import asyncio
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 from typing import Any, Final, TypedDict, cast
@@ -35,25 +36,6 @@ from .const import (
     SSL_MODERN,
 )
 
-
-class ConfData(TypedDict, total=False):
-    """Typed dict for config data."""
-
-    server_host: list[str]
-    server_port: int
-    base_url: str
-    ssl_certificate: str
-    ssl_peer_certificate: str
-    ssl_key: str
-    cors_allowed_origins: list[str]
-    use_x_forwarded_for: bool
-    use_x_frame_options: bool
-    trusted_proxies: list[IPv4Network | IPv6Network]
-    login_attempts_threshold: int
-    ip_ban_enabled: bool
-    ssl_profile: str
-
-
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY: Final = DOMAIN
@@ -66,6 +48,31 @@ KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 DATA_STORE: HassKey[HTTPConfigStore] = HassKey(STORAGE_KEY)
 
 
+class ConfData(TypedDict, total=False):
+    """Typed dict for the validated HTTP config (matches ``HTTP_STORAGE_SCHEMA``)."""
+
+    server_host: list[str]
+    server_port: int
+    ssl_certificate: str
+    ssl_peer_certificate: str
+    ssl_key: str
+    cors_allowed_origins: list[str]
+    use_x_forwarded_for: bool
+    trusted_proxies: list[IPv4Network | IPv6Network]
+    login_attempts_threshold: int
+    ip_ban_enabled: bool
+    ssl_profile: str
+    use_x_frame_options: bool
+
+
+class _HTTPStoreData(TypedDict):
+    """Data structure for HTTP config storage."""
+
+    stable: ConfData
+    pending: ConfData | None
+    yaml_migration_done: bool
+
+
 def _ip_network_str(value: Any) -> str:
     """Validate the value is a valid IP network and return its string form."""
     return str(ip_network(value))
@@ -73,6 +80,9 @@ def _ip_network_str(value: Any) -> str:
 
 HTTP_STORAGE_SCHEMA: Final = vol.Schema(
     {
+        # YAML used to allow base_url (deprecated); strip it on the way in so
+        # the stored config never contains it.
+        vol.Remove(CONF_BASE_URL): object,
         vol.Optional(CONF_SERVER_HOST): vol.All(
             cv.ensure_list, vol.Length(min=1), [cv.string]
         ),
@@ -98,154 +108,6 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
     }
 )
 _DEFAULT_CONFIG: Final[ConfData] = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
-
-
-def yaml_config_to_storage(conf: dict[str, Any]) -> dict[str, Any]:
-    """Convert a validated HTTP_SCHEMA config to a JSON-serializable storage dict."""
-    storage_conf: dict[str, Any] = dict(conf)
-    storage_conf.pop(CONF_BASE_URL, None)
-    if CONF_TRUSTED_PROXIES in storage_conf:
-        storage_conf[CONF_TRUSTED_PROXIES] = [
-            str(network) for network in storage_conf[CONF_TRUSTED_PROXIES]
-        ]
-    return storage_conf
-
-
-class _HTTPStoreData(TypedDict):
-    """Data structure for HTTP config storage."""
-
-    stable: ConfData
-    pending: ConfData | None
-    yaml_migration_done: bool
-
-
-class _HTTPStore(Store[_HTTPStoreData]):
-    """Http store."""
-
-    async def _async_migrate_func(
-        self,
-        old_major_version: int,
-        old_minor_version: int,
-        old_data: dict[str, Any],
-    ) -> dict[str, Any]:
-        if old_major_version == 1:
-            # Run the v1 payload through the storage schema so the v2 ``stable``
-            # slot is well-formed (all keys present, values normalised) and the
-            # load step can rely on direct key access.
-            try:
-                stable = dict(HTTP_STORAGE_SCHEMA(old_data))
-            except vol.Invalid:
-                _LOGGER.warning(
-                    "Discarding invalid v1 HTTP config during migration; "
-                    "falling back to defaults"
-                )
-                stable = dict(HTTP_STORAGE_SCHEMA({}))
-            return {
-                KEY_STABLE: stable,
-                KEY_PENDING: None,
-                KEY_YAML_MIGRATION_DONE: False,
-            }
-        return old_data
-
-
-class HTTPConfigStore:
-    """Persist HTTP config as a stable/pending pair.
-
-    ``stable`` holds the last config the user confirmed as working;
-    ``pending`` holds an unconfirmed config the user wants to try on
-    the next start. Normal startup prefers ``pending`` so the new
-    config gets exercised; recovery mode falls back to ``stable`` so
-    Home Assistant can still come up after a bad config.
-    """
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the store."""
-        self._hass = hass
-        self._store = _HTTPStore(
-            hass,
-            STORAGE_VERSION,
-            STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-        self._stable: ConfData = _DEFAULT_CONFIG
-        self._pending: ConfData | None = None
-        self._yaml_migration_done = False
-        self._loaded = False
-
-    @property
-    def stable(self) -> ConfData:
-        """Return the last confirmed-working config."""
-        return self._stable
-
-    @property
-    def pending(self) -> ConfData | None:
-        """Return the unconfirmed config awaiting promotion, if any."""
-        return self._pending
-
-    @property
-    def yaml_migration_done(self) -> bool:
-        """Return whether the YAML migration has been completed."""
-        return self._yaml_migration_done
-
-    async def async_load(self) -> None:
-        """Load the stable and pending configs from disk."""
-        if self._loaded:
-            return
-        raw = await self._store.async_load()
-        if raw is not None:
-            self._stable = raw[KEY_STABLE]
-            self._pending = raw[KEY_PENDING]
-            self._yaml_migration_done = raw[KEY_YAML_MIGRATION_DONE]
-        self._loaded = True
-
-    async def async_set_pending(self, config: ConfData | None) -> None:
-        """Set (or clear) the pending config."""
-        await self.async_load()
-        if config == self.stable:
-            # No need to save a pending config that is the same as stable.
-            config = None
-        self._pending = config
-        await self._async_persist()
-
-    async def async_promote_pending(self) -> None:
-        """Promote the pending config to stable.
-
-        Raises ``HomeAssistantError`` if there is nothing to promote.
-        """
-        await self.async_load()
-        if self._pending is None:
-            raise HomeAssistantError("No pending HTTP config to promote")
-        self._stable = self._pending
-        self._pending = None
-        await self._async_persist()
-
-    async def async_migrate_yaml(self, config: ConfData) -> None:
-        """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
-        await self.async_load()
-        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
-        self._pending = None if validated_config == self._stable else validated_config
-        self._yaml_migration_done = True
-        await self._async_persist()
-
-    async def _async_persist(self) -> None:
-        """Write the current state to disk (or remove the file if empty)."""
-        await self._store.async_save(
-            {
-                KEY_STABLE: self._stable,
-                KEY_PENDING: self._pending,
-                KEY_YAML_MIGRATION_DONE: self._yaml_migration_done,
-            }
-        )
-
-
-async def async_get_and_load_store(hass: HomeAssistant) -> HTTPConfigStore:
-    """Return the singleton HTTP config store and load it."""
-    if (store := hass.data.get(DATA_STORE)) is None:
-        store = HTTPConfigStore(hass)
-        hass.data[DATA_STORE] = store
-    await store.async_load()
-    return store
 
 
 async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData:
@@ -321,3 +183,138 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
 
     _LOGGER.info("Using stable HTTP config")
     return store.stable
+
+
+async def async_get_and_load_store(hass: HomeAssistant) -> HTTPConfigStore:
+    """Return the singleton HTTP config store and load it."""
+    if (store := hass.data.get(DATA_STORE)) is None:
+        store = HTTPConfigStore(hass)
+        hass.data[DATA_STORE] = store
+    await store.async_load()
+    return store
+
+
+class HTTPConfigStore:
+    """Persist HTTP config as a stable/pending pair.
+
+    ``stable`` holds the last config the user confirmed as working;
+    ``pending`` holds an unconfirmed config the user wants to try on
+    the next start. Normal startup prefers ``pending`` so the new
+    config gets exercised; recovery mode falls back to ``stable`` so
+    Home Assistant can still come up after a bad config.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the store."""
+        self._hass = hass
+        self._store = _HTTPStore(
+            hass,
+            STORAGE_VERSION,
+            STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
+        )
+        self._stable: ConfData = _DEFAULT_CONFIG
+        self._pending: ConfData | None = None
+        self._yaml_migration_done = False
+        self._loaded = False
+        self._load_lock = asyncio.Lock()
+
+    @property
+    def stable(self) -> ConfData:
+        """Return the last confirmed-working config."""
+        return self._stable
+
+    @property
+    def pending(self) -> ConfData | None:
+        """Return the unconfirmed config awaiting promotion, if any."""
+        return self._pending
+
+    @property
+    def yaml_migration_done(self) -> bool:
+        """Return whether the YAML migration has been completed."""
+        return self._yaml_migration_done
+
+    async def async_load(self) -> None:
+        """Load the stable and pending configs from disk."""
+        if self._loaded:
+            return
+        async with self._load_lock:
+            if self._loaded:
+                # Another coroutine may have loaded the config while we were waiting
+                # for the lock; check again to avoid unnecessary disk I/O.
+                return  # type: ignore[unreachable]
+            raw = await self._store.async_load()
+            if raw is not None:
+                self._stable = raw[KEY_STABLE]
+                self._pending = raw[KEY_PENDING]
+                self._yaml_migration_done = raw[KEY_YAML_MIGRATION_DONE]
+            self._loaded = True
+
+    async def async_set_pending(self, config: ConfData | None) -> None:
+        """Set (or clear) the pending config."""
+        await self.async_load()
+        if config == self.stable:
+            # No need to save a pending config that is the same as stable.
+            config = None
+        self._pending = config
+        await self._async_persist()
+
+    async def async_promote_pending(self) -> None:
+        """Promote the pending config to stable.
+
+        Raises ``HomeAssistantError`` if there is nothing to promote.
+        """
+        await self.async_load()
+        if self._pending is None:
+            raise HomeAssistantError("No pending HTTP config to promote")
+        self._stable = self._pending
+        self._pending = None
+        await self._async_persist()
+
+    async def async_migrate_yaml(self, config: ConfData) -> None:
+        """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
+        await self.async_load()
+        validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
+        self._pending = None if validated_config == self._stable else validated_config
+        self._yaml_migration_done = True
+        await self._async_persist()
+
+    async def _async_persist(self) -> None:
+        """Write the current state to disk (or remove the file if empty)."""
+        await self._store.async_save(
+            {
+                KEY_STABLE: self._stable,
+                KEY_PENDING: self._pending,
+                KEY_YAML_MIGRATION_DONE: self._yaml_migration_done,
+            }
+        )
+
+
+class _HTTPStore(Store[_HTTPStoreData]):
+    """Http store."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        if old_major_version == 1:
+            # Run the v1 payload through the storage schema so the v2 ``stable``
+            # slot is well-formed (all keys present, values normalised) and the
+            # load step can rely on direct key access.
+            try:
+                stable = HTTP_STORAGE_SCHEMA(old_data)
+            except vol.Invalid:
+                _LOGGER.warning(
+                    "Discarding invalid v1 HTTP config during migration; "
+                    "falling back to defaults"
+                )
+                stable = HTTP_STORAGE_SCHEMA({})
+            return {
+                KEY_STABLE: stable,
+                KEY_PENDING: None,
+                KEY_YAML_MIGRATION_DONE: False,
+            }
+        return old_data

@@ -60,7 +60,7 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import ConfData, async_load_config  # noqa: F401
+from .config import async_load_config
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,

@@ -923,10 +923,14 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
 
     stored = hass_storage["http"]["data"]
     assert stored["stable"] == existing_stable
-    pending = stored["pending"]
-    assert pending is not None
-    assert pending["server_port"] == 8765
-    assert pending["ip_ban_enabled"] is False
+    assert stored["pending"] == {
+        "server_port": 8765,
+        "cors_allowed_origins": ["https://cast.home-assistant.io"],
+        "login_attempts_threshold": -1,
+        "ip_ban_enabled": False,
+        "ssl_profile": "modern",
+        "use_x_frame_options": True,
+    }
 
     issue = issue_registry.async_get_issue("http", "deprecated_yaml")
     assert issue is not None
@@ -1169,9 +1173,9 @@ async def test_setup_migrates_v1_storage_to_v2(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    # We do a yaml migration on first boot after store mirgation as v1 store is just used for recovery mode
-    # therefore default config is used
-
+    # The migrated v1 store config is only used in recovery mode. Since this
+    # test isn't running in recovery mode, the YAML migration runs on first
+    # boot after store migration. With no YAML http config, the default config is migrated to the pending slot and used. Therefore we assert below the default port (8123)
     args, _ = mock_create_server.call_args
     assert args[2] == 8123
     assert hass_storage["http"]["version"] == 2
