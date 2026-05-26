@@ -117,9 +117,7 @@ it. If no section matches, emit a single `add_comment` with:
 ## Check requirements
 
 ❌ Internal error: deterministic artifact contains an unknown check kind
-(`<check_kind>` on `<pkg>`). Update
-`.github/workflows/check-requirements.md` or remove the kind from the
-deterministic stage.
+(`<check_kind>` on `<pkg>`).
 ```
 
 Then stop. Do not improvise a verdict.
