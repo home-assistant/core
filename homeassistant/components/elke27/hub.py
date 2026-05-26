@@ -120,7 +120,7 @@ class Elke27Hub:
             client = Elke27Client(ClientConfig())
             client_identity = build_client_identity(self._client_id)
             _set_client_identity(client, client_identity)
-            self._client = client
+            connection_unsubscribe: Callable[[], None] | None = None
 
             def _raise_not_ready() -> None:
                 msg = "The client did not become ready before timeout"
@@ -133,17 +133,25 @@ class Elke27Hub:
                 ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
                 if not ready:
                     _raise_not_ready()
-                self._connection_unsubscribe = client.subscribe(
-                    self._handle_connection_event
-                )
-                self._resubscribe_typed_callbacks()
+                connection_unsubscribe = client.subscribe(self._handle_connection_event)
+                self._resubscribe_typed_callbacks(client)
+                self._connection_unsubscribe = connection_unsubscribe
+                self._client = client
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
             except asyncio.CancelledError:
+                await asyncio.shield(
+                    self._async_cleanup_connecting_client(
+                        client, connection_unsubscribe
+                    )
+                )
                 await asyncio.shield(self._async_disconnect(log_unavailable=False))
                 raise
             except Exception:
+                await self._async_cleanup_connecting_client(
+                    client, connection_unsubscribe
+                )
                 await self._async_disconnect(log_unavailable=False)
                 raise
 
@@ -300,10 +308,9 @@ class Elke27Hub:
             _raise_command_error("Area arming", err)
         return True
 
-    def _resubscribe_typed_callbacks(self) -> None:
+    def _resubscribe_typed_callbacks(self, client: Elke27Client) -> None:
         """Re-register typed callbacks on a new client connection."""
-        client = self._client
-        if client is None or not self._typed_callbacks:
+        if not self._typed_callbacks:
             return
         for cb in list(self._typed_callbacks):
             self._typed_callbacks[cb] = client.subscribe_typed(cb)
@@ -315,6 +322,19 @@ class Elke27Hub:
                 with contextlib.suppress(Exception):
                     unsubscribe()
             self._typed_callbacks[cb] = None
+
+    async def _async_cleanup_connecting_client(
+        self,
+        client: Elke27Client,
+        connection_unsubscribe: Callable[[], None] | None,
+    ) -> None:
+        """Clean up a client that failed before becoming the active client."""
+        if connection_unsubscribe is not None:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                connection_unsubscribe()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await client.async_disconnect()
+        self._clear_typed_subscriptions()
 
     async def async_disarm_area(
         self,
@@ -413,9 +433,10 @@ class Elke27Hub:
             _LOGGER.debug("Reconnect attempt %s starting", self._reconnect_attempts + 1)
             try:
                 await self._async_connect()
-            except Elke27LinkRequiredError as err:
+            except (ConfigEntryAuthFailed, Elke27LinkRequiredError) as err:
                 _LOGGER.warning(
-                    "Reconnect aborted because panel linking is required: %s", err
+                    "Reconnect aborted because panel authentication requires attention: %s",
+                    err,
                 )
                 return
             except (
