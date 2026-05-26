@@ -1,5 +1,7 @@
 """Repairs for HomeWizard integration."""
 
+from homewizard_energy.errors import DisabledError, RequestError
+
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -81,13 +83,20 @@ class BatteryModeCloudDisabledRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
             coordinator = self.entry.runtime_data
-            await coordinator.api.system(cloud_enabled=True)
-            await coordinator.async_refresh()
-            return self.async_create_entry(data={})
+            try:
+                await coordinator.api.system(cloud_enabled=True)
+            except DisabledError:
+                errors = {"base": "api_not_enabled"}
+            except RequestError:
+                errors = {"base": "network_error"}
+            else:
+                await coordinator.async_refresh()
+                return self.async_create_entry(data={})
 
-        return self.async_show_form(step_id="confirm")
+        return self.async_show_form(step_id="confirm", errors=errors)
 
 
 async def async_create_fix_flow(
