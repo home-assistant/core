@@ -38,38 +38,6 @@
     }
   },
   "services": {
-    "capture_motion_clip": {
-      "description": "Saves the most recent motion-triggered video clip from a SimpliSafe outdoor camera to a local file.",
-      "fields": {
-        "device_id": {
-          "description": "[%key:component::simplisafe::services::capture_motion_image::fields::device_id::description%]",
-          "name": "[%key:component::simplisafe::services::capture_motion_image::fields::device_id::name%]"
-        },
-        "filename": {
-          "description": "The full path of the file to save the clip to (must be in an allowed directory).",
-          "name": "[%key:component::simplisafe::services::capture_motion_image::fields::filename::name%]"
-        }
-      },
-      "name": "Capture motion clip"
-    },
-    "capture_motion_image": {
-      "description": "Saves the most recent motion-triggered image from a SimpliSafe outdoor camera to a local file.",
-      "fields": {
-        "device_id": {
-          "description": "The outdoor camera to capture the image from.",
-          "name": "Camera"
-        },
-        "filename": {
-          "description": "The full path of the file to save the image to (must be in an allowed directory).",
-          "name": "Filename"
-        },
-        "width": {
-          "description": "The width of the image in pixels (240–1080). Defaults to 720.",
-          "name": "Width"
-        }
-      },
-      "name": "Capture motion image"
-    },
     "remove_pin": {
       "description": "Removes a PIN by its label or value.",
       "fields": {

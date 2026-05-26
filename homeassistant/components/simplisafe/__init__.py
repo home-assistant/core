@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from pathlib import Path
 import re
 from typing import Any
 
@@ -93,8 +92,6 @@ type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
 DEFAULT_IMAGE_WIDTH = 720
 
 ATTR_CATEGORY = "category"
-ATTR_FILENAME = "filename"
-ATTR_IMAGE_WIDTH = "width"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
@@ -127,35 +124,14 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_NAME_CAPTURE_MOTION_IMAGE = "capture_motion_image"
-SERVICE_NAME_CAPTURE_MOTION_CLIP = "capture_motion_clip"
 SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICES = (
-    SERVICE_NAME_CAPTURE_MOTION_IMAGE,
-    SERVICE_NAME_CAPTURE_MOTION_CLIP,
     SERVICE_NAME_REMOVE_PIN,
     SERVICE_NAME_SET_PIN,
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
-SERVICE_CAPTURE_MOTION_IMAGE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_FILENAME): cv.string,
-        vol.Optional(ATTR_IMAGE_WIDTH, default=DEFAULT_IMAGE_WIDTH): vol.All(
-            vol.Coerce(int), vol.Range(min=240, max=1080)
-        ),
-    }
-)
-
-SERVICE_CAPTURE_MOTION_CLIP_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_FILENAME): cv.string,
-    }
 )
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
@@ -225,74 +201,6 @@ def _resolve_image_url(url: str, width: int = DEFAULT_IMAGE_WIDTH) -> str:
     """Substitute the {&width} URI template parameter and strip any remaining ones."""
     url = url.replace("{&width}", f"&width={width}")
     return re.sub(r"\{[^}]+\}", "", url)
-
-
-def _resolve_clip_url(url: str) -> str:
-    """Strip any unresolved URI template parameters from a clip URL."""
-    return re.sub(r"\{[^}]+\}", "", url)
-
-
-async def _async_fetch_and_write_media(
-    hass: HomeAssistant,
-    simplisafe: SimpliSafe,
-    url: str,
-    filename: str,
-    description: str,
-) -> None:
-    """Fetch media from SimpliSafe and write it to a local file."""
-    if not hass.config.is_allowed_path(filename):
-        raise HomeAssistantError(f"Access to {filename} is not allowed")
-    try:
-        media_bytes = await simplisafe.async_media(url)
-    except SimplipyError as err:
-        raise HomeAssistantError(
-            f"Error fetching {description} from SimpliSafe: {err}"
-        ) from err
-    if media_bytes is None:
-        raise HomeAssistantError(f"No {description} data received from SimpliSafe")
-    LOGGER.debug("Writing %s to %s", description, filename)
-    try:
-        await hass.async_add_executor_job(Path(filename).write_bytes, media_bytes)
-    except OSError as err:
-        raise HomeAssistantError(
-            f"Could not write {description} to {filename}: {err}"
-        ) from err
-
-
-@callback
-def _async_get_camera_serial_and_simplisafe(
-    hass: HomeAssistant, call: ServiceCall
-) -> tuple[str, SimpliSafe]:
-    """Get the camera serial number and SimpliSafe data for a service call."""
-    device_id = call.data[ATTR_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if (camera_device := device_registry.async_get(device_id)) is None:
-        raise HomeAssistantError(f"No device found with ID: {device_id}")
-
-    matching_serials = [
-        identity[1] for identity in camera_device.identifiers if identity[0] == DOMAIN
-    ]
-    if len(matching_serials) != 1:
-        raise HomeAssistantError(
-            f"Expected 1 SimpliSafe identifier for device {device_id}, "
-            f"got {len(matching_serials)}"
-        )
-    serial = matching_serials[0]
-
-    entry: SimpliSafeConfigEntry | None
-    for entry_id in camera_device.config_entries:
-        if (
-            (entry := hass.config_entries.async_get_entry(entry_id)) is None
-            or entry.domain != DOMAIN
-            or entry.state is not ConfigEntryState.LOADED
-        ):
-            continue
-        return serial, entry.runtime_data
-
-    raise HomeAssistantError(
-        f"No loaded SimpliSafe entry for camera device: {device_id}"
-    )
 
 
 @callback
@@ -440,41 +348,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         return wrapper
 
     @_verify_domain_control
-    async def async_capture_motion_image(call: ServiceCall) -> None:
-        """Save the most recent motion-triggered image to a file."""
-        serial, simplisafe = _async_get_camera_serial_and_simplisafe(hass, call)
-        media_urls = simplisafe.camera_media_urls.get(serial)
-        if not media_urls:
-            raise HomeAssistantError("No motion image available for this camera")
-        if (image_url := media_urls.get("image_url")) is None:
-            raise HomeAssistantError("No image URL available for this camera")
-        width: int = call.data[ATTR_IMAGE_WIDTH]
-        await _async_fetch_and_write_media(
-            hass,
-            simplisafe,
-            _resolve_image_url(image_url, width),
-            call.data[ATTR_FILENAME],
-            "image",
-        )
-
-    @_verify_domain_control
-    async def async_capture_motion_clip(call: ServiceCall) -> None:
-        """Save the most recent motion-triggered video clip to a file."""
-        serial, simplisafe = _async_get_camera_serial_and_simplisafe(hass, call)
-        media_urls = simplisafe.camera_media_urls.get(serial)
-        if not media_urls:
-            raise HomeAssistantError("No motion clip available for this camera")
-        if (clip_url := media_urls.get("clip_url")) is None:
-            raise HomeAssistantError("No clip URL available for this camera")
-        await _async_fetch_and_write_media(
-            hass,
-            simplisafe,
-            _resolve_clip_url(clip_url),
-            call.data[ATTR_FILENAME],
-            "clip",
-        )
-
-    @_verify_domain_control
     @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
@@ -500,16 +373,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
         )
 
     for service, method, schema in (
-        (
-            SERVICE_NAME_CAPTURE_MOTION_IMAGE,
-            async_capture_motion_image,
-            SERVICE_CAPTURE_MOTION_IMAGE_SCHEMA,
-        ),
-        (
-            SERVICE_NAME_CAPTURE_MOTION_CLIP,
-            async_capture_motion_clip,
-            SERVICE_CAPTURE_MOTION_CLIP_SCHEMA,
-        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
