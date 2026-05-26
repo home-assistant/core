@@ -26,8 +26,8 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
+    CONF_MODE,
     CONF_PASSIVE,
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
@@ -46,7 +46,11 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_UUID,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -95,15 +99,26 @@ async def test_setup_and_stop(
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    "options",
+    [{CONF_MODE: "passive"}, {CONF_PASSIVE: True}],
+    ids=["mode_passive", "legacy_passive_true"],
+)
 @pytest.mark.usefixtures("one_adapter")
 async def test_setup_and_stop_passive(
-    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    options: dict[str, Any],
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner."""
+    """Test we set up and stop the scanner in passive mode.
+
+    Covers both the new CONF_MODE key and the legacy CONF_PASSIVE boolean
+    so the fallback path in async_setup_entry stays exercised.
+    """
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
-        options={CONF_PASSIVE: True},
+        options=options,
         unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)
@@ -138,8 +153,10 @@ async def test_setup_and_stop_passive(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
-        "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+        "bluez": {
+            **scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
+            "adapter": "hci0",
+        },
         "scanning_mode": "passive",
     }
 
@@ -149,7 +166,7 @@ async def test_setup_and_stop_old_bluez(
     mock_bleak_scanner_start: MagicMock,
     one_adapter_old_bluez: None,
 ) -> None:
-    """Test we and setup and stop the scanner the passive scanner with older bluez."""
+    """Default AUTO falls back to active on adapters without passive scan support."""
     entry = MockConfigEntry(
         domain=bluetooth.DOMAIN,
         data={},
@@ -188,7 +205,7 @@ async def test_setup_and_stop_old_bluez(
         await hass.async_block_till_done()
 
     assert init_kwargs == {
-        "adapter": "hci0",
+        "bluez": {"adapter": "hci0"},
         "scanning_mode": "active",
     }
 
@@ -1640,6 +1657,117 @@ async def test_register_callback_by_address(
         assert service_info.manufacturer_id == 89
 
 
+@pytest.mark.parametrize(
+    ("matcher", "mode", "kwargs", "expected_args"),
+    [
+        pytest.param(
+            {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            {"scan_interval": 300.0, "scan_duration": 5.0},
+            ("44:44:33:11:23:45", 300.0, 5.0),
+            id="active_with_interval_and_duration",
+        ),
+        pytest.param(
+            {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            {"scan_interval": 300.0},
+            ("44:44:33:11:23:45", 300.0, None),
+            id="active_with_interval_default_duration",
+        ),
+        pytest.param(
+            {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            {},
+            ("44:44:33:11:23:45", None, None),
+            id="active_with_address_default_cadence",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_register_callback_registers_active_scan(
+    hass: HomeAssistant,
+    matcher: dict[str, str],
+    mode: BluetoothScanningMode,
+    kwargs: dict[str, float],
+    expected_args: tuple[str, float | None, float | None],
+) -> None:
+    """An address matcher in non-PASSIVE mode registers an active-scan request."""
+    mock_bt: list[Any] = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        def _cb(_si: BluetoothServiceInfo, _ch: BluetoothChange) -> None:
+            return None
+
+        mock_cancel = Mock()
+        with patch.object(
+            HomeAssistantBluetoothManager,
+            "async_register_active_scan",
+            return_value=mock_cancel,
+        ) as mock_register:
+            cancel = bluetooth.async_register_callback(
+                hass, _cb, matcher, mode, **kwargs
+            )
+            mock_register.assert_called_once_with(*expected_args)
+            mock_cancel.assert_not_called()
+            cancel()
+            mock_cancel.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("matcher", "mode", "kwargs"),
+    [
+        pytest.param(
+            {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.PASSIVE,
+            {"scan_interval": 300.0},
+            id="passive_mode",
+        ),
+        pytest.param(
+            {SERVICE_UUID: "cba20d00-224d-11e6-9fb8-0002a5d5c51b"},
+            BluetoothScanningMode.ACTIVE,
+            {"scan_interval": 300.0},
+            id="no_address_in_matcher",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_register_callback_skips_active_scan(
+    hass: HomeAssistant,
+    matcher: dict[str, str],
+    mode: BluetoothScanningMode,
+    kwargs: dict[str, float],
+) -> None:
+    """PASSIVE mode or a matcher without an address never registers an active scan."""
+    mock_bt: list[Any] = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        def _cb(_si: BluetoothServiceInfo, _ch: BluetoothChange) -> None:
+            return None
+
+        with patch.object(
+            HomeAssistantBluetoothManager, "async_register_active_scan"
+        ) as mock_register:
+            cancel = bluetooth.async_register_callback(
+                hass, _cb, matcher, mode, **kwargs
+            )
+            mock_register.assert_not_called()
+            cancel()
+
+
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_register_callback_by_address_connectable_only(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock
@@ -2532,6 +2660,35 @@ async def test_process_advertisements_timeout(
         await async_process_advertisements(
             hass, _callback, {}, BluetoothScanningMode.ACTIVE, 0
         )
+
+
+@pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
+async def test_process_advertisements_wires_timeout_as_scan_duration(
+    hass: HomeAssistant,
+) -> None:
+    """async_process_advertisements forwards its timeout as scan_duration."""
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        return False
+
+    mock_cancel = Mock()
+    with (
+        patch.object(
+            HomeAssistantBluetoothManager,
+            "async_register_active_scan",
+            return_value=mock_cancel,
+        ) as mock_register,
+        pytest.raises(TimeoutError),
+    ):
+        await async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            0,
+        )
+    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 0)
+    mock_cancel.assert_called_once()
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

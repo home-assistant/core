@@ -46,6 +46,7 @@ from homeassistant.helpers.automation import (
     DomainSpec,
     move_top_level_schema_fields_to_options,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ANY,
@@ -103,35 +104,275 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         assert integration_mock.call_args == call(hass, "test")
 
 
-async def test_trigger_variables(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
-) -> None:
-    """Test trigger variables."""
-    assert await async_setup_component(
-        hass,
-        "automation",
-        {
-            "automation": {
+class _MockTrigger(Trigger):
+    """Mock modern trigger demonstrating variable-handling.
+
+    Fires when the bus event ``mock_trigger_fire`` is observed, emitting
+    an ``extra_var`` in the extra_trigger_payload and a ``rendered_option``
+    field containing the result of rendering a config-supplied template
+    against the variables the Trigger class has access to at attach time
+    — which is none.
+    """
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return config
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the mock trigger."""
+        super().__init__(hass, config)
+        self._options = config.options or {}
+
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to a bus event."""
+        raw_template = self._options.get("option_template")
+        if raw_template is not None:
+            rendered_option = Template(raw_template, self._hass).async_render({})
+        else:
+            rendered_option = "<no_template>"
+
+        @callback
+        def _on_event(event: Any) -> None:
+            run_action(
+                {
+                    "extra_var": "from_extra_payload",
+                    "rendered_option": rendered_option,
+                },
+                "mock fired",
+                event.context,
+            )
+
+        return self._hass.bus.async_listen("mock_trigger_fire", _on_event)
+
+
+_BASE_DATA_TEMPLATE = {
+    "name": "{{ name }}",
+    "via_event": "{{ via_event }}",
+    "trigger_id": "{{ trigger.id }}",
+    "trigger_idx": "{{ trigger.idx }}",
+    "trigger_platform": "{{ trigger.platform }}",
+    "trigger_description": "{{ trigger.description }}",
+    "this_entity_id": "{{ this.entity_id }}",
+}
+_LEGACY_TRIGGER = {"platform": "event", "event_type": "test_event"}
+_LEGACY_PER_TRIGGER_VARS = {
+    "name": "Paulus",
+    "via_event": "{{ trigger.event.event_type }}",
+}
+_LEGACY_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "test_event",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "event",
+    "trigger_description": "event 'test_event'",
+    "this_entity_id": "automation.automation_0",
+}
+_MODERN_TRIGGER = {
+    "platform": "event.received",
+    "target": {"entity_id": "event.foo"},
+    "options": {"event_type": ["button_press"]},
+}
+_MODERN_PER_TRIGGER_VARS = {
+    "name": "Paulus",
+    "via_event": "{{ trigger.entity_id }}",
+}
+_MODERN_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "event.foo",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "event.received",
+    "trigger_description": "state of event.foo",
+    "this_entity_id": "automation.automation_0",
+}
+_MOCK_DATA_TEMPLATE = {
+    **_BASE_DATA_TEMPLATE,
+    "top_level_extra": "{{ extra_var | default('NOT_AT_TOP_LEVEL') }}",
+    "trigger_extra_var": "{{ trigger.extra_var }}",
+    "trigger_rendered_option": "{{ trigger.rendered_option }}",
+    "automation_in_action": "{{ automation_var }}",
+    "per_trigger_in_action": "{{ per_trigger_var }}",
+}
+_MOCK_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "from_extra_payload",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "mock_templated_trigger",
+    "trigger_description": "mock fired",
+    "this_entity_id": "automation.automation_0",
+    # New variables emitted by the trigger are wrapped in the
+    # trigger dict and not to top level
+    "top_level_extra": "NOT_AT_TOP_LEVEL",
+    "trigger_extra_var": "from_extra_payload",
+    # Variables injected by the user (typically an automation) and per
+    # trigger variables are not visible to the trigger
+    # Note: It's a documented feature that per trigger variables are
+    # not meant to be consumed by the trigger
+    "trigger_rendered_option": ("automation=NOT_VISIBLE per_trigger=NOT_VISIBLE"),
+    "automation_in_action": "automation_value",
+    "per_trigger_in_action": "per_trigger_value",
+}
+
+
+@pytest.mark.parametrize(
+    ("automation_extra", "data_template", "expected_data"),
+    [
+        pytest.param(
+            {"trigger": {**_LEGACY_TRIGGER, "variables": _LEGACY_PER_TRIGGER_VARS}},
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_only",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"name": "Global", "via_event": "ignored"},
+                "trigger": {**_LEGACY_TRIGGER, "variables": _LEGACY_PER_TRIGGER_VARS},
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_overrides_automation_trigger_variables",
+        ),
+        pytest.param(
+            {
+                "variables": {
+                    "name": "Global",
+                    "via_event": "{{ trigger.event.event_type }}",
+                },
+                "trigger": {**_LEGACY_TRIGGER, "variables": {"name": "Paulus"}},
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_overrides_automation_variables",
+        ),
+        pytest.param(
+            {
                 "trigger": {
-                    "platform": "event",
-                    "event_type": "test_event",
+                    **_LEGACY_TRIGGER,
+                    "variables": {**_LEGACY_PER_TRIGGER_VARS, "trigger": "ignored"},
+                },
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_cannot_shadow_trigger_payload",
+        ),
+        pytest.param(
+            {"trigger": {**_MODERN_TRIGGER, "variables": _MODERN_PER_TRIGGER_VARS}},
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_only",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"name": "Global", "via_event": "ignored"},
+                "trigger": {**_MODERN_TRIGGER, "variables": _MODERN_PER_TRIGGER_VARS},
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_overrides_automation_trigger_variables",
+        ),
+        pytest.param(
+            {
+                "variables": {
+                    "name": "Global",
+                    "via_event": "{{ trigger.entity_id }}",
+                },
+                "trigger": {**_MODERN_TRIGGER, "variables": {"name": "Paulus"}},
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_overrides_automation_variables",
+        ),
+        pytest.param(
+            {
+                "trigger": {
+                    **_MODERN_TRIGGER,
+                    "variables": {**_MODERN_PER_TRIGGER_VARS, "trigger": "ignored"},
+                },
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_cannot_shadow_trigger_payload",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"automation_var": "automation_value"},
+                "trigger": {
+                    "platform": "mock_templated_trigger",
+                    "options": {
+                        "option_template": (
+                            "automation={{ automation_var | default('NOT_VISIBLE') }}"
+                            " per_trigger="
+                            "{{ per_trigger_var | default('NOT_VISIBLE') }}"
+                        ),
+                    },
                     "variables": {
                         "name": "Paulus",
-                        "via_event": "{{ trigger.event.event_type }}",
+                        "via_event": "{{ trigger.extra_var }}",
+                        "per_trigger_var": "per_trigger_value",
                     },
                 },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {"hello": "{{ name }} + {{ via_event }}"},
-                },
-            }
-        },
+            },
+            _MOCK_DATA_TEMPLATE,
+            _MOCK_EXPECTED,
+            id="mock_modern_payload_contract",
+        ),
+    ],
+)
+async def test_trigger_variables(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    automation_extra: dict[str, Any],
+    data_template: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test trigger variables and their precedence over other variable sources."""
+    hass.states.async_set("event.foo", STATE_UNKNOWN, {"event_type": "button_press"})
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": _MockTrigger}
+
+    mock_integration(hass, MockModule("mock_templated_trigger"))
+    mock_platform(
+        hass,
+        "mock_templated_trigger.trigger",
+        Mock(async_get_triggers=async_get_triggers),
     )
 
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    **automation_extra,
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": data_template,
+                    },
+                }
+            },
+        )
+
     hass.bus.async_fire("test_event")
+    hass.states.async_set(
+        "event.foo",
+        "2026-05-21T12:00:00+00:00",
+        {"event_type": "button_press"},
+    )
+    hass.bus.async_fire("mock_trigger_fire")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert service_calls[0].data["hello"] == "Paulus + test_event"
+    assert service_calls[0].data == expected_data
 
 
 async def test_if_disabled_trigger_not_firing(
@@ -4003,3 +4244,154 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     assert len(calls) == expected_calls
 
     unsub()
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "state", "entity_id": ["sensor.a", "sensor.b"]},
+            ["sensor.a", "sensor.b"],
+            id="state",
+        ),
+        pytest.param(
+            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            ["sensor.a"],
+            id="numeric_state",
+        ),
+        pytest.param(
+            {"platform": "calendar", "options": {"entity_id": "calendar.x"}},
+            ["calendar.x"],
+            id="calendar",
+        ),
+        pytest.param(
+            {
+                "platform": "zone",
+                "entity_id": ["person.a"],
+                "zone": "zone.home",
+                "event": "enter",
+            },
+            ["person.a", "zone.home"],
+            id="zone-legacy",
+        ),
+        pytest.param(
+            {"platform": "geo_location", "zone": "zone.home"},
+            ["zone.home"],
+            id="geo_location",
+        ),
+        pytest.param(
+            {"platform": "sun"},
+            ["sun.sun"],
+            id="sun",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="event-with-entity-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": "not-a-valid-entity-id"},
+            },
+            [],
+            id="event-invalid-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            [],
+            id="event-entity-id-list-not-extracted",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            ["sensor.x", "sensor.y"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {}},
+            [],
+            id="modern-target-empty",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_entities(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from various trigger config shapes."""
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "device", "device_id": "abc123"},
+            ["abc123"],
+            id="device",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            ["abc123"],
+            id="event-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            ["abc123", "def456"],
+            id="tag-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag"},
+            [],
+            id="tag-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"device_id": "abc123"}},
+            ["abc123"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"device_id": ["abc123", "def456"]},
+            },
+            ["abc123", "def456"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_devices(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting devices from various trigger config shapes."""
+    assert trigger.async_extract_devices(trigger_conf) == expected

@@ -26,10 +26,10 @@ async def test_cover_entity(
     """Tests cover entity."""
 
     blind_device_name = "Blind Controller"
-    blind_entity_key = "cover.blind_controller_test_entity_name"
+    blind_entity_key = "cover.test_entity_room_blind_controller_test_entity_name"
     blind_entity_id = "test-entity-id-blind"
     door_device_name = "Cover Controller"
-    door_entity_key = "cover.cover_controller_test_entity_name"
+    door_entity_key = "cover.test_entity_room_cover_controller_test_entity_name"
     door_entity_id = "test-entity-id-door"
     entity_type = Platform.COVER
 
