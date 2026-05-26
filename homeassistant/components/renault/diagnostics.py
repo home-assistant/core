@@ -8,11 +8,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import RenaultConfigEntry
-from .const import CONF_KAMEREON_ACCOUNT_ID
+from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOGIN_TOKEN
 from .renault_vehicle import RenaultVehicleProxy
 
 TO_REDACT = {
     CONF_KAMEREON_ACCOUNT_ID,
+    CONF_LOGIN_TOKEN,
     CONF_PASSWORD,
     CONF_USERNAME,
     "radioCode",
