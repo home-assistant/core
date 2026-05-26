@@ -13,13 +13,16 @@ import urllib.request
 def get_pypi_data(package_name):
     url = f"https://pypi.org/pypi/{package_name}/json"
     try:
-        with urllib.request.urlopen(url) as response:
+        with urllib.request.urlopen(url, timeout=10) as response:
             return json.loads(response.read().decode())
     except urllib.error.HTTPError as e:
-        print(f"Error fetching PyPI data: {e}", file=sys.stderr)
+        print(f"Error fetching PyPI data (HTTP {e.code}): {e.reason}", file=sys.stderr)
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"Network error fetching PyPI data: {e.reason}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"Unexpected error: {e}", file=sys.stderr)
+        print(f"Unexpected error fetching PyPI data: {e}", file=sys.stderr)
         sys.exit(1)
 
 def find_github_repo(info):
@@ -45,17 +48,29 @@ def check_github_tag(repo_url, version):
     # Try with 'v' prefix and without
     tag_options = [f"v{version}", version]
     for tag in tag_options:
-        url = f"{repo_url}/releases/tag/{tag}"
-        try:
-            req = urllib.request.Request(url, method="HEAD")
-            with urllib.request.urlopen(req) as resp:
-                if resp.status == 200:
-                    return tag
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                continue
-        except Exception:
-            pass
+        # Check both tree and releases paths on GitHub
+        for path_template in [f"tree/{tag}", f"releases/tag/{tag}"]:
+            url = f"{repo_url}/{path_template}"
+            try:
+                req = urllib.request.Request(url, method="HEAD")
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status == 200:
+                        return tag
+            except urllib.error.HTTPError as e:
+                # If it's a 404, we continue checking other tag/path options
+                if e.code == 404:
+                    continue
+                # For non-404 HTTP errors (like 403 Forbidden/429 rate limit), exit with error to avoid false reports
+                print(f"\n[ERROR] HTTP error contacting GitHub ({e.code} {e.reason}) for tag '{tag}'", file=sys.stderr)
+                sys.exit(1)
+            except urllib.error.URLError as e:
+                # Connection or timeout error
+                print(f"\n[ERROR] Network error contacting GitHub: {e.reason}", file=sys.stderr)
+                sys.exit(1)
+            except Exception as e:
+                # Unexpected exceptions
+                print(f"\n[ERROR] Unexpected error verifying tag '{tag}': {e}", file=sys.stderr)
+                sys.exit(1)
     return None
 
 def main():
