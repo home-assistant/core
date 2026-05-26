@@ -23,6 +23,7 @@ from homeassistant.components.roborock.const import (
     CONF_SHOW_WALLS,
     DOMAIN,
     DRAWABLES,
+    REGION_CUSTOM,
 )
 from homeassistant.const import CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -481,7 +482,7 @@ async def test_config_flow_with_custom_url(
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "custom"}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "custom_url"
@@ -548,7 +549,7 @@ async def test_config_flow_custom_url_failures(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "custom"}
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
         )
         assert result["step_id"] == "custom_url"
 
