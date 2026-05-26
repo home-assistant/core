@@ -28,7 +28,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from .const import (
     CONF_SERIAL_PORT,
@@ -388,7 +387,6 @@ class EDL21Entity(SensorEntity):
         self._electricity_id = electricity_id
         self._obis = obis
         self._telegram = telegram
-        self._last_update = utcnow()
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
         self._attr_unique_id = f"{electricity_id}_{obis}"
