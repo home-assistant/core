@@ -1,7 +1,7 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from incomfortclient import Heater as InComfortHeater
 
@@ -103,11 +103,13 @@ class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{heater.serial_no}_{description.key}"
 
+    @override
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._heater.status[self.entity_description.value_key]  # type: ignore [no-any-return]
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""

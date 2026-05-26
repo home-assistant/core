@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from incomfortclient import Heater as InComfortHeater
 
@@ -96,11 +96,13 @@ class IncomfortBinarySensor(IncomfortBoilerEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{heater.serial_no}_{description.key}"
 
+    @override
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
         return bool(self._heater.status[self.entity_description.value_key])
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""

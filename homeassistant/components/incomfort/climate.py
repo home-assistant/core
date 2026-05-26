@@ -1,6 +1,6 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 
-from typing import Any
+from typing import Any, override
 
 from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
 
@@ -75,16 +75,19 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
                 coordinator.config_entry.entry_id,
             )
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {"status": self._room.status}
 
+    @override
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
+    @override
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the actual current HVAC action."""
@@ -92,6 +95,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
+    @override
     @property
     def target_temperature(self) -> float | None:
         """Return the (override)temperature we try to reach.
@@ -106,11 +110,13 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             return self._room.setpoint
         return self._room.override or self._room.setpoint
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
         temperature: float = kwargs[ATTR_TEMPERATURE]
         await self._room.set_override(temperature)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
