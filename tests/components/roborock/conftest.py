@@ -279,11 +279,11 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     )
 
     async def set_dnd_timer(timer: DnDTimer) -> None:
-        setattr(dnd_trait, "start_hour", timer.start_hour)
-        setattr(dnd_trait, "start_minute", timer.start_minute)
-        setattr(dnd_trait, "end_hour", timer.end_hour)
-        setattr(dnd_trait, "end_minute", timer.end_minute)
-        setattr(dnd_trait, "enabled", timer.enabled)
+        dnd_trait.start_hour = timer.start_hour
+        dnd_trait.start_minute = timer.start_minute
+        dnd_trait.end_hour = timer.end_hour
+        dnd_trait.end_minute = timer.end_minute
+        dnd_trait.enabled = timer.enabled
 
     dnd_trait.set_dnd_timer = AsyncMock()
     dnd_trait.set_dnd_timer.side_effect = set_dnd_timer
@@ -298,11 +298,11 @@ def make_valley_electric_timer(dataclass_template: RoborockBase) -> AsyncMock:
     )
 
     async def set_timer(timer: ValleyElectricityTimer) -> None:
-        setattr(valley_electric_timer_trait, "start_hour", timer.start_hour)
-        setattr(valley_electric_timer_trait, "start_minute", timer.start_minute)
-        setattr(valley_electric_timer_trait, "end_hour", timer.end_hour)
-        setattr(valley_electric_timer_trait, "end_minute", timer.end_minute)
-        setattr(valley_electric_timer_trait, "enabled", timer.enabled)
+        valley_electric_timer_trait.start_hour = timer.start_hour
+        valley_electric_timer_trait.start_minute = timer.start_minute
+        valley_electric_timer_trait.end_hour = timer.end_hour
+        valley_electric_timer_trait.end_minute = timer.end_minute
+        valley_electric_timer_trait.enabled = timer.enabled
 
     valley_electric_timer_trait.set_timer = AsyncMock()
     valley_electric_timer_trait.set_timer.side_effect = set_timer
@@ -437,9 +437,9 @@ def fake_devices_fixture() -> list[FakeDevice]:
                 NETWORK_INFO_BY_DEVICE[device_data.duid]
             )
         elif device_data.pv == "A01":
-            if device_product_data.category == RoborockCategory.WET_DRY_VAC:
+            if device_product_data.category is RoborockCategory.WET_DRY_VAC:
                 fake_device.dyad = create_dyad_trait()
-            elif device_product_data.category == RoborockCategory.WASHING_MACHINE:
+            elif device_product_data.category is RoborockCategory.WASHING_MACHINE:
                 fake_device.zeo = create_zeo_trait()
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")

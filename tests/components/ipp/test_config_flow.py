@@ -512,7 +512,7 @@ async def test_full_zeroconf_tls_flow_implementation(
 
 
 async def test_zeroconf_empty_unique_id_uses_serial(hass: HomeAssistant) -> None:
-    """Test zeroconf flow if printer lacks (empty) unique identification with serial fallback."""
+    """Test zeroconf flow with empty unique ID uses serial fallback."""
     fixture = await hass.async_add_executor_job(
         load_fixture, "ipp/printer_without_uuid.json"
     )

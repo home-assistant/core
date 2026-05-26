@@ -6,6 +6,7 @@
     "pep621",
     "pip_requirements",
     "pre-commit",
+    "dockerfile",
     "custom.regex",
     "homeassistant-manifest"
   ],
@@ -19,6 +20,10 @@
       "/(^|/)requirements[\\w_-]*\\.txt$/",
       "/(^|/)homeassistant/package_constraints\\.txt$/"
     ]
+  },
+
+  "dockerfile": {
+    "managerFilePatterns": ["/^Dockerfile$/"]
   },
 
   "homeassistant-manifest": {
@@ -35,6 +40,14 @@
       "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ruff",
       "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "Update go2rtc RECOMMENDED_VERSION in const.py alongside the Dockerfile pin",
+      "managerFilePatterns": ["/^homeassistant/components/go2rtc/const\\.py$/"],
+      "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ghcr.io/alexxit/go2rtc",
+      "datasourceTemplate": "docker"
     }
   ],
 
@@ -115,6 +128,7 @@
         "standard-aifc",
         "standard-telnetlib",
         "ulid-transform",
+        "unidiff",
         "url-normalize",
         "xmltodict"
       ],
@@ -128,7 +142,8 @@
         "home-assistant-bluetooth",
         "home-assistant-frontend",
         "home-assistant-intents",
-        "infrared-protocols"
+        "infrared-protocols",
+        "rf-protocols"
       ],
       "enabled": true,
       "minimumReleaseAge": null,
@@ -184,6 +199,13 @@
       "labels": ["dependency"]
     },
     {
+      "description": "Docker allowlist (ghcr.io exposes no release timestamps so the global cooldown needs to be bypassed)",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency"]
+    },
+    {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
       "matchPackageNames": ["astral-sh/ruff-pre-commit", "ruff"],
       "groupName": "ruff",
@@ -212,6 +234,12 @@
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
       "groupSlug": "pylint"
+    },
+    {
+      "description": "Group go2rtc Dockerfile pin with const.py RECOMMENDED_VERSION into one PR",
+      "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
+      "groupName": "go2rtc",
+      "groupSlug": "go2rtc"
     }
   ]
 }

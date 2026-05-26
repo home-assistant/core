@@ -327,6 +327,7 @@ async def test_hassio_system_health_with_issues(
         host_internet=None,
         supervisor_internet=False,
     )
+    hass.data[DATA_ADDONS_LIST] = []
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         info = await get_system_health_info(hass, "hassio")
