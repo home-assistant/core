@@ -1,0 +1,15 @@
+{
+  "domain": "qingpingiot",
+  "name": "Qingping",
+  "codeowners": ["@qingping"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/qingpingiot",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
