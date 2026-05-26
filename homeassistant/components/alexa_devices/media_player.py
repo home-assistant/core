@@ -87,7 +87,6 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
 
     entity_description: AmazonDevicesMediaPlayerEntityDescription
 
-    _attr_has_entity_name = True
     _attr_name = None  # Uses the device name
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = 0.05

@@ -146,10 +146,10 @@ async def _setup_media_player_platform(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("mock_amazon_devices_client")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
