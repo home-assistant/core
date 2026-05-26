@@ -54,6 +54,7 @@ def shutterbox_fixture():
         is_slider=True,
         is_position_inverted=True,
         cover_type=None,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
@@ -76,6 +77,7 @@ def gatebox_fixture():
         is_slider=False,
         is_position_inverted=False,
         cover_type=None,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
@@ -98,6 +100,7 @@ def gate_fixture():
         is_slider=True,
         is_position_inverted=True,
         cover_type=None,
+        tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
@@ -445,6 +448,43 @@ async def test_with_no_stop(gatebox, hass: HomeAssistant) -> None:
     assert not supported_features & CoverEntityFeature.STOP
 
 
+async def test_tilt_only_supported_features(shutterbox, hass: HomeAssistant) -> None:
+    """Test that tilt_only removes position/open/close/stop features."""
+
+    feature_mock, entity_id = shutterbox
+    feature_mock.tilt_only = True
+
+    await async_setup_entity(hass, entity_id)
+
+    supported_features = hass.states.get(entity_id).attributes[ATTR_SUPPORTED_FEATURES]
+    assert not supported_features & CoverEntityFeature.OPEN
+    assert not supported_features & CoverEntityFeature.CLOSE
+    assert not supported_features & CoverEntityFeature.SET_POSITION
+    assert not supported_features & CoverEntityFeature.STOP
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
+async def test_tilt_with_position_supported_features(
+    shutterbox, hass: HomeAssistant
+) -> None:
+    """Test that has_tilt without tilt_only keeps both position and tilt features."""
+
+    await async_setup_entity(hass, shutterbox[1])
+
+    supported_features = hass.states.get(shutterbox[1]).attributes[
+        ATTR_SUPPORTED_FEATURES
+    ]
+    assert supported_features & CoverEntityFeature.OPEN
+    assert supported_features & CoverEntityFeature.CLOSE
+    assert supported_features & CoverEntityFeature.SET_POSITION
+    assert supported_features & CoverEntityFeature.STOP
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
 async def test_update_failure(
     feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
@@ -546,15 +586,29 @@ async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == CoverState.OPENING
 
 
-async def test_open_tilt(shutterbox, hass: HomeAssistant) -> None:
-    """Test closing tilt."""
+@pytest.mark.parametrize(
+    ("is_tilt_180", "expected_tilt_position", "expected_tilt_reported"),
+    [
+        pytest.param(False, 0, 100, id="tilt_90"),
+        pytest.param(True, 50, 50, id="tilt_180"),
+    ],
+)
+async def test_open_tilt(
+    shutterbox,
+    hass: HomeAssistant,
+    is_tilt_180: bool,
+    expected_tilt_position: int,
+    expected_tilt_reported: int,
+) -> None:
+    """Test opening tilt for 90-degree and 180-degree tilt shutters."""
     feature_mock, entity_id = shutterbox
+    feature_mock.is_tilt_180 = is_tilt_180
 
     def initial_update():
         feature_mock.tilt_current = 100
 
     def set_tilt_position(tilt_position):
-        assert tilt_position == 0
+        assert tilt_position == expected_tilt_position
         feature_mock.tilt_current = tilt_position
 
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
@@ -570,7 +624,9 @@ async def test_open_tilt(shutterbox, hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100  # inverted
+    assert (
+        state.attributes[ATTR_CURRENT_TILT_POSITION] == expected_tilt_reported
+    )  # inverted
 
 
 async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:

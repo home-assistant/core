@@ -88,6 +88,14 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
                 | CoverEntityFeature.CLOSE_TILT
             )
 
+        if feature.tilt_only:
+            self._attr_supported_features &= ~(
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.SET_POSITION
+                | CoverEntityFeature.STOP
+            )
+
     @property
     def device_class(self) -> CoverDeviceClass | None:
         """Return the device class based on cover type when available."""
@@ -137,7 +145,8 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Fully open the cover tilt."""
-        await self._feature.async_set_tilt_position(0)
+        position = 50 if self._feature.is_tilt_180 else 0
+        await self._feature.async_set_tilt_position(position)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Fully close the cover tilt."""
