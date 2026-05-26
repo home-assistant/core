@@ -48,7 +48,7 @@ async def test_setup_entry_exceptions(
     expected_translation_key: str,
 ) -> None:
     """Test async_setup_entry surfaces translation-keyed errors."""
-    mock_opnsense_client.return_value.validate.side_effect = exc
+    mock_opnsense_client.validate.side_effect = exc
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
