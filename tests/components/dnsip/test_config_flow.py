@@ -71,8 +71,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_adv(hass: HomeAssistant) -> None:
-    """Test we get the form with advanced options on."""
+async def test_form_with_advanced_options(hass: HomeAssistant) -> None:
+    """Test we can submit the form with custom resolver and port options."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
