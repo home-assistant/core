@@ -1,30 +1,29 @@
 """The tests for the opnsense device tracker platform."""
 
+from datetime import timedelta
 from unittest import mock
 
 from aiopnsense import OPNsenseConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker
 from homeassistant.components.opnsense import OPNsenseRuntimeData
 from homeassistant.components.opnsense.const import DOMAIN
-from homeassistant.components.opnsense.coordinator import (
-    OPNsenseDeviceTrackerCoordinator,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")
 async def test_device_tracker_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device tracker platform setup."""
-    entity_registry = er.async_get(hass)
 
     # Setup the integration
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -53,10 +52,9 @@ async def test_device_tracker_setup(
 async def test_device_tracker_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device tracker entity states and attributes."""
-    entity_registry = er.async_get(hass)
-
     # Setup the integration
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -108,6 +106,7 @@ async def test_device_tracker_states(
 async def test_device_tracker_with_interfaces_filter(
     hass: HomeAssistant,
     mock_opnsense_client: mock.AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test device tracker with interface filtering."""
     # Create config entry with interface filtering
@@ -127,8 +126,6 @@ async def test_device_tracker_with_interfaces_filter(
     )
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
-
     # Setup the integration
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -146,24 +143,27 @@ async def test_device_tracker_with_interfaces_filter(
     assert len(device_tracker_entities) == 0
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_tracker_coordinator_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: mock.AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator wraps client errors as UpdateFailed."""
-    mock_opnsense_client.return_value.get_arp_table.side_effect = (
-        OPNsenseConnectionError("connection failed")
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.desktop").state != STATE_UNAVAILABLE
+
+    mock_opnsense_client.get_arp_table.side_effect = OPNsenseConnectionError(
+        "connection failed"
     )
 
-    coordinator = OPNsenseDeviceTrackerCoordinator(
-        hass,
-        mock_config_entry,
-        mock_opnsense_client.return_value,
-        [],
-    )
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    with pytest.raises(UpdateFailed, match="Error communicating with OPNsense router"):
-        await coordinator._async_update_data()
+    assert hass.states.get("device_tracker.desktop").state == STATE_UNAVAILABLE
 
-    mock_opnsense_client.return_value.get_arp_table.assert_awaited_once_with(True)
+    assert mock_opnsense_client.get_arp_table.call_count == 2

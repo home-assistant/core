@@ -1,6 +1,6 @@
 """Tests for the OPNsense config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
@@ -136,6 +136,44 @@ async def test_user_no_unique_id_aborts(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_on_unknown_error(
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock
+) -> None:
+    """Test when we have unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    mock_opnsense_client.validate.side_effect = TypeError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_DATA,
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "unknown"}
+
+    mock_opnsense_client.validate.side_effect = None
+
+    # Submit user step, should go to interfaces step
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_DATA,
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "interfaces"
+
+    # Submit interfaces step
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRACKER_INTERFACES: []},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_interfaces_step_with_tracker_interfaces(
     hass: HomeAssistant, mock_opnsense_client: AsyncMock
 ) -> None:
@@ -224,16 +262,9 @@ async def test_import_no_unique_id_aborts(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_exceptions(hass: HomeAssistant) -> None:
-    """Test all exception branches in async_step_import."""
-    import_data = dict(CONFIG_DATA_IMPORT)
-    patch_target = (
-        "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"
-    )
-    patch_interfaces = (
-        "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces"
-    )
-    exceptions = [
+@pytest.mark.parametrize(
+    ("exc", "reason"),
+    [
         (OPNsenseInvalidURL, "invalid_url"),
         (OPNsenseInvalidAuth, "invalid_auth"),
         (OPNsensePrivilegeMissing, "privilege_missing"),
@@ -243,114 +274,52 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
         (OPNsenseUnknownFirmware, "unknown_version"),
         (OPNsenseBelowMinFirmware, "invalid_version"),
         (Exception, "unknown"),
-    ]
-    for exc, reason in exceptions:
-        with (
-            patch(patch_target, side_effect=exc),
-            patch(patch_interfaces),
-            patch(
-                "homeassistant.components.opnsense.config_flow.async_create_issue"
-            ) as mock_issue,
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=import_data,
-            )
-            assert result["type"] is FlowResultType.ABORT
-            assert result["reason"] == reason
-            issue_ids = [call.args[2] for call in mock_issue.call_args_list]
-            assert f"import_failed_{reason}" in issue_ids
+    ],
+)
+async def test_import_exceptions(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    exc: type[Exception],
+    reason: str,
+) -> None:
+    """Test all exception branches in async_step_import."""
+    mock_opnsense_client.validate.side_effect = exc
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=CONFIG_DATA_IMPORT,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert issue_registry.async_get_issue(DOMAIN, f"import_failed_{reason}")
 
 
 @pytest.mark.usefixtures("mock_opnsense_client", "mock_setup_entry")
 async def test_import_empty_tracker_interfaces(hass: HomeAssistant) -> None:
     """Test import with empty CONF_TRACKER_INTERFACES (should pop the key)."""
-    import_data = dict(CONFIG_DATA_IMPORT)
-    import_data[CONF_TRACKER_INTERFACES] = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=import_data,
+        data={**CONFIG_DATA_IMPORT, CONF_TRACKER_INTERFACES: []},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_TRACKER_INTERFACES not in result["data"]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
+async def test_import_missing_interfaces(
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test import with missing tracker interfaces (should create issue and abort)."""
-    import_data = dict(CONFIG_DATA_IMPORT)
-    import_data[CONF_TRACKER_INTERFACES] = ["MISSING"]
-    with (
-        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
-            return_value={"LAN": {"name": "LAN"}},
-        ),
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
-            return_value="unique_id_missing",
-        ),
-        patch(
-            "homeassistant.components.opnsense.config_flow.async_create_issue"
-        ) as mock_issue,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=import_data,
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "import_failed_missing_interfaces"
-        issue_ids = [call.args[2] for call in mock_issue.call_args_list]
-        assert "import_failed_missing_interfaces" in issue_ids
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_on_unknown_error(hass: HomeAssistant) -> None:
-    """Test when we have unknown errors."""
+    mock_opnsense_client.get_interfaces.return_value = {"LAN": {"name": "LAN"}}
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_IMPORT},
+        data={**CONFIG_DATA_IMPORT, CONF_TRACKER_INTERFACES: ["MISSING"]},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-
-    with patch(
-        "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
-        side_effect=TypeError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONFIG_DATA,
-        )
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("errors") == {"base": "unknown"}
-
-    # No error this time
-    with (
-        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
-            return_value={"LAN": {"name": "LAN"}},
-        ),
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
-            return_value="unique_id_after_retry",
-        ),
-    ):
-        # Submit user step, should go to interfaces step
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONFIG_DATA,
-        )
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("step_id") == "interfaces"
-
-        # Submit interfaces step
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_TRACKER_INTERFACES: []},
-        )
-        assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "import_failed_missing_interfaces"
+    assert issue_registry.async_get_issue(DOMAIN, "import_failed_missing_interfaces")
