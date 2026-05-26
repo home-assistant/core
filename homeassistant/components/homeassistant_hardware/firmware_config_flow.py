@@ -418,10 +418,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(otbr_manager)
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
 
-        if addon_info.state == AddonState.RUNNING:
+        if addon_info.state is AddonState.RUNNING:
             await otbr_manager.async_stop_addon()
 
         return await self.async_step_start_otbr_addon()

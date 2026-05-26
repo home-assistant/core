@@ -7743,6 +7743,7 @@
       'options': list([
         'anti_crease',
         'automatic_start',
+        'cancelled',
         'cleaning',
         'cooling_down',
         'disinfecting',
@@ -7754,6 +7755,7 @@
         'hygiene',
         'main_wash',
         'not_running',
+        'paused',
         'pre_wash',
         'rinse',
         'rinse_hold',
@@ -7802,6 +7804,7 @@
       'options': list([
         'anti_crease',
         'automatic_start',
+        'cancelled',
         'cleaning',
         'cooling_down',
         'disinfecting',
@@ -7813,6 +7816,7 @@
         'hygiene',
         'main_wash',
         'not_running',
+        'paused',
         'pre_wash',
         'rinse',
         'rinse_hold',
@@ -11553,6 +11557,7 @@
       'options': list([
         'anti_crease',
         'automatic_start',
+        'cancelled',
         'cleaning',
         'cooling_down',
         'disinfecting',
@@ -11564,6 +11569,7 @@
         'hygiene',
         'main_wash',
         'not_running',
+        'paused',
         'pre_wash',
         'rinse',
         'rinse_hold',
@@ -11612,6 +11618,7 @@
       'options': list([
         'anti_crease',
         'automatic_start',
+        'cancelled',
         'cleaning',
         'cooling_down',
         'disinfecting',
@@ -11623,6 +11630,7 @@
         'hygiene',
         'main_wash',
         'not_running',
+        'paused',
         'pre_wash',
         'rinse',
         'rinse_hold',

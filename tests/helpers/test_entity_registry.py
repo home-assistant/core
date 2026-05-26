@@ -19,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -574,60 +578,131 @@ def test_get_available_entity_id_considers_existing_entities(
 @pytest.mark.parametrize(
     (
         "device_name",
+        "device_area_name",
+        "entity_area_name",
         "object_id_base",
         "suggested_object_id",
         "user_name",
+        "expected_initial_entity_id",
         "expected_entity_id",
     ),
     [
-        (
+        pytest.param(
+            None,
+            None,
             None,
             "My Sensor",
             None,
             None,
             "sensor.my_sensor",
+            "sensor.my_sensor",
+            id="no_device_no_area",
         ),
-        (
-            "Living Room",
+        pytest.param(
+            "Lamp",
+            None,
+            None,
             "Temperature",
             None,
             None,
-            "sensor.living_room_temperature",
+            "sensor.lamp_temperature",
+            "sensor.lamp_temperature",
+            id="device_no_area",
         ),
-        (
-            "Living Room",
+        pytest.param(
+            "Lamp",
+            None,
+            None,
             "Temperature",
             "custom_id",
             None,
             "sensor.custom_id",
+            "sensor.custom_id",
+            id="suggested_object_id",
         ),
-        (
-            "Living Room",
+        pytest.param(
+            "Lamp",
+            None,
+            None,
             "Temperature",
             "custom_id",
             "Humidity",
-            "sensor.living_room_humidity",
+            "sensor.custom_id",
+            "sensor.lamp_humidity",
+            id="user_name",
         ),
-        (
-            "Living Room",
+        pytest.param(
+            "Lamp",
+            None,
+            None,
             "Temperature",
             None,
-            "Living Room Sensor",
-            "sensor.living_room_sensor",
+            "Lamp Sensor",
+            "sensor.lamp_temperature",
+            "sensor.lamp_sensor",
+            id="user_name_unprefixed",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            None,
+            "Temperature",
+            None,
+            None,
+            "sensor.kitchen_lamp_temperature",
+            "sensor.kitchen_lamp_temperature",
+            id="device_area",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            "Garage",
+            "Temperature",
+            None,
+            None,
+            "sensor.kitchen_lamp_temperature",
+            "sensor.garage_lamp_temperature",
+            id="entity_area",
+        ),
+        pytest.param(
+            None,
+            None,
+            "Kitchen",
+            "My Sensor",
+            None,
+            None,
+            "sensor.my_sensor",
+            "sensor.kitchen_my_sensor",
+            id="entity_area_no_device",
+        ),
+        pytest.param(
+            "Lamp",
+            "Kitchen",
+            "Garage",
+            "Temperature",
+            "custom_id",
+            None,
+            "sensor.custom_id",
+            "sensor.custom_id",
+            id="suggested_object_id_area",
         ),
     ],
 )
-def test_regenerate_entity_id(
+def test_generate_entity_id(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     device_name: str | None,
+    device_area_name: str | None,
+    entity_area_name: str | None,
     object_id_base: str | None,
     suggested_object_id: str | None,
     user_name: str | None,
+    expected_initial_entity_id: str,
     expected_entity_id: str,
 ) -> None:
-    """Test regenerating entity IDs."""
+    """Test generating and regenerating entity IDs."""
     config_entry = MockConfigEntry(domain="sensor")
     config_entry.add_to_hass(hass)
 
@@ -639,6 +714,9 @@ def test_regenerate_entity_id(
             name=device_name,
         )
         device_id = device_entry.id
+        if device_area_name is not None:
+            device_area = area_registry.async_create(device_area_name)
+            device_registry.async_update_device(device_id, area_id=device_area.id)
 
     entry = entity_registry.async_get_or_create(
         "sensor",
@@ -651,6 +729,13 @@ def test_regenerate_entity_id(
         original_name=object_id_base,
         suggested_object_id=suggested_object_id,
     )
+    assert entry.entity_id == expected_initial_entity_id
+
+    if entity_area_name is not None:
+        entity_area = area_registry.async_create(entity_area_name)
+        entry = entity_registry.async_update_entity(
+            entry.entity_id, area_id=entity_area.id
+        )
 
     if user_name is not None:
         entry = entity_registry.async_update_entity(entry.entity_id, name=user_name)
@@ -703,6 +788,9 @@ async def test_filter_on_load(
             ]
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -874,6 +962,9 @@ async def test_load_bad_data(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -1182,6 +1273,9 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1298,6 +1392,9 @@ async def test_migration_1_7(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         },
     }
 
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
     await er.async_load(hass)
     registry = er.async_get(hass)
 
@@ -1369,6 +1466,9 @@ async def test_migration_1_11(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
@@ -1536,6 +1636,9 @@ async def test_migration_1_18(
             ],
         },
     }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
 
     await er.async_load(hass)
     registry = er.async_get(hass)
