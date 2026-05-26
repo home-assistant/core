@@ -209,12 +209,23 @@
       "init": {
         "data": {
           "allow_service_calls": "Allow the device to perform Home Assistant actions.",
+          "bluetooth_scanning_mode": "Bluetooth scanning mode",
           "subscribe_logs": "Subscribe to logs from the device."
         },
         "data_description": {
           "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions or send events. Only enable this if you trust the device.",
+          "bluetooth_scanning_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly.",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
+      }
+    }
+  },
+  "selector": {
+    "bluetooth_scanning_mode": {
+      "options": {
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     }
   }
