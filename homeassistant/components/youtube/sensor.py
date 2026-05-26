@@ -77,8 +77,9 @@ SENSOR_TYPES = [
         state_class=SensorStateClass.TOTAL,
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_VIDEO_COUNT],
-        entity_picture_fn=lambda channel: channel[ATTR_ICON],
+        entity_picture_fn=lambda _: None,
         attributes_fn=None,
+        icon="mdi:filmstrip-box-multiple",
     ),
 ]
 
