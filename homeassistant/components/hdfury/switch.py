@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigCoordinator, HDFuryConfigEntry, HDFuryRuntimeData
+from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -156,16 +156,6 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
 
     entity_description: HDFurySwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: HDFuryConfigCoordinator,
-        runtime_data: HDFuryRuntimeData,
-        entity_description: HDFurySwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch entity."""
-        super().__init__(coordinator, runtime_data, entity_description)
-        self._client = runtime_data.client
-
     @property
     def is_on(self) -> bool:
         """Set Switch State."""
@@ -176,24 +166,26 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
         """Handle Switch On Event."""
 
         try:
-            await self.entity_description.set_value_fn(self._client, "on")
+            await self.entity_description.set_value_fn(self.runtime_data.client, "on")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.entity_description.key] = "1"
+        self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle Switch Off Event."""
 
         try:
-            await self.entity_description.set_value_fn(self._client, "off")
+            await self.entity_description.set_value_fn(self.runtime_data.client, "off")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.entity_description.key] = "0"
+        self.coordinator.async_set_updated_data(self.coordinator.data)

@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigCoordinator, HDFuryConfigEntry, HDFuryRuntimeData
+from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -65,21 +65,11 @@ class HDFuryButton(HDFuryEntity, ButtonEntity):
 
     entity_description: HDFuryButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: HDFuryConfigCoordinator,
-        runtime_data: HDFuryRuntimeData,
-        entity_description: HDFuryButtonEntityDescription,
-    ) -> None:
-        """Initialize the button entity."""
-        super().__init__(coordinator, runtime_data, entity_description)
-        self._client = runtime_data.client
-
     async def async_press(self) -> None:
         """Handle Button Press."""
 
         try:
-            await self.entity_description.press_fn(self._client)
+            await self.entity_description.press_fn(self.runtime_data.client)
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

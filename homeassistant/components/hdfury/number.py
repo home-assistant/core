@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigCoordinator, HDFuryConfigEntry, HDFuryRuntimeData
+from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -106,16 +106,6 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
 
     entity_description: HDFuryNumberEntityDescription
 
-    def __init__(
-        self,
-        coordinator: HDFuryConfigCoordinator,
-        runtime_data: HDFuryRuntimeData,
-        entity_description: HDFuryNumberEntityDescription,
-    ) -> None:
-        """Initialize the number entity."""
-        super().__init__(coordinator, runtime_data, entity_description)
-        self._client = runtime_data.client
-
     @property
     def native_value(self) -> float:
         """Return the current number value."""
@@ -126,11 +116,14 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
         """Set Number Value Event."""
 
         try:
-            await self.entity_description.set_value_fn(self._client, str(int(value)))
+            await self.entity_description.set_value_fn(
+                self.runtime_data.client, str(int(value))
+            )
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.entity_description.key] = str(int(value))
+        self.coordinator.async_set_updated_data(self.coordinator.data)

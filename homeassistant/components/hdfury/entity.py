@@ -26,6 +26,7 @@ class HDFuryEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]]):
 
         super().__init__(coordinator)
 
+        self.runtime_data = runtime_data
         self.entity_description = entity_description
 
         board = runtime_data.board
