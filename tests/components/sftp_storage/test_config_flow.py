@@ -16,13 +16,11 @@ from homeassistant.components.sftp_storage.config_flow import (
 )
 from homeassistant.components.sftp_storage.const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.storage import STORAGE_DIR
