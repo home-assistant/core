@@ -263,7 +263,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         DOMAIN,
                         "import_failed_missing_interfaces",
                         is_fixable=False,
-                        severity=IssueSeverity.CRITICAL,
+                        severity=IssueSeverity.ERROR,
                         translation_key="import_failed_missing_interfaces",
                         translation_placeholders={
                             "missing": ", ".join(missing),
