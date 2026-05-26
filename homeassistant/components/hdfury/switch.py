@@ -173,8 +173,7 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
                 translation_key="communication_error",
             ) from error
 
-        self.coordinator.data[self.entity_description.key] = "1"
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle Switch Off Event."""
@@ -187,5 +186,4 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
                 translation_key="communication_error",
             ) from error
 
-        self.coordinator.data[self.entity_description.key] = "0"
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        await self.coordinator.async_request_refresh()

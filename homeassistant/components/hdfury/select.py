@@ -29,13 +29,17 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         key="portseltx0",
         translation_key="portseltx0",
         options=list(TX0_INPUT_PORTS.keys()),
-        set_value_fn=lambda runtime_data, value: _set_ports(runtime_data),
+        set_value_fn=lambda runtime_data, value: _set_ports(
+            runtime_data, "portseltx0", value
+        ),
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
         translation_key="portseltx1",
         options=list(TX1_INPUT_PORTS.keys()),
-        set_value_fn=lambda runtime_data, value: _set_ports(runtime_data),
+        set_value_fn=lambda runtime_data, value: _set_ports(
+            runtime_data, "portseltx1", value
+        ),
     ),
 )
 
@@ -50,10 +54,10 @@ SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescrip
 )
 
 
-async def _set_ports(runtime_data: HDFuryRuntimeData) -> None:
+async def _set_ports(runtime_data: HDFuryRuntimeData, key: str, value: str) -> None:
     info = runtime_data.info_coordinator.data
-    tx0 = info.get("portseltx0")
-    tx1 = info.get("portseltx1")
+    tx0 = value if key == "portseltx0" else info.get("portseltx0")
+    tx1 = value if key == "portseltx1" else info.get("portseltx1")
 
     if tx0 is None or tx1 is None:
         raise HomeAssistantError(
@@ -101,16 +105,12 @@ class HDFurySelect(HDFuryEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        previous = self.coordinator.data[self.entity_description.key]
-        self.coordinator.data[self.entity_description.key] = option
-
         try:
             await self.entity_description.set_value_fn(self.runtime_data, option)
         except HDFuryError as error:
-            self.coordinator.data[self.entity_description.key] = previous
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from error
 
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        await self.coordinator.async_request_refresh()

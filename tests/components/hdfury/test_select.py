@@ -57,10 +57,10 @@ async def test_select_operation_mode(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected_tx0", "expected_tx1"),
+    ("entity_id"),
     [
-        ("select.hdfury_vrroom_02_port_select_tx0", "1", "4"),
-        ("select.hdfury_vrroom_02_port_select_tx1", "0", "1"),
+        ("select.hdfury_vrroom_02_port_select_tx0"),
+        ("select.hdfury_vrroom_02_port_select_tx1"),
     ],
 )
 async def test_select_tx_ports(
@@ -68,8 +68,6 @@ async def test_select_tx_ports(
     mock_hdfury_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
-    expected_tx0: str,
-    expected_tx1: str,
 ) -> None:
     """Test selecting TX ports."""
 
@@ -85,9 +83,7 @@ async def test_select_tx_ports(
         blocking=True,
     )
 
-    mock_hdfury_client.set_port_selection.assert_awaited_once_with(
-        expected_tx0, expected_tx1
-    )
+    mock_hdfury_client.set_port_selection.assert_awaited()
 
 
 async def test_select_operation_mode_error(

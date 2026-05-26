@@ -125,5 +125,4 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
                 translation_key="communication_error",
             ) from error
 
-        self.coordinator.data[self.entity_description.key] = str(int(value))
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        await self.coordinator.async_request_refresh()
