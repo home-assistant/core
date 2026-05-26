@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 
 from homeassistant.components.loqed.const import DOMAIN
@@ -15,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 from tests.typing import ClientSessionGenerator
@@ -87,7 +87,10 @@ async def test_cannot_connect_to_bridge_will_retry(
 
 
 async def test_setup_retry_after_bridge_webhook_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup is reentrant after Loqed bridge webhook setup fails.
 
@@ -116,7 +119,8 @@ async def test_setup_retry_after_bridge_webhook_failure(
 
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.state is ConfigEntryState.LOADED
