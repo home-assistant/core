@@ -40,6 +40,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 6 Switch 1',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '10.0.1.1',
       'mac': '00:00:00:00:01:01',
       'source_type': <SourceType.ROUTER: 'router'>,
@@ -94,6 +97,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1 wd_client_1',
       'host_name': 'wd_client_1',
+      'in_zones': list([
+      ]),
       'mac': '00:00:00:00:00:02',
       'source_type': <SourceType.ROUTER: 'router'>,
     }),
@@ -147,6 +152,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 0 ws_client_1',
       'host_name': 'ws_client_1',
+      'in_zones': list([
+      ]),
       'ip': '10.0.0.1',
       'mac': '00:00:00:00:00:01',
       'source_type': <SourceType.ROUTER: 'router'>,

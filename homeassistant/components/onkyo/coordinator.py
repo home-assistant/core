@@ -160,6 +160,6 @@ class ChannelMutingCoordinator(DataUpdateCoordinator[ChannelMutingData]):
             self._desired = {
                 channel: desired
                 for channel, desired in self._desired.items()
-                if self.data[channel] != desired
+                if self.data[channel] is not desired
             }
             self.async_set_updated_data(self.data)
