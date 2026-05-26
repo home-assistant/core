@@ -144,10 +144,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self) -> bool:
-        """Return True if the cover is closed, False otherwise."""
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed."""
         if self.positions.primary is None:
-            return False
+            return None
         return self.positions.primary <= CLOSED_POSITION
 
     @property
@@ -371,9 +371,10 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     @property
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
-        primary = self.positions.primary
-        tilt = self.positions.tilt
-        return (0 if primary is None else primary) + (0 if tilt is None else tilt)
+        if self.positions.primary is None or self.positions.tilt is None:
+            raise ValueError("Position data is missing")
+            
+        return self.positions.primary + self.positions.tilt
 
     @property
     def open_tilt_position(self) -> ShadePosition:
