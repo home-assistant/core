@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from typing import Any, cast
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 import voluptuous as vol
 
@@ -69,11 +69,13 @@ async def _async_discovered_igd_devices(
     ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
-def _redact_discovery_location(location: str) -> str:
+def _redact_discovery_location(parsed_location: ParseResult) -> str:
     """Redact credentials from a discovery location for logging."""
     try:
-        parsed_location = urlparse(location)
+        hostname = parsed_location.hostname
     except ValueError:
+        return "<invalid URL>"
+    if not parsed_location.netloc or hostname is None:
         return "<invalid URL>"
 
     netloc = parsed_location.netloc.rsplit("@", 1)[-1]
@@ -87,10 +89,13 @@ async def _async_mac_address_from_discovery(
 ) -> str | None:
     """Get the mac address from a discovery."""
     location = get_preferred_location(discovery.ssdp_all_locations)
-    redacted_location = _redact_discovery_location(location)
-    error_msg = f"Invalid UPnP discovery location: {redacted_location}"
     try:
         parsed_location = urlparse(location)
+    except ValueError as err:
+        raise ValueError("Invalid UPnP discovery location: <invalid URL>") from err
+    redacted_location = _redact_discovery_location(parsed_location)
+    error_msg = f"Invalid UPnP discovery location: {redacted_location}"
+    try:
         host = parsed_location.hostname
         _ = parsed_location.port  # Validate invalid port values.
     except ValueError as err:
@@ -98,9 +103,9 @@ async def _async_mac_address_from_discovery(
     if host is None:
         raise ValueError(error_msg)
     host_with_optional_port = parsed_location.netloc.rsplit("@", 1)[-1]
-    if host_with_optional_port.count(":") > 1 and not host_with_optional_port.startswith(
-        "["
-    ):
+    if host_with_optional_port.count(
+        ":"
+    ) > 1 and not host_with_optional_port.startswith("["):
         raise ValueError(error_msg)
     return await async_get_mac_address_from_host(hass, host)
 

@@ -1,13 +1,13 @@
 """Test UPnP/IGD config flow."""
 
 import copy
+import logging
 from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.upnp.config_flow import _redact_discovery_location
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
@@ -39,14 +39,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-
-
-def test_redact_discovery_location() -> None:
-    """Test discovery location redaction."""
-    assert (
-        _redact_discovery_location("http://user:pass@192.168.1.1/desc.xml?token=abc")
-        == "http://192.168.1.1"
-    )
 
 
 @pytest.mark.usefixtures(
@@ -182,6 +174,36 @@ async def test_flow_ssdp_invalid_discovery_location(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_flow_ssdp_invalid_discovery_location_redacts_credentials(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config flow redacts credentials in invalid SSDP discovery logs."""
+    caplog.set_level(logging.DEBUG)
+    test_discovery = deepcopy(TEST_DISCOVERY)
+    bad_location = "http://user:pass@fe80::1/rootDesc.xml?token=abc"
+    test_discovery.ssdp_location = bad_location
+    test_discovery.ssdp_all_locations = {bad_location}
+    test_discovery.upnp["location"] = bad_location
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=test_discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+    invalid_location_log = next(
+        record.getMessage()
+        for record in caplog.records
+        if "Invalid UPnP discovery location, ignoring" in record.getMessage()
+    )
+    assert "Invalid UPnP discovery location: http://fe80::1" in invalid_location_log
+    assert "user:pass" not in invalid_location_log
+    assert "rootDesc.xml" not in invalid_location_log
+    assert "token=abc" not in invalid_location_log
 
 
 @pytest.mark.usefixtures(
