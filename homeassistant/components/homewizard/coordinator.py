@@ -30,7 +30,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
     api: HomeWizardEnergy
     api_disabled: bool = False
-    _battery_mode_cloud_issue_active: bool | None = None
+    _battery_mode_cloud_issue_active: bool = False
 
     config_entry: HomeWizardConfigEntry
 
