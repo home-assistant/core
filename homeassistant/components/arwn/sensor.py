@@ -40,7 +40,12 @@ async def async_setup_platform(
         """Process MQTT events as sensors."""
         event = json_loads_object(msg.payload)
 
-        device = parse_message(msg.topic, event)
+        try:
+            device = parse_message(msg.topic, event)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Failed to parse ARWN message on topic %s", msg.topic)
+            return
+
         if device is None:
             return
 
@@ -60,35 +65,50 @@ async def async_setup_platform(
                 else msg.topic
             )
 
-            sensor_name = reading.sensor_name
+            try:
+                device_class = (
+                    SensorDeviceClass(reading.device_class)
+                    if reading.device_class
+                    else None
+                )
+                state_class = (
+                    SensorStateClass(reading.state_class)
+                    if reading.state_class
+                    else None
+                )
+            except ValueError:
+                _LOGGER.debug(
+                    "Unknown device_class=%s or state_class=%s for sensor %s",
+                    reading.device_class,
+                    reading.state_class,
+                    reading.sensor_name,
+                )
+                device_class = None
+                state_class = None
 
-            if sensor_name not in store:
+            if unique_id not in store:
                 sensor = ArwnSensor(
                     unique_id=unique_id,
-                    name=sensor_name,
+                    name=reading.sensor_name,
                     state_key=reading.sensor_key,
                     units=reading.unit,
                     icon=reading.icon,
-                    device_class=(
-                        SensorDeviceClass(reading.device_class)
-                        if reading.device_class
-                        else None
-                    ),
-                    state_class=SensorStateClass(reading.state_class),
+                    device_class=device_class,
+                    state_class=state_class,
                     event=event,
                 )
-                store[sensor_name] = sensor
+                store[unique_id] = sensor
                 _LOGGER.debug(
                     "Registering sensor %(name)s => %(event)s",
-                    {"name": sensor_name, "event": event},
+                    {"name": reading.sensor_name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:
                 _LOGGER.debug(
                     "Recording sensor %(name)s => %(event)s",
-                    {"name": sensor_name, "event": event},
+                    {"name": reading.sensor_name, "event": event},
                 )
-                store[sensor_name].set_event(event)
+                store[unique_id].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
 
@@ -117,7 +137,7 @@ class ArwnSensor(SensorEntity):
         self._attr_icon = icon
         self._attr_device_class = device_class
         self._attr_state_class = state_class
-        if event:
+        if event is not None:
             self._attr_extra_state_attributes = dict(event)
             self._attr_native_value = event.get(state_key)
 

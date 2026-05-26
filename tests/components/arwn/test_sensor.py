@@ -1,6 +1,7 @@
 """Tests for the ARWN sensor platform."""
 
 import json
+from typing import Any
 
 import pytest
 
@@ -122,7 +123,7 @@ async def test_single_reading_sensor_created(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     topic: str,
-    payload: dict,
+    payload: dict[str, Any],
     entity_id: str,
     expected_state: str,
 ) -> None:
