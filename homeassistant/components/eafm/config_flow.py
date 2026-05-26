@@ -41,7 +41,7 @@ class UKFloodsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.stations = {}
         for station in stations:
             label = station["label"]
-            rloId = station["RLOIid"]
+            rlo_id = station["RLOIid"]
 
             # API annoyingly sometimes returns a list and some times returns a string
             # E.g. L3121 has a label of ['Scurf Dyke', 'Scurf Dyke Dyke Level']
@@ -50,11 +50,11 @@ class UKFloodsFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Similar for RLOIid
             # E.g. 0018 has an RLOIid of ['10427', '9154']
-            if isinstance(rloId, list):
-                rloId = rloId[-1]
+            if isinstance(rlo_id, list):
+                rlo_id = rlo_id[-1]
 
-            fullName = label + " - " + rloId
-            self.stations[fullName] = station["stationReference"]
+            full_name = label + " - " + rlo_id
+            self.stations[full_name] = station["stationReference"]
 
         if not self.stations:
             return self.async_abort(reason="no_stations")

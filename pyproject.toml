@@ -710,6 +710,7 @@ select = [
   "LOG",    # flake8-logging
   "N804",   # First argument of a class method should be named cls
   "N805",   # First argument of a method should be named self
+  "N806",   # Variable {name} in function should be snake_case
   "N815",   # Variable {name} in class scope should not be mixedCase
   "PERF",   # Perflint
   "PGH",    # pygrep-hooks
@@ -927,6 +928,9 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Some utils have constants that benefit from being uppercase
+"homeassistant/util/*" = ["N806"]
 
 # Allow relative imports within auth and within components
 "homeassistant/auth/*/*" = ["TID252"]
