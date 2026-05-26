@@ -3,11 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 from homewizard_energy.errors import DisabledError
+import pytest
 
 from homeassistant.components.homewizard.const import (
     DOMAIN,
     battery_mode_cloud_issue_id,
 )
+from homeassistant.components.homewizard.repairs import async_create_fix_flow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -171,3 +173,9 @@ async def test_repair_confirm_enables_cloud_connection(
 
     mock_homewizardenergy.system.assert_called_with(cloud_enabled=True)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_repair_unknown_issue_id_raises(hass: HomeAssistant) -> None:
+    """Test unknown repair issue id raises ValueError."""
+    with pytest.raises(ValueError, match="unknown repair unknown_issue"):
+        await async_create_fix_flow(hass, "unknown_issue", {"entry_id": "entry-id"})

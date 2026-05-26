@@ -109,4 +109,4 @@ async def async_create_fix_flow(
     ):
         return BatteryModeCloudDisabledRepairFlow(entry)
 
-    return ConfirmRepairFlow()
+    raise ValueError(f"unknown repair {issue_id}")  # pragma: no cover
