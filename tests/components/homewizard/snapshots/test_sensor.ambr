@@ -4865,6 +4865,99 @@
     'state': '123.0',
   })
 # ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi P1 Meter',
+    'model_id': 'HWE-P1',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '5c2fafabcdef',
+    'sw_version': '4.19',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_battery_group_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery group power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Battery group power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_group_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_battery_group_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Battery group power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_battery_group_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-404.0',
+  })
+# ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_target_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -12892,6 +12985,99 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.0',
+  })
+# ---
+# name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi P1 Meter',
+    'model_id': 'HWE-P1',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '5c2fafabcdef',
+    'sw_version': '4.19',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_battery_group_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery group power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Battery group power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_group_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_battery_group_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Battery group power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_battery_group_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-404.0',
   })
 # ---
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_target_power:device-registry]
