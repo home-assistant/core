@@ -15,7 +15,13 @@ from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import DIESEL_HEATER_SERVICE_INFO, NOT_DIESEL_HEATER_SERVICE_INFO, TEST_ADDRESS
+from . import (
+    DIESEL_HEATER_MFR_ID_ONLY,
+    DIESEL_HEATER_NAME_ONLY,
+    DIESEL_HEATER_SERVICE_INFO,
+    NOT_DIESEL_HEATER_SERVICE_INFO,
+    TEST_ADDRESS,
+)
 
 from tests.common import MockConfigEntry
 
@@ -130,6 +136,88 @@ async def test_user_step_creates_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
+
+
+async def test_user_step_detects_device_by_name_only(hass: HomeAssistant) -> None:
+    """User step matches a device by name even without service UUID or mfr id."""
+    with patch(
+        "homeassistant.components.diesel_heater.config_flow.bluetooth"
+        ".async_discovered_service_info",
+        return_value=[DIESEL_HEATER_NAME_ONLY],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_user_step_detects_device_by_manufacturer_id_only(
+    hass: HomeAssistant,
+) -> None:
+    """User step matches a device by manufacturer id 0xFFFF alone."""
+    with patch(
+        "homeassistant.components.diesel_heater.config_flow.bluetooth"
+        ".async_discovered_service_info",
+        return_value=[DIESEL_HEATER_MFR_ID_ONLY],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_user_step_skips_already_configured_device(hass: HomeAssistant) -> None:
+    """User step skips devices already configured in another entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_PIN: DEFAULT_PIN},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.diesel_heater.config_flow.bluetooth"
+        ".async_discovered_service_info",
+        return_value=[DIESEL_HEATER_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    # The only discovered device is already configured -> no devices visible,
+    # flow falls through to the manual step.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+
+async def test_user_step_aborts_when_creating_duplicate_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Creating an entry for an already-configured address aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_PIN: DEFAULT_PIN},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.diesel_heater.config_flow.bluetooth"
+        ".async_discovered_service_info",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: TEST_ADDRESS, CONF_PIN: DEFAULT_PIN},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_user_step_ignores_unknown_devices(hass: HomeAssistant) -> None:
