@@ -9,10 +9,10 @@ Follow these systematic steps to successfully bump a python package requirement 
 
 ## Gotchas & Non-Obvious Constraints
 
-- **PR Template Integrity**: Home Assistant's Pull Request template (`.github/PULL_REQUEST_TEMPLATE.md`) MUST be preserved perfectly. **NEVER REMOVE ANY SECTION, COMMENT, OR UNCHECKED CHECKBOX.** Leave all unchecked checkboxes in place.
+- **PR Template Integrity**: Follow Home Assistant's Pull Request template (`.github/PULL_REQUEST_TEMPLATE.md`) exactly as written, including any instructions inside the template itself. Preserve all sections, comments, and unchecked checkboxes unless the template explicitly says otherwise; the only allowed removal is the **Breaking change** section when the template instructs you to remove it if not applicable.
 - **Lazy Translation Resolution**: Home Assistant tests do NOT read translations directly from `strings.json` but from the generated `translations/en.json`. After any manifest modification or dependency change, compile/regenerate translations using:
   ```bash
-  uv run script/translations/develop.py --all
+  uv run python3 -m script.translations develop --all
   ```
   Or for a specific integration:
   ```bash
@@ -27,9 +27,9 @@ Follow these systematic steps to successfully bump a python package requirement 
 - [ ] **2. Discover Codebase References**: Search the codebase (using `grep` or similar search tools) to find all `manifest.json` and requirements files referencing the package.
 - [ ] **3. Resolve Version/Tag Details**: Run the integrated validation helper script to resolve version details, GitHub repo, release tag format, and formatted PR links:
   ```bash
-  ./.agent/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
+  ./.claude/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
   ```
-  *(Note: If you are in a branched workspace, resolve the path to the script relative to the workspace root or the active agent skills directory).*
+  *(Note: If your workspace uses a different skills directory layout, adjust the script path relative to the workspace root accordingly.)*
 - [ ] **4. Plan-Validate-Execute (Draft Plan)**: Before modifying any files, write a brief, structured plan outlining the integrations to change, old version, new version, and the resolved comparison link. Show this draft plan to the user.
 
 ### Phase B: Execute and Validate (Local Changes)
@@ -41,7 +41,7 @@ Follow these systematic steps to successfully bump a python package requirement 
 - [ ] **6. Apply Bump to manifests**: Update the version constraint string in all identified `manifest.json` files (e.g., change `"package==1.0.0"` to `"package==1.1.0"`).
 - [ ] **7. Regenerate Core Requirements**: Run the requirements generator to update all derivative requirements and constraint files:
   ```bash
-  uv run script/gen_requirements_all.py
+  uv run python3 -m script.gen_requirements_all
   ```
 - [ ] **8. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
 - [ ] **9. Regenerate Translations**: Compile/generate the translations for the modified integrations:
@@ -77,7 +77,7 @@ Follow these systematic steps to successfully bump a python package requirement 
   ```
 - [ ] **15. PR Description Preparation**: Generate the pull request body from `.github/PULL_REQUEST_TEMPLATE.md`:
   - **Proposed change**: Describe the package, old version, new version, target/source branches, and insert the resolved PyPI, changelog, and comparison diff links.
-  - **Type of change**: Mark the `Dependency bump` checkbox as checked: `[x] Dependency bump`.
+  - **Type of change**: Check only 1 box in this section, and mark the `Dependency upgrade` checkbox as checked: `[x] Dependency upgrade`.
   - **Breaking change**: You may remove the "Breaking change" section entirely from the template.
   - **Validation checklists**: Mark `The code change is tested` checkbox as checked: `[x] The code change is tested`.
   - **Keep remaining template intact**: Do NOT remove any other commented-out blocks, headers, or unchecked checkboxes in the template.
