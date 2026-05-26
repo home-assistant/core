@@ -12,7 +12,7 @@ from .entity import QubeEntity
 
 PARALLEL_UPDATES = 1
 
-SGREADY_OPTIONS = ["off", "block", "plus", "max"]
+SG_READY_OPTIONS = ["off", "block", "plus", "max"]
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
 class QubeSGReadySelect(QubeEntity, SelectEntity):
     """Qube SG Ready mode select entity."""
 
-    _attr_options = SGREADY_OPTIONS
+    _attr_options = SG_READY_OPTIONS
     _attr_translation_key = "sg_ready_mode"
 
     def __init__(
