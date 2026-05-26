@@ -10,6 +10,7 @@ from homeassistant.components.homewizard.const import (
     battery_mode_cloud_issue_id,
 )
 from homeassistant.components.homewizard.repairs import async_create_fix_flow
+from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -223,3 +224,20 @@ async def test_repair_unknown_issue_id_raises(hass: HomeAssistant) -> None:
     """Test unknown repair issue id raises ValueError."""
     with pytest.raises(ValueError, match="unknown repair unknown_issue"):
         await async_create_fix_flow(hass, "unknown_issue", {"entry_id": "entry-id"})
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        {"entry_id": None},
+        {"entry_id": 123},
+    ],
+)
+async def test_repair_invalid_entry_id_returns_confirm_flow(
+    hass: HomeAssistant,
+    data: dict[str, str | int | float | None] | None,
+) -> None:
+    """Test invalid repair flow data falls back to confirm flow."""
+    flow = await async_create_fix_flow(hass, "any_issue", data)
+    assert isinstance(flow, ConfirmRepairFlow)
