@@ -87,28 +87,28 @@ async def async_setup_entry(
         await client.validate()
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
-    except OPNsenseUnknownFirmware:
+    except OPNsenseUnknownFirmware as err:
         _LOGGER.error("Error checking the OPNsense firmware version at %s", url)
-        return False
-    except OPNsenseBelowMinFirmware:
+        raise ConfigEntryError from err
+    except OPNsenseBelowMinFirmware as err:
         _LOGGER.error(
             "OPNsense Firmware is below the minimum supported version at %s", url
         )
-        return False
-    except OPNsenseInvalidURL:
+        raise ConfigEntryError from err
+    except OPNsenseInvalidURL as err:
         _LOGGER.error(
             "Invalid URL while connecting to OPNsense API endpoint at %s", url
         )
-        return False
+        raise ConfigEntryError from err
     except OPNsenseTimeoutError as err:
         _LOGGER.error("Timeout while connecting to OPNsense API endpoint at %s", url)
         # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
         raise ConfigEntryNotReady from err
-    except OPNsenseSSLError:
+    except OPNsenseSSLError as err:
         _LOGGER.error(
             "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
         )
-        return False
+        raise ConfigEntryError from err
     except OPNsenseInvalidAuth as err:
         _LOGGER.error(
             "Authentication failure while connecting to OPNsense API endpoint at %s",
