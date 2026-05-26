@@ -5,6 +5,11 @@ send_magic_packet:
       example: "aa:bb:cc:dd:ee:ff"
       selector:
         text:
+    secureon_password:
+      example: "11:22:33:44:55:66"
+      selector:
+        text:
+          type: password
     broadcast_address:
       example: 192.168.255.255
       selector:
