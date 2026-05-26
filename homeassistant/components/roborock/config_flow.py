@@ -99,7 +99,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_REGION, default="auto"): SelectSelector(
+                    vol.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
                         SelectSelectorConfig(
                             options=REGION_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -118,7 +118,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self._username
         if user_input is not None:
-            url = user_input[CONF_ROBOROCK_SERVER_URL]
+            url = user_input[CONF_ROBOROCK_SERVER_URL].strip()
             parsed = urlparse(url)
             if parsed.scheme not in ("http", "https") or not parsed.netloc:
                 errors[CONF_ROBOROCK_SERVER_URL] = "invalid_url_format"
@@ -138,7 +138,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_ROBOROCK_SERVER_URL,
-                        default="https://usiot.roborock.com",
+                        default=(
+                            user_input[CONF_ROBOROCK_SERVER_URL]
+                            if user_input is not None
+                            else "https://usiot.roborock.com"
+                        ),
                     ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
