@@ -545,6 +545,9 @@
       "target_humidity": {
         "name": "Target humidity"
       },
+      "temp_setting_quick": {
+        "name": "Quick boil temperature"
+      },
       "temperature_level": {
         "name": "Temperature level"
       },
@@ -611,6 +614,15 @@
           "144h": "144h",
           "168h": "168h",
           "cancel": "Cancel"
+        }
+      },
+      "work_type": {
+        "name": "Work type",
+        "state": {
+          "boiling_quick": "Quick boil",
+          "setting_quick": "Quick heat",
+          "temp_boiling": "Boil and keep warm",
+          "temp_setting": "Heat and keep warm"
         }
       }
     },

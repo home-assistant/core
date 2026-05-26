@@ -19,6 +19,18 @@ from .entity import TuyaEntity
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
 SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
+    DeviceCategory.BH: (
+        SelectEntityDescription(
+            key=DPCode.TEMP_SETTING_QUICK_C,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temp_setting_quick",
+        ),
+        SelectEntityDescription(
+            key=DPCode.WORK_TYPE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="work_type",
+        ),
+    ),
     DeviceCategory.CL: (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
