@@ -9,9 +9,12 @@ from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
 
 from homeassistant.components.homewizard import get_main_device
-from homeassistant.components.homewizard.const import DOMAIN
+from homeassistant.components.homewizard.const import (
+    DOMAIN,
+    battery_mode_cloud_issue_id,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -261,42 +264,40 @@ async def test_battery_cloud_issue_updates_only_on_state_transition(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test battery/cloud issue is only created/deleted when condition changes."""
     combined_data = mock_homewizardenergy.combined.return_value
     combined_data.system.cloud_enabled = False
     combined_data.batteries.mode = "predictive"
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+    issue_events: list[str] = []
 
-    with (
-        patch(
-            "homeassistant.components.homewizard.coordinator.async_create_issue"
-        ) as mock_create_issue,
-        patch(
-            "homeassistant.components.homewizard.coordinator.async_delete_issue"
-        ) as mock_delete_issue,
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    @callback
+    def _capture_issue_event(event: Event[ir.EventIssueRegistryUpdatedData]) -> None:
+        if event.data["domain"] == DOMAIN and event.data["issue_id"] == issue_id:
+            issue_events.append(event.data["action"])
 
-        assert mock_create_issue.call_count == 1
-        assert mock_delete_issue.call_count == 0
+    hass.bus.async_listen(ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED, _capture_issue_event)
 
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert mock_create_issue.call_count == 1
-        assert mock_delete_issue.call_count == 0
+    assert issue_events == ["create"]
 
-        combined_data.system.cloud_enabled = True
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create"]
 
-        assert mock_create_issue.call_count == 1
-        assert mock_delete_issue.call_count == 1
+    combined_data.system.cloud_enabled = True
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create", "remove"]
 
-        await mock_config_entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
-
-        assert mock_create_issue.call_count == 1
-        assert mock_delete_issue.call_count == 1
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert issue_events == ["create", "remove"]
