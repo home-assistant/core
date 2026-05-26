@@ -2443,7 +2443,7 @@
     'state': '14.8',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2459,7 +2459,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_1_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2467,29 +2467,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery pack 1 cycle count',
+    'object_id_base': 'Battery pack 1 cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery pack 1 cycle count',
+    'original_name': 'Battery pack 1 cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_1_cycles',
     'unique_id': 'SolidFlex2000-87654321_9019',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 1 cycle count',
+      'friendly_name': 'CMS-SF2000 Battery pack 1 cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_1_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_1_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2833,7 +2834,7 @@
     'state': '15.0',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2849,7 +2850,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_2_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2857,29 +2858,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery pack 2 cycle count',
+    'object_id_base': 'Battery pack 2 cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery pack 2 cycle count',
+    'original_name': 'Battery pack 2 cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_2_cycles',
     'unique_id': 'SolidFlex2000-87654321_9038',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 2 cycle count',
+      'friendly_name': 'CMS-SF2000 Battery pack 2 cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_2_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_2_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3223,7 +3225,7 @@
     'state': '15.1',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3239,7 +3241,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_3_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3247,29 +3249,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery pack 3 cycle count',
+    'object_id_base': 'Battery pack 3 cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery pack 3 cycle count',
+    'original_name': 'Battery pack 3 cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_3_cycles',
     'unique_id': 'SolidFlex2000-87654321_9057',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 3 cycle count',
+      'friendly_name': 'CMS-SF2000 Battery pack 3 cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_3_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_3_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3613,7 +3616,7 @@
     'state': '15.3',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3629,7 +3632,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_4_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3637,29 +3640,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery pack 4 cycle count',
+    'object_id_base': 'Battery pack 4 cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery pack 4 cycle count',
+    'original_name': 'Battery pack 4 cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_4_cycles',
     'unique_id': 'SolidFlex2000-87654321_9152',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 4 cycle count',
+      'friendly_name': 'CMS-SF2000 Battery pack 4 cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_4_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_4_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4003,7 +4007,7 @@
     'state': '14.9',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4019,7 +4023,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_5_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4027,29 +4031,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery pack 5 cycle count',
+    'object_id_base': 'Battery pack 5 cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery pack 5 cycle count',
+    'original_name': 'Battery pack 5 cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_pack_5_cycles',
     'unique_id': 'SolidFlex2000-87654321_9205',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 5 cycle count',
+      'friendly_name': 'CMS-SF2000 Battery pack 5 cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_battery_pack_5_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_battery_pack_5_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5715,7 +5720,7 @@
     'supported_features': 0,
     'translation_key': 'equivalent_full_cycles',
     'unique_id': 'SolidFlex2000-87654321_8646',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
 # name: test_sensor[2][sensor.cms_sf2000_equivalent_full_cycles-state]
@@ -5723,6 +5728,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'CMS-SF2000 Equivalent full cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_equivalent_full_cycles',
@@ -5906,7 +5912,7 @@
     'state': '15.2',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_main_cycle_count-entry]
+# name: test_sensor[2][sensor.cms_sf2000_main_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5922,7 +5928,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cms_sf2000_main_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_main_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5930,29 +5936,30 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Main cycle count',
+    'object_id_base': 'Main cycles',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Main cycle count',
+    'original_name': 'Main cycles',
     'platform': 'indevolt',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_cycles',
     'unique_id': 'SolidFlex2000-87654321_9003',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cycles',
   })
 # ---
-# name: test_sensor[2][sensor.cms_sf2000_main_cycle_count-state]
+# name: test_sensor[2][sensor.cms_sf2000_main_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Main cycle count',
+      'friendly_name': 'CMS-SF2000 Main cycles',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'cycles',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cms_sf2000_main_cycle_count',
+    'entity_id': 'sensor.cms_sf2000_main_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

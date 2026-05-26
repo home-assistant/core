@@ -119,7 +119,7 @@
         "name": "Battery pack 1 current"
       },
       "battery_pack_1_cycles": {
-        "name": "Battery pack 1 cycle count"
+        "name": "Battery pack 1 cycles"
       },
       "battery_pack_1_mos_temperature": {
         "name": "Battery pack 1 MOS temperature"
@@ -140,7 +140,7 @@
         "name": "Battery pack 2 current"
       },
       "battery_pack_2_cycles": {
-        "name": "Battery pack 2 cycle count"
+        "name": "Battery pack 2 cycles"
       },
       "battery_pack_2_mos_temperature": {
         "name": "Battery pack 2 MOS temperature"
@@ -161,7 +161,7 @@
         "name": "Battery pack 3 current"
       },
       "battery_pack_3_cycles": {
-        "name": "Battery pack 3 cycle count"
+        "name": "Battery pack 3 cycles"
       },
       "battery_pack_3_mos_temperature": {
         "name": "Battery pack 3 MOS temperature"
@@ -182,7 +182,7 @@
         "name": "Battery pack 4 current"
       },
       "battery_pack_4_cycles": {
-        "name": "Battery pack 4 cycle count"
+        "name": "Battery pack 4 cycles"
       },
       "battery_pack_4_mos_temperature": {
         "name": "Battery pack 4 MOS temperature"
@@ -203,7 +203,7 @@
         "name": "Battery pack 5 current"
       },
       "battery_pack_5_cycles": {
-        "name": "Battery pack 5 cycle count"
+        "name": "Battery pack 5 cycles"
       },
       "battery_pack_5_mos_temperature": {
         "name": "Battery pack 5 MOS temperature"
@@ -311,7 +311,7 @@
         "name": "Main current"
       },
       "main_cycles": {
-        "name": "Main cycle count"
+        "name": "Main cycles"
       },
       "main_mos_temperature": {
         "name": "Main MOS temperature"
