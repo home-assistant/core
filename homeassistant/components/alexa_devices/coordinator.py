@@ -8,7 +8,12 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice, AmazonVocalRecord
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonMediaState,
+    AmazonVocalRecord,
+    AmazonVolumeState,
+)
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,9 +79,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         }
 
         self._vocal_records: dict[str, AmazonVocalRecord] = {}
-
         self.api.on_history_event.append(self.history_state_event_handler)
         self.api.on_history_event.freeze()
+
+        self._volume_states: dict[str, AmazonVolumeState] = {}
+        self.api.on_volume_state_event.append(self.volume_state_event_handler)
+        self.api.on_volume_state_event.freeze()
+
+        self._media_states: dict[str, AmazonMediaState] = {}
+        self.api.on_media_state_event.append(self.media_state_event_handler)
+        self.api.on_media_state_event.freeze()
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -189,3 +201,31 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def vocal_records(self) -> dict[str, AmazonVocalRecord]:
         """Vocal records of devices."""
         return self._vocal_records
+
+    async def sync_media_state(self) -> None:
+        """Sync media state."""
+        await self.api.sync_media_state()
+
+    async def media_state_event_handler(
+        self, media_state: dict[str, AmazonMediaState]
+    ) -> None:
+        """Handle pushed media state changed events."""
+        self._media_states = media_state
+        self.async_update_listeners()
+
+    @property
+    def media_states(self) -> dict[str, AmazonMediaState]:
+        """Media state of devices."""
+        return self._media_states
+
+    async def volume_state_event_handler(
+        self, volume_states: dict[str, AmazonVolumeState]
+    ) -> None:
+        """Handle pushed volume change events."""
+        self._volume_states = volume_states
+        self.async_update_listeners()
+
+    @property
+    def volume_states(self) -> dict[str, AmazonVolumeState]:
+        """Volumes of devices."""
+        return self._volume_states
