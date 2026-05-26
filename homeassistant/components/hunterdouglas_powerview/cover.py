@@ -365,7 +365,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current cover tile position."""
         return self.positions.tilt
 
