@@ -67,7 +67,7 @@ async def test_user_flow_cannot_connect(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_invalid_station(
-    hass: HomeAssistant, mock_opensensemap_api: AsyncMock
+    hass: HomeAssistant, mock_opensensemap_api: AsyncMock, station_data: dict
 ) -> None:
     """Test that a station with no name is rejected."""
     mock_opensensemap_api.data = {}
@@ -81,6 +81,13 @@ async def test_user_flow_invalid_station(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_station"}
+
+    mock_opensensemap_api.data = station_data
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_STATION_ID: TEST_STATION_ID},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

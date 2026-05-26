@@ -1,7 +1,6 @@
 """Common fixtures for the openSenseMap tests."""
 
 from collections.abc import AsyncGenerator, Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -9,7 +8,7 @@ import pytest
 from homeassistant.components.opensensemap.const import CONF_STATION_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 TEST_STATION_ID = "test-station-id"
 
@@ -27,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 async def station_data(hass: HomeAssistant) -> dict:
     """Load the example station data."""
-    return json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
+    return await async_load_json_object_fixture(hass, "station.json", DOMAIN)
 
 
 @pytest.fixture
