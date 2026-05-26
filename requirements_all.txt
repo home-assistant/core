@@ -1263,7 +1263,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.96
+holidays==0.97
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260429.4
@@ -1514,6 +1514,9 @@ lxml==6.0.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
+
+# homeassistant.components.matter
+matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
 matter-python-client==0.7.1
@@ -2650,7 +2653,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -3117,7 +3120,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.0
+teltasync==0.3.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
