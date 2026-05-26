@@ -59,7 +59,7 @@ class RepairsFlow(
     def issue_id(self, issue_id: str) -> None:
         """Warn that setting the issue_id directly is useless.
 
-        Even prior to changing the platform to pass issue_id via the RepairFlowContext,
+        Even prior to changing the platform to pass issue_id via a RepairFlowContext,
         the RepairFlowManager would overwrite any attempt of any integration implementing RepairFlow
         setting issue_id in __init__().
         """
