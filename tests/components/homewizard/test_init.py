@@ -301,3 +301,26 @@ async def test_battery_cloud_issue_updates_only_on_state_transition(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert issue_events == ["create", "remove"]
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test stale battery/cloud issue is removed after reload when resolved."""
+    combined_data = mock_homewizardenergy.combined.return_value
+    combined_data.batteries.mode = "predictive"
+    combined_data.system.cloud_enabled = False
+    issue_id = battery_mode_cloud_issue_id(mock_config_entry.entry_id)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    combined_data.system.cloud_enabled = True
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
