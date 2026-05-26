@@ -1,6 +1,6 @@
 ---
 name: bump-dependency
-description: Bumps a Python package dependency across Home Assistant Core integrations, regenerates core requirement files, compiles translation files, runs verification tests and prek lint, and prepares a pull request with proper release/compare links.
+description: Bumps a Python package dependency across Home Assistant Core integrations, regenerates core requirement files, runs verification tests and prek lint, and prepares a pull request with proper release/compare links.
 ---
 
 # Bump Python Package Dependency in Home Assistant Core
