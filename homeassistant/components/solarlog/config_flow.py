@@ -13,9 +13,9 @@ from solarlog_cli.solarlog_exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT
 
-from .const import CONF_HAS_PWD, DEFAULT_HOST, DOMAIN
+from .const import CONF_HAS_PWD, DEFAULT_HOST, DEFAULT_TIMEOUT, DOMAIN
 
 
 class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -137,6 +137,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             if not user_input[CONF_HAS_PWD] or user_input.get(CONF_PASSWORD, "") == "":
                 user_input[CONF_PASSWORD] = ""
                 user_input[CONF_HAS_PWD] = False
+                user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
@@ -145,6 +146,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
             ):
                 # if password has been provided, only save if extended data is available
+                user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates=user_input,
