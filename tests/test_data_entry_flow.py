@@ -1311,5 +1311,5 @@ async def test_show_advanced_options(
     assert (
         "The deprecated function show_advanced_options was called. It will be "
         "removed in HA Core 2027.6. Use a user friendly way to present additional "
-        "options in the UI, for example in a section instead"
+        "options in the UI, for example a section instead"
     ) in caplog.text

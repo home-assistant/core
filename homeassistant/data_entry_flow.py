@@ -643,7 +643,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
     @property
     @deprecated_function(
-        "a user friendly way to present additional options in the UI, for example in a section",
+        "a user friendly way to present additional options in the UI, for example a section",
         breaks_in_ha_version="2027.6",
     )
     def show_advanced_options(self) -> bool:
