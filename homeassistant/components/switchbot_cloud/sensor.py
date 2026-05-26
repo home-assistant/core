@@ -269,7 +269,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
     "Humidifier": (TEMPERATURE_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
         BATTERY_DESCRIPTION,
@@ -293,7 +293,10 @@ async def async_setup_entry(
     data = config.runtime_data
     entities: list[SwitchBotCloudSensor] = []
     for device, coordinator in data.devices.sensors:
-        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
+        if device.device_type not in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES:
+            continue
+        descriptions = SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
+        for description in descriptions:
             if device.device_type == "Relay Switch 2PM":
                 entities.append(
                     SwitchBotCloudRelaySwitch2PMSensor(
