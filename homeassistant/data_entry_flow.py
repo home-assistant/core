@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import deprecated_function
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
@@ -643,9 +644,17 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return self.context.get("source", None)  # type: ignore[return-value]
 
     @property
+    @deprecated_function(
+        "a user friendly way to present additional options in the UI, for example a section",
+        breaks_in_ha_version="2027.6",
+    )
     def show_advanced_options(self) -> bool:
-        """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)  # type: ignore[return-value]
+        """If we should show advanced options.
+
+        During the deprecation period return True to not break existing flows that use
+        this property to determine whether to show additional options.
+        """
+        return True
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
