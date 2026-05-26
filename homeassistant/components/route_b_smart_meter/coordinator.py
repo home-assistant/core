@@ -131,6 +131,6 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
                 _LOGGER.warning(
                     "Serial port closed cleanly; ready for the next polling cycle"
                 )
-            except Exception as close_error:  # noqa: BLE001
-                _LOGGER.error("Could not close serial port: %s", close_error)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Could not close serial port")
             raise UpdateFailed(error) from error
