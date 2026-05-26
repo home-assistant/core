@@ -44,6 +44,11 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+async def _async_mock_login(self: AqualinkClient) -> None:
+    """Mock a successful login that sets the account user_id."""
+    self.user_id = MOCK_USER_ID
+
+
 async def _advance_coordinator_time(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -230,13 +235,10 @@ async def test_setup_backfills_unique_id(
     system.update = AsyncMock()
     system.get_devices = AsyncMock(return_value={})
 
-    async def mock_login(aqualink_client: AqualinkClient) -> None:
-        aqualink_client.user_id = "account-123"
-
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            mock_login,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -246,7 +248,7 @@ async def test_setup_backfills_unique_id(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.unique_id == "account-123"
+    assert config_entry.unique_id == MOCK_USER_ID
 
 
 async def test_migrate_legacy_unique_id(
@@ -269,13 +271,10 @@ async def test_migrate_legacy_unique_id(
     system.update = AsyncMock()
     system.get_devices = AsyncMock(return_value={})
 
-    async def mock_login(aqualink_client: AqualinkClient) -> None:
-        aqualink_client.user_id = "account-123"
-
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            mock_login,
+            _async_mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -286,7 +285,7 @@ async def test_migrate_legacy_unique_id(
         await hass.async_block_till_done()
 
     assert config_entry.minor_version == 2
-    assert config_entry.unique_id == "account-123"
+    assert config_entry.unique_id == MOCK_USER_ID
 
 
 async def test_setup_login_unauthorized(
@@ -395,16 +394,11 @@ async def test_setup_first_refresh_unauthorized_closes_client(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_close.assert_awaited_once()
+    mock_close.assert_awaited()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
-
-
-async def _async_mock_login(self: AqualinkClient) -> None:
-    """Mock a successful login that sets the account user_id."""
-    self.user_id = MOCK_USER_ID
 
 
 async def test_setup_conflicting_account(

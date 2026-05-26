@@ -113,15 +113,11 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors, account_id = await self._async_validate_credentials(user_input)
             if not errors and account_id is not None:
                 legacy_unique_id = _username_unique_id(config_entry.data[CONF_USERNAME])
-                if config_entry.unique_id in (None, legacy_unique_id):
-                    if (
-                        _username_unique_id(user_input[CONF_USERNAME])
-                        != legacy_unique_id
-                    ):
-                        return self.async_abort(reason="account_mismatch")
-                else:
+                if config_entry.unique_id not in (None, legacy_unique_id):
                     await self.async_set_unique_id(account_id)
                     self._abort_if_unique_id_mismatch(reason="account_mismatch")
+                elif _username_unique_id(user_input[CONF_USERNAME]) != legacy_unique_id:
+                    return self.async_abort(reason="account_mismatch")
 
                 existing_entry = (
                     self.hass.config_entries.async_entry_for_domain_unique_id(

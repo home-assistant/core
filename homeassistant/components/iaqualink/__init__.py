@@ -70,16 +70,37 @@ class AqualinkRuntimeData:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version < 2:
-        hass.config_entries.async_update_entry(
-            entry,
-            minor_version=2,
+        aqualink = AqualinkClient(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            httpx_client=get_async_client(hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2),
         )
+        account_id: str | None = None
+        try:
+            await aqualink.login()
+            account_id = aqualink.user_id or None
+        except (
+            AqualinkServiceException,
+            AqualinkServiceUnauthorizedException,
+            TimeoutError,
+            httpx.HTTPError,
+        ):
+            pass
+        finally:
+            await aqualink.close()
 
-    _LOGGER.info(
-        "Migration to configuration version %s.%s successful",
-        entry.version,
-        entry.minor_version,
-    )
+        if account_id:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=account_id, minor_version=2
+            )
+        else:
+            hass.config_entries.async_update_entry(entry, minor_version=2)
+
+        _LOGGER.info(
+            "Migration to configuration version %s.%s successful",
+            entry.version,
+            entry.minor_version,
+        )
 
     return True
 
@@ -109,16 +130,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     account_id = aqualink.user_id
     if entry.unique_id != account_id:
-        conflicting_entry = next(
-            (
-                existing_entry
-                for existing_entry in hass.config_entries.async_entries(DOMAIN)
-                if existing_entry.entry_id != entry.entry_id
-                and existing_entry.unique_id == account_id
-            ),
-            None,
+        conflicting_entry = hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, account_id
         )
-        if conflicting_entry is not None:
+        if (
+            conflicting_entry is not None
+            and conflicting_entry.entry_id != entry.entry_id
+        ):
             await aqualink.close()
             raise ConfigEntryError(
                 "Another iAquaLink config entry already uses this account"
