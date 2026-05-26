@@ -40,12 +40,5 @@
         "title": "Set up Elk E27 Alarm Panel"
       }
     }
-  },
-  "entity": {
-    "alarm_control_panel": {
-      "area": {
-        "name": "Area"
-      }
-    }
   }
 }
