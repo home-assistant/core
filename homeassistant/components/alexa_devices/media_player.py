@@ -228,9 +228,13 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         await self.async_call_alexa_music(media_id, media_type)
 
     @alexa_api_call
-    async def async_call_alexa_music(self, search_term: str, provider: str) -> None:
+    async def async_call_alexa_music(
+        self, search_phrase: str, provider_id: str
+    ) -> None:
         """Call alexa music."""
-        await self.coordinator.api.call_alexa_music(self.device, search_term, provider)
+        await self.coordinator.api.call_alexa_music(
+            self.device, search_phrase, provider_id
+        )
 
     @alexa_api_call
     async def async_set_device_volume(self, volume: int) -> None:

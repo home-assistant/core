@@ -25,6 +25,16 @@ from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+def _get_registered_event_handler(
+    mock_amazon_devices_client: AsyncMock,
+    event_attr: str,
+) -> AsyncMock:
+    """Return the callback registered on the mocked library event."""
+    event = getattr(mock_amazon_devices_client, event_attr)
+    event.append.assert_called_once()
+    return event.append.call_args.args[0]
+
+
 async def test_coordinator_stale_device(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -183,9 +193,10 @@ async def test_state_event_updates_coordinator(
     listener = Mock()
     coordinator.async_add_listener(listener)
 
-    event_handler = getattr(
-        mock_amazon_devices_client, event_attr
-    ).append.call_args.args[0]
+    event_handler = _get_registered_event_handler(
+        mock_amazon_devices_client,
+        event_attr,
+    )
     await event_handler(event_state)
     assert getattr(coordinator, coordinator_attr) == event_state
     listener.assert_called_once()

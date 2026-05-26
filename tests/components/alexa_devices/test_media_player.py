@@ -42,10 +42,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 ENTITY_ID = "media_player.echo_test"
 
-# ---------------------------------------------------------------------------
-# Shared state factories
-# ---------------------------------------------------------------------------
-
 
 def _make_media_state(
     player_state: str = "PLAYING",
@@ -88,14 +84,26 @@ def _make_volume_state(volume: int = 50) -> AmazonVolumeState:
     return AmazonVolumeState(volume=volume, is_muted=False)
 
 
+def _get_media_state_event_callback(
+    mock_amazon_devices_client: AsyncMock,
+) -> AsyncMock:
+    """Return the registered media state event callback."""
+    return mock_amazon_devices_client.on_media_state_event.append.call_args.args[0]
+
+
+def _get_volume_state_event_callback(
+    mock_amazon_devices_client: AsyncMock,
+) -> AsyncMock:
+    """Return the registered volume state event callback."""
+    return mock_amazon_devices_client.on_volume_state_event.append.call_args.args[0]
+
+
 async def _push_media_state(
     mock_amazon_devices_client: AsyncMock,
     media_state: AmazonMediaState,
 ) -> None:
     """Update coordinator media state via the registered event handler."""
-    event_handler = (
-        mock_amazon_devices_client.on_media_state_event.append.call_args.args[0]
-    )
+    event_handler = _get_media_state_event_callback(mock_amazon_devices_client)
     await event_handler({TEST_DEVICE_1_SN: media_state})
 
 
@@ -103,9 +111,7 @@ async def _clear_media_state(
     mock_amazon_devices_client: AsyncMock,
 ) -> None:
     """Clear coordinator media state via the registered event handler."""
-    event_handler = (
-        mock_amazon_devices_client.on_media_state_event.append.call_args.args[0]
-    )
+    event_handler = _get_media_state_event_callback(mock_amazon_devices_client)
     await event_handler({})
 
 
@@ -114,9 +120,7 @@ async def _push_volume_state(
     volume_state: AmazonVolumeState,
 ) -> None:
     """Update coordinator volume state via the registered event handler."""
-    event_handler = (
-        mock_amazon_devices_client.on_volume_state_event.append.call_args.args[0]
-    )
+    event_handler = _get_volume_state_event_callback(mock_amazon_devices_client)
     await event_handler({TEST_DEVICE_1_SN: volume_state})
 
 
@@ -124,9 +128,7 @@ async def _clear_volume_state(
     mock_amazon_devices_client: AsyncMock,
 ) -> None:
     """Clear coordinator volume state via the registered event handler."""
-    event_handler = (
-        mock_amazon_devices_client.on_volume_state_event.append.call_args.args[0]
-    )
+    event_handler = _get_volume_state_event_callback(mock_amazon_devices_client)
     await event_handler({})
 
 
@@ -139,11 +141,6 @@ async def _setup_media_player_platform(
         "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
     ):
         await setup_integration(hass, mock_config_entry)
-
-
-# ---------------------------------------------------------------------------
-# Snapshot / registration
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_amazon_devices_client")
@@ -178,11 +175,6 @@ async def test_media_player_not_created_for_unsupported_device(
     assert hass.states.get(ENTITY_ID) is None
 
 
-# ---------------------------------------------------------------------------
-# Coordinator failure → STATE_UNAVAILABLE
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "side_effect",
     [
@@ -211,11 +203,6 @@ async def test_coordinator_data_update_fails(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
-
-
-# ---------------------------------------------------------------------------
-# Offline device
-# ---------------------------------------------------------------------------
 
 
 async def test_offline_device_is_unavailable(
@@ -262,11 +249,6 @@ async def test_offline_device_recovers(
     assert state.state != STATE_UNAVAILABLE
 
 
-# ---------------------------------------------------------------------------
-# Player state
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("player_state", "expected_ha_state"),
     [
@@ -310,11 +292,6 @@ async def test_idle_when_no_media_state(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == MediaPlayerState.IDLE
-
-
-# ---------------------------------------------------------------------------
-# Volume
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -373,11 +350,6 @@ async def test_is_volume_muted(
     assert state.attributes.get("is_volume_muted") == expected_muted
 
 
-# ---------------------------------------------------------------------------
-# Media metadata attributes
-# ---------------------------------------------------------------------------
-
-
 async def test_media_metadata_attributes(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
@@ -422,11 +394,6 @@ async def test_media_metadata_none_when_no_state(
     assert (state := hass.states.get(ENTITY_ID))
     for attr in ("media_title", "media_artist", "media_album_name", "media_duration"):
         assert state.attributes.get(attr) is None
-
-
-# ---------------------------------------------------------------------------
-# Service calls → API
-# ---------------------------------------------------------------------------
 
 
 async def test_service_set_volume_level(
@@ -487,7 +454,6 @@ async def test_service_unmute_volume_restores_level(
     )
     await hass.async_block_till_done()
 
-    # Mute first so _prev_volume is recorded
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_MUTE,
@@ -587,11 +553,6 @@ async def test_service_play_media(
         "Abbey Road",
         MediaType.MUSIC,
     )
-
-
-# ---------------------------------------------------------------------------
-# Supported features are dynamic
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -695,7 +656,6 @@ async def test_mute_volume_no_volume_state_returns_early(
     """Mute returns early when there is no volume state."""
     await _setup_media_player_platform(hass, mock_config_entry)
 
-    # Remove volume state entirely
     await _clear_volume_state(mock_amazon_devices_client)
     await hass.async_block_till_done()
 
@@ -717,14 +677,12 @@ async def test_unmute_volume_without_prev_volume_returns_early(
     """Unmute returns early when there is no previous volume stored."""
     await _setup_media_player_platform(hass, mock_config_entry)
 
-    # Ensure entity exists with a valid volume state
     await _push_volume_state(
         mock_amazon_devices_client,
         volume_state=_make_volume_state(50),
     )
     await hass.async_block_till_done()
 
-    # Directly unmute without ever muting first -> _prev_volume is None
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_MUTE,
