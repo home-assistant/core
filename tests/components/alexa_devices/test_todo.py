@@ -79,8 +79,8 @@ async def test_all_entities(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_todo_lists,
-    mock_todo_items,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
 ) -> None:
     """Test all entities."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
@@ -154,8 +154,8 @@ async def test_update_todo_item(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_todo_lists,
-    mock_todo_items,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
 ) -> None:
     """Test updating a todo item."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
@@ -226,8 +226,8 @@ async def test_update_todo_item_errors(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_todo_lists,
-    mock_todo_items,
+    mock_todo_lists: list[AmazonListInfo],
+    mock_todo_items: dict[str, Any],
 ) -> None:
     """Test updating a todo item with errors."""
     mock_amazon_devices_client.todo_lists = mock_todo_lists
