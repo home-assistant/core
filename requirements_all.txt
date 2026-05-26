@@ -2653,7 +2653,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
