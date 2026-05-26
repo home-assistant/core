@@ -11,11 +11,12 @@ import pytest
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_call_logger_set_level, async_fire_time_changed
+from tests.common import MockUser, async_call_logger_set_level, async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -23,7 +24,7 @@ ZONE_NS = f"{COMPONENTS_NS}.zone"
 GROUP_NS = f"{COMPONENTS_NS}.group"
 CONFIGED_NS = "otherlibx"
 UNCONFIG_NS = "unconfigurednamespace"
-INTEGRATION = "test_component"
+INTEGRATION = "test_logging"
 INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
@@ -117,7 +118,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(mocks) == 4
+    assert len(mocks) == 5
 
     assert len(mocks[""].orig_setLevel.mock_calls) == 1
     assert mocks[""].orig_setLevel.mock_calls[0][1][0] == LOGSEVERITY["WARNING"]
@@ -133,6 +134,8 @@ async def test_setting_level(hass: HomeAssistant) -> None:
         mocks["test.child.child"].orig_setLevel.mock_calls[0][1][0]
         == LOGSEVERITY["WARNING"]
     )
+
+    assert len(mocks["homeassistant.components.logger"].orig_setLevel.mock_calls) == 0
 
     # Test set default level
     with patch("logging.getLogger", mocks.__getitem__):
@@ -150,7 +153,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
             {"test.child": "info", "new_logger": "notset"},
             blocking=True,
         )
-    assert len(mocks) == 5
+    assert len(mocks) == 6
 
     assert len(mocks["test.child"].orig_setLevel.mock_calls) == 2
     assert mocks["test.child"].orig_setLevel.mock_calls[1][1][0] == LOGSEVERITY["INFO"]
@@ -428,3 +431,20 @@ async def test_log_once_removed_from_store(
     await hass.async_block_till_done()
 
     assert hass_storage["core.logger"]["data"] == {"logs": {}}
+
+
+@pytest.mark.parametrize("service", ["set_level", "set_default_level"])
+async def test_services_require_admin(
+    hass: HomeAssistant, hass_read_only_user: MockUser, service: str
+) -> None:
+    """Test logger services require admin."""
+    assert await async_setup_component(hass, "logger", {})
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            logger.DOMAIN,
+            service,
+            {"level": "debug"} if service == "set_default_level" else {"test": "debug"},
+            context=Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )

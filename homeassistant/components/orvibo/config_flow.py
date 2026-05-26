@@ -90,7 +90,9 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not user_input.get(CONF_MAC):
-                # Using private attribute access here since S20 class doesn't have a public method to get the MAC without repeating discovery
+                # Using private attribute access here since S20
+                # class doesn't have a public method to get
+                # the MAC without repeating discovery
                 if not device._mac:  # noqa: SLF001
                     return "cannot_discover"
                 user_input[CONF_MAC] = format_mac(device._mac.hex()).lower()  # noqa: SLF001

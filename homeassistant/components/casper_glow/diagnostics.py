@@ -1,7 +1,5 @@
 """Diagnostics support for the Casper Glow integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components import bluetooth

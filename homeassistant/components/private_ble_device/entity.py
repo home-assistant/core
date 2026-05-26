@@ -1,7 +1,5 @@
 """Tracking for bluetooth low energy devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import binascii
 
@@ -72,4 +70,4 @@ class BasePrivateDeviceEntity(Entity):
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Respond when the bluetooth device being tracked broadcasted updated information."""
+        """Respond when the tracked device broadcasted updated info."""

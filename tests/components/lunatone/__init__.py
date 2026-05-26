@@ -10,15 +10,22 @@ from lunatone_rest_api_client.models import (
     FeaturesStatus,
     InfoData,
     LineStatus,
+    SensorDaliAddress,
+    SensorData,
+    SensorsData,
+    SensorType,
 )
-from lunatone_rest_api_client.models.common import Status
+from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
+from yarl import URL
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-BASE_URL: Final = "http://10.0.0.131"
+BASE_IP: Final = "10.0.0.131"
+BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
+MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
 PRODUCT_NAME: Final = "Test Product"
 SERIAL_NUMBER: Final = 12345
 UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"
@@ -95,6 +102,22 @@ LEGACY_INFO_DATA: Final[InfoData] = InfoData(
         ),
     },
 )
+SENSOR_DATA: list[SensorData] = [
+    SensorData(
+        id=1, name="Sensor 1", type=SensorType.TEMPERATURE, addressType="internal"
+    ),
+    SensorData(
+        id=2, name="Sensor 2", type=SensorType.AIR_HUMIDITY, addressType="internal"
+    ),
+    SensorData(
+        id=3,
+        name="Sensor 3",
+        type=SensorType.TEMPERATURE,
+        addressType="dali",
+        daliSensorAddress=SensorDaliAddress(line=0, address=0, instanceNumber=0),
+    ),
+]
+SENSORS_DATA = SensorsData(sensors=SENSOR_DATA)
 
 
 def build_devices_data() -> DevicesData:
@@ -124,6 +147,46 @@ def build_device_data_list() -> list[DeviceData]:
                 dimmable=Status[float](status=0.0),
             ),
             address=1,
+            line=0,
+        ),
+        DeviceData(
+            id=3,
+            name="Device 3",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
+                colorKelvin=Status[int](status=1000),
+            ),
+            address=2,
+            line=0,
+        ),
+        DeviceData(
+            id=4,
+            name="Device 4",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
+                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
+            ),
+            address=3,
+            line=0,
+        ),
+        DeviceData(
+            id=5,
+            name="Device 5",
+            available=True,
+            status=DeviceStatus(),
+            features=FeaturesStatus(
+                switchable=Status[bool](status=False),
+                dimmable=Status[float](status=0.0),
+                colorRGB=Status[ColorRGBData](status=ColorRGBData(r=0, g=0, b=0)),
+                colorWAF=Status[ColorWAFData](status=ColorWAFData(w=0, a=0, f=0)),
+            ),
+            address=4,
             line=0,
         ),
     ]

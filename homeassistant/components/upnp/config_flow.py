@@ -1,7 +1,5 @@
 """Config flow for UPNP."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -93,7 +91,8 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     # Paths:
-    # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
+    # 1: ssdp(discovery_info) --> ssdp_confirm(None)
+    #    --> ssdp_confirm({}) --> create_entry()
     # 2: user(None): scan --> user({...}) --> create_entry()
 
     @staticmethod

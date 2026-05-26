@@ -15,12 +15,12 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
 )
-from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
+from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR, SERVICE_TURN_ON
+from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +137,7 @@ async def async_handle_service(service_call: ServiceCall) -> None:
                 _extract_color_from_path, service_call.hass, image_reference
             )
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     except UnidentifiedImageError as ex:
         _LOGGER.error(
             "Bad image from %s '%s' provided, are you sure it's an image? %s",
@@ -150,7 +151,7 @@ async def async_handle_service(service_call: ServiceCall) -> None:
         service_data[ATTR_RGB_COLOR] = color
 
         await service_call.hass.services.async_call(
-            LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
 
 

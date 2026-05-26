@@ -1,7 +1,5 @@
 """Support for P1 Monitor sensors."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 from homeassistant.components.sensor import (

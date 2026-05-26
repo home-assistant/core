@@ -3,8 +3,6 @@
 This module defines and sets up the select entities for the MyNeomitis integration.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -104,12 +102,8 @@ async def async_setup_entry(
     def _create_entity(device: dict) -> MyNeoSelect:
         """Create a select entity for a device."""
         if device["model"] == "EWS":
-            # According to the MyNeomitis API, EWS "relais" devices expose a "relayMode"
-            # field in their state, while "pilote" devices do not. We therefore use the
-            # presence of "relayMode" as an explicit heuristic to distinguish relais
-            # from pilote devices. If the upstream API changes this behavior, this
-            # detection logic must be revisited.
-            if "relayMode" in device.get("state", {}):
+            state = device.get("state") or {}
+            if state.get("deviceType") == 0:
                 description = SELECT_TYPES["relais"]
             else:
                 description = SELECT_TYPES["pilote"]

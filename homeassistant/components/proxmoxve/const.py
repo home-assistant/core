@@ -7,7 +7,6 @@ CONF_AUTH_METHOD = "auth_method"
 CONF_REALM = "realm"
 CONF_NODE = "node"
 CONF_NODES = "nodes"
-CONF_TOKEN = "token"
 CONF_TOKEN_ID = "token_id"
 CONF_TOKEN_SECRET = "token_value"
 CONF_VMS = "vms"
@@ -41,3 +40,4 @@ class ProxmoxPermission(StrEnum):
 
     POWER = "VM.PowerMgmt"
     SNAPSHOT = "VM.Snapshot"
+    SYSPOWER = "Sys.PowerMgmt"

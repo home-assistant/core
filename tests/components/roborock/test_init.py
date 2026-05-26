@@ -365,7 +365,7 @@ async def test_update_unavailability_threshold(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a small number of update failures are suppressed before marking a device unavailable."""
+    """Test update failures are suppressed before marking unavailable."""
     await async_setup_component(hass, HA_DOMAIN, {})
     assert setup_entry.state is ConfigEntryState.LOADED
 
@@ -469,7 +469,7 @@ async def test_cloud_api_repair_cleared_on_update(
     fake_vacuum: FakeDevice,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a repair is created then cleared if the device is reachable locally again."""
+    """Test repair is created then cleared when device is local again."""
 
     # Fake that the device is only reachable via cloud
     fake_vacuum.is_connected = True
@@ -566,8 +566,8 @@ async def test_zeo_device_fails_setup(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Roborock Q7",
+        "Roborock Q10 S5+",
         # Zeo device is missing
-        # Q10 has no sensor entities
     }
 
 
@@ -621,7 +621,7 @@ async def test_dyad_device_fails_setup(
         # Dyad device is missing
         "Zeo One",
         "Roborock Q7",
-        # Q10 has no sensor entities
+        "Roborock Q10 S5+",
     }
 
 

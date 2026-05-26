@@ -1,14 +1,12 @@
 """The LetPot integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from letpot.client import LetPotClient
-from letpot.converters import CONVERTERS
+from letpot.converters import GARDEN_CONVERTERS
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
-from letpot.models import AuthenticationInfo
+from letpot.models import AuthenticationInfo, LetPotGardenStatus
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
@@ -73,10 +71,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 
     device_client = LetPotDeviceClient(auth)
 
-    coordinators: list[LetPotDeviceCoordinator] = [
-        LetPotDeviceCoordinator(hass, entry, device, device_client)
+    coordinators: list[LetPotDeviceCoordinator[LetPotGardenStatus]] = [
+        LetPotDeviceCoordinator[LetPotGardenStatus](hass, entry, device, device_client)
         for device in devices
-        if any(converter.supports_type(device.device_type) for converter in CONVERTERS)
+        if any(
+            converter.supports_type(device.device_type)
+            for converter in GARDEN_CONVERTERS
+        )
     ]
 
     await asyncio.gather(

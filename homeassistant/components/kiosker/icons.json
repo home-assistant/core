@@ -1,0 +1,66 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "blackout_state": {
+        "default": "mdi:monitor",
+        "state": {
+          "on": "mdi:monitor-off"
+        }
+      },
+      "screensaver_state": {
+        "default": "mdi:power-sleep",
+        "state": {
+          "off": "mdi:monitor-shimmer"
+        }
+      }
+    },
+    "button": {
+      "clear_cache": {
+        "default": "mdi:cached"
+      },
+      "clear_cookies": {
+        "default": "mdi:cookie-alert-outline"
+      },
+      "navigate_backward": {
+        "default": "mdi:arrow-left"
+      },
+      "navigate_forward": {
+        "default": "mdi:arrow-right"
+      },
+      "navigate_home": {
+        "default": "mdi:home-outline"
+      },
+      "navigate_refresh": {
+        "default": "mdi:refresh"
+      },
+      "ping": {
+        "default": "mdi:lan-pending"
+      },
+      "print": {
+        "default": "mdi:printer"
+      },
+      "screensaver_interact": {
+        "default": "mdi:sleep-off"
+      }
+    },
+    "sensor": {
+      "ambient_light": {
+        "default": "mdi:brightness-6"
+      },
+      "blackout_state": {
+        "default": "mdi:monitor-off"
+      },
+      "last_interaction": {
+        "default": "mdi:gesture-tap"
+      },
+      "last_motion": {
+        "default": "mdi:motion-sensor"
+      }
+    },
+    "switch": {
+      "disable_screensaver": {
+        "default": "mdi:power-sleep"
+      }
+    }
+  }
+}
