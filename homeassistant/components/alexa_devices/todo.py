@@ -79,7 +79,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             )
         else:
             entity_description = EntityDescription(
-                key=alexa_list.id, translation_key=alexa_list.list_type.lower()
+                key=alexa_list.id,
+                translation_key=alexa_list.list_type.value.lower(),
             )
 
         super().__init__(coordinator, entity_description)
