@@ -708,8 +708,8 @@ class MqttAvailabilityMixin(Entity):
             self.hass, self._availability_sub_state
         )
 
-    @override
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         mqtt_data = self.hass.data[DATA_MQTT]
