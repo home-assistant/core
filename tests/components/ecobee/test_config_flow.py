@@ -88,14 +88,13 @@ async def test_pin_request_succeeds(hass: HomeAssistant) -> None:
 
 
 async def test_pin_request_fails(hass: HomeAssistant) -> None:
-    """Test expected result if pin request fails."""
+    """Test expected result if pin request fails, then recovers on retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
-        mock_ecobee = mock_ecobee.return_value
-        mock_ecobee.request_pin.return_value = False
+        mock_ecobee.return_value.request_pin.return_value = False
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: "api-key"}
@@ -104,6 +103,32 @@ async def test_pin_request_fails(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "pin_request_failed"
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.request_pin.return_value = True
+        flow_instance.pin = "test-pin"
+        flow_instance.request_tokens.return_value = True
+        flow_instance.api_key = "test-api-key"
+        flow_instance.refresh_token = "test-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_KEY: "api-key"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "authorize"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_API_KEY: "test-api-key",
+        CONF_REFRESH_TOKEN: "test-token",
+    }
 
 
 async def test_token_request_succeeds(hass: HomeAssistant) -> None:
@@ -141,7 +166,7 @@ async def test_token_request_succeeds(hass: HomeAssistant) -> None:
 
 
 async def test_token_request_fails(hass: HomeAssistant) -> None:
-    """Test expected result if token request fails."""
+    """Test expected result if token request fails, then recovers on retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -165,12 +190,26 @@ async def test_token_request_fails(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "authorize"
-    assert result["errors"]["base"] == "token_request_failed"
-    assert result["description_placeholders"] == {
-        "pin": "test-pin",
-        "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "authorize"
+        assert result["errors"]["base"] == "token_request_failed"
+        assert result["description_placeholders"] == {
+            "pin": "test-pin",
+            "auth_url": "https://www.ecobee.com/consumerportal/index.html",
+        }
+
+        flow_instance.request_tokens.return_value = True
+        flow_instance.api_key = "test-api-key"
+        flow_instance.refresh_token = "test-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_API_KEY: "test-api-key",
+        CONF_REFRESH_TOKEN: "test-token",
     }
 
 
@@ -290,7 +329,7 @@ async def test_password_login_raises_auth_error(
     exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test that pyecobee auth exceptions map to user-facing form errors."""
+    """Test that pyecobee auth exceptions map to user-facing form errors, then recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -311,6 +350,28 @@ async def test_password_login_raises_auth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == expected_error
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.return_value = True
+        flow_instance.refresh_token = "test-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token",
+    }
 
 
 async def test_password_login_with_mfa_challenge_succeeds(hass: HomeAssistant) -> None:
@@ -366,7 +427,7 @@ async def test_mfa_submission_errors_recover(
     exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test that errors during MFA submission keep the user on the form."""
+    """Test that errors during MFA submission keep the user on the form and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -394,16 +455,31 @@ async def test_mfa_submission_errors_recover(
             result["flow_id"], user_input={"code": "999999"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "mfa"
-    assert result["errors"]["base"] == expected_error
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "mfa"
+        assert result["errors"]["base"] == expected_error
+
+        flow_instance.submit_mfa_code.side_effect = None
+        flow_instance.submit_mfa_code.return_value = True
+        flow_instance.refresh_token = "test-token-after-recovery"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "123456"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token-after-recovery",
+    }
 
 
 @pytest.mark.parametrize("blank_code", ["", "   ", "\t\n "])
 async def test_mfa_submission_rejects_blank_code(
     hass: HomeAssistant, blank_code: str
 ) -> None:
-    """Test that an empty/whitespace MFA code is rejected before reaching the network."""
+    """Whitespace-only MFA code is rejected client-side, flow then recovers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -430,10 +506,23 @@ async def test_mfa_submission_rejects_blank_code(
         )
 
         flow_instance.submit_mfa_code.assert_not_called()
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "mfa"
+        assert result["errors"]["base"] == "invalid_mfa_code"
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "mfa"
-    assert result["errors"]["base"] == "invalid_mfa_code"
+        flow_instance.submit_mfa_code.return_value = True
+        flow_instance.refresh_token = "test-token-after-recovery"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "123456"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token-after-recovery",
+    }
 
 
 async def test_reauth_flow_succeeds(hass: HomeAssistant) -> None:
@@ -527,7 +616,7 @@ async def test_reauth_flow_error_branches(
     exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test that auth errors during reauth keep the user on the reauth form."""
+    """Auth errors during reauth keep the user on the reauth form, then recover."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -547,16 +636,35 @@ async def test_reauth_flow_error_branches(
         mock_flow_ecobee.return_value.refresh_tokens.side_effect = exception
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+            result["flow_id"], user_input={CONF_PASSWORD: "wrong-password"}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == expected_error
 
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.return_value = True
+        flow_instance.refresh_token = "fresh-refresh-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "new-password",
+        CONF_REFRESH_TOKEN: "fresh-refresh-token",
+    }
+
 
 async def test_mfa_step_submit_returns_false(hass: HomeAssistant) -> None:
-    """submit_mfa_code returning False (not raising) surfaces invalid_mfa_code."""
+    """submit_mfa_code returning False surfaces invalid_mfa_code, then recovers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -581,16 +689,30 @@ async def test_mfa_step_submit_returns_false(hass: HomeAssistant) -> None:
         flow_instance.submit_mfa_code.return_value = False
 
         result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"code": "999999"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "mfa"
+        assert result["errors"]["base"] == "invalid_mfa_code"
+
+        flow_instance.submit_mfa_code.return_value = True
+        flow_instance.refresh_token = "test-token-after-recovery"
+
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"code": "123456"}
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "mfa"
-    assert result["errors"]["base"] == "invalid_mfa_code"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token-after-recovery",
+    }
 
 
 async def test_reauth_returns_false_surfaces_login_failed(hass: HomeAssistant) -> None:
-    """refresh_tokens returning False during reauth surfaces login_failed."""
+    """refresh_tokens returning False during reauth surfaces login_failed, then recovers."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -610,9 +732,25 @@ async def test_reauth_returns_false_surfaces_login_failed(hass: HomeAssistant) -
         mock_flow_ecobee.return_value.refresh_tokens.return_value = False
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+            result["flow_id"], user_input={CONF_PASSWORD: "wrong-password"}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "login_failed"
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.Ecobee"
+    ) as mock_flow_ecobee:
+        flow_instance = mock_flow_ecobee.return_value
+        flow_instance.refresh_tokens.return_value = True
+        flow_instance.refresh_token = "fresh-refresh-token"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_REFRESH_TOKEN] == "fresh-refresh-token"
+    assert entry.data[CONF_PASSWORD] == "new-password"

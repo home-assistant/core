@@ -1,8 +1,9 @@
-"""Tests for the ecobee integration setup, refresh, and update paths."""
+"""Tests for the ecobee integration setup and refresh paths."""
 
-from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyecobee import (
     ECOBEE_API_KEY,
     ECOBEE_PASSWORD,
@@ -15,21 +16,14 @@ from pyecobee import (
 )
 import pytest
 
-from homeassistant.components.ecobee import EcobeeData
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from tests.common import MockConfigEntry
+from . import GENERIC_THERMOSTAT_INFO
 
-
-@pytest.fixture(autouse=True)
-def disable_real_requests() -> Generator[None]:
-    """Block any accidental real HTTP calls from the integration code."""
-    with patch("homeassistant.components.ecobee.Ecobee", autospec=False):
-        yield
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _api_key_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -56,230 +50,257 @@ def _credentials_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def _build_mock_ecobee(*, refresh_returns: bool = True) -> MagicMock:
-    """Return a MagicMock that looks like a successfully-refreshed Ecobee instance."""
+_DEFAULT_THERMOSTATS = object()
+
+
+def _build_mock_ecobee(
+    *,
+    refresh_returns: bool = True,
+    config: dict | None = None,
+    thermostats: list | None = _DEFAULT_THERMOSTATS,
+) -> MagicMock:
+    """Return a MagicMock shaped like a successfully-refreshed pyecobee.Ecobee."""
     ecobee = MagicMock()
     ecobee.refresh_tokens.return_value = refresh_returns
-    ecobee.thermostats = [{"identifier": 1, "name": "Thermostat"}]
-    ecobee.config = {
-        ECOBEE_API_KEY: "test-api-key",
-        ECOBEE_REFRESH_TOKEN: "new-refresh-token",
-    }
+    ecobee.thermostats = (
+        [GENERIC_THERMOSTAT_INFO]
+        if thermostats is _DEFAULT_THERMOSTATS
+        else thermostats
+    )
+    ecobee.get_thermostat = lambda index: ecobee.thermostats[index]
+    ecobee.config = (
+        {ECOBEE_API_KEY: "test-api-key", ECOBEE_REFRESH_TOKEN: "new-refresh-token"}
+        if config is None
+        else config
+    )
     return ecobee
 
 
-async def test_setup_entry_returns_false_when_refresh_fails(
+async def _setup_with_mock(
     hass: HomeAssistant,
-) -> None:
-    """A False return from EcobeeData.refresh aborts setup."""
+    entry: MockConfigEntry,
+    ecobee: MagicMock,
+    *,
+    platforms: list[Platform] | None = None,
+) -> bool:
+    """Set up the entry with a patched pyecobee.Ecobee returning ``ecobee``."""
+    with (
+        patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee),
+        patch(
+            "homeassistant.components.ecobee.PLATFORMS",
+            [] if platforms is None else platforms,
+        ),
+    ):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return result
+
+
+def _has_reauth_flow(hass: HomeAssistant) -> bool:
+    """Return True if the ecobee config flow has an in-progress reauth flow."""
+    return any(
+        flow["context"].get("source") == SOURCE_REAUTH
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )
+
+
+async def test_setup_succeeds_with_api_key_entry(hass: HomeAssistant) -> None:
+    """A PIN/API-key entry sets up cleanly when pyecobee returns thermostats."""
+    entry = _api_key_entry(hass)
+    ecobee = _build_mock_ecobee()
+
+    assert await _setup_with_mock(hass, entry, ecobee) is True
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_succeeds_with_credentials_entry(hass: HomeAssistant) -> None:
+    """A username/password entry sets up cleanly when pyecobee returns thermostats."""
+    entry = _credentials_entry(hass)
+    ecobee = _build_mock_ecobee(
+        config={
+            ECOBEE_USERNAME: "user@example.com",
+            ECOBEE_PASSWORD: "test-password",
+            ECOBEE_REFRESH_TOKEN: "new-refresh-token",
+        }
+    )
+
+    assert await _setup_with_mock(hass, entry, ecobee) is True
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_rejects_entry_with_no_credentials(hass: HomeAssistant) -> None:
+    """An entry missing both API key and username/password fails setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_REFRESH_TOKEN: "test-refresh-token"}
+    )
+    entry.add_to_hass(hass)
+
+    assert await _setup_with_mock(hass, entry, _build_mock_ecobee()) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_fails_when_refresh_returns_false(hass: HomeAssistant) -> None:
+    """A False return from pyecobee.refresh_tokens aborts setup."""
     entry = _api_key_entry(hass)
     ecobee = _build_mock_ecobee(refresh_returns=False)
 
-    with patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee):
-        assert await hass.config_entries.async_setup(entry.entry_id) is False
-        await hass.async_block_till_done()
-
+    assert await _setup_with_mock(hass, entry, ecobee) is False
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not _has_reauth_flow(hass)
 
 
-async def test_setup_entry_returns_false_when_no_thermostats(
-    hass: HomeAssistant,
-) -> None:
+async def test_setup_fails_when_no_thermostats(hass: HomeAssistant) -> None:
     """Setup aborts when ecobee.com returns no thermostats."""
     entry = _api_key_entry(hass)
-    ecobee = _build_mock_ecobee()
-    ecobee.thermostats = None
+    ecobee = _build_mock_ecobee(thermostats=None)
 
-    with patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee):
-        assert await hass.config_entries.async_setup(entry.entry_id) is False
-        await hass.async_block_till_done()
-
+    assert await _setup_with_mock(hass, entry, ecobee) is False
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_ecobee_data_credentials_branch(hass: HomeAssistant) -> None:
-    """EcobeeData uses the username/password branch when no api_key is present."""
+async def test_setup_triggers_reauth_on_mfa_required(hass: HomeAssistant) -> None:
+    """EcobeeAuthMfaRequiredError during setup raises ConfigEntryAuthFailed → reauth."""
     entry = _credentials_entry(hass)
+    ecobee = _build_mock_ecobee()
+    ecobee.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError("mfa")
 
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        EcobeeData(
-            hass,
-            entry,
-            api_key=None,
-            username="user@example.com",
-            password="hunter2",
-            refresh_token="rt",
-        )
-        mock_ecobee_cls.assert_called_once_with(
-            config={
+    assert await _setup_with_mock(hass, entry, ecobee) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert _has_reauth_flow(hass)
+
+
+async def test_setup_triggers_reauth_on_auth_failed_with_username(
+    hass: HomeAssistant,
+) -> None:
+    """EcobeeAuthFailedError on a credentials entry raises ConfigEntryAuthFailed → reauth."""
+    entry = _credentials_entry(hass)
+    ecobee = _build_mock_ecobee(
+        config={ECOBEE_USERNAME: "user@example.com", ECOBEE_PASSWORD: "test-password"}
+    )
+    ecobee.refresh_tokens.side_effect = EcobeeAuthFailedError("bad creds")
+
+    assert await _setup_with_mock(hass, entry, ecobee) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert _has_reauth_flow(hass)
+
+
+async def test_setup_no_reauth_on_auth_failed_without_username(
+    hass: HomeAssistant,
+) -> None:
+    """API-key entries surface EcobeeAuthFailedError as a False return, not reauth."""
+    entry = _api_key_entry(hass)
+    ecobee = _build_mock_ecobee(config={ECOBEE_API_KEY: "test-api-key"})
+    ecobee.refresh_tokens.side_effect = EcobeeAuthFailedError("bad creds")
+
+    assert await _setup_with_mock(hass, entry, ecobee) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not _has_reauth_flow(hass)
+
+
+async def test_setup_no_reauth_on_unknown_error(hass: HomeAssistant) -> None:
+    """EcobeeAuthUnknownError is treated as transient — no reauth flow is started."""
+    entry = _api_key_entry(hass)
+    ecobee = _build_mock_ecobee()
+    ecobee.refresh_tokens.side_effect = EcobeeAuthUnknownError("network")
+
+    assert await _setup_with_mock(hass, entry, ecobee) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert not _has_reauth_flow(hass)
+
+
+async def test_setup_recovers_from_expired_token_during_update(
+    hass: HomeAssistant,
+) -> None:
+    """update() catches ExpiredTokenError and triggers refresh() in the same setup pass."""
+    entry = _api_key_entry(hass)
+    ecobee = _build_mock_ecobee()
+    ecobee.update.side_effect = ExpiredTokenError("expired")
+
+    assert await _setup_with_mock(hass, entry, ecobee) is True
+    assert entry.state is ConfigEntryState.LOADED
+    # refresh_tokens runs twice: once during async_setup_entry's refresh(), and
+    # again from update()'s ExpiredTokenError branch.
+    assert ecobee.refresh_tokens.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_data"),
+    [
+        (
+            {
+                ECOBEE_API_KEY: "test-api-key",
+                ECOBEE_REFRESH_TOKEN: "fresh-refresh-token",
+            },
+            {
+                CONF_API_KEY: "test-api-key",
+                CONF_REFRESH_TOKEN: "fresh-refresh-token",
+            },
+        ),
+        (
+            {
                 ECOBEE_USERNAME: "user@example.com",
-                ECOBEE_PASSWORD: "hunter2",
-                ECOBEE_REFRESH_TOKEN: "rt",
-            }
-        )
-
-
-async def test_ecobee_data_rejects_missing_credentials(hass: HomeAssistant) -> None:
-    """EcobeeData raises when nothing is supplied."""
-    entry = _api_key_entry(hass)
-    with pytest.raises(ValueError, match="No ecobee credentials"):
-        EcobeeData(hass, entry)
-
-
-async def test_update_refreshes_on_expired_token(hass: HomeAssistant) -> None:
-    """update() catches ExpiredTokenError and triggers a refresh."""
-    entry = _api_key_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.return_value = True
-        ecobee.config = {
-            ECOBEE_API_KEY: "test-api-key",
-            ECOBEE_REFRESH_TOKEN: "new-rt",
-        }
-        # update() raises ExpiredTokenError; the except branch calls refresh(),
-        # which invokes refresh_tokens() (mocked to succeed).
-        ecobee.update.side_effect = ExpiredTokenError("expired")
-
-        runtime = EcobeeData(
-            hass, entry, api_key="test-api-key", refresh_token="old-rt"
-        )
-        await runtime.update()
-
-    # update() was called once and refresh_tokens() ran in response to the expiry.
-    ecobee.refresh_tokens.assert_called_once_with()
-
-
-async def test_refresh_raises_config_entry_auth_failed_on_mfa(
+                ECOBEE_PASSWORD: "test-password",
+                ECOBEE_REFRESH_TOKEN: "fresh-refresh-token",
+            },
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "test-password",
+                CONF_REFRESH_TOKEN: "fresh-refresh-token",
+            },
+        ),
+    ],
+    ids=["api_key", "credentials"],
+)
+async def test_setup_persists_refreshed_credentials_to_entry(
     hass: HomeAssistant,
+    config: dict,
+    expected_data: dict,
 ) -> None:
-    """Refresh translates EcobeeAuthMfaRequiredError into ConfigEntryAuthFailed."""
-    entry = _credentials_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.side_effect = EcobeeAuthMfaRequiredError("mfa")
+    """A successful refresh writes the new refresh_token back to the entry."""
+    entry = (
+        _credentials_entry(hass) if ECOBEE_USERNAME in config else _api_key_entry(hass)
+    )
+    ecobee = _build_mock_ecobee(config=config)
 
-        runtime = EcobeeData(
-            hass,
-            entry,
-            username="user@example.com",
-            password="pw",
-            refresh_token="rt",
-        )
-        with pytest.raises(ConfigEntryAuthFailed):
-            await runtime.refresh()
+    assert await _setup_with_mock(hass, entry, ecobee) is True
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data == expected_data
 
 
-async def test_refresh_raises_config_entry_auth_failed_on_failed_with_username(
-    hass: HomeAssistant,
+async def test_runtime_refresh_persists_new_refresh_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Refresh raises ConfigEntryAuthFailed when creds rejected and username stored."""
+    """A natural runtime refresh writes the rotated refresh_token back to the entry.
+
+    Sets up successfully, then advances time past the climate platform's scan
+    interval + EcobeeData's MIN_TIME_BETWEEN_UPDATES throttle so a real entity
+    poll calls update() → ExpiredTokenError → refresh() → entry update.
+    """
     entry = _credentials_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.side_effect = EcobeeAuthFailedError("bad pw")
-        ecobee.config = {
+    ecobee = _build_mock_ecobee(
+        config={
             ECOBEE_USERNAME: "user@example.com",
-            ECOBEE_PASSWORD: "pw",
+            ECOBEE_PASSWORD: "test-password",
+            ECOBEE_REFRESH_TOKEN: "first-refresh-token",
         }
+    )
 
-        runtime = EcobeeData(
-            hass,
-            entry,
-            username="user@example.com",
-            password="pw",
-            refresh_token="rt",
-        )
-        with pytest.raises(ConfigEntryAuthFailed):
-            await runtime.refresh()
+    assert (
+        await _setup_with_mock(hass, entry, ecobee, platforms=[Platform.CLIMATE])
+        is True
+    )
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_REFRESH_TOKEN] == "first-refresh-token"
 
-
-async def test_refresh_returns_false_on_failed_without_username(
-    hass: HomeAssistant,
-) -> None:
-    """API-key-only entries surface EcobeeAuthFailedError as a False return, no raise."""
-    entry = _api_key_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.side_effect = EcobeeAuthFailedError("bad pw")
-        ecobee.config = {ECOBEE_API_KEY: "test-api-key"}  # no username
-
-        runtime = EcobeeData(hass, entry, api_key="test-api-key", refresh_token="rt")
-        assert await runtime.refresh() is False
-
-
-async def test_refresh_returns_false_on_unknown_error(hass: HomeAssistant) -> None:
-    """Refresh returns False on EcobeeAuthUnknownError."""
-    entry = _api_key_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.side_effect = EcobeeAuthUnknownError("network")
-
-        runtime = EcobeeData(hass, entry, api_key="test-api-key", refresh_token="rt")
-        assert await runtime.refresh() is False
-
-
-async def test_refresh_returns_false_when_refresh_tokens_returns_false(
-    hass: HomeAssistant,
-) -> None:
-    """A False return from pyecobee.refresh_tokens surfaces as False from EcobeeData."""
-    entry = _api_key_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.return_value = False
-
-        runtime = EcobeeData(hass, entry, api_key="test-api-key", refresh_token="rt")
-        assert await runtime.refresh() is False
-
-
-async def test_refresh_updates_entry_with_api_key_and_token(
-    hass: HomeAssistant,
-) -> None:
-    """A successful refresh on an API-key entry stores api_key + refresh_token."""
-    entry = _api_key_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.return_value = True
-        ecobee.config = {
-            ECOBEE_API_KEY: "test-api-key",
-            ECOBEE_REFRESH_TOKEN: "fresh-rt",
-        }
-
-        runtime = EcobeeData(
-            hass, entry, api_key="test-api-key", refresh_token="old-rt"
-        )
-        assert await runtime.refresh() is True
-
-    assert entry.data == {
-        CONF_API_KEY: "test-api-key",
-        CONF_REFRESH_TOKEN: "fresh-rt",
+    ecobee.update.side_effect = ExpiredTokenError("expired")
+    ecobee.config = {
+        ECOBEE_USERNAME: "user@example.com",
+        ECOBEE_PASSWORD: "test-password",
+        ECOBEE_REFRESH_TOKEN: "rotated-refresh-token",
     }
 
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-async def test_refresh_updates_entry_with_username_password(
-    hass: HomeAssistant,
-) -> None:
-    """A successful refresh on a credentials entry preserves username/password."""
-    entry = _credentials_entry(hass)
-    with patch("homeassistant.components.ecobee.Ecobee") as mock_ecobee_cls:
-        ecobee = mock_ecobee_cls.return_value
-        ecobee.refresh_tokens.return_value = True
-        ecobee.config = {
-            ECOBEE_USERNAME: "user@example.com",
-            ECOBEE_PASSWORD: "pw",
-            ECOBEE_REFRESH_TOKEN: "fresh-rt",
-        }
-
-        runtime = EcobeeData(
-            hass,
-            entry,
-            username="user@example.com",
-            password="pw",
-            refresh_token="old-rt",
-        )
-        assert await runtime.refresh() is True
-
-    assert entry.data == {
-        CONF_USERNAME: "user@example.com",
-        CONF_PASSWORD: "pw",
-        CONF_REFRESH_TOKEN: "fresh-rt",
-    }
+    assert entry.data[CONF_REFRESH_TOKEN] == "rotated-refresh-token"
