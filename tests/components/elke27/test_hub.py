@@ -76,6 +76,55 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
     client.async_disconnect.assert_awaited_once()
 
 
+async def test_connect_does_not_expose_client_until_ready_and_subscribed(
+    hass: HomeAssistant,
+) -> None:
+    """Test hub stores the client only after readiness and subscriptions."""
+    client = AsyncMock()
+    client.async_connect = AsyncMock(return_value=None)
+    client.set_client_identity = Mock()
+    client.async_disconnect = AsyncMock(return_value=None)
+    unsubscribe = Mock()
+    typed_unsubscribe = Mock()
+
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.70",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub.subscribe_typed(Mock())
+
+    async def _wait_ready(*, timeout_s: float) -> bool:
+        assert timeout_s == READY_TIMEOUT
+        assert hub.client is None
+        return True
+
+    def _subscribe(*args: Any) -> Mock:
+        assert hub.client is None
+        return unsubscribe
+
+    def _subscribe_typed(*args: Any) -> Mock:
+        assert hub.client is None
+        return typed_unsubscribe
+
+    client.wait_ready = AsyncMock(side_effect=_wait_ready)
+    client.subscribe = Mock(side_effect=_subscribe)
+    client.subscribe_typed = Mock(side_effect=_subscribe_typed)
+
+    with patch(
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
+    ):
+        await hub.async_connect()
+
+    assert hub.client is client
+    client.subscribe.assert_called_once()
+    client.subscribe_typed.assert_called_once()
+
+
 async def test_connect_wait_ready_false_disconnects(
     hass: HomeAssistant,
 ) -> None:
@@ -487,8 +536,7 @@ async def test_resubscribe_typed_callbacks(hass: HomeAssistant) -> None:
     cb = _cb
     hub._typed_callbacks = {cb: None}
     client = SimpleNamespace(subscribe_typed=Mock(return_value="token"))
-    hub._client = client
-    hub._resubscribe_typed_callbacks()
+    hub._resubscribe_typed_callbacks(client)
     assert hub._typed_callbacks[cb] == "token"
 
 
@@ -830,6 +878,22 @@ async def test_reconnect_loop_stops_on_link_required(
         None,
     )
     hub._async_connect = AsyncMock(side_effect=Elke27LinkRequiredError("nope"))
+    await hub._async_reconnect_loop()
+
+
+async def test_reconnect_loop_stops_on_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """Verify reconnect loop stops on auth failures."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.76",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._async_connect = AsyncMock(side_effect=ConfigEntryAuthFailed("nope"))
     await hub._async_reconnect_loop()
 
 
