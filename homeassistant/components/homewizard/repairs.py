@@ -1,6 +1,10 @@
 """Repairs for HomeWizard integration."""
 
-from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -92,17 +96,17 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    assert data is not None
-    assert isinstance(data["entry_id"], str)
+    if data is None or not isinstance(entry_id := data.get("entry_id"), str):
+        return ConfirmRepairFlow()
 
     if issue_id.startswith("migrate_to_v2_api_") and (
-        entry := hass.config_entries.async_get_entry(data["entry_id"])
+        entry := hass.config_entries.async_get_entry(entry_id)
     ):
         return MigrateToV2ApiRepairFlow(entry)
 
     if issue_id.startswith(f"{ISSUE_BATTERY_MODE_CLOUD_DISABLED}_") and (
-        entry := hass.config_entries.async_get_entry(data["entry_id"])
+        entry := hass.config_entries.async_get_entry(entry_id)
     ):
         return BatteryModeCloudDisabledRepairFlow(entry)
 
-    raise ValueError(f"unknown repair {issue_id}")  # pragma: no cover
+    return ConfirmRepairFlow()
