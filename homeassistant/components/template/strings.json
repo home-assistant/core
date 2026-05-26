@@ -152,10 +152,12 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "Location accuracy"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "Defines a template to get the accuracy of the device tracker's location in meters. Valid values are numbers greater than or equal to `0`."
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -723,10 +725,12 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data::location_accuracy%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data_description::location_accuracy%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }

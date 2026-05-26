@@ -76,7 +76,11 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
-from .device_tracker import CONF_IN_ZONES, async_create_preview_tracker
+from .device_tracker import (
+    CONF_IN_ZONES,
+    CONF_LOCATION_ACCURACY,
+    async_create_preview_tracker,
+)
 from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
     CONF_OFF_ACTION,
@@ -153,6 +157,7 @@ _SCHEMA_STATE: dict[vol.Marker, Any] = {
 def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+    advanced_options: dict[vol.Marker, Any] = {}
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
@@ -234,6 +239,9 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
             vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
             vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
+        }
+        advanced_options |= {
+            vol.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
         }
 
     if domain == Platform.EVENT:
@@ -441,6 +449,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Schema(
                 {
                     vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                    **advanced_options,
                 }
             ),
             {"collapsed": True},

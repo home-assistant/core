@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'template_device_tracker',
-      'gps_accuracy': 0,
+      'gps_accuracy': 10.0,
       'in_zones': list([
       ]),
       'latitude': 10.0,
