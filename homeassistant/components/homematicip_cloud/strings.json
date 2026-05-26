@@ -38,8 +38,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "chamber_degraded": {
+        "name": "Chamber degraded"
+      },
       "cloud_connection": {
         "name": "Cloud connection"
+      },
+      "raining": {
+        "name": "Raining"
       }
     },
     "event": {
