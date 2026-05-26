@@ -176,26 +176,22 @@ async def test_user_unique_id_already_configured(
         (OPNsensePrivilegeMissing, "privilege_missing"),
         (OPNsenseInvalidURL, "invalid_url"),
         (OPNsenseSSLError, "ssl_error"),
-        ((OPNsenseConnectionError, OPNsenseTimeoutError), "cannot_connect"),
+        (OPNsenseConnectionError, "cannot_connect"),
+        (OPNsenseTimeoutError, "cannot_connect"),
         (OPNsenseUnknownFirmware, "unknown_version"),
         (OPNsenseBelowMinFirmware, "invalid_version"),
     ],
 )
 async def test_user_exceptions(
     hass: HomeAssistant,
-    exc: type[Exception] | tuple[type[Exception], ...],
+    exc: type[Exception],
     expected: str,
 ) -> None:
     """Test all exception branches in async_step_user."""
     patch_target = (
         "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"
     )
-    if isinstance(exc, tuple):
-        # Patch to raise the first exception in the tuple
-        exc_to_raise = exc[0]
-    else:
-        exc_to_raise = exc
-    with patch(patch_target, side_effect=exc_to_raise):
+    with patch(patch_target, side_effect=exc):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -258,16 +254,15 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
         (OPNsenseInvalidAuth, "invalid_auth"),
         (OPNsensePrivilegeMissing, "privilege_missing"),
         (OPNsenseSSLError, "ssl_error"),
-        ((OPNsenseConnectionError, OPNsenseTimeoutError), "cannot_connect"),
+        (OPNsenseConnectionError, "cannot_connect"),
+        (OPNsenseTimeoutError, "cannot_connect"),
         (OPNsenseUnknownFirmware, "unknown_version"),
         (OPNsenseBelowMinFirmware, "invalid_version"),
         (Exception, "unknown"),
     ]
     for exc, reason in exceptions:
         with (
-            patch(
-                patch_target, side_effect=exc if not isinstance(exc, tuple) else exc[0]
-            ),
+            patch(patch_target, side_effect=exc),
             patch(patch_interfaces),
         ):
             result = await hass.config_entries.flow.async_init(
