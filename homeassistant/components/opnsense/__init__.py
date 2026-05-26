@@ -135,7 +135,7 @@ async def async_setup_entry(
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         known_interfaces = [
-            ifinfo.get("name", "") for ifinfo in interfaces_resp.values()
+            name for ifinfo in interfaces_resp.values() if (name := ifinfo.get("name"))
         ]
         for intf_description in tracker_interfaces:
             if intf_description not in known_interfaces:
