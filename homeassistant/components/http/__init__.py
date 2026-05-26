@@ -91,7 +91,6 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
-from .websocket_api import async_register_websocket_commands
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -175,9 +174,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we import aiohttp_fast_zlib
     (await async_import_module(hass, "aiohttp_fast_zlib")).enable()
 
+    # Deferred import: websocket_api declares http as its manifest
+    # dependency and imports back into this package at module load
+    # (websocket_api/http.py -> homeassistant.components.http). A top-level
+    # import of .websocket_api here would re-enter the still-loading
+    # websocket_api package and fail when applying its decorators
+    # (e.g. @websocket_api.require_admin).
+    websocket_api_module = await async_import_module(
+        hass, "homeassistant.components.http.websocket_api"
+    )
+
     conf = await async_load_config(hass, config)
 
-    async_register_websocket_commands(hass)
+    websocket_api_module.async_register_websocket_commands(hass)
 
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
