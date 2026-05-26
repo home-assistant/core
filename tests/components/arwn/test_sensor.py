@@ -179,9 +179,7 @@ async def test_unknown_topic_ignored(
     )
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(
-        hass, "arwn/unknown_domain", json.dumps({"value": 1.0})
-    )
+    async_fire_mqtt_message(hass, "arwn/unknown_domain", json.dumps({"value": 1.0}))
     await hass.async_block_till_done()
 
     assert hass.data.get("arwn") is None
