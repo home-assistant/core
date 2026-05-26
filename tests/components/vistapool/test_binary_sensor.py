@@ -6,24 +6,34 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "fixture_name",
+    [
+        pytest.param("pool_data.json", id="default"),
+        pytest.param("pool_data_all_modules.json", id="all_modules_enabled"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
-    mock_pool_data: dict[str, Any],
+    fixture_name: str,
 ) -> None:
-    """Test all binary sensor entities for the default fixture."""
-    mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
+    """Test binary sensor entities for fixtures covering modules off and on."""
+    mock_vistapool_client.fetch_pool_data.return_value = load_json_object_fixture(
+        fixture_name, DOMAIN
+    )
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -52,48 +62,6 @@ async def test_binary_sensors_hydrolysis_branch(
 
     assert hass.states.get("binary_sensor.my_pool_hydrolysis_low").state == STATE_ON
     assert hass.states.get("binary_sensor.my_pool_electrolysis_low") is None
-
-
-async def test_binary_sensors_all_modules_enabled(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test every module-gated binary sensor comes up when all `has*` flags are set."""
-    mock_vistapool_client.fetch_pool_data.return_value = {
-        "main": {
-            "hasCD": 1,
-            "hasCL": 1,
-            "hasIO": 1,
-            "hasPH": 1,
-            "hasRX": 1,
-            "hasHidro": 1,
-            "version": 1,
-        },
-        "modules": {
-            "ph": {"tank": 0, "pump_high_on": 0, "pump_low_on": 0, "al3": 0},
-            "rx": {"tank": 0, "pump_status": 0},
-            "cl": {"tank": 0, "pump_status": 0},
-            "cd": {"tank": 0},
-        },
-        "hidro": {"is_electrolysis": True, "fl1": 0, "fl2": 0, "cover": 0, "low": 0},
-        "filtration": {"status": 0},
-        "backwash": {"status": 0},
-        "relays": {"filtration": {"heating": {"status": 0}}},
-    }
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    for entity_id in (
-        "binary_sensor.my_pool_hidro_fl2",
-        "binary_sensor.my_pool_chlorine_pump",
-        "binary_sensor.my_pool_redox_pump",
-        "binary_sensor.my_pool_ph_pump_alarm",
-        "binary_sensor.my_pool_dosing_tank",
-    ):
-        assert hass.states.get(entity_id) is not None
 
 
 async def test_binary_sensors_dosing_tank_low(
