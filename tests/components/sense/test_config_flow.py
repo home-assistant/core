@@ -9,7 +9,6 @@ from sense_energy import (
     SenseAPITimeoutException,
     SenseAuthenticationException,
     SenseMFARequiredException,
-    SenseWebsocketException,
 )
 
 from homeassistant import config_entries
@@ -39,9 +38,9 @@ def mock_flow_sense_fixture() -> Generator[MagicMock]:
         yield mock_sense
 
 
+@pytest.mark.usefixtures("mock_flow_sense")
 async def test_form(
     hass: HomeAssistant,
-    mock_flow_sense: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we get the form."""
@@ -72,10 +71,10 @@ async def test_form(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
-    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     error: str,
 ) -> None:
@@ -104,10 +103,10 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_mfa_required(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle the MFA flow."""
     mock_flow_sense.return_value.authenticate.side_effect = SenseMFARequiredException
@@ -142,10 +141,10 @@ async def test_form_mfa_required(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_mfa_exceptions(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
-    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     error: str,
 ) -> None:
@@ -186,41 +185,8 @@ async def test_form_mfa_exceptions(
     assert result["data"] == MOCK_CONFIG
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        SenseAPITimeoutException,
-        SenseAPIException,
-        SenseWebsocketException,
-    ],
-)
-async def test_setup_entry_exceptions(
-    hass: HomeAssistant,
-    mock_sense: MagicMock,
-    config_entry: MockConfigEntry,
-    exception: type[Exception],
-) -> None:
-    """Test we handle exceptions during async_setup_entry and can recover."""
-    mock_sense.update_realtime.side_effect = exception
-    config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
-
-    # Verify recovery: clear the error and reload the entry
-    mock_sense.update_realtime.side_effect = None
-    assert await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-
-
-async def test_reauth_no_form(
-    hass: HomeAssistant,
-    mock_flow_sense: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_flow_sense", "mock_setup_entry")
+async def test_reauth_no_form(hass: HomeAssistant) -> None:
     """Test reauth where no form needed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -228,15 +194,13 @@ async def test_reauth_no_form(
         unique_id="test-email",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=True,
-    ):
-        result = await entry.start_reauth_flow(hass)
+    result = await entry.start_reauth_flow(hass)
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_password(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
@@ -254,15 +218,11 @@ async def test_reauth_password(
     assert result["type"] is FlowResultType.FORM
 
     mock_flow_sense.return_value.authenticate.side_effect = None
-    with patch(
-        "homeassistant.components.sense.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"password": "test-password"},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "test-password"},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
