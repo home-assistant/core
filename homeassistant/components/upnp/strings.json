@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "incomplete_discovery": "Incomplete discovery",
+      "invalid_discovery_info": "Invalid discovery information",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "flow_title": "{name}",

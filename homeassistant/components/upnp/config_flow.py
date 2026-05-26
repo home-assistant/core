@@ -77,7 +77,7 @@ async def _async_mac_address_from_discovery(
     try:
         parsed_location = urlparse(location)
         host = parsed_location.hostname
-        _ = parsed_location.port
+        _ = parsed_location.port  # Validate malformed netlocs, including IPv6.
     except ValueError as err:
         raise ValueError(f"Invalid UPnP discovery location: {location}") from err
     if host is None:
