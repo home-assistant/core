@@ -1,9 +1,11 @@
 """Support for device trackers which integrates with other components."""
 
+from collections.abc import Callable
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components import zone
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -43,10 +45,61 @@ def _validate_in_zones_or_lat_and_lon(obj: dict) -> dict:
     if CONF_IN_ZONES not in obj:
         if CONF_LATITUDE not in obj or CONF_LONGITUDE not in obj:
             raise vol.Invalid(
-                "Either 'in_zones' or both 'latitude' and 'longitude' must be specified"
+                f"Either '{CONF_IN_ZONES}' or both '{CONF_LATITUDE}' and '{CONF_LONGITUDE}' must be specified"
             )
+    elif (CONF_LATITUDE in obj and CONF_LONGITUDE not in obj) or (
+        CONF_LATITUDE not in obj and CONF_LONGITUDE in obj
+    ):
+        raise vol.Invalid(
+            f"Both '{CONF_LATITUDE}' and '{CONF_LONGITUDE}' must be specified"
+        )
 
     return obj
+
+
+def validate_in_zones(
+    entity: AbstractTemplateTracker,
+) -> Callable[[Any], list[str] | None]:
+    """Convert the result to a list of entity_ids.
+
+    This ensures the result is a list of zone entity_ids.
+    All other values that are not lists will result in None.
+    """
+
+    def convert(result: Any) -> list[str] | None:
+        if template_validators.check_result_for_none(result):
+            return None
+
+        if not isinstance(result, list):
+            template_validators.log_validation_result_error(
+                entity,
+                CONF_IN_ZONES,
+                result,
+                "expected a list of zone entity_ids",
+            )
+            return None
+
+        zone_entity_ids = []
+        failed = []
+        for v in result:
+            try:
+                zone_entity_ids.append(
+                    vol.All(cv.entity_id, cv.entity_domain(zone.DOMAIN))(v)
+                )
+            except vol.Invalid:
+                failed.append(v)
+
+        if failed:
+            template_validators.log_validation_result_error(
+                entity,
+                CONF_IN_ZONES,
+                failed,
+                "expected a list of zone entity_ids",
+            )
+
+        return zone_entity_ids
+
+    return convert
 
 
 TRACKER_COMMON_SCHEMA = vol.Schema(
@@ -137,7 +190,7 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity):
         self.setup_template(
             CONF_IN_ZONES,
             "_attr_in_zones",
-            template_validators.list_of_strings(self, CONF_IN_ZONES),
+            validate_in_zones(self),
         )
         self.setup_template(
             CONF_LATITUDE,

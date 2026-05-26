@@ -111,6 +111,26 @@ async def setup_single_attribute_tracker(
     )
 
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"latitude": "{{ 10 }}"},
+        {"longitude": "{{ 10 }}"},
+        {"in_zones": "{{ ['zone.home'] }}", "latitude": "{{ 10 }}"},
+        {"in_zones": "{{ ['zone.home'] }}", "longitude": "{{ 10 }}"},
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_required_keys(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
+) -> None:
+    """Test that required keys are present."""
+    await setup_entity(hass, TEST_TRACKER, style, 0, config)
+    assert hass.states.async_all("device_tracker") == []
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -228,6 +248,8 @@ async def test_syntax_error(hass: HomeAssistant) -> None:
             STATE_HOME,
         ),
         ("{{ ['zone.something'] }}", [], STATE_NOT_HOME),
+        ("{{ ['sensor.something'] }}", [], STATE_NOT_HOME),
+        ("{{ ['not_an_entity_id'] }}", [], STATE_NOT_HOME),
         ("{{ None }}", [], STATE_UNKNOWN),
         ("{{ 110 }}", [], STATE_UNKNOWN),
         ("{{ -110 }}", [], STATE_UNKNOWN),
@@ -248,6 +270,64 @@ async def test_in_zones(
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.state == expected_state
     assert state.attributes.get(attribute) == expected_value
+
+
+@pytest.mark.parametrize(
+    ("config", "attribute"),
+    [({}, "in_zones")],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("attribute_template", "expected_state", "error"),
+    [
+        (
+            "{{ ['sensor.something'] }}",
+            STATE_NOT_HOME,
+            "Received invalid device_tracker in_zones: "
+            "['sensor.something'] for entity device_tracker.template_device_tracker, "
+            "expected a list of zone entity_ids",
+        ),
+        (
+            "{{ ['not_an_entity_id'] }}",
+            STATE_NOT_HOME,
+            "Received invalid device_tracker in_zones: "
+            "['not_an_entity_id'] for entity device_tracker.template_device_tracker, "
+            "expected a list of zone entity_ids",
+        ),
+        (
+            "{{ -110 }}",
+            STATE_UNKNOWN,
+            "Received invalid device_tracker in_zones: "
+            "-110 for entity device_tracker.template_device_tracker, "
+            "expected a list of zone entity_ids",
+        ),
+        (
+            "{{ 'on' }}",
+            STATE_UNKNOWN,
+            "Received invalid device_tracker in_zones: "
+            "on for entity device_tracker.template_device_tracker, "
+            "expected a list of zone entity_ids",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_tracker")
+async def test_in_zones_creates_error(
+    hass: HomeAssistant,
+    expected_state: str,
+    error: str,
+    caplog: pytest.LogCaptureFixture,
+    caplog_setup_text: str,
+) -> None:
+    """Test template latitude."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_TRACKER.entity_id)
+    assert state.state == expected_state
+    assert state.attributes["in_zones"] == []
+
+    assert error in caplog_setup_text or error in caplog.text
 
 
 @pytest.mark.parametrize(
