@@ -888,10 +888,18 @@ async def test_notify_live_activity_uses_stored_token(
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
     # FCM token stays as push_token; live activity APNs token is a separate field.
-    assert call_json["push_token"] == "PUSH_TOKEN"
-    assert call_json["live_activity_token"] == "LIVE_ACTIVITY_TOKEN_HEX"
-    assert call_json["data"]["live_update"] is True
-    assert call_json["data"]["tag"] == "washer_cycle"
+    assert call_json == {
+        "push_token": "PUSH_TOKEN",
+        "live_activity_token": "LIVE_ACTIVITY_TOKEN_HEX",
+        "message": "45 minutes remaining",
+        "data": {"live_update": True, "tag": "washer_cycle", "progress": 2700},
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }
 
 
 async def test_notify_live_activity_falls_back_to_push_to_start(
@@ -960,8 +968,18 @@ async def test_notify_live_activity_falls_back_to_push_to_start(
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
     # FCM token stays as push_token; push-to-start token is live_activity_token.
-    assert call_json["push_token"] == "FCM_TOKEN"
-    assert call_json["live_activity_token"] == "PUSH_TO_START_HEX_TOKEN"
+    assert call_json == {
+        "push_token": "FCM_TOKEN",
+        "live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+        "message": "Laundry started",
+        "data": {"live_update": True, "tag": "laundry"},
+        "registration_info": {
+            "app_id": "io.robbie.HomeAssistant",
+            "app_version": "2024.1",
+            "os_version": "17.2",
+            "webhook_id": "ios-webhook-1",
+        },
+    }
 
 
 async def test_notify_live_activity_without_tag_uses_fcm(
@@ -982,8 +1000,17 @@ async def test_notify_live_activity_without_tag_uses_fcm(
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
     # Should use normal FCM token since there is no tag.
-    assert call_json["push_token"] == "PUSH_TOKEN"
-    assert "live_activity_token" not in call_json
+    assert call_json == {
+        "push_token": "PUSH_TOKEN",
+        "message": "No tag here",
+        "data": {"live_update": True},
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }
 
 
 async def test_notify_normal_notification_ignores_live_activity_tokens(
@@ -1012,5 +1039,14 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
     # Should use normal FCM token — live_update flag not set.
-    assert call_json["push_token"] == "PUSH_TOKEN"
-    assert "live_activity_token" not in call_json
+    assert call_json == {
+        "push_token": "PUSH_TOKEN",
+        "message": "Normal notification",
+        "data": {"tag": "some_tag"},
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }

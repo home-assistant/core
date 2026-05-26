@@ -34,6 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -1418,8 +1419,10 @@ async def test_webhook_update_live_activity_token(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that we can store a Live Activity push token."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -1436,41 +1439,19 @@ async def test_webhook_update_live_activity_token(
     result = await resp.json()
     assert result == {}
 
-    # Verify token was stored in hass.data
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert webhook_id in tokens
-    assert tokens[webhook_id]["washer_cycle"]["token"] == (
-        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
-    )
-    assert isinstance(tokens[webhook_id]["washer_cycle"]["expires_at"], float)
-
-
-async def test_webhook_update_live_activity_token_stores_only_push_token(
-    hass: HomeAssistant,
-    create_registrations: tuple[dict[str, Any], dict[str, Any]],
-    webhook_client: TestClient,
-) -> None:
-    """Test that stored token data contains only push_token (FCM handles routing)."""
-    webhook_id = create_registrations[1]["webhook_id"]
-    resp = await webhook_client.post(
-        f"/api/webhook/{webhook_id}",
-        json={
-            "type": "live_activity_token",
-            "data": {
-                "tag": "ev_charge",
-                "push_token": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    assert tokens == {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": (
+                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+                ),
             },
         },
-    )
-
-    assert resp.status == HTTPStatus.OK
-
-    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    stored = tokens[webhook_id]["ev_charge"]
-    assert stored["token"] == (
-        "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-    )
-    assert isinstance(stored["expires_at"], float)
+    }
 
 
 async def test_webhook_live_activity_token_schedules_cleanup(
@@ -1480,7 +1461,11 @@ async def test_webhook_live_activity_token_schedules_cleanup(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that storing the first token schedules a cleanup that expires it."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    # No tokens yet, and no cleanup scheduled
+    assert tokens == {}
 
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -1495,21 +1480,34 @@ async def test_webhook_live_activity_token_schedules_cleanup(
     assert resp.status == HTTPStatus.OK
 
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert webhook_id in tokens
+    assert tokens == {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": (
+                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+                ),
+            },
+        },
+    }
 
     freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS + 1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert webhook_id not in tokens
+    assert tokens == {}
 
 
 async def test_webhook_live_activity_dismissed(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that we can dismiss a Live Activity and clean up its token."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
     webhook_id = create_registrations[1]["webhook_id"]
 
     # First register a token
@@ -1524,10 +1522,19 @@ async def test_webhook_live_activity_dismissed(
         },
     )
 
-    # Verify token is stored
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert webhook_id in tokens
-    assert "washer_cycle" in tokens[webhook_id]
+    assert tokens == {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": (
+                    dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS
+                ),
+            },
+        },
+    }
 
     # Now dismiss it
     resp = await webhook_client.post(
@@ -1544,8 +1551,8 @@ async def test_webhook_live_activity_dismissed(
     result = await resp.json()
     assert result == {}
 
-    # Verify token was removed — webhook_id key also cleaned up since no activities remain
-    assert webhook_id not in tokens
+    # webhook_id key also cleaned up since no activities remain
+    assert tokens == {}
 
 
 async def test_webhook_live_activity_dismissed_nonexistent_tag(
@@ -1567,3 +1574,4 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
     )
 
     assert resp.status == HTTPStatus.OK
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}

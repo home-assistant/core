@@ -744,12 +744,15 @@ async def test_live_activity_expired_tokens_cleaned_at_startup(
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert "expired_tag" not in tokens.get("wh-1", {})
-    assert "valid_tag" in tokens["wh-1"]
+    expected = {
+        "wh-1": {
+            "valid_tag": {"token": "new", "expires_at": valid_ts},
+        },
+    }
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
     saved = hass_storage[STORAGE_KEY]["data"][DATA_LIVE_ACTIVITY_TOKENS]
-    assert "expired_tag" not in saved.get("wh-1", {})
-    assert "valid_tag" in saved["wh-1"]
+    assert saved == expected
 
 
 async def test_live_activity_cleanup_task_removes_expired_tokens(
