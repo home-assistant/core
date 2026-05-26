@@ -134,6 +134,23 @@ async def test_binary_sensors_acid_tank_low(
     assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "on"
 
 
+async def test_binary_sensors_acid_tank_unknown_when_no_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the acid-tank sensor reports unknown when no tank values are available."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasPH": 1, "version": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "unknown"
+
+
 async def test_binary_sensors_fl2_requires_hidro(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -248,6 +248,13 @@ class VistapoolAcidTankBinarySensor(VistapoolEntity, BinarySensorEntity):
         self._attr_unique_id = self.build_unique_id("acid_tank")
 
     @property
-    def is_on(self) -> bool:
-        """Return true if any tank is low."""
-        return any(bool(self.coordinator.get_value(path)) for path in TANK_MODULE_PATHS)
+    def is_on(self) -> bool | None:
+        """Return true if any tank is low, or None if no tank data is available."""
+        values = [
+            value
+            for path in TANK_MODULE_PATHS
+            if (value := self.coordinator.get_value(path)) is not None
+        ]
+        if not values:
+            return None
+        return any(bool(value) for value in values)
