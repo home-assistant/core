@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Elke27ConfigEntry) -> bo
     try:
         await hub.async_connect()
     except Elke27LinkRequiredError as err:
-        msg = "Linking credentials are invalid"
+        msg = "Panel requires linking; please reauthenticate"
         raise ConfigEntryAuthFailed(msg) from err
     except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
         _LOGGER.warning("Failed to set up connection to %s:%s: %s", host, port, err)

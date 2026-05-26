@@ -161,17 +161,28 @@ class Elke27Hub:
     async def _async_disconnect(self, *, log_unavailable: bool = True) -> None:
         """Disconnect the client and unregister event handlers."""
         was_connected = self._client is not None
+        cancel_error: asyncio.CancelledError | None = None
         if self._connection_unsubscribe is not None:
-            with contextlib.suppress(asyncio.CancelledError, Exception):
+            try:
                 self._connection_unsubscribe()
+            except asyncio.CancelledError as err:
+                cancel_error = err
+            except Exception:  # noqa: BLE001
+                pass
             self._connection_unsubscribe = None
         if self._client is not None:
-            with contextlib.suppress(asyncio.CancelledError, Exception):
+            try:
                 await self._client.async_disconnect()
+            except asyncio.CancelledError as err:
+                cancel_error = err
+            except Exception:  # noqa: BLE001
+                pass
         self._client = None
         self._clear_typed_subscriptions()
         if was_connected and not self._stopping and log_unavailable:
             self._log_unavailable()
+        if cancel_error is not None:
+            raise cancel_error
 
     def get_snapshot(self) -> Any | None:
         """Return the latest client snapshot."""
@@ -487,8 +498,8 @@ def _connection_state(event: Any) -> bool | None:
         if value == "ready":
             return True
         return None
-    if hasattr(event, "event_type"):
-        event_type = event.event_type
+    event_type = getattr(event, "event_type", None) or getattr(event, "type", None)
+    if event_type is not None:
         value = (
             event_type.value
             if isinstance(event_type, Enum)
