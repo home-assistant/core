@@ -549,7 +549,7 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                if continuous_duration:
+                if continuous_duration > 0:
                     await asyncio.sleep(continuous_duration)
                     req = ptz_service.create_type("Stop")
                     req.ProfileToken = profile.token
