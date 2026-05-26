@@ -247,7 +247,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     for ifinfo in interfaces_resp.values()
                     if (name := ifinfo.get("name"))
                 ]
-                self.available_interfaces = list(known_interfaces)
+                self.available_interfaces = sorted(known_interfaces)
                 # Abort import if any specified tracker interface is not found
                 missing = [
                     intf_description
