@@ -1362,7 +1362,7 @@ influxdb==5.3.1
 infrared-protocols==5.6.0
 
 # homeassistant.components.inkbird
-inkbird-ble==1.4.0
+inkbird-ble==1.4.3
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.6.2
