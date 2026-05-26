@@ -9,11 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import WATERING_COMMAND_SOURCE
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothEntity
 
 FALLBACK_WATERING_TIME_IN_SECONDS = 60 * 60
-_WATERING_COMMAND_SOURCE = "18"
 
 
 async def async_setup_entry(
@@ -118,7 +118,7 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
         )
         await self.coordinator.write(
             self._service.start_watering,
-            {0: _WATERING_COMMAND_SOURCE, 1: str(duration)},
+            {0: WATERING_COMMAND_SOURCE, 1: str(duration)},
         )
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -127,7 +127,7 @@ class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
         """Turn the entity off."""
         await self.coordinator.write(
             self._service.stop_watering,
-            {0: _WATERING_COMMAND_SOURCE},
+            {0: WATERING_COMMAND_SOURCE},
         )
         self._attr_is_on = False
         self.async_write_ha_state()

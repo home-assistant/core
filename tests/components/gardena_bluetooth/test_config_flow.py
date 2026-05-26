@@ -137,7 +137,6 @@ async def test_no_valid_devices(
 
 async def test_smart_water_control_manual_flow(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Smart Water Control devices (G-19033/19034) advertise no service UUIDs.
 
