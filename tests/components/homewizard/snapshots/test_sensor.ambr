@@ -4895,7 +4895,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12834,7 +12834,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12924,7 +12924,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13017,7 +13017,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13110,7 +13110,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13203,7 +13203,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13296,7 +13296,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13381,7 +13381,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13474,7 +13474,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13567,7 +13567,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13660,7 +13660,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13753,7 +13753,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13846,7 +13846,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13939,7 +13939,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14032,7 +14032,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14125,7 +14125,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14218,7 +14218,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14311,7 +14311,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14404,7 +14404,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14489,7 +14489,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14579,7 +14579,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14672,7 +14672,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14757,7 +14757,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14850,7 +14850,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14943,7 +14943,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15036,7 +15036,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15121,7 +15121,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15206,7 +15206,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15305,7 +15305,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15398,7 +15398,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15491,7 +15491,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15584,7 +15584,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15677,7 +15677,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15762,7 +15762,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15847,7 +15847,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15932,7 +15932,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -16017,7 +16017,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -16102,7 +16102,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -16187,7 +16187,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -16280,7 +16280,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -16365,7 +16365,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })
