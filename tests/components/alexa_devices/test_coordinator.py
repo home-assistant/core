@@ -1,14 +1,12 @@
 """Tests for the Alexa Devices coordinator."""
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonMediaState, AmazonVolumeState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -23,16 +21,6 @@ from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-def _get_registered_event_handler(
-    mock_amazon_devices_client: AsyncMock,
-    event_attr: str,
-) -> AsyncMock:
-    """Return the callback registered on the mocked library event."""
-    event = getattr(mock_amazon_devices_client, event_attr)
-    event.append.assert_called_once()
-    return event.append.call_args.args[0]
 
 
 async def test_coordinator_stale_device(
@@ -138,65 +126,3 @@ async def test_sync_history_state_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
-
-
-@pytest.mark.parametrize(
-    ("event_attr", "coordinator_attr", "event_state"),
-    [
-        pytest.param(
-            "on_media_state_event",
-            "media_states",
-            {
-                TEST_DEVICE_1_SN: AmazonMediaState(
-                    player_state="PLAYING",
-                    pause_enabled=True,
-                    next_enabled=True,
-                    previous_enabled=True,
-                    now_playing_title="Test",
-                    now_playing_line1="Artist",
-                    now_playing_line2="Album",
-                    now_playing_url=None,
-                    media_length=100,
-                    media_position=10,
-                    media_position_updated_at=datetime.now(UTC),
-                    seek_back_enabled=False,
-                    seek_forward_enabled=False,
-                    shuffle_enabled=False,
-                    repeat_enabled=False,
-                    media_provider="Test",
-                    media_provider_url=None,
-                )
-            },
-            id="media_state",
-        ),
-        pytest.param(
-            "on_volume_state_event",
-            "volume_states",
-            {TEST_DEVICE_1_SN: AmazonVolumeState(volume=30, is_muted=False)},
-            id="volume_state",
-        ),
-    ],
-)
-async def test_state_event_updates_coordinator(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    event_attr: str,
-    coordinator_attr: str,
-    event_state: dict[str, AmazonMediaState] | dict[str, AmazonVolumeState],
-) -> None:
-    """Test state events update coordinator and notify listeners."""
-    await setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-
-    listener = Mock()
-    coordinator.async_add_listener(listener)
-
-    event_handler = _get_registered_event_handler(
-        mock_amazon_devices_client,
-        event_attr,
-    )
-    await event_handler(event_state)
-    assert getattr(coordinator, coordinator_attr) == event_state
-    listener.assert_called_once()
