@@ -21,7 +21,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "select.qube_heat_pump_sg_ready_mode"
+ENTITY_ID = "select.qube_heat_pump"
 
 
 async def test_entities(
@@ -41,24 +41,14 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("option", "expected_a", "expected_b"),
-    [
-        ("off", False, False),
-        ("block", True, False),
-        ("plus", False, True),
-        ("max", True, True),
-    ],
-)
+@pytest.mark.parametrize("option", ["block", "plus", "max"])
 async def test_select_option(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     option: str,
-    expected_a: bool,
-    expected_b: bool,
 ) -> None:
-    """Test selecting an SG Ready mode writes the correct coil values."""
+    """Test selecting an SG Ready mode."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -68,8 +58,7 @@ async def test_select_option(
         blocking=True,
     )
 
-    mock_qube_client.write_switch.assert_any_await("bms_sgready_a", expected_a)
-    mock_qube_client.write_switch.assert_any_await("bms_sgready_b", expected_b)
+    mock_qube_client.set_sg_ready_mode.assert_awaited_once_with(option)
 
 
 async def test_select_option_connection_error(
@@ -80,7 +69,25 @@ async def test_select_option_connection_error(
     """Test select raises HomeAssistantError on connection error."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_qube_client.write_switch = AsyncMock(side_effect=ConnectionError)
+    mock_qube_client.set_sg_ready_mode = AsyncMock(side_effect=ConnectionError)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "plus"},
+            blocking=True,
+        )
+
+
+async def test_select_option_write_failure(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test select raises HomeAssistantError when write fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_qube_client.set_sg_ready_mode = AsyncMock(return_value=False)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,

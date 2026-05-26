@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[select.qube_heat_pump_sg_ready_mode-entry]
+# name: test_entities[select.qube_heat_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.qube_heat_pump_sg_ready_mode',
+    'entity_id': 'select.qube_heat_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,12 +28,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'SG Ready mode',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'SG Ready mode',
+    'original_name': None,
     'platform': 'hr_energy_qube',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -43,10 +43,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select.qube_heat_pump_sg_ready_mode-state]
+# name: test_entities[select.qube_heat_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Qube heat pump SG Ready mode',
+      'friendly_name': 'Qube heat pump',
       'options': list([
         'off',
         'block',
@@ -55,7 +55,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.qube_heat_pump_sg_ready_mode',
+    'entity_id': 'select.qube_heat_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

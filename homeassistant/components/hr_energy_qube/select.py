@@ -12,31 +12,7 @@ from .entity import QubeEntity
 
 PARALLEL_UPDATES = 1
 
-SGREADY_A_KEY = "bms_sgready_a"
-SGREADY_B_KEY = "bms_sgready_b"
-
-SGREADY_MODE_OFF = "off"
-SGREADY_MODE_BLOCK = "block"
-SGREADY_MODE_PLUS = "plus"
-SGREADY_MODE_MAX = "max"
-
-SGREADY_OPTIONS = [
-    SGREADY_MODE_OFF,
-    SGREADY_MODE_BLOCK,
-    SGREADY_MODE_PLUS,
-    SGREADY_MODE_MAX,
-]
-
-SGREADY_MODE_TO_BITS: dict[str, tuple[bool, bool]] = {
-    SGREADY_MODE_OFF: (False, False),
-    SGREADY_MODE_BLOCK: (True, False),
-    SGREADY_MODE_PLUS: (False, True),
-    SGREADY_MODE_MAX: (True, True),
-}
-
-SGREADY_BITS_TO_MODE: dict[tuple[bool, bool], str] = {
-    v: k for k, v in SGREADY_MODE_TO_BITS.items()
-}
+SGREADY_OPTIONS = ["off", "block", "plus", "max"]
 
 
 async def async_setup_entry(
@@ -67,37 +43,23 @@ class QubeSGReadySelect(QubeEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and SGREADY_A_KEY in self.coordinator.data.switches
-            and SGREADY_B_KEY in self.coordinator.data.switches
-        )
+        return super().available and self.coordinator.data.sg_ready_mode is not None
 
     @property
     def current_option(self) -> str | None:
         """Return the current SG Ready mode."""
-        bit_a = self.coordinator.data.switches.get(SGREADY_A_KEY)
-        bit_b = self.coordinator.data.switches.get(SGREADY_B_KEY)
-        if bit_a is None or bit_b is None:
-            return None
-        return SGREADY_BITS_TO_MODE.get((bool(bit_a), bool(bit_b)))
+        return self.coordinator.data.sg_ready_mode
 
     async def async_select_option(self, option: str) -> None:
         """Set the SG Ready mode."""
-        bits = SGREADY_MODE_TO_BITS[option]
         try:
-            success_a = await self.coordinator.client.write_switch(
-                SGREADY_A_KEY, bits[0]
-            )
-            success_b = await self.coordinator.client.write_switch(
-                SGREADY_B_KEY, bits[1]
-            )
+            success = await self.coordinator.client.set_sg_ready_mode(option)
         except (ConnectionError, TimeoutError, OSError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",
             ) from err
-        if not success_a or not success_b:
+        if not success:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_command_failed",

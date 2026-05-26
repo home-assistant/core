@@ -25,6 +25,7 @@ class QubeData:
 
     state: QubeState
     switches: dict[str, bool | None]
+    sg_ready_mode: str | None
 
 
 class QubeCoordinator(DataUpdateCoordinator[QubeData]):
@@ -48,6 +49,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
         try:
             state = await self.client.get_all_data()
             switches = await self.client.read_all_switches()
+            sg_ready_mode = await self.client.get_sg_ready_mode()
         except (ConnectionError, TimeoutError, OSError) as exc:
             raise UpdateFailed(
                 f"Error communicating with Qube heat pump: {exc}"
@@ -56,4 +58,4 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
         if state is None:
             raise UpdateFailed("No data received from Qube heat pump")
 
-        return QubeData(state=state, switches=switches)
+        return QubeData(state=state, switches=switches, sg_ready_mode=sg_ready_mode)
