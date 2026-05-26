@@ -61,9 +61,7 @@ def _assert_request_call(
     """Assert a matching request call was made."""
     expected_method = method.lower()
     expected_headers = (
-        {key.lower(): value for key, value in headers.items()}
-        if headers is not None
-        else None
+        {key.lower(): value for key, value in headers.items()} if headers else None
     )
     if any(
         call_method.lower() == expected_method
@@ -71,14 +69,18 @@ def _assert_request_call(
         and call_data == data
         and (
             expected_headers is None
-            or {key.lower(): value for key, value in (call_headers or {}).items()}
-            == expected_headers
+            or expected_headers.items()
+            <= {
+                key.lower(): value for key, value in (call_headers or {}).items()
+            }.items()
         )
         for call_method, call_url, call_data, call_headers in aioclient_mock.mock_calls
     ):
         return
 
-    headers_message = "" if expected_headers is None else f" and headers {headers!r}"
+    headers_message = (
+        "" if expected_headers is None else f" and headers {expected_headers!r}"
+    )
     raise AssertionError(
         f"Expected {expected_method.upper()} request to {url} with {data!r}"
         f"{headers_message}; "
