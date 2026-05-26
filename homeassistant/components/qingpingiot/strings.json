@@ -21,6 +21,9 @@
           "model": "Model",
           "name": "[%key:common::config_flow::data::name%]"
         },
+        "data_description": {
+          "mac": "The 12-character hex MAC address of the device (e.g. AABBCCDDEEFF)."
+        },
         "description": "Enter device MAC address and select model.",
         "title": "Add Device Manually"
       },
@@ -28,12 +31,18 @@
         "data": {
           "model": "Model"
         },
+        "data_description": {
+          "model": "Select the device model to update."
+        },
         "description": "Update settings for {device_name}.",
         "title": "Reconfigure Device"
       },
       "user": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Select a discovered Qingping device."
         },
         "description": "Select a discovered device or add manually.",
         "title": "Qingping Device"

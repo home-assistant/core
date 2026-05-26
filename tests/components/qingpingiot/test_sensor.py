@@ -129,10 +129,10 @@ async def test_temperature_sensor_updates_from_json(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Simulate online status first
-    coordinator = entry.runtime_data.coordinator
-    coordinator.data["online"] = True
-    coordinator.data["last_timestamp"] = int(time.time())
+    # Send a non-type-17 message first to set online with last_timestamp
+    online_payload = json.dumps({"type": 1}).encode()
+    async_fire_mqtt_message(hass, "qingping/112233445566/up", online_payload)
+    await hass.async_block_till_done()
 
     # Send JSON sensor data (type 17)
     payload = json.dumps(
