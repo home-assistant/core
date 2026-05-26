@@ -414,7 +414,6 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
           uv pip install -r requirements_all.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
