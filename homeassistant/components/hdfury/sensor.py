@@ -5,7 +5,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import HDFuryConfigEntry
+from . import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 0

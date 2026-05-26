@@ -3,22 +3,20 @@
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import HDFuryRuntimeData
+from . import HDFuryRuntimeData
+from .coordinator import HDFuryDataUpdateCoordinator
 
 
-class HDFuryEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]]):
+class HDFuryEntity(CoordinatorEntity[HDFuryDataUpdateCoordinator]):
     """Common elements for all entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, str]],
+        coordinator: HDFuryDataUpdateCoordinator,
         runtime_data: HDFuryRuntimeData,
         entity_description: EntityDescription,
     ) -> None:

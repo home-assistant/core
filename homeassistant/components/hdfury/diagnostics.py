@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from .coordinator import HDFuryConfigEntry
+from . import HDFuryConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

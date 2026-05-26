@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import HDFuryConfigEntry, HDFuryRuntimeData
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry, HDFuryRuntimeData
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
