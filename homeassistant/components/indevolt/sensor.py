@@ -132,7 +132,7 @@ SENSORS: Final = (
     IndevoltSensorEntityDescription(
         key=IndevoltBattery.GEN_2_CYCLE_COUNT,
         generation=(2,),
-        translation_key="cycle_count",
+        translation_key="equivalent_full_cycles",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

@@ -241,9 +241,6 @@
       "cumulative_production": {
         "name": "Cumulative production"
       },
-      "cycle_count": {
-        "name": "Equivalent Full Cycles"
-      },
       "daily_production": {
         "name": "Daily production"
       },
@@ -297,6 +294,9 @@
           "real_time_control": "Real-time control",
           "self_consumed_prioritized": "Self-consumed prioritized"
         }
+      },
+      "equivalent_full_cycles": {
+        "name": "Equivalent full cycles"
       },
       "grid_frequency": {
         "name": "Grid frequency"
