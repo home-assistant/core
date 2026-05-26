@@ -7,11 +7,15 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
+from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.diagnostics import (
     MAX_JSON_DEPTH,
     async_get_config_entry_diagnostics,
 )
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,15 +27,16 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_charger: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test OpenEVSE diagnostics and redacted data."""
     entry = MockConfigEntry(
         title="openevse_mock_config",
-        domain="openevse",
+        domain=DOMAIN,
         data={
-            "host": "192.168.1.100",
-            "username": "my_username",
-            "password": "my_password",
+            CONF_HOST: "192.168.1.100",
+            CONF_USERNAME: "my_username",
+            CONF_PASSWORD: "my_password",
         },
         entry_id="FAKE_AUTH",
         unique_id="deadbeeffeed",
@@ -42,14 +47,7 @@ async def test_entry_diagnostics(
 
     diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert diagnostics["config_entry"]["data"] == {
-        "host": "192.168.1.100",
-        "username": "**REDACTED**",
-        "password": "**REDACTED**",
-    }
-    assert diagnostics["charger"]["status"] == "Charging"
-    assert diagnostics["charger"]["charging_voltage"] == 240
-    assert diagnostics["charger"]["charging_current"] == 32000.0
+    assert diagnostics == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_entry_diagnostics_exceptions(
