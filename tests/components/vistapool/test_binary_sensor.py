@@ -12,7 +12,11 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -41,8 +45,8 @@ async def test_all_entities(
     fixture_name: str,
 ) -> None:
     """Test binary sensor entities for fixtures covering modules off and on."""
-    mock_vistapool_client.fetch_pool_data.return_value = load_json_object_fixture(
-        fixture_name, DOMAIN
+    mock_vistapool_client.fetch_pool_data.return_value = (
+        await async_load_json_object_fixture(hass, fixture_name, DOMAIN)
     )
     mock_config_entry.add_to_hass(hass)
 
