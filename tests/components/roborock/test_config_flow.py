@@ -607,7 +607,7 @@ async def test_config_flow_custom_url_invalid_format(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "custom"}
+        result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
     )
     assert result["step_id"] == "custom_url"
 
