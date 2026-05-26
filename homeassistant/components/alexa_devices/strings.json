@@ -58,6 +58,18 @@
     }
   },
   "entity": {
+    "event": {
+      "voice_event": {
+        "name": "Voice event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    },
     "notify": {
       "announce": {
         "name": "Announce"
