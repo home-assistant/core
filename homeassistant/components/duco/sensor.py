@@ -31,6 +31,8 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+PRIMARY_SENSOR_KEYS = {"co2", "humidity"}
+PRIMARY_BOX_SENSOR_KEYS = {"rssi_wifi"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -227,6 +229,8 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         """Initialize the sensor entity."""
         super().__init__(coordinator, node)
         self.entity_description = description
+        if description.key in PRIMARY_SENSOR_KEYS:
+            self._attr_name = None
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.key}"
         )
@@ -251,6 +255,8 @@ class DucoBoxSensorEntity(DucoEntity, SensorEntity):
         """Initialize the box sensor entity."""
         super().__init__(coordinator, node)
         self.entity_description = description
+        if description.key in PRIMARY_BOX_SENSOR_KEYS:
+            self._attr_name = None
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{node.node_id}_{description.key}"
         )

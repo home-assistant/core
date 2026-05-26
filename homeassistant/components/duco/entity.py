@@ -1,7 +1,5 @@
 """Base entity for the Duco integration."""
 
-from typing import cast
-
 from duco_connectivity.models import Node, NodeType
 from yarl import URL
 
@@ -24,8 +22,8 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._node_id = node.node_id
-        # Loaded Duco entries always get a stable unique ID from the config flow.
-        mac = cast(str, coordinator.config_entry.unique_id)
+        assert coordinator.config_entry.unique_id is not None
+        mac = coordinator.config_entry.unique_id
 
         self._mac = mac
         self._is_box = node.general.node_type == NodeType.BOX

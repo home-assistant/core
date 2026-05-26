@@ -76,7 +76,7 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that diagnostic sensor entities are disabled by default."""
-    for entity_id in ("sensor.living_signal_strength",):
+    for entity_id in ("sensor.living",):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -104,7 +104,7 @@ async def test_coordinator_update_failure_marks_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    state = hass.states.get("sensor.office_co2")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -130,11 +130,11 @@ async def test_lan_info_failures_keep_node_entities_available(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    state = hass.states.get("sensor.office_co2")
     assert state is not None
     assert state.state == "405"
 
-    state = hass.states.get("sensor.living_signal_strength")
+    state = hass.states.get("sensor.living")
     assert state is not None
     assert state.state == "-60"
 
@@ -144,12 +144,12 @@ async def test_lan_info_failures_keep_node_entities_available(
     [
         (
             200,
-            "sensor.new_rh_sensor_humidity",
+            "sensor.new_rh_sensor",
             "55.0",
         ),
         (
             201,
-            "sensor.new_valve_carbon_dioxide",
+            "sensor.new_valve",
             "575",
         ),
     ],
@@ -344,7 +344,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.future_sensor_humidity") is None
+    assert hass.states.get("sensor.future_sensor") is None
 
     # Second poll: type now resolved — entities must be created.
     mock_duco_client.async_get_nodes.return_value = [
@@ -355,7 +355,7 @@ async def test_previously_unknown_node_gets_entities_after_type_becomes_known(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.future_sensor_humidity")
+    state = hass.states.get("sensor.future_sensor")
     assert state is not None
     assert state.state == "62.0"
 
