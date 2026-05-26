@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    TEMPERATURE,
     EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
@@ -49,8 +50,6 @@ CURRENT_SYSTEM_PRESSURE = "current_system_pressure"
 HIGH_SYSTEM_PRESSURE = "high_system_pressure"
 LOW_SYSTEM_PRESSURE = "low_system_pressure"
 BATTERY = "battery"
-# pylint: disable-next=home-assistant-duplicate-const
-TEMPERATURE = "temperature"
 INLET_TDS = "inlet_tds"
 OUTLET_TDS = "outlet_tds"
 CARTRIDGE_1_LIFE = "cart1"

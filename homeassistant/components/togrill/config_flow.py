@@ -8,6 +8,7 @@ from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import PacketA0Notify
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -113,6 +114,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_infos[address]
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address
