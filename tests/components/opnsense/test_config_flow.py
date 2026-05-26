@@ -23,7 +23,8 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
 )
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 
@@ -81,7 +82,7 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
 async def test_import_unique_id_already_configured(
     hass: HomeAssistant, mock_opnsense_client: AsyncMock
 ) -> None:
-    """Test import step when unique ID is already configured (should abort)."""
+    """Test import step when unique ID is already configured."""
     # The fixture patches config_flow and component clients separately.
     # Import uses the config_flow client default unique ID from setup_mock_opnsense_client.
     existing_unique_id = "mocked_unique_id"
@@ -101,6 +102,13 @@ async def test_import_unique_id_already_configured(
     )
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+    # The deprecation issue must still be created so the YAML block gets removed
+    issue = ir.async_get(hass).async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
 
 
 async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
