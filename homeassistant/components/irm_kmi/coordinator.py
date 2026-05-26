@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
@@ -42,6 +42,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         )
         self._api = api_client
         self._location = entry.data[CONF_LOCATION]
+        self._last_successful_data_update: datetime | None = None
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -62,25 +63,30 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
 
         except IrmKmiApiError as err:
             if (
-                self.last_update_success_time is not None
+                self.data is not None
+                and self._last_successful_data_update is not None
                 and self.update_interval is not None
-                and self.last_update_success_time - utcnow()
-                < timedelta(seconds=2.5 * self.update_interval.seconds)
+                and utcnow() - self._last_successful_data_update
+                < 2.5 * self.update_interval
             ):
                 return self.data
 
             _LOGGER.warning(
-                "Could not connect to the API since %s", self.last_update_success_time
+                "Could not connect to the API since %s",
+                self._last_successful_data_update,
             )
             raise UpdateFailed(
                 f"Error communicating with API for general forecast: {err}. "
-                f"Last success time is: {self.last_update_success_time}"
+                f"Last success time is: {self._last_successful_data_update}"
             ) from err
+
+        data = await self.process_api_data()
+        self._last_successful_data_update = utcnow()
 
         if not self.last_update_success:
             _LOGGER.warning("Successfully reconnected to the API")
 
-        return await self.process_api_data()
+        return data
 
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
