@@ -31,6 +31,26 @@
     }
   },
   "entity": {
+    "number": {
+      "big_temperature_drop": { "name": "Big temperature drop" },
+      "constant_temp_setpoint": { "name": "Constant temperature setpoint" },
+      "curve_0_temperature": { "name": "Curve 0°C temperature" },
+      "curve_10_temperature": { "name": "Curve 10°C temperature" },
+      "curve_20_temperature": { "name": "Curve 20°C temperature" },
+      "curve_minus_10_temperature": { "name": "Curve -10°C temperature" },
+      "curve_minus_20_temperature": { "name": "Curve -20°C temperature" },
+      "room_temperature_fine_tuning": {
+        "name": "Room temperature fine tuning"
+      },
+      "temperature_drop": { "name": "Temperature drop" },
+      "trend_sampling_interval": { "name": "Trend sampling interval" },
+      "water_out_maximum_temperature": {
+        "name": "Water out maximum temperature"
+      },
+      "water_out_minimum_temperature": {
+        "name": "Water out minimum temperature"
+      }
+    },
     "sensor": {
       "curve_supply_water_temperature": {
         "name": "Curve supply water temperature"
@@ -49,6 +69,9 @@
         "name": "Supply water temperature setpoint"
       },
       "valve_position": { "name": "Valve position" }
+    },
+    "valve": {
+      "valve_position_setpoint": { "name": "Valve position setpoint" }
     }
   }
 }
