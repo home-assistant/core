@@ -167,7 +167,7 @@ async def test_setup_config_full(
     full_config.update(config_update)
     full_config.update(config_ext)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == full_config
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -351,7 +351,7 @@ async def test_setup_minimal_config_no_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == BASE_V1_CONFIG
 
     assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -396,7 +396,7 @@ async def test_setup_minimal_config_with_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == config_base
 
     assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
