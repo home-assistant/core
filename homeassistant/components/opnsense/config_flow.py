@@ -170,7 +170,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle tracker interface selection step."""
-        if user_input is None or CONF_TRACKER_INTERFACES not in user_input:
+        if user_input is None:
             return await self._show_interfaces_form({}, None)
 
         if user_input.get(CONF_TRACKER_INTERFACES):
