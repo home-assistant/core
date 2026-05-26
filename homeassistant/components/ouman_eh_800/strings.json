@@ -64,11 +64,11 @@
         "name": "Operation mode",
         "state": {
           "automatic": "[%key:common::state::auto%]",
-          "big_temperature_drop": "Big temperature drop",
+          "big_temperature_drop": "[%key:component::ouman_eh_800::entity::number::big_temperature_drop::name%]",
           "manual_valve_control": "Manual valve control",
           "normal_temperature": "Nominal temperature",
           "shutdown": "[%key:common::state::standby%]",
-          "temperature_drop": "Temperature drop"
+          "temperature_drop": "[%key:component::ouman_eh_800::entity::number::temperature_drop::name%]"
         }
       },
       "relay_control": {
