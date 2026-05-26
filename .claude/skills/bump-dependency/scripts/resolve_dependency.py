@@ -53,8 +53,7 @@ def check_github_tag(repo_url, version):
                 continue
         except Exception:
             pass
-    # Default to v-prefix if not found, as it is most common
-    return f"v{version}"
+    return None
 
 def main():
     parser = argparse.ArgumentParser(description="Resolve PyPI package info and GitHub release diffs.")
@@ -82,6 +81,15 @@ def main():
         # Verify tag formats on GitHub
         old_tag = check_github_tag(github_repo, args.old_version)
         new_tag = check_github_tag(github_repo, target_version)
+
+        if not old_tag or not new_tag:
+            missing_tags = []
+            if not old_tag:
+                missing_tags.append(args.old_version)
+            if not new_tag:
+                missing_tags.append(target_version)
+            print(f"\n[ERROR] Could not resolve GitHub release tag for version(s): {', '.join(missing_tags)}", file=sys.stderr)
+            sys.exit(1)
 
         changelog_url = f"{github_repo}/releases/tag/{new_tag}"
         compare_url = f"{github_repo}/compare/{old_tag}...{new_tag}"
