@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.upnp.config_flow import _redact_discovery_location
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
@@ -38,6 +39,14 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+
+def test_redact_discovery_location() -> None:
+    """Test discovery location redaction."""
+    assert (
+        _redact_discovery_location("http://user:pass@192.168.1.1/desc.xml?token=abc")
+        == "http://192.168.1.1"
+    )
 
 
 @pytest.mark.usefixtures(
