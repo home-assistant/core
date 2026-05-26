@@ -221,7 +221,7 @@ async def test_websocket_bad_core_update(hass: HomeAssistant, client) -> None:
 
 
 async def test_websocket_core_update_invalid_time_zone(
-    hass: HomeAssistant, client
+    hass: HomeAssistant, client: MockHAClientWebSocket
 ) -> None:
     """Test core config update rejects an invalid time zone."""
     await client.send_json(
