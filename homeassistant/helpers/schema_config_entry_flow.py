@@ -180,7 +180,6 @@ class SchemaCommonFlowHandler:
     ) -> ConfigFlowResult:
         """Handle a form step."""
         form_step: SchemaFlowFormStep = cast(SchemaFlowFormStep, self._flow[step_id])
-        data_schema = await self._get_schema(form_step)
 
         if user_input is not None and form_step.validate_user_input is not None:
             # Do extra validation of user input
@@ -192,7 +191,7 @@ class SchemaCommonFlowHandler:
         if user_input is not None:
             # User input was validated successfully, update options
             self._update_and_remove_omitted_optional_keys(
-                self._options, user_input, data_schema
+                self._options, user_input, await self._get_schema(form_step)
             )
 
         if user_input is not None or form_step.schema is None:

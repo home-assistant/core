@@ -319,7 +319,7 @@ async def test_suggested_values(
     )
     config_entry.add_to_hass(hass)
 
-    # Start flow in basic mode, suggested values should be the existing options
+    # Start flow, suggested values should be the existing options
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -471,7 +471,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    # Start flow in basic mode, flow state is initialised with None value
+    # Start flow, flow state is initialised with None value
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "step_1"
@@ -508,7 +508,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
 async def test_options_flow_omit_optional_keys(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager
 ) -> None:
-    """Test handling of advanced options in options flow."""
+    """Test handling of optional keys in options flow."""
     manager.hass = hass
 
     OPTIONS_SCHEMA = vol.Schema(
@@ -538,24 +538,8 @@ async def test_options_flow_omit_optional_keys(
     )
     config_entry.add_to_hass(hass)
 
-    # Start flow in basic mode
+    # Start flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert list(result["data_schema"].schema.keys()) == [
-        "optional_no_default",
-        "optional_default",
-    ]
-
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        "optional_default": "a very reasonable default",
-    }
-
-    # Start flow in advanced mode
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
-    )
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert list(result["data_schema"].schema.keys()) == [
         "optional_no_default",
@@ -619,15 +603,13 @@ async def test_options_flow_with_automatic_reload(
         options={
             "optional_no_default": "abc123",
             "optional_default": "not default",
-            "advanced_no_default": "abc123",
-            "advanced_default": "not default",
         },
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert len(load_entry_mock.mock_calls) == 1
 
-    # Start flow in basic mode
+    # Start flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is data_entry_flow.FlowResultType.FORM
 
