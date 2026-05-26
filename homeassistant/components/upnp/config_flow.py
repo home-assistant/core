@@ -74,14 +74,15 @@ async def _async_mac_address_from_discovery(
 ) -> str | None:
     """Get the mac address from a discovery."""
     location = get_preferred_location(discovery.ssdp_all_locations)
+    error_msg = "Invalid UPnP discovery location"
     try:
         parsed_location = urlparse(location)
         host = parsed_location.hostname
         _ = parsed_location.port  # Validate malformed netlocs, including IPv6.
     except ValueError as err:
-        raise ValueError(f"Invalid UPnP discovery location: {location}") from err
+        raise ValueError(error_msg) from err
     if host is None:
-        raise ValueError(f"Invalid UPnP discovery location: {location}")
+        raise ValueError(error_msg)
     return await async_get_mac_address_from_host(hass, host)
 
 
