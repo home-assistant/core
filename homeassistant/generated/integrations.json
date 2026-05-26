@@ -5650,6 +5650,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "qingpingiot": {
+      "name": "Qingping",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "qld_bushfire": {
       "name": "Queensland Bushfire Alert",
       "integration_type": "service",
