@@ -58,6 +58,8 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         }
         client.routines = ["Test Routine"]
         client.send_sound_notification = AsyncMock()
+        client.on_todo_event = AsyncMock()
+        client.on_todo_event.freeze.return_value = None
         yield client
 
 
