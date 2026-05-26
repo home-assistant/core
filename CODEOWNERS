@@ -236,8 +236,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
-/homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
-/tests/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
+/homeassistant/components/blue_current/ @gleeuwen @jtodorova23
+/tests/components/blue_current/ @gleeuwen @jtodorova23
 /homeassistant/components/bluemaestro/ @bdraco
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
@@ -945,8 +945,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
-/homeassistant/components/konnected/ @heythisisnate
-/tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
 /tests/components/kostal_plenticore/ @stegm
 /homeassistant/components/kraken/ @eifinger
@@ -1934,6 +1932,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
+/homeassistant/components/vistapool/ @fdebrus
+/tests/components/vistapool/ @fdebrus
 /homeassistant/components/vivotek/ @HarlemSquirrel
 /tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325
@@ -2058,6 +2058,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2
 /tests/components/yolink/ @matrixd2
+/homeassistant/components/yoto/ @cdnninja @piitaya
+/tests/components/yoto/ @cdnninja @piitaya
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
 /homeassistant/components/youtube/ @joostlek
