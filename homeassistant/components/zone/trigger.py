@@ -67,7 +67,7 @@ _ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(CONF_ZONE): vol.All(
-                cv.ensure_list, [cv.entity_id], vol.Length(min=1)
+                cv.ensure_list, [cv.entity_domain("zone")], vol.Length(min=1)
             ),
         },
     }
