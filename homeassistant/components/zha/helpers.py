@@ -1445,6 +1445,17 @@ def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             return await func(self, *args, **kwargs)
+        except TimeoutError as exc:
+            raise HomeAssistantError(
+                "Failed to send request: device did not respond"
+            ) from exc
+        except zigpy.exceptions.ZigbeeException as exc:
+            message = "Failed to send request"
+
+            if str(exc):
+                message = f"{message}: {exc}"
+
+            raise HomeAssistantError(message) from exc
         except ZHAException as err:
             raise HomeAssistantError(err) from err
 
