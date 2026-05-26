@@ -52,11 +52,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up buttons using the platform schema."""
 
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.config_coordinator
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        HDFuryButton(coordinator, runtime_data, description) for description in BUTTONS
+        HDFuryButton(coordinator, description) for description in BUTTONS
     )
 
 
@@ -69,7 +68,7 @@ class HDFuryButton(HDFuryEntity, ButtonEntity):
         """Handle Button Press."""
 
         try:
-            await self.entity_description.press_fn(self.runtime_data.client)
+            await self.entity_description.press_fn(self.coordinator.client)
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

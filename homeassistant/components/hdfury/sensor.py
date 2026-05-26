@@ -102,11 +102,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors using the platform schema."""
 
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.info_coordinator
+    coordinator = entry.runtime_data.info_coordinator
 
     async_add_entities(
-        HDFurySensor(coordinator, runtime_data, description)
+        HDFurySensor(coordinator, description)
         for description in SENSORS
         if description.key in coordinator.data
     )

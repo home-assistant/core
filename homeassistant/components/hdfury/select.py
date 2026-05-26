@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from hdfury import OPERATION_MODES, TX0_INPUT_PORTS, TX1_INPUT_PORTS, HDFuryError
 
@@ -10,9 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HDFuryConfigEntry, HDFuryRuntimeData
+from . import HDFuryConfigEntry
 from .const import DOMAIN
 from .entity import HDFuryEntity
+
+if TYPE_CHECKING:
+    from . import HDFuryRuntimeData
 
 PARALLEL_UPDATES = 1
 
@@ -76,17 +80,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up selects using the platform schema."""
 
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.info_coordinator
+    coordinator = entry.runtime_data.info_coordinator
 
     entities: list[HDFuryEntity] = [
-        HDFurySelect(coordinator, runtime_data, description)
+        HDFurySelect(coordinator, description)
         for description in SELECT_PORTS
         if description.key in coordinator.data
     ]
 
     if "opmode" in coordinator.data:
-        entities.append(HDFurySelect(coordinator, runtime_data, SELECT_OPERATION_MODE))
+        entities.append(HDFurySelect(coordinator, SELECT_OPERATION_MODE))
 
     async_add_entities(entities)
 
@@ -105,8 +108,10 @@ class HDFurySelect(HDFuryEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
+        runtime_data = self.coordinator.config_entry.runtime_data
+
         try:
-            await self.entity_description.set_value_fn(self.runtime_data, option)
+            await self.entity_description.set_value_fn(runtime_data, option)
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

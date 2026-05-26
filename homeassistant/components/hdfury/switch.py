@@ -141,11 +141,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches using the platform schema."""
 
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.config_coordinator
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        HDFurySwitch(coordinator, runtime_data, description)
+        HDFurySwitch(coordinator, description)
         for description in SWITCHES
         if description.key in coordinator.data
     )
@@ -166,7 +165,7 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
         """Handle Switch On Event."""
 
         try:
-            await self.entity_description.set_value_fn(self.runtime_data.client, "on")
+            await self.entity_description.set_value_fn(self.coordinator.client, "on")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -179,7 +178,7 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
         """Handle Switch Off Event."""
 
         try:
-            await self.entity_description.set_value_fn(self.runtime_data.client, "off")
+            await self.entity_description.set_value_fn(self.coordinator.client, "off")
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

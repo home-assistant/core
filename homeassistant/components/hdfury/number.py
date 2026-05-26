@@ -91,11 +91,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers using the platform schema."""
 
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.config_coordinator
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
-        HDFuryNumber(coordinator, runtime_data, description)
+        HDFuryNumber(coordinator, description)
         for description in NUMBERS
         if description.key in coordinator.data
     )
@@ -117,7 +116,7 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
 
         try:
             await self.entity_description.set_value_fn(
-                self.runtime_data.client, str(int(value))
+                self.coordinator.client, str(int(value))
             )
         except HDFuryError as error:
             raise HomeAssistantError(
