@@ -377,7 +377,13 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         await self._device.set_slats_level_async(level)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
+        """Open the cover.
+
+        The slats-safe call used in async_close_cover is intentionally not
+        mirrored here: the regression reported in issue #114266 only
+        affects close, and for an open cover slats at 0 (horizontal) is
+        the natural rest position.
+        """
         await self._device.set_shutter_level_async(HMIP_COVER_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
