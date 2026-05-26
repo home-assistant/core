@@ -73,10 +73,6 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
         key="tamper_detection",
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
-    "Shelter Alarm": BinarySensorEntityDescription(
-        key="shelter_alarm",
-        translation_key="shelter_alarm",
-    ),
     SENSOR_MAP["diskfull"]: BinarySensorEntityDescription(
         key="disk_full",
         translation_key="disk_full",
