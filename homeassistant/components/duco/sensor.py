@@ -52,14 +52,8 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
     DucoSensorEntityDescription(
         key="ventilation_state",
         translation_key="ventilation_state",
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            state.lower()
-            for state in VentilationState
-            if state != VentilationState.UNKNOWN
-        ],
         value_fn=lambda node: (
-            node.ventilation.state.lower()
+            node.ventilation.state.value
             if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
             else None
         ),
