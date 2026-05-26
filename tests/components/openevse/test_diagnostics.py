@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -22,32 +22,9 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
-    """Test OpenEVSE diagnostics."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
-
-    assert diagnostics["config_entry"]["data"] == {
-        "host": "192.168.1.100",
-    }
-    assert diagnostics["charger"]["status"] == "Charging"
-    assert diagnostics["charger"]["charging_voltage"] == 240
-    assert diagnostics["charger"]["charging_current"] == 32000.0
-
-
-async def test_entry_diagnostics_redact(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_charger: MagicMock,
-) -> None:
-    """Test OpenEVSE diagnostics with auth data redacted."""
+    """Test OpenEVSE diagnostics and redacted data."""
     entry = MockConfigEntry(
         title="openevse_mock_config",
         domain="openevse",
@@ -70,6 +47,9 @@ async def test_entry_diagnostics_redact(
         "username": "**REDACTED**",
         "password": "**REDACTED**",
     }
+    assert diagnostics["charger"]["status"] == "Charging"
+    assert diagnostics["charger"]["charging_voltage"] == 240
+    assert diagnostics["charger"]["charging_current"] == 32000.0
 
 
 async def test_entry_diagnostics_exceptions(
@@ -83,115 +63,65 @@ async def test_entry_diagnostics_exceptions(
     class MockEnum(Enum):
         TEST = "test_value"
 
-    class FakeCharger:
-        """Fake charger to raise exceptions and return custom values for properties."""
+    class CustomObj:
+        def __str__(self) -> str:
+            return "custom_str"
 
-        def __init__(self, original_charger: MagicMock) -> None:
-            self._original_charger = original_charger
-            # Copy other properties from the original mock for realism
-            excluded = {
-                "status",
-                "charging_voltage",
-                "vehicle_eta",
-                "mode",
-                "divertmode",
-                "manual_override",
-                "ota_update",
-                "service_level",
-                "uptime",
-                "wifi_firmware",
-                "openevse_firmware",
-                "wifi_signal",
-                "freeram",
-            }
-            # Copy all mock attributes except the overridden ones
-            for key, val in original_charger.__dict__.items():
-                if key not in excluded:
-                    self.__dict__[key] = val
+    class CustomKeyObj:
+        pass
 
-        @property
-        def charging_voltage(self) -> int:
-            raise ValueError("Connection error")
-
-        @property
-        def vehicle_eta(self) -> datetime:
-            return datetime(2000, 1, 1, 12, 0, 0)
-
-        @property
-        def mode(self) -> MockEnum:
-            return MockEnum.TEST
-
-        @property
-        def divertmode(self) -> set[str]:
-            return {"solar", "eco"}
-
-        @property
-        def manual_override(self) -> frozenset[str]:
-            return frozenset({"override"})
-
-        @property
-        def ota_update(self) -> tuple[Any, ...]:
-            return ("v1.0", lambda: "nested_callable")
-
-        @property
-        def service_level(self) -> dict[MockEnum, str]:
-            return {MockEnum.TEST: "level_2"}
-
-        @property
-        def uptime(self) -> object:
-            class CustomObj:
-                def __str__(self) -> str:
-                    return "custom_str"
-
-            return CustomObj()
-
-        @property
-        def custom_key_obj(self) -> object:
-            class CustomKeyObj:
-                pass
-
-            return CustomKeyObj()
-
-        @property
-        def wifi_firmware(self) -> Any:
-            return lambda: "callable_value"
-
-        @property
-        def openevse_firmware(self) -> list[Any]:
-            cyclic: list[Any] = []
-            cyclic.append(cyclic)
-            return cyclic
-
-        @property
-        def wifi_signal(self) -> list[Any]:
-            nested: list[Any] = []
-            curr = nested
-            for _ in range(MAX_JSON_DEPTH + 2):
-                new_list: list[Any] = []
-                curr.append(new_list)
-                curr = new_list
-            return nested
-
-        @property
-        def freeram(self) -> dict[Any, Any]:
-            return {
-                "simple": "val",
-                123: "int_key",
-                MockEnum.TEST: "enum_key",
-                self.custom_key_obj: "obj_key",
-            }
+    custom_key_obj = CustomKeyObj()
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Inject the FakeCharger into the coordinator to isolate side effects
-    coordinator = mock_config_entry.runtime_data
-    coordinator.charger = FakeCharger(mock_charger)
+    # Configure the mock_charger after setup to isolate side effects
+    mock_charger.vehicle_eta = datetime(2000, 1, 1, 12, 0, 0)
+    mock_charger.mode = MockEnum.TEST
+    mock_charger.divertmode = {"solar", "eco"}
+    mock_charger.manual_override = frozenset({"override"})
+    mock_charger.ota_update = ("v1.0", lambda: "nested_callable")
+    mock_charger.service_level = {MockEnum.TEST: "level_2"}
+    mock_charger.uptime = CustomObj()
+    mock_charger.wifi_firmware = lambda: "callable_value"
 
-    diagnostics = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
+    # Set up cyclic list
+    cyclic: list[Any] = []
+    cyclic.append(cyclic)
+    mock_charger.openevse_firmware = cyclic
+
+    # Set up deeply nested list
+    nested: list[Any] = []
+    curr = nested
+    for _ in range(MAX_JSON_DEPTH + 2):
+        new_list: list[Any] = []
+        curr.append(new_list)
+        curr = new_list
+    mock_charger.wifi_signal = nested
+
+    # Set up freeram dict
+    mock_charger.freeram = {
+        "simple": "val",
+        123: "int_key",
+        MockEnum.TEST: "enum_key",
+        custom_key_obj: "obj_key",
+    }
+
+    # Delete status so it's not present
+    if hasattr(mock_charger, "status"):
+        delattr(mock_charger, "status")
+
+    # Patch charging_voltage to raise ValueError
+    with patch.object(
+        type(mock_charger),
+        "charging_voltage",
+        PropertyMock(side_effect=ValueError("Connection error")),
+        create=True,
+    ):
+        diagnostics = await get_diagnostics_for_config_entry(
+            hass, hass_client, mock_config_entry
+        )
 
     # status should be omitted because the attribute is not present
     assert "status" not in diagnostics["charger"]
@@ -254,22 +184,18 @@ async def test_entry_diagnostics_cancelled_error(
     mock_charger: MagicMock,
 ) -> None:
     """Test OpenEVSE diagnostics handles asyncio.CancelledError correctly."""
-
-    class CancelledFakeCharger:
-        @property
-        def status(self) -> str:
-            raise asyncio.CancelledError
-
-        @property
-        def websocket(self) -> Any:
-            return None
-
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
-    coordinator.charger = CancelledFakeCharger()
-
-    with pytest.raises(asyncio.CancelledError):
+    # Raise CancelledError on status access using patch.object
+    with (
+        patch.object(
+            type(mock_charger),
+            "status",
+            PropertyMock(side_effect=asyncio.CancelledError),
+            create=True,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
         await async_get_config_entry_diagnostics(hass, mock_config_entry)
