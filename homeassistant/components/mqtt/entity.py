@@ -1240,7 +1240,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
+        """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
 
     def _cleanup_discovery_on_remove(self) -> None:
