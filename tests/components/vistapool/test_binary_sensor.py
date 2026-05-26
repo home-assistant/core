@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock
 
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,24 +27,27 @@ async def test_binary_sensors_default_modules(
     await hass.async_block_till_done()
 
     # Always-on entities.
-    assert hass.states.get("binary_sensor.my_pool_filtration").state == "on"
-    assert hass.states.get("binary_sensor.my_pool_backwash").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_heating").state == "off"
+    assert hass.states.get("binary_sensor.my_pool_filtration").state == STATE_ON
+    assert hass.states.get("binary_sensor.my_pool_backwash").state == STATE_OFF
+    assert hass.states.get("binary_sensor.my_pool_heating").state == STATE_OFF
 
     # Module-gated; the fixture sets hasHidro=1, hasPH=1, hasRX=1.
-    assert hass.states.get("binary_sensor.my_pool_hidro_flow").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_hidro_cover_reduction").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_ph_pump").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_ph_acid_pump").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_ph_base_pump").state == "off"
-    assert hass.states.get("binary_sensor.my_pool_redox_pump").state == "off"
+    assert hass.states.get("binary_sensor.my_pool_hidro_flow").state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.my_pool_hidro_cover_reduction").state
+        == STATE_OFF
+    )
+    assert hass.states.get("binary_sensor.my_pool_ph_pump").state == STATE_OFF
+    assert hass.states.get("binary_sensor.my_pool_ph_acid_pump").state == STATE_OFF
+    assert hass.states.get("binary_sensor.my_pool_ph_base_pump").state == STATE_OFF
+    assert hass.states.get("binary_sensor.my_pool_redox_pump").state == STATE_OFF
 
     # is_electrolysis=True in the fixture, so electrolysis_low is exposed.
-    assert hass.states.get("binary_sensor.my_pool_electrolysis_low").state == "off"
+    assert hass.states.get("binary_sensor.my_pool_electrolysis_low").state == STATE_OFF
     assert hass.states.get("binary_sensor.my_pool_hydrolysis_low") is None
 
     # Acid tank: any-of CD/CL/PH/RX — present because hasPH and hasRX.
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "off"
+    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_OFF
 
     # Module-gated and absent in the fixture (hasCD=0, hasCL=0).
     assert hass.states.get("binary_sensor.my_pool_hidro_fl2") is None
@@ -70,7 +74,7 @@ async def test_binary_sensors_hydrolysis_branch(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_pool_hydrolysis_low").state == "on"
+    assert hass.states.get("binary_sensor.my_pool_hydrolysis_low").state == STATE_ON
     assert hass.states.get("binary_sensor.my_pool_electrolysis_low") is None
 
 
@@ -131,7 +135,7 @@ async def test_binary_sensors_acid_tank_low(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "on"
+    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_ON
 
 
 async def test_binary_sensors_acid_tank_unknown_when_no_data(
@@ -148,7 +152,7 @@ async def test_binary_sensors_acid_tank_unknown_when_no_data(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == "unknown"
+    assert hass.states.get("binary_sensor.my_pool_acid_tank").state == STATE_UNKNOWN
 
 
 async def test_binary_sensors_fl2_requires_hidro(
@@ -187,5 +191,5 @@ async def test_binary_sensors_multi_pool(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.pool_a_filtration").state == "on"
-    assert hass.states.get("binary_sensor.pool_b_filtration").state == "on"
+    assert hass.states.get("binary_sensor.pool_a_filtration").state == STATE_ON
+    assert hass.states.get("binary_sensor.pool_b_filtration").state == STATE_ON
