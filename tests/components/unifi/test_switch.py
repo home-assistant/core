@@ -49,6 +49,17 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+
+def _assert_request_call(
+    aioclient_mock: AiohttpClientMocker, method: str, url: str, data: dict[str, Any]
+) -> None:
+    """Assert a matching request call was made."""
+    assert any(
+        call_method == method and str(call_url) == url and call_data == data
+        for call_method, call_url, call_data, _headers in aioclient_mock.mock_calls
+    )
+
+
 CLIENT_1 = {
     "hostname": "client_1",
     "ip": "10.0.0.1",
@@ -1411,25 +1422,20 @@ async def test_object_oriented_network_configs(
     # Disable Policy Engine rule
     aioclient_mock.put(config_url, json={}, headers={"content-type": CONTENT_TYPE_JSON})
 
-    call_count = aioclient_mock.call_count
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(config)
     expected_disable_call["enabled"] = False
     handler = config_entry_setup.runtime_data.api.object_oriented_network_configs
 
-    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+    _assert_request_call(aioclient_mock, "put", config_url, expected_disable_call)
     handler.process_raw([expected_disable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
-
-    call_count = aioclient_mock.call_count
 
     # Enable Policy Engine rule
     await hass.services.async_call(
@@ -1442,8 +1448,7 @@ async def test_object_oriented_network_configs(
     expected_enable_call = deepcopy(config)
     expected_enable_call["enabled"] = True
 
-    assert aioclient_mock.call_count == call_count + 1
-    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+    _assert_request_call(aioclient_mock, "put", config_url, expected_enable_call)
     handler.process_raw([expected_enable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON

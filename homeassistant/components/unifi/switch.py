@@ -176,6 +176,7 @@ def async_object_oriented_network_config_supported_fn(
     try:
         secure: Any = config.secure
     except TypeError:
+        # aiounifi raises when raw UniFi data sets "secure" to null.
         return False
     if not isinstance(secure, Mapping):
         return False
