@@ -1,71 +1,38 @@
 """Tests for the Vistapool binary_sensor platform."""
 
-from __future__ import annotations
-
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_binary_sensors_default_modules(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
     mock_pool_data: dict[str, Any],
 ) -> None:
-    """Test binary sensors come up with the expected states for the default fixture."""
+    """Test all binary sensor entities for the default fixture."""
     mock_vistapool_client.fetch_pool_data.return_value = mock_pool_data
     mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Always-on entities.
-    assert hass.states.get("binary_sensor.my_pool_filtration").state == STATE_ON
-    assert hass.states.get("binary_sensor.my_pool_backwash").state == STATE_OFF
-    assert hass.states.get("binary_sensor.my_pool_heating").state == STATE_OFF
-
-    # Module-gated; the fixture sets hasHidro=1, hasPH=1, hasRX=1.
-    assert hass.states.get("binary_sensor.my_pool_hidro_flow").state == STATE_OFF
-    assert (
-        hass.states.get("binary_sensor.my_pool_hidro_cover_reduction").state
-        == STATE_OFF
-    )
-    assert hass.states.get("binary_sensor.my_pool_ph_pump_alarm").state == STATE_OFF
-    assert hass.states.get("binary_sensor.my_pool_ph_acid_pump").state == STATE_OFF
-    assert hass.states.get("binary_sensor.my_pool_ph_base_pump").state == STATE_OFF
-    assert hass.states.get("binary_sensor.my_pool_redox_pump").state == STATE_OFF
-
-    # is_electrolysis=True in the fixture, so electrolysis_low is exposed.
-    assert hass.states.get("binary_sensor.my_pool_electrolysis_low").state == STATE_OFF
-    assert hass.states.get("binary_sensor.my_pool_hydrolysis_low") is None
-
-    # Dosing tank: any-of CD/CL/PH/RX — present because hasPH and hasRX.
-    assert hass.states.get("binary_sensor.my_pool_dosing_tank").state == STATE_OFF
-
-    # Module-gated and absent in the fixture (hasCD=0, hasCL=0).
-    assert hass.states.get("binary_sensor.my_pool_hidro_fl2") is None
-    assert hass.states.get("binary_sensor.my_pool_chlorine_pump") is None
-
-    # Diagnostic module-installed entities are created for every module
-    # regardless of the has* flag and are disabled by default.
-    for entity_id in (
-        "binary_sensor.my_pool_chlorine_module",
-        "binary_sensor.my_pool_conductivity_module",
-        "binary_sensor.my_pool_hidro_module",
-        "binary_sensor.my_pool_io_module",
-        "binary_sensor.my_pool_ph_module",
-        "binary_sensor.my_pool_redox_module",
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS", [Platform.BINARY_SENSOR]
     ):
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_binary_sensors_hydrolysis_branch(
