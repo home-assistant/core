@@ -345,9 +345,10 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            # The others may raise HassioNotReadyError if only some
-            # data was successfully fetched from Supervisor
-            supervisor_info = hassio.get_supervisor_info(hass)
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
                 operating_system_info = hassio.get_os_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):

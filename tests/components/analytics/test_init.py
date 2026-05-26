@@ -155,9 +155,15 @@ async def test_unload_entry(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("ws_type", "ws_options"),
+    [("analytics", {}), ("analytics/preferences", {"preferences": {"base": True}})],
+)
 async def test_websocket_not_loaded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    ws_type: str,
+    ws_options: dict[str, Any],
 ) -> None:
     """Test websocket returns error when analytics entry failed to load."""
     with (
@@ -174,35 +180,7 @@ async def test_websocket_not_loaded(
         await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id({"type": "analytics"})
-    response = await ws_client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "not_found"
-
-
-async def test_websocket_preferences_not_loaded(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test preferences websocket returns error when analytics entry failed to load."""
-    with (
-        patch(
-            "homeassistant.components.analytics.analytics.is_hassio",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.hassio.get_supervisor_info",
-            side_effect=HassioNotReadyError,
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id(
-        {"type": "analytics/preferences", "preferences": {"base": True}}
-    )
+    await ws_client.send_json_auto_id({"type": ws_type} | ws_options)
     response = await ws_client.receive_json()
 
     assert not response["success"]
