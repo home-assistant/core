@@ -21,7 +21,11 @@ from habluetooth import (
 )
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.const import (
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -33,7 +37,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.package import is_docker_env
 
 from .const import (
-    CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
