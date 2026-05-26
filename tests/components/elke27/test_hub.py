@@ -842,6 +842,12 @@ def test_event_type_and_connection_state() -> None:
         is True
     )
     assert _connection_state(SimpleNamespace(event_type="ready")) is True
+    assert _connection_state(SimpleNamespace(type="ready")) is True
+    assert _connection_state(SimpleNamespace(type="disconnected")) is False
+    assert (
+        _connection_state(SimpleNamespace(type="connection", data={"connected": True}))
+        is True
+    )
     enum_val = Enum("E", {"READY": "ready"})
     assert _event_type({"type": enum_val.READY}) == "READY"
     assert _connection_state({"event_type": None}) is None
@@ -890,6 +896,53 @@ async def test_disconnect_suppresses_client_disconnect_errors(
 
     assert hub._client is None
     unsubscribe.assert_called_once()
+
+
+async def test_disconnect_reraises_client_disconnect_cancel_after_cleanup(
+    hass: HomeAssistant,
+) -> None:
+    """Verify disconnect cleanup does not swallow cancellation."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    unsubscribe = Mock()
+    hub._typed_callbacks = {lambda *_: None: unsubscribe}
+    hub._client = SimpleNamespace(
+        async_disconnect=AsyncMock(side_effect=asyncio.CancelledError)
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await hub._async_disconnect()
+
+    assert hub._client is None
+    unsubscribe.assert_called_once()
+
+
+async def test_disconnect_reraises_unsubscribe_cancel_after_cleanup(
+    hass: HomeAssistant,
+) -> None:
+    """Verify unsubscribe cancellation propagates after cleanup."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._connection_unsubscribe = Mock(side_effect=asyncio.CancelledError)
+    hub._client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+
+    with pytest.raises(asyncio.CancelledError):
+        await hub._async_disconnect()
+
+    assert hub._connection_unsubscribe is None
+    assert hub._client is None
 
 
 async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
