@@ -640,18 +640,9 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
-        has_fn=(
-            lambda data: (
-                data.batteries is not None and data.batteries.target_power_w is not None
-            )
-        ),
-        value_fn=(
-            lambda data: (
-                data.batteries.target_power_w
-                if data.batteries is not None
-                and data.batteries.target_power_w is not None
-                else None
-            )
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.target_power_w if data.batteries is not None else None
         ),
     ),
     HomeWizardSensorEntityDescription(
