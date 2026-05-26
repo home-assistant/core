@@ -1714,7 +1714,14 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
-        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+        options = trigger_conf[CONF_OPTIONS]
+        return [*options[CONF_ENTITY_ID], options[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
+        return [
+            *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            *trigger_conf[CONF_OPTIONS][CONF_ZONE],
+        ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
         return [trigger_conf[CONF_ZONE]]
