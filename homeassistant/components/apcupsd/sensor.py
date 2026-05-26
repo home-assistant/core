@@ -4,8 +4,6 @@ import logging
 
 import dateutil
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -24,11 +22,9 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-import homeassistant.helpers.issue_registry as ir
 
-from .const import AVAILABLE_VIA_DEVICE_ATTR, DEPRECATED_SENSORS, DOMAIN, LAST_S_TEST
+from .const import LAST_S_TEST
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 from .entity import APCUPSdEntity
 
@@ -48,18 +44,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "apc": SensorEntityDescription(
-        key="apc",
-        translation_key="apc_status",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "apcmodel": SensorEntityDescription(
-        key="apcmodel",
-        translation_key="apc_model",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "badbatts": SensorEntityDescription(
         key="badbatts",
@@ -100,12 +84,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "date": SensorEntityDescription(
-        key="date",
-        translation_key="date",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "dipsw": SensorEntityDescription(
         key="dipsw",
         translation_key="dip_switch_settings",
@@ -132,21 +110,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="wake_delay",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "end apc": SensorEntityDescription(
-        key="end apc",
-        translation_key="date_and_time",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "extbatts": SensorEntityDescription(
         key="extbatts",
         translation_key="external_batteries",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "firmware": SensorEntityDescription(
-        key="firmware",
-        translation_key="firmware_version",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "hitrans": SensorEntityDescription(
@@ -264,12 +230,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="min_time",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "model": SensorEntityDescription(
-        key="model",
-        translation_key="model",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "nombattv": SensorEntityDescription(
         key="nombattv",
         translation_key="battery_nominal_voltage",
@@ -358,12 +318,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "serialno": SensorEntityDescription(
-        key="serialno",
-        translation_key="serial_number",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
@@ -402,18 +356,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "upsmode": SensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "upsname": SensorEntityDescription(
-        key="upsname",
-        translation_key="ups_name",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "version": SensorEntityDescription(
-        key="version",
-        translation_key="version",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xoffbat": SensorEntityDescription(
@@ -561,63 +503,3 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         self._attr_native_value, inferred_unit = infer_unit(data)
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit
-
-    async def async_added_to_hass(self) -> None:
-        """Handle when entity is added to Home Assistant.
-
-        If this is a deprecated sensor entity, create a repair issue to guide
-        the user to disable it.
-        """
-        await super().async_added_to_hass()
-
-        if not self.enabled:
-            return
-
-        reason = DEPRECATED_SENSORS.get(self.entity_description.key)
-        if not reason:
-            return
-
-        automations = automations_with_entity(self.hass, self.entity_id)
-        scripts = scripts_with_entity(self.hass, self.entity_id)
-        if not automations and not scripts:
-            return
-
-        entity_registry = er.async_get(self.hass)
-        items = [
-            f"- [{entry.name or entry.original_name or entity_id}]"
-            f"(/config/{integration}/edit/"
-            f"{entry.unique_id or entity_id.split('.', 1)[-1]})"
-            for integration, entities in (
-                ("automation", automations),
-                ("script", scripts),
-            )
-            for entity_id in entities
-            if (entry := entity_registry.async_get(entity_id))
-        ]
-        placeholders = {
-            "entity_name": str(self.name or self.entity_id),
-            "entity_id": self.entity_id,
-            "items": "\n".join(items),
-        }
-        if via_attr := AVAILABLE_VIA_DEVICE_ATTR.get(self.entity_description.key):
-            placeholders["available_via_device_attr"] = via_attr
-        if device_entry := self.device_entry:
-            placeholders["device_id"] = device_entry.id
-
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"{reason}_{self.entity_id}",
-            breaks_in_ha_version="2026.6.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=reason,
-            translation_placeholders=placeholders,
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle when entity will be removed from Home Assistant."""
-        await super().async_will_remove_from_hass()
-
-        if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
-            ir.async_delete_issue(self.hass, DOMAIN, f"{issue_key}_{self.entity_id}")
