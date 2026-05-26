@@ -74,8 +74,14 @@ async def _async_mac_address_from_discovery(
 ) -> str | None:
     """Get the mac address from a discovery."""
     location = get_preferred_location(discovery.ssdp_all_locations)
-    host = urlparse(location).hostname
-    assert host is not None
+    try:
+        parsed_location = urlparse(location)
+        host = parsed_location.hostname
+        _ = parsed_location.port
+    except ValueError as err:
+        raise ValueError(f"Invalid UPnP discovery location: {location}") from err
+    if host is None:
+        raise ValueError(f"Invalid UPnP discovery location: {location}")
     return await async_get_mac_address_from_host(hass, host)
 
 

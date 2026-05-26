@@ -149,10 +149,18 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "non_igd_device"
 
 
-async def test_flow_ssdp_invalid_discovery_location(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "bad_location",
+    [
+        pytest.param("http://fe80::1/rootDesc.xml", id="malformed_ipv6"),
+        pytest.param("http:///rootDesc.xml", id="missing_hostname"),
+    ],
+)
+async def test_flow_ssdp_invalid_discovery_location(
+    hass: HomeAssistant, bad_location: str
+) -> None:
     """Test config flow aborts invalid SSDP discovery location."""
     test_discovery = deepcopy(TEST_DISCOVERY)
-    bad_location = "http://fe80::1/rootDesc.xml"
     test_discovery.ssdp_location = bad_location
     test_discovery.ssdp_all_locations = {bad_location}
     test_discovery.upnp["location"] = bad_location
