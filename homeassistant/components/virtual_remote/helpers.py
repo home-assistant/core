@@ -88,7 +88,7 @@ def infrared_entity_field(
 
 def infrared_entity_field_with_current(
     default_entity_id: str,
-    available_entities: dict[str, selector.SelectOptionDict],
+    _available_entities: dict[str, selector.SelectOptionDict],
 ) -> vol.Required:
     """Return an infrared entity field allowing a stale current entity default."""
     if default_entity_id:

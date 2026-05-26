@@ -2,7 +2,24 @@
 
 The Virtual Remote integration creates Home Assistant `remote` entities backed by existing Home Assistant `infrared` entities.
 
-It allows infrared command sets to be organized as reusable remote entities while infrared transmission remains handled by the linked infrared integration.
+It allows infrared command sets to be grouped into reusable remote entities while infrared transmission remains handled by the linked infrared integration.
+
+This makes it possible to use one infrared transmitter for multiple devices such as TVs, AV receivers, projectors, or air conditioners.
+
+---
+
+## Requirements
+
+Virtual Remote requires at least one Home Assistant `infrared` entity provided by another integration.
+
+The linked `infrared` entity is responsible for transmitting infrared commands through compatible hardware such as IR blasters or infrared emitters.
+
+Compatible integrations include any integration that exposes Home Assistant `infrared` entities.
+
+Examples include:
+- iTach IP2IR
+- ESPHome infrared transmitters
+- any integration exposing Home Assistant `infrared` entities
 
 ---
 
@@ -14,7 +31,7 @@ It allows infrared command sets to be organized as reusable remote entities whil
 - Use standard Home Assistant `remote` services
 - Store named infrared commands
 - Add, edit, and remove commands through the options flow
-- Support multiple command formats
+- Support multiple infrared command formats
 - Reuse one infrared transmitter across multiple virtual remotes
 
 ---
@@ -24,11 +41,10 @@ It allows infrared command sets to be organized as reusable remote entities whil
 The integration supports the same command formats as the iTach IP2IR remote functionality.
 
 Supported formats include:
-
 - Pronto Hex
 - Raw timing lists
 - Raw timing objects
-- Text timing formats
+- Text-based timing formats
 
 ---
 
@@ -41,14 +57,13 @@ Supported formats include:
 3. Select the infrared entity to use.
 4. Enter a name for the virtual remote.
 
-The initial setup flow creates the first virtual remote. Additional remotes are added from the integration options.
+The initial setup flow creates the first virtual remote. Additional remotes can be added from the integration options.
 
 ---
 
 ## Managing Virtual Remotes
 
 Open the Virtual Remote integration options to:
-
 - Add virtual remote
 - Edit virtual remote
 - Remove virtual remote
@@ -63,7 +78,6 @@ If a virtual remote points to an infrared entity that no longer exists, the opti
 Commands are managed through the integration options flow.
 
 Available operations:
-
 - Add command
 - Edit command
 - Remove command
@@ -98,4 +112,4 @@ A virtual remote is available when its linked infrared entity is available.
 
 - Multiple virtual remotes may share the same infrared entity.
 - The integration does not directly communicate with physical hardware.
-- Infrared transmission is handled entirely by the linked infrared integration.
+- Infrared transmission is handled by the linked infrared integration.

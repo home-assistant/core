@@ -4,7 +4,6 @@ from typing import cast
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.virtual_remote.const import (
     CONF_INFRARED_ENTITY_ID,
     CONF_REMOTE_COMMANDS,
@@ -40,15 +39,19 @@ async def _init_options_flow(
     source: str | None = None,
 ) -> ConfigFlowResult:
     """Initialize the options flow."""
-    context: config_entries.ConfigFlowContext = {
-        "source": "init",
-        "entry_id": entry.entry_id,
-    }
-    if source is not None:
-        context["source"] = source
-    return await hass.config_entries.options.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id,
-        context=context,
+        context={
+            "source": "init",
+            "entry_id": entry.entry_id,
+        },
+    )
+    if source is None:
+        return result
+
+    return await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": source},
     )
 
 
@@ -245,7 +248,7 @@ async def test_remove_remote_aborts_when_remote_is_not_found(
 async def test_remote_steps_abort_without_remotes(
     hass: HomeAssistant, infrared_entity: str
 ) -> None:
-    """Test remote steps abort without configured remotes."""
+    """Test remote management menu options are hidden without configured remotes."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -253,13 +256,10 @@ async def test_remote_steps_abort_without_remotes(
     )
     entry.add_to_hass(hass)
 
-    for source in (SOURCE_EDIT_REMOTE, SOURCE_REMOVE_REMOTE, SOURCE_MANAGE_COMMANDS):
-        result = await _init_options_flow(hass, entry, source)
-        if source == SOURCE_MANAGE_COMMANDS:
-            assert result["type"] is FlowResultType.MENU
-        else:
-            assert result["type"] is FlowResultType.ABORT
-            assert result["reason"] == "no_virtual_remotes"
+    result = await _init_options_flow(hass, entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == [SOURCE_ADD_REMOTE]
 
 
 async def test_manage_commands_menu(
@@ -569,30 +569,6 @@ async def test_edit_remote_validation_errors(
     assert result["errors"] == errors
 
 
-@pytest.mark.parametrize(
-    ("source", "expected_option"),
-    [
-        (SOURCE_ADD_COMMAND, "add_command"),
-        (SOURCE_EDIT_COMMAND, "edit_command"),
-        (SOURCE_REMOVE_COMMAND, "remove_command"),
-    ],
-)
-async def test_manage_commands_source_shortcuts(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    source: str,
-    expected_option: str,
-) -> None:
-    """Test command source shortcuts."""
-    flow = VirtualRemoteOptionsFlow(config_entry)
-    flow.hass = hass
-
-    result = await flow.async_step_manage_commands()
-
-    assert result["type"] is FlowResultType.MENU
-    assert expected_option in result["menu_options"]
-
-
 async def test_select_remote_for_command_aborts_without_remotes(
     hass: HomeAssistant,
     infrared_entity: str,
@@ -794,6 +770,166 @@ async def test_manage_commands_menu_contains_command_actions(
     assert "remove_command" in result["menu_options"]
 
 
+async def test_options_flow_menu_routes_to_add_remote(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test menu selection routes to add remote step."""
+    result = await _init_options_flow(hass, config_entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert SOURCE_ADD_REMOTE in result["menu_options"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": SOURCE_ADD_REMOTE},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_ADD_REMOTE
+
+
+async def test_options_flow_menu_routes_to_edit_remote(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test menu selection routes to edit remote selection step."""
+    result = await _init_options_flow(hass, config_entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert SOURCE_EDIT_REMOTE in result["menu_options"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": SOURCE_EDIT_REMOTE},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_remote_for_edit"
+
+
+async def test_options_flow_menu_routes_to_remove_remote(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test menu selection routes to remove remote step."""
+    result = await _init_options_flow(hass, config_entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert SOURCE_REMOVE_REMOTE in result["menu_options"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": SOURCE_REMOVE_REMOTE},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_REMOVE_REMOTE
+
+
+async def test_options_flow_menu_routes_to_manage_commands(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test menu selection routes to manage commands menu."""
+    result = await _init_options_flow(hass, config_entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert SOURCE_MANAGE_COMMANDS in result["menu_options"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": SOURCE_MANAGE_COMMANDS},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == SOURCE_MANAGE_COMMANDS
+
+
+async def test_direct_remote_management_steps_abort_without_remotes(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test direct remote management steps abort without configured remotes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_VIRTUAL_REMOTES: []},
+    )
+    entry.add_to_hass(hass)
+
+    flow = VirtualRemoteOptionsFlow(entry)
+    flow.hass = hass
+
+    for step in (
+        flow.async_step_select_remote_for_edit,
+        flow.async_step_remove_remote,
+    ):
+        result = await step()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_virtual_remotes"
+
+    result = await flow.async_step_manage_commands()
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == SOURCE_MANAGE_COMMANDS
+
+
+async def test_direct_select_remote_for_command_aborts_without_remotes(
+    hass: HomeAssistant,
+    infrared_entity: str,
+) -> None:
+    """Test direct command remote selection aborts without configured remotes."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_VIRTUAL_REMOTES: []},
+    )
+    entry.add_to_hass(hass)
+
+    flow = VirtualRemoteOptionsFlow(entry)
+    flow.hass = hass
+
+    result = await flow.async_step_select_remote_for_command()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_virtual_remotes"
+
+
+async def test_direct_remove_remote_step_shows_selector_form(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test direct remove remote step builds the selector form."""
+    flow = VirtualRemoteOptionsFlow(config_entry)
+    flow.hass = hass
+
+    result = await flow.async_step_remove_remote()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_REMOVE_REMOTE
+
+
+async def test_options_flow_menu_routes_to_remove_remote_selector(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test normal menu routing builds the remove remote selector form."""
+    result = await _init_options_flow(hass, config_entry)
+
+    assert result["type"] is FlowResultType.MENU
+    assert SOURCE_REMOVE_REMOTE in result["menu_options"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": SOURCE_REMOVE_REMOTE},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_REMOVE_REMOTE
+
+
 @pytest.mark.parametrize(
     ("source", "expected_step", "needs_commands"),
     [
@@ -802,7 +938,7 @@ async def test_manage_commands_menu_contains_command_actions(
         (SOURCE_REMOVE_COMMAND, "select_remote_for_command_removal", True),
     ],
 )
-async def test_manage_commands_source_shortcuts_cover_direct_branches(
+async def test_direct_manage_commands_source_branches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
@@ -810,7 +946,7 @@ async def test_manage_commands_source_shortcuts_cover_direct_branches(
     expected_step: str,
     needs_commands: bool,
 ) -> None:
-    """Test command source shortcuts route to command selection steps."""
+    """Test direct manage-command source branches."""
     if needs_commands:
         config_entry.options[CONF_VIRTUAL_REMOTES][0][CONF_REMOTE_COMMANDS] = {
             "POWER_ON": RAW_COMMAND
@@ -819,12 +955,25 @@ async def test_manage_commands_source_shortcuts_cover_direct_branches(
     flow = VirtualRemoteOptionsFlow(config_entry)
     flow.hass = hass
     monkeypatch.setattr(
-        type(flow),
-        "context",
-        property(lambda _flow: {"source": source}),
+        type(flow), "context", property(lambda _flow: {"source": source})
     )
 
     result = await flow.async_step_manage_commands()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step
+
+
+async def test_remove_command_aborts_when_submitted_command_disappears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test removing a stale command aborts instead of silently succeeding."""
+    flow = VirtualRemoteOptionsFlow(config_entry)
+    flow.hass = hass
+    flow._selected_remote_id = "living_room_tv"
+
+    result = await flow.async_step_remove_command({COMMAND_NAME: "MISSING_COMMAND"})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "command_not_found"

@@ -90,16 +90,16 @@ def configured_remote_definitions(entry: ConfigEntry) -> list[Mapping[str, Any]]
 def _virtual_remote_device_info(
     remote_id: str,
     name: str,
-    remote_config: Mapping[str, Any],
+    _remote_config: Mapping[str, Any],
 ) -> DeviceInfo:
     """Return device info for a standalone virtual remote."""
     return DeviceInfo(identifiers={(DOMAIN, remote_id)}, name=name)
 
 
 def _standalone_virtual_remote_entity_name(
-    remote_id: str,
-    name: str,
-    remote_config: Mapping[str, Any],
+    _remote_id: str,
+    _name: str,
+    _remote_config: Mapping[str, Any],
 ) -> str | None:
     """Return entity name for a standalone virtual remote.
 
@@ -157,7 +157,8 @@ def cleanup_stale_remote_entities(
 
         unique_id = entity_entry.unique_id
         if (
-            unique_id.startswith(unique_id_prefix)
+            isinstance(unique_id, str)
+            and unique_id.startswith(unique_id_prefix)
             and unique_id not in expected_unique_ids
         ):
             entity_registry.async_remove(entity_entry.entity_id)

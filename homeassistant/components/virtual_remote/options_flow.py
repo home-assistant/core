@@ -59,20 +59,6 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> config_entries.ConfigFlowResult:
         """Manage the options menu."""
-        source = self.context.get("source")
-
-        if source == SOURCE_ADD_REMOTE:
-            return await self.async_step_add_remote()
-
-        if source == SOURCE_EDIT_REMOTE:
-            return await self.async_step_select_remote_for_edit()
-
-        if source == SOURCE_REMOVE_REMOTE:
-            return await self.async_step_remove_remote()
-
-        if source == SOURCE_MANAGE_COMMANDS:
-            return await self.async_step_manage_commands()
-
         menu_options = [SOURCE_ADD_REMOTE]
         if self._virtual_remotes:
             menu_options.extend(
@@ -586,7 +572,10 @@ class VirtualRemoteOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             command_name = str(user_input[COMMAND_NAME])
-            commands.pop(command_name, None)
+            if command_name not in commands:
+                return self.async_abort(reason="command_not_found")
+
+            commands.pop(command_name)
             if commands:
                 remote[CONF_REMOTE_COMMANDS] = commands
             else:
