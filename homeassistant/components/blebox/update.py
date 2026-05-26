@@ -106,11 +106,12 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         self._cancel_poll()
         self._in_progress_old_version = self._feature.installed_version
         self._poll_attempts = 0
+        self.async_write_ha_state()
         try:
             await self._feature.async_install()
-        except Error:
+        except Error as ex:
             self._reset_progress()
-            raise
+            raise HomeAssistantError(ex) from ex
         self._poll_cancel = async_call_later(
             self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
         )

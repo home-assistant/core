@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -165,6 +166,43 @@ async def test_install(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_INSTALLED_VERSION] == "0.1"
+
+
+async def test_install_error(
+    firmwareupdate: tuple[blebox_uniapi.update.Update, str],
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that an install failure clears in_progress and raises HomeAssistantError."""
+    feature_mock, entity_id = firmwareupdate
+
+    def initial_update() -> None:
+        feature_mock.installed_version = "0.1"
+        feature_mock.latest_version = "0.2"
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, entity_id)
+
+    feature_mock.async_install = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError("install failed")
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    feature_mock.async_update.assert_called_once()
 
 
 @pytest.mark.freeze_time("2026-05-21 00:00:00")
