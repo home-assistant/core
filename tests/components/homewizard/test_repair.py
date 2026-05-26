@@ -178,7 +178,6 @@ async def test_repair_confirm_enables_cloud_connection(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (DisabledError, "api_not_enabled"),
         (RequestError, "network_error"),
     ],
 )

@@ -185,8 +185,7 @@
     "battery_mode_cloud_disabled": {
       "fix_flow": {
         "error": {
-          "api_not_enabled": "[%key:component::homewizard::config::error::api_not_enabled%]",
-          "network_error": "[%key:component::homewizard::config::error::network_error%]"
+          "network_error": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {
           "confirm": {

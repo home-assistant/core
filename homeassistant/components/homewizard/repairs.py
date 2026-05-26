@@ -1,6 +1,6 @@
 """Repairs for HomeWizard integration."""
 
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import RequestError
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -88,8 +88,6 @@ class BatteryModeCloudDisabledRepairFlow(RepairsFlow):
             coordinator = self.entry.runtime_data
             try:
                 await coordinator.api.system(cloud_enabled=True)
-            except DisabledError:
-                errors = {"base": "api_not_enabled"}
             except RequestError:
                 errors = {"base": "network_error"}
             else:
