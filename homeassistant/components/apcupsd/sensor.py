@@ -1,6 +1,7 @@
 """Support for APCUPSd sensors."""
 
 import logging
+from typing import Final
 
 import dateutil
 
@@ -31,6 +32,20 @@ from .entity import APCUPSdEntity
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+# List of useless sensors to ignore, since they are either provided in device
+# information, or not useful at all
+IGNORED_SENSORS: Final = {
+    "apc",
+    "end apc",
+    "date",
+    "apcmodel",
+    "model",
+    "firmware",
+    "version",
+    "upsname",
+    "serialno",
+}
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "alarmdel": SensorEntityDescription(
@@ -426,6 +441,8 @@ async def async_setup_entry(
     # created is deterministic since "APCMODEL" and "MODEL"
     # resources map to the same "Model" name.
     for resource in sorted(available_resources | {LAST_S_TEST}):
+        if resource in IGNORED_SENSORS:
+            continue
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
