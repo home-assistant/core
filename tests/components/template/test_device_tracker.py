@@ -261,10 +261,10 @@ async def test_syntax_error(hass: HomeAssistant) -> None:
 async def test_in_zones(
     hass: HomeAssistant,
     attribute: str,
-    expected_value: float | None,
+    expected_value: list[str] | None,
     expected_state: str,
 ) -> None:
-    """Test template latitude."""
+    """Test template in_zones."""
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
@@ -395,7 +395,7 @@ async def test_longitude(
     expected_state: str,
 ) -> None:
     """Test template longitude."""
-    await async_trigger(hass, TEST_STATE_ENTITY_ID, expected_value)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
 
     state = hass.states.get(TEST_TRACKER.entity_id)
     assert state.state == expected_state
