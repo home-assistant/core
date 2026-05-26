@@ -30,6 +30,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_BATCH_SIZE: Final = 50
 SCAN_INTERVAL: Final = 30
 
 type IndevoltConfigEntry = ConfigEntry[IndevoltCoordinator]
@@ -91,7 +92,7 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         sensor_keys = SENSOR_KEYS[self.generation]
 
         try:
-            for chunk in itertools.batched(sensor_keys, 50, strict=False):
+            for chunk in itertools.batched(sensor_keys, SCAN_BATCH_SIZE, strict=False):
                 data.update(await self.api.fetch_data(list(chunk)))
 
         except (ClientError, OSError) as err:
