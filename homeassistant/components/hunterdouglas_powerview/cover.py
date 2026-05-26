@@ -398,12 +398,16 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        self._async_schedule_update_for_transition(100 - self.transition_steps)
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
+
+        self._async_schedule_update_for_transition(100 - steps)
         await self._async_execute_move(self.open_tilt_position)
-        self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the tilt to a specific position."""
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
         await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
 
     async def _async_set_cover_tilt_position(
