@@ -4244,3 +4244,154 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     assert len(calls) == expected_calls
 
     unsub()
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "state", "entity_id": ["sensor.a", "sensor.b"]},
+            ["sensor.a", "sensor.b"],
+            id="state",
+        ),
+        pytest.param(
+            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            ["sensor.a"],
+            id="numeric_state",
+        ),
+        pytest.param(
+            {"platform": "calendar", "options": {"entity_id": "calendar.x"}},
+            ["calendar.x"],
+            id="calendar",
+        ),
+        pytest.param(
+            {
+                "platform": "zone",
+                "entity_id": ["person.a"],
+                "zone": "zone.home",
+                "event": "enter",
+            },
+            ["person.a", "zone.home"],
+            id="zone-legacy",
+        ),
+        pytest.param(
+            {"platform": "geo_location", "zone": "zone.home"},
+            ["zone.home"],
+            id="geo_location",
+        ),
+        pytest.param(
+            {"platform": "sun"},
+            ["sun.sun"],
+            id="sun",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="event-with-entity-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": "not-a-valid-entity-id"},
+            },
+            [],
+            id="event-invalid-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            [],
+            id="event-entity-id-list-not-extracted",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            ["sensor.x", "sensor.y"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {}},
+            [],
+            id="modern-target-empty",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_entities(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from various trigger config shapes."""
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "device", "device_id": "abc123"},
+            ["abc123"],
+            id="device",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            ["abc123"],
+            id="event-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            ["abc123", "def456"],
+            id="tag-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag"},
+            [],
+            id="tag-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"device_id": "abc123"}},
+            ["abc123"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"device_id": ["abc123", "def456"]},
+            },
+            ["abc123", "def456"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_devices(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting devices from various trigger config shapes."""
+    assert trigger.async_extract_devices(trigger_conf) == expected
