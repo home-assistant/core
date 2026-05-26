@@ -57,7 +57,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         battery_mode_cloud_issue_active = (
             data.batteries is not None
             and data.system is not None
-            and data.batteries.mode == str(Batteries.Mode.PREDICTIVE)
+            and data.batteries.mode == Batteries.Mode.PREDICTIVE.value
             and data.system.cloud_enabled is False
         )
 
