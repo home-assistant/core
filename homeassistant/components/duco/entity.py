@@ -27,11 +27,11 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
 
         self._mac = mac
         self._is_box = node.general.node_type == NodeType.BOX
-        device_name = (
-            node.general.name or coordinator.board_info.box_name
-            if self._is_box
-            else node.general.name or f"Node {node.node_id}"
-        )
+        device_name: str
+        if self._is_box:
+            device_name = node.general.name or coordinator.board_info.box_name
+        else:
+            device_name = node.general.name or f"Node {node.node_id}"
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier(mac, node.node_id))},
