@@ -119,7 +119,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="conductivity_module",
         translation_key="conductivity_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASCD,
@@ -127,7 +126,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="chlorine_module",
         translation_key="chlorine_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASCL,
@@ -135,7 +133,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="redox_module",
         translation_key="redox_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASRX,
@@ -143,7 +140,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="ph_module",
         translation_key="ph_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASPH,
@@ -151,7 +147,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="io_module",
         translation_key="io_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASIO,
@@ -159,7 +154,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
     VistapoolBinarySensorEntityDescription(
         key="hidro_module",
         translation_key="hidro_module",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_path=PATH_HASHIDRO,
