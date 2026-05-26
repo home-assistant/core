@@ -1284,8 +1284,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/openevse/ @c00w @firstof9
 /homeassistant/components/openexchangerates/ @MartinHjelmare
 /tests/components/openexchangerates/ @MartinHjelmare
-/homeassistant/components/opengarage/ @danielhiversen
-/tests/components/opengarage/ @danielhiversen
+/homeassistant/components/opengarage/ @danielhiversen @h0tw1r3
+/tests/components/opengarage/ @danielhiversen @h0tw1r3
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
 /homeassistant/components/openrgb/ @felipecrs

@@ -1,7 +1,7 @@
 {
   "domain": "opengarage",
   "name": "OpenGarage",
-  "codeowners": ["@danielhiversen"],
+  "codeowners": ["@danielhiversen", "@h0tw1r3"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opengarage",
   "integration_type": "device",
