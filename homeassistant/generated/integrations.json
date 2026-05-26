@@ -3773,6 +3773,12 @@
         }
       }
     },
+    "lg_tv_rs232": {
+      "name": "LG TV via Serial",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
       "integration_type": "device",
@@ -5071,8 +5077,8 @@
     },
     "opensensemap": {
       "name": "openSenseMap",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "opensky": {
@@ -5198,6 +5204,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "ovhcloud_ai_endpoints": {
+      "name": "OVHcloud AI Endpoints",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -8217,6 +8229,12 @@
     },
     "yolink": {
       "name": "YoLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
+    "yoto": {
+      "name": "Yoto",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
