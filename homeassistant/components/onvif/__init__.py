@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
         await async_populate_options(hass, entry)
 
     device = ONVIFDevice(hass, entry)
-    camera_address = f"{device.device.host}:{device.device.port}"
+    camera_address = f"{device.host}:{device.port}"
 
     async with AsyncExitStack() as stack:
         # Register cleanup callback for device
