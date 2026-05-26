@@ -10,10 +10,12 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
+    ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
 from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
     ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
     HOME_ZONE,
 )
@@ -59,6 +61,7 @@ LOCATION_UPDATE_SCHEMA = vol.All(
             vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
             vol.Optional(ATTR_COURSE): cv.positive_int,
             vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
         },
     ),
 )
@@ -127,6 +130,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return attrs
 
     @property
+    def in_zones(self) -> list[str] | None:
+        """Return the zones the device is currently in."""
+        return self._data.get(ATTR_IN_ZONES)
+
+    @property
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self._data.get(ATTR_GPS_ACCURACY, 0)
@@ -150,6 +158,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
+        if ATTR_IN_ZONES in self._data:
+            # New app sends in_zones as well as location_name. Prioritize in_zones
+            # and only use location_name for backwards compatibility with old
+            # app versions.
+            return None
         if location_name := self._data.get(ATTR_LOCATION_NAME):
             if location_name == HOME_ZONE:
                 return STATE_HOME
