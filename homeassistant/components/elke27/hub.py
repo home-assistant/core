@@ -342,10 +342,15 @@ class Elke27Hub:
         event_type = _event_type(event)
         if connection_state is False or event_type == "DISCONNECTED":
             _LOGGER.debug("Panel disconnect event received; scheduling reconnect")
-            self._log_unavailable()
-            self._hass.loop.call_soon_threadsafe(self._schedule_reconnect)
+            self._hass.loop.call_soon_threadsafe(self._handle_disconnected)
         elif connection_state is True or event_type == "READY":
             self._hass.loop.call_soon_threadsafe(self._cancel_reconnect)
+
+    @callback
+    def _handle_disconnected(self) -> None:
+        """Handle a panel disconnect on the Home Assistant event loop."""
+        self._log_unavailable()
+        self._schedule_reconnect()
 
     @callback
     def _schedule_reconnect(self) -> None:
