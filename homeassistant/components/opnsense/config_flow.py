@@ -298,6 +298,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             DOMAIN,
             f"import_failed_{reason}",
+            breaks_in_ha_version="2026.12.0",
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"import_failed_{reason}",
