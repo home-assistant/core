@@ -152,12 +152,12 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self.positions.primary <= CLOSED_POSITION
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return the current position of cover."""
         return self.positions.primary
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         return self.positions.primary
 
@@ -370,7 +370,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         return self.positions.tilt
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         if self.positions.primary is None or self.positions.tilt is None:
             return None
