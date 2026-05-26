@@ -658,15 +658,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """
         schema = {}
         for key, val in data_schema.schema.items():
-            if isinstance(key, vol.Marker):
-                # Exclude advanced field
-                if (
-                    key.description
-                    and key.description.get("advanced")
-                    and not self.show_advanced_options
-                ):
-                    continue
-
             # Process the section schema options
             if (
                 suggested_values is not None
