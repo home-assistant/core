@@ -326,7 +326,7 @@ async def make_new_device_data(
         manageable_by_webhook=default_config.webhook,
     )
 
-    _PLATFORM_LIST_MAP: dict[Platform, list] = {
+    _platform_list_map: dict[Platform, list] = {
         Platform.BINARY_SENSOR: devices_data.binary_sensors,
         Platform.BUTTON: devices_data.buttons,
         Platform.CLIMATE: devices_data.climates,
@@ -342,7 +342,7 @@ async def make_new_device_data(
     }
 
     for platform in default_config.entity_config:
-        target_list = _PLATFORM_LIST_MAP.get(platform)
+        target_list = _platform_list_map.get(platform)
         if target_list is None:
             continue
         existing_ids = {item[0].device_id for item in target_list}
