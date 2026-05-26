@@ -42,6 +42,20 @@
         "name": "Cloud connection"
       }
     },
+    "event": {
+      "button": {
+        "name": "Button {channel}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "long_press": "Long press",
+              "long_release": "Long release",
+              "short_release": "Short release"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "optical_signal_light": {
         "state_attributes": {
