@@ -196,12 +196,16 @@ async def async_setup_entry(
                     if isinstance(description.exists_path, str)
                     else description.exists_path
                 )
-                if not all(coordinator.get_value(path) for path in required):
+                if not all(
+                    _coerce_to_bool(coordinator.get_value(path)) for path in required
+                ):
                     continue
             entities.append(VistapoolBinarySensor(coordinator, description))
 
-        if coordinator.get_value(PATH_HASHIDRO):
-            is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+        if _coerce_to_bool(coordinator.get_value(PATH_HASHIDRO)):
+            is_electrolysis = _coerce_to_bool(
+                coordinator.get_value("hidro.is_electrolysis")
+            )
             entities.append(
                 VistapoolBinarySensor(
                     coordinator,
@@ -217,7 +221,7 @@ async def async_setup_entry(
             )
 
         if any(
-            coordinator.get_value(path)
+            _coerce_to_bool(coordinator.get_value(path))
             for path in (PATH_HASCD, PATH_HASCL, PATH_HASPH, PATH_HASRX)
         ):
             entities.append(VistapoolDosingTankBinarySensor(coordinator))

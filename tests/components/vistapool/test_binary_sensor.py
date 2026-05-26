@@ -119,6 +119,28 @@ async def test_binary_sensors_string_values(
     assert hass.states.get("binary_sensor.my_pool_backwash").state == STATE_OFF
 
 
+async def test_binary_sensors_string_has_flags(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test entity creation gates also coerce string has* flags."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasPH": "0", "hasRX": "1", "hasHidro": "0", "version": 1},
+        "modules": {"rx": {"pump_status": 0, "tank": 0}},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.my_pool_redox_pump") is not None
+    assert hass.states.get("binary_sensor.my_pool_ph_acid_pump") is None
+    assert hass.states.get("binary_sensor.my_pool_hidro_flow") is None
+    assert hass.states.get("binary_sensor.my_pool_electrolysis_low") is None
+    assert hass.states.get("binary_sensor.my_pool_hydrolysis_low") is None
+
+
 async def test_binary_sensors_fl2_requires_hidro(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
