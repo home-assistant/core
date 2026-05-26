@@ -51,5 +51,6 @@ APPLICATION_CREDENTIALS = [
     "xbox",
     "yale",
     "yolink",
+    "yoto",
     "youtube",
 ]
