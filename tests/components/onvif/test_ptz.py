@@ -198,5 +198,5 @@ async def test_ptz_continuous_move_does_not_call_stop_when_duration_zero(
         await _call_ptz(hass, continuous_duration=0)
 
     ptz_service.ContinuousMove.assert_awaited_once()
-    ptz_service.Stop.assert_not_called()
+    ptz_service.Stop.assert_not_awaited()
     mock_sleep.assert_not_awaited()
