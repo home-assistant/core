@@ -212,10 +212,10 @@ async def test_user_exceptions(
         assert result["errors"] == {"base": expected}
 
 
-async def test_interfaces_step_user_input_missing(
+async def test_user_no_unique_id_aborts(
     hass: HomeAssistant,
 ) -> None:
-    """Test interfaces step behavior via the flow manager."""
+    """Test that the user flow aborts if the router has no unique id."""
     with (
         patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
         patch(
@@ -235,17 +235,35 @@ async def test_interfaces_step_user_input_missing(
             result["flow_id"],
             user_input={**CONFIG_DATA, CONF_URL: TEST_URL},
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "interfaces"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "no_unique_id"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
+
+async def test_import_no_unique_id_aborts(hass: HomeAssistant) -> None:
+    """Test that the import flow aborts and raises a repair if no unique id."""
+    with (
+        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
+            return_value={"LAN": {"name": "LAN"}},
+        ),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.opnsense.config_flow.async_create_issue"
+        ) as mock_issue,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA_IMPORT,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        # Submitting an empty dict omits tracker_interfaces and creates the entry,
-        # so no additional interfaces-step submission is needed.
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "no_unique_id"
+        issue_ids = [call.args[2] for call in mock_issue.call_args_list]
+        assert "import_failed_no_unique_id" in issue_ids
 
 
 async def test_import_exceptions(hass: HomeAssistant) -> None:
@@ -308,6 +326,10 @@ async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
             return_value={"LAN": {"name": "LAN"}},
         ),
         patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
+            return_value="unique_id_missing",
+        ),
+        patch(
             "homeassistant.components.opnsense.config_flow.async_create_issue"
         ) as mock_issue,
     ):
@@ -318,7 +340,8 @@ async def test_import_missing_interfaces(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "import_failed_missing_interfaces"
-        mock_issue.assert_called()
+        issue_ids = [call.args[2] for call in mock_issue.call_args_list]
+        assert "import_failed_missing_interfaces" in issue_ids
 
 
 async def test_abort_import_helper(hass: HomeAssistant) -> None:
@@ -339,7 +362,8 @@ async def test_abort_import_helper(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "invalid_url"
-        mock_issue.assert_called()
+        issue_ids = [call.args[2] for call in mock_issue.call_args_list]
+        assert "import_failed_invalid_url" in issue_ids
 
 
 async def test_on_unknown_error(hass: HomeAssistant) -> None:
@@ -368,6 +392,10 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
             return_value={"LAN": {"name": "LAN"}},
+        ),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_device_unique_id",
+            return_value="unique_id_after_retry",
         ),
     ):
         # Submit user step, should go to interfaces step

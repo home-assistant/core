@@ -158,9 +158,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             unique_id = await client.get_device_unique_id()
-            if unique_id:
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+            if not unique_id:
+                return self.async_abort(reason="no_unique_id")
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
             self._entry_data = user_input
             return await self.async_step_interfaces()
 
@@ -232,9 +233,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         unique_id = await client.get_device_unique_id()
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+        if not unique_id:
+            return self._abort_import(reason="no_unique_id")
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
         # Validate CONF_TRACKER_INTERFACES if present and not empty
         verified_data = dict(import_data)
