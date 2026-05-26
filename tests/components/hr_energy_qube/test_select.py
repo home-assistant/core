@@ -21,7 +21,20 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "select.qube_heat_pump"
+
+async def _setup_select(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> str:
+    """Set up the select platform and return the entity_id."""
+    with patch("homeassistant.components.hr_energy_qube.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 1
+    return entries[0].entity_id
 
 
 async def test_entities(
@@ -32,10 +45,7 @@ async def test_entities(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test all select entities via snapshot."""
-    with patch(
-        "homeassistant.components.hr_energy_qube.PLATFORMS",
-        [Platform.SELECT],
-    ):
+    with patch("homeassistant.components.hr_energy_qube.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -49,12 +59,12 @@ async def test_select_option(
     option: str,
 ) -> None:
     """Test selecting an SG Ready mode."""
-    await setup_integration(hass, mock_config_entry)
+    entity_id = await _setup_select(hass, mock_config_entry)
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
         blocking=True,
     )
 
@@ -67,14 +77,14 @@ async def test_select_option_connection_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test select raises HomeAssistantError on connection error."""
-    await setup_integration(hass, mock_config_entry)
+    entity_id = await _setup_select(hass, mock_config_entry)
 
     mock_qube_client.set_sg_ready_mode = AsyncMock(side_effect=ConnectionError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "plus"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "plus"},
             blocking=True,
         )
 
@@ -85,14 +95,14 @@ async def test_select_option_write_failure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test select raises HomeAssistantError when write fails."""
-    await setup_integration(hass, mock_config_entry)
+    entity_id = await _setup_select(hass, mock_config_entry)
 
     mock_qube_client.set_sg_ready_mode = AsyncMock(return_value=False)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "plus"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "plus"},
             blocking=True,
         )
 
@@ -113,9 +123,9 @@ async def test_select_unavailable_on_coordinator_error(
     return_value: None,
 ) -> None:
     """Test select becomes unavailable when coordinator fails."""
-    await setup_integration(hass, mock_config_entry)
+    entity_id = await _setup_select(hass, mock_config_entry)
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -127,6 +137,6 @@ async def test_select_unavailable_on_coordinator_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
