@@ -58,9 +58,11 @@ def setup_mock_onvif_camera(
 ):
     """Prepare mock onvif.ONVIFCamera.
 
-    When ``with_full_setup`` is set, the mock is configured with the additional
-    services that ``ONVIFDevice.async_setup`` needs to fully set up a config
-    entry against a real (non-mocked) ``ONVIFDevice``.
+    When ``with_full_setup`` is set, the mock is additionally configured with
+    every service ``ONVIFDevice.async_setup`` invokes, so that a config entry
+    can be fully set up end-to-end. The returned profile is fixed in this mode,
+    so the ``with_h264``, ``two_profiles`` and ``no_profiles`` flags have no
+    effect on it.
     """
     devicemgmt = MagicMock()
 
@@ -125,7 +127,7 @@ def setup_mock_onvif_camera(
                 Manufacturer=MANUFACTURER,
                 Model=MODEL,
                 FirmwareVersion=FIRMWARE_VERSION,
-                SerialNumber=SERIAL_NUMBER,
+                SerialNumber=SERIAL_NUMBER if with_serial else None,
             )
         )
 

@@ -141,3 +141,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    mock_onvif_camera_cls.assert_called_once()
+    host, port, username, password = mock_onvif_camera_cls.call_args.args[:4]
+    assert (host, port, username, password) == (HOST, PORT, USERNAME, PASSWORD)
