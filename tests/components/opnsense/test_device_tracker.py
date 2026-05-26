@@ -18,10 +18,10 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_opnsense_client")
 async def test_device_tracker_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_opnsense_client: mock.AsyncMock,
 ) -> None:
     """Test device tracker platform setup."""
     entity_registry = er.async_get(hass)
@@ -49,10 +49,10 @@ async def test_device_tracker_setup(
     assert "ff:ff:ff:ff:ff:fe" in entity_unique_ids
 
 
+@pytest.mark.usefixtures("mock_opnsense_client")
 async def test_device_tracker_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_opnsense_client: mock.AsyncMock,
 ) -> None:
     """Test device tracker entity states and attributes."""
     entity_registry = er.async_get(hass)

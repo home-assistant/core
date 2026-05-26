@@ -79,9 +79,8 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
     assert result.get("title") == CONFIG_DATA_IMPORT[CONF_URL]
 
 
-async def test_import_unique_id_already_configured(
-    hass: HomeAssistant, mock_opnsense_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_import_unique_id_already_configured(hass: HomeAssistant) -> None:
     """Test import step when unique ID is already configured."""
     # The fixture patches config_flow and component clients separately.
     # Import uses the config_flow client default unique ID from setup_mock_opnsense_client.
@@ -305,9 +304,8 @@ async def test_import_exceptions(hass: HomeAssistant) -> None:
             assert f"import_failed_{reason}" in issue_ids
 
 
-async def test_import_empty_tracker_interfaces(
-    hass: HomeAssistant, mock_opnsense_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_import_empty_tracker_interfaces(hass: HomeAssistant) -> None:
     """Test import with empty CONF_TRACKER_INTERFACES (should pop the key)."""
     import_data = dict(CONFIG_DATA_IMPORT)
     import_data[CONF_TRACKER_INTERFACES] = []
