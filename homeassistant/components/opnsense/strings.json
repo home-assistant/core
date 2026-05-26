@@ -42,6 +42,35 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Connection failure while connecting to OPNsense API endpoint at {url}"
+    },
+    "firmware_too_old": {
+      "message": "OPNsense firmware at {url} is below the minimum supported version"
+    },
+    "invalid_auth": {
+      "message": "Authentication failure while connecting to OPNsense API endpoint at {url}"
+    },
+    "invalid_url": {
+      "message": "Invalid URL while connecting to OPNsense API endpoint at {url}"
+    },
+    "privilege_missing": {
+      "message": "The API user connecting to {url} does not have sufficient privileges"
+    },
+    "ssl_error": {
+      "message": "Unable to verify SSL certificate while connecting to OPNsense API endpoint at {url}"
+    },
+    "timeout_connecting": {
+      "message": "Timeout while connecting to OPNsense API endpoint at {url}"
+    },
+    "tracker_interface_not_found": {
+      "message": "Configured tracker interface {interface} is not present on the OPNsense router. Known interfaces: {known}"
+    },
+    "unknown_firmware": {
+      "message": "Could not determine the OPNsense firmware version at {url}"
+    }
+  },
   "issues": {
     "import_failed_cannot_connect": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",

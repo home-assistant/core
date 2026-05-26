@@ -1,7 +1,5 @@
 """Support for OPNsense Routers."""
 
-import logging
-
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseClient,
@@ -25,8 +23,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -88,46 +84,53 @@ async def async_setup_entry(
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware as err:
-        _LOGGER.error("Error checking the OPNsense firmware version at %s", url)
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_firmware",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseBelowMinFirmware as err:
-        _LOGGER.error(
-            "OPNsense Firmware is below the minimum supported version at %s", url
-        )
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_too_old",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseInvalidURL as err:
-        _LOGGER.error(
-            "Invalid URL while connecting to OPNsense API endpoint at %s", url
-        )
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_url",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseTimeoutError as err:
-        _LOGGER.error("Timeout while connecting to OPNsense API endpoint at %s", url)
-        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connecting",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseSSLError as err:
-        _LOGGER.error(
-            "Unable to verify SSL while connecting to OPNsense API endpoint at %s", url
-        )
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="ssl_error",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseInvalidAuth as err:
-        _LOGGER.error(
-            "Authentication failure while connecting to OPNsense API endpoint at %s",
-            url,
-        )
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsensePrivilegeMissing as err:
-        _LOGGER.error(
-            "Invalid Permissions while connecting to OPNsense API endpoint at %s",
-            url,
-        )
-        raise ConfigEntryError from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="privilege_missing",
+            translation_placeholders={"url": url},
+        ) from err
     except OPNsenseConnectionError as err:
-        _LOGGER.error(
-            "Connection failure while connecting to OPNsense API endpoint at %s",
-            url,
-        )
-        # A connection error could be transient, so we raise ConfigEntryNotReady to trigger a retry later
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
@@ -136,11 +139,14 @@ async def async_setup_entry(
         ]
         for intf_description in tracker_interfaces:
             if intf_description not in known_interfaces:
-                error_message = (
-                    "Specified OPNsense tracker interface %s is not found",
-                    intf_description,
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="tracker_interface_not_found",
+                    translation_placeholders={
+                        "interface": intf_description,
+                        "known": ", ".join(known_interfaces),
+                    },
                 )
-                raise ConfigEntryError(error_message)
 
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
