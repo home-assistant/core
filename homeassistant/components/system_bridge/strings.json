@@ -217,7 +217,7 @@
         "home": "[%key:common::entity::button::home::name%]",
         "insert": "Insert",
         "left": "[%key:common::entity::button::left::name%]",
-        "lights_kbd_down": "Keyboasrd backlight brightness down",
+        "lights_kbd_down": "Keyboard backlight brightness down",
         "lights_kbd_toggle": "Toggle keyboard backlight",
         "lights_kbd_up": "Keyboard backlight brighness up",
         "lights_mon_down": "Display brightness down",
