@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '123.4',
+    'state': '123',
   })
 # ---
 # name: test_sensors[sensor.zeversolar_sensor_power-entry]

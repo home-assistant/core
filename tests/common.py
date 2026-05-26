@@ -100,6 +100,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, ulid as ulid_util, uuid as uuid_util
 from homeassistant.util.async_ import (
     _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
@@ -765,7 +766,6 @@ def mock_device_registry(
     registry.deleted_devices = dr.DeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
-    dr.async_get.cache_clear()
     return registry
 
 
@@ -1857,6 +1857,8 @@ def import_and_test_deprecated_alias(
     alias_name: str,
     replacement: Any,
     breaks_in_ha_version: str,
+    *,
+    replacement_name: str | None = None,
 ) -> None:
     """Import and test deprecated alias replaced by a value.
 
@@ -1866,7 +1868,9 @@ def import_and_test_deprecated_alias(
     - Assert the deprecated alias is included in the modules.__dir__()
     - Assert the deprecated alias is included in the modules.__all__()
     """
-    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    replacement_name = (
+        replacement_name or f"{replacement.__module__}.{replacement.__name__}"
+    )
     value = import_deprecated_constant(module, alias_name)
     assert value == replacement
     assert (
@@ -2026,3 +2030,47 @@ def get_sensor_display_state(
         numerical_value = float(value)
         value = f"{numerical_value:z.{precision}f}"
     return value
+
+
+async def assert_platform_setup_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    integration_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert that setting up a platform creates an issue."""
+    caplog.clear()
+    with assert_setup_component(1, platform_domain):
+        assert await async_setup_component(
+            hass,
+            platform_domain,
+            {platform_domain: {"platform": integration_domain}},
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_domain)) == 0
+    assert (
+        f"Configuring the {integration_domain} integration under the {platform_domain} platform key is not"
+        f" supported, it must be configured under its own {integration_domain} key instead"
+        in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is not None
+    assert issue.translation_key == "platform_config_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": platform_domain,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
+    }

@@ -15,13 +15,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryFlow,
 )
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
