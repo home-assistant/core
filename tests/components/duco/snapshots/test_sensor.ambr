@@ -54,61 +54,6 @@
     'state': '42.0',
   })
 # ---
-# name: test_sensor_entities_state[sensor.bathroom_rh_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bathroom_rh_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_113_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.bathroom_rh_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Bathroom RH Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bathroom_rh_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '42.0',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -212,61 +157,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_valve',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '48.0',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.bedroom_valve_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.bedroom_valve_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_60_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.bedroom_valve_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Bedroom valve Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bedroom_valve_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -382,61 +272,6 @@
     'state': '512',
   })
 # ---
-# name: test_sensor_entities_state[sensor.hall_valve_carbon_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.hall_valve_carbon_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Carbon dioxide',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon dioxide',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_61_co2',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.hall_valve_carbon_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Hall valve Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.hall_valve_carbon_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '512',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.hall_valve_co2_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -540,61 +375,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_rh',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '61.0',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.kitchen_rh_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.kitchen_rh_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_50_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.kitchen_rh_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Kitchen RH Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.kitchen_rh_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -759,61 +539,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.living_signal_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_signal_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Signal strength',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-    'original_icon': None,
-    'original_name': 'Signal strength',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_1_rssi_wifi',
-    'unit_of_measurement': 'dBm',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.living_signal_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Signal strength',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.living_signal_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-60',
   })
 # ---
 # name: test_sensor_entities_state[sensor.living_target_flow_level-entry]
@@ -1020,61 +745,6 @@
     'state': '405',
   })
 # ---
-# name: test_sensor_entities_state[sensor.office_co2_carbon_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.office_co2_carbon_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Carbon dioxide',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon dioxide',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_2_co2',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.office_co2_carbon_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Office CO2 Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.office_co2_carbon_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '405',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.office_co2_co2_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1239,61 +909,6 @@
     'state': '54.0',
   })
 # ---
-# name: test_sensor_entities_state[sensor.study_valve_carbon_dioxide-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.study_valve_carbon_dioxide',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Carbon dioxide',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': 'Carbon dioxide',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_62_co2',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.study_valve_carbon_dioxide-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Study valve Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.study_valve_carbon_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '645',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.study_valve_co2_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1346,61 +961,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.study_valve_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.study_valve_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_62_humidity',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_entities_state[sensor.study_valve_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Study valve Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.study_valve_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '54.0',
   })
 # ---
 # name: test_sensor_entities_state[sensor.study_valve_humidity_air_quality_index-entry]
