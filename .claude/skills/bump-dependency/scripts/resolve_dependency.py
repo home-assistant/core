@@ -39,8 +39,9 @@ def find_github_repo(info):
         m = re.search(r"https?://(?:www\.)?github\.com/([^/]+)/([^/]+)", cleaned_url, re.IGNORECASE)
         if m:
             owner, repo = m.groups()
-            repo = repo.replace(".git", "")
-            repo = repo.split("/")[0]
+            # Strip query parameters, hashes, trailing slashes, and .git extension
+            repo = repo.split("?")[0].split("#")[0].split("/")[0]
+            repo = repo.removesuffix(".git")
             return f"https://github.com/{owner}/{repo}"
     return None
 
