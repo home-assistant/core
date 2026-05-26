@@ -146,6 +146,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
+        if self.positions.primary is None:
+            return None
         return self.positions.primary <= CLOSED_POSITION
 
     @property
@@ -369,7 +371,9 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     @property
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
-        return self.positions.primary + self.positions.tilt
+        primary = self.positions.primary or 0
+        tilt = self.positions.tilt or 0
+        return primary + tilt
 
     @property
     def open_tilt_position(self) -> ShadePosition:
