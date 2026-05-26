@@ -43,7 +43,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import json as json_helper
+from homeassistant.helpers import device_registry as dr, json as json_helper
 from homeassistant.helpers.entity_component import DATA_INSTANCES, EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -88,6 +88,8 @@ class SandboxEntityDescription:
     capabilities: dict[str, Any] = field(default_factory=dict)
     initial_state: str | None = None
     initial_attributes: dict[str, Any] = field(default_factory=dict)
+    device_info: dict[str, Any] | None = None
+    device_id: str | None = None
 
     @classmethod
     def from_payload(cls, payload: Mapping[str, Any]) -> SandboxEntityDescription:
@@ -106,6 +108,7 @@ class SandboxEntityDescription:
             capabilities=dict(payload.get("capabilities") or {}),
             initial_state=payload.get("initial_state"),
             initial_attributes=dict(payload.get("initial_attributes") or {}),
+            device_info=_deserialise_device_info(payload.get("device_info")),
         )
 
 
@@ -315,6 +318,22 @@ class SandboxBridge:
         # SwitchEntity, …); for the framework to host it the domain
         # component itself has to be set up so its EntityComponent exists.
         await self._ensure_domain_loaded(description.domain)
+        # Pre-create the device entry so its id is known before the proxy
+        # registers; the framework's own async_get_or_create call inside
+        # EntityPlatform.async_add_entities is idempotent on (identifiers,
+        # connections) and will reuse the same DeviceEntry.
+        if description.device_info is not None:
+            try:
+                device = dr.async_get(self.hass).async_get_or_create(
+                    config_entry_id=description.entry_id,
+                    **description.device_info,
+                )
+            except dr.DeviceInfoError as err:
+                raise HomeAssistantError(
+                    f"register_entity: invalid device_info for "
+                    f"{description.sandbox_entity_id!r}: {err}"
+                ) from err
+            description.device_id = device.id
         proxy = self._build_proxy(description)
         platform = self._ensure_platform(entry, description.domain)
         await platform.async_add_entities([proxy])
@@ -587,6 +606,35 @@ class _SandboxStoreServer:
             os.unlink(path)
         except FileNotFoundError:
             return
+
+
+def _deserialise_device_info(value: Any) -> dict[str, Any] | None:
+    """Rebuild a ``DeviceInfo`` TypedDict from the wire payload.
+
+    The sandbox-side serialiser flattens sets and tuples to lists of
+    two-element lists; this reverses that so
+    :func:`device_registry.async_get_or_create` sees the shapes its
+    validators expect. ``entry_type`` is rebuilt as a
+    :class:`DeviceEntryType` enum value.
+    """
+    if not value or not isinstance(value, Mapping):
+        return None
+    out: dict[str, Any] = {}
+    for key, raw in value.items():
+        if raw is None:
+            out[key] = None
+        elif key in ("identifiers", "connections") and isinstance(raw, list):
+            out[key] = {tuple(item) for item in raw if isinstance(item, list)}
+        elif key == "via_device" and isinstance(raw, list):
+            out[key] = tuple(raw)
+        elif key == "entry_type" and isinstance(raw, str):
+            try:
+                out[key] = dr.DeviceEntryType(raw)
+            except ValueError:
+                _LOGGER.debug("register_entity: unknown entry_type %r — dropping", raw)
+        else:
+            out[key] = raw
+    return out
 
 
 def _parse_supports_response(value: Any) -> SupportsResponse:

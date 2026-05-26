@@ -13,9 +13,10 @@ pattern — see ``plan.md`` Phase 5's deferral note.
 """
 
 import contextlib
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 if TYPE_CHECKING:
@@ -54,6 +55,12 @@ class SandboxProxyEntity(Entity):
         # Domains like ``light`` index supported_features with bitwise
         # ``in``; ``None`` blows up the check, so default to 0.
         self._attr_supported_features = int(description.supported_features or 0)
+        # Surface the sandbox-side DeviceInfo so EntityPlatform's normal
+        # async_add_entities path runs dr.async_get_or_create and links
+        # the proxy to the matching DeviceEntry (idempotent with the
+        # pre-creation the bridge does).
+        if description.device_info is not None:
+            self._attr_device_info = cast(DeviceInfo, description.device_info)
 
     @property
     def available(self) -> bool:

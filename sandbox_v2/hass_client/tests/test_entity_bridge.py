@@ -104,6 +104,104 @@ async def _hass_with_demo_component_fixture():
             await flow_runner.async_stop()
 
 
+def test_serialise_device_info_flattens_sets_tuples_and_enums() -> None:
+    """The wire form replaces sets/tuples with lists and enums with strings."""
+    from hass_client.entity_bridge import _serialise_device_info  # noqa: PLC0415
+
+    from homeassistant.helpers.device_registry import DeviceEntryType  # noqa: PLC0415
+
+    payload = _serialise_device_info(
+        {
+            "identifiers": {("foo", "1"), ("foo", "2")},
+            "connections": {("mac", "00:11:22:33:44:55")},
+            "via_device": ("parent_domain", "parent-id"),
+            "entry_type": DeviceEntryType.SERVICE,
+            "name": "Thermostat",
+            "manufacturer": "Acme",
+        }
+    )
+
+    assert payload is not None
+    # set ordering isn't deterministic — compare as sets-of-tuples.
+    assert {tuple(item) for item in payload["identifiers"]} == {
+        ("foo", "1"),
+        ("foo", "2"),
+    }
+    assert payload["connections"] == [["mac", "00:11:22:33:44:55"]]
+    assert payload["via_device"] == ["parent_domain", "parent-id"]
+    assert payload["entry_type"] == "service"
+    assert payload["name"] == "Thermostat"
+    assert payload["manufacturer"] == "Acme"
+
+
+def test_serialise_device_info_returns_none_for_empty_input() -> None:
+    """Empty / missing device_info short-circuits to None."""
+    from hass_client.entity_bridge import _serialise_device_info  # noqa: PLC0415
+
+    assert _serialise_device_info(None) is None
+    assert _serialise_device_info({}) is None
+
+
+async def test_bridge_includes_device_info_in_register_payload(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """An entity with ``device_info`` ships it in the register_entity payload."""
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_calls: list[dict[str, Any]] = []
+
+    async def _on_register(payload: dict[str, Any]) -> dict[str, str]:
+        register_calls.append(payload)
+        return {"entity_id": "demo.with_device_main"}
+
+    main.register("sandbox_v2/register_entity", _on_register)
+    main.start()
+    sandbox.start()
+
+    class _DeviceEntity(_FakeEntity):
+        def __init__(self) -> None:
+            super().__init__()
+            self.entity_id = "demo.with_device"
+            self._attr_device_info = {
+                "identifiers": {("demo", "dev-1")},
+                "name": "Demo Device",
+                "manufacturer": "Acme",
+            }
+
+    entity = _DeviceEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+
+    now = datetime.now(tz=datetime.now().astimezone().tzinfo)
+    hass.bus.async_fire(
+        EVENT_STATE_CHANGED,
+        {
+            "entity_id": entity.entity_id,
+            "old_state": None,
+            "new_state": State(
+                entity.entity_id, "off", {}, last_changed=now, last_updated=now
+            ),
+        },
+    )
+
+    for _ in range(50):
+        if register_calls and entity.entity_id in bridge._registered:  # noqa: SLF001
+            break
+        await asyncio.sleep(0)
+
+    assert len(register_calls) == 1
+    device_info = register_calls[0].get("device_info")
+    assert device_info is not None
+    assert device_info["identifiers"] == [["demo", "dev-1"]]
+    assert device_info["name"] == "Demo Device"
+    assert device_info["manufacturer"] == "Acme"
+
+    await bridge.async_stop()
+
+
 async def test_bridge_emits_register_and_state_pushes(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:

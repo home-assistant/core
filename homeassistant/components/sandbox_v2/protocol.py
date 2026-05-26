@@ -22,7 +22,13 @@ Sandbox → Main calls:
 * ``sandbox_v2/register_entity`` — sandbox tells main "I just added an
   entity, here's its description". Main builds the proxy and replies
   ``{"entity_id": <main-side id>}`` so the sandbox can route later
-  ``call_service`` requests back to the right local entity.
+  ``call_service`` requests back to the right local entity. Optional
+  ``device_info`` field (Phase 19): a JSON-flattened ``DeviceInfo`` dict
+  — sets become lists of two-element lists (``identifiers`` /
+  ``connections``), tuples become lists (``via_device``), and
+  ``entry_type`` is the enum's string value. When present, main calls
+  :func:`device_registry.async_get_or_create` so the sandbox's devices
+  surface in main's device_registry tied to the sandboxed entry.
 * ``sandbox_v2/unregister_entity`` — symmetric counterpart.
 * ``sandbox_v2/state_changed``   — push (no response). Carries the
   marshalled state delta for one entity.

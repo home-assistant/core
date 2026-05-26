@@ -191,7 +191,7 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
     domain = platform.domain if platform is not None else entity.entity_id.split(".")[0]
     capabilities = _serialise(entity.capability_attributes or {})
     entity_category = entity.entity_category
-    return {
+    payload: dict[str, Any] = {
         "entry_id": entry_id,
         "domain": domain,
         "sandbox_entity_id": entity.entity_id,
@@ -206,6 +206,44 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
         "supported_features": int(entity.supported_features or 0),
         "capabilities": capabilities,
     }
+    device_info = _serialise_device_info(entity.device_info)
+    if device_info is not None:
+        payload["device_info"] = device_info
+    return payload
+
+
+def _serialise_device_info(device_info: Any) -> dict[str, Any] | None:
+    """Return a JSON-safe rendering of an entity's ``device_info``.
+
+    ``DeviceInfo`` is a ``TypedDict`` with set/tuple-shaped fields
+    (``identifiers``, ``connections``, ``via_device``) and a ``StrEnum``
+    (``entry_type``). Sets become lists of two-element lists (preserving
+    the pair shape main needs to rebuild tuples); enums become their
+    string value; ``URL`` instances become strings. Anything else passes
+    through ``_serialise`` for generic JSON-safety.
+    """
+    if not device_info:
+        return None
+    if not isinstance(device_info, dict):
+        return None
+    out: dict[str, Any] = {}
+    for key, value in device_info.items():
+        if value is None:
+            out[key] = None
+            continue
+        if key in ("identifiers", "connections"):
+            # set[tuple[str, str]] → list[list[str, str]]
+            out[key] = [list(item) for item in value]
+        elif key == "via_device":
+            # tuple[str, str] → list[str]
+            out[key] = list(value)
+        elif key == "entry_type":
+            out[key] = getattr(value, "value", str(value))
+        elif key == "configuration_url":
+            out[key] = str(value) if value is not None else None
+        else:
+            out[key] = _serialise(value)
+    return out
 
 
 def _stringify(value: Any) -> str | None:
