@@ -24,7 +24,11 @@ from homeassistant.components.elke27.hub import (
     _set_client_identity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 
 def _client_factory(client: AsyncMock) -> Callable[..., AsyncMock]:
@@ -98,6 +102,25 @@ async def test_connect_wait_ready_false_disconnects(
             await hub.async_connect()
 
     client.async_disconnect.assert_awaited_once()
+
+
+async def test_connect_invalid_link_keys_raises_auth_failed(
+    hass: HomeAssistant,
+) -> None:
+    """Test hub connect raises auth failed for invalid persisted link keys."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.71",
+        2101,
+        "{",
+        "112233445566",
+        None,
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hub.async_connect()
+
+    assert hub._client is None
 
 
 async def test_connect_failure_cleans_subscriptions(hass: HomeAssistant) -> None:

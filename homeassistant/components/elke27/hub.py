@@ -20,7 +20,11 @@ from elke27_lib.errors import (
 )
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import READY_TIMEOUT
 from .identity import build_client_identity
@@ -102,7 +106,17 @@ class Elke27Hub:
         """Connect the client, then await readiness."""
         async with self._connect_lock:
             await self._async_disconnect(log_unavailable=False)
-            link_keys = LinkKeys.from_json(self._link_keys_json)
+            try:
+                link_keys = LinkKeys.from_json(self._link_keys_json)
+            except (
+                AttributeError,
+                Elke27Error,
+                KeyError,
+                TypeError,
+                ValueError,
+            ) as err:
+                msg = "Linking credentials are invalid"
+                raise ConfigEntryAuthFailed(msg) from err
             client = Elke27Client(ClientConfig())
             client_identity = build_client_identity(self._client_id)
             _set_client_identity(client, client_identity)

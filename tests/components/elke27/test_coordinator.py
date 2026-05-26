@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock
 
+from elke27_lib import PanelSnapshot
 from elke27_lib.events import (
     UNSET_AT,
     UNSET_CLASSIFICATION,
@@ -82,6 +83,19 @@ async def test_coordinator_subscribes_and_sets_snapshot(hass: HomeAssistant) -> 
 
     await coordinator.async_start()
     assert hub._subscribe_typed is not None
+
+
+async def test_coordinator_uses_empty_snapshot_when_snapshot_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Verify the coordinator uses an empty snapshot when the hub has none."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(None)
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    await coordinator.async_start()
+
+    assert coordinator.data == PanelSnapshot.empty()
 
 
 async def test_coordinator_start_suppresses_unsubscribe_error(
