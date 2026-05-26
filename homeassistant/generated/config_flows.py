@@ -548,6 +548,7 @@ FLOWS = {
         "ourgroceries",
         "overkiz",
         "overseerr",
+        "ovhcloud_ai_endpoints",
         "ovo_energy",
         "owntracks",
         "p1_monitor",
