@@ -26,6 +26,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -372,7 +373,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         if self.positions.primary is None or self.positions.tilt is None:
-            raise ValueError("Position data is missing")
+            return None
             
         return self.positions.primary + self.positions.tilt
 
@@ -390,9 +391,10 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        self._async_schedule_update_for_transition(self.transition_steps)
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
+        self._async_schedule_update_for_transition(steps)
         await self._async_execute_move(self.close_tilt_position)
-        self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
