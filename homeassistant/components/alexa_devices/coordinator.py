@@ -204,7 +204,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     @property
     def todo_list_items(self) -> dict[str, dict[str, AmazonListItem]]:
-        "Current todo_items."
+        """Current cached to-do list items (list_id -> item_id -> AmazonListItem)."""
         return self._todo_list_items
 
     async def sync_history_state(self) -> None:
