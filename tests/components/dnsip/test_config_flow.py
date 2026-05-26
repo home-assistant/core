@@ -76,7 +76,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
 
     assert result["data_schema"] == DATA_SCHEMA
