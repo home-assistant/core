@@ -145,8 +145,8 @@
         },
         "data_description": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "latitude": "Defines a template to get the latitude of the device tracker. Value values are numbers between `-90` and `90`.",
-          "longitude": "Defines a template to get the longitude of the device tracker. Value values are numbers between `-180` and `180`.",
+          "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
+          "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "sections": {
@@ -731,7 +731,7 @@
             "name": "[%key:component::template::common::advanced_options%]"
           }
         },
-        "title": "[%key:component::template::config::step::cover::title%]"
+        "title": "[%key:component::template::config::step::device_tracker::title%]"
       },
       "event": {
         "data": {
