@@ -77,8 +77,8 @@
       "ph_module": {
         "name": "pH module"
       },
-      "ph_pump": {
-        "name": "pH pump"
+      "ph_pump_alarm": {
+        "name": "pH pump alarm"
       },
       "redox_module": {
         "name": "Redox module"

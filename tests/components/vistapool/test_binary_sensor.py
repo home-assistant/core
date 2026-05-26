@@ -37,7 +37,7 @@ async def test_binary_sensors_default_modules(
         hass.states.get("binary_sensor.my_pool_hidro_cover_reduction").state
         == STATE_OFF
     )
-    assert hass.states.get("binary_sensor.my_pool_ph_pump").state == STATE_OFF
+    assert hass.states.get("binary_sensor.my_pool_ph_pump_alarm").state == STATE_OFF
     assert hass.states.get("binary_sensor.my_pool_ph_acid_pump").state == STATE_OFF
     assert hass.states.get("binary_sensor.my_pool_ph_base_pump").state == STATE_OFF
     assert hass.states.get("binary_sensor.my_pool_redox_pump").state == STATE_OFF
@@ -118,7 +118,7 @@ async def test_binary_sensors_all_modules_enabled(
         "binary_sensor.my_pool_hidro_fl2",
         "binary_sensor.my_pool_chlorine_pump",
         "binary_sensor.my_pool_redox_pump",
-        "binary_sensor.my_pool_ph_pump",
+        "binary_sensor.my_pool_ph_pump_alarm",
         "binary_sensor.my_pool_dosing_tank",
     ):
         assert hass.states.get(entity_id) is not None

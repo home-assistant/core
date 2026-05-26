@@ -96,8 +96,8 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
         exists_path=PATH_HASRX,
     ),
     VistapoolBinarySensorEntityDescription(
-        key="ph_pump",
-        translation_key="ph_pump",
+        key="ph_pump_alarm",
+        translation_key="ph_pump_alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_path="modules.ph.al3",
         exists_path=PATH_HASPH,
