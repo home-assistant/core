@@ -131,7 +131,12 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
             msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-            if "DT" in msg.raw and msg.raw["DT"] == 1:
+            if (
+                "DT" in msg.raw
+                and msg.raw["DT"] == 1
+                and "MR" in msg.raw
+                and "DIV" in msg.raw
+            ):
                 # this packet reports the current value
                 raw_val = msg.raw["MR"]
                 divisor = msg.raw["DIV"]
@@ -147,7 +152,12 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 return
 
             msg = EEPHandler(eep).decode(telegram)
-            if "CMD" in msg.raw and msg.raw["CMD"] == 4:
+            if (
+                "CMD" in msg.raw
+                and msg.raw["CMD"] == 4
+                and "I/O" in msg.raw
+                and "OV" in msg.raw
+            ):
                 channel = msg.raw["I/O"]
                 output = msg.raw["OV"]
                 if channel == self.channel:

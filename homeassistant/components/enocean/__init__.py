@@ -1,5 +1,7 @@
 """Support for EnOcean devices."""
 
+import contextlib
+
 from enocean_async import Gateway
 import voluptuous as vol
 
@@ -56,7 +58,8 @@ async def async_setup_entry(
     try:
         await gateway.start()
     except ConnectionError as err:
-        await gateway.stop()
+        with contextlib.suppress(Exception):
+            await gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
     config_entry.runtime_data = gateway
@@ -72,5 +75,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry: stop the gateway."""
 
-    await config_entry.runtime_data.stop()
+    with contextlib.suppress(Exception):
+        await config_entry.runtime_data.stop()
     return True

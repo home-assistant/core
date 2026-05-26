@@ -1,5 +1,6 @@
 """Config flows for the EnOcean integration."""
 
+import contextlib
 import glob
 from typing import Any
 
@@ -173,7 +174,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
         finally:
-            await gateway.stop()
+            with contextlib.suppress(Exception):
+                await gateway.stop()
 
         return True
 

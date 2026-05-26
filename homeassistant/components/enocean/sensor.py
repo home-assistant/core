@@ -187,7 +187,12 @@ class EnOceanPowerSensor(EnOceanSensor):
             return
         msg: EEPMessage = EEPHandler(eep).decode(telegram)
 
-        if "DT" in msg.raw and msg.raw["DT"] == 1:
+        if (
+            "DT" in msg.raw
+            and msg.raw["DT"] == 1
+            and "MR" in msg.raw
+            and "DIV" in msg.raw
+        ):
             # this packet reports the current value
             raw_val = msg.raw["MR"]
             divisor = msg.raw["DIV"]
