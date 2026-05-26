@@ -7,12 +7,15 @@ Instead, tests should let Home Assistant perform the setup via
 real setup pipeline (platforms, services, listeners, unload handlers,
 etc.) is exercised.
 
-This checker flags any ``await <something>.async_setup_entry(...)`` or
-``await async_setup_entry(...)`` call in a test module whose target
-resolves to a function defined under ``homeassistant.components.*``.
-The integration-init case and the entity-platform case get separate
-messages so violations can be tracked and fixed independently.
+This checker flags any call to ``async_setup_entry`` (whether awaited or
+not, accessed as a name or an attribute) made from a test module whose
+target resolves to a module-level function defined under
+``homeassistant.components.*``. The integration-init case and the
+entity-platform case get separate messages so violations can be tracked
+and fixed independently.
 """
+
+from enum import Enum
 
 import astroid
 from astroid import nodes
@@ -22,47 +25,58 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.module_info import is_test_module, parse_module
 
 
-def _resolve_integration_async_setup_entry(call: nodes.Call) -> str | None:
+class _SetupKind(Enum):
+    """The kind of integration ``async_setup_entry`` being called."""
+
+    INIT = "init"
+    PLATFORM = "platform"
+
+
+def _resolve_integration_async_setup_entry(call: nodes.Call) -> _SetupKind | None:
     """Return the kind of integration ``async_setup_entry`` *call* targets.
 
-    Returns ``"init"`` if the target is in the integration's ``__init__``
-    module, ``"platform"`` if it is in an entity-platform module, or
-    ``None`` if the call does not resolve to an integration's
-    ``async_setup_entry``.
+    Returns ``_SetupKind.INIT`` if the target is in the integration's
+    ``__init__`` module, ``_SetupKind.PLATFORM`` if it is in an
+    entity-platform module, or ``None`` if the call does not resolve to
+    an integration's ``async_setup_entry``.
     """
     func = call.func
-    if isinstance(func, nodes.Attribute):
-        if func.attrname != "async_setup_entry":
+    match func:
+        case nodes.Attribute(attrname="async_setup_entry"):
+            pass
+        case nodes.Name(name="async_setup_entry"):
+            pass
+        case _:
             return None
-    elif isinstance(func, nodes.Name):
-        if func.name != "async_setup_entry":
-            return None
-    else:
-        return None
 
     try:
-        inferred_values = list(func.infer())
-    except astroid.InferenceError, astroid.AstroidError:
+        inferred_values = func.infer()
+    except astroid.exceptions.InferenceError, astroid.exceptions.AstroidError:
         return None
 
     seen_qnames: set[str] = set()
-    for inferred in inferred_values:
-        if inferred is astroid.Uninferable:
-            continue
-        if not isinstance(inferred, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            continue
-        qname = inferred.qname()
-        if not qname or qname in seen_qnames:
-            continue
-        seen_qnames.add(qname)
-        # qname is the function's fully-qualified name, e.g.
-        # ``homeassistant.components.sun.async_setup_entry``. Strip the
-        # function name to get the module and parse it.
-        module_qname = qname.rsplit(".", 1)[0]
-        parsed = parse_module(module_qname)
-        if parsed is None:
-            continue
-        return "init" if parsed.module is None else "platform"
+    try:
+        for inferred in inferred_values:
+            if inferred is astroid.Uninferable:
+                continue
+            if not isinstance(inferred, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
+                continue
+            # Require the function to be defined at module level so that
+            # class methods named ``async_setup_entry`` (whose qname
+            # includes the class name) are not classified as integration
+            # setup functions.
+            if not isinstance(inferred.parent, nodes.Module):
+                continue
+            module_qname = inferred.parent.qname()
+            if not module_qname or module_qname in seen_qnames:
+                continue
+            seen_qnames.add(module_qname)
+            parsed = parse_module(module_qname)
+            if parsed is None:
+                continue
+            return _SetupKind.INIT if parsed.module is None else _SetupKind.PLATFORM
+    except astroid.exceptions.InferenceError, astroid.exceptions.AstroidError:
+        return None
     return None
 
 
@@ -73,22 +87,30 @@ class DirectAsyncSetupEntry(BaseChecker):
     priority = -1
     msgs = {
         "W7418": (
-            "Do not call `async_setup_entry` directly from tests; use "
-            "`await hass.config_entries.async_setup(entry.entry_id)` instead",
+            (
+                "Do not call `async_setup_entry` directly from tests; use "
+                "`await hass.config_entries.async_setup(entry.entry_id)` instead"
+            ),
             "home-assistant-tests-direct-async-setup-entry",
-            "Used when a test module calls an integration's "
-            "`async_setup_entry` from `__init__.py` directly. Tests should "
-            "let Home Assistant drive the setup so the full setup pipeline "
-            "is exercised.",
+            (
+                "Used when a test module calls an integration's "
+                "`async_setup_entry` from `__init__.py` directly. Tests should "
+                "let Home Assistant drive the setup so the full setup pipeline "
+                "is exercised."
+            ),
         ),
         "W7420": (
-            "Do not call a platform's `async_setup_entry` directly from "
-            "tests; use `await hass.config_entries.async_setup(entry.entry_id)`"
-            " instead",
+            (
+                "Do not call a platform's `async_setup_entry` directly from "
+                "tests; use `await hass.config_entries.async_setup(entry.entry_id)`"
+                " instead"
+            ),
             "home-assistant-tests-direct-platform-async-setup-entry",
-            "Used when a test module calls an integration entity platform's "
-            "`async_setup_entry` directly. Tests should let Home Assistant "
-            "drive the setup so the full setup pipeline is exercised.",
+            (
+                "Used when a test module calls an integration entity platform's "
+                "`async_setup_entry` directly. Tests should let Home Assistant "
+                "drive the setup so the full setup pipeline is exercised."
+            ),
         ),
     }
     options = ()
@@ -103,17 +125,17 @@ class DirectAsyncSetupEntry(BaseChecker):
         """Flag direct calls to an integration's async_setup_entry."""
         if not self._in_test_module:
             return
-        kind = _resolve_integration_async_setup_entry(node)
-        if kind == "init":
-            self.add_message(
-                "home-assistant-tests-direct-async-setup-entry",
-                node=node,
-            )
-        elif kind == "platform":
-            self.add_message(
-                "home-assistant-tests-direct-platform-async-setup-entry",
-                node=node,
-            )
+        match _resolve_integration_async_setup_entry(node):
+            case _SetupKind.INIT:
+                self.add_message(
+                    "home-assistant-tests-direct-async-setup-entry",
+                    node=node,
+                )
+            case _SetupKind.PLATFORM:
+                self.add_message(
+                    "home-assistant-tests-direct-platform-async-setup-entry",
+                    node=node,
+                )
 
 
 def register(linter: PyLinter) -> None:
