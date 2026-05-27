@@ -740,7 +740,6 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 95.0,
       'min_temp': 5.0,
@@ -786,7 +785,6 @@
       'friendly_name': 'Кабінет',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       'max_temp': 95.0,
