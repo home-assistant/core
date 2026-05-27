@@ -2,7 +2,7 @@
 
 from datetime import time
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
 import voluptuous as vol
@@ -49,7 +49,7 @@ _SLOT_SCHEMA = vol.Schema(
 )
 
 
-_WEEKLY_SCHEDULE_FIELDS: dict[vol.Marker, object] = {
+_WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
     vol.Optional(slot_attr): vol.All(cv.ensure_list, [_SLOT_SCHEMA])
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
@@ -111,7 +111,11 @@ def _convert_time_slots_to_day_schedule(
 def _build_weekly_schedule_days(
     service_call: ServiceCall,
 ) -> dict[str, DaySchedule | None]:
-    """Build a dict of day-name -> DaySchedule from the service call data."""
+    """Build day-name -> schedule values from the service call data.
+
+    Days omitted from the service call map to None, which tells python-bsblan not to
+    modify that day.
+    """
     return {
         day_name: _convert_time_slots_to_day_schedule(service_call.data.get(attr_name))
         for day_name, attr_name in _DAY_NAME_SLOT_ATTR_PAIRS
