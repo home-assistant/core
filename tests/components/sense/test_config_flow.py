@@ -59,7 +59,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
     assert result["data"] == MOCK_CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
