@@ -1,7 +1,5 @@
 """Config flow for AEMET OpenData."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aemet_opendata.exceptions import AuthError
@@ -61,6 +59,8 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude

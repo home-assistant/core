@@ -204,7 +204,7 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
 async def test_tv_options_flow_start_with_volume(hass: HomeAssistant) -> None:
-    """Test options config flow for TV with providing apps option after providing volume step in initial config."""
+    """Test options flow for TV with apps option after volume step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
@@ -264,7 +264,7 @@ async def test_user_host_already_configured(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
 async def test_user_serial_number_already_exists(hass: HomeAssistant) -> None:
-    """Test serial_number is already configured with different host and name during user setup."""
+    """Test serial_number already configured with different host and name."""
     # Set up new entry
     MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
@@ -311,7 +311,7 @@ async def test_user_error_on_could_not_connect_invalid_token(
     "vizio_connect", "vizio_bypass_setup", "vizio_complete_pairing"
 )
 async def test_user_tv_pairing_no_apps(hass: HomeAssistant) -> None:
-    """Test pairing config flow when access token not provided for tv during user entry and no apps configured."""
+    """Test pairing flow when no access token for TV and no apps configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
@@ -373,7 +373,7 @@ async def test_user_invalid_pin(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
 async def test_user_ignore(hass: HomeAssistant) -> None:
-    """Test user config flow doesn't throw an error when there's an existing ignored source."""
+    """Test user config flow with an existing ignored source."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_SPEAKER_CONFIG,
@@ -501,7 +501,7 @@ async def test_zeroconf_dupe_fail(hass: HomeAssistant) -> None:
     "vizio_connect", "vizio_bypass_setup", "vizio_guess_device_type"
 )
 async def test_zeroconf_ignore(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery doesn't throw an error when there's an existing ignored source."""
+    """Test zeroconf discovery with an existing ignored source."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_SPEAKER_CONFIG,
@@ -561,7 +561,7 @@ async def test_zeroconf_abort_when_ignored(hass: HomeAssistant) -> None:
     "vizio_guess_device_type",
 )
 async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) -> None:
-    """Test entity is already configured during zeroconf setup when existing entry uses hostname."""
+    """Test already configured during zeroconf when entry uses hostname."""
     config = MOCK_SPEAKER_CONFIG.copy()
     config[CONF_HOST] = "hostname"
     entry = MockConfigEntry(

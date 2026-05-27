@@ -1,7 +1,5 @@
 """The Shelly integration."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Final
 
@@ -41,6 +39,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
+    CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -48,6 +47,7 @@ from .const import (
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
+    BLEScannerMode,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -84,6 +84,7 @@ PLATFORMS: Final = [
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -117,6 +118,8 @@ CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     if (conf := config.get(DOMAIN)) is not None:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
     async_setup_services(hass)
@@ -124,20 +127,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 3):
+        return False
+    if entry.minor_version < 3:
+        # One-time flip of explicit Active scanning to Auto so existing
+        # installs get the new battery-friendly default; Passive stays
+        # Passive because users picked it deliberately.
+        options = dict(entry.options)
+        if options.get(CONF_BLE_SCANNER_MODE) == BLEScannerMode.ACTIVE:
+            options[CONF_BLE_SCANNER_MODE] = BLEScannerMode.AUTO
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=3)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
     entry.runtime_data = ShellyEntryData([])
 
-    # The community integration for Shelly devices uses Shelly domain as well as Core
-    # integration. If the user removes the community integration but doesn't remove
-    # the config entry, Core integration will try to configure that config entry with
-    # an error. The config entry data for this community integration doesn't contain
-    # host value, so if host isn't present, config entry will not be configured.
+    # The custom component for Shelly devices uses shelly domain as well as core
+    # integration. If the user removes the custom component but doesn't remove the
+    # config entry, core integration will try to configure that config entry with an
+    # error. The config entry data for this custom component doesn't contain host
+    # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
         LOGGER.warning(
             (
-                "The config entry %s probably comes from a community integration, "
-                "please remove it if you want to use the Core Shelly integration"
+                "The config entry %s probably comes from a custom integration, please"
+                " remove it if you want to use core Shelly integration"
             ),
             entry.title,
         )

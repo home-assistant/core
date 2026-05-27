@@ -1,7 +1,5 @@
 """Test the UniFi Protect camera platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -168,7 +166,10 @@ def validate_rtsp_camera_entity(
 
     entity_name = f"{camera_obj.name} {channel.name} Resolution Channel (Insecure)"
     unique_id = f"{camera_obj.mac}_{channel.id}_insecure"
-    entity_id = f"camera.{entity_name.replace(' ', '_').replace('(', '').replace(')', '').lower()}"
+    entity_id = (
+        "camera."
+        f"{entity_name.replace(' ', '_').replace('(', '').replace(')', '').lower()}"
+    )
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)

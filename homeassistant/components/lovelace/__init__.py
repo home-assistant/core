@@ -128,8 +128,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             conf = await async_hass_config_yaml(hass)
         except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_reload",
+            ) from err
 
         integration = await async_get_integration(hass, DOMAIN)
 
@@ -338,10 +340,7 @@ async def create_yaml_resource_col(
 @callback
 def _async_ensure_default_panel(hass: HomeAssistant) -> None:
     """Ensure a default lovelace panel is registered for backward compatibility."""
-    if (
-        frontend.DATA_PANELS not in hass.data
-        or DOMAIN not in hass.data[frontend.DATA_PANELS]
-    ):
+    if not frontend.async_panel_exists(hass, DOMAIN):
         frontend.async_register_built_in_panel(hass, DOMAIN)
 
 
@@ -396,7 +395,8 @@ async def _async_migrate_default_config(
     3. Creates a new dashboard entry with url_path "lovelace"
     4. Handles storage files:
        a. If .storage/lovelace.lovelace does not exist, copies data and removes old file
-       b. If .storage/lovelace.lovelace already exists, renames old file to lovelace_old as backup
+       b. If .storage/lovelace.lovelace already exists,
+          renames old file to lovelace_old as backup
     5. Sets the default panel to "lovelace" if not already configured
     """
     # 1. Skip if already migrated (dashboard with url_path "lovelace" exists)

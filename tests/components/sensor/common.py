@@ -51,7 +51,9 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.AREA: UnitOfArea.SQUARE_METERS,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: UnitOfPressure.HPA,
     SensorDeviceClass.BATTERY: PERCENTAGE,
-    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    ),
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.CONDUCTIVITY: UnitOfConductivity.SIEMENS_PER_CM,
@@ -84,7 +86,9 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.POWER: UnitOfPower.KILO_WATT,
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,
     SensorDeviceClass.PRECIPITATION: UnitOfPrecipitationDepth.MILLIMETERS,
-    SensorDeviceClass.PRECIPITATION_INTENSITY: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+    ),
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
     SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
@@ -95,7 +99,10 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
     SensorDeviceClass.TEMPERATURE_DELTA: UnitOfTemperature.CELSIUS,
     SensorDeviceClass.TIMESTAMP: None,
-    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.UPTIME: None,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    ),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,
     SensorDeviceClass.VOLUME: UnitOfVolume.LITERS,

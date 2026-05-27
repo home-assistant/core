@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -28,7 +28,6 @@ CONF_SENSOR = "target_sensor"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MAX_HUMIDITY = "max_humidity"
 CONF_TARGET_HUMIDITY = "target_humidity"
-CONF_DEVICE_CLASS = "device_class"
 CONF_MIN_DUR = "min_cycle_duration"
 CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_WET_TOLERANCE = "wet_tolerance"

@@ -1,7 +1,5 @@
 """Tests for the Slack integration."""
 
-from __future__ import annotations
-
 import json
 
 from homeassistant.components.slack.const import CONF_DEFAULT_CHANNEL, DOMAIN

@@ -1,7 +1,5 @@
 """Support for the Environment Canada radar imagery."""
 
-from __future__ import annotations
-
 from env_canada import ECMap
 import voluptuous as vol
 

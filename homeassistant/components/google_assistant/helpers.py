@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Collection, Mapping
@@ -20,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -114,7 +111,7 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+        self._on_deinitialize.append(start.async_at_started(self.hass, sync_google))
 
     @callback
     def async_deinitialize(self) -> None:
@@ -174,7 +171,7 @@ class AbstractConfig(ABC):
 
     @abstractmethod
     def get_local_webhook_id(self, agent_user_id):
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for a given agent user id via the local SDK."""
 
     @abstractmethod
     def get_agent_user_id_from_context(self, context):
@@ -188,7 +185,7 @@ class AbstractConfig(ABC):
         """
 
     @abstractmethod
-    def should_expose(self, state) -> bool:
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
 
     @abstractmethod
@@ -427,7 +424,8 @@ class AbstractConfig(ABC):
             )
 
         if (agent_user_id := self.get_agent_user_id_from_webhook(webhook_id)) is None:
-            # No agent user linked to this webhook, means that the user has somehow unregistered
+            # No agent user linked to this webhook, means that
+            # the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
                 (
@@ -534,7 +532,7 @@ class GoogleEntity:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
+        return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
 
     @callback
     def traits(self) -> list[trait._Trait]:
@@ -551,7 +549,7 @@ class GoogleEntity:
     @callback
     def should_expose(self):
         """If entity should be exposed."""
-        return self.config.should_expose(self.state)
+        return self.config.should_expose(self.entity_id)
 
     @callback
     def should_expose_local(self) -> bool:
@@ -735,7 +733,7 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                f"Unable to execute {command} for {self.state.entity_id}",
+                f"Unable to execute {command} for {self.entity_id}",
             )
 
     @callback
@@ -804,8 +802,6 @@ def async_get_entities(
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
         entity_id = state.entity_id
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here

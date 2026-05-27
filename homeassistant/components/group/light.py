@@ -1,7 +1,5 @@
 """Platform allowing several lights to be grouped into one light."""
 
-from __future__ import annotations
-
 from collections import Counter
 import itertools
 import logging

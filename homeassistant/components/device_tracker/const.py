@@ -1,7 +1,5 @@
 """Device tracker constants."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 import logging
@@ -37,6 +35,8 @@ CONF_CONSIDER_HOME: Final = "consider_home"
 DEFAULT_CONSIDER_HOME: Final = timedelta(seconds=180)
 
 CONF_NEW_DEVICE_DEFAULTS: Final = "new_device_defaults"
+
+CONF_ASSOCIATED_ZONE: Final = "associated_zone"
 
 ATTR_ATTRIBUTES: Final = "attributes"
 ATTR_BATTERY: Final = "battery"

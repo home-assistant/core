@@ -1,7 +1,5 @@
 """Service registration for the OpenDisplay integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import contextlib
@@ -51,7 +49,7 @@ ATTR_TONE_COMPRESSION = "tone_compression"
 
 
 def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
-    """Return a validator that converts a lowercase enum name string to an enum member."""
+    """Convert a lowercase enum name string to an enum member."""
     members = {m.name.lower(): m for m in enum_class}
 
     def validate(value: str) -> IntEnum:
@@ -179,6 +177,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         with contextlib.suppress(asyncio.CancelledError):
             await prev
     entry.runtime_data.upload_task = current
@@ -219,7 +218,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
-                tone_compression=tone_compression,
+                tone=tone_compression,
                 fit=fit_mode,
                 rotate=rotation,
             )

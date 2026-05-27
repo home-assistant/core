@@ -9,8 +9,6 @@ CHANNEL_CREATION_HELP_URL = "https://support.google.com/youtube/answer/1646861"
 
 CONF_CHANNELS = "channels"
 CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
-COORDINATOR = "coordinator"
-AUTH = "auth"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -22,3 +20,4 @@ ATTR_DESCRIPTION = "description"
 ATTR_THUMBNAIL = "thumbnail"
 ATTR_VIDEO_ID = "video_id"
 ATTR_PUBLISHED_AT = "published_at"
+ATTR_VIDEO_COUNT = "video_count"

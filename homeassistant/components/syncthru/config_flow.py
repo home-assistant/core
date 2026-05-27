@@ -92,6 +92,8 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
                 }
             ),
