@@ -61,7 +61,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Optional(CONF_USE_SSL, default=DEFAULT_USE_SSL): bool,
-        vol.Optional(CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE): _PROFILE_SELECTOR,
+        vol.Optional(
+            CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE
+        ): _PROFILE_SELECTOR,
     }
 )
 
@@ -69,7 +71,9 @@ STEP_ZEROCONF_CONFIRM_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE): _PROFILE_SELECTOR,
+        vol.Optional(
+            CONF_DEVICE_PROFILE, default=DEFAULT_DEVICE_PROFILE
+        ): _PROFILE_SELECTOR,
     }
 )
 
@@ -145,9 +149,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: host}
-                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 data = {
                     CONF_HOST: host,
                     CONF_USE_SSL: use_ssl,
@@ -166,9 +168,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(
-        self, discovery_info: Any
-    ) -> FlowResult:
+    async def async_step_zeroconf(self, discovery_info: Any) -> FlowResult:
         """Handle a Zeroconf discovery."""
         host = discovery_info.host
         name = discovery_info.name.removesuffix("._http._tcp.local.")
@@ -192,13 +192,15 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AllnetAuthenticationError:
             # Auth required — still show confirmation, user will enter credentials
             pass
-        except (AllnetConnectionError, AllnetUnsupportedFirmwareError, AllnetInvalidResponseError):
+        except (
+            AllnetConnectionError,
+            AllnetUnsupportedFirmwareError,
+            AllnetInvalidResponseError,
+        ):
             return self.async_abort(reason="cannot_connect")
         else:
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host}
-            )
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
             self._discovered_name = device_name
 
         self.context["title_placeholders"] = {
@@ -234,7 +236,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except AllnetUnsupportedFirmwareError:
                 errors["base"] = "unsupported_firmware"
-            except (AllnetConnectionError, AllnetInvalidResponseError):
+            except AllnetConnectionError, AllnetInvalidResponseError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(unique_id)
@@ -258,9 +260,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, entry_data: dict[str, Any]
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
         """Handle re-authentication initiation."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -286,7 +286,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except (AllnetConnectionError, AllnetInvalidResponseError):
+            except AllnetConnectionError, AllnetInvalidResponseError:
                 errors["base"] = "cannot_connect"
             else:
                 new_data = {**entry.data}

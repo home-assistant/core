@@ -15,7 +15,9 @@ from .conftest import TEST_UNIQUE_ID
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_entities_created(hass: HomeAssistant, setup_integration) -> None:
+async def test_binary_sensor_entities_created(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that binary sensor entities are created for BINARY_SENSOR channels."""
     state_door = hass.states.get("binary_sensor.allnet_test_device_door_contact")
     state_motion = hass.states.get("binary_sensor.allnet_test_device_motion_sensor")
@@ -33,7 +35,9 @@ async def test_binary_sensor_is_on_true(hass: HomeAssistant, setup_integration) 
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_is_on_false(hass: HomeAssistant, setup_integration) -> None:
+async def test_binary_sensor_is_on_false(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that is_on=False maps to STATE_OFF."""
     state = hass.states.get("binary_sensor.allnet_test_device_door_contact")
     assert state is not None
@@ -51,7 +55,10 @@ async def test_binary_sensor_is_on_none_is_unavailable(
         kind=ChannelKind.BINARY_SENSOR,
         name="Door Contact",
         value=None,
-        raw={"info": {"chipid": "74", "unit": ""}, "digitalToText": "offen/geschlossen"},
+        raw={
+            "info": {"chipid": "74", "unit": ""},
+            "digitalToText": "offen/geschlossen",
+        },
     )
     mock_allnet_client.async_get_channels.return_value = (null_channel,)
 
@@ -65,7 +72,9 @@ async def test_binary_sensor_is_on_none_is_unavailable(
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_motion_device_class(hass: HomeAssistant, setup_integration) -> None:
+async def test_binary_sensor_motion_device_class(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that chipid=74 + 'erkannt' in digitalToText → MOTION device class."""
     state = hass.states.get("binary_sensor.allnet_test_device_motion_sensor")
     assert state is not None

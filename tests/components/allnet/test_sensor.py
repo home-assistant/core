@@ -37,7 +37,9 @@ async def test_sensor_native_value(hass: HomeAssistant, setup_integration) -> No
 
 
 @pytest.mark.asyncio
-async def test_sensor_temperature_device_class(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_temperature_device_class(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that °C unit maps to TEMPERATURE device class."""
     state = hass.states.get("sensor.allnet_test_device_temperature")
     assert state is not None
@@ -46,7 +48,9 @@ async def test_sensor_temperature_device_class(hass: HomeAssistant, setup_integr
 
 
 @pytest.mark.asyncio
-async def test_sensor_current_device_class(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_current_device_class(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that A unit maps to CURRENT device class."""
     state = hass.states.get("sensor.allnet_test_device_current")
     assert state is not None
@@ -55,7 +59,9 @@ async def test_sensor_current_device_class(hass: HomeAssistant, setup_integratio
 
 
 @pytest.mark.asyncio
-async def test_sensor_humidity_device_class(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_humidity_device_class(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that % unit maps to HUMIDITY device class."""
     # Humidity is unavailable (value=None) but device class is still set
     # The entity itself reports unavailable state
@@ -65,7 +71,9 @@ async def test_sensor_humidity_device_class(hass: HomeAssistant, setup_integrati
 
 
 @pytest.mark.asyncio
-async def test_sensor_unavailable_when_value_none(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_unavailable_when_value_none(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that sensors with value=None are marked unavailable."""
     # humidity_0 has value=None
     state = hass.states.get("sensor.allnet_test_device_humidity")

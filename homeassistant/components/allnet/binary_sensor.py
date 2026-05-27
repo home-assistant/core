@@ -22,7 +22,9 @@ _NAME_SMOKE = ("smoke", "rauch", "gas")
 _NAME_MOISTURE = ("leak", "leck", "water", "wasser", "moisture", "feucht")
 
 
-def _device_class_from_channel(chipid: str, digital_to_text: str, name: str) -> BinarySensorDeviceClass | None:
+def _device_class_from_channel(
+    chipid: str, digital_to_text: str, name: str
+) -> BinarySensorDeviceClass | None:
     """Return the best-matching BinarySensorDeviceClass, or None."""
     # chipid "74" (PCF8574 single digital input)
     if chipid == "74":
@@ -70,7 +72,9 @@ async def async_setup_entry(
             raw_info = channel.raw.get("info", {})
             chipid = str(raw_info.get("chipid", ""))
             digital_to_text = str(channel.raw.get("digitalToText", ""))
-            dev_class = _device_class_from_channel(chipid, digital_to_text, channel.name)
+            dev_class = _device_class_from_channel(
+                chipid, digital_to_text, channel.name
+            )
 
             unique_id = f"{device_unique_id}_{channel.id}_binary_sensor"
             new_entities.append(
@@ -88,9 +92,7 @@ async def async_setup_entry(
 
     _check_new_entities()
 
-    entry.async_on_unload(
-        coordinator.async_add_listener(_check_new_entities)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_check_new_entities))
 
 
 class AllnetBinarySensorEntity(AllnetEntity, BinarySensorEntity):

@@ -41,7 +41,9 @@ async def test_switch_is_on(hass: HomeAssistant, setup_integration) -> None:
 
 
 @pytest.mark.asyncio
-async def test_turn_on_calls_set_channel_state(hass: HomeAssistant, setup_integration) -> None:
+async def test_turn_on_calls_set_channel_state(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that turn_on calls async_set_channel_state with state=True."""
     entry = setup_integration
     client = entry.runtime_data.client
@@ -58,7 +60,9 @@ async def test_turn_on_calls_set_channel_state(hass: HomeAssistant, setup_integr
 
 
 @pytest.mark.asyncio
-async def test_turn_off_calls_set_channel_state(hass: HomeAssistant, setup_integration) -> None:
+async def test_turn_off_calls_set_channel_state(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that turn_off calls async_set_channel_state with state=False."""
     entry = setup_integration
     client = entry.runtime_data.client

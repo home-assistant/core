@@ -96,7 +96,9 @@ async def test_diagnostics_structure(hass: HomeAssistant, setup_integration) -> 
 
 
 @pytest.mark.asyncio
-async def test_diagnostics_channel_count(hass: HomeAssistant, setup_integration) -> None:
+async def test_diagnostics_channel_count(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test that channel_count equals total number of channels."""
     entry = setup_integration
     diag = await async_get_config_entry_diagnostics(hass, entry)

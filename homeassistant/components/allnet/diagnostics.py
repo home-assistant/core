@@ -52,8 +52,12 @@ async def async_get_config_entry_diagnostics(
         },
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
-            "last_exception": str(coordinator.last_exception) if coordinator.last_exception else None,
-            "update_interval_seconds": coordinator.update_interval.total_seconds() if coordinator.update_interval else None,
+            "last_exception": str(coordinator.last_exception)
+            if coordinator.last_exception
+            else None,
+            "update_interval_seconds": coordinator.update_interval.total_seconds()
+            if coordinator.update_interval
+            else None,
         },
         "channels": channels_by_kind,
         "channel_count": sum(len(v) for v in channels_by_kind.values()),

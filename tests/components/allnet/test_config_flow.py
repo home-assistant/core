@@ -32,7 +32,9 @@ from .conftest import TEST_HOST, TEST_UNIQUE_ID
 # ---------------------------------------------------------------------------
 
 
-def _make_zeroconf_info(host: str = TEST_HOST, name: str = "all3500") -> ZeroconfServiceInfo:
+def _make_zeroconf_info(
+    host: str = TEST_HOST, name: str = "all3500"
+) -> ZeroconfServiceInfo:
     """Return a ZeroconfServiceInfo for the given host/name."""
     ip = IPv4Address(host)
     return ZeroconfServiceInfo(
@@ -51,7 +53,10 @@ def _patch_validate(device_info):
     return patch(
         "homeassistant.components.allnet.config_flow._validate_and_get_unique_id",
         new=AsyncMock(
-            return_value=(device_info.unique_id, device_info.name or device_info.model or TEST_HOST)
+            return_value=(
+                device_info.unique_id,
+                device_info.name or device_info.model or TEST_HOST,
+            )
         ),
     )
 
@@ -102,7 +107,11 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST, CONF_USE_SSL: False, CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -118,7 +127,11 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST, CONF_USE_SSL: False, CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -134,7 +147,11 @@ async def test_user_step_unsupported_firmware(hass: HomeAssistant) -> None:
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST, CONF_USE_SSL: False, CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -142,7 +159,9 @@ async def test_user_step_unsupported_firmware(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_user_step_already_configured(hass: HomeAssistant, mock_device_info, setup_integration) -> None:
+async def test_user_step_already_configured(
+    hass: HomeAssistant, mock_device_info, setup_integration
+) -> None:
     """Test the user step aborts if the device is already configured."""
     with _patch_validate(mock_device_info):
         result = await hass.config_entries.flow.async_init(
@@ -150,7 +169,11 @@ async def test_user_step_already_configured(hass: HomeAssistant, mock_device_inf
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: TEST_HOST, CONF_USE_SSL: False, CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
 
     assert result2["type"] == FlowResultType.ABORT
@@ -230,7 +253,9 @@ async def test_zeroconf_confirm_success(hass: HomeAssistant, mock_device_info) -
 
 
 @pytest.mark.asyncio
-async def test_zeroconf_confirm_invalid_auth(hass: HomeAssistant, mock_device_info) -> None:
+async def test_zeroconf_confirm_invalid_auth(
+    hass: HomeAssistant, mock_device_info
+) -> None:
     """Test zeroconf confirm shows invalid_auth error when credentials wrong."""
     # First step succeeds (no auth)
     with _patch_validate(mock_device_info):
@@ -245,7 +270,11 @@ async def test_zeroconf_confirm_invalid_auth(hass: HomeAssistant, mock_device_in
     with _patch_validate_error(AllnetAuthenticationError("401")):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "wrong", CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "wrong",
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -258,7 +287,9 @@ async def test_zeroconf_confirm_invalid_auth(hass: HomeAssistant, mock_device_in
 
 
 @pytest.mark.asyncio
-async def test_reauth_success(hass: HomeAssistant, setup_integration, mock_device_info) -> None:
+async def test_reauth_success(
+    hass: HomeAssistant, setup_integration, mock_device_info
+) -> None:
     """Test reauth flow updates credentials and reloads the entry."""
     entry = setup_integration
 
@@ -309,7 +340,9 @@ async def test_reauth_invalid_auth(hass: HomeAssistant, setup_integration) -> No
 
 
 @pytest.mark.asyncio
-async def test_options_flow_scan_interval(hass: HomeAssistant, setup_integration) -> None:
+async def test_options_flow_scan_interval(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test options flow updates the scan interval."""
     entry = setup_integration
 
@@ -327,7 +360,9 @@ async def test_options_flow_scan_interval(hass: HomeAssistant, setup_integration
 
 
 @pytest.mark.asyncio
-async def test_options_flow_default_scan_interval(hass: HomeAssistant, setup_integration) -> None:
+async def test_options_flow_default_scan_interval(
+    hass: HomeAssistant, setup_integration
+) -> None:
     """Test options flow form shows the default scan interval."""
     entry = setup_integration
 

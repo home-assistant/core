@@ -8,8 +8,8 @@ rules:
       Uses DataUpdateCoordinator with a configurable scan interval
       (default 30 s, min 10 s, max 3600 s) adjustable via the options flow.
   brands:
-    status: todo
-    comment: Brands PR to home-assistant/brands is pending.
+    status: done
+    comment: Brands PR submitted at home-assistant/brands#10384.
   common-modules:
     status: done
     comment: >
@@ -35,14 +35,14 @@ rules:
     status: exempt
     comment: The integration does not register any custom service actions.
   docs-high-level-description:
-    status: todo
-    comment: Documentation PR to home-assistant.io is pending.
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
   docs-installation-instructions:
-    status: todo
-    comment: Documentation PR to home-assistant.io is pending.
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
   docs-removal-instructions:
-    status: todo
-    comment: Documentation PR to home-assistant.io is pending.
+    status: done
+    comment: Documentation published at https://www.home-assistant.io/integrations/allnet.
   entity-event-setup:
     status: exempt
     comment: >

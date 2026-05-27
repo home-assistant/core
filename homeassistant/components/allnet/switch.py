@@ -51,9 +51,7 @@ async def async_setup_entry(
 
     _check_new_entities()
 
-    entry.async_on_unload(
-        coordinator.async_add_listener(_check_new_entities)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_check_new_entities))
 
 
 class AllnetSwitchEntity(AllnetEntity, SwitchEntity):

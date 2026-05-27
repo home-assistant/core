@@ -43,22 +43,66 @@ class _UnitMapping:
 
 
 _UNIT_MAP: dict[str, _UnitMapping] = {
-    "°C": _UnitMapping(SensorDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS, SensorStateClass.MEASUREMENT),
-    "°F": _UnitMapping(SensorDeviceClass.TEMPERATURE, UnitOfTemperature.FAHRENHEIT, SensorStateClass.MEASUREMENT),
-    "%": _UnitMapping(SensorDeviceClass.HUMIDITY, PERCENTAGE, SensorStateClass.MEASUREMENT),
-    "ppm": _UnitMapping(SensorDeviceClass.CO2, CONCENTRATION_PARTS_PER_MILLION, SensorStateClass.MEASUREMENT),
-    "µg/m³": _UnitMapping(None, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SensorStateClass.MEASUREMENT),
+    "°C": _UnitMapping(
+        SensorDeviceClass.TEMPERATURE,
+        UnitOfTemperature.CELSIUS,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "°F": _UnitMapping(
+        SensorDeviceClass.TEMPERATURE,
+        UnitOfTemperature.FAHRENHEIT,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "%": _UnitMapping(
+        SensorDeviceClass.HUMIDITY, PERCENTAGE, SensorStateClass.MEASUREMENT
+    ),
+    "ppm": _UnitMapping(
+        SensorDeviceClass.CO2,
+        CONCENTRATION_PARTS_PER_MILLION,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "µg/m³": _UnitMapping(
+        None, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SensorStateClass.MEASUREMENT
+    ),
     "pt./cm³": _UnitMapping(None, "pt./cm³", SensorStateClass.MEASUREMENT),
     "µm": _UnitMapping(None, "µm", SensorStateClass.MEASUREMENT),
-    "A": _UnitMapping(SensorDeviceClass.CURRENT, UnitOfElectricCurrent.AMPERE, SensorStateClass.MEASUREMENT),
-    "Hz": _UnitMapping(SensorDeviceClass.FREQUENCY, UnitOfFrequency.HERTZ, SensorStateClass.MEASUREMENT),
-    "cos φ": _UnitMapping(SensorDeviceClass.POWER_FACTOR, None, SensorStateClass.MEASUREMENT),
-    "W": _UnitMapping(SensorDeviceClass.POWER, UnitOfPower.WATT, SensorStateClass.MEASUREMENT),
-    "kWh": _UnitMapping(SensorDeviceClass.ENERGY, UnitOfEnergy.KILO_WATT_HOUR, SensorStateClass.TOTAL_INCREASING),
-    "V": _UnitMapping(SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, SensorStateClass.MEASUREMENT),
-    "mbar": _UnitMapping(SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.MBAR, SensorStateClass.MEASUREMENT),
-    "hPa": _UnitMapping(SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.HPA, SensorStateClass.MEASUREMENT),
-    "lx": _UnitMapping(SensorDeviceClass.ILLUMINANCE, LIGHT_LUX, SensorStateClass.MEASUREMENT),
+    "A": _UnitMapping(
+        SensorDeviceClass.CURRENT,
+        UnitOfElectricCurrent.AMPERE,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "Hz": _UnitMapping(
+        SensorDeviceClass.FREQUENCY, UnitOfFrequency.HERTZ, SensorStateClass.MEASUREMENT
+    ),
+    "cos φ": _UnitMapping(
+        SensorDeviceClass.POWER_FACTOR, None, SensorStateClass.MEASUREMENT
+    ),
+    "W": _UnitMapping(
+        SensorDeviceClass.POWER, UnitOfPower.WATT, SensorStateClass.MEASUREMENT
+    ),
+    "kWh": _UnitMapping(
+        SensorDeviceClass.ENERGY,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        SensorStateClass.TOTAL_INCREASING,
+    ),
+    "V": _UnitMapping(
+        SensorDeviceClass.VOLTAGE,
+        UnitOfElectricPotential.VOLT,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "mbar": _UnitMapping(
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        UnitOfPressure.MBAR,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "hPa": _UnitMapping(
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        UnitOfPressure.HPA,
+        SensorStateClass.MEASUREMENT,
+    ),
+    "lx": _UnitMapping(
+        SensorDeviceClass.ILLUMINANCE, LIGHT_LUX, SensorStateClass.MEASUREMENT
+    ),
 }
 
 
@@ -82,10 +126,16 @@ def _resolve_mapping(channel: Channel) -> _UnitMapping:
     mapping = _UNIT_MAP.get(unit)
     if mapping is None:
         # Unknown unit — pass it through verbatim with MEASUREMENT state_class
-        return _UnitMapping(None, unit or None, SensorStateClass.MEASUREMENT if unit else None)
+        return _UnitMapping(
+            None, unit or None, SensorStateClass.MEASUREMENT if unit else None
+        )
     if unit == "µg/m³":
         pm_class = _pm_device_class(channel.name)
-        return _UnitMapping(pm_class, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SensorStateClass.MEASUREMENT)
+        return _UnitMapping(
+            pm_class,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            SensorStateClass.MEASUREMENT,
+        )
     return mapping
 
 
@@ -129,9 +179,7 @@ async def async_setup_entry(
 
     _check_new_entities()
 
-    entry.async_on_unload(
-        coordinator.async_add_listener(_check_new_entities)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_check_new_entities))
 
 
 class AllnetSensorEntity(AllnetEntity, SensorEntity):
