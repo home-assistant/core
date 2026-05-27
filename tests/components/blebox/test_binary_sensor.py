@@ -76,6 +76,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
     ],
 )
 async def test_init(
+    hass: HomeAssistant,
     fixture_name: str,
     unique_id: str,
     expected_name: str,
@@ -83,7 +84,6 @@ async def test_init(
     expected_state: str,
     expected_device_name: str,
     device_registry: dr.DeviceRegistry,
-    hass: HomeAssistant,
     request: pytest.FixtureRequest,
 ) -> None:
     """Test binary_sensor initialisation."""
