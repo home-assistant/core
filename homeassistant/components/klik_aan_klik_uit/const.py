@@ -5,7 +5,6 @@ from typing import Final
 DOMAIN: Final = "klik_aan_klik_uit"
 
 CONF_TRANSMITTER: Final = "transmitter"
-CONF_DEVICE_ID: Final = "device_id"
 CONF_CHANNEL: Final = "channel"
 CONF_GROUP: Final = "group"
 CONF_DIM: Final = "dim"

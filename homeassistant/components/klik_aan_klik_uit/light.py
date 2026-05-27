@@ -7,7 +7,7 @@ from rf_protocols.commands.kaku import KakuCommand
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import CONF_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,7 +17,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_CHANNEL,
-    CONF_DEVICE_ID,
     CONF_DIM,
     CONF_GROUP,
     CONF_TRANSMITTER,

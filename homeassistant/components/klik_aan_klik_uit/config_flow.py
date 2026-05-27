@@ -11,12 +11,12 @@ from homeassistant.components.radio_frequency import (
     async_send_command,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import (
     CONF_CHANNEL,
-    CONF_DEVICE_ID,
     CONF_DIM,
     CONF_GROUP,
     CONF_TRANSMITTER,
