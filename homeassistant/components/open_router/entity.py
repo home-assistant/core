@@ -199,11 +199,14 @@ async def async_prepare_files_for_prompt(
 
         if mime_type.startswith("video/"):
             if file_path.exists():
+
                 def encode_video(
                     path: Path = file_path, mime: str = mime_type
                 ) -> VideoUrlParam:
                     if not path.exists():
-                        raise HomeAssistantError(f"`{path}` does not exist, file may have been deleted/moved during encoding")
+                        raise HomeAssistantError(
+                            f"`{path}` does not exist, file may have been deleted/moved during encoding"
+                        )
                     base64_file = base64.b64encode(path.read_bytes()).decode("utf-8")
                     return VideoUrlParam(
                         type="video_url",
@@ -233,6 +236,7 @@ async def async_prepare_files_for_prompt(
                     )
                 )
         elif mime_type.startswith(("image/", "application/pdf")):
+
             def encode_image(
                 path: Path = file_path, mime: str = mime_type
             ) -> ChatCompletionContentPartImageParam:
@@ -243,6 +247,7 @@ async def async_prepare_files_for_prompt(
                     type="image_url",
                     image_url={"url": f"data:{mime};base64,{encoded}"},
                 )
+
             content.append(await hass.async_add_executor_job(encode_image))
         else:
             raise HomeAssistantError(

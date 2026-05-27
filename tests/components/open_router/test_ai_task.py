@@ -391,7 +391,9 @@ async def test_generate_data_with_video_attachment_local(
             task_name="Test Task",
             entity_id="ai_task.gemini_1_5_pro",
             instructions="Describe the video",
-            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+            attachments=[
+                {"media_content_id": "media-source://media_source/local/clip.mp4"}
+            ],
         )
 
     assert result.data == "Video processed"
@@ -473,7 +475,9 @@ async def test_generate_data_with_video_attachment_remote(
             task_name="Test Task",
             entity_id="ai_task.gemini_1_5_pro",
             instructions="Describe the video",
-            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+            attachments=[
+                {"media_content_id": "media-source://media_source/local/clip.mp4"}
+            ],
         )
 
     assert result.data == "Video processed via URL"
@@ -521,5 +525,7 @@ async def test_generate_data_with_video_attachment_remote_no_external_url(
             task_name="Test Task",
             entity_id="ai_task.gemini_1_5_pro",
             instructions="Describe the video",
-            attachments=[{"media_content_id": "media-source://media_source/local/clip.mp4"}],
+            attachments=[
+                {"media_content_id": "media-source://media_source/local/clip.mp4"}
+            ],
         )
