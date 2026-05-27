@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
@@ -18,6 +19,7 @@ from reolink_aio.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
@@ -42,6 +44,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import (
     DHCP_FORMATTED_MAC,
+    TEST_BC_CON,
     TEST_BC_PORT,
     TEST_HOST,
     TEST_HOST2,
@@ -91,6 +94,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
     }
     assert result["options"] == {
@@ -146,6 +150,7 @@ async def test_config_flow_privacy_success(
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
     }
     assert result["options"] == {
@@ -188,6 +193,7 @@ async def test_config_flow_baichuan_only(
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: True,
     }
     assert result["options"] == {
@@ -350,6 +356,7 @@ async def test_config_flow_errors(hass: HomeAssistant, reolink_host: MagicMock) 
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
     }
     assert result["options"] == {
@@ -370,6 +377,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -411,6 +419,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -459,6 +468,7 @@ async def test_reauth_abort_unique_id_mismatch(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -529,6 +539,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_USE_HTTPS: TEST_USE_HTTPS,
         CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         CONF_BC_PORT: TEST_BC_PORT,
+        CONF_BC_CONNECT: TEST_BC_CON,
         CONF_BC_ONLY: False,
     }
     assert result["options"] == {
@@ -553,6 +564,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -595,6 +607,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=ANY,
             bc_port=TEST_BC_PORT,
+            bc_connection=ConnectionEnum(TEST_BC_CON),
             bc_only=False,
         )
         assert expected_call in reolink_host_class.call_args_list
@@ -677,6 +690,7 @@ async def test_dhcp_ip_update(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -720,6 +734,7 @@ async def test_dhcp_ip_update(
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=ANY,
             bc_port=TEST_BC_PORT,
+            bc_connection=ConnectionEnum(TEST_BC_CON),
             bc_only=False,
         )
         assert expected_call in reolink_host_class.call_args_list
@@ -753,6 +768,7 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -786,6 +802,7 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
         timeout=DEFAULT_TIMEOUT,
         aiohttp_get_session_callback=ANY,
         bc_port=TEST_BC_PORT,
+        bc_connection=ConnectionEnum(TEST_BC_CON),
         bc_only=False,
     )
     assert expected_call in reolink_host_class.call_args_list
@@ -815,6 +832,7 @@ async def test_reconfig(hass: HomeAssistant) -> None:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
@@ -864,6 +882,7 @@ async def test_reconfig_abort_unique_id_mismatch(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
             CONF_BC_ONLY: False,
         },
         options={
