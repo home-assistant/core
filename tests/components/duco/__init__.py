@@ -1,6 +1,6 @@
 """Tests for the Duco integration."""
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 from contextlib import nullcontext
 from unittest.mock import patch
 
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 async def setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    platforms: Iterable[Platform] | None = None,
+    platforms: Sequence[Platform] | None = None,
 ) -> MockConfigEntry:
     """Set up the Duco integration for testing."""
     config_entry.add_to_hass(hass)
