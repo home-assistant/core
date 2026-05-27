@@ -1,7 +1,9 @@
 """Tests for EZVIZ entities."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
@@ -10,7 +12,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 def _mock_camera_data(**kwargs: object) -> dict[str, object]:
@@ -202,6 +206,7 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the image entity updates its alarm picture on refresh."""
     mock_ezviz_client.load_cameras.return_value = {
@@ -213,7 +218,6 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
 
     await setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data
     mock_ezviz_client.load_cameras.return_value = {
         "C123456789": _mock_camera_data(
             last_alarm_time="2023-01-01T12:05:00Z",
@@ -221,7 +225,8 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
         )
     }
 
-    await coordinator.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("image.camera_1_last_motion_image")
@@ -233,6 +238,7 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the image entity keeps the previous alarm picture when omitted."""
     mock_ezviz_client.load_cameras.return_value = {
@@ -244,14 +250,14 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
 
     await setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data
     mock_ezviz_client.load_cameras.return_value = {
         "C123456789": _mock_camera_data(
             last_alarm_time="2023-01-01T12:05:00Z",
         )
     }
 
-    await coordinator.async_request_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("image.camera_1_last_motion_image")
