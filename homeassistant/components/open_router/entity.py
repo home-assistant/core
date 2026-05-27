@@ -6,8 +6,8 @@ from datetime import timedelta
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from urllib.parse import urljoin
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
+from urllib.parse import urljoin
 
 import openai
 from openai.types.chat import (
