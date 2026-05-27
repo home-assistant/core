@@ -92,8 +92,7 @@ def _extract_backup(
     ):
         ostf.tar.extractall(
             path=Path(tempdir, "extracted"),
-            members=securetar.secure_path(ostf.tar),
-            filter="fully_trusted",
+            filter="tar",
         )
         backup_meta_file = Path(tempdir, "extracted", "backup.json")
         backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
@@ -119,8 +118,7 @@ def _extract_backup(
         ) as istf:
             istf.extractall(
                 path=Path(tempdir, "homeassistant"),
-                members=securetar.secure_path(istf),
-                filter="fully_trusted",
+                filter="tar",
             )
             if restore_content.restore_homeassistant:
                 keep = list(KEEP_BACKUPS)
