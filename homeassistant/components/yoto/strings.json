@@ -44,13 +44,16 @@
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "play_failed": {
-      "message": "Failed to play Yoto card: {error}"
+      "message": "Failed to play Yoto media: {error}"
     },
     "unknown_card": {
       "message": "Unknown Yoto card: {card_id}"
     },
     "unknown_chapter": {
       "message": "Unknown chapter {chapter_key} on card {card_id}"
+    },
+    "unknown_track": {
+      "message": "Unknown track {track_key} on card {card_id}"
     },
     "update_error": {
       "message": "Error communicating with Yoto: {error}"

@@ -234,7 +234,11 @@ async def test_play_media(
 @pytest.mark.usefixtures("mock_yoto_client")
 @pytest.mark.parametrize(
     "media_content_id",
-    ["spotify:track:abc", "yoto://"],
+    [
+        pytest.param("spotify:track:abc", id="wrong_scheme"),
+        pytest.param("yoto://", id="empty_path"),
+        pytest.param("yoto://card/chapter/track/extra", id="too_many_segments"),
+    ],
 )
 async def test_play_media_invalid_uri_raises(
     hass: HomeAssistant,
@@ -262,6 +266,7 @@ async def test_play_media_invalid_uri_raises(
     [
         pytest.param("yoto://does-not-exist", id="unknown_card"),
         pytest.param("yoto://card-test/does-not-exist", id="unknown_chapter"),
+        pytest.param("yoto://card-test/01/does-not-exist", id="unknown_track"),
     ],
 )
 async def test_play_media_unknown_target_raises(
@@ -441,7 +446,7 @@ async def test_browse_media_fetches_card_detail_lazily(
 ) -> None:
     """Browsing a card without loaded chapters triggers update_card_detail."""
     card = mock_yoto_client.library["card-test"]
-    card.chapters = None
+    card.chapters = {}
 
     async def _populate(card_id: str) -> None:
         card.chapters = {"01": Chapter(key="01", title="Intro", tracks={})}
@@ -520,7 +525,7 @@ async def test_browse_media_card_detail_failure_raises(
 ) -> None:
     """A failure fetching card chapters bubbles up as a browse error."""
     card = mock_yoto_client.library["card-test"]
-    card.chapters = None
+    card.chapters = {}
     mock_yoto_client.update_card_detail.side_effect = YotoError("offline")
 
     await setup_integration(hass, mock_config_entry)

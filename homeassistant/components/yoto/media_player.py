@@ -201,13 +201,33 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             )
 
         if chapter_key is not None:
-            chapter = (card.chapters or {}).get(chapter_key)
+            # Library list may not include chapters yet; fetch detail on demand.
+            if not card.chapters:
+                try:
+                    await client.update_card_detail(card_id)
+                except YotoError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="card_detail_failed",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
+
+            chapter = card.chapters.get(chapter_key)
             if chapter is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="unknown_chapter",
                     translation_placeholders={
                         "chapter_key": chapter_key,
+                        "card_id": card_id,
+                    },
+                )
+            if track_key is not None and track_key not in chapter.tracks:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_track",
+                    translation_placeholders={
+                        "track_key": track_key,
                         "card_id": card_id,
                     },
                 )
@@ -269,7 +289,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
                 ) from err
 
         if chapter_key is not None:
-            chapter = (card.chapters or {}).get(chapter_key)
+            chapter = card.chapters.get(chapter_key)
             if chapter is None:
                 raise BrowseError(
                     translation_domain=DOMAIN,
@@ -301,13 +321,13 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
 
     def _browse_card(self, card: Card) -> BrowseMedia:
         """List a card's chapters, collapsing single-chapter cards to tracks."""
-        chapters = card.chapters or {}
+        chapters = card.chapters
         # Single-chapter cards expand straight to tracks (skip a one-item level).
         if len(chapters) == 1:
             chapter_key, chapter = next(iter(chapters.items()))
             children = [
                 self._track_node(card.id, chapter_key, track_key, track)
-                for track_key, track in (chapter.tracks or {}).items()
+                for track_key, track in chapter.tracks.items()
             ]
         else:
             children = [
@@ -326,7 +346,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         node.can_expand = True
         node.children = [
             self._track_node(card_id, chapter_key, track_key, track)
-            for track_key, track in (chapter.tracks or {}).items()
+            for track_key, track in chapter.tracks.items()
         ]
         return node
 
@@ -354,7 +374,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             media_content_type=MediaType.MUSIC,
             title=chapter.title or chapter_key,
             can_play=True,
-            can_expand=len(chapter.tracks or {}) > 1,
+            can_expand=len(chapter.tracks) > 1,
             thumbnail=chapter.icon,
         )
 
@@ -410,7 +430,7 @@ def _parse_uri(media_id: str) -> tuple[str, str | None, str | None]:
     if not media_id.startswith(prefix):
         raise ValueError(f"Not a Yoto media identifier: {media_id}")
     parts = [segment for segment in media_id[len(prefix) :].split("/") if segment]
-    if not parts:
+    if not parts or len(parts) > 3:
         raise ValueError(f"Not a Yoto media identifier: {media_id}")
     card_id = parts[0]
     chapter_key = parts[1] if len(parts) > 1 else None
