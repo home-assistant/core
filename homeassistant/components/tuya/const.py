@@ -883,7 +883,7 @@ class DPCode(StrEnum):
     SWITCH_DISTURB = "switch_disturb"
     SWITCH_FAN = "switch_fan"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
-    SWITCH_KB_SOUND = "switch_kb_sound"  # Keyboard beep switch
+    SWITCH_KB_SOUND = "switch_kb_sound"  # Keyboard tone switch
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
