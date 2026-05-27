@@ -4,6 +4,7 @@
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",
   "postStartCommand": "script/bootstrap",
+  "mounts": "source=/home/sa/frontend,target=/workspaces/frontend,type=bind,consistency=cached",
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },

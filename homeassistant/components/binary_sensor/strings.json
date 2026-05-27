@@ -256,8 +256,8 @@
     "problem": {
       "name": "Problem",
       "state": {
-        "off": "OK",
-        "on": "Problem"
+        "off": "正常",
+        "on": "跌倒"
       }
     },
     "running": {

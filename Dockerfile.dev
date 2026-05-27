@@ -31,8 +31,8 @@ RUN \
 #ENV http_proxy http://192.168.100.212:7897
 #ENV https_proxy http://192.168.100.212:7897
 
-ENV http_proxy http://192.168.8.120:1080
-ENV https_proxy http://192.168.8.120:1080
+#ENV http_proxy http://192.168.8.120:1080
+#ENV https_proxy http://192.168.8.120:1080
 
 
 # Add go2rtc binary
@@ -61,6 +61,14 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     --mount=type=bind,source=requirements_test_pre_commit.txt,target=requirements_test_pre_commit.txt \
     uv pip install -r requirements.txt -r requirements_test.txt
 
+
+ENV http_proxy http://192.168.4.48:7897
+ENV https_proxy http://192.168.4.48:7897
+
+#ENV http_proxy http://192.168.8.120:1080
+#ENV https_proxy http://192.168.8.120:1080
+
+
 # Claude Code native install
 
 RUN curl -fsSL https://claude.ai/install.sh | bash
@@ -69,3 +77,6 @@ WORKDIR /workspaces
 
 # Set the default shell to bash instead of sh
 ENV SHELL=/bin/bash
+
+#CMD ["hass --skip-pip-packages home-assistant-frontend --config /workspaces/core/config", "-g", "daemon off;"]
+#ENTRYPOINT ["/home/vscode/.local/ha-venv/bin/hass --skip-pip-packages home-assistant-frontend --config /workspaces/core/config"]
