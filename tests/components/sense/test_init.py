@@ -18,9 +18,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "exception",
     [
-        SenseAPITimeoutException,
-        SenseAPIException,
-        SenseWebsocketException,
+        SenseAPITimeoutException(),
+        SenseAPIException("api error"),
+        SenseWebsocketException(),
     ],
 )
 async def test_setup_entry_exceptions(

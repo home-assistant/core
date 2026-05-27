@@ -63,20 +63,19 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    "exception",
     [
-        (SenseAuthenticationException, "invalid_auth"),
-        (SenseAPITimeoutException, "cannot_connect"),
-        (SenseAPIException, "cannot_connect"),
-        (Exception, "unknown"),
+        SenseAuthenticationException("invalid_auth"),
+        SenseAPITimeoutException("cannot_connect"),
+        SenseAPIException("cannot_connect"),
+        Exception("unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
-    exception: type[Exception],
-    error: str,
+    exception: Exception,
 ) -> None:
     """Test we handle all exceptions in the user flow and can recover."""
     mock_flow_sense.return_value.authenticate.side_effect = exception
@@ -90,7 +89,7 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error}
+    assert result["errors"] == {"base": str(exception)}
 
     # Verify recovery: clear the error and complete the flow successfully
     mock_flow_sense.return_value.authenticate.side_effect = None
