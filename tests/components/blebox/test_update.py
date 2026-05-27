@@ -1,6 +1,7 @@
 """BleBox update entity tests."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi.error
@@ -23,6 +24,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -118,12 +120,14 @@ async def test_update(
     assert device.sw_version == "0.2"
 
 
-async def test_update_error(
+async def test_update_failure(
     firmwareupdate: tuple[blebox_uniapi.update.Update, str],
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that a failed async_update raises HomeAssistantError."""
+    """Test that first update failure marks entity unavailable and logs at info level."""
+    caplog.set_level(logging.INFO)
+
     feature_mock, entity_id = firmwareupdate
     await async_setup_entity(hass, entity_id)
 
@@ -133,7 +137,66 @@ async def test_update_error(
     await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
-    assert "HomeAssistantError" in caplog.text
+    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_update_failure_not_repeated(
+    firmwareupdate: tuple[blebox_uniapi.update.Update, str],
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that repeated update failures do not log additional messages."""
+    caplog.set_level(logging.INFO)
+
+    feature_mock, entity_id = firmwareupdate
+    await async_setup_entity(hass, entity_id)
+
+    feature_mock.async_update = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError("connection refused")
+    )
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    record_count = len(caplog.records)
+
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert len(caplog.records) == record_count
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_update_failure_then_recovery(
+    firmwareupdate: tuple[blebox_uniapi.update.Update, str],
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that entity becomes available again after a successful update."""
+    caplog.set_level(logging.INFO)
+
+    feature_mock, entity_id = firmwareupdate
+    await async_setup_entity(hass, entity_id)
+
+    feature_mock.async_update = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError("connection refused")
+    )
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    def recovery_update() -> None:
+        feature_mock.installed_version = "0.1"
+        feature_mock.latest_version = "0.2"
+
+    feature_mock.async_update = AsyncMock(side_effect=recovery_update)
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+    assert f"'{feature_mock.full_name}' is back online" in caplog.text
 
 
 @pytest.mark.freeze_time("2026-05-21 00:00:00")

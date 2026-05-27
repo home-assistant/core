@@ -1,6 +1,7 @@
 """BleBox update entities implementation."""
 
 from datetime import timedelta
+import logging
 from typing import Any, Final
 
 from blebox_uniapi.error import ConnectionError as BleBoxConnectionError, Error
@@ -19,6 +20,8 @@ from homeassistant.helpers.event import async_call_later
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=1)
 
@@ -75,8 +78,16 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         """Update state and refresh sw_version in device registry."""
         try:
             await self._feature.async_update()
+            if self._unavailable_logged:
+                _LOGGER.info("'%s' is back online", self.name)
+                self._unavailable_logged = False
+            self._attr_available = True
         except Error as ex:
-            raise HomeAssistantError(ex) from ex
+            if not self._unavailable_logged:
+                _LOGGER.info("Updating '%s' failed: %s", self.name, ex)
+                self._unavailable_logged = True
+            self._attr_available = False
+            return
         self._sync_sw_version()
 
     @property
