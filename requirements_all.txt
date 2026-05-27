@@ -2726,6 +2726,9 @@ python-snoo==0.8.3
 # homeassistant.components.songpal
 python-songpal==0.16.2
 
+# homeassistant.components.swisscom
+python-swisscom-internet-box==0.1.1
+
 # homeassistant.components.tado
 python-tado==0.18.16
 

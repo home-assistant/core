@@ -3,6 +3,11 @@
 import logging
 from typing import Any
 
+from swisscom_internet_box import (
+    SwisscomAuthError,
+    SwisscomClient,
+    SwisscomConnectionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -10,7 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .api import SwisscomAuthError, SwisscomClient, SwisscomConnectionError
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,9 +42,9 @@ class SwisscomConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_PASSWORD],
         )
         await client.login()
-        info = await client.get_device_info()
-        unique_id = format_mac(info["BaseMAC"]) if info.get("BaseMAC") else None
-        title = info.get("ModelName") or "Internet-Box"
+        info = await client.get_box_info()
+        unique_id = format_mac(info.base_mac) if info.base_mac else None
+        title = info.model_name or "Internet-Box"
         return unique_id, title
 
     async def async_step_user(

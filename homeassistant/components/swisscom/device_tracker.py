@@ -110,32 +110,32 @@ class SwisscomScannerEntity(
         self._attr_unique_id = key
 
     @property
-    def _device(self) -> dict | None:
+    def _device(self):
         return self.coordinator.data.get(self._key)
 
     @property
     def is_connected(self) -> bool:
         """Return whether the device is currently connected to the LAN."""
         device = self._device
-        return bool(device and device["active"])
+        return bool(device and device.active)
 
     @property
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         device = self._device
-        return device["mac"] if device else self._key
+        return device.phys_address if device else self._key
 
     @property
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         device = self._device
-        return device["host"] if device else None
+        return device.name if device else None
 
     @property
     def ip_address(self) -> str | None:
         """Return the IP address of the device."""
         device = self._device
-        return device["ip"] if device else None
+        return device.ip_address if device else None
 
     @property
     def name(self) -> str | None:
