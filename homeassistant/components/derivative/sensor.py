@@ -52,6 +52,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
+    CONF_REPLACE_UNAVAILABLE,
     CONF_ROUND_DIGITS,
     CONF_TIME_WINDOW,
     CONF_UNIT,
@@ -109,6 +110,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
         vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
+        vol.Optional(CONF_REPLACE_UNAVAILABLE, default=False): cv.boolean,
     }
 )
 
@@ -150,6 +152,7 @@ async def async_setup_entry(
         unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
+        replace_unavailable=config_entry.options.get(CONF_REPLACE_UNAVAILABLE, False),
     )
 
     async_add_entities([derivative_sensor])
@@ -175,6 +178,7 @@ async def async_setup_platform(
         unit_time=config[CONF_UNIT_TIME],
         unique_id=config.get(CONF_UNIQUE_ID),
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
+        replace_unavailable=config[CONF_REPLACE_UNAVAILABLE],
     )
 
     async_add_entities([derivative])
@@ -199,6 +203,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
+        replace_unavailable: bool,
         unique_id: str | None,
     ) -> None:
         """Initialize the derivative sensor."""
@@ -234,6 +239,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
             else max_sub_interval
         )
+        self._replace_unavailable = replace_unavailable
         self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: (
             None
         )
@@ -331,6 +337,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         # Check the source state for unknown/unavailable condition.
         # If unusable, write unknown/unavailable state and return false.
         if not state or state.state == STATE_UNAVAILABLE:
+            if self._replace_unavailable:
+                self._attr_available = True
+                self._write_native_value(Decimal(0))
+                return False
             self._attr_available = False
             self.async_write_ha_state()
             return False

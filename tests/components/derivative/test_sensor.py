@@ -976,6 +976,33 @@ async def test_unavailable(
             assert rounded_state == expect
 
 
+async def test_replace_unavailable_option(hass: HomeAssistant) -> None:
+    """Test replace_unavailable option falls back to zero."""
+    config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    assert float(state.state) == 0.0
+    assert state.state != STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
 async def test_unavailable_2(
     bad_state: str,
