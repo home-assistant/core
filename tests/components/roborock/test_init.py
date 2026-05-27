@@ -662,7 +662,7 @@ async def test_disabled_device_no_coordinator(
 
     # close() should have been called on the disabled device to stop its
     # background reconnect loop from disrupting the MQTT session.
-    first_device.close.assert_called_once()
+    first_device.close.assert_awaited_once()
 
     # close() should NOT have been called on enabled devices.
     for device in fake_devices[1:]:
