@@ -1502,12 +1502,13 @@ async def test_publish_error(
 
 async def test_subscribe_error(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
     record_calls: MessageCallbackType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test publish error."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
+    await mqtt_mock_entry()
     mqtt_client_mock.reset_mock()
     # simulate client is not connected error before subscribing
     mqtt_client_mock.subscribe.side_effect = lambda *args, **kwargs: (4, None)

@@ -507,7 +507,9 @@ class ReolinkHost:
                 wake[channel] = False
 
             # check privacy mode if enabled
-            if self._api.baichuan.privacy_mode(channel):
+            if self._api.baichuan.privacy_mode(channel) and (
+                not self._api.is_battery or wake[channel]
+            ):
                 await self._api.baichuan.get_privacy_mode(channel)
 
         if all(wake.values()):

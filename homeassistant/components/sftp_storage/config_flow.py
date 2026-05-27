@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     FileSelector,
@@ -27,11 +28,7 @@ from . import SFTPConfigEntryData
 from .client import get_client_options
 from .const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DEFAULT_PKEY_NAME,
     DOMAIN,
     LOGGER,

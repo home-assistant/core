@@ -24,6 +24,7 @@ from pyatv.interface import (
     PushListener,
     PushUpdater,
 )
+from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -345,7 +346,10 @@ class AppleTvMediaPlayer(
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_id = async_process_play_media_url(self.hass, play_item.url)
+            if play_item.path and self._is_feature_available(FeatureName.StreamFile):
+                media_id = str(play_item.path)
+            else:
+                media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
         if self._is_feature_available(FeatureName.StreamFile) and (
@@ -353,11 +357,16 @@ class AppleTvMediaPlayer(
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)
-        elif self._is_feature_available(FeatureName.PlayUrl):
+        elif self._is_feature_available(FeatureName.PlayUrl) and (
+            (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
+        ):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
             await self.atv.stream.play_url(media_id)
         else:
-            _LOGGER.error("Media streaming is not possible with current configuration")
+            _LOGGER.error(
+                "Media streaming is not possible with current configuration for %s",
+                media_id,
+            )
 
     @property
     def media_image_hash(self) -> str | None:
