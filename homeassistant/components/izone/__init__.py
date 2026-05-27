@@ -1,6 +1,5 @@
 """Platform for the iZone AC."""
 
-import pizone
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -45,60 +44,62 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_pick_legacy_migration_controller(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> pizone.Controller:
-    """Return the single controller to bind to a legacy ``unique_id == izone`` entry.
-
-    Raises ConfigEntryNotReady if no eligible controller is found on the network,
-    or ConfigEntryError if multiple eligible controllers are found (ambiguous).
-    """
-    try:
-        controllers = await config_flow.async_discover_controllers(hass)
-    except OSError:
-        raise ConfigEntryNotReady("iZone discovery service failed to start") from None
-    conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-    excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
-    configured_uids = {
-        config_entry.unique_id
-        for config_entry in hass.config_entries.async_entries(IZONE)
-        if config_entry.entry_id != entry.entry_id
-        and config_entry.unique_id not in (None, IZONE)
-    }
-    eligible = [
-        controller
-        for controller in controllers.values()
-        if controller.device_uid not in excluded_uids
-        and controller.device_uid not in configured_uids
-    ]
-
-    if not eligible:
-        raise ConfigEntryNotReady(
-            "No eligible iZone controller found to migrate legacy config entry"
-        )
-
-    if len(eligible) > 1:
-        raise ConfigEntryError(
-            "Multiple eligible iZone controllers found for a legacy config entry"
-        )
-
-    return eligible[0]
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     try:
         await async_start_discovery_service(hass)
     except OSError as err:
         raise ConfigEntryNotReady("iZone discovery service failed to start") from err
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
+    if entry.unique_id == IZONE:
+        # Legacy v1-migrated entry: resolve to a real controller UID at setup time.
+        #
+        # Doing this work here (rather than in async_migrate_entry) is intentional:
+        # ConfigEntryNotReady raised from async_migrate_entry becomes a permanent
+        # MIGRATION_ERROR — HA does not retry failed migrations.  Raising it from
+        # async_setup_entry correctly schedules a retry on the next HA start.
+        #
+        # Raising ConfigEntryError (multiple eligible controllers) is permanent either
+        # way; those controllers are not lost — the discovery fan-out will surface them
+        # as individual flows once HA restarts.  This is not a breaking change: a v1
+        # entry with multiple controllers was already broken before this PR.
+        # async_discover_controllers reuses the already-running service (idempotent
+        # start), so OSError here means fetch_controllers() itself failed — rare but
+        # kept as a defensive guard.
+        try:
+            controllers = await config_flow.async_discover_controllers(hass)
+        except OSError as err:
+            raise ConfigEntryNotReady(
+                "iZone discovery failed while resolving legacy config entry"
+            ) from err
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate old config entry schema to the current version."""
-    if entry.version == 1:
-        controller = await _async_pick_legacy_migration_controller(hass, entry)
+        conf: ConfigType | None = hass.data.get(DATA_CONFIG)
+        excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
+        configured_uids = {
+            config_entry.unique_id
+            for config_entry in hass.config_entries.async_entries(IZONE)
+            if config_entry.entry_id != entry.entry_id
+            and config_entry.unique_id not in (None, IZONE)
+        }
+        eligible = [
+            controller
+            for controller in controllers.values()
+            if controller.device_uid not in excluded_uids
+            and controller.device_uid not in configured_uids
+        ]
+
+        if not eligible:
+            raise ConfigEntryNotReady(
+                "No eligible iZone controller found to bind to legacy config entry"
+            )
+
+        if len(eligible) > 1:
+            raise ConfigEntryError(
+                "Multiple eligible iZone controllers found for a legacy config entry; "
+                "delete this entry and re-add each controller individually"
+            )
+
+        controller = eligible[0]
         new_title = (
             f"iZone {controller.device_uid}"
             if entry.title == "iZone Aircon"
@@ -106,11 +107,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         hass.config_entries.async_update_entry(
             entry,
-            version=2,
             unique_id=controller.device_uid,
-            data={},
             title=new_title,
         )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry schema to the current version."""
+    if entry.version == 1:
+        # Clear legacy data only — UID and title binding is deferred to
+        # async_setup_entry where ConfigEntryNotReady retry semantics work correctly.
+        # Raising ConfigEntryNotReady from async_migrate_entry would permanently land
+        # the entry in MIGRATION_ERROR with no retry path.
+        hass.config_entries.async_update_entry(entry, version=2, data={})
         return True
     return False
 
