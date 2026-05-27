@@ -1,70 +1,57 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to ALLNET",
-        "data": {
-          "host": "Host",
-          "username": "Username",
-          "password": "Password",
-          "use_ssl": "Use SSL",
-          "device_profile": "Device profile"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the ALLNET device.",
-          "username": "The username for the ALLNET web interface, if authentication is enabled.",
-          "password": "The password for the ALLNET web interface, if authentication is enabled.",
-          "use_ssl": "Enable this if the ALLNET device is configured for HTTPS.",
-          "device_profile": "Select the device type, or leave on Auto to detect automatically."
-        }
-      },
-      "zeroconf_confirm": {
-        "title": "Discovered ALLNET device",
-        "description": "Do you want to add the ALLNET device **{name}** at {host}?",
-        "data": {
-          "username": "Username",
-          "password": "Password",
-          "device_profile": "Device profile"
-        },
-        "data_description": {
-          "username": "Username if authentication is enabled on the device.",
-          "password": "Password if authentication is enabled on the device.",
-          "device_profile": "Select the device type, or leave on Auto to detect automatically."
-        }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate ALLNET",
-        "description": "The ALLNET device at {host} rejected the stored credentials. Enter new credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      }
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration is already in progress",
+      "cannot_connect": "Cannot connect to device",
+      "not_allnet_device": "Not an ALLNET device",
+      "reauth_successful": "Re-authentication was successful"
     },
     "error": {
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid authentication",
-      "unsupported_firmware": "Device does not support the ALLNET JSON API. Check firmware version.",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "unsupported_firmware": "Device does not support the ALLNET JSON API. Check firmware version."
     },
-    "abort": {
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Configuration is already in progress",
-      "not_allnet_device": "Not an ALLNET device",
-      "cannot_connect": "Cannot connect to device",
-      "reauth_successful": "Re-authentication was successful"
-    }
-  },
-  "options": {
     "step": {
-      "init": {
-        "title": "ALLNET options",
+      "reauth_confirm": {
         "data": {
-          "scan_interval": "Polling interval (seconds)"
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "The ALLNET device at {host} rejected the stored credentials. Enter new credentials.",
+        "title": "Re-authenticate ALLNET"
+      },
+      "user": {
+        "data": {
+          "device_profile": "Device profile",
+          "host": "Host",
+          "password": "Password",
+          "use_ssl": "Use SSL",
+          "username": "Username"
         },
         "data_description": {
-          "scan_interval": "How often to poll the device for updated values. Minimum 10, maximum 3600 seconds."
-        }
+          "device_profile": "Select the device type, or leave on Auto to detect automatically.",
+          "host": "The hostname or IP address of the ALLNET device.",
+          "password": "The password for the ALLNET web interface, if authentication is enabled.",
+          "use_ssl": "Enable this if the ALLNET device is configured for HTTPS.",
+          "username": "The username for the ALLNET web interface, if authentication is enabled."
+        },
+        "title": "Connect to ALLNET"
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "device_profile": "Device profile",
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "device_profile": "Select the device type, or leave on Auto to detect automatically.",
+          "password": "Password if authentication is enabled on the device.",
+          "username": "Username if authentication is enabled on the device."
+        },
+        "description": "Do you want to add the ALLNET device **{name}** at {host}?",
+        "title": "Discovered ALLNET device"
       }
     }
   },
@@ -72,8 +59,8 @@
     "device_profile": {
       "options": {
         "auto": "Auto-detect",
-        "msr": "MSR (measurement/control device)",
-        "managed_switch": "Managed switch"
+        "managed_switch": "Managed switch",
+        "msr": "MSR (measurement/control device)"
       }
     }
   }
