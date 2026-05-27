@@ -18,6 +18,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STO
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -1230,7 +1231,7 @@ async def test_async_setup_starts_import_flow(hass: HomeAssistant) -> None:
             side_effect=lambda target: target.close(),
         ) as mock_create_task,
     ):
-        assert await izone_component.async_setup(hass, {IZONE: {"exclude": []}})
+        assert await async_setup_component(hass, IZONE, {IZONE: {"exclude": []}})
 
     mock_async_init.assert_called_once_with(
         IZONE, context={"source": config_entries.SOURCE_IMPORT}
