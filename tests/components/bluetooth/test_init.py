@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import sys
 import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -99,6 +100,7 @@ async def test_setup_and_stop(
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux BlueZ scanner")
 @pytest.mark.parametrize(
     "options",
     [{CONF_MODE: "passive"}, {CONF_PASSIVE: True}],
@@ -161,6 +163,7 @@ async def test_setup_and_stop_passive(
     }
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux BlueZ scanner")
 async def test_setup_and_stop_old_bluez(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
