@@ -12,9 +12,6 @@ from homeassistant.core import HomeAssistant
 from .coordinator import OpenEVSEConfigEntry
 
 REDACT_CONFIG_DATA = {CONF_PASSWORD, CONF_USERNAME}
-
-MAX_JSON_DEPTH = 20
-
 CHARGER_PROPERTIES = (
     "status",
     "vehicle",
@@ -64,73 +61,13 @@ CHARGER_PROPERTIES = (
 )
 
 
-def _to_json_safe(val: Any, seen: set[int] | None = None, depth: int = 0) -> Any:
-    """Coerce value to be JSON-serializable.
-
-    Top-level callables on the charger object are skipped entirely in the main
-    diagnostics loop. For nested structures (lists, dicts, tuples, sets), any
-    encountered callable elements are coerced to None here to preserve the
-    structure while remaining JSON-safe.
-    """
-    if isinstance(val, (str, int, float, bool)) or val is None:
-        return val
-
-    # Limit the maximum allowed depth value (0-based) to MAX_JSON_DEPTH.
-    # At depth = MAX_JSON_DEPTH, we truncate and return a placeholder.
-    if depth >= MAX_JSON_DEPTH:
-        return f"<Depth limit exceeded: {type(val).__name__}>"
-
-    if seen is None:
-        seen = set()
-
-    val_id = id(val)
-    if val_id in seen:
-        return f"<Circular reference detected: {type(val).__name__}>"
-
+def _to_json_safe(val: Any) -> Any:
+    """Coerce value to be JSON-serializable."""
     if isinstance(val, (datetime, date)):
         return val.isoformat()
     if isinstance(val, Enum):
-        return _to_json_safe(val.value, seen, depth + 1)
-    if isinstance(val, (set, frozenset)):
-        seen.add(val_id)
-        try:
-            coerced_vals = [_to_json_safe(v, seen, depth + 1) for v in val]
-            return sorted(coerced_vals, key=str)
-        finally:
-            seen.remove(val_id)
-    if isinstance(val, (list, tuple)):
-        seen.add(val_id)
-        try:
-            return [_to_json_safe(v, seen, depth + 1) for v in val]
-        finally:
-            seen.remove(val_id)
-    if isinstance(val, dict):
-        seen.add(val_id)
-        try:
-            key_mappings = []
-            for k in val:
-                if isinstance(k, str):
-                    key_str = k
-                elif isinstance(k, (int, float, bool)) or k is None:
-                    key_str = f"<{type(k).__name__}: {k}>"
-                elif isinstance(k, Enum):
-                    key_str = f"{type(k).__name__}.{k.name}"
-                else:
-                    key_str = f"<{type(k).__name__}>"
-                key_mappings.append((key_str, k))
-
-            # Sort key_str pairs deterministically, avoiding comparisons on original objects/keys
-            key_mappings.sort(key=lambda item: item[0])
-
-            res = {}
-            for key_str, k in key_mappings:
-                res[key_str] = _to_json_safe(val[k], seen, depth + 1)
-            return res
-        finally:
-            seen.remove(val_id)
-    if callable(val):
-        return None
-    return f"<{type(val).__name__} object>"
+        return val.value
+    return val
 
 
 async def async_get_config_entry_diagnostics(
@@ -154,7 +91,6 @@ async def async_get_config_entry_diagnostics(
             continue
 
         # Top-level callables on the charger object are omitted from diagnostics.
-        # Any nested callables within collections are coerced to None by _to_json_safe.
         if callable(val):
             continue
 
