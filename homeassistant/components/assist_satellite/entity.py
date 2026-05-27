@@ -662,9 +662,14 @@ class AssistSatelliteEntity(entity.Entity):
             return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
 
         try:
-            return float(command_timeout_state.state)
-        except ValueError as err:
-            raise RuntimeError("Command timeout entity has invalid state") from err
+            command_timeout = float(command_timeout_state.state)
+        except ValueError:
+            return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+        return min(
+            vad.MAX_COMMAND_TIMEOUT_SECONDS,
+            max(vad.MIN_COMMAND_TIMEOUT_SECONDS, command_timeout),
+        )
 
     async def _resolve_announcement_media_id(
         self,

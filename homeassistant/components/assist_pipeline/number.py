@@ -1,6 +1,7 @@
 """Number entities for assist pipeline settings."""
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntityDescription,
     NumberMode,
     RestoreNumber,
@@ -23,6 +24,7 @@ class CommandTimeoutNumber(RestoreNumber):
         translation_key="command_timeout",
         entity_category=EntityCategory.CONFIG,
     )
+    _attr_device_class = NumberDeviceClass.DURATION
     _attr_native_min_value = MIN_COMMAND_TIMEOUT_SECONDS
     _attr_native_max_value = MAX_COMMAND_TIMEOUT_SECONDS
     _attr_native_step = 1.0

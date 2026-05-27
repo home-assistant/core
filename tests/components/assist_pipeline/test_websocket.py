@@ -17,6 +17,7 @@ from homeassistant.components.assist_pipeline.const import (
     SAMPLE_WIDTH,
 )
 from homeassistant.components.assist_pipeline.pipeline import (
+    AudioSettings,
     DeviceAudioQueue,
     Pipeline,
     PipelineData,
@@ -1750,8 +1751,15 @@ async def test_audio_pipeline_with_enhancements(
     events = []
     client = await hass_ws_client(hass)
 
-    with patch(
-        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    with (
+        patch(
+            "homeassistant.components.tts.secrets.token_urlsafe",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.websocket_api.AudioSettings",
+            wraps=AudioSettings,
+        ) as mock_audio_settings,
     ):
         await client.send_json_auto_id(
             {
@@ -1772,6 +1780,13 @@ async def test_audio_pipeline_with_enhancements(
         # result
         msg = await client.receive_json()
         assert msg["success"]
+        mock_audio_settings.assert_called_once_with(
+            noise_suppression_level=2,
+            auto_gain_dbfs=15,
+            volume_multiplier=2.0,
+            is_vad_enabled=True,
+            timeout_seconds=30.0,
+        )
 
         # run start
         msg = await client.receive_json()

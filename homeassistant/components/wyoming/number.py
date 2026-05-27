@@ -8,6 +8,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
 from .models import WyomingConfigEntry
 
