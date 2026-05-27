@@ -1,7 +1,5 @@
 """Validate integration quality scale files."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol
@@ -14,13 +12,8 @@ from homeassistant.util.yaml import load_yaml_dict
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
-    action_setup,
-    config_entry_unloading,
     config_flow,
-    diagnostics,
     discovery,
-    parallel_updates,
-    reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
@@ -42,7 +35,7 @@ class Rule:
 
 ALL_RULES = [
     # BRONZE
-    Rule("action-setup", ScaledQualityScaleTiers.BRONZE, action_setup),
+    Rule("action-setup", ScaledQualityScaleTiers.BRONZE),
     Rule("appropriate-polling", ScaledQualityScaleTiers.BRONZE),
     Rule("brands", ScaledQualityScaleTiers.BRONZE),
     Rule("common-modules", ScaledQualityScaleTiers.BRONZE),
@@ -62,22 +55,18 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule(
-        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
-    ),
+    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
-    Rule(
-        "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
-    ),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
     Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
@@ -129,7 +118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aftership",
     "agent_dvr",
     "airly",
-    "airnow",
     "airq",
     "airthings",
     "airthings_ble",
@@ -229,7 +217,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "canary",
     "cast",
     "ccm15",
-    "cert_expiry",
     "chacon_dio",
     "channels",
     "circuit",
@@ -464,7 +451,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "honeywell",
     "horizon",
     "hp_ilo",
-    "html5",
     "http",
     "hue",
     "huisbaasje",
@@ -623,7 +609,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "monzo",
     "moon",
@@ -651,7 +636,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nasweb",
     "neato",
     "nederlandse_spoorwegen",
-    "ness_alarm",
     "netatmo",
     "netdata",
     "netgear",
@@ -672,7 +656,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -754,7 +737,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "prowl",
     "proximity",
     "proxmoxve",
-    "prusalink",
     "ps4",
     "pulseaudio_loopback",
     "pure_energie",
@@ -885,7 +867,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sony_projector",
     "soundtouch",
     "spc",
-    "speedtestdotnet",
     "spider",
     "spotify",
     "sql",
@@ -936,7 +917,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "telnet",
     "temper",
     "template",
-    "tesla_fleet",
     "tesla_wall_connector",
     "thermobeacon",
     "thermopro",
@@ -1072,7 +1052,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "zeroconf",
     "zerproc",
     "zestimate",
-    "zeversolar",
     "zha",
     "zhong_hong",
     "ziggo_mediabox_xl",
@@ -1659,7 +1638,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -1918,7 +1896,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
@@ -2072,7 +2049,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "zeroconf",
     "zerproc",
     "zestimate",
-    "zeversolar",
     "zha",
     "zhong_hong",
     "ziggo_mediabox_xl",
@@ -2204,16 +2180,23 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             integration.add_error(
                 "quality_scale",
                 (
-                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
+                    "New integrations marked as internal"
+                    " should be added to NO_QUALITY_SCALE"
+                    " in script/hassfest/quality_scale.py."
                     if integration.quality_scale == "internal"
-                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                    else "Quality scale definition not found."
+                    " New integrations are required to at"
+                    " least reach the Bronze tier."
                 ),
             )
             return
         if declared_quality_scale is not None:
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
+                "Quality scale definition not found."
+                " Integrations that set a manifest quality"
+                " scale must have a quality scale"
+                " definition.",
             )
             return
         return
@@ -2232,7 +2215,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     if integration.domain in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE:
         integration.add_error(
             "quality_scale",
-            "Quality scale file found! Please remove from `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
+            "Quality scale file found! Please"
+            " remove from"
+            " `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2242,7 +2227,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "This integration is graded and should be removed from `INTEGRATIONS_WITHOUT_SCALE`"
+            "This integration is graded and should be"
+            " removed from `INTEGRATIONS_WITHOUT_SCALE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2253,7 +2239,10 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         integration.add_error(
             "quality_scale",
             (
-                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                "New integrations marked as internal"
+                " should be added to"
+                " INTEGRATIONS_WITHOUT_SCALE in"
+                " script/hassfest/quality_scale.py."
                 if integration.quality_scale == "internal"
                 else "New integrations are required to at least reach the Bronze tier."
             ),
@@ -2307,7 +2296,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             )
             integration.add_error(
                 "quality_scale",
-                f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
+                f"Quality scale tier {scale.name.lower()}"
+                " requires quality scale rules to be"
+                f" met:\n{friendly_rule_str}",
             )
 
 

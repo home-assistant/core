@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[binary_sensor.mock_reeflex_light-entry]
+# name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.mock_reeflex_light',
+    'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,21 +36,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.mock_reeflex_light-state]
+# name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'light',
       'friendly_name': 'Mock reeflex Light',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_reeflex_light',
+    'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup[binary_sensor.mock_reeflex_uvc_lamp_connected-entry]
+# name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_reeflex_uvc_lamp_connected',
+    'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,14 +87,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[binary_sensor.mock_reeflex_uvc_lamp_connected-state]
+# name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Mock reeflex UVC lamp connected',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_reeflex_uvc_lamp_connected',
+    'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

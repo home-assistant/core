@@ -1,7 +1,5 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Collection
 from functools import cache
@@ -94,6 +92,9 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 FORBIDDEN_PACKAGES = {
     # Not longer needed, as we could use the standard library
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # backoff is archived / unmaintained
+    # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
     # Coloredlogs is unmaintained and contains a '.pth' file
@@ -121,11 +122,13 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
+    "aseko_pool_live": {"gql": {"backoff"}},
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
+    "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -139,6 +142,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "pyefergy": {"codecov", "types-pytz"}
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "energyid": {"energyid-webhooks": {"backoff"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
@@ -152,6 +156,8 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
+    "geocaching": {"geocachingapi": {"backoff"}},
+    "github": {"aiogithubapi": {"backoff"}},
     "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
@@ -159,11 +165,14 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-transit": {"async-timeout"},
     },
     "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
-    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
+    "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "izone": {"python-izone": {"async-timeout"}},
+    "ipp": {"pyipp": {"backoff"}},
+    "iqvia": {"pyiqvia": {"backoff"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
@@ -186,11 +195,14 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
+    "modern_forms": {"aiomodernforms": {"backoff"}},
+    "monarch_money": {"gql": {"backoff"}},
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
-    "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
+    "overkiz": {"pyoverkiz": {"backoff"}},
+    "prosegur": {"pyprosegur": {"backoff"}},
+    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
@@ -198,10 +210,17 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
+    "roku": {"rokuecp": {"backoff"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
+    "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
+    "tailwind": {"gotailwind": {"backoff"}},
+    "technove": {"python-technove": {"backoff"}},
+    "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
+    "tibber": {"gql": {"backoff"}},
+    "toon": {"toonapi": {"backoff"}},
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -210,6 +229,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
+    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
@@ -281,14 +301,10 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
-    # https://github.com/danifus/pyzipper
-    "knx": {"xknxproject": {"pyzipper"}},
     # https://github.com/hthiery/python-lacrosse
     "lacrosse": {"homeassistant": {"pylacrosse"}},
     # ???
     "linode": {"homeassistant": {"linode-api"}},
-    # https://github.com/timmo001/aiolyric
-    "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {
         "homeassistant": {"microbeespy"},
@@ -637,8 +653,10 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     ):
         integration.add_error(
             "requirements",
-            f"Integration {integration.domain} runtime files dependency exceptions "
-            "have been resolved, please remove from `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -744,7 +762,8 @@ def check_dependency_files(
         integration.add_warning_or_error(
             pkg in package_exceptions,
             "requirements",
-            f"Package {pkg} has a forbidden top level directory '{dir_name}' in {package}",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
         )
     for file_name in results["file_names"]:
         integration.add_warning_or_error(

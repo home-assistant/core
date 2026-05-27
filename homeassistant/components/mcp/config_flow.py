@@ -1,7 +1,5 @@
 """Config flow for the Model Context Protocol integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -15,7 +13,7 @@ from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -26,13 +24,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_AUTHORIZATION_URL,
-    CONF_SCOPE,
-    CONF_TOKEN_URL,
-    DOMAIN,
-)
+from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -246,13 +238,16 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.debug("Protected resource metadata: %s", resource_metadata)
                 oauth_config = await async_discover_authorization_server(
                     self.hass,
-                    # Use the first authorization server from the resource metadata as it
-                    # is the most common to have only one and there is not a defined strategy.
+                    # Use the first authorization server from the
+                    # resource metadata as it is the most common to
+                    # have only one and there is not a defined
+                    # strategy.
                     resource_metadata.authorization_servers[0],
                 )
             else:
                 _LOGGER.debug(
-                    "Discovering authorization server without protected resource metadata"
+                    "Discovering authorization server without"
+                    " protected resource metadata"
                 )
                 oauth_config = await async_discover_authorization_server(
                     self.hass,
@@ -270,7 +265,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.oauth_config = oauth_config
             self.data.update(
                 {
-                    CONF_AUTHORIZATION_URL: oauth_config.authorization_server.authorize_url,
+                    CONF_AUTHORIZATION_URL: (
+                        oauth_config.authorization_server.authorize_url
+                    ),
                     CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
                     CONF_SCOPE: _select_scopes(
                         self.auth_header, oauth_config, resource_metadata
@@ -432,11 +429,12 @@ async def async_discover_protected_resource(
     auth_url: str,
     mcp_server_url: str,
 ) -> ResourceMetadata:
-    """Discover the OAuth configuration for a protected resource for MCP spec version 2025-11-25+.
+    """Discover the OAuth configuration for a protected resource.
 
-    This implements the functionality in the MCP spec for discovery. We use the information
-    from the WWW-Authenticate header to fetch the resource metadata implementing
-    RFC9728.
+    This is for MCP spec version 2025-11-25+. It implements the
+    functionality in the MCP spec for discovery. We use the information
+    from the WWW-Authenticate header to fetch the resource metadata
+    implementing RFC9728.
 
     For the url https://example.com/public/mcp we attempt these urls:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp

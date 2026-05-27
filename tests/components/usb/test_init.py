@@ -253,7 +253,7 @@ async def test_discovered_by_websocket_scan(
 async def test_discovered_by_websocket_scan_limited_by_description_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the description matcher."""
+    """Test websocket scan discovery is limited by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*2652*"}
     ]
@@ -380,7 +380,7 @@ async def test_most_targeted_matcher_wins(
 async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan rejected by the description matcher."""
+    """Test websocket scan discovery rejected by the description matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*not_it*"}
     ]
@@ -418,7 +418,7 @@ async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
 async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the serial_number matcher."""
+    """Test websocket scan discovery is limited by the serial_number matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -462,7 +462,7 @@ async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
 async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is rejected by the serial_number matcher."""
+    """Test websocket scan discovery is rejected by the serial_number matcher."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
     ]
@@ -500,7 +500,7 @@ async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
 async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is limited by the manufacturer matcher."""
+    """Test websocket scan discovery is limited by the manufacturer matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -544,7 +544,7 @@ async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
 async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan is rejected by the manufacturer matcher."""
+    """Test websocket scan discovery is rejected by the manufacturer matcher."""
     new_usb = [
         {
             "domain": "test1",
@@ -587,7 +587,7 @@ async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
 async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket is rejected with empty serial number."""
+    """Test websocket discovery is rejected with empty serial number."""
     new_usb = [
         {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
     ]
@@ -662,7 +662,7 @@ async def test_discovered_by_websocket_scan_match_vid_only(
 async def test_discovered_by_websocket_scan_match_vid_wrong_pid(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a device is discovered from websocket scan only matching vid but wrong pid."""
+    """Test websocket scan discovery matching vid but wrong pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
     mock_ports = [
@@ -769,7 +769,7 @@ async def test_non_matching_discovered_by_scanner_after_started(
 async def test_aiousbwatcher_on_wsl_fallback_without_throwing_exception(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that aiousbwatcher on WSL failure results in fallback to scanning without raising an exception."""
+    """Test aiousbwatcher WSL failure falls back to scanning without exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
     mock_ports = [
@@ -1169,9 +1169,7 @@ async def test_register_port_event_callback(
     mock_callback2 = Mock()
 
     # Start off with no ports
-    with (
-        patch_scanned_serial_ports(return_value=[]),
-    ):
+    with patch_scanned_serial_ports(return_value=[]):
         assert await async_setup_component(hass, DOMAIN, {"usb": {}})
 
         _cancel1 = usb.async_register_port_event_callback(hass, mock_callback1)
@@ -1264,9 +1262,7 @@ async def test_register_port_event_callback_failure(
     mock_callback2 = Mock(side_effect=RuntimeError("Failure 2"))
 
     # Start off with no ports
-    with (
-        patch_scanned_serial_ports(return_value=[]),
-    ):
+    with patch_scanned_serial_ports(return_value=[]):
         assert await async_setup_component(hass, DOMAIN, {"usb": {}})
 
         usb.async_register_port_event_callback(hass, mock_callback1)
@@ -1333,7 +1329,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             device="/dev/ttyAMA1",
             serial_number=None,
             manufacturer=None,
-            description=None,
+            description="ttyAMA1",
         ),
         USBDevice(
             device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
@@ -1341,7 +1337,7 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             pid="4001",
             serial_number="10B41DE589FC",
             manufacturer="Nabu Casa",
-            description="ZBT-2",
+            description="ZBT-2 - Nabu Casa ZBT-2",
             bcd_device=257,
             interface_description="Nabu Casa ZBT-2",
             interface_num=0,
@@ -1679,13 +1675,22 @@ async def test_removal_aborts_discovery_flows(
         assert final_flows[0]["handler"] == "test2"
 
 
+@pytest.mark.usefixtures("force_usb_polling_watcher")
 async def test_list_serial_ports(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup_usb: MagicMock,
 ) -> None:
     """Test listing serial ports via websocket."""
-    setup_usb.return_value = [
+    matchers = [
+        {
+            "description": "*cp2102*",
+            "domain": "homeassistant_sky_connect",
+            "pid": "EA60",
+            "vid": "10C4",
+        },
+        {"domain": "custom_component", "vid": "DEAD", "pid": "BEEF"},
+    ]
+    mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
             vid="10C4",
@@ -1697,6 +1702,22 @@ async def test_list_serial_ports(
             interface_description="CP2102 USB to UART Bridge",
             interface_num=0,
         ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="DEAD",
+            pid="BEEF",
+            serial_number=None,
+            manufacturer=None,
+            description="Unknown adapter",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="0000",
+            pid="0000",
+            serial_number=None,
+            manufacturer=None,
+            description="No matchers",
+        ),
         SerialDevice(
             device="/dev/ttyS0",
             serial_number=None,
@@ -1705,34 +1726,65 @@ async def test_list_serial_ports(
         ),
     ]
 
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
-    response = await ws_client.receive_json()
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=matchers),
+        patch_scanned_serial_ports(return_value=mock_ports),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+        await hass.async_block_till_done()
+
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+        response = await ws_client.receive_json()
 
     assert response["success"]
-    result = response["result"]
-    assert len(result) == 2
-
-    assert result[0] == {
-        "device": "/dev/ttyUSB0",
-        "vid": "10C4",
-        "pid": "EA60",
-        "serial_number": "001234",
-        "manufacturer": "Silicon Labs",
-        "description": "CP2102 USB to UART",
-        "bcd_device": 257,
-        "interface_description": "CP2102 USB to UART Bridge",
-        "interface_num": 0,
-    }
-
-    assert result[1] == {
-        "device": "/dev/ttyS0",
-        "serial_number": None,
-        "manufacturer": None,
-        "description": "ttyS0",
-        "interface_description": None,
-        "interface_num": None,
-    }
+    assert response["result"] == [
+        {
+            "device": "/dev/ttyUSB0",
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "001234",
+            "manufacturer": "Silicon Labs",
+            "description": "CP2102 USB to UART",
+            "bcd_device": 257,
+            "interface_description": "CP2102 USB to UART Bridge",
+            "interface_num": 0,
+            "matching_integrations": ["homeassistant_sky_connect"],
+        },
+        {
+            "device": "/dev/ttyUSB1",
+            "vid": "DEAD",
+            "pid": "BEEF",
+            "serial_number": None,
+            "manufacturer": None,
+            "description": "Unknown adapter",
+            "bcd_device": None,
+            "interface_description": None,
+            "interface_num": None,
+            "matching_integrations": ["custom_component"],
+        },
+        {
+            "device": "/dev/ttyUSB2",
+            "vid": "0000",
+            "pid": "0000",
+            "serial_number": None,
+            "manufacturer": None,
+            "description": "No matchers",
+            "bcd_device": None,
+            "interface_description": None,
+            "interface_num": None,
+            "matching_integrations": [],
+        },
+        {
+            "device": "/dev/ttyS0",
+            "serial_number": None,
+            "manufacturer": None,
+            "description": "ttyS0",
+            "interface_description": None,
+            "interface_num": None,
+            "matching_integrations": [],
+        },
+    ]
 
 
 async def test_list_serial_ports_require_admin(

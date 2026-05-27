@@ -1,7 +1,5 @@
 """Test how the DmsDeviceSource handles available and unavailable devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 import logging
@@ -601,7 +599,8 @@ async def test_ssdp_bootid(
     await assert_source_available(hass)
     assert upnp_factory_mock.async_create_device.await_count == 1
 
-    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    # Send a new SSDP alive with an incremented boot ID,
+    # device should be dis/reconnected
     await ssdp_callback(
         SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
@@ -627,7 +626,8 @@ async def test_repeated_connect(
     """Test trying to connect an already connected device is safely ignored."""
     upnp_factory_mock.async_create_device.reset_mock()
 
-    # Calling internal function directly to skip trying to time 2 SSDP messages carefully
+    # Calling internal function directly to skip trying to
+    # time 2 SSDP messages carefully
     domain_data = get_domain_data(hass)
     device_source = domain_data.sources[MOCK_SOURCE_ID]
     with caplog.at_level(logging.DEBUG):

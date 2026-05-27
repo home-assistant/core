@@ -6,11 +6,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device you entered belongs to a different Duco box.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "This Duco system is not supported by this integration. The integration requires a Duco Connectivity Board running public API 2.1 or newer."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_board": "[%key:component::duco::config::abort::unsupported_board%]"
     },
     "step": {
       "discovery_confirm": {
@@ -47,14 +49,17 @@
       }
     },
     "sensor": {
-      "box_temperature": {
-        "name": "Box temperature"
-      },
       "iaq_co2": {
         "name": "CO2 air quality index"
       },
       "iaq_rh": {
         "name": "Humidity air quality index"
+      },
+      "target_flow_level": {
+        "name": "Target flow level"
+      },
+      "time_state_end": {
+        "name": "Mode end time"
       },
       "ventilation_state": {
         "name": "Ventilation state",
@@ -95,6 +100,14 @@
     },
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."
+    },
+    "unsupported_board": {
+      "message": "[%key:component::duco::config::abort::unsupported_board%]"
+    }
+  },
+  "system_health": {
+    "info": {
+      "write_requests_remaining": "Remaining write requests today"
     }
   }
 }

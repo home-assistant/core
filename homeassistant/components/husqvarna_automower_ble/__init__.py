@@ -1,7 +1,5 @@
 """The Husqvarna Autoconnect Bluetooth integration."""
 
-from __future__ import annotations
-
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError
@@ -53,7 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
             )
         if response_result != ResponseResult.OK:
             raise ConfigEntryNotReady(
-                f"Unable to connect to device {address}, mower returned {response_result}"
+                f"Unable to connect to device {address}, "
+                f"mower returned {response_result}"
             )
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(

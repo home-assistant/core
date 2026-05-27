@@ -1,7 +1,5 @@
 """UniFi Protect Platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -86,7 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     except NotAuthorized as err:
         data_service.auth_retries += 1
         if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="entry_auth_failed",
+            ) from err
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err

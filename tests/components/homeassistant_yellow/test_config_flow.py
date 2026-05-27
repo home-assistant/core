@@ -376,7 +376,8 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=RADIO_DEVICE,
                     firmware_type=ApplicationType.SPINEL,

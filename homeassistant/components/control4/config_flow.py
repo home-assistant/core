@@ -1,7 +1,5 @@
 """Config flow for Control4 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -170,7 +168,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         data_schema = vol.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(

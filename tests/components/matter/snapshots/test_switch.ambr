@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_energy_20ecn4101_child_lock_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock (top)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock (top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-EveChildLock-319486977-319422481',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy 20ECN4101 Child lock (top)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_20ecn4101_child_lock_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -152,6 +202,56 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[eve_energy_plug][switch.eve_energy_plug_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_energy_plug_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-EveChildLock-319486977-319422481',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_plug][switch.eve_energy_plug_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_plug_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -197,6 +297,106 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_plug_patched',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_energy_plug_patched_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-EveChildLock-319486977-319422481',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy Plug Patched Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_plug_patched_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_shutter][switch.eve_shutter_switch_20eci1701_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_shutter_switch_20eci1701_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-EveChildLock-319486977-319422481',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_shutter][switch.eve_shutter_switch_20eci1701_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_shutter_switch_20eci1701_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import DeviceType, FunctionalChannelType
@@ -143,6 +141,8 @@ class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
 
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     """Representation of the HomematicIP switching group."""
+
+    _attr_has_entity_name = False
 
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""

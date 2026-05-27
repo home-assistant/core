@@ -1,7 +1,5 @@
 """Support for MQTT notify."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components import notify
@@ -54,7 +52,7 @@ async def async_setup_entry(
 
 
 class MqttNotify(MqttEntity, NotifyEntity):
-    """Representation of a notification entity service that can send messages using MQTT."""
+    """Notification entity that can send messages using MQTT."""
 
     _default_name = DEFAULT_NAME
     _entity_id_format = notify.ENTITY_ID_FORMAT

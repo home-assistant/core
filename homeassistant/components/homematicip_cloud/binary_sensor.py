@@ -1,10 +1,15 @@
 """Support for HomematicIP Cloud binary sensor."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from homematicip.base.enums import LockState, SmokeDetectorAlarmType, WindowState
+from homematicip.base.enums import (
+    BinaryBehaviorType,
+    LockState,
+    SmokeDetectorAlarmType,
+    WindowState,
+)
 from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
@@ -34,6 +39,7 @@ from homematicip.group import SecurityGroup, SecurityZoneGroup
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -72,6 +78,161 @@ SAM_DEVICE_ATTRIBUTES = {
     "accelerationSensorSensitivity": ATTR_ACCELERATION_SENSOR_SENSITIVITY,
     "accelerationSensorTriggerAngle": ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE,
 }
+
+
+def _always_exists(_device: Device) -> bool:
+    """Default exists_fn: every matched device gets the entity."""
+    return True
+
+
+@dataclass(frozen=True, kw_only=True)
+class HmipBinarySensorDescription[_DeviceT: Device](BinarySensorEntityDescription):
+    """Describe a simple HomematicIP binary sensor."""
+
+    value_fn: Callable[[_DeviceT], bool]
+    exists_fn: Callable[[_DeviceT], bool] = _always_exists
+    # Required: contributes to unique_id via {device.id}_{channel}_{key}. An
+    # implicit default would silently lean on get_channel_index()'s fallback
+    # and create a migration footgun.
+    channel: int
+
+
+MOTION_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[
+        MotionDetectorIndoor | MotionDetectorOutdoor | MotionDetectorPushButton
+    ],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        value_fn=lambda device: device.motionDetected,
+        channel=1,
+    ),
+)
+
+PRESENCE_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[PresenceDetectorIndoor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="presence",
+        device_class=BinarySensorDeviceClass.PRESENCE,
+        value_fn=lambda device: device.presenceDetected,
+        channel=1,
+    ),
+)
+
+SMOKE_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[SmokeDetector],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        value_fn=lambda device: (
+            device.smokeDetectorAlarmType == SmokeDetectorAlarmType.PRIMARY_ALARM
+        ),
+        channel=1,
+    ),
+    HmipBinarySensorDescription(
+        key="chamber_degraded",
+        translation_key="chamber_degraded",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda device: device.chamberDegraded,
+        exists_fn=lambda device: smoke_detector_channel_data_exists(
+            device, "chamberDegraded"
+        ),
+        channel=1,
+    ),
+)
+
+WATER_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[WaterSensor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="water",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        value_fn=lambda device: device.moistureDetected or device.waterlevelDetected,
+        channel=1,
+    ),
+)
+
+RAIN_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[RainSensor | WeatherSensorPlus | WeatherSensorPro],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="rain",
+        translation_key="raining",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        value_fn=lambda device: device.raining,
+        channel=1,
+    ),
+)
+
+MAINS_FAILURE_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[PluggableMainsFailureSurveillance],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="mains_failure",
+        device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda device: not device.powerMainsFailure,
+        channel=1,
+    ),
+)
+
+BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
+    key="battery",
+    device_class=BinarySensorDeviceClass.BATTERY,
+    value_fn=lambda device: bool(device.lowBat),
+    channel=0,
+)
+
+SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
+    tuple[type, ...], tuple[HmipBinarySensorDescription[Any], ...]
+] = {
+    (
+        MotionDetectorIndoor,
+        MotionDetectorOutdoor,
+        MotionDetectorPushButton,
+    ): MOTION_SENSOR_DESCRIPTIONS,
+    (PresenceDetectorIndoor,): PRESENCE_SENSOR_DESCRIPTIONS,
+    (SmokeDetector,): SMOKE_SENSOR_DESCRIPTIONS,
+    (WaterSensor,): WATER_SENSOR_DESCRIPTIONS,
+    (RainSensor, WeatherSensorPlus, WeatherSensorPro): RAIN_SENSOR_DESCRIPTIONS,
+    (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
+}
+
+
+def _create_simple_binary_sensors(
+    hap: HomematicipHAP,
+    device: Device,
+) -> list[HomematicipSimpleBinarySensor[Any]]:
+    """Create all simple described binary sensors for a device."""
+    entities: list[HomematicipSimpleBinarySensor[Any]] = []
+
+    for device_types, descriptions in SIMPLE_BINARY_SENSOR_DESCRIPTIONS.items():
+        if not isinstance(device, device_types):
+            continue
+        entities.extend(
+            HomematicipSimpleBinarySensor(hap, device, description)
+            for description in descriptions
+            if description.exists_fn(device)
+        )
+        # Each device class matches at most one group key (enforced by
+        # test_simple_binary_sensor_descriptions_no_overlap), so further
+        # iteration cannot add entities.
+        break
+
+    if device.lowBat is not None:
+        entities.append(
+            HomematicipSimpleBinarySensor(hap, device, BATTERY_SENSOR_DESCRIPTION)
+        )
+
+    return entities
 
 
 def _is_full_flush_lock_controller(device: object) -> bool:
@@ -133,37 +294,15 @@ async def async_setup_entry(
             entities.append(HomematicipShutterContact(hap, device))
         if isinstance(device, RotaryHandleSensor):
             entities.append(HomematicipShutterContact(hap, device, True))
-        if isinstance(
-            device,
-            (
-                MotionDetectorIndoor,
-                MotionDetectorOutdoor,
-                MotionDetectorPushButton,
-            ),
-        ):
-            entities.append(HomematicipMotionDetector(hap, device))
-        if isinstance(device, PluggableMainsFailureSurveillance):
-            entities.append(
-                HomematicipPluggableMainsFailureSurveillanceSensor(hap, device)
-            )
+        if isinstance(device, Device):
+            entities.extend(_create_simple_binary_sensors(hap, device))
+
         if _is_full_flush_lock_controller(device):
             entities.append(HomematicipFullFlushLockControllerLocked(hap, device))
             entities.append(HomematicipFullFlushLockControllerGlassBreak(hap, device))
-        if isinstance(device, PresenceDetectorIndoor):
-            entities.append(HomematicipPresenceDetector(hap, device))
-        if isinstance(device, SmokeDetector):
-            entities.append(HomematicipSmokeDetector(hap, device))
-            if smoke_detector_channel_data_exists(device, "chamberDegraded"):
-                entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
-        if isinstance(device, WaterSensor):
-            entities.append(HomematicipWaterDetector(hap, device))
-        if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
-            entities.append(HomematicipRainSensor(hap, device))
         if isinstance(device, (WeatherSensor, WeatherSensorPlus, WeatherSensorPro)):
             entities.append(HomematicipStormSensor(hap, device))
             entities.append(HomematicipSunshineSensor(hap, device))
-        if isinstance(device, Device) and device.lowBat is not None:
-            entities.append(HomematicipBatterySensor(hap, device))
 
     for group in hap.home.groups:
         if isinstance(group, SecurityGroup):
@@ -174,30 +313,56 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+class HomematicipSimpleBinarySensor[_DeviceT: Device](
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """A simple HomematicIP binary sensor backed by an entity description."""
+
+    entity_description: HmipBinarySensorDescription[_DeviceT]
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: _DeviceT,
+        description: HmipBinarySensorDescription[_DeviceT],
+    ) -> None:
+        """Initialize the described binary sensor."""
+        super().__init__(
+            hap,
+            device,
+            channel=description.channel,
+            feature_id=description.key,
+            use_description_name=True,
+        )
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the binary sensor is on."""
+        return self.entity_description.value_fn(self._device)
+
+
 class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP cloud connection sensor."""
+
+    _attr_translation_key = "cloud_connection"
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
         super().__init__(hap, hap.home, feature_id="cloud_connection")
 
     @property
-    def name(self) -> str:
-        """Return the name cloud connection entity."""
-
-        name = "Cloud Connection"
-        # Add a prefix to the name if the homematic ip home has a name.
-        return name if not self._home.name else f"{self._home.name} {name}"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        # Adds a sensor to the existing HAP device
+        # Merges into the existing HAP device registered in __init__.py.
+        # Name must match __init__.py logic for has_entity_name to work.
+        label = self._home.label or ""
         return DeviceInfo(
             identifiers={
                 # Serial numbers of Homematic IP device
                 (DOMAIN, self._home.id)
-            }
+            },
+            name=label,
         )
 
     @property
@@ -326,21 +491,6 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         return state_attr
 
 
-class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP motion detector."""
-
-    _attr_device_class = BinarySensorDeviceClass.MOTION
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the motion detector."""
-        super().__init__(hap, device, feature_id="motion")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if motion is detected."""
-        return self._device.motionDetected
-
-
 class HomematicipFullFlushLockControllerLocked(
     HomematicipGenericEntity, BinarySensorEntity
 ):
@@ -354,7 +504,22 @@ class HomematicipFullFlushLockControllerLocked(
 
     @property
     def is_on(self) -> bool:
-        """Return true if the controlled lock is locked."""
+        """Return true if the controlled lock is unlocked.
+
+        Per HA's BinarySensorDeviceClass.LOCK contract, ON means
+        unlocked / open and OFF means locked / closed.
+
+        The mapping from the firmware-reported ``lockState`` depends on
+        the channel's ``binaryBehaviorType``. With the default
+        ``NORMALLY_OPEN`` wiring, the input goes ACTIVE (and lockState
+        flips to ``LOCKED``) when the contact closes — i.e. when a
+        magnetic door contact registers the door as closed. With
+        ``NORMALLY_CLOSE`` the same physical event puts the input into
+        the IDLE state (lockState ``UNLOCKED``). To present the same
+        HA semantics regardless of which way the user wired the
+        contact, ``lockState`` is interpreted relative to the
+        configured behavior.
+        """
         channel = _get_channel_by_role(
             self._device,
             "MULTI_MODE_LOCK_INPUT_CHANNEL",
@@ -363,7 +528,15 @@ class HomematicipFullFlushLockControllerLocked(
         if channel is None:
             return False
         lock_state = getattr(channel, "lockState", None)
-        return getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        is_locked_state = (
+            getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+        )
+        binary_behavior = getattr(channel, "binaryBehaviorType", None)
+        normally_close = (
+            getattr(binary_behavior, "name", binary_behavior)
+            == BinaryBehaviorType.NORMALLY_CLOSE.name
+        )
+        return is_locked_state if normally_close else not is_locked_state
 
 
 class HomematicipFullFlushLockControllerGlassBreak(
@@ -390,75 +563,6 @@ class HomematicipFullFlushLockControllerGlassBreak(
         return bool(getattr(channel, "glassBroken", False))
 
 
-class HomematicipPresenceDetector(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP presence detector."""
-
-    _attr_device_class = BinarySensorDeviceClass.PRESENCE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the presence detector."""
-        super().__init__(hap, device, feature_id="presence")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if presence is detected."""
-        return self._device.presenceDetected
-
-
-class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP smoke detector."""
-
-    _attr_device_class = BinarySensorDeviceClass.SMOKE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the smoke detector."""
-        super().__init__(hap, device, feature_id="smoke")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if smoke is detected."""
-        if self._device.smokeDetectorAlarmType:
-            return (
-                self._device.smokeDetectorAlarmType
-                == SmokeDetectorAlarmType.PRIMARY_ALARM
-            )
-        return False
-
-
-class HomematicipSmokeDetectorChamberDegraded(
-    HomematicipGenericEntity, BinarySensorEntity
-):
-    """Representation of the HomematicIP smoke detector chamber health."""
-
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize smoke detector chamber health sensor."""
-        super().__init__(
-            hap, device, post="Chamber Degraded", feature_id="chamber_degraded"
-        )
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if smoke chamber is degraded."""
-        return self._device.chamberDegraded
-
-
-class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP water detector."""
-
-    _attr_device_class = BinarySensorDeviceClass.MOISTURE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the water detector."""
-        super().__init__(hap, device, feature_id="water")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true, if moisture or waterlevel is detected."""
-        return self._device.moistureDetected or self._device.waterlevelDetected
-
-
 class HomematicipStormSensor(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP storm sensor."""
 
@@ -475,21 +579,6 @@ class HomematicipStormSensor(HomematicipGenericEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true, if storm is detected."""
         return self._device.storm
-
-
-class HomematicipRainSensor(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP rain sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.MOISTURE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize rain sensor."""
-        super().__init__(hap, device, "Raining", feature_id="rain")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true, if it is raining."""
-        return self._device.raining
 
 
 class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
@@ -518,41 +607,10 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         return state_attr
 
 
-class HomematicipBatterySensor(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP low battery sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.BATTERY
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize battery sensor."""
-        super().__init__(hap, device, post="Battery", channel=0, feature_id="battery")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if battery is low."""
-        return self._device.lowBat
-
-
-class HomematicipPluggableMainsFailureSurveillanceSensor(
-    HomematicipGenericEntity, BinarySensorEntity
-):
-    """Representation of the HomematicIP pluggable mains failure surveillance sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.POWER
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize pluggable mains failure surveillance sensor."""
-        super().__init__(hap, device, feature_id="mains_failure")
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if power mains fails."""
-        return not self._device.powerMainsFailure
-
-
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP security zone sensor group."""
 
+    _attr_has_entity_name = False
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(

@@ -1,7 +1,5 @@
 """Classes for voice assistant pipelines."""
 
-from __future__ import annotations
-
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -591,7 +589,10 @@ class PipelineRun:
     """Data tied to the conversation ID."""
 
     _intent_agent_only = False
-    """If request should only be handled by agent, ignoring sentence triggers and local processing."""
+    """If request should only be handled by agent.
+
+    Ignores sentence triggers and local processing.
+    """
 
     _streamed_response_text = False
     """If the conversation agent streamed response text to TTS result."""
@@ -934,6 +935,7 @@ class PipelineRun:
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
+                    "audio_processing": asdict(self.stt_provider.audio_processing),
                 },
             )
         )
@@ -1047,7 +1049,11 @@ class PipelineRun:
             if agent_info is None:
                 raise IntentRecognitionError(
                     code="intent-agent-not-found",
-                    message=f"Intent recognition engine {self._conversation_data.continue_conversation_agent} asked for follow-up but is no longer found",
+                    message=(
+                        f"Intent recognition engine"
+                        f" {self._conversation_data.continue_conversation_agent}"
+                        " asked for follow-up but is no longer found"
+                    ),
                 )
             self._intent_agent_only = True
 
@@ -1151,14 +1157,17 @@ class PipelineRun:
 
                 nonlocal delta_character_count
 
-                # Streamed responses are not cached. That's why we only start streaming text after
-                # we have received enough characters that indicates it will be a long response
-                # or if we have received text, and then a tool call.
+                # Streamed responses are not cached. That's why we
+                # only start streaming text after we have received
+                # enough characters that indicates it will be a long
+                # response or if we have received text, and then a
+                # tool call.
 
                 # Tool call after we already received text
                 start_streaming = delta_character_count > 0 and delta.get("tool_calls")
 
-                # Count characters in the content and test if we exceed streaming threshold
+                # Count characters in the content and test if we
+                # exceed streaming threshold
                 if not start_streaming and content:
                     delta_character_count += len(content)
                     start_streaming = delta_character_count > STREAM_RESPONSE_CHARS
@@ -1188,7 +1197,8 @@ class PipelineRun:
                     parts.append(tts_input_stream.get_nowait())
                 tts_input_stream.put_nowait(
                     "".join(
-                        # At this point parts is only strings, None indicates end of queue
+                        # At this point parts is only strings,
+                        # None indicates end of queue
                         cast(list[str], parts)
                     )
                 )
@@ -1345,7 +1355,7 @@ class PipelineRun:
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
         if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
+            intent_response.response_type is not intent.IntentResponseType.ACTION_DONE
             or not intent_response.matched_states
         ):
             return False
@@ -1429,7 +1439,8 @@ class PipelineRun:
                 code="tts-not-supported",
                 message=(
                     f"Text-to-speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}:"
+                    f"does not support language {self.pipeline.tts_language}"
+                    f" or options {tts_options}:"
                     f" {err}"
                 ),
             ) from err
@@ -1543,7 +1554,10 @@ class PipelineRun:
     async def process_volume_only(
         self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
-        """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
+        """Apply volume transformation only with optional chunking.
+
+        No VAD/audio enhancements are applied.
+        """
         timestamp_ms = 0
         async for chunk in audio_stream:
             if self.audio_settings.volume_multiplier != 1.0:
@@ -1562,7 +1576,11 @@ class PipelineRun:
     async def process_enhance_audio(
         self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
-        """Split audio into chunks and apply VAD/noise suppression/auto gain/volume transformation."""
+        """Split audio into chunks and apply audio enhancements.
+
+        Applies VAD/noise suppression/auto gain/volume
+        transformation.
+        """
         assert self.audio_enhancer is not None
 
         timestamp_ms = 0
@@ -1665,7 +1683,7 @@ class PipelineInput:
     """Identifier of the device that is processing the input/output of the pipeline."""
 
     satellite_id: str | None = None
-    """Identifier of the satellite that is processing the input/output of the pipeline."""
+    """Identifier of the satellite processing the pipeline."""
 
     async def execute(self, validate: bool = False) -> None:
         """Run pipeline."""
@@ -1727,7 +1745,8 @@ class PipelineInput:
                         sec_since_last_wake_up = time.monotonic() - last_wake_up
                         if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
                             _LOGGER.debug(
-                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                                "Speech-to-text cancelled to avoid"
+                                " duplicate wake-up for %s",
                                 self.wake_word_phrase,
                             )
                             raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
@@ -1740,7 +1759,8 @@ class PipelineInput:
                 stt_input_stream = stt_processed_stream
 
                 if stt_audio_buffer:
-                    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+                    # Send audio in the buffer first to speech-to-text,
+                    # then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> AsyncGenerator[
                         EnhancedAudioChunk
@@ -2044,7 +2064,9 @@ class PipelineStorageCollectionWebsocket(
             msg["id"],
             {
                 "pipelines": async_get_pipelines(hass),
-                "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
+                "preferred_pipeline": (
+                    self.storage_collection.async_get_preferred_item()
+                ),
             },
         )
 

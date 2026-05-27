@@ -1,7 +1,5 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import dataclasses
@@ -256,7 +254,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
@@ -345,7 +343,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(multipan_manager)
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
+        if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_addon_not_installed()
         return await self.async_step_addon_installed()
 
@@ -411,7 +409,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the Silicon Labs Multiprotocol add-on."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
@@ -649,7 +647,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Initiate ZHA backup and start multiprotocol addon uninstall."""
-        # pylint: disable=hass-component-root-import
+        # pylint: disable=home-assistant-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
@@ -832,7 +830,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     # Request the addon to start if it's not started
     # `async_start_addon` returns as soon as the start request has been sent
     # and does not wait for the addon to be started, so we raise below
-    if addon_info.state == AddonState.NOT_RUNNING:
+    if addon_info.state is AddonState.NOT_RUNNING:
         await multipan_manager.async_start_addon()
 
     if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
@@ -852,7 +850,7 @@ async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) ->
     multipan_manager = await get_multiprotocol_addon_manager(hass)
     addon_info: AddonInfo = await multipan_manager.async_get_addon_info()
 
-    if addon_info.state != AddonState.RUNNING:
+    if addon_info.state is not AddonState.RUNNING:
         return False
 
     if addon_info.options["device"] != device_path:

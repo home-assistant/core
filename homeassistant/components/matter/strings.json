@@ -141,6 +141,9 @@
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
+      },
+      "temporary_mute_request": {
+        "name": "Temporary mute"
       }
     },
     "climate": {
@@ -605,6 +608,11 @@
       },
       "window_covering_target_position": {
         "name": "Target opening position"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
       }
     },
     "switch": {

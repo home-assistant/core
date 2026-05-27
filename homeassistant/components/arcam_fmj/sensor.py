@@ -1,7 +1,5 @@
 """Arcam sensors for incoming stream info."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -23,6 +21,9 @@ from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Read-only, coordinator-driven entities; no per-entity I/O to bound.
+PARALLEL_UPDATES = 0
 
 
 def _enum_options(value: type[IntOrTypeEnum]) -> list[str]:

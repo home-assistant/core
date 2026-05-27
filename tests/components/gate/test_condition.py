@@ -46,8 +46,8 @@ async def test_gate_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("gate.is_closed", {}, True, False),
-        ("gate.is_open", {}, True, False),
+        ("gate.is_closed", {}, True, True),
+        ("gate.is_open", {}, True, True),
     ],
 )
 async def test_gate_condition_options_validation(

@@ -4,8 +4,6 @@ These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
 
-from __future__ import annotations
-
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import (
@@ -26,11 +24,13 @@ from .connection import HKDevice
 from .entity import CharacteristicEntity
 
 NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
-        name="Spray Quantity",
-        translation_key="spray_quantity",
-        entity_category=EntityCategory.CONFIG,
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
+        NumberEntityDescription(
+            key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+            name="Spray Quantity",
+            translation_key="spray_quantity",
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,

@@ -1,7 +1,5 @@
 """Support for the Netatmo climate schedule selector."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 
@@ -100,12 +98,11 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._attr_current_option = (
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
-                    data["schedule_id"]
-                )
-            ).name
-            self.async_write_ha_state()
+            if schedule := self.hass.data[DOMAIN][DATA_SCHEDULES][
+                self.home.entity_id
+            ].get(data["schedule_id"]):
+                self._attr_current_option = schedule.name
+                self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

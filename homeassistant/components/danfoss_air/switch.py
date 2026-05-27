@@ -1,7 +1,5 @@
 """Support for the for Danfoss Air HRV sswitches."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

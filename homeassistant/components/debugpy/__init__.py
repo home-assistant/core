@@ -1,7 +1,5 @@
 """The Remote Python Debugger integration."""
 
-from __future__ import annotations
-
 from asyncio import Event, get_running_loop
 import logging
 from threading import Thread

@@ -1753,7 +1753,10 @@
     'capabilities': dict({
       'options': list([
         'ok',
+        'no_dustbin_or_filter',
+        'auto_empty_dock_fan_error',
         'duct_blockage',
+        'auto_empty_dock_voltage_error',
         'water_empty',
         'waste_water_tank_full',
         'maintenance_brush_jammed',
@@ -1799,7 +1802,10 @@
       'friendly_name': 'Roborock S7 2 Dock Dock error',
       'options': list([
         'ok',
+        'no_dustbin_or_filter',
+        'auto_empty_dock_fan_error',
         'duct_blockage',
+        'auto_empty_dock_voltage_error',
         'water_empty',
         'waste_water_tank_full',
         'maintenance_brush_jammed',
@@ -2958,7 +2964,10 @@
     'capabilities': dict({
       'options': list([
         'ok',
+        'no_dustbin_or_filter',
+        'auto_empty_dock_fan_error',
         'duct_blockage',
+        'auto_empty_dock_voltage_error',
         'water_empty',
         'waste_water_tank_full',
         'maintenance_brush_jammed',
@@ -3004,7 +3013,10 @@
       'friendly_name': 'Roborock S7 MaxV Dock Dock error',
       'options': list([
         'ok',
+        'no_dustbin_or_filter',
+        'auto_empty_dock_fan_error',
         'duct_blockage',
+        'auto_empty_dock_voltage_error',
         'water_empty',
         'waste_water_tank_full',
         'maintenance_brush_jammed',

@@ -451,7 +451,7 @@ async def test_firmware_callback_auto_creates_entry(
     model: str,
     hass: HomeAssistant,
 ) -> None:
-    """Test that firmware notification triggers import flow that auto-creates config entry."""
+    """Test firmware notification triggers import flow creating entry."""
     await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
     await async_setup_component(hass, USB_DOMAIN, {})
 
@@ -518,7 +518,7 @@ async def test_firmware_callback_auto_creates_entry(
 async def test_duplicate_usb_discovery_aborts_early(
     usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
-    """Test USB discovery aborts early when unique_id exists before serial path resolution."""
+    """Test USB discovery aborts early when unique_id already exists."""
     # Create existing config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -532,12 +532,7 @@ async def test_duplicate_usb_discovery_aborts_early(
             "serial_number": usb_data.serial_number,
             "vid": usb_data.vid,
         },
-        unique_id=(
-            f"{usb_data.vid}:{usb_data.pid}_"
-            f"{usb_data.serial_number}_"
-            f"{usb_data.manufacturer}_"
-            f"{usb_data.description}"
-        ),
+        unique_id=usb_data.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -579,12 +574,7 @@ async def test_firmware_callback_updates_existing_entry(
             "description": usb_data.description,
             "product": usb_data.description,
         },
-        unique_id=(
-            f"{usb_data.vid}:{usb_data.pid}_"
-            f"{usb_data.serial_number}_"
-            f"{usb_data.manufacturer}_"
-            f"{usb_data.description}"
-        ),
+        unique_id=usb_data.serial_number,
     )
     config_entry.add_to_hass(hass)
 

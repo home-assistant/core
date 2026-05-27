@@ -1,7 +1,5 @@
 """Utility functions for Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator, Callable, Sequence
@@ -18,6 +16,7 @@ from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
+    HassioNotReadyError,
     get_apps_list,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -171,7 +170,7 @@ class OwningAddon:
         except AddonError:
             return False
         else:
-            return addon_info.state == AddonState.RUNNING
+            return addon_info.state is AddonState.RUNNING
 
     @asynccontextmanager
     async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
@@ -184,7 +183,7 @@ class OwningAddon:
             yield
             return
 
-        if addon_info.state != AddonState.RUNNING:
+        if addon_info.state is not AddonState.RUNNING:
             yield
             return
 
@@ -220,7 +219,7 @@ class OwningIntegration:
             yield
             return
 
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             yield
             return
 
@@ -260,7 +259,7 @@ async def get_otbr_addon_firmware_info(
     except AddonError:
         return None
 
-    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+    if otbr_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     if (otbr_path := otbr_addon_info.options.get("device")) is None:
@@ -285,7 +284,7 @@ async def get_z2m_addon_firmware_info(
     except AddonError:
         return None
 
-    if z2m_addon_info.state == AddonState.NOT_INSTALLED:
+    if z2m_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     serial = z2m_addon_info.options.get("serial")
@@ -338,7 +337,7 @@ async def guess_hardware_owners(
     except AddonError:
         pass
     else:
-        if multipan_addon_info.state != AddonState.NOT_INSTALLED:
+        if multipan_addon_info.state is not AddonState.NOT_INSTALLED:
             multipan_path = multipan_addon_info.options.get("device")
 
             if multipan_path is not None:
@@ -353,7 +352,11 @@ async def guess_hardware_owners(
                 )
 
     # Z2M can be provided by one of many add-ons, we match them by name
-    for app_info in get_apps_list(hass) or []:
+    try:
+        apps_list = get_apps_list(hass)
+    except HassioNotReadyError:
+        apps_list = []
+    for app_info in apps_list:
         slug = app_info.get("slug")
 
         if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:

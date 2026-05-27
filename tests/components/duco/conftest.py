@@ -1,17 +1,19 @@
 """Fixtures for Duco tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from duco.models import (
+from duco_connectivity import (
+    ApiEndpointInfo,
+    ApiInfo,
     BoardInfo,
     DiagComponent,
     DiagStatus,
     LanInfo,
     Node,
     NodeGeneralInfo,
+    NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
 )
@@ -21,12 +23,78 @@ from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
 
 USER_INPUT = {CONF_HOST: TEST_HOST}
+
+UNSUPPORTED_BOARD_INFOS = [
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.0",
+        ),
+        id="version-too-low",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version=None,
+        ),
+        id="missing-version",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.1.0-beta",
+        ),
+        id="malformed-version",
+    ),
+]
+
+
+def _node_from_dict(data: dict[str, Any]) -> Node:
+    """Convert a node fixture payload into a Duco node model."""
+    ventilation = data.get("ventilation")
+    sensor = data.get("sensor")
+    motor_state = data.get("motor_state")
+
+    return Node(
+        node_id=data["node_id"],
+        general=NodeGeneralInfo(**data["general"]),
+        ventilation=NodeVentilationInfo(**ventilation)
+        if ventilation is not None
+        else None,
+        sensor=NodeSensorInfo(**sensor) if sensor is not None else None,
+        motor_state=NodeMotorStateInfo(**motor_state)
+        if motor_state is not None
+        else None,
+    )
+
+
+def load_nodes_fixture(filename: str) -> list[Node]:
+    """Load nodes from a JSON fixture file."""
+    return [_node_from_dict(node) for node in load_json_array_fixture(filename, DOMAIN)]
 
 
 @pytest.fixture
@@ -51,6 +119,25 @@ def mock_board_info() -> BoardInfo:
         serial_duco_box="GHI789",
         serial_duco_comm="JKL012",
         time=1700000000,
+        public_api_version="2.5",
+        software_version="1.2.3",
+    )
+
+
+@pytest.fixture
+def mock_api_info() -> ApiInfo:
+    """Return mock API info."""
+    return ApiInfo(
+        api_version="2.5",
+        reported_api_version="2.5.1",
+        endpoints=[
+            ApiEndpointInfo(
+                url="/info",
+                query_parameters=["module", "submodule"],
+                methods=["GET"],
+                modules=["General", "Diag"],
+            )
+        ],
     )
 
 
@@ -181,19 +268,28 @@ def mock_nodes() -> list[Node]:
 
 
 @pytest.fixture
+def mock_sensor_nodes(mock_nodes: list[Node]) -> list[Node]:
+    """Return sensor test nodes including VLV examples."""
+    return [*mock_nodes, *load_nodes_fixture("sensor_nodes.json")]
+
+
+@pytest.fixture
+def dynamic_sensor_nodes() -> dict[int, Node]:
+    """Return dynamic sensor test nodes keyed by node ID."""
+    return {
+        node.node_id: node for node in load_nodes_fixture("dynamic_sensor_nodes.json")
+    }
+
+
+@pytest.fixture
 def mock_duco_client(
+    mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
-        patch(
-            "homeassistant.components.duco.build_ssl_context",
-        ),
-        patch(
-            "homeassistant.components.duco.config_flow.build_ssl_context",
-        ),
         patch(
             "homeassistant.components.duco.DucoClient",
             autospec=True,
@@ -204,13 +300,14 @@ def mock_duco_client(
         ),
     ):
         client = mock_class.return_value
+        client.async_get_api_info.return_value = mock_api_info
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status=DiagStatus.OK)
         ]
-        client.async_get_write_req_remaining.return_value = 100
+        client.async_get_write_requests_remaining.return_value = 100
         yield client
 
 

@@ -1,7 +1,5 @@
 """The MusicCast integration."""
 
-from __future__ import annotations
-
 from aiomusiccast.capabilities import Capability
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE

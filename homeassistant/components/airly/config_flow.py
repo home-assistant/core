@@ -1,7 +1,5 @@
 """Adds config flow for Airly."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from http import HTTPStatus
 from typing import Any
