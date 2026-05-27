@@ -27,8 +27,6 @@ from homeassistant.components.assist_pipeline.pipeline import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 from .conftest import (
     BYTES_ONE_SECOND,
@@ -37,6 +35,9 @@ from .conftest import (
     MockWakeWordEntity2,
     make_10ms_chunk,
 )
+
+from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
