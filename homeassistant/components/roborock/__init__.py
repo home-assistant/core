@@ -154,7 +154,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     # reconnect loops from triggering MQTT session restarts that would
     # disrupt coordinator setup for the enabled devices.
     if disabled_devices:
-        await asyncio.gather(*[device.close() for device in disabled_devices])
+        await asyncio.gather(
+            *[device.close() for device in disabled_devices],
+            return_exceptions=True,
+        )
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, enabled_devices, user_data),
