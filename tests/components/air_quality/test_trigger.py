@@ -21,9 +21,9 @@ from homeassistant.core import HomeAssistant
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -229,7 +229,7 @@ async def test_air_quality_trigger_options_validation(
         ),
     ],
 )
-async def test_air_quality_trigger_binary_sensor_behavior_any(
+async def test_air_quality_trigger_binary_sensor_behavior_each(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -243,7 +243,7 @@ async def test_air_quality_trigger_binary_sensor_behavior_any(
 
     Covers gas, CO, and smoke device classes.
     """
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -390,7 +390,7 @@ async def test_air_quality_trigger_binary_sensor_behavior_first(
         ),
     ],
 )
-async def test_air_quality_trigger_binary_sensor_behavior_last(
+async def test_air_quality_trigger_binary_sensor_behavior_all(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -401,7 +401,7 @@ async def test_air_quality_trigger_binary_sensor_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test air quality trigger fires when the last binary_sensor changes state."""
-    await assert_trigger_behavior_last(
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -570,7 +570,7 @@ async def test_air_quality_trigger_binary_sensor_behavior_last(
         ),
     ],
 )
-async def test_air_quality_trigger_sensor_behavior_any(
+async def test_air_quality_trigger_sensor_behavior_each(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -581,7 +581,7 @@ async def test_air_quality_trigger_sensor_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test air quality trigger fires for sensor entities."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -789,7 +789,7 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_air_quality_trigger_sensor_crossed_threshold_behavior_last(
+async def test_air_quality_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -803,7 +803,7 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_last(
 
     Fires when the last sensor changes state.
     """
-    await assert_trigger_behavior_last(
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
