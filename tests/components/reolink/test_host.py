@@ -207,7 +207,7 @@ async def test_invalid_bc_connection(
     hass: HomeAssistant,
     reolink_host: MagicMock,
 ) -> None:
-    """Test setup of host with a outdated, invalid bc_connection."""
+    """Test setup of host with an outdated, invalid bc_connection."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
