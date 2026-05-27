@@ -12,7 +12,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import EnOceanConfigEntry
-from .const import DOMAIN
+from .const import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_SENDER_ID,
+    DOMAIN,
+)
 from .entity import LIB_ENTITY_CATEGORY_MAP, EnOceanEntity
 
 PARALLEL_UPDATES = 1
@@ -47,7 +52,9 @@ async def async_setup_entry(
             category = LIB_ENTITY_CATEGORY_MAP.get(entity.category)
             if entity.id == _SENDER_SLOT_ENTITY_ID:
                 entities.append(
-                    EnOceanDeviceSenderSlotSelect(eurid, entity.id, gateway, category)
+                    EnOceanDeviceSenderSlotSelect(
+                        eurid, entity.id, gateway, category, config_entry
+                    )
                 )
             else:
                 entities.append(
@@ -254,6 +261,18 @@ class EnOceanDefaultSenderSelect(_SenderSlotSelectBase):
 class EnOceanDeviceSenderSlotSelect(_SenderSlotSelectBase):
     """Dynamic select for a device's assigned sender slot."""
 
+    def __init__(
+        self,
+        address: EURID,
+        entity_key: str,
+        gateway: Gateway,
+        entity_category: EntityCategory | None,
+        config_entry: EnOceanConfigEntry,
+    ) -> None:
+        """Initialize the device sender slot select."""
+        super().__init__(address, entity_key, gateway, entity_category)
+        self._config_entry = config_entry
+
     @staticmethod
     def _build_label(
         slot_key: str, address: SenderAddress | None, device_names: list[str]
@@ -274,8 +293,22 @@ class EnOceanDeviceSenderSlotSelect(_SenderSlotSelectBase):
         self._options_from(raw, current_key)
 
     async def async_select_option(self, option: str) -> None:
-        """Persist the selected sender slot key to device config."""
+        """Persist the selected sender slot to device config and config entry."""
         key = self._label_to_key.get(option, "auto")
         self._attr_current_option = option
         self.gateway.set_device_config(self.address, self.entity_key, key)
         self.async_write_ha_state()
+
+        device_id_str = str(self.address)
+        devices = []
+        for dev in self._config_entry.options.get(CONF_ENOCEAN_DEVICES, []):
+            if dev[CONF_ENOCEAN_DEVICE_ID] == device_id_str:
+                if key == "auto":
+                    dev = {k: v for k, v in dev.items() if k != CONF_ENOCEAN_SENDER_ID}
+                else:
+                    dev = {**dev, CONF_ENOCEAN_SENDER_ID: option}
+            devices.append(dev)
+        self.hass.config_entries.async_update_entry(
+            self._config_entry,
+            options={**self._config_entry.options, CONF_ENOCEAN_DEVICES: devices},
+        )
