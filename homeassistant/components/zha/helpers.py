@@ -2,8 +2,8 @@
 
 import asyncio
 import collections
-from collections.abc import Callable, Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Callable, Mapping
+from contextlib import asynccontextmanager
 import copy
 import dataclasses
 import enum
@@ -1388,8 +1388,8 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-@contextmanager
-def convert_zha_error_to_ha_error() -> Generator[None]:
+@asynccontextmanager
+async def convert_zha_error_to_ha_error() -> AsyncGenerator[None]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""
     try:
         yield
