@@ -1,12 +1,11 @@
 """Support for Amcrest Switches."""
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from amcrest import AmcrestError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
@@ -21,7 +20,7 @@ from .helpers import log_update_error
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from . import AmcrestConfigEntryData, AmcrestDevice
+    from . import AmcrestConfigEntry, AmcrestDevice
 
 PRIVACY_MODE_KEY = "privacy_mode"
 
@@ -38,12 +37,11 @@ SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmcrestConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for an Amcrest config entry."""
-    runtime_data = cast("AmcrestConfigEntryData", config_entry.runtime_data)
-    device = runtime_data["device"]
+    device = config_entry.runtime_data.device
     name = device.name
     serial = device.serial_number
 

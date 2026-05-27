@@ -87,8 +87,8 @@ async def test_setup_entry_loads_platforms(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data["device"] is not None
-    assert mock_config_entry.runtime_data["stop_event"] is not None
+    assert mock_config_entry.runtime_data.device is not None
+    assert mock_config_entry.runtime_data.stop_event is not None
 
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -112,7 +112,7 @@ async def test_unload_entry(
     loaded_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry unload sets stop_event and unloads platforms."""
-    stop_event = loaded_config_entry.runtime_data["stop_event"]
+    stop_event = loaded_config_entry.runtime_data.stop_event
 
     assert await hass.config_entries.async_unload(loaded_config_entry.entry_id)
     await hass.async_block_till_done()

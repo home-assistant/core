@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any, NotRequired, TypedDict, cast
+from typing import Any, cast
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -473,7 +473,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
@@ -557,33 +557,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for event_code in sensor.event_codes
     }
 
-    # Platforms expect this to exist during async_setup_entry.
-    entry.runtime_data = {"device": device}
+    runtime_data = AmcrestRuntimeData(device=device)
+    entry.runtime_data = runtime_data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    stop_event = threading.Event()
-    _start_event_monitor(hass, name, api, event_codes, stop_event)
-
-    runtime_data = cast(AmcrestConfigEntryData, entry.runtime_data)
-    runtime_data["stop_event"] = stop_event
+    runtime_data.stop_event = threading.Event()
+    _start_event_monitor(hass, name, api, event_codes, runtime_data.stop_event)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AmcrestConfigEntry) -> bool:
     """Unload a config entry."""
-    if runtime_data := cast(AmcrestConfigEntryData | None, entry.runtime_data):
-        if stop_event := runtime_data.get("stop_event"):
-            stop_event.set()
+    if entry.runtime_data.stop_event is not None:
+        entry.runtime_data.stop_event.set()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class AmcrestConfigEntryData(TypedDict):
-    """Runtime data for an Amcrest config entry."""
+@dataclass
+class AmcrestRuntimeData:
+    """Runtime data stored on the config entry."""
 
     device: AmcrestDevice
-    stop_event: NotRequired[threading.Event]
+    stop_event: threading.Event | None = None
+
+
+type AmcrestConfigEntry = ConfigEntry[AmcrestRuntimeData]
 
 
 @dataclass

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from aiohttp import web
@@ -13,7 +13,6 @@ from haffmpeg.camera import CameraMjpeg
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import (
@@ -44,7 +43,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestConfigEntryData, AmcrestDevice
+    from . import AmcrestConfigEntry, AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,12 +61,11 @@ _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmcrestConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an Amcrest camera from a config entry."""
-    runtime_data = cast("AmcrestConfigEntryData", config_entry.runtime_data)
-    device = runtime_data["device"]
+    device = config_entry.runtime_data.device
     serial = device.serial_number
     unique_id = f"{serial}-{device.resolution}-{device.channel}"
     entity = AmcrestCam(

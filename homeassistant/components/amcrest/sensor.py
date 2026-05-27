@@ -2,12 +2,11 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,7 +20,7 @@ from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPD
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestConfigEntryData, AmcrestDevice
+    from . import AmcrestConfigEntry, AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +50,11 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmcrestConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for an Amcrest config entry."""
-    runtime_data = cast("AmcrestConfigEntryData", config_entry.runtime_data)
-    device = runtime_data["device"]
+    device = config_entry.runtime_data.device
     name = device.name
     serial = device.serial_number
 

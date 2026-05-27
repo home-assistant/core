@@ -4,7 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -35,7 +34,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestConfigEntryData, AmcrestDevice
+    from . import AmcrestConfigEntry, AmcrestDevice
 
 
 @dataclass(frozen=True)
@@ -152,12 +151,11 @@ def _get_config_flow_binary_sensors() -> tuple[AmcrestSensorEntityDescription, .
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AmcrestConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors for an Amcrest config entry."""
-    runtime_data = cast("AmcrestConfigEntryData", config_entry.runtime_data)
-    device = runtime_data["device"]
+    device = config_entry.runtime_data.device
     name = device.name
     serial = device.serial_number
 
