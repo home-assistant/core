@@ -86,8 +86,6 @@ def async_note_integration_discovery(
     """Start a config flow when the shared discovery service reports a controller."""
     if ctrl.device_uid in _yaml_excluded_uids(hass):
         return
-    if hass.config_entries.async_entry_for_domain_unique_id(IZONE, ctrl.device_uid):
-        return
     if _async_blocks_runtime_integration_discovery(hass):
         return
     discovery_flow.async_create_flow(
