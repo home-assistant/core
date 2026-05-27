@@ -29,7 +29,7 @@ ATTR_FRIDAY_SLOTS = "friday_slots"
 ATTR_SATURDAY_SLOTS = "saturday_slots"
 ATTR_SUNDAY_SLOTS = "sunday_slots"
 
-_DAY_ATTRS: tuple[tuple[str, str], ...] = (
+_DAY_NAME_SLOT_ATTR_PAIRS: tuple[tuple[str, str], ...] = (
     ("monday", ATTR_MONDAY_SLOTS),
     ("tuesday", ATTR_TUESDAY_SLOTS),
     ("wednesday", ATTR_WEDNESDAY_SLOTS),
@@ -50,13 +50,8 @@ _SLOT_SCHEMA = vol.Schema(
 
 
 _WEEKLY_SCHEDULE_FIELDS: dict[vol.Marker, object] = {
-    vol.Optional(ATTR_MONDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_TUESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_WEDNESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_THURSDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_FRIDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_SATURDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
-    vol.Optional(ATTR_SUNDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+    vol.Optional(slot_attr): vol.All(cv.ensure_list, [_SLOT_SCHEMA])
+    for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 
 
@@ -119,7 +114,7 @@ def _build_weekly_schedule_days(
     """Build a dict of day-name -> DaySchedule from the service call data."""
     return {
         day_name: _convert_time_slots_to_day_schedule(service_call.data.get(attr_name))
-        for day_name, attr_name in _DAY_ATTRS
+        for day_name, attr_name in _DAY_NAME_SLOT_ATTR_PAIRS
     }
 
 
