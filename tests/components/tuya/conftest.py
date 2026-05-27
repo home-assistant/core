@@ -144,7 +144,7 @@ def notification_helper(
 
 @pytest.fixture
 def no_quirk() -> Generator[None]:
-    """Fixture to bypass all quirk registration."""
+    """Fixture for Tuya NotificationHelper."""
     with (
         patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
         patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
