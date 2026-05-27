@@ -23,7 +23,7 @@ def platform_autouse():
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,

@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.const import Platform
@@ -24,7 +25,7 @@ def platform_autouse():
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -34,7 +35,11 @@ async def test_platform_setup_and_discovery(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+    ):
+        await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
