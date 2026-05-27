@@ -4652,16 +4652,16 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
             {
                 "platform": "zone.entered",
                 "target": {"entity_id": ["person.a", "device_tracker.b"]},
-                "options": {"zone": ["zone.home", "zone.work"]},
+                "options": {"zone": "zone.home"},
             },
-            ["person.a", "device_tracker.b", "zone.home", "zone.work"],
+            ["person.a", "device_tracker.b", "zone.home"],
             id="zone-entered-modern",
         ),
         pytest.param(
             {
                 "platform": "zone.left",
                 "target": {"entity_id": "person.a"},
-                "options": {"zone": ["zone.home"]},
+                "options": {"zone": "zone.home"},
             },
             ["person.a", "zone.home"],
             id="zone-left-modern",
