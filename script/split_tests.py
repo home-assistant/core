@@ -573,11 +573,12 @@ def _collect_tests_cached(path: Path, cache_path: Path) -> TestFolder:
 
 def collect_tests(path: Path, cache_path: Path | None = None) -> TestFolder:
     """Collect all tests, using an on-disk cache when ``cache_path`` is set."""
-    if cache_path is None:
-        return _collect_tests_uncached(path)
     if path.is_file():
-        # No fixture tree to scope against; bypass cache to avoid stale hits.
-        print(f"--cache ignored: {path} is a single file")
+        # TestFolder requires a directory root; a single file has no
+        # parent to anchor against and CI never invokes us this way.
+        print(f"Expected a directory, got file: {path}")
+        sys.exit(1)
+    if cache_path is None:
         return _collect_tests_uncached(path)
     return _collect_tests_cached(path, cache_path)
 

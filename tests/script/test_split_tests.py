@@ -275,25 +275,12 @@ def test_walk_test_tree_skips_hidden_and_dunder_dirs(tmp_path: Path) -> None:
     assert {p.name for p in test_files} == {"test_real.py"}
 
 
-def test_collect_tests_skips_cache_for_single_file_root(tmp_path: Path) -> None:
-    """Single-file root bypasses caching.
-
-    Otherwise the invalidation hash would be constant and stale counts
-    could survive conftest edits.
-    """
-    cache_path = tmp_path / "cache.json"
+def test_collect_tests_rejects_single_file_root(tmp_path: Path) -> None:
+    """A file root has no parent to anchor a TestFolder, so we exit early."""
     file = tmp_path / "test_solo.py"
     file.write_text("def test_x(): pass\n")
-
-    with (
-        patch.object(split_tests, "_collect_tests_uncached") as uncached,
-        patch.object(split_tests, "_collect_tests_cached") as cached,
-    ):
-        split_tests.collect_tests(file, cache_path)
-
-    uncached.assert_called_once_with(file)
-    cached.assert_not_called()
-    assert not cache_path.exists()
+    with pytest.raises(SystemExit):
+        split_tests.collect_tests(file)
 
 
 def test_cache_roundtrip(tmp_path: Path) -> None:
