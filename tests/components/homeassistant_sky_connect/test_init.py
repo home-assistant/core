@@ -420,13 +420,14 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # Wait for a bit for the USB scan debouncer to cool off
-        async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
-
-        # Unplug the stick
+        # Unplug the stick before advancing time: the forced polling watcher rescans on
+        # the time jump used to cool off the request debouncer, so the device must
+        # already be gone or that scan would reload it as still present
         mock_exists.return_value = False
 
         with patch_scanned_serial_ports(return_value=[]):
+            # Wait for a bit for the USB scan debouncer to cool off
+            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
             await async_request_scan(hass)
 
         # The integration has reloaded and is now in a failed state
@@ -578,10 +579,10 @@ def _multi_pan_sky_connect_entry(firmware: str) -> MockConfigEntry:
     )
 
 
-async def test_multi_pan_migration_issue_created_for_cpc(
+async def test_multi_pan_migration_issue_not_created_for_cpc(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the multi-PAN migration repair issue is created when firmware is CPC."""
+    """Test no repair issue is created for CPC firmware when the addon is not running."""
     config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
     config_entry.add_to_hass(hass)
 
@@ -598,17 +599,13 @@ async def test_multi_pan_migration_issue_created_for_cpc(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
     )
-    assert issue is not None
-    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
-    assert issue.translation_placeholders == {
-        "hardware_name": "Home Assistant SkyConnect"
-    }
-    assert issue.data == {"entry_id": config_entry.entry_id}
-    assert issue.is_fixable
 
 
 async def test_multi_pan_migration_issue_created_for_addon(
@@ -636,6 +633,11 @@ async def test_multi_pan_migration_issue_created_for_addon(
         issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
     )
     assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {
+        "hardware_name": "Home Assistant SkyConnect"
+    }
+    assert issue.data == {"entry_id": config_entry.entry_id}
     assert issue.is_fixable
 
 

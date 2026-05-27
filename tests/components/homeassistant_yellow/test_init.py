@@ -325,12 +325,12 @@ async def test_setup_entry_addon_info_fails(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_multi_pan_migration_issue_created_for_cpc(
+async def test_multi_pan_migration_issue_not_created_for_cpc(
     hass: HomeAssistant,
     addon_store_info,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the multi-PAN migration repair issue is created when firmware is CPC."""
+    """Test no repair issue is created for CPC firmware when the addon is not running."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
 
@@ -364,15 +364,13 @@ async def test_multi_pan_migration_issue_created_for_cpc(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
     )
-    assert issue is not None
-    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
-    assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
-    assert issue.data == {"entry_id": config_entry.entry_id}
-    assert issue.is_fixable
 
 
 async def test_multi_pan_migration_issue_created_for_addon(
@@ -415,6 +413,9 @@ async def test_multi_pan_migration_issue_created_for_addon(
         issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
     )
     assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
+    assert issue.data == {"entry_id": config_entry.entry_id}
     assert issue.is_fixable
 
 

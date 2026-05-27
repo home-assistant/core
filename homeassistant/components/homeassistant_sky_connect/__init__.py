@@ -14,10 +14,7 @@ from homeassistant.components.homeassistant_hardware.repair_helpers import (
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     multi_pan_addon_using_device,
 )
-from homeassistant.components.homeassistant_hardware.util import (
-    ApplicationType,
-    guess_firmware_info,
-)
+from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
     async_register_port_event_callback,
@@ -102,12 +99,10 @@ async def async_setup_entry(
             translation_key="device_disconnected",
         )
 
-    uses_multi_pan = ApplicationType(entry.data[FIRMWARE]) is ApplicationType.CPC
-    if not uses_multi_pan:
-        try:
-            uses_multi_pan = await multi_pan_addon_using_device(hass, device_path)
-        except HomeAssistantError as err:
-            raise ConfigEntryNotReady from err
+    try:
+        uses_multi_pan = await multi_pan_addon_using_device(hass, device_path)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
 
     if uses_multi_pan:
         async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
