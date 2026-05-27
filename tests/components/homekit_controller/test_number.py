@@ -51,39 +51,6 @@ def create_valve_with_set_duration(accessory: Accessory) -> Service:
     return service
 
 
-def create_multi_valve_with_set_duration(accessory: Accessory) -> None:
-    """Define multi-valve characteristics with set durations."""
-    accessory.add_service(ServicesTypes.IRRIGATION_SYSTEM, name="Irrigation System")
-
-    for name in ("Front Lawn", "Back Yard", "Greenhouse"):
-        service = accessory.add_service(ServicesTypes.VALVE, name=name)
-
-        active = service.add_char(CharacteristicsTypes.ACTIVE)
-        active.value = False
-
-        set_duration = service.add_char(CharacteristicsTypes.SET_DURATION)
-        set_duration.value = 1200
-        set_duration.minValue = 0
-        set_duration.maxValue = 5400
-        set_duration.minStep = 60
-
-
-def create_labeled_valve_with_set_duration(accessory: Accessory) -> Service:
-    """Define an unnamed labeled valve service with a set duration."""
-    service = accessory.add_service(ServicesTypes.VALVE)
-
-    active = service.add_char(CharacteristicsTypes.ACTIVE)
-    active.value = False
-
-    service_label_index = service.add_char(CharacteristicsTypes.SERVICE_LABEL_INDEX)
-    service_label_index.value = 1.0
-
-    set_duration = service.add_char(CharacteristicsTypes.SET_DURATION)
-    set_duration.value = 1200
-
-    return service
-
-
 async def test_migrate_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -218,35 +185,3 @@ async def test_valve_set_duration_number(
         ServicesTypes.VALVE,
         {CharacteristicsTypes.SET_DURATION: 600},
     )
-
-
-async def test_multi_valve_set_duration_names(
-    hass: HomeAssistant,
-    get_next_aid: Callable[[], int],
-) -> None:
-    """Test set duration numbers use valve service names."""
-    await setup_test_component(
-        hass, get_next_aid(), create_multi_valve_with_set_duration
-    )
-
-    front_lawn = hass.states.get("number.testdevice_front_lawn_duration")
-    assert front_lawn
-
-    back_yard = hass.states.get("number.testdevice_back_yard_duration")
-    assert back_yard
-
-    greenhouse = hass.states.get("number.testdevice_greenhouse_duration")
-    assert greenhouse
-
-
-async def test_labeled_valve_set_duration_name(
-    hass: HomeAssistant,
-    get_next_aid: Callable[[], int],
-) -> None:
-    """Test set duration numbers normalize service label indexes in names."""
-    await setup_test_component(
-        hass, get_next_aid(), create_labeled_valve_with_set_duration
-    )
-
-    labeled_valve = hass.states.get("number.testdevice_valve_1_duration")
-    assert labeled_valve

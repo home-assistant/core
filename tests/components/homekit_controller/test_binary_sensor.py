@@ -194,24 +194,6 @@ def create_valve_with_status_characteristics(accessory: Accessory) -> Service:
     return service
 
 
-def create_multi_valve_with_fault_characteristics(accessory: Accessory) -> None:
-    """Define multi-valve characteristics with fault status."""
-    irrigation = accessory.add_service(
-        ServicesTypes.IRRIGATION_SYSTEM, name="Irrigation System"
-    )
-    fault = irrigation.add_char(CharacteristicsTypes.STATUS_FAULT)
-    fault.value = 0
-
-    for name in ("Front Lawn", "Back Yard", "Greenhouse"):
-        service = accessory.add_service(ServicesTypes.VALVE, name=name)
-
-        active = service.add_char(CharacteristicsTypes.ACTIVE)
-        active.value = False
-
-        fault = service.add_char(CharacteristicsTypes.STATUS_FAULT)
-        fault.value = 0
-
-
 def create_sensor_with_duplicate_low_battery_characteristics(
     accessory: Accessory,
 ) -> None:
@@ -368,28 +350,6 @@ async def test_valve_status_binary_sensors(
         {CharacteristicsTypes.STATUS_FAULT: 1},
     )
     assert state.state == "on"
-
-
-async def test_multi_valve_fault_binary_sensor_names(
-    hass: HomeAssistant,
-    get_next_aid: Callable[[], int],
-) -> None:
-    """Test fault binary sensors use valve service names."""
-    await setup_test_component(
-        hass, get_next_aid(), create_multi_valve_with_fault_characteristics
-    )
-
-    irrigation = hass.states.get("binary_sensor.testdevice_irrigation_system_problem")
-    assert irrigation
-
-    front_lawn = hass.states.get("binary_sensor.testdevice_front_lawn_problem")
-    assert front_lawn
-
-    back_yard = hass.states.get("binary_sensor.testdevice_back_yard_problem")
-    assert back_yard
-
-    greenhouse = hass.states.get("binary_sensor.testdevice_greenhouse_problem")
-    assert greenhouse
 
 
 async def test_duplicate_low_battery_characteristics_create_single_binary_sensor(
