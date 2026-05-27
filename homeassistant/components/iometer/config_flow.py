@@ -46,7 +46,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: host})
 
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(30):
                 status = await self._async_get_first_status(host)
         except IOmeterNoStatusError:
             return self.async_abort(reason="no_status")
@@ -84,7 +84,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             try:
-                async with asyncio.timeout(10):
+                async with asyncio.timeout(30):
                     status = await self._async_get_first_status(self._host)
             except IOmeterNoStatusError:
                 errors["base"] = "no_status"
