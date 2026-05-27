@@ -67,18 +67,28 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
         """
         # For now I'm assuming lights support either effects or brightness.
         if effect_name := kwargs.get(ATTR_EFFECT):
-            await await_or_reraise(self.dev.set_effect_by_name(effect_name))
+            await await_or_reraise(
+                self.hass,
+                self.coordinator.config_entry,
+                self.dev.set_effect_by_name(effect_name),
+            )
         elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
             pct = round(brightness * 4.0 / 255) * 25
-            await await_or_reraise(self.dev.set_brightness(pct))
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.set_brightness(pct)
+            )
         else:
-            await await_or_reraise(self.dev.turn_on())
+            await await_or_reraise(
+                self.hass, self.coordinator.config_entry, self.dev.turn_on()
+            )
 
     @refresh_system
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await await_or_reraise(self.dev.turn_off())
+        await await_or_reraise(
+            self.hass, self.coordinator.config_entry, self.dev.turn_off()
+        )
 
     @property
     def brightness(self) -> int:
@@ -86,7 +96,7 @@ class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
 
         The scale needs converting between 0-100 and 0-255.
         """
-        return self.dev.brightness * 255 / 100
+        return round(self.dev.brightness * 255 / 100)
 
     @property
     def effect(self) -> str:
