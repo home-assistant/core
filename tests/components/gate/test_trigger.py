@@ -257,7 +257,7 @@ async def test_gate_trigger_cover_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test gate trigger fires when the last cover changes state."""
+    """Test gate trigger fires when all covers have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_covers,

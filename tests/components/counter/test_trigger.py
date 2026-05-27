@@ -263,7 +263,7 @@ async def test_counter_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test counter trigger fires on last state change."""
+    """Test counter trigger fires when all counters have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_counters,

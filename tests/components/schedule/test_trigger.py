@@ -192,7 +192,7 @@ async def test_schedule_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test schedule trigger fires on last schedule state change."""
+    """Test schedule trigger fires when all schedules have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_schedules,

@@ -332,7 +332,7 @@ async def test_media_player_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test media player state trigger fires on last entity change."""
+    """Test media player state trigger fires when all entities have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_media_players,

@@ -189,7 +189,7 @@ async def test_power_trigger_sensor_crossed_threshold_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test power crossed_threshold trigger fires when the last sensor changes state."""
+    """Test power crossed_threshold trigger fires when all sensors have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,

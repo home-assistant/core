@@ -472,7 +472,7 @@ async def test_climate_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test climate trigger fires on last state change."""
+    """Test climate trigger fires when all climate entities have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
@@ -533,7 +533,7 @@ async def test_climate_state_attribute_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test climate attribute trigger fires on last change."""
+    """Test climate attribute trigger fires when all climate entities have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,

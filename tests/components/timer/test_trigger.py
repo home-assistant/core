@@ -260,7 +260,7 @@ async def test_timer_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test timer trigger fires on last timer last_transition change."""
+    """Test timer trigger fires when all timers have transitioned."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_timers,

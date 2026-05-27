@@ -206,7 +206,7 @@ async def test_motion_trigger_binary_sensor_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test motion trigger fires when the last binary_sensor changes state."""
+    """Test motion trigger fires when all binary_sensors have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_binary_sensors,

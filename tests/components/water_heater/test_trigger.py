@@ -374,7 +374,7 @@ async def test_water_heater_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test water heater state trigger fires on last entity change."""
+    """Test water heater state trigger fires when all entities have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_water_heaters,
@@ -414,7 +414,7 @@ async def test_water_heater_state_attribute_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test water heater temp trigger fires on last entity threshold."""
+    """Test water heater temp trigger fires when all entities have crossed threshold."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_water_heaters,

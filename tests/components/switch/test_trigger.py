@@ -172,7 +172,7 @@ async def test_switch_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test switch trigger fires when the last switch changes state."""
+    """Test switch trigger fires when all switches have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_switches,
@@ -271,7 +271,7 @@ async def test_input_boolean_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the switch trigger fires when the last input_boolean changes."""
+    """Test that the switch trigger fires when all input_booleans have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_input_booleans,

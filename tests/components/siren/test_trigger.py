@@ -182,7 +182,7 @@ async def test_siren_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test siren trigger fires on last siren state change."""
+    """Test siren trigger fires when all sirens have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_sirens,

@@ -385,7 +385,7 @@ async def test_battery_level_crossed_threshold_sensor_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test trigger fires when the last sensor changes."""
+    """Test trigger fires when all sensors have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,

@@ -281,7 +281,7 @@ async def test_window_trigger_binary_sensor_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test window trigger fires when the last binary_sensor changes state."""
+    """Test window trigger fires when all binary_sensors have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_binary_sensors,
@@ -417,7 +417,7 @@ async def test_window_trigger_cover_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test window trigger fires when the last cover changes state."""
+    """Test window trigger fires when all covers have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_covers,

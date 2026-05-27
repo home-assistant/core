@@ -337,7 +337,7 @@ ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.In(
@@ -361,7 +361,7 @@ class EntityTriggerBase(Trigger):
     # `_excluded_states`. Subclasses can override to relax the origin
     # check.
     _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -871,7 +871,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 
 
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -905,7 +905,7 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute
     changes from not within to within the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS, default={}): {
                 vol.Required("threshold"): NumericThresholdSelector(

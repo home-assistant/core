@@ -320,7 +320,7 @@ async def test_humidifier_state_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test humidifier trigger fires on last entity state change."""
+    """Test humidifier trigger fires when all entities have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,
@@ -378,7 +378,7 @@ async def test_humidifier_state_attribute_trigger_behavior_all(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test humidifier attribute trigger fires on last state change."""
+    """Test humidifier attribute trigger fires when all entities have changed state."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,

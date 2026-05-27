@@ -341,7 +341,7 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold trigger fires on last climate change."""
+    """Test crossed_threshold trigger fires when all climate entities have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
@@ -467,7 +467,7 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold trigger fires on last humidifier change."""
+    """Test crossed_threshold trigger fires when all humidifiers have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,
@@ -593,7 +593,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_all(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test crossed_threshold trigger fires on last weather change."""
+    """Test crossed_threshold trigger fires when all weather entities have changed."""
     await assert_trigger_behavior_all(
         hass,
         target_entities=target_weathers,
