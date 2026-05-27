@@ -140,9 +140,9 @@ async def async_get_actions(
     actions: list[dict[str, str]] = []
     for required_cluster_id, cluster_actions in DEVICE_ACTIONS_BY_CLUSTER_ID.items():
         if required_cluster_id in cluster_ids:
-            actions.extend(cluster_actions)
-    for action in actions:
-        action[CONF_DEVICE_ID] = device_id
+            actions.extend(
+                {**action, CONF_DEVICE_ID: device_id} for action in cluster_actions
+            )
     return actions
 
 
