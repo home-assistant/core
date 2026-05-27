@@ -50,6 +50,11 @@ ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_TAG = "tag"
 
+# When a notification with this message arrives with a tag matching a stored
+# Live Activity token, end the activity remotely instead of letting it fall
+# through to a regular clear_notification banner.
+LIVE_ACTIVITY_CLEAR_MESSAGE = "clear_notification"
+
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"
 

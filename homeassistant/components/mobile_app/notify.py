@@ -5,7 +5,7 @@ import asyncio
 from functools import partial
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import ClientError, ClientSession
 
@@ -54,6 +54,7 @@ from .const import (
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    LIVE_ACTIVITY_CLEAR_MESSAGE,
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
@@ -61,6 +62,8 @@ from .push_notification import PushChannel
 from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
+
+type LiveActivityEvent = Literal["start", "update", "end"]
 
 
 async def async_setup_entry(
@@ -238,47 +241,114 @@ class MobileAppNotificationService(BaseNotificationService):
                 " not connected to local push notifications"
             )
 
-    async def _get_live_activity_token(
+    def _resolve_live_activity_push(
         self, entry: ConfigEntry, data: dict[str, Any]
-    ) -> str | None:
-        """Return the Live Activity APNs token for this notification, or None."""
+    ) -> tuple[str, LiveActivityEvent] | None:
+        """Return ``(token, event)`` for a Live Activity push, or ``None``."""
         notification_data = data.get(ATTR_DATA) or {}
-        if not notification_data.get(ATTR_LIVE_UPDATE):
-            return None
-
         tag = notification_data.get(ATTR_TAG)
         if not tag:
             return None
 
         webhook_id = entry.data[ATTR_WEBHOOK_ID]
-        live_activity_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-        device_tokens = live_activity_tokens.get(webhook_id, {})
-        if (stored := device_tokens.get(tag)) and stored[
-            "expires_at"
-        ] > dt_util.utcnow().timestamp():
-            # The activity is already running on the device and the token is valid
-            return stored["token"]
+        device_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].get(
+            webhook_id, {}
+        )
+        stored = device_tokens.get(tag)
+        stored_token_valid = (
+            stored is not None and stored["expires_at"] > dt_util.utcnow().timestamp()
+        )
 
-        # Start a new activity remotely
-        app_data = entry.data[ATTR_APP_DATA]
-        return app_data.get(ATTR_LIVE_ACTIVITY_TOKEN)
+        # clear_notification ends a known activity; if no token is stored for
+        # the tag, fall through to the normal clear_notification path.
+        if data.get(ATTR_MESSAGE) == LIVE_ACTIVITY_CLEAR_MESSAGE:
+            if stored_token_valid:
+                return stored["token"], "end"
+            return None
+
+        if not notification_data.get(ATTR_LIVE_UPDATE):
+            return None
+
+        if stored_token_valid:
+            return stored["token"], "update"
+
+        if push_to_start := entry.data[ATTR_APP_DATA].get(ATTR_LIVE_ACTIVITY_TOKEN):
+            return push_to_start, "start"
+
+        return None
 
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
+        live_activity_token: str | None = None
+        if resolved := self._resolve_live_activity_push(entry, data):
+            live_activity_token, event = resolved
+            data = _translate_live_activity_payload(data, event)
+
         try:
             await _send_message(
                 async_get_clientsession(self.hass),
                 entry,
                 data,
-                live_activity_token=await self._get_live_activity_token(entry, data),
+                live_activity_token=live_activity_token,
             )
         except HomeAssistantError as e:
             if e.translation_key == "rate_limit_exceeded_sending_notification":
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))
+
+
+# Documented flat fields that get lifted into content_state under the same
+# key name. The wire keys match the iOS HALiveActivityAttributes.ContentState
+# struct.
+_LIVE_ACTIVITY_PASS_THROUGH_FIELDS = frozenset(
+    {"critical_text", "progress", "progress_max", "chronometer"}
+)
+
+# Documented flat fields that get renamed when lifted into content_state.
+_LIVE_ACTIVITY_RENAMED_FIELDS = {
+    "notification_icon": "icon",
+    "notification_icon_color": "color",
+}
+
+
+def _translate_live_activity_payload(
+    data: dict[str, Any], event: LiveActivityEvent
+) -> dict[str, Any]:
+    """Lift the documented flat Live Activity fields into content_state."""
+    notification_data = {**(data.get(ATTR_DATA) or {}), "event": event}
+    new_data = {**data, ATTR_DATA: notification_data}
+
+    if event == "end":
+        # clear_notification is a command string, not body text the user wants
+        # to see briefly before dismissal — strip it so the relay doesn't copy
+        # it into content_state.message.
+        new_data.pop(ATTR_MESSAGE, None)
+        return new_data
+
+    content_state: dict[str, Any] = dict(notification_data.get("content_state", {}))
+
+    for key in _LIVE_ACTIVITY_PASS_THROUGH_FIELDS:
+        if (value := notification_data.get(key)) is not None:
+            content_state.setdefault(key, value)
+
+    for flat_key, wire_key in _LIVE_ACTIVITY_RENAMED_FIELDS.items():
+        if (value := notification_data.get(flat_key)) is not None:
+            content_state.setdefault(wire_key, value)
+
+    if (when := notification_data.get("when")) is not None:
+        if notification_data.get("when_relative"):
+            countdown_end = dt_util.utcnow().timestamp() + when
+        else:
+            countdown_end = when
+        content_state.setdefault("countdown_end", countdown_end)
+
+    if content_state:
+        notification_data["content_state"] = content_state
+
+    return new_data
 
 
 async def _send_message(
