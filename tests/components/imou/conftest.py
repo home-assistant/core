@@ -1,7 +1,7 @@
 """Test configuration and fixtures for Imou integration."""
 
-from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyimouapi.ha_device import ImouHaDevice
 import pytest
@@ -57,7 +57,7 @@ def imou_mock_devices(request: pytest.FixtureRequest) -> list[ImouHaDevice]:
 @pytest.fixture
 def mock_imou_ha_device_manager(
     imou_mock_devices: list[ImouHaDevice],
-) -> Generator[AsyncMock]:
+) -> Generator[MagicMock]:
     """Mock ImouHaDeviceManager with a default device list."""
     with patch(
         PATCH_IMOU_HA_DEVICE_MANAGER,
@@ -83,9 +83,9 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: AsyncMock,
-) -> AsyncGenerator[AsyncMock]:
-    """Set up Imou with mocked library clients; yields the HA device manager mock."""
+    mock_imou_ha_device_manager: MagicMock,
+) -> MagicMock:
+    """Set up Imou with mocked library clients; returns the HA device manager mock."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
