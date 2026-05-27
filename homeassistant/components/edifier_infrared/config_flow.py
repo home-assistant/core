@@ -44,9 +44,9 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             infrared_entity_id = user_input[CONF_INFRARED_ENTITY_ID]
             model = EdifierModel(user_input[CONF_MODEL])
-            device_type = MODEL_TO_COMMAND_SET[model]
+            command_set = MODEL_TO_COMMAND_SET[model]
 
-            await self.async_set_unique_id(f"{device_type}_{infrared_entity_id}")
+            await self.async_set_unique_id(f"{command_set}_{infrared_entity_id}")
             self._abort_if_unique_id_configured()
 
             entity_name = infrared_entity_id
@@ -58,7 +58,7 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_INFRARED_ENTITY_ID: infrared_entity_id,
                     CONF_MODEL: model.value,
-                    CONF_COMMAND_SET: device_type.value,
+                    CONF_COMMAND_SET: command_set.value,
                 },
             )
 
