@@ -61,7 +61,9 @@ def _assert_request_call(
     """Assert a matching request call was made."""
     expected_method = method.lower()
     expected_headers = (
-        {key.lower(): value for key, value in headers.items()} if headers else None
+        {key.lower(): value for key, value in headers.items()}
+        if headers is not None
+        else None
     )
     if any(
         call_method.lower() == expected_method
@@ -69,10 +71,13 @@ def _assert_request_call(
         and call_data == data
         and (
             expected_headers is None
-            or expected_headers.items()
-            <= {
-                key.lower(): value for key, value in (call_headers or {}).items()
-            }.items()
+            or (not expected_headers and not call_headers)
+            or (
+                expected_headers.items()
+                <= {
+                    key.lower(): value for key, value in (call_headers or {}).items()
+                }.items()
+            )
         )
         for call_method, call_url, call_data, call_headers in aioclient_mock.mock_calls
     ):
@@ -1471,9 +1476,7 @@ async def test_object_oriented_network_configs(
         is not None
     )
 
-    _assert_request_call(
-        aioclient_mock, "put", config_url, expected_disable_call, headers={}
-    )
+    _assert_request_call(aioclient_mock, "put", config_url, expected_disable_call)
     handler.process_raw([expected_disable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -1489,9 +1492,7 @@ async def test_object_oriented_network_configs(
     expected_enable_call = deepcopy(config)
     expected_enable_call["enabled"] = True
 
-    _assert_request_call(
-        aioclient_mock, "put", config_url, expected_enable_call, headers={}
-    )
+    _assert_request_call(aioclient_mock, "put", config_url, expected_enable_call)
     handler.process_raw([expected_enable_call])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
