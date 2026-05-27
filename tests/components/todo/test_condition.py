@@ -172,7 +172,7 @@ def parametrize_incomplete_condition_states_any(
                 }
             },
             target_states=["3", "5"],
-            other_states=["0", "1", "2", "8", "10"],
+            other_states=["0", "1", "9", "10"],
         ),
     ]
 
@@ -204,7 +204,7 @@ def parametrize_incomplete_condition_states_all(
                 }
             },
             target_states=["3", "5"],
-            other_states=["0", "1", "2", "8", "10"],
+            other_states=["0", "1", "9", "10"],
         ),
     ]
 
