@@ -22,7 +22,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import (
     CoreState,
     Event,
@@ -276,15 +275,16 @@ class CloudGoogleConfig(AbstractConfig):
             )
         )
 
-    def should_expose(self, state: State) -> bool:
-        """If a state object should be exposed."""
-        return self._should_expose_entity_id(state.entity_id)
+    def should_expose(self, entity_id: str) -> bool:
+        """If an entity should be exposed."""
+        entity_filter: EntityFilter = self._config[CONF_FILTER]
+        if not entity_filter.empty_filter:
+            return entity_filter(entity_id)
+
+        return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
 
     def _should_expose_legacy(self, entity_id: str) -> bool:
         """If an entity ID should be exposed."""
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(entity_id, {})
         entity_expose: bool | None = entity_config.get(PREF_SHOULD_EXPOSE)
@@ -311,16 +311,6 @@ class CloudGoogleConfig(AbstractConfig):
             and split_entity_id(entity_id)[0] in default_expose
             and _supported_legacy(self.hass, entity_id)
         )
-
-    def _should_expose_entity_id(self, entity_id: str) -> bool:
-        """If an entity should be exposed."""
-        entity_filter: EntityFilter = self._config[CONF_FILTER]
-        if not entity_filter.empty_filter:
-            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-                return False
-            return entity_filter(entity_id)
-
-        return async_should_expose(self.hass, CLOUD_GOOGLE, entity_id)
 
     @property
     def agent_user_id(self) -> str:
@@ -473,7 +463,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_id = event.data["entity_id"]
 
-        if not self._should_expose_entity_id(entity_id):
+        if not self.should_expose(entity_id):
             return
 
         self.async_schedule_google_sync_all()
@@ -496,8 +486,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Check if any exposed entity uses the device area
         if not any(
-            entity_entry.area_id is None
-            and self._should_expose_entity_id(entity_entry.entity_id)
+            entity_entry.area_id is None and self.should_expose(entity_entry.entity_id)
             for entity_entry in er.async_entries_for_device(
                 er.async_get(self.hass), event.data["device_id"]
             )

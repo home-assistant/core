@@ -23,7 +23,7 @@
       "service": "mdi:refresh"
     },
     "set_dhw_override": {
-      "service": "mdi:water-heater"
+      "service": "mdi:water-boiler"
     },
     "set_system_mode": {
       "service": "mdi:pencil"
