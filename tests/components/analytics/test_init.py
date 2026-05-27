@@ -120,41 +120,6 @@ async def test_schedule_starts_and_sends_analytics(
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_unload_entry(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test that unloading the config entry stops the analytics schedule."""
-    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
-    aioclient_mock.post(BASIC_ENDPOINT_URL_DEV, status=200)
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    ws_client = await hass_ws_client(hass)
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
-        await ws_client.send_json_auto_id(
-            {"type": "analytics/preferences", "preferences": {"base": True}}
-        )
-        await ws_client.receive_json()
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=901))
-        await hass.async_block_till_done()
-
-    assert len(aioclient_mock.mock_calls) == 1
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=2))
-    await hass.async_block_till_done()
-
-    assert len(aioclient_mock.mock_calls) == 1
-
-
 @pytest.mark.parametrize(
     ("ws_type", "ws_options"),
     [("analytics", {}), ("analytics/preferences", {"preferences": {"base": True}})],

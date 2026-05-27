@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Analytics from a config entry."""
-    snapshots_url = hass.data.get(_DATA_SNAPSHOTS_URL)
+    snapshots_url = hass.data[_DATA_SNAPSHOTS_URL]
     analytics = Analytics(hass, snapshots_url)
 
     try:
@@ -120,13 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(async_at_started(hass, start_schedule))
 
     hass.data[DATA_COMPONENT] = analytics
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload an Analytics config entry."""
-    analytics = hass.data.pop(DATA_COMPONENT)
-    analytics.cancel_scheduled()
     return True
 
 
