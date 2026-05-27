@@ -33,12 +33,7 @@ from homeassistant.components.intent import (
     TimerInfo,
     async_register_timer_handler,
 )
-from homeassistant.components.light import (
-    ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-    intent as light_intent,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -95,11 +90,6 @@ async def init_components(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
 
-    # Disable fuzzy matching by default for tests
-    agent = async_get_agent(hass)
-    assert isinstance(agent, default_agent.DefaultAgent)
-    agent.fuzzy_matching = False
-
 
 @pytest.mark.parametrize(
     "er_kwargs",
@@ -126,7 +116,7 @@ async def test_hidden_entities_skipped(
     )
 
     assert len(calls) == 0
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
@@ -145,13 +135,13 @@ async def test_exposed_domains(hass: HomeAssistant) -> None:
     result = await conversation.async_converse(
         hass, "unlock front door", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     result = await conversation.async_converse(
         hass, "run my script", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
@@ -201,7 +191,7 @@ async def test_exposed_areas(
     )
 
     # All is well for the exposed kitchen light
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_kitchen.id
     assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
@@ -212,14 +202,14 @@ async def test_exposed_areas(
     )
 
     # This should be an error because the lights in that area are not exposed
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     # But we can still ask questions about the bedroom, even with no exposed entities
     result = await conversation.async_converse(
         hass, "how many lights are on in the bedroom?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
 
 
 @pytest.mark.usefixtures("init_components")
@@ -258,7 +248,7 @@ async def test_punctuation(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data["entity_id"][0] == "light.test_light"
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["name"]["value"] == "test light"
     assert result.response.intent.slots["name"]["text"] == "test light"
@@ -336,7 +326,7 @@ async def test_unexposed_entities_skipped(
     )
 
     assert len(calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_kitchen.id
     assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
@@ -348,7 +338,7 @@ async def test_unexposed_entities_skipped(
         hass, "how many lights are on in the kitchen", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == exposed_light.entity_id
 
@@ -413,7 +403,7 @@ async def test_duplicated_names_resolved_with_device_area(
         assert len(calls) == 1
         assert calls[0].data["entity_id"][0] == bedroom_light.entity_id
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.intent is not None
         assert result.response.intent.slots.get("name", {}).get("value") == name
         assert result.response.intent.slots.get("name", {}).get("text") == name
@@ -431,7 +421,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     unregister = manager.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # Using different case and including punctuation
     test_sentences = ["it's party time!", "IT IS TIME TO PARTY."]
@@ -440,7 +430,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
         assert callback.call_args[0][0].text == sentence
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             sentence
         )
         assert result.response.speech == {
@@ -453,7 +443,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     callback.reset_mock()
     for sentence in test_sentences:
         result = await conversation.async_converse(hass, sentence, None, Context())
-        assert result.response.response_type == intent.IntentResponseType.ERROR, (
+        assert result.response.response_type is intent.IntentResponseType.ERROR, (
             sentence
         )
 
@@ -489,7 +479,7 @@ async def test_trigger_sentence_response_translation(
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
         )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.speech == {
             "plain": {"speech": expected, "extra_data": None}
         }
@@ -503,7 +493,7 @@ async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
     result = await conversation.async_converse(
         hass, "add apples to my shopping list", None, Context()
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech == {
         "plain": {"speech": "Added apples", "extra_data": None}
     }
@@ -516,7 +506,7 @@ async def test_nevermind_intent(hass: HomeAssistant) -> None:
     assert result.response.intent is not None
     assert result.response.intent.intent_type == intent.INTENT_NEVERMIND
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert not result.response.speech
 
 
@@ -527,7 +517,7 @@ async def test_respond_intent(hass: HomeAssistant) -> None:
     assert result.response.intent is not None
     assert result.response.intent.intent_type == intent.INTENT_RESPOND
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == "Hello from Home Assistant."
 
 
@@ -594,7 +584,7 @@ async def test_satellite_area_context(
         satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_kitchen.id
     assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
@@ -618,7 +608,7 @@ async def test_satellite_area_context(
         satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_bedroom.id
     assert result.response.intent.slots["area"]["text"] == area_bedroom.normalized_name
@@ -642,7 +632,7 @@ async def test_satellite_area_context(
         device_id=bedroom_satellite.id,
     )
     await hass.async_block_till_done()
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_bedroom.id
     assert result.response.intent.slots["area"]["text"] == area_bedroom.normalized_name
@@ -662,7 +652,7 @@ async def test_satellite_area_context(
             hass, f"turn {command} all lights", None, Context(), None
         )
         await hass.async_block_till_done()
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
         # All lights should have been targeted
         assert {s.entity_id for s in result.response.matched_states} == {
@@ -677,7 +667,7 @@ async def test_error_no_device(hass: HomeAssistant) -> None:
         hass, "turn on missing entity", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -695,7 +685,7 @@ async def test_error_no_device_exposed(hass: HomeAssistant) -> None:
         hass, "turn on kitchen light", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -710,7 +700,7 @@ async def test_error_no_area(hass: HomeAssistant) -> None:
         hass, "turn on the lights in missing area", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -725,7 +715,7 @@ async def test_error_no_floor(hass: HomeAssistant) -> None:
         hass, "turn on all the lights on missing floor", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -744,11 +734,12 @@ async def test_error_no_device_in_area(
         hass, "turn on missing entity in the kitchen", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
-        == "Sorry, I am not aware of any device called missing entity in the kitchen area"
+        == "Sorry, I am not aware of any device called"
+        " missing entity in the kitchen area"
     )
 
 
@@ -763,7 +754,7 @@ async def test_error_no_device_on_floor(
         hass, "turn on missing entity on ground floor", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -818,7 +809,7 @@ async def test_error_no_device_on_floor_exposed(
             hass, "turn on test light on the ground floor", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -857,7 +848,7 @@ async def test_error_no_device_in_area_exposed(
         hass, "turn on test light in the kitchen", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -886,7 +877,7 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
             hass, "turn on the fans", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -899,7 +890,7 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_components")
 async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
-    """Test error message when devices/entities exist for a domain but are not exposed."""
+    """Test error when entities exist but are not exposed."""
     hass.states.async_set("fan.test_fan", "off")
     expose_entity(hass, "fan.test_fan", False)
     await hass.async_block_till_done()
@@ -921,7 +912,7 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
             hass, "turn on the fans", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -940,7 +931,7 @@ async def test_error_no_domain_in_area(
         hass, "turn on the lights in the kitchen", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -954,7 +945,7 @@ async def test_error_no_domain_in_area_exposed(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test error message when devices/entities for a domain exist in an area but are not exposed."""
+    """Test error when area entities exist but are not exposed."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -976,7 +967,7 @@ async def test_error_no_domain_in_area_exposed(
         hass, "turn on the lights in the kitchen", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1000,7 +991,7 @@ async def test_error_no_domain_on_floor(
         hass, "turn on all lights on the ground floor", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1018,7 +1009,7 @@ async def test_error_no_domain_on_floor(
         hass, "turn on all lights upstairs", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1033,7 +1024,7 @@ async def test_error_no_domain_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error message when devices/entities for a domain exist on a floor but are not exposed."""
+    """Test error when floor entities exist but are not exposed."""
     floor_ground = floor_registry.async_create("ground")
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(
@@ -1057,7 +1048,7 @@ async def test_error_no_domain_on_floor_exposed(
         hass, "turn on all lights on the ground floor", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1095,7 +1086,7 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
             hass, "open the windows", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1144,7 +1135,7 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
             hass, "open all the windows", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1165,7 +1156,7 @@ async def test_error_no_device_class_in_area(
         hass, "open bedroom windows", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1179,7 +1170,7 @@ async def test_error_no_device_class_in_area_exposed(
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Test error message when entities of a device class exist in an area but are not exposed."""
+    """Test error when device class entities in area are not exposed."""
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
     area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
     bedroom_window = entity_registry.async_get_or_create("cover", "demo", "1234")
@@ -1200,7 +1191,7 @@ async def test_error_no_device_class_in_area_exposed(
         hass, "open bedroom windows", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1215,7 +1206,7 @@ async def test_error_no_device_class_on_floor_exposed(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test error message when entities of a device class exist in on a floor but are not exposed."""
+    """Test error when device class entities on floor are not exposed."""
     floor_ground = floor_registry.async_create("ground")
 
     area_bedroom = area_registry.async_get_or_create("bedroom_id")
@@ -1255,7 +1246,7 @@ async def test_error_no_device_class_on_floor_exposed(
             hass, "open ground floor windows", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1277,7 +1268,7 @@ async def test_error_no_intent(hass: HomeAssistant) -> None:
             hass, "do something", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
         )
@@ -1314,7 +1305,7 @@ async def test_error_duplicate_names(
         result = await conversation.async_converse(
             hass, f"turn on {name}", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1328,7 +1319,7 @@ async def test_error_duplicate_names(
         result = await conversation.async_converse(
             hass, f"is {name} on?", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1343,7 +1334,7 @@ async def test_error_duplicate_names(
 async def test_duplicate_names_but_one_is_exposed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test when multiple devices have the same name (or alias), but only one of them is exposed."""
+    """Test duplicate names where only one is exposed."""
     kitchen_light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
     kitchen_light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
 
@@ -1371,7 +1362,7 @@ async def test_duplicate_names_but_one_is_exposed(
         result = await conversation.async_converse(
             hass, f"turn on {name}", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.matched_states[0].entity_id == kitchen_light_1.entity_id
 
 
@@ -1381,7 +1372,7 @@ async def test_error_duplicate_names_same_area(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test error message when multiple devices have the same name (or alias) in the same area."""
+    """Test error when duplicate names exist in same area."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1408,28 +1399,30 @@ async def test_error_duplicate_names_same_area(
         result = await conversation.async_converse(
             hass, f"turn on {name} in {area_kitchen.name}", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+            == f"Sorry, there are multiple devices called"
+            f" {name} in the {area_kitchen.name} area"
         )
 
         # question
         result = await conversation.async_converse(
             hass, f"is {name} on in the {area_kitchen.name}?", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
         )
         assert (
             result.response.speech["plain"]["speech"]
-            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+            == f"Sorry, there are multiple devices called"
+            f" {name} in the {area_kitchen.name} area"
         )
 
 
@@ -1439,7 +1432,7 @@ async def test_duplicate_names_same_area_but_one_is_exposed(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test when multiple devices have the same name (or alias) in the same area but only one is exposed."""
+    """Test duplicate names in same area with one exposed."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1471,7 +1464,7 @@ async def test_duplicate_names_same_area_but_one_is_exposed(
         result = await conversation.async_converse(
             hass, f"turn on {name} in {area_kitchen.name}", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.matched_states[0].entity_id == kitchen_light_1.entity_id
 
 
@@ -1482,7 +1475,7 @@ async def test_duplicate_names_different_areas(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test preferred area when multiple devices have the same name (or alias) in different areas."""
+    """Test preferred area with duplicate names in different areas."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1537,20 +1530,20 @@ async def test_duplicate_names_different_areas(
         result = await conversation.async_converse(
             hass, f"turn on {name}", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
 
         # Target kitchen light by using kitchen device
         result = await conversation.async_converse(
             hass, f"turn on {name}", None, Context(), None, device_id=device_kitchen.id
         )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
 
         # Target bedroom light by using bedroom device
         result = await conversation.async_converse(
             hass, f"turn on {name}", None, Context(), None, device_id=device_bedroom.id
         )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
         assert result.response.matched_states[0].entity_id == bedroom_light.entity_id
 
 
@@ -1569,7 +1562,7 @@ async def test_error_wrong_state(hass: HomeAssistant) -> None:
         hass, "pause test player", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert result.response.speech["plain"]["speech"] == "Sorry, no device is playing"
 
@@ -1590,7 +1583,7 @@ async def test_error_feature_not_supported(hass: HomeAssistant) -> None:
         hass, "set test player volume to 100%", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1604,7 +1597,7 @@ async def test_error_no_timer_support(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test error message when a device does not support timers (no handler is registered)."""
+    """Test error when device has no timer support."""
     area_kitchen = area_registry.async_create("kitchen")
 
     entry = MockConfigEntry()
@@ -1622,7 +1615,7 @@ async def test_error_no_timer_support(
         hass, "set a 5 minute timer", None, Context(), None, device_id=device_id
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert (
         result.response.speech["plain"]["speech"]
@@ -1646,7 +1639,7 @@ async def test_error_timer_not_found(hass: HomeAssistant) -> None:
         hass, "pause timer", None, Context(), None, device_id=device_id
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert (
         result.response.speech["plain"]["speech"] == "Sorry, I couldn't find that timer"
@@ -1684,18 +1677,18 @@ async def test_error_multiple_timers_matched(
     result = await conversation.async_converse(
         hass, "set a timer for 5 minutes", None, Context(), None, device_id=device_id
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     result = await conversation.async_converse(
         hass, "set a timer for 5 minutes", None, Context(), None, device_id=device_id
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # Cannot target multiple timers
     result = await conversation.async_converse(
         hass, "cancel timer", None, Context(), None, device_id=device_id
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert (
         result.response.speech["plain"]["speech"]
@@ -1721,7 +1714,7 @@ async def test_no_states_matched_default_error(
             hass, "turn on lights in the kitchen", None, Context(), None
         )
 
-        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert result.response.response_type is intent.IntentResponseType.ERROR
         assert (
             result.response.error_code
             == intent.IntentResponseErrorCode.NO_VALID_TARGETS
@@ -1809,7 +1802,7 @@ async def test_all_domains_loaded(hass: HomeAssistant) -> None:
     )
 
     # Invalid target vs. no intent recognized
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
         result.response.speech["plain"]["speech"]
@@ -1863,7 +1856,7 @@ async def test_same_named_entities_in_different_areas(
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert (
         result.response.intent.slots.get("name", {}).get("value") == kitchen_light.name
@@ -1883,7 +1876,7 @@ async def test_same_named_entities_in_different_areas(
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert (
         result.response.intent.slots.get("name", {}).get("value") == bedroom_light.name
@@ -1899,19 +1892,19 @@ async def test_same_named_entities_in_different_areas(
     result = await conversation.async_converse(
         hass, "turn on overhead light", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # Querying a duplicate name should also fail
     result = await conversation.async_converse(
         hass, "is the overhead light on?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # But we can still ask questions that don't rely on the name
     result = await conversation.async_converse(
         hass, "how many lights are on?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
 
 
 @pytest.mark.usefixtures("init_components")
@@ -1920,7 +1913,7 @@ async def test_same_aliased_entities_in_different_areas(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that entities with the same alias (but different names) in different areas can be targeted."""
+    """Test same-alias entities in different areas."""
     area_kitchen = area_registry.async_get_or_create("kitchen_id")
     area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
@@ -1962,7 +1955,7 @@ async def test_same_aliased_entities_in_different_areas(
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots.get("name", {}).get("value") == "overhead light"
     assert result.response.intent.slots.get("name", {}).get("text") == "overhead light"
@@ -1978,7 +1971,7 @@ async def test_same_aliased_entities_in_different_areas(
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots.get("name", {}).get("value") == "overhead light"
     assert result.response.intent.slots.get("name", {}).get("text") == "overhead light"
@@ -1990,19 +1983,19 @@ async def test_same_aliased_entities_in_different_areas(
     result = await conversation.async_converse(
         hass, "turn on overhead light", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # Querying a duplicate alias should also fail
     result = await conversation.async_converse(
         hass, "is the overhead light on?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # But we can still ask questions that don't rely on the alias
     result = await conversation.async_converse(
         hass, "how many lights are on?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
 
 
 @pytest.mark.usefixtures("init_components")
@@ -2034,13 +2027,13 @@ async def test_device_id_in_handler(hass: HomeAssistant) -> None:
         Context(),
         device_id=device_id,
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert handler.device_id == device_id
 
 
 @pytest.mark.usefixtures("init_components")
 async def test_name_wildcard_lower_priority(hass: HomeAssistant) -> None:
-    """Test that the default agent does not prioritize a {name} slot when it's a wildcard."""
+    """Test default agent deprioritizes wildcard name slot."""
 
     class OrderBeerIntentHandler(intent.IntentHandler):
         intent_type = "OrderBeer"
@@ -2077,7 +2070,7 @@ async def test_name_wildcard_lower_priority(hass: HomeAssistant) -> None:
     result = await conversation.async_converse(
         hass, "I'd like to order a stout please", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert beer_handler.triggered
     assert not food_handler.triggered
 
@@ -2086,7 +2079,7 @@ async def test_name_wildcard_lower_priority(hass: HomeAssistant) -> None:
     result = await conversation.async_converse(
         hass, "I'd like to order a cookie please", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert not beer_handler.triggered
     assert food_handler.triggered
 
@@ -2278,7 +2271,7 @@ async def test_intent_entity_remove_custom_name(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that removing a custom name allows targeting the entity by its auto-generated name again."""
+    """Test removing custom name restores auto-generated name."""
     context = Context()
     entity = MockLight("kitchen light", STATE_ON)
     entity._attr_unique_id = "1234"
@@ -2708,7 +2701,7 @@ async def test_custom_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from custom_sentences have priority over builtin intents/sentences."""
+    """Test custom_sentences have priority over builtins."""
     with tempfile.NamedTemporaryFile(
         mode="w+",
         encoding="utf-8",
@@ -2765,7 +2758,7 @@ async def test_config_sentences_priority(
     hass_admin_user: MockUser,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that user intents from configuration.yaml have priority over builtin intents/sentences.
+    """Test config intents have priority over builtins.
 
     Also test that they follow proper selection logic.
     """
@@ -2878,7 +2871,7 @@ async def test_query_same_name_different_areas(
     result = await conversation.async_converse(
         hass, "is the overhead light on?", None, Context(), None
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     # Succeeds using area from device (kitchen)
     result = await conversation.async_converse(
@@ -2889,7 +2882,7 @@ async def test_query_same_name_different_areas(
         None,
         device_id=kitchen_device.id,
     )
-    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
 
@@ -2970,35 +2963,6 @@ async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
     result = await agent.async_recognize_intent(user_input)
     assert result is not None
     assert getattr(result, mark, None) is None
-
-
-@pytest.mark.usefixtures("init_components")
-async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
-    """Test that intent recognition results are cached for fuzzy matches."""
-    agent = async_get_agent(hass)
-
-    # There is no entity named test light
-    user_input = ConversationInput(
-        text="turn on test light",
-        context=Context(),
-        conversation_id=None,
-        device_id=None,
-        satellite_id=None,
-        language=hass.config.language,
-        agent_id=None,
-    )
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
-    assert result.unmatched_entities["area"].text == "test "
-
-    # Mark this result so we know it is from cache next time
-    mark = "_from_cache"
-    setattr(result, mark, True)
-
-    # Should be from cache this time
-    result = await agent.async_recognize_intent(user_input)
-    assert result is not None
-    assert getattr(result, mark, None) is True
 
 
 @pytest.mark.usefixtures("init_components")
@@ -3095,7 +3059,7 @@ async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
     )
 
     assert result is not None
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # Not exposed
     expose_entity(hass, "light.test_light", False)
@@ -3108,7 +3072,7 @@ async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
     )
 
     assert result is not None
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
 
 @pytest.mark.parametrize(
@@ -3348,7 +3312,7 @@ async def test_handle_intents_filters_results(
         )
 
         assert len(mock_recognize.mock_calls) == 2
-        assert len(mock_process.mock_calls) == 2
+        assert mock_process.call_count == 1
 
         # Check we filtered things
         assert len(results) == 2
@@ -3375,7 +3339,7 @@ async def test_state_names_are_not_translated(
         result = await conversation.async_converse(
             hass, "what is the weather like?", None, Context(), None
         )
-        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
         mock_async_render.assert_called_once()
 
         assert (
@@ -3420,107 +3384,6 @@ async def test_language_with_alternative_code(
         assert call.data == {"entity_id": [entity_id]}
 
 
-@pytest.mark.parametrize("fuzzy_matching", [True, False])
-@pytest.mark.parametrize(
-    ("sentence", "intent_type", "slots"),
-    [
-        ("time", "HassGetCurrentTime", {}),
-        ("how about my timers", "HassTimerStatus", {}),
-        (
-            "the office needs more blue",
-            "HassLightSet",
-            {"area": "office", "color": "blue"},
-        ),
-        (
-            "50% office light",
-            "HassLightSet",
-            {"name": "office light", "brightness": "50%"},
-        ),
-        (
-            "turn on the lights in the spaceship",
-            "HassTurnOn",
-            {"domain": "lights", "area": "office"},  # context area
-        ),
-    ],
-)
-async def test_fuzzy_matching(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    fuzzy_matching: bool,
-    sentence: str,
-    intent_type: str,
-    slots: dict[str, Any],
-) -> None:
-    """Test fuzzy vs. non-fuzzy matching on some English sentences."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-    assert await async_setup_component(hass, "intent", {})
-    await light_intent.async_setup_intents(hass)
-
-    agent = async_get_agent(hass)
-    agent.fuzzy_matching = fuzzy_matching
-
-    area_office = area_registry.async_get_or_create("office_id")
-    area_office = area_registry.async_update(area_office.id, name="office")
-
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-    office_satellite = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("demo", "id-1234")},
-    )
-    device_registry.async_update_device(office_satellite.id, area_id=area_office.id)
-
-    office_light = entity_registry.async_get_or_create(
-        "light", "demo", "1234", original_name="office light"
-    )
-    office_light = entity_registry.async_update_entity(
-        office_light.entity_id, area_id=area_office.id
-    )
-    hass.states.async_set(
-        office_light.entity_id,
-        "on",
-        attributes={
-            ATTR_FRIENDLY_NAME: "office light",
-            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS, ColorMode.RGB],
-        },
-    )
-    _on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
-
-    result = await conversation.async_converse(
-        hass,
-        sentence,
-        None,
-        Context(),
-        language="en",
-        device_id=office_satellite.id,
-    )
-    response = result.response
-
-    if not fuzzy_matching:
-        # Should not match
-        assert response.response_type == intent.IntentResponseType.ERROR
-        return
-
-    assert response.response_type in (
-        intent.IntentResponseType.ACTION_DONE,
-        intent.IntentResponseType.QUERY_ANSWER,
-    )
-    assert response.intent is not None
-    assert response.intent.intent_type == intent_type
-
-    # Verify slot texts match
-    actual_slots = {
-        slot_name: slot_value["text"]
-        for slot_name, slot_value in response.intent.slots.items()
-        if slot_name != "preferred_area_id"  # context area
-    }
-    assert actual_slots == slots
-
-
 @pytest.mark.usefixtures("init_components")
 async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
     """Test that intent tool calls are stored in the chat log."""
@@ -3533,7 +3396,7 @@ async def test_intent_tool_call_in_chat_log(hass: HomeAssistant) -> None:
         hass, "turn on test light", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
         chat_session.async_get_chat_session(hass, result.conversation_id) as session,
@@ -3585,7 +3448,7 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
         hass, trigger_sentence, None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     with (
         chat_session.async_get_chat_session(hass, result.conversation_id) as session,
@@ -3623,7 +3486,7 @@ async def test_no_tool_call_on_no_intent_match(hass: HomeAssistant) -> None:
         hass, "this is a random sentence that should not match", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
 
     with (
         chat_session.async_get_chat_session(hass, result.conversation_id) as session,
@@ -3648,7 +3511,7 @@ async def test_intent_tool_call_with_error_response(hass: HomeAssistant) -> None
         hass, "turn on the non existent device", None, Context(), None
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
     with (

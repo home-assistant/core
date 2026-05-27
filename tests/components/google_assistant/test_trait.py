@@ -1346,7 +1346,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
 
 
 async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None:
-    """Test TemperatureSetting trait support for climate domain not supporting any modes."""
+    """Test TemperatureSetting trait for climate with no modes."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
@@ -1794,7 +1794,7 @@ async def test_temperature_control_water_heater_set_temperature(
     temp_out: float,
     current_init: str,
 ) -> None:
-    """Test TemperatureControl trait support for water heater domain - SetTemperature."""
+    """Test TemperatureControl trait for water heater SetTemperature."""
     hass.config.units = unit
 
     min_temp = TemperatureConverter.convert(
@@ -2384,7 +2384,7 @@ async def test_fan_speed(hass: HomeAssistant) -> None:
 
 
 async def test_fan_speed_without_percentage_step(hass: HomeAssistant) -> None:
-    """Test FanSpeed trait falls back to percent-only when percentage_step is missing."""
+    """Test FanSpeed trait falls back to percent-only without step."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(
         fan.DOMAIN, FanEntityFeature.SET_SPEED, None, None

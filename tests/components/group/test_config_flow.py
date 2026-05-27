@@ -317,20 +317,16 @@ async def test_options(
 
 
 @pytest.mark.parametrize(
-    ("group_type", "extra_options", "extra_options_after", "advanced"),
+    ("group_type", "extra_options", "extra_options_after"),
     [
-        ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": False}, False),
-        ("light", {"all": False}, {"all": False}, True),
-        ("light", {"all": True}, {"all": False}, True),
-        ("switch", {"all": False}, {"all": False}, False),
-        ("switch", {"all": True}, {"all": False}, False),
-        ("switch", {"all": False}, {"all": False}, True),
-        ("switch", {"all": True}, {"all": False}, True),
+        ("light", {"all": False}, {"all": False}),
+        ("light", {"all": True}, {"all": False}),
+        ("switch", {"all": False}, {"all": False}),
+        ("switch", {"all": True}, {"all": False}),
     ],
 )
 async def test_all_options(
-    hass: HomeAssistant, group_type, extra_options, extra_options_after, advanced
+    hass: HomeAssistant, group_type, extra_options, extra_options_after
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
@@ -356,9 +352,7 @@ async def test_all_options(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": advanced}
-    )
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == group_type
 

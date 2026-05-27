@@ -104,7 +104,7 @@ async def test_binary_sensor_setup_no_notify(
         await hass.async_block_till_done()  # wait until services are registered
 
     assert all(
-        f"updates on binary sensor numato_binary_sensor_mock_port{port} only in polling mode"
-        in caplog.text
+        f"updates on binary sensor numato_binary_sensor_mock_port{port}"
+        " only in polling mode" in caplog.text
         for port in NUMATO_CFG["numato"]["devices"][0]["binary_sensors"]["ports"]
     )
