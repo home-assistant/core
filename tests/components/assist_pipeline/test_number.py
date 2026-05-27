@@ -65,5 +65,5 @@ def test_command_timeout_number_attributes() -> None:
     assert number.native_max_value == MAX_COMMAND_TIMEOUT_SECONDS
     assert number.native_step == 1.0
     assert number.native_unit_of_measurement == UnitOfTime.SECONDS
-    assert number.device_class is NumberDeviceClass.DURATION
-    assert number.mode is NumberMode.BOX
+    assert number.device_class == NumberDeviceClass.DURATION
+    assert number.mode == NumberMode.BOX
