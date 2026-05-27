@@ -144,7 +144,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
           "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
           "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
           "name": "[%key:common::config_flow::data::name%]"
