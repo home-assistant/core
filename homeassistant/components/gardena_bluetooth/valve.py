@@ -112,7 +112,8 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
         self._attr_unique_id = f"{coordinator.address}-{self._service.state.unique_id}"
 
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_closed = not self.coordinator.get_cached(self._service.state)
+        state = self.coordinator.get_cached(self._service.state)
+        self._attr_is_closed = None if state is None else not state
         super()._handle_coordinator_update()
 
     async def async_open_valve(self, **kwargs: Any) -> None:
