@@ -106,16 +106,19 @@ def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
 
 
 def service_feature_translation(
-    service: Service, feature_translation_key: str
-) -> tuple[str, Mapping[str, str] | None]:
-    """Return translation data for a feature scoped by the HomeKit service."""
-    if scope := service_feature_scope(service):
-        return (
-            f"{feature_translation_key}_{scope.translation_suffix}",
-            scope.translation_placeholders,
-        )
+    service: Service, feature_translation_key: str | None
+) -> tuple[str, Mapping[str, str]] | None:
+    """Return service-scoped translation data for a HomeKit feature."""
+    if (
+        feature_translation_key is None
+        or (scope := service_feature_scope(service)) is None
+    ):
+        return None
 
-    return feature_translation_key, None
+    return (
+        f"{feature_translation_key}_{scope.translation_suffix}",
+        scope.translation_placeholders,
+    )
 
 
 async def async_get_controller(hass: HomeAssistant) -> Controller:

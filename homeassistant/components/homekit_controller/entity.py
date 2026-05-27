@@ -230,11 +230,7 @@ class HomeKitEntity(Entity):
 
     def _get_translated_name(self) -> str | UndefinedType:
         """Return the translated entity name."""
-        if (
-            not self.has_entity_name
-            or self.translation_key is None
-            or not self.platform_data
-        ):
+        if not self.has_entity_name or not self.platform_data:
             return UNDEFINED
         translated_name = self._name_internal(
             self._device_class_name, self.platform_data.platform_translations

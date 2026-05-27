@@ -69,6 +69,9 @@
     "distance": {
       "name": "[%key:component::sensor::entity_component::distance::name%]"
     },
+    "duration": {
+      "name": "[%key:component::sensor::entity_component::duration::name%]"
+    },
     "energy": {
       "name": "[%key:component::sensor::entity_component::energy::name%]"
     },

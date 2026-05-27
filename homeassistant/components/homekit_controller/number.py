@@ -66,8 +66,6 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     ),
     CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.SET_DURATION,
-        name="Duration",
-        translation_key="duration",
         has_entity_name=True,
         device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
@@ -91,12 +89,7 @@ async def async_setup_entry(
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := NUMBER_ENTITIES.get(char.type):
-            entity_class = (
-                HomeKitServiceNumber
-                if char.type == CharacteristicsTypes.SET_DURATION
-                else HomeKitNumber
-            )
-            entities.append(entity_class(conn, info, char, description))
+            entities.append(HomeKitNumber(conn, info, char, description))
         else:
             return False
 
@@ -124,12 +117,22 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
+        if description.has_entity_name and (
+            translation := service_feature_translation(
+                char.service, description.device_class
+            )
+        ):
+            self._attr_translation_key, translation_placeholders = translation
+            self._attr_translation_placeholders = translation_placeholders
 
     @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
         if (translated_name := self._get_translated_name()) is not UNDEFINED:
             return translated_name
+
+        if self.entity_description.name is UNDEFINED:
+            return super().name
 
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
@@ -166,24 +169,3 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
                 self._char.type: value,
             }
         )
-
-
-class HomeKitServiceNumber(HomeKitNumber):
-    """Representation of a HomeKit number named from its service."""
-
-    def __init__(
-        self,
-        conn: HKDevice,
-        info: ConfigType,
-        char: Characteristic,
-        description: NumberEntityDescription,
-    ) -> None:
-        """Initialise a HomeKit number control named from its service."""
-        super().__init__(conn, info, char, description)
-        if description.translation_key is None:
-            return
-        self._attr_translation_key, translation_placeholders = (
-            service_feature_translation(char.service, description.translation_key)
-        )
-        if translation_placeholders is not None:
-            self._attr_translation_placeholders = translation_placeholders

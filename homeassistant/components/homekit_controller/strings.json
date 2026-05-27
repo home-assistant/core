@@ -72,29 +72,23 @@
   },
   "entity": {
     "binary_sensor": {
-      "fault": {
-        "name": "Fault"
+      "battery_with_service_label": {
+        "name": "{service_label_index} Battery"
       },
-      "fault_with_service_label": {
-        "name": "{service_label_index} Fault"
+      "battery_with_service_name": {
+        "name": "{service_name} Battery"
       },
-      "fault_with_service_name": {
-        "name": "{service_name} Fault"
+      "battery_with_valve_label": {
+        "name": "Valve {service_label_index} Battery"
       },
-      "fault_with_valve_label": {
-        "name": "Valve {service_label_index} Fault"
+      "problem_with_service_label": {
+        "name": "{service_label_index} Problem"
       },
-      "low_battery": {
-        "name": "Low Battery"
+      "problem_with_service_name": {
+        "name": "{service_name} Problem"
       },
-      "low_battery_with_service_label": {
-        "name": "{service_label_index} Low Battery"
-      },
-      "low_battery_with_service_name": {
-        "name": "{service_name} Low Battery"
-      },
-      "low_battery_with_valve_label": {
-        "name": "Valve {service_label_index} Low Battery"
+      "problem_with_valve_label": {
+        "name": "Valve {service_label_index} Problem"
       }
     },
     "event": {

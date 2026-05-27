@@ -165,16 +165,12 @@ REJECT_CHAR_BY_TYPE = {
 CHARACTERISTIC_BINARY_SENSORS: dict[str, HomeKitBinarySensorEntityDescription] = {
     CharacteristicsTypes.STATUS_LO_BATT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_LO_BATT,
-        name="Low Battery",
-        translation_key="low_battery",
         has_entity_name=True,
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     CharacteristicsTypes.STATUS_FAULT: HomeKitBinarySensorEntityDescription(
         key=CharacteristicsTypes.STATUS_FAULT,
-        name="Fault",
-        translation_key="fault",
         has_entity_name=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -197,12 +193,12 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
         """Initialise a HomeKit characteristic binary sensor."""
         self.entity_description = description
         super().__init__(conn, info, char)
-        if description.translation_key is None:
-            return
-        self._attr_translation_key, translation_placeholders = (
-            service_feature_translation(char.service, description.translation_key)
-        )
-        if translation_placeholders is not None:
+        if description.has_entity_name and (
+            translation := service_feature_translation(
+                char.service, description.device_class
+            )
+        ):
+            self._attr_translation_key, translation_placeholders = translation
             self._attr_translation_placeholders = translation_placeholders
 
     def get_characteristic_types(self) -> list[str]:

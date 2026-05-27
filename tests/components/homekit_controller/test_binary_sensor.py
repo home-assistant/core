@@ -336,14 +336,14 @@ async def test_valve_status_binary_sensors(
 
     low_battery = Helper(
         hass,
-        "binary_sensor.testdevice_low_battery",
+        "binary_sensor.testdevice_battery",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
     )
     fault = Helper(
         hass,
-        "binary_sensor.testdevice_fault",
+        "binary_sensor.testdevice_problem",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -379,16 +379,16 @@ async def test_multi_valve_fault_binary_sensor_names(
         hass, get_next_aid(), create_multi_valve_with_fault_characteristics
     )
 
-    irrigation = hass.states.get("binary_sensor.testdevice_irrigation_system_fault")
+    irrigation = hass.states.get("binary_sensor.testdevice_irrigation_system_problem")
     assert irrigation
 
-    front_lawn = hass.states.get("binary_sensor.testdevice_front_lawn_fault")
+    front_lawn = hass.states.get("binary_sensor.testdevice_front_lawn_problem")
     assert front_lawn
 
-    back_yard = hass.states.get("binary_sensor.testdevice_back_yard_fault")
+    back_yard = hass.states.get("binary_sensor.testdevice_back_yard_problem")
     assert back_yard
 
-    greenhouse = hass.states.get("binary_sensor.testdevice_greenhouse_fault")
+    greenhouse = hass.states.get("binary_sensor.testdevice_greenhouse_problem")
     assert greenhouse
 
 
@@ -404,9 +404,9 @@ async def test_duplicate_low_battery_characteristics_create_single_binary_sensor
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get("binary_sensor.shared_sensor_low_battery")
+    low_battery = hass.states.get("binary_sensor.shared_sensor_battery")
     assert low_battery
-    assert hass.states.get("binary_sensor.shared_sensor_low_battery_2") is None
+    assert hass.states.get("binary_sensor.shared_sensor_battery_2") is None
 
 
 async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
@@ -421,9 +421,9 @@ async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get("binary_sensor.unnamed_sensor_low_battery")
+    low_battery = hass.states.get("binary_sensor.unnamed_sensor_battery")
     assert low_battery
-    assert hass.states.get("binary_sensor.unnamed_sensor_low_battery_2") is None
+    assert hass.states.get("binary_sensor.unnamed_sensor_battery_2") is None
 
 
 async def test_named_low_battery_characteristic_creates_binary_sensor(
@@ -438,9 +438,7 @@ async def test_named_low_battery_characteristic_creates_binary_sensor(
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get(
-        "binary_sensor.outdoor_sensor_temperature_low_battery"
-    )
+    low_battery = hass.states.get("binary_sensor.outdoor_sensor_temperature_battery")
     assert low_battery
 
 
@@ -453,10 +451,10 @@ async def test_labeled_low_battery_characteristics_create_scoped_binary_sensors(
         hass, get_next_aid(), create_labeled_valves_with_low_battery_characteristics
     )
 
-    valve_1 = hass.states.get("binary_sensor.testdevice_valve_1_low_battery")
+    valve_1 = hass.states.get("binary_sensor.testdevice_valve_1_battery")
     assert valve_1
 
-    valve_2 = hass.states.get("binary_sensor.testdevice_valve_2_low_battery")
+    valve_2 = hass.states.get("binary_sensor.testdevice_valve_2_battery")
     assert valve_2
 
 
@@ -472,10 +470,8 @@ async def test_low_battery_characteristic_ignored_with_battery_service(
     await setup_test_accessories(hass, [accessory])
 
     assert hass.states.get("sensor.outdoor_sensor_battery")
-    assert hass.states.get("binary_sensor.outdoor_sensor_low_battery") is None
-    assert (
-        hass.states.get("binary_sensor.outdoor_sensor_temperature_low_battery") is None
-    )
+    assert hass.states.get("binary_sensor.outdoor_sensor_battery") is None
+    assert hass.states.get("binary_sensor.outdoor_sensor_temperature_battery") is None
 
 
 async def test_migrate_unique_id(
