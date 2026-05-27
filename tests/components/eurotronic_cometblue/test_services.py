@@ -227,7 +227,9 @@ async def test_set_holiday_errors(
     await setup_with_selected_platforms(hass, mock_config_entry)
 
     # Start date must be in the future (at least 1 hour ahead as time is floored to hours on device)
-    with pytest.raises(ValueError, match="Start date .* must be in the future"):
+    with pytest.raises(
+        ServiceValidationError, match="Start date .* must be in the future"
+    ):
         await hass.services.async_call(
             DOMAIN,
             "set_holiday",
