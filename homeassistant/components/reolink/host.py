@@ -11,7 +11,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.baichuan import DEFAULT_BC_PORT
-from reolink_aio.enums import SubType
+from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
@@ -36,6 +36,7 @@ from .const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
@@ -77,6 +78,12 @@ class ReolinkHost:
         self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
+        try:
+            bc_connection = ConnectionEnum(
+                config.get(CONF_BC_CONNECT, ConnectionEnum.unknown.value)
+            )
+        except ValueError:
+            bc_connection = ConnectionEnum.unknown
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
@@ -96,6 +103,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
+            bc_connection=bc_connection,
             bc_only=config.get(CONF_BC_ONLY, False),
         )
 

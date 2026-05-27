@@ -2785,13 +2785,13 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.4.1
+pyvesync==3.4.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.34
+pyvlx==0.2.35
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
