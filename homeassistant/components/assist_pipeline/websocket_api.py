@@ -43,6 +43,11 @@ from .pipeline import (
     WakeWordSettings,
     async_get_pipeline,
 )
+from .vad import (
+    DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    MAX_COMMAND_TIMEOUT_SECONDS,
+    MIN_COMMAND_TIMEOUT_SECONDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +101,13 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("volume_multiplier"): float,
                             # Advanced use cases/testing
                             vol.Optional("no_vad"): bool,
+                            vol.Optional("command_timeout_seconds"): vol.All(
+                                vol.Coerce(float),
+                                vol.Range(
+                                    min=MIN_COMMAND_TIMEOUT_SECONDS,
+                                    max=MAX_COMMAND_TIMEOUT_SECONDS,
+                                ),
+                            ),
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -105,6 +117,13 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
                             vol.Optional("wake_word_phrase"): str,
+                            vol.Optional("command_timeout_seconds"): vol.All(
+                                vol.Coerce(float),
+                                vol.Range(
+                                    min=MIN_COMMAND_TIMEOUT_SECONDS,
+                                    max=MAX_COMMAND_TIMEOUT_SECONDS,
+                                ),
+                            ),
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -213,6 +232,9 @@ async def websocket_run(
             auto_gain_dbfs=msg_input.get("auto_gain_dbfs", 0),
             volume_multiplier=msg_input.get("volume_multiplier", 1.0),
             is_vad_enabled=not msg_input.get("no_vad", False),
+            timeout_seconds=msg_input.get(
+                "command_timeout_seconds", DEFAULT_COMMAND_TIMEOUT_SECONDS
+            ),
         )
     elif start_stage == PipelineStage.INTENT:
         # Input to conversation agent

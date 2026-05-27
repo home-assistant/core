@@ -100,6 +100,11 @@
         }
       }
     },
+    "number": {
+      "command_timeout": {
+        "name": "[%key:component::assist_pipeline::entity::number::command_timeout::name%]"
+      }
+    },
     "select": {
       "pipeline": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",

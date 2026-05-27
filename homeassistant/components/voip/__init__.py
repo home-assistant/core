@@ -20,6 +20,7 @@ from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
     Platform.ASSIST_SATELLITE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SWITCH,
 )

@@ -27,6 +27,7 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
@@ -131,6 +132,7 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_supported_features = AssistSatelliteEntityFeature(0)
     _attr_pipeline_entity_id: str | None = None
     _attr_vad_sensitivity_entity_id: str | None = None
+    _attr_command_timeout_entity_id: str | None = None
 
     _conversation_id: str | None = None
 
@@ -159,6 +161,11 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    @property
+    def command_timeout_entity_id(self) -> str | None:
+        """Entity ID of the command timeout to use for the next conversation."""
+        return self._attr_command_timeout_entity_id
 
     @property
     def tts_options(self) -> dict[str, Any] | None:
@@ -528,7 +535,8 @@ class AssistSatelliteEntity(entity.Entity):
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
                         audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                            silence_seconds=self._resolve_vad_sensitivity(),
+                            timeout_seconds=self._resolve_command_timeout(),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,
@@ -639,6 +647,24 @@ class AssistSatelliteEntity(entity.Entity):
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
         return vad.VadSensitivity.to_seconds(vad_sensitivity)
+
+    @callback
+    def _resolve_command_timeout(self) -> float:
+        """Resolve command timeout from a number entity."""
+        if not (command_timeout_entity_id := self.command_timeout_entity_id):
+            return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+        command_timeout_state = self.hass.states.get(command_timeout_entity_id)
+        if command_timeout_state is None or command_timeout_state.state in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+        try:
+            return float(command_timeout_state.state)
+        except ValueError as err:
+            raise RuntimeError("Command timeout entity has invalid state") from err
 
     async def _resolve_announcement_media_id(
         self,

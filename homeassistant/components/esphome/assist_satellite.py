@@ -173,14 +173,14 @@ class EsphomeAssistSatellite(
         self._active_audio_channel = 0
         self._has_multi_channel_audio = False
 
-    def _get_entity_id(self, suffix: str) -> str | None:
+    def _get_entity_id(self, platform: Platform, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
         if self._entry_data.device_info is None:
             return None
 
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
-            Platform.SELECT,
+            platform,
             DOMAIN,
             f"{self._entry_data.device_info.mac_address}-{suffix}",
         )
@@ -193,17 +193,22 @@ class EsphomeAssistSatellite(
     def get_pipeline_entity(self, index: int) -> str | None:
         """Return the entity ID of a pipeline by index."""
         id_suffix = "" if index < 1 else f"_{index + 1}"
-        return self._get_entity_id(f"pipeline{id_suffix}")
+        return self._get_entity_id(Platform.SELECT, f"pipeline{id_suffix}")
 
     def get_wake_word_entity(self, index: int) -> str | None:
         """Return the entity ID of a wake word by index."""
         id_suffix = "" if index < 1 else f"_{index + 1}"
-        return self._get_entity_id(f"wake_word{id_suffix}")
+        return self._get_entity_id(Platform.SELECT, f"wake_word{id_suffix}")
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity for the next conversation."""
-        return self._get_entity_id("vad_sensitivity")
+        return self._get_entity_id(Platform.SELECT, "vad_sensitivity")
+
+    @property
+    def command_timeout_entity_id(self) -> str | None:
+        """Return the command timeout entity ID for the next conversation."""
+        return self._get_entity_id(Platform.NUMBER, "command_timeout")
 
     @callback
     def async_get_configuration(

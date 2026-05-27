@@ -1,7 +1,5 @@
 """Support for esphome numbers."""
 
-from functools import partial
-
 from aioesphomeapi import (
     EntityInfo,
     NumberInfo,
@@ -9,16 +7,20 @@ from aioesphomeapi import (
     NumberState,
 )
 
+from homeassistant.components.assist_pipeline import CommandTimeoutNumber
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
+    EsphomeAssistEntity,
     EsphomeEntity,
     convert_api_error_ha_error,
     esphome_float_state_property,
     platform_async_setup_entry,
 )
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
@@ -70,9 +72,33 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         )
 
 
-async_setup_entry = partial(
-    platform_async_setup_entry,
-    info_type=NumberInfo,
-    entity_type=EsphomeNumber,
-    state_type=NumberState,
-)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up esphome numbers based on a config entry."""
+    await platform_async_setup_entry(
+        hass,
+        entry,
+        async_add_entities,
+        info_type=NumberInfo,
+        entity_type=EsphomeNumber,
+        state_type=NumberState,
+    )
+
+    entry_data = entry.runtime_data
+    assert entry_data.device_info is not None
+    if entry_data.device_info.voice_assistant_feature_flags_compat(
+        entry_data.api_version
+    ):
+        async_add_entities([EsphomeCommandTimeoutNumber(hass, entry_data)])
+
+
+class EsphomeCommandTimeoutNumber(EsphomeAssistEntity, CommandTimeoutNumber):
+    """Command timeout for ESPHome devices."""
+
+    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+        """Initialize a command timeout number."""
+        EsphomeAssistEntity.__init__(self, entry_data)
+        CommandTimeoutNumber.__init__(self, hass, self._device_info.mac_address)

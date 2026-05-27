@@ -3,12 +3,20 @@
 import itertools as it
 
 from homeassistant.components.assist_pipeline.vad import (
+    DEFAULT_COMMAND_TIMEOUT_SECONDS,
     AudioBuffer,
     VoiceCommandSegmenter,
     chunk_samples,
 )
 
 _ONE_SECOND = 1.0
+
+
+def test_defaults() -> None:
+    """Test default command timeout."""
+    segmenter = VoiceCommandSegmenter()
+
+    assert segmenter.timeout_seconds == DEFAULT_COMMAND_TIMEOUT_SECONDS
 
 
 def test_silence() -> None:

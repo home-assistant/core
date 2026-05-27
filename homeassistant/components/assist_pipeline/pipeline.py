@@ -81,7 +81,15 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
-from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
+from .vad import (
+    DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    MAX_COMMAND_TIMEOUT_SECONDS,
+    MIN_COMMAND_TIMEOUT_SECONDS,
+    AudioBuffer,
+    VoiceActivityTimeout,
+    VoiceCommandSegmenter,
+    chunk_samples,
+)
 
 if TYPE_CHECKING:
     from hassil.recognize import RecognizeResult
@@ -522,6 +530,9 @@ class AudioSettings:
     silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
+    timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS
+    """Maximum number of seconds before command detection times out."""
+
     def __post_init__(self) -> None:
         """Verify settings post-initialization."""
         if (self.noise_suppression_level < 0) or (self.noise_suppression_level > 4):
@@ -529,6 +540,16 @@ class AudioSettings:
 
         if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
+
+        if not (
+            MIN_COMMAND_TIMEOUT_SECONDS
+            <= self.timeout_seconds
+            <= MAX_COMMAND_TIMEOUT_SECONDS
+        ):
+            raise ValueError(
+                "timeout_seconds must be in "
+                f"[{MIN_COMMAND_TIMEOUT_SECONDS}, {MAX_COMMAND_TIMEOUT_SECONDS}]"
+            )
 
     @property
     def needs_processor(self) -> bool:
@@ -952,7 +973,8 @@ class PipelineRun:
                 and self.stt_provider.audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
-                    silence_seconds=self.audio_settings.silence_seconds
+                    silence_seconds=self.audio_settings.silence_seconds,
+                    timeout_seconds=self.audio_settings.timeout_seconds,
                 )
 
             result = await self.stt_provider.async_process_audio_stream(

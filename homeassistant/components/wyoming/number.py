@@ -2,6 +2,7 @@
 
 from typing import Final
 
+from homeassistant.components.assist_pipeline import CommandTimeoutNumber
 from homeassistant.components.number import NumberEntityDescription, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,7 @@ async def async_setup_entry(
         [
             WyomingSatelliteAutoGainNumber(item.device),
             WyomingSatelliteVolumeMultiplierNumber(item.device),
+            WyomingSatelliteCommandTimeoutNumber(hass, item.device),
         ]
     )
 
@@ -93,3 +95,15 @@ class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumb
         )
         self.async_write_ha_state()
         self._device.set_volume_multiplier(self._attr_native_value)
+
+
+
+class WyomingSatelliteCommandTimeoutNumber(
+    WyomingSatelliteEntity, CommandTimeoutNumber
+):
+    """Command timeout for Wyoming satellites."""
+
+    def __init__(self, hass: HomeAssistant, device: SatelliteDevice) -> None:
+        """Initialize a command timeout number."""
+        WyomingSatelliteEntity.__init__(self, device)
+        CommandTimeoutNumber.__init__(self, hass, device.satellite_id)

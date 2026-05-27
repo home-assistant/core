@@ -23,6 +23,7 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
+from .number import CommandTimeoutNumber
 from .pipeline import (
     AudioSettings,
     Pipeline,
@@ -52,6 +53,7 @@ __all__ = (
     "SAMPLE_RATE",
     "SAMPLE_WIDTH",
     "AssistPipelineSelect",
+    "CommandTimeoutNumber",
     "AudioSettings",
     "Pipeline",
     "PipelineEvent",

@@ -155,3 +155,10 @@ class SatelliteDevice:
         return ent_reg.async_get_entity_id(
             "select", DOMAIN, f"{self.satellite_id}-vad_sensitivity"
         )
+
+    def get_command_timeout_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for command timeout."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "number", DOMAIN, f"{self.satellite_id}-command_timeout"
+        )

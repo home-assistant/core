@@ -76,6 +76,13 @@ class VoIPDevice:
             "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
         )
 
+    def get_command_timeout_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for command timeout."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "number", DOMAIN, f"{self.voip_id}-command_timeout"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""

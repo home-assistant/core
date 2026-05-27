@@ -144,6 +144,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    def command_timeout_entity_id(self) -> str | None:
+        """Return the command timeout entity ID for next conversation."""
+        return self.device.get_command_timeout_entity_id(self.hass)
+
+    @property
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {

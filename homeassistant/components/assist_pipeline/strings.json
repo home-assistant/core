@@ -5,6 +5,11 @@
         "name": "Assist in progress"
       }
     },
+    "number": {
+      "command_timeout": {
+        "name": "Command timeout"
+      }
+    },
     "select": {
       "pipeline": {
         "name": "Assistant",

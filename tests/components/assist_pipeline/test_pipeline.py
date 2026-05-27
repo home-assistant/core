@@ -29,6 +29,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
+    AudioSettings,
     Pipeline,
     PipelineData,
     PipelineEventType,
@@ -39,6 +40,11 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipeline,
     async_get_pipelines,
     async_update_pipeline,
+)
+from homeassistant.components.assist_pipeline.vad import (
+    DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    MAX_COMMAND_TIMEOUT_SECONDS,
+    MIN_COMMAND_TIMEOUT_SECONDS,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -77,6 +83,23 @@ async def delay_save_fixture() -> AsyncGenerator[None]:
 async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+def test_audio_settings_command_timeout_defaults() -> None:
+    """Test default command timeout settings."""
+    settings = AudioSettings()
+
+    assert settings.timeout_seconds == DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize(
+    "timeout_seconds",
+    [MIN_COMMAND_TIMEOUT_SECONDS - 0.1, MAX_COMMAND_TIMEOUT_SECONDS + 0.1],
+)
+def test_audio_settings_command_timeout_validation(timeout_seconds: float) -> None:
+    """Test command timeout settings validation."""
+    with pytest.raises(ValueError, match="timeout_seconds must be in"):
+        AudioSettings(timeout_seconds=timeout_seconds)
 
 
 @pytest.fixture
@@ -2216,14 +2239,16 @@ async def test_stt_vad_enabled_based_on_audio_processing(
                 start_stage=assist_pipeline.PipelineStage.STT,
                 end_stage=assist_pipeline.PipelineStage.STT,
                 event_callback=lambda _: None,
-                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+                audio_settings=assist_pipeline.AudioSettings(
+                    is_vad_enabled=True, timeout_seconds=30
+                ),
             ),
         )
         await pipeline_input.validate()
         await pipeline_input.execute()
 
         # VAD should be created when requires_external_vad is True
-        mock_vad.assert_called_once()
+        mock_vad.assert_called_once_with(silence_seconds=0.7, timeout_seconds=30)
         assert mock_vad_instance.process.called
 
     # Test with requires_external_vad=False

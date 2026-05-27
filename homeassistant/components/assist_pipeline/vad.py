@@ -4,10 +4,15 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import Final
 
 from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_COMMAND_TIMEOUT_SECONDS: Final = 15.0
+MIN_COMMAND_TIMEOUT_SECONDS: Final = 1.0
+MAX_COMMAND_TIMEOUT_SECONDS: Final = 120.0
 
 
 class VadSensitivity(StrEnum):
@@ -82,7 +87,7 @@ class VoiceCommandSegmenter:
     silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
-    timeout_seconds: float = 15.0
+    timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS
     """Maximum number of seconds before stopping with timeout=True."""
 
     reset_seconds: float = 1.0
