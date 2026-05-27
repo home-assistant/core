@@ -2,9 +2,12 @@
 
 from typing import Final
 
+from homeassistant.const import CONF_DEVICE_ID as HA_CONF_DEVICE_ID
+
 DOMAIN: Final = "klik_aan_klik_uit"
 
 CONF_TRANSMITTER: Final = "transmitter"
+CONF_DEVICE_ID: Final = HA_CONF_DEVICE_ID
 CONF_CHANNEL: Final = "channel"
 CONF_GROUP: Final = "group"
 CONF_DIM: Final = "dim"
