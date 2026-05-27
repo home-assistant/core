@@ -1,6 +1,7 @@
 """Test AI Task structured data generation."""
 
 from pathlib import Path
+import tempfile
 from unittest.mock import AsyncMock, patch
 
 from openai.types import CompletionUsage
@@ -294,6 +295,10 @@ async def test_generate_data_with_attachments(
             ],
         ),
         patch("pathlib.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.open_router.entity.guess_file_type",
+            return_value=("image/jpeg", None),
+        ),
         patch("pathlib.Path.read_bytes", return_value=b"fake_image_data"),
     ):
         result = await ai_task.async_generate_data(
@@ -375,7 +380,7 @@ async def test_generate_data_with_video_attachment_local(
             return_value=media_source.PlayMedia(
                 url="/local/clip.mp4",
                 mime_type="video/mp4",
-                path=Path("/tmp/clip.mp4"),
+                path=Path(tempfile.gettempdir()) / "clip.mp4",
             ),
         ),
         patch("pathlib.Path.exists", return_value=True),
@@ -443,13 +448,13 @@ async def test_generate_data_with_video_attachment_remote(
                 media_source.PlayMedia(
                     url="/local/clip.mp4",
                     mime_type="video/mp4",
-                    path=Path("/tmp/clip.mp4"),
+                    path=Path(tempfile.gettempdir()) / "clip.mp4",
                 ),
                 # Second call: from entity.py non-local video handler
                 media_source.PlayMedia(
                     url="/local/clip.mp4",
                     mime_type="video/mp4",
-                    path=Path("/tmp/clip.mp4"),
+                    path=Path(tempfile.gettempdir()) / "clip.mp4",
                 ),
             ],
         ),
@@ -498,7 +503,7 @@ async def test_generate_data_with_video_attachment_remote_no_external_url(
             return_value=media_source.PlayMedia(
                 url="/local/clip.mp4",
                 mime_type="video/mp4",
-                path=Path("/tmp/clip.mp4"),
+                path=Path(tempfile.gettempdir()) / "clip.mp4",
             ),
         ),
         patch("pathlib.Path.exists", return_value=False),
