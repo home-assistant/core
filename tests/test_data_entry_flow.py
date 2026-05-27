@@ -3,7 +3,6 @@
 import asyncio
 import dataclasses
 import logging
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -1275,32 +1274,21 @@ def test_nested_section_in_serializer() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    ("context", "expected_show_advanced"),
-    [
-        # The property is deprecated and now unconditionally returns True
-        ({}, True),
-        ({"show_advanced_options": False}, True),
-        ({"show_advanced_options": True}, True),
-    ],
-)
 async def test_show_advanced_options(
     manager: MockFlowManager,
-    context: dict[str, Any],
-    expected_show_advanced: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test FlowHandler show_advanced_options property."""
+    """Test FlowHandler show_advanced_options property is deprecated and always True."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
         async def async_step_init(self, info):
-            assert self.show_advanced_options == expected_show_advanced
+            assert self.show_advanced_options is True
             return self.async_create_entry(title="hello", data={})
 
-    await manager.async_init("test", context=context, data={})
+    await manager.async_init("test", context={}, data={})
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 

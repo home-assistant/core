@@ -257,7 +257,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.2.2
+aioesphomeapi==45.3.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -797,7 +797,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.14
+dbus-fast==5.0.15
 
 # homeassistant.components.debugpy
 debugpy==1.8.17
@@ -1213,7 +1213,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.7.4
+habluetooth==6.7.9
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1263,7 +1263,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.96
+holidays==0.97
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260429.4
@@ -1359,7 +1359,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==5.6.0
+infrared-protocols==5.6.1
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1455,6 +1455,9 @@ lektricowifi==0.1
 # homeassistant.components.letpot
 letpot==0.7.0
 
+# homeassistant.components.lg_tv_rs232
+lg-rs232-tv==1.2.0
+
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
 
@@ -1514,6 +1517,9 @@ lxml==6.0.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
+
+# homeassistant.components.matter
+matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
 matter-python-client==0.7.1
@@ -1745,6 +1751,7 @@ open-meteo==0.3.2
 # homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
+# homeassistant.components.ovhcloud_ai_endpoints
 openai==2.21.0
 
 # homeassistant.components.openerz
@@ -2452,7 +2459,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.14
 
 # homeassistant.components.prusalink
-pyprusalink==2.2.0
+pyprusalink==3.0.0
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2650,7 +2657,7 @@ python-hpilo==4.4.3
 python-izone==1.2.10
 
 # homeassistant.components.joaoapps_join
-python-join-api==0.0.9
+python-join-api==0.1.1
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -2784,7 +2791,7 @@ pyvesync==3.4.1
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.34
+pyvlx==0.2.35
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2832,7 +2839,7 @@ qbittorrent-api==2026.5.1
 qbusmqttapi==1.5.0
 
 # homeassistant.components.qingping
-qingping-ble==1.1.0
+qingping-ble==1.1.5
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -3117,7 +3124,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.0
+teltasync==0.3.1
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
