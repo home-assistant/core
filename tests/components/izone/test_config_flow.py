@@ -1070,6 +1070,35 @@ async def test_runtime_integration_discovery_starts_confirm_flow(
     assert progress[0]["step_id"] == "confirm"
 
 
+async def test_integration_discovery_confirm_creates_entry(
+    hass: HomeAssistant, mock_entry_setup: None
+) -> None:
+    """Full path: integration-discovery flow confirmed by the user creates an entry."""
+    controller = _make_controller("000000002", "192.0.2.2")
+
+    result = await hass.config_entries.flow.async_init(
+        IZONE,
+        context={
+            "source": config_entries.SOURCE_INTEGRATION_DISCOVERY,
+            "unique_id": controller.device_uid,
+        },
+        data={CONF_HOST: controller.device_ip},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value={controller.device_uid: controller},
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "iZone 000000002"
+    assert result["result"].unique_id == "000000002"
+
+
 async def test_runtime_integration_discovery_skips_yaml_excluded_uid(
     hass: HomeAssistant,
 ) -> None:
@@ -1095,7 +1124,7 @@ async def test_runtime_integration_discovery_skips_yaml_excluded_uid(
 async def test_runtime_integration_discovery_skips_when_uid_already_configured(
     hass: HomeAssistant,
 ) -> None:
-    """No discovery flow when a config entry already exists for the UID."""
+    """No active flow remains when a config entry already exists for the UID."""
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000002",
@@ -1104,19 +1133,16 @@ async def test_runtime_integration_discovery_skips_when_uid_already_configured(
     ).add_to_hass(hass)
     ctrl = _make_controller("000000002", "192.0.2.2")
 
-    with patch(
-        "homeassistant.helpers.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        config_flow.async_note_integration_discovery(hass, ctrl)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    config_flow.async_note_integration_discovery(hass, ctrl)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_create_flow.assert_not_called()
+    assert not hass.config_entries.flow.async_progress_by_handler(IZONE)
 
 
 async def test_runtime_integration_discovery_skips_for_ignored_unique_id(
     hass: HomeAssistant,
 ) -> None:
-    """Ignored discoveries do not get a second integration discovery flow."""
+    """No active flow remains when the UID matches an ignored entry."""
     MockConfigEntry(
         domain=IZONE,
         unique_id="000000002",
@@ -1125,13 +1151,10 @@ async def test_runtime_integration_discovery_skips_for_ignored_unique_id(
     ).add_to_hass(hass)
     ctrl = _make_controller("000000002", "192.0.2.2")
 
-    with patch(
-        "homeassistant.helpers.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        config_flow.async_note_integration_discovery(hass, ctrl)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    config_flow.async_note_integration_discovery(hass, ctrl)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_create_flow.assert_not_called()
+    assert not hass.config_entries.flow.async_progress_by_handler(IZONE)
 
 
 async def test_runtime_integration_discovery_skips_during_user_select_controller_step(
