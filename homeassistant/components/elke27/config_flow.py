@@ -41,6 +41,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
 )
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
+        vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
+    }
+)
 
 
 class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -93,18 +99,17 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm reauthentication."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._selected_host = user_input[CONF_HOST]
             return await self._async_link_and_create_entry(
                 access_code=user_input[CONF_ACCESS_CODE],
                 passphrase=user_input[CONF_PASSPHRASE],
                 errors=errors,
                 step_id="reauth_confirm",
-                data_schema=STEP_USER_DATA_SCHEMA,
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
             )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
 

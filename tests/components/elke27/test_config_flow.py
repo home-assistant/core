@@ -19,7 +19,10 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elke27 import config_flow
-from homeassistant.components.elke27.config_flow import STEP_USER_DATA_SCHEMA
+from homeassistant.components.elke27.config_flow import (
+    STEP_REAUTH_DATA_SCHEMA,
+    STEP_USER_DATA_SCHEMA,
+)
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
@@ -336,11 +339,11 @@ async def test_reauth_preserves_client_id(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["data_schema"] is STEP_REAUTH_DATA_SCHEMA
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "192.168.1.10",
                 "access_code": "1234",
                 "passphrase": "test-pass",
             },
@@ -353,6 +356,7 @@ async def test_reauth_preserves_client_id(hass: HomeAssistant) -> None:
     assert client.async_link.await_args.kwargs["client_identity"] == (
         config_flow.build_client_identity(existing_client_id)
     )
+    assert client.async_link.await_args.kwargs[CONF_HOST] == "192.168.1.10"
     client.async_disconnect.assert_awaited_once()
 
 
