@@ -92,13 +92,14 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities([EsphomeCommandTimeoutNumber(hass, entry_data)])
+        async_add_entities([EsphomeCommandTimeoutNumber(entry_data)])
 
 
 class EsphomeCommandTimeoutNumber(EsphomeAssistEntity, CommandTimeoutNumber):
     """Command timeout for ESPHome devices."""
 
-    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+    def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize a command timeout number."""
+        # These base classes take different constructor arguments.
         EsphomeAssistEntity.__init__(self, entry_data)
-        CommandTimeoutNumber.__init__(self, hass, self._device_info.mac_address)
+        CommandTimeoutNumber.__init__(self, self._device_info.mac_address)

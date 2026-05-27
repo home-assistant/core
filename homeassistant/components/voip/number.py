@@ -20,19 +20,20 @@ async def async_setup_entry(
     @callback
     def async_add_device(device: VoIPDevice) -> None:
         """Add device."""
-        async_add_entities([VoipCommandTimeoutNumber(hass, device)])
+        async_add_entities([VoIPCommandTimeoutNumber(device)])
 
     domain_data.devices.async_add_new_device_listener(async_add_device)
 
     async_add_entities(
-        [VoipCommandTimeoutNumber(hass, device) for device in domain_data.devices]
+        [VoIPCommandTimeoutNumber(device) for device in domain_data.devices]
     )
 
 
-class VoipCommandTimeoutNumber(VoIPEntity, CommandTimeoutNumber):
+class VoIPCommandTimeoutNumber(VoIPEntity, CommandTimeoutNumber):
     """Command timeout for VoIP devices."""
 
-    def __init__(self, hass: HomeAssistant, device: VoIPDevice) -> None:
+    def __init__(self, device: VoIPDevice) -> None:
         """Initialize a command timeout number."""
+        # These base classes take different constructor arguments.
         VoIPEntity.__init__(self, device)
-        CommandTimeoutNumber.__init__(self, hass, device.voip_id)
+        CommandTimeoutNumber.__init__(self, device.voip_id)

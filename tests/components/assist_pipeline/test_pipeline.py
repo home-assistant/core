@@ -93,13 +93,19 @@ def test_audio_settings_command_timeout_defaults() -> None:
 
 
 @pytest.mark.parametrize(
-    "timeout_seconds",
-    [MIN_COMMAND_TIMEOUT_SECONDS - 0.1, MAX_COMMAND_TIMEOUT_SECONDS + 0.1],
+    ("timeout_seconds", "expected_timeout_seconds"),
+    [
+        (MIN_COMMAND_TIMEOUT_SECONDS - 0.1, MIN_COMMAND_TIMEOUT_SECONDS),
+        (MAX_COMMAND_TIMEOUT_SECONDS + 0.1, MAX_COMMAND_TIMEOUT_SECONDS),
+    ],
 )
-def test_audio_settings_command_timeout_validation(timeout_seconds: float) -> None:
-    """Test command timeout settings validation."""
-    with pytest.raises(ValueError, match="timeout_seconds must be in"):
-        AudioSettings(timeout_seconds=timeout_seconds)
+def test_audio_settings_command_timeout_clamps(
+    timeout_seconds: float, expected_timeout_seconds: float
+) -> None:
+    """Test command timeout settings clamping."""
+    settings = AudioSettings(timeout_seconds=timeout_seconds)
+
+    assert settings.timeout_seconds == expected_timeout_seconds
 
 
 @pytest.fixture

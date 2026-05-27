@@ -2,11 +2,16 @@
 
 import itertools as it
 
+import pytest
+
 from homeassistant.components.assist_pipeline.vad import (
     DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    MAX_COMMAND_TIMEOUT_SECONDS,
+    MIN_COMMAND_TIMEOUT_SECONDS,
     AudioBuffer,
     VoiceCommandSegmenter,
     chunk_samples,
+    normalize_command_timeout_seconds,
 )
 
 _ONE_SECOND = 1.0
@@ -17,6 +22,23 @@ def test_defaults() -> None:
     segmenter = VoiceCommandSegmenter()
 
     assert segmenter.timeout_seconds == DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        ("unknown", DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        (MIN_COMMAND_TIMEOUT_SECONDS - 1, MIN_COMMAND_TIMEOUT_SECONDS),
+        (MAX_COMMAND_TIMEOUT_SECONDS + 1, MAX_COMMAND_TIMEOUT_SECONDS),
+        ("30", 30.0),
+    ],
+)
+def test_normalize_command_timeout_seconds(
+    value: float | str | None, expected: float
+) -> None:
+    """Test command timeout normalization."""
+    assert normalize_command_timeout_seconds(value) == expected
 
 
 def test_silence() -> None:

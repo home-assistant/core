@@ -28,6 +28,7 @@ from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
@@ -583,6 +584,48 @@ async def test_vad_sensitivity_entity(
         async with asyncio.timeout(1):
             await entity.async_accept_pipeline_from_satellite(audio_stream)
             await done.wait()
+
+
+async def test_command_timeout_entity_not_configured(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test command timeout defaults when no entity is configured."""
+    assert entity._resolve_command_timeout() == vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize(
+    ("state", "expected_timeout_seconds"),
+    [
+        (STATE_UNAVAILABLE, vad.DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        (STATE_UNKNOWN, vad.DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        ("not-a-number", vad.DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        (str(vad.MIN_COMMAND_TIMEOUT_SECONDS - 1), vad.MIN_COMMAND_TIMEOUT_SECONDS),
+        (str(vad.MAX_COMMAND_TIMEOUT_SECONDS + 1), vad.MAX_COMMAND_TIMEOUT_SECONDS),
+        ("30", 30.0),
+    ],
+)
+async def test_command_timeout_entity(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    state: str,
+    expected_timeout_seconds: float,
+) -> None:
+    """Test resolving command timeout from an entity."""
+    command_timeout_entity_id = "number.command_timeout"
+    hass.states.async_set(command_timeout_entity_id, state)
+    entity._attr_command_timeout_entity_id = command_timeout_entity_id
+
+    assert entity._resolve_command_timeout() == expected_timeout_seconds
+
+
+async def test_command_timeout_entity_not_found(
+    hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
+) -> None:
+    """Test command timeout defaults when entity state is missing."""
+    entity._attr_command_timeout_entity_id = "number.command_timeout"
+
+    assert entity._resolve_command_timeout() == vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
 
 
 async def test_pipeline_entity_not_found(

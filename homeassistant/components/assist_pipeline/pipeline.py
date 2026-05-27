@@ -83,12 +83,11 @@ from .error import (
 )
 from .vad import (
     DEFAULT_COMMAND_TIMEOUT_SECONDS,
-    MAX_COMMAND_TIMEOUT_SECONDS,
-    MIN_COMMAND_TIMEOUT_SECONDS,
     AudioBuffer,
     VoiceActivityTimeout,
     VoiceCommandSegmenter,
     chunk_samples,
+    normalize_command_timeout_seconds,
 )
 
 if TYPE_CHECKING:
@@ -541,15 +540,11 @@ class AudioSettings:
         if (self.auto_gain_dbfs < 0) or (self.auto_gain_dbfs > 31):
             raise ValueError("auto_gain_dbfs must be in [0, 31]")
 
-        if not (
-            MIN_COMMAND_TIMEOUT_SECONDS
-            <= self.timeout_seconds
-            <= MAX_COMMAND_TIMEOUT_SECONDS
-        ):
-            raise ValueError(
-                "timeout_seconds must be in "
-                f"[{MIN_COMMAND_TIMEOUT_SECONDS}, {MAX_COMMAND_TIMEOUT_SECONDS}]"
-            )
+        object.__setattr__(
+            self,
+            "timeout_seconds",
+            normalize_command_timeout_seconds(self.timeout_seconds),
+        )
 
     @property
     def needs_processor(self) -> bool:

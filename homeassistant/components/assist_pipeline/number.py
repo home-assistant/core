@@ -7,12 +7,11 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
-
 from .vad import (
     DEFAULT_COMMAND_TIMEOUT_SECONDS,
     MAX_COMMAND_TIMEOUT_SECONDS,
     MIN_COMMAND_TIMEOUT_SECONDS,
+    normalize_command_timeout_seconds,
 )
 
 
@@ -33,10 +32,9 @@ class CommandTimeoutNumber(RestoreNumber):
     _attr_mode = NumberMode.BOX
     _attr_native_value = DEFAULT_COMMAND_TIMEOUT_SECONDS
 
-    def __init__(self, hass: HomeAssistant, unique_id_prefix: str) -> None:
+    def __init__(self, unique_id_prefix: str) -> None:
         """Initialize a command timeout number."""
         self._attr_unique_id = f"{unique_id_prefix}-command_timeout"
-        self.hass = hass
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
@@ -48,7 +46,5 @@ class CommandTimeoutNumber(RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        self._attr_native_value = float(
-            max(self._attr_native_min_value, min(self._attr_native_max_value, value))
-        )
+        self._attr_native_value = normalize_command_timeout_seconds(value)
         self.async_write_ha_state()

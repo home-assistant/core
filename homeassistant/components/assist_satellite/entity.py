@@ -27,7 +27,6 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
@@ -655,21 +654,10 @@ class AssistSatelliteEntity(entity.Entity):
             return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
 
         command_timeout_state = self.hass.states.get(command_timeout_entity_id)
-        if command_timeout_state is None or command_timeout_state.state in (
-            STATE_UNAVAILABLE,
-            STATE_UNKNOWN,
-        ):
+        if command_timeout_state is None:
             return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
 
-        try:
-            command_timeout = float(command_timeout_state.state)
-        except ValueError:
-            return vad.DEFAULT_COMMAND_TIMEOUT_SECONDS
-
-        return min(
-            vad.MAX_COMMAND_TIMEOUT_SECONDS,
-            max(vad.MIN_COMMAND_TIMEOUT_SECONDS, command_timeout),
-        )
+        return vad.normalize_command_timeout_seconds(command_timeout_state.state)
 
     async def _resolve_announcement_media_id(
         self,

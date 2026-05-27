@@ -32,7 +32,7 @@ async def async_setup_entry(
         [
             WyomingSatelliteAutoGainNumber(item.device),
             WyomingSatelliteVolumeMultiplierNumber(item.device),
-            WyomingSatelliteCommandTimeoutNumber(hass, item.device),
+            WyomingSatelliteCommandTimeoutNumber(item.device),
         ]
     )
 
@@ -103,7 +103,8 @@ class WyomingSatelliteCommandTimeoutNumber(
 ):
     """Command timeout for Wyoming satellites."""
 
-    def __init__(self, hass: HomeAssistant, device: SatelliteDevice) -> None:
+    def __init__(self, device: SatelliteDevice) -> None:
         """Initialize a command timeout number."""
+        # These base classes take different constructor arguments.
         WyomingSatelliteEntity.__init__(self, device)
-        CommandTimeoutNumber.__init__(self, hass, device.satellite_id)
+        CommandTimeoutNumber.__init__(self, device.satellite_id)

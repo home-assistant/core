@@ -15,6 +15,22 @@ MIN_COMMAND_TIMEOUT_SECONDS: Final = 1.0
 MAX_COMMAND_TIMEOUT_SECONDS: Final = 120.0
 
 
+def normalize_command_timeout_seconds(value: float | str | None) -> float:
+    """Normalize command timeout seconds to the supported range."""
+    if value is None:
+        return DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+    try:
+        timeout_seconds = float(value)
+    except (TypeError, ValueError):
+        return DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+    return min(
+        MAX_COMMAND_TIMEOUT_SECONDS,
+        max(MIN_COMMAND_TIMEOUT_SECONDS, timeout_seconds),
+    )
+
+
 class VadSensitivity(StrEnum):
     """How quickly the end of a voice command is detected."""
 
