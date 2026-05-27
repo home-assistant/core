@@ -65,10 +65,10 @@ async def test_form(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (SenseAuthenticationException, "invalid_auth"),
-        (SenseAPITimeoutException, "cannot_connect"),
-        (SenseAPIException, "cannot_connect"),
-        (Exception, "unknown"),
+        (SenseAuthenticationException(), "invalid_auth"),
+        (SenseAPITimeoutException(), "cannot_connect"),
+        (SenseAPIException(), "cannot_connect"),
+        (Exception("unknown exception"), "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -109,7 +109,7 @@ async def test_form_mfa_required(
     mock_flow_sense: MagicMock,
 ) -> None:
     """Test we handle the MFA flow."""
-    mock_flow_sense.return_value.authenticate.side_effect = SenseMFARequiredException
+    mock_flow_sense.return_value.authenticate.side_effect = SenseMFARequiredException()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -136,16 +136,16 @@ async def test_form_mfa_required(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (SenseAuthenticationException, "invalid_auth"),
-        (SenseAPITimeoutException, "cannot_connect"),
-        (Exception, "unknown"),
+        (SenseAuthenticationException(), "invalid_auth"),
+        (SenseAPITimeoutException(), "cannot_connect"),
+        (Exception("Unknown exception"), "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_mfa_exceptions(
     hass: HomeAssistant,
     mock_flow_sense: MagicMock,
-    exception: type[Exception],
+    exception: Exception,
     error: str,
 ) -> None:
     """Test we handle all MFA validation exceptions and can recover."""
