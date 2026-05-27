@@ -135,6 +135,9 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             except (IOmeterNoReadingsError, IOmeterConnectionError) as err:
                 _LOGGER.warning("IOmeter reading stream error: %s", err)
                 await asyncio.sleep(5)
+            except Exception:
+                _LOGGER.exception("Unexpected error in reading stream")
+                await asyncio.sleep(5)
 
     async def _watch_status(self) -> None:
         """Consume status SSE events, reconnecting on transient errors."""
@@ -148,4 +151,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
                 await asyncio.sleep(5)
             except (IOmeterNoStatusError, IOmeterConnectionError) as err:
                 _LOGGER.warning("IOmeter status stream error: %s", err)
+                await asyncio.sleep(5)
+            except Exception:
+                _LOGGER.exception("Unexpected error in status stream")
                 await asyncio.sleep(5)

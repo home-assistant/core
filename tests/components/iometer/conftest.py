@@ -44,7 +44,7 @@ def mock_iometer_client(
     reading_queue: asyncio.Queue[Reading],
     status_queue: asyncio.Queue[Status],
 ) -> Generator[MagicMock]:
-    """Mock a IOmeter SSE client."""
+    """Mock an IOmeter SSE client."""
 
     async def watch_readings():
         while True:
@@ -72,7 +72,7 @@ def mock_iometer_client(
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock a IOmeter config entry."""
+    """Mock an IOmeter config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="IOmeter-1ISK0000000000",
