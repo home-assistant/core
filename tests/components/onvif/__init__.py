@@ -60,9 +60,10 @@ def setup_mock_onvif_camera(
 
     When ``with_full_setup`` is set, the mock is additionally configured with
     every service ``ONVIFDevice.async_setup`` invokes, so that a config entry
-    can be fully set up end-to-end. The returned profile is fixed in this mode,
-    so the ``with_h264``, ``two_profiles`` and ``no_profiles`` flags have no
-    effect on it.
+    can be fully set up end-to-end. In this mode the profile and device
+    information responses are replaced, so the flags that control them
+    (``with_h264``, ``two_profiles``, ``no_profiles``, ``auth_fail`` and
+    ``profiles_transient_failure``) have no effect.
     """
     devicemgmt = MagicMock()
 
