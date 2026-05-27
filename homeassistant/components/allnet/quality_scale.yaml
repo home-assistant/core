@@ -18,13 +18,11 @@ rules:
     status: done
     comment: >
       Full config flow test coverage in tests/components/allnet/test_config_flow.py:
-      user step (success + all error paths), zeroconf flow, reauth flow,
-      options flow.
+      user step (success + all error paths), zeroconf flow, reauth flow.
   config-flow:
     status: done
     comment: >
       ConfigFlow with user, zeroconf_confirm and reauth_confirm steps.
-      OptionsFlow for scan_interval.
   dependency-transparency:
     status: done
     comment: >

@@ -18,7 +18,6 @@ from homeassistant.components.allnet.const import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -333,41 +332,3 @@ async def test_reauth_invalid_auth(hass: HomeAssistant, setup_integration) -> No
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
 
-
-# ---------------------------------------------------------------------------
-# options flow
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_options_flow_scan_interval(
-    hass: HomeAssistant, setup_integration
-) -> None:
-    """Test options flow updates the scan interval."""
-    entry = setup_integration
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 60},
-    )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_SCAN_INTERVAL] == 60
-
-
-@pytest.mark.asyncio
-async def test_options_flow_default_scan_interval(
-    hass: HomeAssistant, setup_integration
-) -> None:
-    """Test options flow form shows the default scan interval."""
-    entry = setup_integration
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-
-    schema = result["data_schema"].schema
-    assert CONF_SCAN_INTERVAL in schema
