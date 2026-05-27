@@ -1769,6 +1769,28 @@ async def test_async_migrate_entry_does_not_raise_for_multiple_eligible(
     assert entry.data == {}
 
 
+async def test_setup_entry_raises_not_ready_when_discovery_service_fails(
+    hass: HomeAssistant,
+) -> None:
+    """async_setup_entry raises ConfigEntryNotReady when async_start_discovery_service raises OSError."""
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=2,
+        unique_id="000000001",
+        data={CONF_HOST: "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(side_effect=OSError),
+        ),
+        pytest.raises(ConfigEntryNotReady),
+    ):
+        await izone_component.async_setup_entry(hass, entry)
+
+
 # ---------------------------------------------------------------------------
 # async_setup_entry – legacy v1-migrated entry (unique_id=IZONE) resolution
 # ---------------------------------------------------------------------------
