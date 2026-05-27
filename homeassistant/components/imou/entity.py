@@ -5,15 +5,8 @@ from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PARAM_STATE, PARAM_STATUS
+from .const import DOMAIN, PARAM_STATE, PARAM_STATUS, imou_device_identifier
 from .coordinator import ImouDataUpdateCoordinator
-
-
-def imou_device_identifier(device: ImouHaDevice) -> str:
-    """Return a device registry identifier (device_id + channel when present)."""
-    if device.channel_id is not None:
-        return f"{device.device_id}_{device.channel_id}"
-    return device.device_id
 
 
 class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):

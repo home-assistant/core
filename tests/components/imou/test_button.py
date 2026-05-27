@@ -1,6 +1,6 @@
 """Tests for Imou button platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from pyimouapi.exceptions import ImouException
 import pytest
@@ -59,7 +59,7 @@ async def test_press_button_via_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    init_integration: AsyncMock,
+    init_integration: MagicMock,
 ) -> None:
     """Pressing a button calls the vendor library through the coordinator."""
     entries = er.async_entries_for_config_entry(
@@ -84,7 +84,7 @@ async def test_press_button_via_service(
 @pytest.mark.usefixtures("init_integration")
 async def test_press_button_service_propagates_api_error(
     hass: HomeAssistant,
-    init_integration: AsyncMock,
+    init_integration: MagicMock,
 ) -> None:
     """Imou API errors from async_press_button surface to the service call."""
     init_integration.async_press_button.side_effect = ImouException("cloud failure")
