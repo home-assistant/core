@@ -86,7 +86,7 @@ async def test_realtime_coordinator_binary_sensor_unavailable(
     mock_sense.update_realtime.side_effect = SenseAPIException("api error")
 
     freezer.tick(timedelta(seconds=ACTIVE_UPDATE_RATE))
-    async_fire_time_changed(hass)
+    async_fire_time_changed(hass, freezer())
     await hass.async_block_till_done()
 
     state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}_power")
