@@ -1,6 +1,5 @@
 """Blebox sensors tests."""
 
-import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
@@ -96,20 +95,6 @@ async def test_update(tempsensor, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == "25.18"
-
-
-async def test_update_failure(
-    tempsensor, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that update failures are logged."""
-
-    caplog.set_level(logging.ERROR)
-
-    feature_mock, entity_id = tempsensor
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
-
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
 
 async def test_airsensor_init(

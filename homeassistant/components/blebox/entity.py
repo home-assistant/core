@@ -31,9 +31,18 @@ class BleBoxEntity[_FeatureT: Feature](Entity):
             configuration_url=f"http://{product.address}",
         )
 
+    _unavailable_logged: bool = False
+
     async def async_update(self) -> None:
         """Update the entity state."""
         try:
             await self._feature.async_update()
+            if self._unavailable_logged:
+                _LOGGER.info("'%s' is back online", self.name)
+                self._unavailable_logged = False
+            self._attr_available = True
         except Error as ex:
-            _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
+            if not self._unavailable_logged:
+                _LOGGER.info("Updating '%s' failed: %s", self.name, ex)
+                self._unavailable_logged = True
+            self._attr_available = False

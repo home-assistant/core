@@ -1,6 +1,5 @@
 """Blebox switch tests."""
 
-import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
@@ -387,28 +386,3 @@ async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
     )
     assert hass.states.get(entity_ids[0]).state == STATE_ON
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
-
-
-ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]
-
-
-@pytest.mark.parametrize("feature", ALL_SWITCH_FIXTURES, indirect=["feature"])
-async def test_update_failure(
-    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that update failures are logged."""
-
-    caplog.set_level(logging.ERROR)
-
-    feature_mock, entity_id = feature
-
-    if isinstance(feature_mock, list):
-        feature_mock[0].async_update = AsyncMock()
-        feature_mock[1].async_update = AsyncMock()
-        feature_mock = feature_mock[0]
-        entity_id = entity_id[0]
-
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
-
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text

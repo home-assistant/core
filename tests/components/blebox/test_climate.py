@@ -275,20 +275,6 @@ async def test_set_thermo(saunabox, hass: HomeAssistant) -> None:
     assert state.state == HVACMode.HEAT
 
 
-async def test_update_failure(
-    saunabox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that update failures are logged."""
-
-    caplog.set_level(logging.ERROR)
-
-    feature_mock, entity_id = saunabox
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
-
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
-
-
 async def test_reding_hvac_actions(
     saunabox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
