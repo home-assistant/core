@@ -74,11 +74,7 @@ class ImouButton(ImouEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle button press."""
-        duration = (
-            PTZ_MOVE_DURATION_MS
-            if self._entity_type in PTZ_BUTTON_TYPES
-            else 0
-        )
+        duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
         try:
             await self.coordinator.device_manager.async_press_button(
                 self._device,
