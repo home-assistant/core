@@ -24,8 +24,6 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -43,7 +41,7 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import NWSConfigEntry, NWSData, base_unique_id, device_info
+from . import NWSConfigEntry, NWSData, device_info, get_base_unique_id
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTR_FORECAST_SHORT_DESCRIPTION,
@@ -126,9 +124,7 @@ class ExtraForecast(TypedDict, total=False):
 
 def _calculate_unique_id(entry_data: Mapping[str, Any], mode: str) -> str:
     """Calculate unique ID."""
-    latitude = entry_data[CONF_LATITUDE]
-    longitude = entry_data[CONF_LONGITUDE]
-    return f"{base_unique_id(latitude, longitude)}_{mode}"
+    return f"{get_base_unique_id(entry_data)}_{mode}"
 
 
 class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
@@ -158,13 +154,11 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             twice_daily_forecast_valid=FORECAST_VALID_TIME,
         )
         self.nws = nws_data.api
-        latitude = entry_data[CONF_LATITUDE]
-        longitude = entry_data[CONF_LONGITUDE]
 
         self.station = self.nws.station
 
         self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
-        self._attr_device_info = device_info(latitude, longitude)
+        self._attr_device_info = device_info(entry_data, nws_data)
         self._attr_name = self.station
 
     async def async_added_to_hass(self) -> None:

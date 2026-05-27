@@ -12,8 +12,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     DEGREE,
     PERCENTAGE,
     UnitOfLength,
@@ -35,8 +33,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import NWSConfigEntry, NWSData, base_unique_id, device_info
-from .const import ATTRIBUTION, CONF_STATION
+from . import NWSConfigEntry, NWSData, device_info, get_base_unique_id
+from .const import ATTRIBUTION
 
 PARALLEL_UPDATES = 0
 
@@ -154,7 +152,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NWS weather platform."""
     nws_data = entry.runtime_data
-    station = entry.data[CONF_STATION]
+    station = nws_data.api.station
 
     async_add_entities(
         NWSSensor(
@@ -186,17 +184,13 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         """Initialise the platform with a data instance."""
         super().__init__(nws_data.coordinator_observation)
         self._nws = nws_data.api
-        latitude = entry_data[CONF_LATITUDE]
-        longitude = entry_data[CONF_LONGITUDE]
         self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
-        self._attr_device_info = device_info(latitude, longitude)
-        self._attr_unique_id = (
-            f"{base_unique_id(latitude, longitude)}_{description.key}"
-        )
+        self._attr_device_info = device_info(entry_data, nws_data)
+        self._attr_unique_id = f"{get_base_unique_id(entry_data)}_{description.key}"
 
     @property
     def native_value(self) -> float | datetime | None:

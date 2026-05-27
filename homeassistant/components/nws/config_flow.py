@@ -8,14 +8,22 @@ from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.location import has_location
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from . import base_unique_id
-from .const import CONF_STATION, DOMAIN
+from . import get_base_unique_id
+from .const import CONF_LOCATION_ENTITY, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,23 +62,44 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
-            )
-            self._abort_if_unique_id_configured()
-            try:
-                info = await validate_input(self.hass, user_input)
-                user_input[CONF_STATION] = info["title"]
-                return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            location_entity = user_input.get(CONF_LOCATION_ENTITY)
+
+            if location_entity:
+                registry = er.async_get(self.hass)
+                entity_entry = registry.async_get(location_entity)
+                if entity_entry is None:
+                    errors["base"] = "entity_not_found"
+                else:
+                    state = self.hass.states.get(location_entity)
+                    if state is None or not has_location(state):
+                        errors["base"] = "entity_no_coordinates"
+                    else:
+                        user_input[CONF_LATITUDE] = state.attributes[ATTR_LATITUDE]
+                        user_input[CONF_LONGITUDE] = state.attributes[ATTR_LONGITUDE]
+                        user_input[CONF_LOCATION_ENTITY] = entity_entry.id
+
+            if not errors:
+                await self.async_set_unique_id(get_base_unique_id(user_input))
+                self._abort_if_unique_id_configured()
+                try:
+                    info = await validate_input(self.hass, user_input)
+                    if not location_entity:
+                        user_input[CONF_STATION] = info["title"]
+                    return self.async_create_entry(title=info["title"], data=user_input)
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
+                vol.Optional(CONF_LOCATION_ENTITY): EntitySelector(
+                    EntitySelectorConfig(
+                        domain=["person", "device_tracker", "zone"],
+                    )
+                ),
                 vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
