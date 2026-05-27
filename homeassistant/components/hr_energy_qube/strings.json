@@ -132,7 +132,7 @@
     },
     "select": {
       "sg_ready_mode": {
-        "name": "SG Ready mode",
+        "name": "Smart grid ready mode",
         "state": {
           "block": "Block",
           "max": "Max",
