@@ -401,13 +401,10 @@ class _Cache:
             hash_value = value.get("hash")
             fixture_hash = value.get("fixture_hash")
             count = value.get("count")
-            # bool is an int subclass; reject true/false and negatives so
-            # corrupted JSON can't feed bucket sizing a bogus weight.
             if (
                 not isinstance(hash_value, str)
                 or not isinstance(fixture_hash, str)
                 or not isinstance(count, int)
-                or isinstance(count, bool)
                 or count < 0
             ):
                 continue

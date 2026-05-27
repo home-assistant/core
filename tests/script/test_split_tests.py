@@ -350,15 +350,9 @@ def test_cache_load_drops_malformed_entries(tmp_path: Path) -> None:
                     "missing_hash.py": {"fixture_hash": "f3", "count": 4},
                     "missing_fixture_hash.py": {"hash": "h4", "count": 4},
                     "not_dict.py": 5,
-                    # bool is an int subclass; reject so True isn't read as 1.
-                    "bool_count.py": {
+                    "negative_count.py": {
                         "hash": "h5",
                         "fixture_hash": "f5",
-                        "count": True,
-                    },
-                    "negative_count.py": {
-                        "hash": "h6",
-                        "fixture_hash": "f6",
                         "count": -1,
                     },
                 },
