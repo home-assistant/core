@@ -1,5 +1,9 @@
 """Switch platform for KlikAanKlikUit RC on/off control."""
 
+from typing import Any
+
+from rf_protocols.commands.kaku import KakuCommand
+
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +24,6 @@ from .const import (
     DOMAIN,
     format_device_summary,
 )
-from rf_protocols.commands.kaku import KakuCommand
 
 PARALLEL_UPDATES = 1
 
@@ -96,13 +99,13 @@ class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
 
-    async def async_turn_on(self, **kwargs: object) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_send(True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs: object) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_send(False)
         self._attr_is_on = False

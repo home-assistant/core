@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.klik_aan_klik_uit.const import REPEAT_COUNT
+from rf_protocols.commands.kaku import _DEFAULT_REPEATS
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -56,7 +57,9 @@ async def test_dim_turn_on_off_sends_kaku_commands(
         first_call = mock_command.call_args_list[0]
         assert first_call.kwargs["on"] is None
         assert first_call.kwargs["dimlevel"] == 100
-        assert first_call.kwargs["frame_repeats"] == REPEAT_COUNT
+        assert (
+            first_call.kwargs.get("frame_repeats", _DEFAULT_REPEATS) == _DEFAULT_REPEATS
+        )
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -74,7 +77,10 @@ async def test_dim_turn_on_off_sends_kaku_commands(
         second_call = mock_command.call_args_list[1]
         assert second_call.kwargs["on"] is False
         assert second_call.kwargs["dimlevel"] is None
-        assert second_call.kwargs["frame_repeats"] == REPEAT_COUNT
+        assert (
+            second_call.kwargs.get("frame_repeats", _DEFAULT_REPEATS)
+            == _DEFAULT_REPEATS
+        )
 
 
 async def test_mid_brightness_maps_to_percent(

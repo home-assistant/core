@@ -3,6 +3,7 @@
 from typing import Any
 
 from rf_protocols.commands import ModulationType
+from rf_protocols.commands.kaku import KakuCommand
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
@@ -22,7 +23,6 @@ from .const import (
     DOMAIN,
     REPEAT_COUNT_LEARN,
 )
-from rf_protocols.commands.kaku import KakuCommand
 
 _SAMPLE_COMMAND = KakuCommand(
     id=0,

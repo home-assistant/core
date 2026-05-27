@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from rf_protocols.commands.kaku import KakuCommand
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +24,6 @@ from .const import (
     DOMAIN,
     format_device_summary,
 )
-from rf_protocols.commands.kaku import KakuCommand
 
 PARALLEL_UPDATES = 1
 
@@ -114,7 +115,9 @@ class KlikAanKlikUitLight(LightEntity, RestoreEntity):
         ) is not None and current_brightness <= 0:
             self._attr_brightness = 255
 
-        brightness_value: int = self._attr_brightness
+        brightness_value: int = (
+            self._attr_brightness if self._attr_brightness is not None else 255
+        )
 
         dimlevel = round(brightness_value * 100 / 255)
         await self._async_send(on=None, dimlevel=dimlevel)
