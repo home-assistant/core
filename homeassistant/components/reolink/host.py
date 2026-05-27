@@ -78,9 +78,12 @@ class ReolinkHost:
         self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
-        bc_connection = ConnectionEnum(
-            config.get(CONF_BC_CONNECT, ConnectionEnum.unknown.value)
-        )
+        try:
+            bc_connection = ConnectionEnum(
+                config.get(CONF_BC_CONNECT, ConnectionEnum.unknown.value)
+            )
+        except ValueError:
+            bc_connection = ConnectionEnum.unknown
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
