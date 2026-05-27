@@ -1823,6 +1823,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "energieleser": {
+      "name": "energieleser",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "energyid": {
       "name": "EnergyID",
       "integration_type": "service",
