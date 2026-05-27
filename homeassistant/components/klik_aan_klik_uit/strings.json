@@ -26,7 +26,6 @@
         "data": {
           "channel": "Channel",
           "device_id": "Device ID",
-          "dim": "Dimming",
           "group": "Group",
           "transmitter": "RF Transmitter"
         },

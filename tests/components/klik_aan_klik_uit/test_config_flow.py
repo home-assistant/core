@@ -3,7 +3,6 @@
 from homeassistant.components.klik_aan_klik_uit.const import (
     CONF_CHANNEL,
     CONF_DEVICE_ID,
-    CONF_DIM,
     CONF_GROUP,
     CONF_TRANSMITTER,
     DOMAIN,
@@ -41,7 +40,6 @@ async def test_user_flow(
         CONF_DEVICE_ID: 123456,
         CONF_CHANNEL: 1,
         CONF_GROUP: False,
-        CONF_DIM: False,
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -78,7 +76,6 @@ async def test_user_flow_retry_learn(
             CONF_DEVICE_ID: 123456,
             CONF_CHANNEL: 1,
             CONF_GROUP: False,
-            CONF_DIM: False,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -120,7 +117,6 @@ async def test_invalid_device_id(
             CONF_DEVICE_ID: -1,
             CONF_CHANNEL: 1,
             CONF_GROUP: False,
-            CONF_DIM: False,
         },
     )
 
@@ -142,7 +138,6 @@ async def test_invalid_channel(
             CONF_DEVICE_ID: 123456,
             CONF_CHANNEL: 17,
             CONF_GROUP: False,
-            CONF_DIM: False,
         },
     )
 
@@ -166,7 +161,6 @@ async def test_unique_id_already_configured(
             CONF_DEVICE_ID: 123456,
             CONF_CHANNEL: 1,
             CONF_GROUP: False,
-            CONF_DIM: False,
         },
     )
 

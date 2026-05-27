@@ -17,7 +17,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_CHANNEL,
-    CONF_DIM,
     CONF_GROUP,
     CONF_TRANSMITTER,
     DOMAIN,
@@ -32,15 +31,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the KlikAanKlikUit switch entity for non-dimmable devices."""
-    if config_entry.data[CONF_DIM]:
-        return
-
+    """Set up the KlikAanKlikUit switch entity."""
     async_add_entities([KlikAanKlikUitSwitch(config_entry)])
 
 
 class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
-    """Switch entity for non-dimmable KlikAanKlikUit devices."""
+    """Switch entity for KlikAanKlikUit devices."""
 
     _attr_has_entity_name = True
     _attr_name = "Output"
@@ -58,9 +54,7 @@ class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
             manufacturer="KlikAanKlikUit",
             model="KlikAanKlikUit switch",
             name=entry.title,
-            sw_version=format_device_summary(
-                self._device_id, self._channel, self._group, False
-            ),
+            sw_version=format_device_summary(self._device_id, self._channel, self._group),
         )
 
     async def async_added_to_hass(self) -> None:

@@ -17,7 +17,6 @@ from homeassistant.helpers import entity_registry as er, selector
 
 from .const import (
     CONF_CHANNEL,
-    CONF_DIM,
     CONF_GROUP,
     CONF_TRANSMITTER,
     DOMAIN,
@@ -63,7 +62,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
             device_id: int = user_input[CONF_DEVICE_ID]
             channel: int = user_input[CONF_CHANNEL]
             group: bool = user_input[CONF_GROUP]
-            dim: bool = user_input[CONF_DIM]
 
             if not (0 <= device_id <= 0x3FFFFFF):
                 return self.async_show_form(
@@ -90,7 +88,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_ID: device_id,
                 CONF_CHANNEL: channel,
                 CONF_GROUP: group,
-                CONF_DIM: dim,
             }
             return await self.async_step_pairing_mode()
 
@@ -184,8 +181,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_id_key: vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=0,
-                            max=0x3FFFFFF,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -197,8 +192,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): vol.All(
                     selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=1,
-                            max=16,
                             mode=selector.NumberSelectorMode.BOX,
                         )
                     ),
@@ -207,10 +200,6 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_GROUP,
                     default=user_input.get(CONF_GROUP, False),
-                ): selector.BooleanSelector(),
-                vol.Required(
-                    CONF_DIM,
-                    default=user_input.get(CONF_DIM, False),
                 ): selector.BooleanSelector(),
             }
         )
