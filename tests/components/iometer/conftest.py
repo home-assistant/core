@@ -1,7 +1,8 @@
 """Common fixtures for the IOmeter tests."""
 
+import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from iometer import Reading, Status
 import pytest
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.iometer.async_setup_entry",
@@ -23,27 +24,50 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_iometer_client() -> Generator[AsyncMock]:
-    """Mock a new IOmeter client."""
-    with (
-        patch(
-            "homeassistant.components.iometer.IOmeterClient",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.iometer.config_flow.IOmeterClient",
-            new=mock_client,
-        ),
-    ):
-        client = mock_client.return_value
-        client.host = "10.0.0.2"
-        client.get_current_reading.return_value = Reading.from_json(
-            load_fixture("reading.json", DOMAIN)
-        )
-        client.get_current_status.return_value = Status.from_json(
-            load_fixture("status.json", DOMAIN)
-        )
-        yield client
+def reading_queue() -> asyncio.Queue[Reading]:
+    """Queue for injecting readings into the SSE stream during tests."""
+    q: asyncio.Queue[Reading] = asyncio.Queue()
+    q.put_nowait(Reading.from_json(load_fixture("reading.json", DOMAIN)))
+    return q
+
+
+@pytest.fixture
+def status_queue() -> asyncio.Queue[Status]:
+    """Queue for injecting statuses into the SSE stream during tests."""
+    q: asyncio.Queue[Status] = asyncio.Queue()
+    q.put_nowait(Status.from_json(load_fixture("status.json", DOMAIN)))
+    return q
+
+
+@pytest.fixture
+def mock_iometer_client(
+    reading_queue: asyncio.Queue[Reading],
+    status_queue: asyncio.Queue[Status],
+) -> Generator[MagicMock]:
+    """Mock a IOmeter SSE client."""
+
+    async def watch_readings():
+        while True:
+            yield await reading_queue.get()
+
+    async def watch_status():
+        while True:
+            yield await status_queue.get()
+
+    with patch(
+        "homeassistant.components.iometer.IOmeterSSEClient",
+        autospec=True,
+    ) as mock_class:
+        client = mock_class.return_value
+        client.__aenter__ = AsyncMock(return_value=client)
+        client.__aexit__ = AsyncMock(return_value=False)
+        client.watch_readings.side_effect = watch_readings
+        client.watch_status.side_effect = watch_status
+        with patch(
+            "homeassistant.components.iometer.config_flow.IOmeterSSEClient",
+            new=mock_class,
+        ):
+            yield client
 
 
 @pytest.fixture
