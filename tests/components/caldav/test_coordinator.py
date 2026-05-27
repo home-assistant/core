@@ -1,6 +1,7 @@
 """Tests for the CalDAV coordinator concurrency cap and unload-time cleanup."""
 
 import asyncio
+import contextlib
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,7 +10,7 @@ from homeassistant.components.caldav import CalDavRuntimeData
 from homeassistant.components.caldav.coordinator import (
     MAX_CONCURRENT_REQUESTS,
     CalDavUpdateCoordinator,
-    close_idle_connections,
+    close_client_session,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -115,26 +116,69 @@ async def test_concurrent_searches_are_capped(
         await asyncio.gather(*tasks, return_exceptions=True)
 
 
-async def test_per_entry_semaphores_are_independent(hass: HomeAssistant) -> None:
-    """Each config entry owns its own semaphore.
+async def test_per_entry_semaphores_are_independent(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A saturated semaphore on entry A does not block entry B.
 
-    A slow account must not delay updates for an unrelated account, which is
-    only true when the semaphore is per-entry rather than process-global.
+    The whole point of moving from a module-global semaphore to a per-entry
+    one is that a slow account cannot delay updates for an unrelated
+    account. Verify the observable behavior — entry B's search completes
+    while entry A's search is held off by an externally-saturated semaphore.
     """
-    sem_a = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
-    sem_b = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
-
+    release_b = asyncio.Event()
     cal_a = MagicMock()
     cal_a.name = "a"
     cal_b = MagicMock()
     cal_b.name = "b"
 
+    async def fake_executor_job(func, *_args, **_kwargs):
+        # Route by the partial's underlying calendar.search reference so the
+        # test can keep entry B's job pending until it explicitly releases it,
+        # while entry A's job must never reach the executor at all (its
+        # semaphore is fully saturated by the test).
+        bound = getattr(func, "func", None)
+        if bound is cal_b.search:
+            await release_b.wait()
+            return []
+        if bound is cal_a.search:
+            pytest.fail("Entry A reached the executor despite saturated semaphore")
+        return []
+
+    monkeypatch.setattr(hass, "async_add_executor_job", fake_executor_job)
+
+    sem_a = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+    sem_b = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+    # Saturate sem_a externally so coord_a is fully blocked at acquisition.
+    for _ in range(MAX_CONCURRENT_REQUESTS):
+        await sem_a.acquire()
+
     coord_a = _build_coordinator(hass, cal_a, sem_a)
     coord_b = _build_coordinator(hass, cal_b, sem_b)
 
-    assert coord_a._request_semaphore is sem_a
-    assert coord_b._request_semaphore is sem_b
-    assert coord_a._request_semaphore is not coord_b._request_semaphore
+    now = dt_util.now()
+    task_a = asyncio.create_task(coord_a.async_get_events(hass, now, now))
+    task_b = asyncio.create_task(coord_b.async_get_events(hass, now, now))
+
+    try:
+        # B can complete: its semaphore has permits and the executor releases.
+        release_b.set()
+        await asyncio.wait_for(task_b, timeout=5.0)
+
+        # Give the loop ticks so that if sem_a were shared, A would have
+        # raced past acquisition by now. It must not.
+        for _ in range(50):
+            await asyncio.sleep(0)
+
+        assert not task_a.done(), (
+            "Entry A's task completed despite sem_a being saturated — "
+            "the semaphore is not actually per-entry"
+        )
+    finally:
+        task_a.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task_a
 
 
 async def test_legacy_yaml_coordinator_has_no_semaphore(
@@ -150,19 +194,19 @@ async def test_legacy_yaml_coordinator_has_no_semaphore(
     await coordinator.async_get_events(hass, now, now)
 
 
-def test_close_idle_connections_handles_no_session() -> None:
+def test_close_client_session_handles_no_session() -> None:
     """Helper is a no-op when the DAVClient has no ``session`` attribute yet."""
     client = MagicMock(spec=[])  # no `session` attr
-    close_idle_connections(client)  # must not raise
+    close_client_session(client)  # must not raise
 
 
-def test_close_idle_connections_handles_none() -> None:
+def test_close_client_session_handles_none() -> None:
     """Helper is a no-op when given ``None`` (e.g. setup never completed)."""
-    close_idle_connections(None)
+    close_client_session(None)
 
 
-def test_close_idle_connections_calls_session_close() -> None:
+def test_close_client_session_calls_session_close() -> None:
     """Helper closes the underlying niquests Session exactly once."""
     client = MagicMock()
-    close_idle_connections(client)
+    close_client_session(client)
     client.session.close.assert_called_once()

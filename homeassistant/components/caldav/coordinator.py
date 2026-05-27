@@ -37,7 +37,7 @@ OFFSET = "!!"
 MAX_CONCURRENT_REQUESTS = 4
 
 
-def close_idle_connections(client: caldav.DAVClient | None) -> None:
+def close_client_session(client: caldav.DAVClient | None) -> None:
     """Close the DAVClient's HTTP session.
 
     caldav 2.1.0+ uses ``niquests`` with ``multiplexed=True`` (HTTP/2), so a

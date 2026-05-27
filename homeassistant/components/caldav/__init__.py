@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import TIMEOUT
-from .coordinator import MAX_CONCURRENT_REQUESTS, close_idle_connections
+from .coordinator import MAX_CONCURRENT_REQUESTS, close_client_session
 
 
 @dataclass
@@ -69,15 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         request_semaphore=asyncio.Semaphore(MAX_CONCURRENT_REQUESTS),
     )
 
-    async def _close_client_session() -> None:
+    async def _close_session() -> None:
         """Tear down the underlying HTTP session at entry unload.
 
         ``session.close()`` is synchronous and can block on socket teardown,
         so dispatch it to the executor rather than running on the event loop.
         """
-        await hass.async_add_executor_job(close_idle_connections, client)
+        await hass.async_add_executor_job(close_client_session, client)
 
-    entry.async_on_unload(_close_client_session)
+    entry.async_on_unload(_close_session)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
