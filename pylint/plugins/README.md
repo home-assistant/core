@@ -100,6 +100,7 @@ Every check has a code following the
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
+| `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 
 
 ## `home_assistant_logger` checker
@@ -360,3 +361,16 @@ the setup through the normal pipeline:
   `homeassistant.setup`.
 
 See [epic #79](https://github.com/home-assistant/epics/issues/79).
+
+
+## `home_assistant_enforce_utcnow` checker
+
+Ensures the Home Assistant helper is used to get the current UTC time.
+
+### `C7414`: `home-assistant-enforce-utcnow`
+
+Use `homeassistant.util.dt.utcnow()` instead of `datetime.datetime.now(UTC)`.
+The helper is implemented as
+`functools.partial(datetime.datetime.now, UTC)` and avoids the global
+lookup of `UTC` on every call, while keeping the codebase consistent in
+how the current UTC time is obtained.

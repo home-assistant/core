@@ -164,7 +164,7 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    now = datetime.now(UTC)
+    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     check_time = timedelta(seconds=check_time_sec)
     delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
     firmware_check_delay = check_time - delta_midnight
