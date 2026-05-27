@@ -1,6 +1,7 @@
 """Tests for the Duco integration."""
 
 from collections.abc import Iterable
+from contextlib import nullcontext
 from unittest.mock import patch
 
 from homeassistant.const import Platform
@@ -17,12 +18,13 @@ async def setup_integration(
     """Set up the Duco integration for testing."""
     config_entry.add_to_hass(hass)
 
-    if platforms is None:
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        return config_entry
+    patch_platforms = nullcontext()
+    if platforms is not None:
+        patch_platforms = patch(
+            "homeassistant.components.duco.PLATFORMS", list(platforms)
+        )
 
-    with patch("homeassistant.components.duco.PLATFORMS", list(platforms)):
+    with patch_platforms:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
