@@ -482,6 +482,7 @@
           "binary_sensor": "[%key:component::binary_sensor::title%]",
           "button": "[%key:component::button::title%]",
           "cover": "[%key:component::cover::title%]",
+          "device_tracker": "[%key:component::device_tracker::title%]",
           "event": "[%key:component::event::title%]",
           "fan": "[%key:component::fan::title%]",
           "image": "[%key:component::image::title%]",
