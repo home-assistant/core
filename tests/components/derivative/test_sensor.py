@@ -978,7 +978,7 @@ async def test_unavailable(
 
 async def test_replace_unavailable_option(hass: HomeAssistant) -> None:
     """Test replace_unavailable option falls back to zero."""
-    config, entity_id = await _setup_sensor(
+    _config, entity_id = await _setup_sensor(
         hass,
         {"unit_time": "s", "replace_unavailable": True},
     )
@@ -1322,7 +1322,7 @@ async def test_replace_unavailable_at_startup_false(hass: HomeAssistant) -> None
 
 async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
     """Test that derivative properly recovers when source returns to available after unavailable."""
-    config, entity_id = await _setup_sensor(
+    _config, entity_id = await _setup_sensor(
         hass,
         {"unit_time": "s", "replace_unavailable": True},
     )
@@ -1364,7 +1364,7 @@ async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
 
 async def test_replace_unavailable_recovery_with_state_list(hass: HomeAssistant) -> None:
     """Test derivative recovery when source becomes available after unavailable with established baseline."""
-    config, entity_id = await _setup_sensor(
+    _config, entity_id = await _setup_sensor(
         hass,
         {"unit_time": "s", "replace_unavailable": True},
     )
