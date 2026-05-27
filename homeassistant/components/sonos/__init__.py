@@ -15,7 +15,7 @@ from aiohttp import ClientError
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
-from soco.core import SoCo, soco_initialize
+from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -106,8 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
             )
         )
-
-    soco_initialize()
     async_setup_services(hass)
 
     return True
@@ -115,6 +113,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
+    soco_reset()
+    _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
@@ -154,6 +154,8 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    soco_reset()
+    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
     return unload_ok
 
 

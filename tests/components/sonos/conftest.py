@@ -8,8 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from soco import SoCo
-from soco.core import soco_initialize
+from soco import SoCo, soco_reset
 from soco.data_structures import (
     DidlFavorite,
     DidlMusicTrack,
@@ -169,10 +168,10 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 @pytest.fixture(autouse=True)
 def reset_sonos():
-    """Reset Sonos state before and after each test."""
-    soco_initialize()
+    """Reset soco state before and after each test."""
+    soco_reset()
     yield
-    soco_initialize()
+    soco_reset()
 
 
 @pytest.fixture
