@@ -251,16 +251,16 @@ class MobileAppNotificationService(BaseNotificationService):
         if not tag:
             return None
 
-        # Per-activity token — the activity is already running on the device.
         webhook_id = entry.data[ATTR_WEBHOOK_ID]
         live_activity_tokens = self.hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
         device_tokens = live_activity_tokens.get(webhook_id, {})
         if (stored := device_tokens.get(tag)) and stored[
             "expires_at"
         ] > dt_util.utcnow().timestamp():
+            # The activity is already running on the device and the token is valid
             return stored["token"]
 
-        # Push-to-start token — start a new activity remotely (iOS 17.2+).
+        # Start a new activity remotely
         app_data = entry.data[ATTR_APP_DATA]
         return app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN)
 
