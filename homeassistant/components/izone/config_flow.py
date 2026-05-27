@@ -464,7 +464,7 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         selected_uid: str,
     ) -> None:
         """Start confirm flows for every other discovered UID (import uses its own path)."""
-        current_ids = self._async_current_ids()
+        current_ids = self._async_current_ids(include_ignore=True)
         in_progress_ids = {
             flow["context"].get("unique_id")
             for flow in self._async_in_progress(include_uninitialized=True)

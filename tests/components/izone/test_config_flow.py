@@ -1669,6 +1669,87 @@ async def test_async_migrate_entry_returns_false_for_current_version(
     assert migrated is False
 
 
+async def test_async_migrate_entry_clears_legacy_data(
+    hass: HomeAssistant,
+) -> None:
+    """v1→v2 migration clears legacy entry data; UID and title binding is deferred.
+
+    ConfigEntryNotReady retry semantics only work inside async_setup_entry — raising
+    from async_migrate_entry permanently lands the entry in MIGRATION_ERROR with no
+    retry path.  All network-dependent work is therefore intentionally deferred to
+    async_setup_entry.
+    """
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+
+    migrated = await izone_component.async_migrate_entry(hass, entry)
+
+    assert migrated is True
+    assert entry.version == 2
+    assert entry.data == {}
+    # UID and title are not resolved until async_setup_entry runs.
+    assert entry.unique_id == IZONE
+    assert entry.title == "iZone Aircon"
+
+
+async def test_async_migrate_entry_does_not_raise_on_discovery_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Migration succeeds without network calls regardless of discovery state.
+
+    The retry-on-not-ready path only works in async_setup_entry; migration never
+    makes network calls (see test_async_migrate_entry_clears_legacy_data).
+    """
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+
+    migrated = await izone_component.async_migrate_entry(hass, entry)
+
+    assert migrated is True
+    assert entry.version == 2
+    assert entry.data == {}
+
+
+async def test_async_migrate_entry_does_not_raise_for_multiple_eligible(
+    hass: HomeAssistant,
+) -> None:
+    """Migration does not raise for multiple eligible controllers.
+
+    The multi-controller failure case is handled in async_setup_entry, not here.
+    """
+    entry = MockConfigEntry(
+        domain=IZONE,
+        version=1,
+        unique_id=IZONE,
+        title="iZone Aircon",
+        data={"host": "192.0.2.1"},
+    )
+    entry.add_to_hass(hass)
+
+    migrated = await izone_component.async_migrate_entry(hass, entry)
+
+    assert migrated is True
+    assert entry.version == 2
+    assert entry.data == {}
+
+
+# ---------------------------------------------------------------------------
+# async_setup_entry – legacy v1-migrated entry (unique_id=IZONE) resolution
+# ---------------------------------------------------------------------------
+
+
 @pytest.mark.parametrize(
     ("initial_title", "expected_title"),
     [
@@ -1676,32 +1757,41 @@ async def test_async_migrate_entry_returns_false_for_current_version(
         pytest.param("My AC", "My AC", id="custom_title_preserved"),
     ],
 )
-async def test_async_migrate_entry_clears_legacy_data(
+async def test_setup_entry_resolves_legacy_uid_and_updates_title(
     hass: HomeAssistant,
     initial_title: str,
     expected_title: str,
 ) -> None:
-    """Version migration should clear legacy entry data when switching to UID-only state."""
+    """Legacy entry has its UID and title resolved at setup time, not migration time."""
     entry = MockConfigEntry(
         domain=IZONE,
-        version=1,
+        version=2,
         unique_id=IZONE,
         title=initial_title,
-        data={"host": "192.0.2.1"},
+        data={},
     )
     entry.add_to_hass(hass)
     controller = _make_controller("000000001", "192.0.2.2")
 
-    with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
-        return_value={controller.device_uid: controller},
+    with (
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value={controller.device_uid: controller},
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(return_value=None),
+        ),
     ):
-        migrated = await izone_component.async_migrate_entry(hass, entry)
+        result = await izone_component.async_setup_entry(hass, entry)
 
-    assert migrated is True
-    assert entry.version == 2
-    assert entry.unique_id == controller.device_uid
-    assert entry.data == {}
+    assert result is True
+    assert entry.unique_id == "000000001"
     assert entry.title == expected_title
 
 
@@ -1712,22 +1802,31 @@ async def test_async_migrate_entry_clears_legacy_data(
         pytest.param(None, OSError, id="discovery_oserror"),
     ],
 )
-async def test_async_migrate_entry_raises_not_ready_on_discovery_failure(
+async def test_setup_entry_raises_not_ready_for_legacy_entry_on_discovery_failure(
     hass: HomeAssistant,
     return_value: dict | None,
     side_effect: type[Exception] | None,
 ) -> None:
-    """Migration raises ConfigEntryNotReady when discovery finds nothing or fails."""
+    """Legacy entry raises ConfigEntryNotReady when discovery finds nothing or fails.
+
+    Because this is raised from async_setup_entry (not async_migrate_entry), HA
+    will schedule a retry — unlike the old behaviour where the exception would
+    permanently land the entry in MIGRATION_ERROR.
+    """
     entry = MockConfigEntry(
         domain=IZONE,
-        version=1,
+        version=2,
         unique_id=IZONE,
         title="iZone Aircon",
-        data={"host": "192.0.2.1"},
+        data={},
     )
     entry.add_to_hass(hass)
 
     with (
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(return_value=None),
+        ),
         patch(
             "homeassistant.components.izone.config_flow.async_discover_controllers",
             return_value=return_value,
@@ -1735,19 +1834,25 @@ async def test_async_migrate_entry_raises_not_ready_on_discovery_failure(
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        await izone_component.async_migrate_entry(hass, entry)
+        await izone_component.async_setup_entry(hass, entry)
 
 
-async def test_async_migrate_entry_raises_config_error_for_multiple_eligible(
+async def test_setup_entry_raises_config_error_for_legacy_entry_with_multiple_eligible(
     hass: HomeAssistant,
 ) -> None:
-    """Migration raises ConfigEntryError when multiple controllers are eligible."""
+    """Legacy entry raises ConfigEntryError when multiple controllers are eligible.
+
+    This is a permanent failure for the legacy entry.  The controllers are not lost —
+    the discovery fan-out will surface them as individual flows once HA restarts.
+    This is not a breaking change: a v1 entry with multiple controllers was already
+    broken before this PR.
+    """
     entry = MockConfigEntry(
         domain=IZONE,
-        version=1,
+        version=2,
         unique_id=IZONE,
         title="iZone Aircon",
-        data={"host": "192.0.2.1"},
+        data={},
     )
     entry.add_to_hass(hass)
     controllers = {
@@ -1757,12 +1862,16 @@ async def test_async_migrate_entry_raises_config_error_for_multiple_eligible(
 
     with (
         patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
             "homeassistant.components.izone.config_flow.async_discover_controllers",
             return_value=controllers,
         ),
         pytest.raises(ConfigEntryError),
     ):
-        await izone_component.async_migrate_entry(hass, entry)
+        await izone_component.async_setup_entry(hass, entry)
 
 
 @pytest.mark.parametrize(
@@ -1772,12 +1881,12 @@ async def test_async_migrate_entry_raises_config_error_for_multiple_eligible(
         pytest.param("999999999", "000000001", id="filtered_by_configured_entry"),
     ],
 )
-async def test_async_migrate_entry_picks_single_eligible_after_filtering(
+async def test_setup_entry_picks_eligible_controller_after_filtering_for_legacy_entry(
     hass: HomeAssistant,
     excluded_uid: str,
     already_configured_uid: str,
 ) -> None:
-    """Migration picks the one controller not filtered out.
+    """Legacy entry picks the one controller not filtered out.
 
     In each case one of two discovered controllers is ineligible — either its
     UID is in the exclude list or it is already owned by another config entry.
@@ -1785,30 +1894,39 @@ async def test_async_migrate_entry_picks_single_eligible_after_filtering(
     """
     entry = MockConfigEntry(
         domain=IZONE,
-        version=1,
+        version=2,
         unique_id=IZONE,
         title="iZone Aircon",
-        data={"host": "192.0.2.1"},
+        data={},
     )
     entry.add_to_hass(hass)
     hass.data[DATA_CONFIG] = {CONF_EXCLUDE: [excluded_uid]}
-    already_configured = MockConfigEntry(
+    MockConfigEntry(
         domain=IZONE, version=2, unique_id=already_configured_uid, data={}
-    )
-    already_configured.add_to_hass(hass)
+    ).add_to_hass(hass)
     controllers = {
         "000000001": _make_controller("000000001", "192.0.2.1"),
         "000000002": _make_controller("000000002", "192.0.2.2"),
     }
 
-    with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
-        return_value=controllers,
+    with (
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.izone.config_flow.async_discover_controllers",
+            return_value=controllers,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(return_value=None),
+        ),
     ):
-        migrated = await izone_component.async_migrate_entry(hass, entry)
+        result = await izone_component.async_setup_entry(hass, entry)
 
-    assert migrated is True
-    assert entry.version == 2
+    assert result is True
     assert entry.unique_id == "000000002"
     assert entry.data == {}
 
@@ -1820,38 +1938,42 @@ async def test_async_migrate_entry_picks_single_eligible_after_filtering(
         pytest.param("999999999", "000000001", id="all_already_configured"),
     ],
 )
-async def test_async_migrate_entry_raises_not_ready_when_no_eligible_after_filter(
+async def test_setup_entry_raises_not_ready_for_legacy_entry_when_no_eligible_after_filter(
     hass: HomeAssistant,
     excluded_uid: str,
     already_configured_uid: str,
 ) -> None:
-    """Migration raises ConfigEntryNotReady when all controllers are filtered out.
+    """Legacy entry raises ConfigEntryNotReady when all controllers are filtered out.
 
-    The dummy UID "999999999" is used for the filter that should have no effect.
+    HA will retry async_setup_entry, giving the user time to resolve the filter
+    configuration.
     """
     entry = MockConfigEntry(
         domain=IZONE,
-        version=1,
+        version=2,
         unique_id=IZONE,
         title="iZone Aircon",
-        data={"host": "192.0.2.1"},
+        data={},
     )
     entry.add_to_hass(hass)
     hass.data[DATA_CONFIG] = {CONF_EXCLUDE: [excluded_uid]}
-    already_configured = MockConfigEntry(
+    MockConfigEntry(
         domain=IZONE, version=2, unique_id=already_configured_uid, data={}
-    )
-    already_configured.add_to_hass(hass)
+    ).add_to_hass(hass)
     controller = _make_controller("000000001", "192.0.2.1")
 
     with (
+        patch(
+            "homeassistant.components.izone.async_start_discovery_service",
+            new=AsyncMock(return_value=None),
+        ),
         patch(
             "homeassistant.components.izone.config_flow.async_discover_controllers",
             return_value={"000000001": controller},
         ),
         pytest.raises(ConfigEntryNotReady),
     ):
-        await izone_component.async_migrate_entry(hass, entry)
+        await izone_component.async_setup_entry(hass, entry)
 
 
 def test_discovery_listener_methods_dispatch_expected_signals(
