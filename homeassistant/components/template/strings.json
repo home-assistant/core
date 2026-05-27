@@ -136,6 +136,34 @@
         },
         "title": "Template cover"
       },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "latitude": "Defines a template to get the latitude of the device tracker. Valid values are numbers between `-90` and `90`.",
+          "longitude": "Defines a template to get the longitude of the device tracker. Valid values are numbers between `-180` and `180`.",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "Location accuracy"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "Defines a template to get the accuracy of the device tracker's location in meters. Valid values are numbers greater than or equal to `0`."
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template device tracker"
+      },
       "event": {
         "data": {
           "device_class": "[%key:component::template::common::device_class%]",
@@ -454,6 +482,7 @@
           "binary_sensor": "[%key:component::binary_sensor::title%]",
           "button": "[%key:component::button::title%]",
           "cover": "[%key:component::cover::title%]",
+          "device_tracker": "[%key:component::device_tracker::title%]",
           "event": "[%key:component::event::title%]",
           "fan": "[%key:component::fan::title%]",
           "image": "[%key:component::image::title%]",
@@ -651,7 +680,6 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
-
       "cover": {
         "data": {
           "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
@@ -683,6 +711,32 @@
           }
         },
         "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "device_tracker": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data::longitude%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "latitude": "[%key:component::template::config::step::device_tracker::data_description::latitude%]",
+          "longitude": "[%key:component::template::config::step::device_tracker::data_description::longitude%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data::location_accuracy%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]",
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data_description::location_accuracy%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::device_tracker::title%]"
       },
       "event": {
         "data": {
