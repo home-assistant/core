@@ -1,7 +1,5 @@
 """Support for switches which integrates with other components."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -9,18 +7,12 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_NAME,
     CONF_STATE,
-    CONF_SWITCHES,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -44,16 +36,11 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
-
-LEGACY_FIELDS = {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 DEFAULT_NAME = "Template Switch"
 
@@ -74,23 +61,6 @@ SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(make_template_entity_common_modern_schema(SWITCH_DOMAIN, DEFAULT_NAME).schema)
 
-SWITCH_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Required(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
-            vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_LEGACY_YAML_SCHEMA)}
-)
 
 SWITCH_CONFIG_ENTRY_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -112,8 +82,6 @@ async def async_setup_platform(
         TriggerSwitchEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_SWITCHES,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -157,8 +125,11 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 

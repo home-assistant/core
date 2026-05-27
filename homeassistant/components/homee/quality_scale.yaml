@@ -44,13 +44,13 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
@@ -62,9 +62,11 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      The integration currently does not have any known issues.
   stale-devices: done
-
   # Platinum
   async-dependency: todo
   inject-websession: todo

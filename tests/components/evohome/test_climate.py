@@ -3,8 +3,6 @@
 All evohome systems have controllers and at least one zone.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -57,7 +55,10 @@ async def test_setup_platform(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    for x in hass.states.async_all(CLIMATE_DOMAIN):
+    climate_states = hass.states.async_all(CLIMATE_DOMAIN)
+    assert climate_states
+
+    for x in climate_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 

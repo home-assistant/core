@@ -1,7 +1,5 @@
 """Image processing for cameras."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Literal, cast
 
@@ -93,7 +91,8 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:
             _LOGGER.exception(
-                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
+                "Error loading libturbojpeg;"
+                " Camera snapshot performance will be sub-optimal"
             )
             TurboJPEGSingleton.__instance = False
 

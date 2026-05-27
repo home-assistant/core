@@ -1,5 +1,11 @@
 {
   "exceptions": {
+    "controller_only_service": {
+      "message": "Only Evohome controllers support the `{service}` action"
+    },
+    "entity_not_found": {
+      "message": "The specified entity `{entity_id}` could not be found"
+    },
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"
     },
@@ -21,16 +27,20 @@
   },
   "issues": {
     "deprecated_clear_zone_override_service": {
-      "description": "Using the `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
-      "title": "Evohome clear zone override action is deprecated"
+      "description": "The `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
+      "title": "Evohome 'Clear zone override' action is deprecated"
+    },
+    "deprecated_controller_service": {
+      "description": "The `{service}` action without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include the Evohome controller climate entity `entity_id`.",
+      "title": "Untargeted Evohome controller action is deprecated"
     },
     "deprecated_preset_reset": {
       "description": "Using the `Reset` preset on an Evohome controller is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
       "title": "Evohome Reset preset is deprecated"
     },
     "deprecated_reset_system_service": {
-      "description": "Using the `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
-      "title": "Evohome reset system action is deprecated"
+      "description": "The `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
+      "title": "Evohome 'Reset system' action is deprecated"
     }
   },
   "services": {
@@ -66,6 +76,10 @@
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
           "name": "Duration"
+        },
+        "entity_id": {
+          "description": "The Evohome controller climate entity.",
+          "name": "Entity"
         },
         "mode": {
           "description": "Mode to set the system to.",

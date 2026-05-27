@@ -1,7 +1,5 @@
 """Support for MQTT vacuums."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
@@ -16,7 +14,13 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_IDLE,
+    STATE_PAUSED,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -38,10 +42,8 @@ FAN_SPEED = "fan_speed"
 SEGMENTS = "segments"
 STATE = "state"
 
-STATE_IDLE = "idle"
 STATE_DOCKED = "docked"
 STATE_ERROR = "error"
-STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
 
@@ -147,7 +149,8 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
         return config
     if not config.get(CONF_UNIQUE_ID):
         raise vol.Invalid(
-            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` requires `{CONF_UNIQUE_ID}` to be configured"
+            f"Option `{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}`"
+            f" requires `{CONF_UNIQUE_ID}` to be configured"
         )
 
     return config
@@ -251,6 +254,10 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
         self._attr_supported_features = _strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
+        ) | (
+            self.supported_features & VacuumEntityFeature.CLEAN_AREA
+            if CONF_CLEAN_SEGMENTS_COMMAND_TOPIC in config
+            else 0
         )
         self._clean_segments_command_topic = config.get(
             CONF_CLEAN_SEGMENTS_COMMAND_TOPIC

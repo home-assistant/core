@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools sensor platform."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from unittest.mock import patch
 
@@ -11,7 +9,7 @@ import pytest
 from requests.exceptions import RequestException
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL, UPTIME_DEVIATION
+from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -84,7 +82,7 @@ async def test_sensor_uptime_spike(
 ) -> None:
     """Test handling of uptime spikes in Fritz!Tools sensors."""
 
-    entity_id = "sensor.mock_title_last_restart"
+    entity_id = "sensor.mock_title_uptime"
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
@@ -95,13 +93,13 @@ async def test_sensor_uptime_spike(
     assert (state := hass.states.get(entity_id))
     assert state.state == "2026-01-16T06:00:21+00:00"
 
-    # Simulate uptime spike by setting uptime to a value between
-    # the previous one and a delta smaller than UPTIME_DEVIATION
+    # Simulate uptime spike by setting uptime to a value that shifts
+    # the resulting timestamp only by 1 second.
     base_uptime = MOCK_FB_SERVICES["DeviceInfo1"]["GetInfo"]["NewUpTime"]
     update_uptime = {
         "DeviceInfo1": {
             "GetInfo": {
-                "NewUpTime": base_uptime + SCAN_INTERVAL - UPTIME_DEVIATION + 1,
+                "NewUpTime": base_uptime + SCAN_INTERVAL + 1,
             },
         },
     }
@@ -119,7 +117,12 @@ async def test_sensor_uptime_spike(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("side_effect", "return_values"),
-    [(RequestException("boom"), None), (None, [0, 0, 0]), (None, [])],
+    [
+        (RequestException("boom"), None),
+        (None, [0, 0, 0]),
+        (None, []),
+        (FritzConnectionException("boom"), None),
+    ],
 )
 async def test_sensor_cpu_temp_not_supported(
     hass: HomeAssistant,

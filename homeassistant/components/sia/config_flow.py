@@ -1,7 +1,5 @@
 """Config flow for sia integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
@@ -134,7 +132,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_handle_data_and_route(
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Handle the user_input, check if configured and route to the right next step or create entry."""
+        """Handle user_input, check if configured and route to the right next step."""
         self._update_data(user_input)
 
         self._async_abort_entries_match({CONF_PORT: self._data[CONF_PORT]})
@@ -150,7 +148,8 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     def _update_data(self, user_input: dict[str, Any]) -> None:
         """Parse the user_input and store in data and options attributes.
 
-        If there is a port in the input or no data, assume it is fully new and overwrite.
+        If there is a port in the input or no data, assume
+        it is fully new and overwrite.
         Add the default options and overwrite the zones in options.
         """
         if not self._data or user_input.get(CONF_PORT):

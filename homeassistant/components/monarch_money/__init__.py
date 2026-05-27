@@ -1,7 +1,5 @@
 """The Monarch Money integration."""
 
-from __future__ import annotations
-
 from typedmonarchmoney import TypedMonarchMoney
 
 from homeassistant.const import CONF_TOKEN, Platform

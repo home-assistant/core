@@ -1,7 +1,5 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -163,6 +161,7 @@ class DecoraWifiLight(LightEntity):
 
         try:
             self._switch.update_attributes(attribs)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.error("Failed to turn on myLeviton switch")
 
@@ -171,6 +170,7 @@ class DecoraWifiLight(LightEntity):
         attribs = {"power": "OFF"}
         try:
             self._switch.update_attributes(attribs)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.error("Failed to turn off myLeviton switch")
 

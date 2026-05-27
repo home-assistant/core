@@ -1,7 +1,5 @@
 """Tests for the ProxmoxVE button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 from proxmoxer import AuthenticationError
@@ -92,7 +90,7 @@ async def test_node_all_actions_buttons(
     entity_id: str,
     attr: str,
 ) -> None:
-    """Test pressing a ProxmoxVE node start all / stop all button triggers the correct API call."""
+    """Test ProxmoxVE node start/stop all button API call."""
     await setup_integration(hass, mock_config_entry)
 
     method_mock = getattr(mock_proxmox_client._node_mock, attr).post
@@ -171,7 +169,7 @@ async def test_container_snapshot_button(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing a ProxmoxVE container snapshot button triggers the correct API call."""
+    """Test ProxmoxVE container snapshot button API call."""
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(200)
@@ -204,7 +202,7 @@ async def test_container_buttons(
     vmid: int,
     action: str,
 ) -> None:
-    """Test pressing a ProxmoxVE container action button triggers the correct API call."""
+    """Test ProxmoxVE container action button API call."""
     await setup_integration(hass, mock_config_entry)
 
     mock_proxmox_client._node_mock.lxc(vmid)

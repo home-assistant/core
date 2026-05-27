@@ -53,7 +53,9 @@ async def async_setup_entry(
 class SubaruLock(LockEntity):
     """Representation of a Subaru door lock.
 
-    Note that the Subaru API currently does not support returning the status of the locks. Lock status is always unknown.
+    Note that the Subaru API currently does not support
+    returning the status of the locks. Lock status is
+    always unknown.
     """
 
     _attr_has_entity_name = True

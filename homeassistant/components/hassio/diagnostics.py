@@ -1,7 +1,5 @@
 """Diagnostics support for Supervisor."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from attr import asdict
@@ -58,8 +56,8 @@ async def async_get_config_entry_diagnostics(
         devices.append({"device": asdict(device), "entities": entities})
 
     return {
-        "coordinator_data": coordinator.data,
-        "addons_coordinator_data": addons_coordinator.data,
-        "stats_coordinator_data": stats_coordinator.data,
+        "coordinator_data": coordinator.data.to_dict(),
+        "addons_coordinator_data": addons_coordinator.data.to_dict(),
+        "stats_coordinator_data": stats_coordinator.data.to_dict(),
         "devices": devices,
     }

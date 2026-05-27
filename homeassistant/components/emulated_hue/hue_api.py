@@ -1,7 +1,5 @@
 """Support for a Hue API to control Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
@@ -650,7 +648,8 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     if cached_state_entry is not None:
         entry_state, entry_time = cached_state_entry
         if entry_time is None:
-            # Handle the case where the entity is listed in config.off_maps_to_on_domains.
+            # Handle the case where the entity is listed
+            # in config.off_maps_to_on_domains.
             cached_state = entry_state
         elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
             STATE_ON
@@ -791,7 +790,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
     color_temp_supported = is_light and light.color_temp_supported(color_modes)
     if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
-        # Same as Color light, but which supports additional setting of color temperature
+        # Same as Color light, but supports additional color temperature setting
         retval["type"] = "Extended color light"
         retval["modelid"] = "HASS231"
         json_state.update(
@@ -809,7 +808,8 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
             json_state[HUE_API_STATE_COLORMODE] = "ct"
     elif color_supported:
         # Color light (Zigbee Device ID: 0x0200)
-        # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
+        # Supports on/off, dimming and color control
+        # (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
         retval["modelid"] = "HASS213"
         json_state.update(

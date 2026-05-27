@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -10,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed"
@@ -19,6 +23,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed away"
@@ -28,6 +35,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed home"
@@ -37,6 +47,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed night"
@@ -46,6 +59,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed vacation"
@@ -55,6 +71,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is disarmed"
@@ -64,6 +83,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is triggered"
@@ -139,21 +161,6 @@
   "exceptions": {
     "code_arm_required": {
       "message": "Arming requires a code but none was given for {entity_id}."
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "services": {
