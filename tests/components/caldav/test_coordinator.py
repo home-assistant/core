@@ -127,21 +127,27 @@ async def test_per_entry_semaphores_are_independent(
     while entry A's search is held off by an externally-saturated semaphore.
     """
     release_b = asyncio.Event()
+    # Use explicit sentinel callables for search rather than relying on
+    # MagicMock's auto-generated child-mock caching for identity routing.
+    search_a = MagicMock(name="search_a")
+    search_b = MagicMock(name="search_b")
     cal_a = MagicMock()
     cal_a.name = "a"
+    cal_a.search = search_a
     cal_b = MagicMock()
     cal_b.name = "b"
+    cal_b.search = search_b
 
     async def fake_executor_job(func, *_args, **_kwargs):
-        # Route by the partial's underlying calendar.search reference so the
-        # test can keep entry B's job pending until it explicitly releases it,
+        # Route by the partial's underlying ``calendar.search`` reference. The
+        # test keeps entry B's job pending until it explicitly releases it,
         # while entry A's job must never reach the executor at all (its
         # semaphore is fully saturated by the test).
         bound = getattr(func, "func", None)
-        if bound is cal_b.search:
+        if bound is search_b:
             await release_b.wait()
             return []
-        if bound is cal_a.search:
+        if bound is search_a:
             pytest.fail("Entry A reached the executor despite saturated semaphore")
         return []
 
@@ -195,6 +201,11 @@ async def test_legacy_yaml_coordinator_has_no_semaphore(
     coordinator = _build_coordinator(hass, calendar, semaphore=None)
     now = dt_util.now()
     await coordinator.async_get_events(hass, now, now)
+    # The search executor job is dispatched only if the coordinator's
+    # ``_semaphore_ctx`` returned an async-enterable object (``nullcontext``
+    # for the no-entry path). If it had returned ``None``, ``async with``
+    # would have raised before reaching this call.
+    calendar.search.assert_called_once()
 
 
 def test_close_client_session_handles_no_session() -> None:
