@@ -27,6 +27,7 @@ The following platforms have extra guidelines:
 ## Entity platforms
 
 - Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
+- Child classes that derive from an entity base class (e.g. `SensorEntity`, `TrackerEntity`) inherit the parent's behavior. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
 
 ## Integration Quality Scale
 
