@@ -171,7 +171,7 @@ def parametrize_incomplete_condition_states_any(
                     "value_max": {"number": 8},
                 }
             },
-            target_states=["3", "5"],
+            target_states=["2", "3", "5", "8"],
             other_states=["0", "1", "9", "10"],
         ),
     ]
@@ -203,7 +203,7 @@ def parametrize_incomplete_condition_states_all(
                     "value_max": {"number": 8},
                 }
             },
-            target_states=["3", "5"],
+            target_states=["2", "3", "5", "8"],
             other_states=["0", "1", "9", "10"],
         ),
     ]
