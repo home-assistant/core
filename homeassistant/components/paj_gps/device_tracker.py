@@ -5,8 +5,7 @@ Reads position data from PajGpsCoordinator and exposes it as a TrackerEntity.
 
 import logging
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -71,8 +70,3 @@ class PajGPSDeviceTracker(PajGpsEntity, TrackerEntity):
         """Return the longitude of the device."""
         tp = self.coordinator.data.positions.get(self._device_id)
         return float(tp.lng) if tp and tp.lng is not None else None
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the tracker."""
-        return SourceType.GPS

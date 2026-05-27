@@ -535,7 +535,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
 
     @property
     def native_value(self) -> int | None:
-        """Return the state of the floor terminal block mechanical channel valve position."""
+        """Return the floor terminal block valve position."""
         channel = next(
             channel
             for channel in self._device.functionalChannels
@@ -1070,9 +1070,7 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
         description: HmipSmokeDetectorSensorDescription,
     ) -> None:
         """Initialize the smoke detector sensor."""
-        super().__init__(
-            hap, device, post=description.key, feature_id="smoke_detector_sensor"
-        )
+        super().__init__(hap, device, feature_id="smoke_detector_sensor")
         self.entity_description = description
         self._sensor_unique_id = f"{device.id}_{description.key}"
 

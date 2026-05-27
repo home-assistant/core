@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[number.mock_classicledcontrol_e_system_led_brightness-entry]
+# name: test_setup[number.mock_aquarium_mock_classicledcontrol_e_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_classicledcontrol_e_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_classicledcontrol_e_system_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_classicledcontrol_e_system_led_brightness-state]
+# name: test_setup[number.mock_aquarium_mock_classicledcontrol_e_system_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicLEDcontrol+e System LED brightness',
@@ -52,14 +52,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_classicledcontrol_e_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_classicledcontrol_e_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_classicvario_day_speed-entry]
+# name: test_setup[number.mock_aquarium_mock_classicvario_day_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -78,7 +78,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_classicvario_day_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_day_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -101,7 +101,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_classicvario_day_speed-state]
+# name: test_setup[number.mock_aquarium_mock_classicvario_day_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Day speed',
@@ -112,14 +112,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_classicvario_day_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_day_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_classicvario_manual_speed-entry]
+# name: test_setup[number.mock_aquarium_mock_classicvario_manual_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_classicvario_manual_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_manual_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -161,7 +161,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_classicvario_manual_speed-state]
+# name: test_setup[number.mock_aquarium_mock_classicvario_manual_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Manual speed',
@@ -172,14 +172,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_classicvario_manual_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_manual_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_classicvario_night_speed-entry]
+# name: test_setup[number.mock_aquarium_mock_classicvario_night_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -198,7 +198,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_classicvario_night_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_night_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -221,7 +221,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_classicvario_night_speed-state]
+# name: test_setup[number.mock_aquarium_mock_classicvario_night_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Night speed',
@@ -232,14 +232,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_classicvario_night_speed',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_night_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_classicvario_system_led_brightness-entry]
+# name: test_setup[number.mock_aquarium_mock_classicvario_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -258,7 +258,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_classicvario_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_system_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -281,7 +281,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_classicvario_system_led_brightness-state]
+# name: test_setup[number.mock_aquarium_mock_classicvario_system_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO System LED brightness',
@@ -292,14 +292,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_classicvario_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_classicvario_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_filter_high_pulse_duration-entry]
+# name: test_setup[number.mock_aquarium_mock_filter_high_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -318,7 +318,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_filter_high_pulse_duration',
+    'entity_id': 'number.mock_aquarium_mock_filter_high_pulse_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -341,7 +341,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_setup[number.mock_filter_high_pulse_duration-state]
+# name: test_setup[number.mock_aquarium_mock_filter_high_pulse_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -353,14 +353,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_filter_high_pulse_duration',
+    'entity_id': 'number.mock_aquarium_mock_filter_high_pulse_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_filter_low_pulse_duration-entry]
+# name: test_setup[number.mock_aquarium_mock_filter_low_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -379,7 +379,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_filter_low_pulse_duration',
+    'entity_id': 'number.mock_aquarium_mock_filter_low_pulse_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -402,7 +402,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_setup[number.mock_filter_low_pulse_duration-state]
+# name: test_setup[number.mock_aquarium_mock_filter_low_pulse_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -414,14 +414,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_filter_low_pulse_duration',
+    'entity_id': 'number.mock_aquarium_mock_filter_low_pulse_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_filter_system_led_brightness-entry]
+# name: test_setup[number.mock_aquarium_mock_filter_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -440,7 +440,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_filter_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_filter_system_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -463,7 +463,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_filter_system_led_brightness-state]
+# name: test_setup[number.mock_aquarium_mock_filter_system_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock filter System LED brightness',
@@ -474,14 +474,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_filter_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_filter_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_heater_night_temperature_offset-entry]
+# name: test_setup[number.mock_aquarium_mock_heater_night_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -500,7 +500,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_heater_night_temperature_offset',
+    'entity_id': 'number.mock_aquarium_mock_heater_night_temperature_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -523,7 +523,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[number.mock_heater_night_temperature_offset-state]
+# name: test_setup[number.mock_aquarium_mock_heater_night_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -534,14 +534,14 @@
       'step': 0.5,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_heater_night_temperature_offset',
+    'entity_id': 'number.mock_aquarium_mock_heater_night_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_heater_system_led_brightness-entry]
+# name: test_setup[number.mock_aquarium_mock_heater_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -560,7 +560,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_heater_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_heater_system_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -583,7 +583,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_heater_system_led_brightness-state]
+# name: test_setup[number.mock_aquarium_mock_heater_system_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Heater System LED brightness',
@@ -594,14 +594,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_heater_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_heater_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_heater_temperature_offset-entry]
+# name: test_setup[number.mock_aquarium_mock_heater_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -620,7 +620,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_heater_temperature_offset',
+    'entity_id': 'number.mock_aquarium_mock_heater_temperature_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -643,7 +643,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[number.mock_heater_temperature_offset-state]
+# name: test_setup[number.mock_aquarium_mock_heater_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -654,14 +654,14 @@
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_heater_temperature_offset',
+    'entity_id': 'number.mock_aquarium_mock_heater_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_reeflex_booster_duration-entry]
+# name: test_setup[number.mock_aquarium_mock_reeflex_booster_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -680,7 +680,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_reeflex_booster_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_booster_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -703,7 +703,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[number.mock_reeflex_booster_duration-state]
+# name: test_setup[number.mock_aquarium_mock_reeflex_booster_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -715,14 +715,14 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_reeflex_booster_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_booster_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_reeflex_daily_burn_duration-entry]
+# name: test_setup[number.mock_aquarium_mock_reeflex_daily_burn_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -741,7 +741,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_reeflex_daily_burn_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_daily_burn_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -764,7 +764,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[number.mock_reeflex_daily_burn_duration-state]
+# name: test_setup[number.mock_aquarium_mock_reeflex_daily_burn_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -776,14 +776,14 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_reeflex_daily_burn_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_daily_burn_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_reeflex_pause_duration-entry]
+# name: test_setup[number.mock_aquarium_mock_reeflex_pause_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -802,7 +802,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_reeflex_pause_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_pause_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -825,7 +825,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_setup[number.mock_reeflex_pause_duration-state]
+# name: test_setup[number.mock_aquarium_mock_reeflex_pause_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -837,14 +837,14 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_reeflex_pause_duration',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_pause_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[number.mock_reeflex_system_led_brightness-entry]
+# name: test_setup[number.mock_aquarium_mock_reeflex_system_led_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -863,7 +863,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_reeflex_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_system_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -886,7 +886,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[number.mock_reeflex_system_led_brightness-state]
+# name: test_setup[number.mock_aquarium_mock_reeflex_system_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock reeflex System LED brightness',
@@ -897,7 +897,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_reeflex_system_led_brightness',
+    'entity_id': 'number.mock_aquarium_mock_reeflex_system_led_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

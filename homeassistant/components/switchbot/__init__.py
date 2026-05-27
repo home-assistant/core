@@ -106,6 +106,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.LOCK_ULTRA.value: [
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.LOCK,
         Platform.SENSOR,
     ],
@@ -114,24 +115,28 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
         Platform.BUTTON,
         Platform.SWITCH,
+        Platform.LIGHT,
     ],
     SupportedModels.AIR_PURIFIER_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
         Platform.SWITCH,
+        Platform.LIGHT,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
         Platform.SWITCH,
+        Platform.LIGHT,
     ],
     SupportedModels.AIR_PURIFIER_TABLE_US.value: [
         Platform.FAN,
         Platform.SENSOR,
         Platform.BUTTON,
         Platform.SWITCH,
+        Platform.LIGHT,
     ],
     SupportedModels.EVAPORATIVE_HUMIDIFIER.value: [
         Platform.HUMIDIFIER,
@@ -141,6 +146,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
@@ -164,6 +170,22 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.EVENT,
     ],
+    SupportedModels.LOCK_VISION.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_VISION_PRO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_PRO_WIFI.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -193,19 +215,29 @@ CLASS_BY_DEVICE = {
     SupportedModels.AIR_PURIFIER_US.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE_JP.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE_US.value: switchbot.SwitchbotAirPurifier,
-    SupportedModels.EVAPORATIVE_HUMIDIFIER.value: switchbot.SwitchbotEvaporativeHumidifier,
+    SupportedModels.EVAPORATIVE_HUMIDIFIER.value: (
+        switchbot.SwitchbotEvaporativeHumidifier
+    ),
     SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
     SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
     SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
     SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: (
+        switchbot.SwitchbotPermanentOutdoorLight
+    ),
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
-    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: (
+        switchbot.SwitchbotSmartThermostatRadiator
+    ),
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
+    SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
 }
 
 
