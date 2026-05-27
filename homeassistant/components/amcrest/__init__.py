@@ -30,7 +30,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -479,11 +478,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
     # unique id is set by the config flow using the serial number
-    serial = entry.unique_id
-    if not serial:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN, translation_key="no_serial_number"
-        )
+    serial = cast(str, entry.unique_id)
 
     config_data = dict(entry.data)
     config_data.update(entry.options)

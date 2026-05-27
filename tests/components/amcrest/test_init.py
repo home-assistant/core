@@ -70,31 +70,6 @@ async def test_setup_entry_uses_unique_id_for_identifiers_when_serial_fetch_fail
     }
 
 
-async def test_setup_entry_requires_unique_id(hass: HomeAssistant) -> None:
-    """Test config-entry setup fails when entry.unique_id is missing."""
-    entry = MockConfigEntry(
-        title="Amcrest Camera",
-        domain=DOMAIN,
-        unique_id=None,
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 80,
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    api = MagicMock()
-    api.get_base_url.return_value = "http://1.2.3.4"
-
-    with patch("homeassistant.components.amcrest.AmcrestChecker", return_value=api):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_setup_entry_loads_platforms(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
