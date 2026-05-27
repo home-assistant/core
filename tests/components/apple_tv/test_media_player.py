@@ -18,10 +18,10 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     BrowseMedia,
     MediaClass,
     MediaType,
-    SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID
