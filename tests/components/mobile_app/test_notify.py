@@ -929,8 +929,7 @@ async def test_notify_live_activity_falls_back_to_push_to_start(
             "app_data": {
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
-                "live_activity_push_to_start_token": "PUSH_TO_START_HEX_TOKEN",
-                "live_activity_push_to_start_apns_environment": "production",
+                "live_activity_token": "PUSH_TO_START_HEX_TOKEN",
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",

@@ -48,7 +48,6 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
-ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN = "live_activity_push_to_start_token"
 ATTR_TAG = "tag"
 
 ATTR_EVENT_DATA = "event_data"
@@ -103,7 +102,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # will connect via websocket channel to receive
         # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
-        vol.Optional(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN): cv.string,
+        vol.Optional(ATTR_LIVE_ACTIVITY_TOKEN): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )

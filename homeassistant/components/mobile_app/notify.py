@@ -37,7 +37,6 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
-    ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
@@ -262,7 +261,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
         # Start a new activity remotely
         app_data = entry.data[ATTR_APP_DATA]
-        return app_data.get(ATTR_LIVE_ACTIVITY_PUSH_TO_START_TOKEN)
+        return app_data.get(ATTR_LIVE_ACTIVITY_TOKEN)
 
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
