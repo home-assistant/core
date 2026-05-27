@@ -15,11 +15,7 @@ from homeassistant.components.allnet.const import (
     CONF_USE_SSL,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -331,4 +327,3 @@ async def test_reauth_invalid_auth(hass: HomeAssistant, setup_integration) -> No
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
-
