@@ -24,6 +24,7 @@ from pyatv.interface import (
     PushListener,
     PushUpdater,
 )
+from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -140,7 +141,7 @@ class AppleTvMediaPlayer(
         all_features = atv.features.all_features()
         for feature_name, support_flag in SUPPORT_FEATURE_MAPPING.items():
             feature_info = all_features.get(feature_name)
-            if feature_info and feature_info.state != FeatureState.Unsupported:
+            if feature_info and feature_info.state is not FeatureState.Unsupported:
                 self._attr_supported_features |= support_flag
 
         # No need to schedule state update here as that will happen when the first
@@ -189,14 +190,14 @@ class AppleTvMediaPlayer(
             return MediaPlayerState.OFF
         if (
             self._is_feature_available(FeatureName.PowerState)
-            and self.atv.power.power_state == PowerState.Off
+            and self.atv.power.power_state is PowerState.Off
         ):
             return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
                 return MediaPlayerState.IDLE
-            if state == DeviceState.Playing:
+            if state is DeviceState.Playing:
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
@@ -346,11 +347,12 @@ class AppleTvMediaPlayer(
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_id = async_process_play_media_url(self.hass, play_item.url)
+            if play_item.path and self._is_feature_available(FeatureName.StreamFile):
+                media_id = str(play_item.path)
+            else:
+                media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        # TTS and other MUSIC-typed URLs lack a file extension that is_streamable
-        # can probe via miniaudio, so MUSIC type unconditionally selects RAOP.
         use_stream_file = self._is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         )
@@ -359,9 +361,17 @@ class AppleTvMediaPlayer(
             if use_stream_file:
                 _LOGGER.debug("Streaming %s via RAOP", media_id)
                 await self.atv.stream.stream_file(media_id)
-            else:
+            elif self._is_feature_available(FeatureName.PlayUrl) and (
+                (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
+            ):
                 _LOGGER.debug("Playing %s via AirPlay", media_id)
                 await self.atv.stream.play_url(media_id)
+            else:
+                _LOGGER.error(
+                    "Media streaming is not possible with current configuration for %s",
+                    media_id,
+                )
+                return
         except exceptions.NotSupportedError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -465,7 +475,7 @@ class AppleTvMediaPlayer(
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
         if self._playing and self._is_feature_available(FeatureName.Shuffle):
-            return self._playing.shuffle != ShuffleState.Off
+            return self._playing.shuffle is not ShuffleState.Off
         return None
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
@@ -525,7 +535,7 @@ class AppleTvMediaPlayer(
             and (self._is_feature_available(FeatureName.TurnOff))
             and (
                 not self._is_feature_available(FeatureName.PowerState)
-                or self.atv.power.power_state == PowerState.On
+                or self.atv.power.power_state is PowerState.On
             )
         ):
             await self.atv.power.turn_off()
