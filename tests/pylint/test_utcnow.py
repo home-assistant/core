@@ -89,6 +89,17 @@ def test_enforce_utcnow_good(
             id="qualified_datetime_utc",
         ),
         pytest.param(
+            # Combined import exercises the non-``datetime`` branch in
+            # ``visit_module`` while still binding ``datetime``.
+            """
+        import os, datetime
+
+        os.environ
+        now = datetime.datetime.now(datetime.UTC)
+        """,
+            id="combined_import_with_unrelated_module",
+        ),
+        pytest.param(
             """
         import datetime as dt
 
