@@ -316,6 +316,9 @@ async def test_browse_media_card_shows_chapters(
     children = response["result"]["children"]
     assert [c["title"] for c in children] == ["Introduction", "Planets"]
     assert children[0]["media_content_id"] == "yoto://card-test/01"
+    # "Introduction" has 2 tracks → expandable; "Planets" has 1 track → leaf.
+    assert children[0]["can_expand"] is True
+    assert children[1]["can_expand"] is False
 
 
 async def test_browse_media_single_chapter_card_collapses_to_tracks(

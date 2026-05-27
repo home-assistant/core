@@ -211,13 +211,11 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
                         "card_id": card_id,
                     },
                 )
-            # Playing a chapter means playing it from its first track.
+            # A chapter plays from its first track.
             if track_key is None and chapter.tracks:
                 track_key = next(iter(chapter.tracks))
 
-        # Targeted plays (chapter or track) always start from the
-        # beginning; only a bare card play honours the card's own
-        # resume setting.
+        # Chapter/track plays start at 0; a card play keeps its resume point.
         seconds_in = 0 if track_key is not None else None
         try:
             await client.play_card(
@@ -304,9 +302,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
     def _browse_card(self, card: Card) -> BrowseMedia:
         """List a card's chapters, collapsing single-chapter cards to tracks."""
         chapters = card.chapters or {}
-        # Single-chapter cards skip the chapter level: the card expands
-        # straight into tracks, avoiding a one-item submenu for the common
-        # single-story case.
+        # Single-chapter cards expand straight to tracks (skip a one-item level).
         if len(chapters) == 1:
             chapter_key, chapter = next(iter(chapters.items()))
             children = [
@@ -315,12 +311,11 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             ]
         else:
             children = [
-                self._chapter_node(card.id, key, chapter)
-                for key, chapter in chapters.items()
+                self._chapter_node(card.id, chapter_key, chapter)
+                for chapter_key, chapter in chapters.items()
             ]
         node = self._card_node(card)
         node.children = children
-        node.children_media_class = MediaClass.MUSIC
         return node
 
     def _browse_chapter(
@@ -333,15 +328,15 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             self._track_node(card_id, chapter_key, track_key, track)
             for track_key, track in (chapter.tracks or {}).items()
         ]
-        node.children_media_class = MediaClass.MUSIC
         return node
 
     def _card_node(self, card: Card) -> BrowseMedia:
         """Build a browse node for a card."""
+        # MUSIC (not ALBUM) so children render in list view with thumbnails.
         return BrowseMedia(
-            media_class=MediaClass.ALBUM,
+            media_class=MediaClass.MUSIC,
             media_content_id=_build_uri(card.id),
-            media_content_type=MediaType.ALBUM,
+            media_content_type=MediaType.MUSIC,
             title=card.title or card.id,
             can_play=True,
             can_expand=True,
@@ -352,13 +347,14 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         self, card_id: str, chapter_key: str, chapter: Chapter
     ) -> BrowseMedia:
         """Build a browse node for a chapter."""
+        # Single-track chapters are leaves: click plays the track directly.
         return BrowseMedia(
             media_class=MediaClass.MUSIC,
             media_content_id=_build_uri(card_id, chapter_key),
             media_content_type=MediaType.MUSIC,
             title=chapter.title or chapter_key,
             can_play=True,
-            can_expand=False,
+            can_expand=len(chapter.tracks or {}) > 1,
             thumbnail=chapter.icon,
         )
 
@@ -407,8 +403,8 @@ def _build_uri(
 def _parse_uri(media_id: str) -> tuple[str, str | None, str | None]:
     """Parse a yoto:// URI into card/chapter/track parts.
 
-    Parsed manually so card IDs keep their original casing (URL parsers
-    lower-case the authority component per RFC 3986).
+    Parsed manually because URL parsers lower-case the authority and Yoto
+    IDs are case-sensitive.
     """
     prefix = f"{URI_SCHEME}://"
     if not media_id.startswith(prefix):
