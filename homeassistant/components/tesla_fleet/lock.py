@@ -86,9 +86,7 @@ class TeslaFleetCableLockEntity(TeslaFleetVehicleEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ServiceValidationError(
-            "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
         )
