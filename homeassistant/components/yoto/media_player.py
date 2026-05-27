@@ -347,7 +347,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         self, card_id: str, chapter_key: str, chapter: Chapter
     ) -> BrowseMedia:
         """Build a browse node for a chapter."""
-        # Single-track chapters are leaves: click plays the track directly.
+        # Single-track chapters aren't expandable: click plays the track.
         return BrowseMedia(
             media_class=MediaClass.MUSIC,
             media_content_id=_build_uri(card_id, chapter_key),

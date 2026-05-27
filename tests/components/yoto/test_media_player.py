@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from yoto_api import Chapter, YotoError
+from yoto_api import Chapter, Track, YotoError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_SEEK_POSITION,
@@ -35,6 +35,27 @@ from tests.typing import WebSocketGenerator
 ENTITY_ID = "media_player.nursery_yoto"
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
+
+
+def _build_chapters(structure: list[tuple[str, int]]) -> dict[str, Chapter]:
+    """Build chapters from a list of ``(chapter_title, track_count)`` tuples."""
+    chapters = {}
+    for index, (title, track_count) in enumerate(structure, start=1):
+        chapter_key = f"{index:02d}"
+        chapters[chapter_key] = Chapter(
+            key=chapter_key,
+            title=title,
+            icon=f"https://example.test/ch{chapter_key}.png",
+            tracks={
+                f"{chapter_key}-{track:02d}": Track(
+                    key=f"{chapter_key}-{track:02d}",
+                    title=f"{title} - Track {track}",
+                    duration=60,
+                )
+                for track in range(1, track_count + 1)
+            },
+        )
+    return chapters
 
 
 @pytest.mark.usefixtures("mock_token_hex", "mock_yoto_client")
@@ -210,13 +231,13 @@ async def test_play_media(
     )
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
 @pytest.mark.parametrize(
     "media_content_id",
     ["spotify:track:abc", "yoto://"],
 )
 async def test_play_media_invalid_uri_raises(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     media_content_id: str,
 ) -> None:
@@ -267,9 +288,9 @@ async def test_play_media_unknown_target_raises(
     mock_yoto_client.play_card.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_browse_media_root_lists_cards(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -291,45 +312,15 @@ async def test_browse_media_root_lists_cards(
     assert children[0]["can_expand"] is True
 
 
-async def test_browse_media_card_shows_chapters(
+async def test_browse_card_with_multiple_chapters_and_multiple_tracks(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Browsing a multi-chapter card shows its chapters."""
-    await setup_integration(hass, mock_config_entry)
-    client = await hass_ws_client()
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": ENTITY_ID,
-            "media_content_type": "album",
-            "media_content_id": "yoto://card-test",
-        }
-    )
-    response = await client.receive_json()
-
-    assert response["success"]
-    children = response["result"]["children"]
-    assert [c["title"] for c in children] == ["Introduction", "Planets"]
-    assert children[0]["media_content_id"] == "yoto://card-test/01"
-    # "Introduction" has 2 tracks → expandable; "Planets" has 1 track → leaf.
-    assert children[0]["can_expand"] is True
-    assert children[1]["can_expand"] is False
-
-
-async def test_browse_media_single_chapter_card_collapses_to_tracks(
-    hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """A card with a single chapter shows its tracks directly."""
+    """N-N: multi-chapter card, multi-track chapters: list expandable chapters."""
     card = mock_yoto_client.library["card-test"]
-    card.chapters = {"01": card.chapters["01"]}
+    card.chapters = _build_chapters([("Intro", 2), ("Planets", 3)])
 
     await setup_integration(hass, mock_config_entry)
     client = await hass_ws_client()
@@ -339,7 +330,7 @@ async def test_browse_media_single_chapter_card_collapses_to_tracks(
             "id": 1,
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
-            "media_content_type": "album",
+            "media_content_type": "music",
             "media_content_id": "yoto://card-test",
         }
     )
@@ -347,13 +338,77 @@ async def test_browse_media_single_chapter_card_collapses_to_tracks(
 
     assert response["success"]
     children = response["result"]["children"]
-    assert [c["title"] for c in children] == ["Welcome", "The Story Begins"]
-    assert children[0]["media_content_id"] == "yoto://card-test/01/01-INT"
+    assert [c["title"] for c in children] == ["Intro", "Planets"]
+    assert all(c["can_expand"] for c in children)
 
 
+async def test_browse_card_with_multiple_chapters_and_single_track(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """N-1: multi-chapter card, single-track chapters: list non-expandable chapters."""
+    card = mock_yoto_client.library["card-test"]
+    card.chapters = _build_chapters([("Song A", 1), ("Song B", 1), ("Song C", 1)])
+
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://card-test",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    children = response["result"]["children"]
+    assert [c["title"] for c in children] == ["Song A", "Song B", "Song C"]
+    assert not any(c["can_expand"] for c in children)
+
+
+async def test_browse_card_with_single_chapter_collapses_to_tracks(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """1-N: single-chapter card expands straight to tracks (skips chapter level)."""
+    card = mock_yoto_client.library["card-test"]
+    card.chapters = _build_chapters([("Only chapter", 3)])
+
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://card-test",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    children = response["result"]["children"]
+    assert [c["title"] for c in children] == [
+        "Only chapter - Track 1",
+        "Only chapter - Track 2",
+        "Only chapter - Track 3",
+    ]
+    assert children[0]["media_content_id"] == "yoto://card-test/01/01-01"
+
+
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_browse_media_chapter_shows_tracks(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -411,9 +466,9 @@ async def test_browse_media_fetches_card_detail_lazily(
     mock_yoto_client.update_card_detail.assert_called_once_with("card-test")
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_browse_media_unknown_card_raises(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -434,9 +489,9 @@ async def test_browse_media_unknown_card_raises(
     assert response["success"] is False
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_browse_media_unknown_chapter_raises(
     hass: HomeAssistant,
-    mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
