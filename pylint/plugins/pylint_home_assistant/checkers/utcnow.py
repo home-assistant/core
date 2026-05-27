@@ -57,44 +57,45 @@ class HassEnforceUtcnowChecker(BaseChecker):
             return
 
         for stmt in node.body:
-            if isinstance(stmt, nodes.ImportFrom):
-                if stmt.modname != "datetime":
-                    continue
-                for name, alias in stmt.names:
-                    local = alias or name
-                    if name == "datetime":
-                        self._datetime_class_paths.add((local,))
-                    elif name == "UTC":
-                        self._utc_paths.add((local,))
-                    elif name == "timezone":
-                        self._utc_paths.add((local, "utc"))
-            elif isinstance(stmt, nodes.Import):
-                for name, alias in stmt.names:
-                    if name != "datetime":
-                        continue
-                    local = alias or name
-                    self._datetime_class_paths.add((local, "datetime"))
-                    self._utc_paths.add((local, "UTC"))
-                    self._utc_paths.add((local, "timezone", "utc"))
+            match stmt:
+                case nodes.ImportFrom(modname="datetime", names=names):
+                    for name, alias in names:
+                        local = alias or name
+                        match name:
+                            case "datetime":
+                                self._datetime_class_paths.add((local,))
+                            case "UTC":
+                                self._utc_paths.add((local,))
+                            case "timezone":
+                                self._utc_paths.add((local, "utc"))
+                case nodes.Import(names=names):
+                    for name, alias in names:
+                        if name != "datetime":
+                            continue
+                        local = alias or name
+                        self._datetime_class_paths.add((local, "datetime"))
+                        self._utc_paths.add((local, "UTC"))
+                        self._utc_paths.add((local, "timezone", "utc"))
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check for ``datetime.now(UTC)`` calls."""
         if not self._enabled:
             return
 
-        if not isinstance(node.func, nodes.Attribute):
-            return
-        if node.func.attrname != "now":
-            return
-        if len(node.args) != 1 or node.keywords:
-            return
+        match node:
+            case nodes.Call(
+                func=nodes.Attribute(attrname="now", expr=expr),
+                args=[arg],
+                keywords=[],
+            ):
+                pass
+            case _:
+                return
 
-        expr_path = _attribute_path(node.func.expr)
-        if expr_path is None or expr_path not in self._datetime_class_paths:
-            return
-
-        arg_path = _attribute_path(node.args[0])
-        if arg_path is None or arg_path not in self._utc_paths:
+        if (
+            _attribute_path(expr) not in self._datetime_class_paths
+            or _attribute_path(arg) not in self._utc_paths
+        ):
             return
 
         self.add_message("home-assistant-enforce-utcnow", node=node)
