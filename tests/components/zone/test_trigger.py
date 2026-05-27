@@ -15,9 +15,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_component
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -473,7 +473,7 @@ def _parametrize_zone_target_entities() -> list[tuple[dict[str, Any], str, int, 
     ("trigger", "trigger_options", "states"),
     _ZONE_TRIGGER_STATES,
 )
-async def test_zone_trigger_behavior_any(
+async def test_zone_trigger_behavior_each(
     hass: HomeAssistant,
     target_zone_entities: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -484,7 +484,7 @@ async def test_zone_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test zone triggers fire when any targeted entity changes."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_zone_entities,
         trigger_target_config=trigger_target_config,
@@ -535,7 +535,7 @@ async def test_zone_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     _ZONE_TRIGGER_STATES,
 )
-async def test_zone_trigger_behavior_last(
+async def test_zone_trigger_behavior_all(
     hass: HomeAssistant,
     target_zone_entities: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -546,7 +546,7 @@ async def test_zone_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test zone triggers fire when last targeted entity changes."""
-    await assert_trigger_behavior_last(
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_zone_entities,
         trigger_target_config=trigger_target_config,

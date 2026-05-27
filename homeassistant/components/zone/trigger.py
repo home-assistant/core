@@ -32,7 +32,7 @@ from homeassistant.helpers.automation import (
 )
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityTriggerBase,
     Trigger,
     TriggerActionRunner,
@@ -63,7 +63,7 @@ _LEGACY_TRIGGER_OPTIONS_SCHEMA = vol.Schema(
 )
 
 # New-style zone trigger schema
-_ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+_ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(CONF_ZONE): cv.entity_domain("zone"),
