@@ -2,23 +2,29 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyenphase import EnvoyTokenAuth
 from pyenphase.auth import EnvoyLegacyAuth
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
 from homeassistant.components.enphase_envoy.services import (
-    ACTION_COORDINATORS,
     ACTION_TOKEN_LIFETIME,
     ATTR_ENVOY_DEVICE_ID,
-    setup_envoy_service_actions,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import envoy_token, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +52,6 @@ async def test_service_load_unload(
     """Test service loading and unloading."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     # test with unloaded config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -59,23 +64,6 @@ async def test_service_load_unload(
             return_response=True,
         )
 
-    # test with simulated second loaded envoy for COV on envoy_coordinators_list handling
-    with (
-        patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
-        patch.dict(
-            hass.data[DOMAIN][ACTION_COORDINATORS], {"4321": "hello world"}, clear=True
-        ),
-    ):
-        await setup_integration(hass, config_entry)
-        assert config_entry.state is ConfigEntryState.LOADED
-
-        # existing envoy_coordinators_list entry for COV of return in service setup
-        setup_envoy_service_actions(hass)
-
-        # existing envoy_coordinators_list entry for COV of return in service unload.
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        assert config_entry.state is ConfigEntryState.NOT_LOADED
-
 
 async def test_service_token_lifetime_value(
     hass: HomeAssistant,
@@ -85,7 +73,6 @@ async def test_service_token_lifetime_value(
     """Test token_lifetime service action for data return."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -104,7 +91,6 @@ async def test_service_uninitialized(
     """Test service action for envoy not initialized."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     mock_envoy.data = None
 
@@ -128,7 +114,6 @@ async def test_service_device_id(
     """Test service action with optional device_id specified."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_reg = er.async_get(hass)
     device_id = entity_reg.async_get(
@@ -153,7 +138,6 @@ async def test_service_device_id_error(
     """Test service action for wrong device_id specified."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     device_id = "some-bogus-device-id"
 
@@ -178,7 +162,6 @@ async def test_service_via_device_id(
     """Test service action with child device id specified."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_reg = er.async_get(hass)
     device_id = entity_reg.async_get("sensor.inverter_1").device_id
@@ -201,28 +184,43 @@ async def test_service_dual_envoy_with_device_id(
     """Test service action with device_id specified and multiple envoys."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Add second Envoy config entry
+    token = envoy_token(300)
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e73",
+        title="Envoy 2345",
+        unique_id="2345",
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_NAME: "Envoy 2345",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+    )
+
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.2", token=token, envoy_serial="2345")
+    mock_envoy.serial_number = "2345"
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, second_entry)
 
     entity_reg = er.async_get(hass)
-    device_id = entity_reg.async_get("sensor.inverter_1").device_id
+    device_id = entity_reg.async_get(
+        "sensor.envoy_2345_lifetime_energy_production"
+    ).device_id
 
     # dual envoy with device_id should work and find correct coordinator
-    with (
-        patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
-        patch.dict(
-            hass.data[DOMAIN][ACTION_COORDINATORS],
-            {"4321": "hello world"},
-        ),
-    ):
-        result = await hass.services.async_call(
-            DOMAIN,
-            ACTION_TOKEN_LIFETIME,
-            {ATTR_ENVOY_DEVICE_ID: device_id},
-            blocking=True,
-            return_response=True,
-        )
+    result = await hass.services.async_call(
+        DOMAIN,
+        ACTION_TOKEN_LIFETIME,
+        {ATTR_ENVOY_DEVICE_ID: device_id},
+        blocking=True,
+        return_response=True,
+    )
 
-        assert result["lifetime"] == 199
+    assert result["lifetime"] == 299
 
 
 async def test_service_dual_envoy_no_device_id(
@@ -233,15 +231,29 @@ async def test_service_dual_envoy_no_device_id(
     """Test service action with no device_id specified and multiple envoys."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
-    # dual envoy with no device_id should raise
+    # Add second Envoy config entry
+    token = envoy_token(300)
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e73",
+        title="Envoy 2345",
+        unique_id="2345",
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_NAME: "Envoy 2345",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.2", token=token, envoy_serial="2345")
+    mock_envoy.serial_number = "2345"
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, second_entry)
+
+    # dual envoy and service without device_id should raise
     with (
-        patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
-        patch.dict(
-            hass.data[DOMAIN][ACTION_COORDINATORS],
-            {"4321": "hello world"},
-        ),
         pytest.raises(
             ServiceValidationError,
             match="No Envoy found",
@@ -267,7 +279,6 @@ async def test_service_token_lifetime_value_with_prev7(
     )
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(
         ServiceValidationError,

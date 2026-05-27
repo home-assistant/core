@@ -13,11 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .services import (
-    add_envoy_to_coordinators_list,
-    remove_envoy_from_coordinators_list,
-    setup_envoy_service_actions,
-)
+from .services import setup_envoy_service_actions
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -79,8 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Add coordinator to list of known coordinators so it can be found by services
-    add_envoy_to_coordinators_list(hass, entry)
     return True
 
 
@@ -90,12 +84,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Remove coordinator from list of known coordinators so it can no longer be
-        # found by services
-        remove_envoy_from_coordinators_list(hass, entry)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

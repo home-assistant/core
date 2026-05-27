@@ -1,7 +1,5 @@
 """Implement Enphase Envoy service actions."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -39,49 +37,40 @@ def _find_envoy_coordinator(
     device_id is specified, the first coordinator in the list is returned.
     """
     dev_reg = dr.async_get(hass)
-    action_coordinators: dict[str, EnphaseUpdateCoordinator] = hass.data[DOMAIN][
-        ACTION_COORDINATORS
-    ]
+    loaded_entries: list[EnphaseConfigEntry] = hass.config_entries.async_loaded_entries(
+        DOMAIN
+    )
+    if not loaded_entries:
+        return None
+
+    # use first entry if no device id was specified and only 1 config entry exists
+    if device_id is None and len(loaded_entries) == 1:
+        return loaded_entries[0].runtime_data
 
     # find the device coordinator
-    if device_id and (device_entry := dev_reg.async_get(device_id)):
-        if device_entry.serial_number and (
-            coordinator := action_coordinators.get(device_entry.serial_number)
-        ):
-            return coordinator
+    if (
+        device_id
+        and (device_entry := dev_reg.async_get(device_id))
+        and device_entry.serial_number
+    ):
         # if child device was passed, use parent
         if (
             device_entry.via_device_id
             and (via_device := dev_reg.async_get(device_entry.via_device_id))
             and via_device.serial_number
-            and (coordinator := action_coordinators.get(via_device.serial_number))
         ):
-            return coordinator
+            device_entry = dev_reg.async_get(device_entry.via_device_id)
 
-    # use first entry if no specific id was specified and only 1 exists
-    if device_id is None and len(action_coordinators) == 1:
-        return next(iter(action_coordinators.values()))
+        if device_entry:
+            config_entry = next(
+                entry
+                for entry in loaded_entries
+                if entry.entry_id in device_entry.config_entries
+            )
+            if config_entry:
+                return config_entry.runtime_data
 
     return None
-
-
-def add_envoy_to_coordinators_list(
-    hass: HomeAssistant, entry: EnphaseConfigEntry
-) -> None:
-    """Add Envoy config entry to list of known envoy coordinators."""
-    # keep track of our coordinator
-    if (entry_envoy := entry.runtime_data.envoy) and entry_envoy.serial_number:
-        hass.data[DOMAIN][ACTION_COORDINATORS][entry_envoy.serial_number] = (
-            entry.runtime_data
-        )
-
-
-def remove_envoy_from_coordinators_list(
-    hass: HomeAssistant, entry: EnphaseConfigEntry
-) -> None:
-    """Remove Envoy config entry from list of known envoy coordinators."""
-    if (entry_envoy := entry.runtime_data.envoy) and entry_envoy.serial_number:
-        hass.data[DOMAIN][ACTION_COORDINATORS].pop(entry_envoy.serial_number, None)
 
 
 @callback
@@ -127,12 +116,6 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
         return {
             "lifetime": coordinator.token_lifetime,
         }
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    if ACTION_COORDINATORS not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][ACTION_COORDINATORS] = {}
 
     # if services are already registered by another envoy don't define again
     existing = hass.services.async_services_for_domain(DOMAIN)
