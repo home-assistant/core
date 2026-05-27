@@ -16,5 +16,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
   "quality_scale": "bronze",
-  "requirements": ["pyvesync==3.4.1"]
+  "requirements": ["pyvesync==3.4.2"]
 }
