@@ -202,7 +202,6 @@ async def _execute_inovelli_all_led_effect(
         )
 
 
-@convert_zha_error_to_ha_error()
 async def _execute_inovelli_individual_led_effect(
     hass: HomeAssistant,
     config: dict[str, Any],
