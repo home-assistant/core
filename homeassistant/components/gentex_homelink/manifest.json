@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["homelink-integration-api==0.0.1"]
+  "requirements": ["homelink-integration-api==0.0.4"]
 }
