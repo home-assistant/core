@@ -3270,7 +3270,8 @@ async def _setup_numerical_condition(
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "25", True),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "50", False),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, "75", False),
-        # above and below (range)
+        # between (range) — limits are inclusive, so a value exactly equal
+        # to either bound is treated as "inside" and matches
         (
             {
                 "threshold": {
@@ -3291,7 +3292,7 @@ async def _setup_numerical_condition(
                 }
             },
             "20",
-            False,
+            True,
         ),
         (
             {
@@ -3302,7 +3303,7 @@ async def _setup_numerical_condition(
                 }
             },
             "80",
-            False,
+            True,
         ),
         (
             {
@@ -3326,8 +3327,9 @@ async def _setup_numerical_condition(
             "90",
             False,
         ),
-        # outside (inverse of between) — limits are non-inclusive, so a value
-        # equal to either bound is treated as "not inside" and matches
+        # outside (inverse of between) — limits are inclusive on the between
+        # side, so a value exactly equal to either bound is "inside" and
+        # does NOT match outside
         (
             {
                 "threshold": {
@@ -3348,7 +3350,7 @@ async def _setup_numerical_condition(
                 }
             },
             "20",
-            True,
+            False,
         ),
         (
             {
@@ -3359,7 +3361,7 @@ async def _setup_numerical_condition(
                 }
             },
             "80",
-            True,
+            False,
         ),
         (
             {
