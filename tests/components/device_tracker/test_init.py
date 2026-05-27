@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, issue_registry as ir
 from homeassistant.helpers.discovery import DiscoveryInfoType
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder
@@ -820,4 +820,66 @@ async def test_modern_platform_setup(hass: HomeAssistant) -> None:
     assert state.attributes == {
         "in_zones": [],
         "source_type": SourceType.ROUTER,
+    }
+
+
+async def test_unsupported_legacy_config_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unsupported legacy config creates issue."""
+
+    integration_domain = "test"
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "device_tracker", integration_domain, {}, config
+            )
+        )
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(integration_domain, async_setup=async_setup),
+    )
+    mock_platform(
+        hass,
+        f"{integration_domain}.device_tracker",
+        MockPlatform(),
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {device_tracker.DOMAIN: {"platform": integration_domain, "something": "value"}},
+    )
+    await async_setup_component(hass, integration_domain, {})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(device_tracker.DOMAIN)) == 0
+    assert (
+        f"The {integration_domain} platform for the {device_tracker.DOMAIN} integration does not support platform"
+        " setup, please remove it from your config" in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{device_tracker.DOMAIN}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is None
+    assert issue.translation_key == "platform_setup_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": device_tracker.DOMAIN,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{device_tracker.DOMAIN}:\n  - platform: {integration_domain}\n```",
     }
