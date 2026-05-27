@@ -28,7 +28,9 @@ from electrolux_group_developer_sdk.feature_constants import (
     DOOR_STATE,
     DRAWER_STATUS,
     HOOD_AUTO_SWITCH_OFF_EVENT,
+    HOOD_FILTER_CHARC_ENABLE,
     UI_LOCK_MODE,
+    ZONE_HOB_POT_DETECTED,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -36,11 +38,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ElectroluxDataUpdateCoordinator
+from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
 from .util import convert_to_snake_case
@@ -62,12 +63,12 @@ class ElectroluxBinarySensorDescription[T = ApplianceData](
 
 
 @dataclass(frozen=True, kw_only=True)
-class ElectroluxCavityBinarySensorDescription[T = ApplianceData](
+class ElectroluxSubmoduleBinarySensorDescription[T = ApplianceData](
     BinarySensorEntityDescription
 ):
-    """Custom binary sensor description for Electrolux appliance cavity sensors."""
+    """Custom binary sensor description for Electrolux appliance submodule sensors."""
 
-    exists_fn: Callable[[T, str], bool] = lambda appliance, cavity: True
+    exists_fn: Callable[[T, str], bool] = lambda appliance, submodule: True
     value_fn: Callable[[T, str], Any]
     mapping: dict[Any, bool] | None = None
 
@@ -83,7 +84,6 @@ GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription, ...] = (
     ElectroluxBinarySensorDescription(
         key="connection_state",
         translation_key="connection_state",
-        icon="mdi:wifi",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=_connection_state_value_fn,
         mapping={"connected": True, "disconnected": False},
@@ -94,11 +94,24 @@ HOB_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription[HBAppliance], ..
     ElectroluxBinarySensorDescription(
         key="ui_lock_mode",
         translation_key="ui_lock_mode",
-        icon="mdi:lock",
-        device_class=BinarySensorDeviceClass.LOCK,
         exists_fn=lambda appliance: appliance.is_feature_supported(UI_LOCK_MODE),
         value_fn=lambda appliance: appliance.get_current_ui_lock_mode(),
         mapping={True: False, False: True},
+    ),
+)
+
+HOB_ZONE_ELECTROLUX_SENSORS: tuple[
+    ElectroluxSubmoduleBinarySensorDescription[HBAppliance], ...
+] = (
+    ElectroluxSubmoduleBinarySensorDescription[HBAppliance](
+        key="pot_detected",
+        translation_key="pot_detected",
+        value_fn=lambda appliance, hob_zone: (
+            appliance.get_current_zone_hob_pot_detected(hob_zone)
+        ),
+        exists_fn=lambda appliance, hob_zone: appliance.is_hob_zone_feature_supported(
+            hob_zone, ZONE_HOB_POT_DETECTED
+        ),
     ),
 )
 
@@ -106,18 +119,25 @@ HOOD_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription[HDAppliance], .
     ElectroluxBinarySensorDescription(
         key="drawer_status",
         translation_key="drawer_status",
-        icon="mdi:file-cabinet",
         exists_fn=lambda appliance: appliance.is_feature_supported(DRAWER_STATUS),
         value_fn=lambda appliance: appliance.get_current_drawer_status(),
     ),
     ElectroluxBinarySensorDescription(
         key="hood_auto_switch_off_event",
         translation_key="hood_auto_switch_off_event",
-        icon="mdi:power-sleep",
         exists_fn=lambda appliance: appliance.is_feature_supported(
             HOOD_AUTO_SWITCH_OFF_EVENT
         ),
         value_fn=lambda appliance: appliance.get_current_hood_auto_switch_off_event(),
+    ),
+    ElectroluxBinarySensorDescription(
+        key="hood_filter_charcoal_enabled",
+        translation_key="hood_filter_charcoal_enabled",
+        exists_fn=lambda appliance: appliance.is_feature_supported(
+            HOOD_FILTER_CHARC_ENABLE
+        ),
+        value_fn=lambda appliance: appliance.get_current_hood_filter_charc_enable(),
+        mapping={"on": True, "off": False},
     ),
 )
 
@@ -130,7 +150,6 @@ CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxBinarySensorDescription(
         key="door_state",
         translation_key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         exists_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
         value_fn=lambda appliance: appliance.get_current_door_state(),
@@ -139,22 +158,6 @@ CARE_ELECTROLUX_SENSORS: tuple[
     ElectroluxBinarySensorDescription(
         key="ui_lock_mode",
         translation_key="ui_lock_mode",
-        icon="mdi:lock",
-        device_class=BinarySensorDeviceClass.LOCK,
-        exists_fn=lambda appliance: appliance.is_feature_supported(UI_LOCK_MODE),
-        value_fn=lambda appliance: appliance.get_current_ui_lock_mode(),
-        mapping={True: False, False: True},
-    ),
-)
-
-REFRIGERATOR_GENERIC_ELECTROLUX_SENSORS: tuple[
-    ElectroluxBinarySensorDescription[CRAppliance], ...
-] = (
-    ElectroluxBinarySensorDescription(
-        key="ui_lock_mode",
-        translation_key="ui_lock_mode",
-        icon="mdi:lock",
-        device_class=BinarySensorDeviceClass.LOCK,
         exists_fn=lambda appliance: appliance.is_feature_supported(UI_LOCK_MODE),
         value_fn=lambda appliance: appliance.get_current_ui_lock_mode(),
         mapping={True: False, False: True},
@@ -165,7 +168,6 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription[OVAppliance], .
     ElectroluxBinarySensorDescription(
         key="door_state",
         translation_key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         exists_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
         value_fn=lambda appliance: appliance.get_current_door_state(),
@@ -174,12 +176,11 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxBinarySensorDescription[OVAppliance], .
 )
 
 STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
-    ElectroluxCavityBinarySensorDescription[SOAppliance], ...
+    ElectroluxSubmoduleBinarySensorDescription[SOAppliance], ...
 ] = (
-    ElectroluxCavityBinarySensorDescription[SOAppliance](
+    ElectroluxSubmoduleBinarySensorDescription[SOAppliance](
         key="door_state",
         translation_key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
             cavity, DOOR_STATE
@@ -191,13 +192,24 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
     ),
 )
 
-FREEZER_FRIDGE_ICE_MAKER_EXTRA_CAVITY_ELECTROLUX_SENSORS: tuple[
-    ElectroluxCavityBinarySensorDescription[CRAppliance], ...
+REFRIGERATOR_GENERIC_ELECTROLUX_SENSORS: tuple[
+    ElectroluxBinarySensorDescription[CRAppliance], ...
 ] = (
-    ElectroluxCavityBinarySensorDescription(
+    ElectroluxBinarySensorDescription(
+        key="ui_lock_mode",
+        translation_key="ui_lock_mode",
+        exists_fn=lambda appliance: appliance.is_feature_supported(UI_LOCK_MODE),
+        value_fn=lambda appliance: appliance.get_current_ui_lock_mode(),
+        mapping={True: False, False: True},
+    ),
+)
+
+FREEZER_FRIDGE_ICE_MAKER_EXTRA_CAVITY_ELECTROLUX_SENSORS: tuple[
+    ElectroluxSubmoduleBinarySensorDescription[CRAppliance], ...
+] = (
+    ElectroluxSubmoduleBinarySensorDescription(
         key="door_state",
         translation_key="door_state",
-        icon="mdi:door",
         device_class=BinarySensorDeviceClass.DOOR,
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
             cavity, DOOR_STATE
@@ -250,6 +262,15 @@ def build_entities_for_appliance(
             if description.exists_fn(appliance_data)
         )
 
+        entities.extend(
+            ElectroluxSubmoduleSensor(
+                appliance_data, coordinator, hob_zone, description
+            )
+            for hob_zone in appliance_data.get_available_hob_zone()
+            for description in HOB_ZONE_ELECTROLUX_SENSORS
+            if description.exists_fn(appliance_data, hob_zone)
+        )
+
     if isinstance(appliance_data, HDAppliance):
         entities.extend(
             ElectroluxSensor(appliance_data, coordinator, description)
@@ -273,7 +294,7 @@ def build_entities_for_appliance(
 
     if isinstance(appliance_data, SOAppliance):
         entities.extend(
-            ElectroluxCavitySensor(appliance_data, coordinator, cavity, description)
+            ElectroluxSubmoduleSensor(appliance_data, coordinator, cavity, description)
             for description in STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS
             for cavity in appliance_data.get_supported_cavities()
             if description.exists_fn(appliance_data, cavity)
@@ -287,7 +308,7 @@ def build_entities_for_appliance(
         )
 
         entities.extend(
-            ElectroluxCavitySensor(appliance_data, coordinator, cavity, description)
+            ElectroluxSubmoduleSensor(appliance_data, coordinator, cavity, description)
             for description in FREEZER_FRIDGE_ICE_MAKER_EXTRA_CAVITY_ELECTROLUX_SENSORS
             for cavity in appliance_data.get_supported_cavities()
             if description.exists_fn(appliance_data, cavity)
@@ -298,7 +319,7 @@ def build_entities_for_appliance(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElectroluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set binary sensor for Electrolux Integration."""
@@ -351,25 +372,28 @@ class ElectroluxSensor(ElectroluxBaseEntity[T], BinarySensorEntity):
         return value
 
 
-class ElectroluxCavitySensor(ElectroluxBaseEntity[T], BinarySensorEntity):
-    """Representation of a generic binary sensor for appliance cavities."""
+class ElectroluxSubmoduleSensor(ElectroluxBaseEntity[T], BinarySensorEntity):
+    """Representation of a generic binary sensor for appliance submodules."""
 
-    entity_description: ElectroluxCavityBinarySensorDescription[T]
+    entity_description: ElectroluxSubmoduleBinarySensorDescription[T]
 
     def __init__(
         self,
         appliance_data: T,
         coordinator: ElectroluxDataUpdateCoordinator,
         cavity: str,
-        description: ElectroluxCavityBinarySensorDescription[T],
+        description: ElectroluxSubmoduleBinarySensorDescription[T],
     ) -> None:
         """Initialize the sensor."""
         entity_key = f"{convert_to_snake_case(cavity)}_{description.key}"
+        translation_key = (
+            f"{convert_to_snake_case(cavity)}_{description.translation_key}"
+        )
         super().__init__(appliance_data, coordinator, entity_key)
 
         self._cavity = cavity
         self.entity_description = description
-        self._attr_translation_key = entity_key
+        self._attr_translation_key = translation_key
 
     def _update_attr_state(self) -> bool:
         new_value = self._get_value()

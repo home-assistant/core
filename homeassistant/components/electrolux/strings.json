@@ -38,8 +38,47 @@
       "drawer_status": {
         "name": "Drawer status"
       },
+      "extracavity_door_state": {
+        "name": "Extra cavity door"
+      },
+      "freezer_door_state": {
+        "name": "Freezer door"
+      },
+      "fridge_door_state": {
+        "name": "Fridge door"
+      },
+      "hobzone1_pot_detected": {
+        "name": "Zone 1 pot detected"
+      },
+      "hobzone2_pot_detected": {
+        "name": "Zone 2 pot detected"
+      },
+      "hobzone3_pot_detected": {
+        "name": "Zone 3 pot detected"
+      },
+      "hobzone4_pot_detected": {
+        "name": "Zone 4 pot detected"
+      },
+      "hobzone5_pot_detected": {
+        "name": "Zone 5 pot detected"
+      },
+      "hobzone6_pot_detected": {
+        "name": "Zone 6 pot detected"
+      },
+      "hobzone7_pot_detected": {
+        "name": "Zone 7 pot detected"
+      },
+      "hobzone8_pot_detected": {
+        "name": "Zone 8 pot detected"
+      },
       "hood_auto_switch_off_event": {
         "name": "Auto switch off event"
+      },
+      "hood_filter_charcoal_enabled": {
+        "name": "Charcoal filter"
+      },
+      "ui_lock_mode": {
+        "name": "UI lock mode"
       },
       "upperoven_door_state": {
         "name": "Upper door state"

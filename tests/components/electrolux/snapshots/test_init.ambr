@@ -22,7 +22,7 @@
     'manufacturer': 'AEG',
     'model': 'RCB732E9MX',
     'model_id': None,
-    'name': 'Ayran fridge',
+    'name': 'Ayran',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '20220412',
