@@ -73,8 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
     except InvalidHeaterList as exc:
         raise NoHeaters from exc
     except InvalidGateway as exc:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Incorrect credentials") from exc
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="incorrect_credentials"
+        ) from exc
     except ClientResponseError as exc:
         if exc.status == 404:
             raise NotFound from exc

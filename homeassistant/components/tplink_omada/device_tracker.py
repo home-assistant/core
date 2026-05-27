@@ -43,6 +43,7 @@ class OmadaClientScannerEntity(
 ):
     """Entity for a client connected to the Omada network."""
 
+    _attr_has_entity_name = True
     _client_details: OmadaWirelessClient | None = None
 
     def __init__(
