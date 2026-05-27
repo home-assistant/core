@@ -119,7 +119,8 @@
         "name": "Battery pack 1 current"
       },
       "battery_pack_1_cycles": {
-        "name": "Battery pack 1 cycles"
+        "name": "Battery pack 1 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_1_mos_temperature": {
         "name": "Battery pack 1 MOS temperature"
@@ -140,7 +141,8 @@
         "name": "Battery pack 2 current"
       },
       "battery_pack_2_cycles": {
-        "name": "Battery pack 2 cycles"
+        "name": "Battery pack 2 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_2_mos_temperature": {
         "name": "Battery pack 2 MOS temperature"
@@ -161,7 +163,8 @@
         "name": "Battery pack 3 current"
       },
       "battery_pack_3_cycles": {
-        "name": "Battery pack 3 cycles"
+        "name": "Battery pack 3 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_3_mos_temperature": {
         "name": "Battery pack 3 MOS temperature"
@@ -182,7 +185,8 @@
         "name": "Battery pack 4 current"
       },
       "battery_pack_4_cycles": {
-        "name": "Battery pack 4 cycles"
+        "name": "Battery pack 4 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_4_mos_temperature": {
         "name": "Battery pack 4 MOS temperature"
@@ -203,7 +207,8 @@
         "name": "Battery pack 5 current"
       },
       "battery_pack_5_cycles": {
-        "name": "Battery pack 5 cycles"
+        "name": "Battery pack 5 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_5_mos_temperature": {
         "name": "Battery pack 5 MOS temperature"
@@ -296,7 +301,8 @@
         }
       },
       "equivalent_full_cycles": {
-        "name": "Equivalent full cycles"
+        "name": "Equivalent full cycles",
+        "unit_of_measurement": "cycles"
       },
       "grid_frequency": {
         "name": "Grid frequency"
@@ -311,7 +317,8 @@
         "name": "Main current"
       },
       "main_cycles": {
-        "name": "Main cycles"
+        "name": "Main cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "main_mos_temperature": {
         "name": "Main MOS temperature"
