@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from allnet import AllnetClient, AllnetConnectionError
 from allnet.exceptions import AllnetAuthenticationError
+from allnet.models import DeviceProfile
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -12,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
-from .const import CONF_USE_SSL, DEFAULT_USE_SSL, DOMAIN
+from .const import CONF_DEVICE_PROFILE, CONF_USE_SSL, DEFAULT_USE_SSL, DOMAIN
 from .coordinator import AllnetDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
@@ -35,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AllnetConfigEntry) -> bo
     username = entry.data.get(CONF_USERNAME) or None
     password = entry.data.get(CONF_PASSWORD) or None
     use_ssl = entry.data.get(CONF_USE_SSL, DEFAULT_USE_SSL)
+    profile = DeviceProfile(entry.data.get(CONF_DEVICE_PROFILE, DeviceProfile.AUTO))
 
     session = async_get_clientsession(hass)
     client = AllnetClient(
@@ -43,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AllnetConfigEntry) -> bo
         password=password,
         use_ssl=use_ssl,
         session=session,
+        profile=profile,
     )
 
     try:

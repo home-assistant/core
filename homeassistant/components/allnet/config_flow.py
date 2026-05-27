@@ -176,6 +176,11 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = host
         self._discovered_name = name
 
+        # Abort immediately if a config entry for this host already exists.
+        # This handles auth-protected devices where the unauthenticated probe
+        # below raises AllnetAuthenticationError before we can set a unique_id.
+        self._async_abort_entries_match({CONF_HOST: host})
+
         # Check if already configured at this host
         await self.async_set_unique_id(None)  # reset; will be set after validation
         self._abort_if_unique_id_configured()
