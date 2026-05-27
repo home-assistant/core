@@ -217,7 +217,11 @@ def config_entry(config_entry_data) -> ConfigEntry:
 
 
 @pytest_asyncio.fixture
-async def setup_integration(hass, config_entry, mock_allnet_client):
+async def setup_integration(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    mock_allnet_client: MagicMock,
+) -> AsyncGenerator[ConfigEntry]:
     """Set up the ALLNET integration with a mock client and yield the entry."""
     mock_session = MagicMock()
     with (

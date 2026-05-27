@@ -2,17 +2,20 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from allnet import AllnetClient, AllnetConnectionError
 from allnet.exceptions import AllnetAuthenticationError, AllnetInvalidResponseError
 from allnet.models import Channel
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import AllnetConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +26,7 @@ class AllnetDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Channel]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AllnetConfigEntry,
         client: AllnetClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -33,9 +36,9 @@ class AllnetDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Channel]]):
             logger=_LOGGER,
             name=f"{DOMAIN}_{entry.unique_id or entry.entry_id}",
             update_interval=timedelta(seconds=scan_interval),
+            config_entry=entry,
         )
         self.client = client
-        self.config_entry = entry
 
     async def _async_update_data(self) -> dict[str, Channel]:
         """Fetch channel data from the ALLNET device."""

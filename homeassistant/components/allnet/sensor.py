@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AllnetConfigEntry
@@ -142,7 +142,7 @@ def _resolve_mapping(channel: Channel) -> _UnitMapping:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AllnetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ALLNET sensors."""
     runtime = entry.runtime_data

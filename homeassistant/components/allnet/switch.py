@@ -8,7 +8,7 @@ from allnet.models import ChannelKind
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AllnetConfigEntry
 from .coordinator import AllnetDataUpdateCoordinator
@@ -18,7 +18,7 @@ from .entity import AllnetEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AllnetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ALLNET switches."""
     runtime = entry.runtime_data
