@@ -193,7 +193,7 @@ async def _execute_inovelli_all_led_effect(
 ) -> None:
     cluster = _find_inovelli_cluster(hass, config)
 
-    with convert_zha_error_to_ha_error():
+    async with convert_zha_error_to_ha_error():
         await cluster.led_effect(
             led_effect=config["effect_type"],
             led_color=config["color"],
@@ -210,7 +210,7 @@ async def _execute_inovelli_individual_led_effect(
 ) -> None:
     cluster = _find_inovelli_cluster(hass, config)
 
-    with convert_zha_error_to_ha_error():
+    async with convert_zha_error_to_ha_error():
         await cluster.individual_led_effect(
             led_effect=config["effect_type"],
             led_color=config["color"],
