@@ -65,9 +65,6 @@ class BucketHolder:
         by_load = attrgetter("total_tests")
         units = sorted(self._atomic_units(test_folder), key=itemgetter(0), reverse=True)
         for size, items in units:
-            for item in items:
-                tag = " (same bucket)" if item is not items[0] else ""
-                print(f"{item.total_tests:>{digits}} tests in {item.path}{tag}")
             fits = [
                 b
                 for b in self._buckets
@@ -75,6 +72,8 @@ class BucketHolder:
             ]
             bucket = max(fits, key=by_load) if fits else min(self._buckets, key=by_load)
             for item in items:
+                tag = " (same bucket)" if item is not items[0] else ""
+                print(f"{item.total_tests:>{digits}} tests in {item.path}{tag}")
                 bucket.add(item)
 
         if not test_folder.added_to_bucket:
