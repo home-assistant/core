@@ -5,7 +5,6 @@ from iometer import IOmeterSSEClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import IOmeterConfigEntry, IOMeterCoordinator
 
@@ -15,8 +14,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: IOmeterConfigEntry) -> bool:
     """Set up IOmeter from a config entry."""
     host = entry.data[CONF_HOST]
-    session = async_get_clientsession(hass)
-    client = IOmeterSSEClient(host=host, session=session)
+    client = IOmeterSSEClient(host=host)
 
     coordinator = IOMeterCoordinator(hass, entry, client)
     await coordinator.async_start()

@@ -118,7 +118,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
 
     async def _run_streams(self) -> None:
         """Run reading and status SSE streams concurrently."""
-        async with asyncio.TaskGroup() as tg:
+        async with self.client, asyncio.TaskGroup() as tg:
             tg.create_task(self._watch_readings())
             tg.create_task(self._watch_status())
 

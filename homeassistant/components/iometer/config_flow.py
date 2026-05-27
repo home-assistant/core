@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -32,11 +31,10 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_first_status(self, host: str) -> Status:
         """Connect to the bridge and return the first status event."""
-        session = async_get_clientsession(self.hass)
-        async with IOmeterSSEClient(host=host, session=session) as client:
+        async with IOmeterSSEClient(host=host) as client:
             async for status in client.watch_status():
                 return status
-        raise IOmeterNoStatusError("No status received")
+        raise IOmeterConnectionError("No status received")
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
