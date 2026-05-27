@@ -221,8 +221,8 @@ class TrackerEntity(
         """Return the entity_id of zones the device is currently in.
 
         The list may be in any order; the base class sorts it by zone radius
-        and discards zones which do not exist. Ignored if latitude and
-        longitude are both set.
+        and discards zones which do not exist. Takes precedence over latitude
+        and longitude when set (including when set to an empty list).
         """
         return self._attr_in_zones
 
@@ -252,11 +252,7 @@ class TrackerEntity(
     @callback
     def _async_write_ha_state(self) -> None:
         """Calculate active zones."""
-        if self.available and self.latitude is not None and self.longitude is not None:
-            self.__active_zone, self.__in_zones = zone.async_in_zones(
-                self.hass, self.latitude, self.longitude, self.location_accuracy
-            )
-        elif (zones := self.in_zones) is not None:
+        if (zones := self.in_zones) is not None:
             zone_states = sorted(
                 (
                     zone_state
@@ -270,6 +266,12 @@ class TrackerEntity(
                 None,
             )
             self.__in_zones = [z.entity_id for z in zone_states]
+        elif (
+            self.available and self.latitude is not None and self.longitude is not None
+        ):
+            self.__active_zone, self.__in_zones = zone.async_in_zones(
+                self.hass, self.latitude, self.longitude, self.location_accuracy
+            )
         else:
             self.__active_zone = None
             self.__in_zones = None
