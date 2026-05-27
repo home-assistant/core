@@ -45,6 +45,7 @@ class AllnetDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Channel]]):
         try:
             channels = await self.client.async_get_channels()
         except AllnetAuthenticationError as err:
+            assert self.config_entry is not None
             self.config_entry.async_start_reauth(self.hass)
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except AllnetConnectionError as err:

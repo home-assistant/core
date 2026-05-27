@@ -14,7 +14,7 @@ from allnet.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
