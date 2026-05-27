@@ -367,11 +367,10 @@ class AppleTvMediaPlayer(
                 _LOGGER.debug("Playing %s via AirPlay", media_id)
                 await self.atv.stream.play_url(media_id)
             else:
-                _LOGGER.error(
-                    "Media streaming is not possible with current configuration for %s",
-                    media_id,
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="streaming_not_supported",
                 )
-                return
         except exceptions.NotSupportedError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

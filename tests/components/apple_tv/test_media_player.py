@@ -31,8 +31,8 @@ from homeassistant.exceptions import HomeAssistantError
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "media_player.living_room_living_room"
-_MUSIC_URL = "http://192.168.1.100:8123/api/tts_proxy/abc.mp3"
-_VIDEO_URL = "http://192.168.1.100:8123/video.mp4"
+_MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
+_VIDEO_URL = "http://example.local:8123/video.mp4"
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -105,10 +105,22 @@ async def test_play_media_launches_app(
 
 
 @pytest.mark.parametrize(
-    ("media_type", "media_id", "called_method"),
+    ("media_type", "media_id", "called_method", "stream_file_state"),
     [
-        (MediaType.MUSIC, _MUSIC_URL, "stream_file"),
-        (MediaType.VIDEO, _VIDEO_URL, "play_url"),
+        pytest.param(
+            MediaType.MUSIC,
+            _MUSIC_URL,
+            "stream_file",
+            FeatureState.Available,
+            id="music_via_raop",
+        ),
+        pytest.param(
+            MediaType.VIDEO,
+            _VIDEO_URL,
+            "play_url",
+            FeatureState.Unsupported,
+            id="video_via_airplay",
+        ),
     ],
 )
 async def test_play_media_selects_streaming_method(
@@ -117,8 +129,11 @@ async def test_play_media_selects_streaming_method(
     media_type: MediaType,
     media_id: str,
     called_method: str,
+    stream_file_state: FeatureState,
 ) -> None:
     """Streaming path is selected from device feature state, not _playing."""
+    mock_atv.features.set_state(FeatureName.StreamFile, stream_file_state)
+
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -153,6 +168,32 @@ async def test_play_media_falls_back_to_play_url(
 
     mock_atv.stream.play_url.assert_awaited_once_with(_VIDEO_URL)
     mock_atv.stream.stream_file.assert_not_called()
+
+
+async def test_play_media_raises_when_no_streaming_method(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+) -> None:
+    """Raise HomeAssistantError when no streaming method is available."""
+    mock_atv.features.set_state(FeatureName.StreamFile, FeatureState.Unsupported)
+    mock_atv.features.set_state(FeatureName.PlayUrl, FeatureState.Unsupported)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: _MUSIC_URL,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "streaming_not_supported"
+    assert exc_info.value.translation_domain == DOMAIN
+    mock_atv.stream.stream_file.assert_not_called()
+    mock_atv.stream.play_url.assert_not_called()
 
 
 @pytest.mark.parametrize(
