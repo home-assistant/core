@@ -1265,3 +1265,141 @@ async def test_unique_id(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "my unique id"
+
+
+async def test_replace_unavailable_at_startup_true(hass: HomeAssistant) -> None:
+    """Test replace_unavailable=True at startup when source is initially unavailable."""
+    # Set source to unavailable BEFORE setting up the derivative sensor
+    source_id = "sensor.energy"
+    hass.states.async_set(source_id, STATE_UNAVAILABLE, {})
+    await hass.async_block_till_done()
+
+    # Now set up the derivative sensor with replace_unavailable=True
+    config = {
+        "platform": "derivative",
+        "name": "power",
+        "source": source_id,
+        "round": 2,
+        "unit_time": "s",
+        "replace_unavailable": True,
+    }
+    config = {"sensor": config}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    # With replace_unavailable=True, sensor should be available with value 0.0 at startup
+    assert state.state == "0.0", f"Expected '0.0', got '{state.state}'"
+    assert state.attributes.get("available") is not False
+
+
+async def test_replace_unavailable_at_startup_false(hass: HomeAssistant) -> None:
+    """Test replace_unavailable=False (default) at startup when source is initially unavailable."""
+    # Set source to unavailable BEFORE setting up the derivative sensor
+    source_id = "sensor.energy"
+    hass.states.async_set(source_id, STATE_UNAVAILABLE, {})
+    await hass.async_block_till_done()
+
+    # Now set up the derivative sensor with replace_unavailable=False (default)
+    config = {
+        "platform": "derivative",
+        "name": "power",
+        "source": source_id,
+        "round": 2,
+        "unit_time": "s",
+        "replace_unavailable": False,
+    }
+    config = {"sensor": config}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    # With replace_unavailable=False, sensor should remain unavailable at startup
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
+    """Test that derivative properly recovers when source returns to available after unavailable."""
+    config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        # Start with normal values to establish baseline
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 1, {})
+        await hass.async_block_till_done()
+
+        # Source becomes unavailable
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        # Should be 0 due to replace_unavailable
+        assert float(state.state) == 0.0
+
+        # Source becomes available again with a new value
+        freezer.move_to(base + timedelta(seconds=3))
+        hass.states.async_set(entity_id, 5, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        # Derivative should calculate: (5 - STATE_UNAVAILABLE(treated as 0)) / 1 sec = 5.0
+        # But since we didn't have a valid previous state before the unavailable gap,
+        # the sensor state should reflect this transition properly
+        assert state.state != STATE_UNAVAILABLE, "Sensor should remain available after recovery"
+        assert state.attributes.get("available") is not False
+
+
+async def test_replace_unavailable_recovery_with_state_list(hass: HomeAssistant) -> None:
+    """Test derivative recovery when source becomes available after unavailable with established baseline."""
+    config, entity_id = await _setup_sensor(
+        hass,
+        {"unit_time": "s", "replace_unavailable": True},
+    )
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        # Establish a series of valid measurements
+        freezer.move_to(base)
+        hass.states.async_set(entity_id, 0, {})
+        await hass.async_block_till_done()
+
+        freezer.move_to(base + timedelta(seconds=1))
+        hass.states.async_set(entity_id, 10, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        assert float(state.state) == 10.0  # (10-0)/1 = 10
+
+        # Source becomes unavailable - derivative should go to 0
+        freezer.move_to(base + timedelta(seconds=2))
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        assert float(state.state) == 0.0  # Replaced with 0
+
+        # Source becomes available again - continue from last valid state
+        freezer.move_to(base + timedelta(seconds=3))
+        hass.states.async_set(entity_id, 15, {})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.power")
+        assert state is not None
+        # Derivative: (15 - 10) / 1 sec = 5.0 (using last valid state before unavailable)
+        assert float(state.state) == 5.0, f"Expected 5.0, got {state.state}"
+        assert state.state != STATE_UNAVAILABLE
