@@ -157,7 +157,9 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
 SUBENTRY_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_CHAT_ID): vol.Coerce(int),
-        vol.Optional(CONF_MESSAGE_THREAD_ID): vol.Any(None, vol.Coerce(int)),
+        vol.Optional(CONF_MESSAGE_THREAD_ID): vol.Any(
+            None, vol.All(vol.Coerce(int), vol.Range(min=1))
+        ),
     }
 )
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
