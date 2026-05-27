@@ -49,9 +49,9 @@ from homeassistant.helpers.automation import (
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
-    BEHAVIOR_ANY,
+    BEHAVIOR_ALL,
+    BEHAVIOR_EACH,
     BEHAVIOR_FIRST,
-    BEHAVIOR_LAST,
     DATA_PLUGGABLE_ACTIONS,
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
@@ -1937,6 +1937,188 @@ async def test_numerical_state_attribute_changed_error_handling(
         assert len(service_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are non-inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are treated as "not inside"
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+        # any — fires on every numerical change regardless of value
+        ({"threshold": {"type": "any"}}, 0, True),
+        ({"threshold": {"type": "any"}}, 50, True),
+        ({"threshold": {"type": "any"}}, 1000, True),
+    ],
+)
+async def test_numerical_state_attribute_changed_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test numerical changed trigger above/below/between/outside/any thresholds.
+
+    Verifies that the threshold limits are non-inclusive: a tracked value
+    exactly equal to a limit is treated as "not inside" the range.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a starting value that differs from new_value so
+    # the changed-transition is always satisfied; the test then exercises
+    # the is_valid_state boundary semantics for the new value.
+    initial_value = -1 if new_value != -1 else -2
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": initial_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
+
+
 async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -2845,6 +3027,195 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         assert len(service_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive, crossing exactly onto the limit does
+        # not enter the range
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are non-inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are treated as "not inside"
+        # and therefore enter the "outside" range from the inside seed value
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+    ],
+)
+async def test_numerical_state_attribute_crossed_threshold_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test crossed-threshold trigger above/below/between/outside thresholds.
+
+    Verifies the threshold limits are non-inclusive: transitioning to a value
+    exactly equal to a limit does not enter the range, so the trigger does
+    not fire. For "outside", values equal to either bound are considered
+    outside and therefore do cause the trigger to fire.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a value that is NOT in the target range so the
+    # transition into the new value is a potential "cross". The seed is
+    # chosen per threshold type to ensure is_valid_state(from_state) is
+    # False and the seed value differs from any parametrized new_value.
+    seed_values = {
+        "above": 0,  # 0 is not above 50
+        "below": 100,  # 100 is not below 50
+        "between": 0,  # 0 is not inside (20, 80)
+        "outside": 30,  # 30 is inside (20, 80), i.e. not "outside"
+    }
+    seed_value = seed_values[trigger_options["threshold"]["type"]]
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": seed_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.crossed_threshold",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
+
+
 async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_validation(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -3487,7 +3858,7 @@ def _set_or_remove_state(
         hass.states.async_set(entity_id, state)
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_fires_on_valid_transition(
     hass: HomeAssistant, behavior: str
 ) -> None:
@@ -3520,7 +3891,7 @@ async def test_entity_trigger_fires_on_valid_transition(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 @pytest.mark.parametrize(
     "initial_state",
     [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
@@ -3556,10 +3927,10 @@ async def test_entity_trigger_from_invalid_initial_state(
     unsub()
 
 
-async def test_entity_trigger_last_requires_all(
+async def test_entity_trigger_all_requires_all(
     hass: HomeAssistant,
 ) -> None:
-    """Test behavior last: trigger fires only when ALL entities are on."""
+    """Test behavior all: trigger fires only when ALL entities are on."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3568,7 +3939,7 @@ async def test_entity_trigger_last_requires_all(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration=None
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration=None
     )
 
     # Turn only A on — not all match, should not fire
@@ -3617,10 +3988,10 @@ async def test_entity_trigger_first_requires_exactly_one(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
+async def test_entity_trigger_all_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior last: unavailable/unknown excluded from all-match.
+    """Test behavior all: unavailable/unknown excluded from all-match.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     not fire because C is still off, so the available entities do not all
@@ -3637,7 +4008,7 @@ async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls, duration=None
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_ALL, calls, duration=None
     )
 
     # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
@@ -3706,7 +4077,7 @@ async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_with_duration(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
 ) -> None:
@@ -3738,7 +4109,7 @@ async def test_entity_trigger_with_duration(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_duration_cancelled_on_state_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
 ) -> None:
@@ -3772,10 +4143,10 @@ async def test_entity_trigger_duration_cancelled_on_state_change(
     unsub()
 
 
-async def test_entity_trigger_duration_any_independent(
+async def test_entity_trigger_duration_each_independent(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any tracks per-entity durations independently."""
+    """Test behavior each tracks per-entity durations independently."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3784,7 +4155,7 @@ async def test_entity_trigger_duration_any_independent(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn A on
@@ -3816,10 +4187,10 @@ async def test_entity_trigger_duration_any_independent(
     unsub()
 
 
-async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
+async def test_entity_trigger_duration_each_entity_off_cancels_only_that_entity(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any: turning off one entity doesn't cancel the other's timer."""
+    """Test behavior each: turning off one entity doesn't cancel the other's timer."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3828,7 +4199,7 @@ async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn both on
@@ -3852,10 +4223,10 @@ async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
     unsub()
 
 
-async def test_entity_trigger_duration_last_requires_all(
+async def test_entity_trigger_duration_all_requires_all(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last: trigger fires only when ALL entities are on for duration."""
+    """Test behavior all: trigger fires only when ALL entities are on for duration."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3864,7 +4235,7 @@ async def test_entity_trigger_duration_last_requires_all(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn only A on — should not start timer (not all match)
@@ -3888,12 +4259,12 @@ async def test_entity_trigger_duration_last_requires_all(
     unsub()
 
 
-async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered(
+async def test_entity_trigger_duration_all_cancelled_when_all_entities_filtered(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last with for: timer cancelled when all entities filtered.
+    """Test behavior all with for: timer cancelled when all entities filtered.
 
-    With behavior=last + `for:`, an "all match" check that becomes vacuously
+    With behavior=all + `for:`, an "all match" check that becomes vacuously
     True (every targeted entity filtered by `_should_include` — here all
     entities go unavailable) must not keep the timer alive; otherwise the
     action would fire after the duration even though no entity still
@@ -3907,7 +4278,7 @@ async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on — combined state "all on", timer starts
@@ -3933,10 +4304,10 @@ async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered
     unsub()
 
 
-async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
+async def test_entity_trigger_duration_all_cancelled_when_one_turns_off(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last: timer is cancelled when one entity turns off."""
+    """Test behavior all: timer is cancelled when one entity turns off."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3945,7 +4316,7 @@ async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on
@@ -3968,10 +4339,10 @@ async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
     unsub()
 
 
-async def test_entity_trigger_duration_last_timer_reset(
+async def test_entity_trigger_duration_all_timer_reset(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last: timer resets when combined state goes off and back on."""
+    """Test behavior all: timer resets when combined state goes off and back on."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3980,7 +4351,7 @@ async def test_entity_trigger_duration_last_timer_reset(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on — combined state "all on", timer starts
@@ -4153,17 +4524,17 @@ async def test_entity_trigger_duration_first_cancelled_when_all_off(
     unsub()
 
 
-async def test_entity_trigger_duration_any_retrigger_resets_timer(
+async def test_entity_trigger_duration_each_retrigger_resets_timer(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any: turning an entity off and on resets its timer."""
+    """Test behavior each: turning an entity off and on resets its timer."""
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_id], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_id], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn on
@@ -4195,7 +4566,7 @@ async def test_entity_trigger_duration_any_retrigger_resets_timer(
 
 @pytest.mark.parametrize(
     ("behavior", "expected_calls"),
-    [(BEHAVIOR_ANY, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_LAST, 1)],
+    [(BEHAVIOR_EACH, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_ALL, 1)],
 )
 @pytest.mark.parametrize(
     "invalid_state",
@@ -4227,7 +4598,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     # Turn on the entities needed to start the timer
     _set_or_remove_state(hass, entity_a, STATE_ON)
     await hass.async_block_till_done()
-    if behavior == BEHAVIOR_LAST:
+    if behavior == BEHAVIOR_ALL:
         _set_or_remove_state(hass, entity_b, STATE_ON)
         await hass.async_block_till_done()
 

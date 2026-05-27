@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'template_device_tracker',
+      'gps_accuracy': 10.0,
+      'in_zones': list([
+      ]),
+      'latitude': 10.0,
+      'longitude': 40.0,
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.template_device_tracker',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---
