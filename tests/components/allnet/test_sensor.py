@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     UnitOfElectricCurrent,
@@ -16,7 +17,9 @@ from .conftest import TEST_UNIQUE_ID
 
 
 @pytest.mark.asyncio
-async def test_sensor_entities_created(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_entities_created(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that sensor entities are created for SENSOR channels."""
     # temp_0, current_0, humidity_0 (all kind=SENSOR)
     state_temp = hass.states.get("sensor.allnet_test_device_temperature")
@@ -29,7 +32,9 @@ async def test_sensor_entities_created(hass: HomeAssistant, setup_integration) -
 
 
 @pytest.mark.asyncio
-async def test_sensor_native_value(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_native_value(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that sensor native_value is set from channel.value."""
     state = hass.states.get("sensor.allnet_test_device_temperature")
     assert state is not None
@@ -38,7 +43,7 @@ async def test_sensor_native_value(hass: HomeAssistant, setup_integration) -> No
 
 @pytest.mark.asyncio
 async def test_sensor_temperature_device_class(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that °C unit maps to TEMPERATURE device class."""
     state = hass.states.get("sensor.allnet_test_device_temperature")
@@ -49,7 +54,7 @@ async def test_sensor_temperature_device_class(
 
 @pytest.mark.asyncio
 async def test_sensor_current_device_class(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that A unit maps to CURRENT device class."""
     state = hass.states.get("sensor.allnet_test_device_current")
@@ -60,11 +65,9 @@ async def test_sensor_current_device_class(
 
 @pytest.mark.asyncio
 async def test_sensor_humidity_device_class(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that % unit maps to HUMIDITY device class."""
-    # Humidity is unavailable (value=None) but device class is still set
-    # The entity itself reports unavailable state
     state = hass.states.get("sensor.allnet_test_device_humidity")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -72,17 +75,18 @@ async def test_sensor_humidity_device_class(
 
 @pytest.mark.asyncio
 async def test_sensor_unavailable_when_value_none(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that sensors with value=None are marked unavailable."""
-    # humidity_0 has value=None
     state = hass.states.get("sensor.allnet_test_device_humidity")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.asyncio
-async def test_sensor_unique_id(hass: HomeAssistant, setup_integration) -> None:
+async def test_sensor_unique_id(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that sensor entities have the correct unique_id."""
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get_entity_id(
@@ -93,9 +97,8 @@ async def test_sensor_unique_id(hass: HomeAssistant, setup_integration) -> None:
 
 @pytest.mark.asyncio
 async def test_sensor_no_binary_sensors_in_sensor_platform(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that binary_sensor channels don't appear as sensor entities."""
-    # door_0 is BINARY_SENSOR kind – should not appear under sensor domain
     state = hass.states.get("sensor.allnet_test_device_door_contact")
     assert state is None

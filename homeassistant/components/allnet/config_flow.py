@@ -14,13 +14,8 @@ from allnet.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -28,6 +23,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_DEVICE_PROFILE,
@@ -236,7 +232,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except AllnetUnsupportedFirmwareError:
                 errors["base"] = "unsupported_firmware"
-            except (AllnetConnectionError, AllnetInvalidResponseError):
+            except AllnetConnectionError, AllnetInvalidResponseError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(unique_id)
@@ -288,7 +284,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except (AllnetConnectionError, AllnetInvalidResponseError):
+            except AllnetConnectionError, AllnetInvalidResponseError:
                 errors["base"] = "cannot_connect"
             else:
                 new_data = {**entry.data}
@@ -310,4 +306,3 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": host},
             errors=errors,
         )
-

@@ -6,7 +6,7 @@ from allnet.exceptions import AllnetAuthenticationError, AllnetConnectionError
 import pytest
 
 from homeassistant.components.allnet.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -14,7 +14,9 @@ from .conftest import TEST_UNIQUE_ID
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_success(hass: HomeAssistant, setup_integration) -> None:
+async def test_setup_entry_success(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that async_setup_entry succeeds with a valid mock client."""
     entry = setup_integration
     assert entry.state is ConfigEntryState.LOADED
@@ -26,7 +28,7 @@ async def test_setup_entry_success(hass: HomeAssistant, setup_integration) -> No
 
 @pytest.mark.asyncio
 async def test_setup_entry_auth_failed(
-    hass: HomeAssistant, config_entry, mock_allnet_client
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_allnet_client: MagicMock
 ) -> None:
     """Test that async_setup_entry raises ConfigEntryAuthFailed on auth error."""
     mock_allnet_client.async_get_device_info = AsyncMock(
@@ -52,7 +54,7 @@ async def test_setup_entry_auth_failed(
 
 @pytest.mark.asyncio
 async def test_setup_entry_not_ready(
-    hass: HomeAssistant, config_entry, mock_allnet_client
+    hass: HomeAssistant, config_entry: ConfigEntry, mock_allnet_client: MagicMock
 ) -> None:
     """Test that async_setup_entry raises ConfigEntryNotReady on connection error."""
     mock_allnet_client.async_get_device_info = AsyncMock(
@@ -77,7 +79,9 @@ async def test_setup_entry_not_ready(
 
 
 @pytest.mark.asyncio
-async def test_unload_entry(hass: HomeAssistant, setup_integration) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that async_unload_entry unloads all platforms."""
     entry = setup_integration
     assert entry.state is ConfigEntryState.LOADED
@@ -90,7 +94,9 @@ async def test_unload_entry(hass: HomeAssistant, setup_integration) -> None:
 
 
 @pytest.mark.asyncio
-async def test_setup_creates_device(hass: HomeAssistant, setup_integration) -> None:
+async def test_setup_creates_device(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that setup registers a device in the device registry."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_device(identifiers={(DOMAIN, TEST_UNIQUE_ID)})

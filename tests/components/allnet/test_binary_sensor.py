@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,7 +17,7 @@ from .conftest import TEST_UNIQUE_ID
 
 @pytest.mark.asyncio
 async def test_binary_sensor_entities_created(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that binary sensor entities are created for BINARY_SENSOR channels."""
     state_door = hass.states.get("binary_sensor.allnet_test_device_door_contact")
@@ -27,7 +28,9 @@ async def test_binary_sensor_entities_created(
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_is_on_true(hass: HomeAssistant, setup_integration) -> None:
+async def test_binary_sensor_is_on_true(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that is_on=True maps to STATE_ON."""
     state = hass.states.get("binary_sensor.allnet_test_device_motion_sensor")
     assert state is not None
@@ -36,7 +39,7 @@ async def test_binary_sensor_is_on_true(hass: HomeAssistant, setup_integration) 
 
 @pytest.mark.asyncio
 async def test_binary_sensor_is_on_false(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that is_on=False maps to STATE_OFF."""
     state = hass.states.get("binary_sensor.allnet_test_device_door_contact")
@@ -46,10 +49,12 @@ async def test_binary_sensor_is_on_false(
 
 @pytest.mark.asyncio
 async def test_binary_sensor_is_on_none_is_unavailable(
-    hass: HomeAssistant, setup_integration, mock_allnet_client, mock_channels
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    mock_allnet_client: MagicMock,
+    mock_channels: tuple[Channel, ...],
 ) -> None:
     """Test that value=None makes binary sensor unavailable after coordinator refresh."""
-    # Replace channels with one that has value=None
     null_channel = Channel(
         id="door_0",
         kind=ChannelKind.BINARY_SENSOR,
@@ -73,7 +78,7 @@ async def test_binary_sensor_is_on_none_is_unavailable(
 
 @pytest.mark.asyncio
 async def test_binary_sensor_motion_device_class(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test that chipid=74 + 'erkannt' in digitalToText → MOTION device class."""
     state = hass.states.get("binary_sensor.allnet_test_device_motion_sensor")
@@ -83,17 +88,18 @@ async def test_binary_sensor_motion_device_class(
 
 @pytest.mark.asyncio
 async def test_binary_sensor_door_no_specific_device_class(
-    hass: HomeAssistant, setup_integration
+    hass: HomeAssistant, setup_integration: ConfigEntry
 ) -> None:
     """Test door_0: chipid=74 but no 'erkannt' in digitalToText → no device class."""
     state = hass.states.get("binary_sensor.allnet_test_device_door_contact")
     assert state is not None
-    # chipid 74 with generic text → device_class is None (not set)
     assert state.attributes.get("device_class") is None
 
 
 @pytest.mark.asyncio
-async def test_binary_sensor_unique_id(hass: HomeAssistant, setup_integration) -> None:
+async def test_binary_sensor_unique_id(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+) -> None:
     """Test that binary sensor entities have the correct unique_id."""
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get_entity_id(
@@ -104,10 +110,12 @@ async def test_binary_sensor_unique_id(hass: HomeAssistant, setup_integration) -
 
 @pytest.mark.asyncio
 async def test_binary_sensor_name_based_device_class(
-    hass: HomeAssistant, config_entry, mock_allnet_client, mock_device_info
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    mock_allnet_client: MagicMock,
+    mock_device_info: MagicMock,
 ) -> None:
     """Test name-based heuristics for binary sensor device class (opening)."""
-    # Channel with "door" in name, chipid not 74 → name-based OPENING class
     door_channel = Channel(
         id="door_1",
         kind=ChannelKind.BINARY_SENSOR,
