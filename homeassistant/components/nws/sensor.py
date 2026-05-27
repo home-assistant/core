@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from pynws import SimpleNWS
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -183,14 +185,27 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(nws_data.coordinator_observation)
-        self._nws = nws_data.api
+        self._nws_data = nws_data
         self.entity_description = description
 
-        self._attr_name = f"{station} {description.name}"
+        if not nws_data.location_entity_id:
+            self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
         self._attr_device_info = device_info(entry_data, nws_data)
         self._attr_unique_id = f"{get_base_unique_id(entry_data)}_{description.key}"
+
+    @property
+    def _nws(self) -> SimpleNWS:
+        """Return the current SimpleNWS API instance."""
+        return self._nws_data.api
+
+    @property
+    def name(self) -> str | None:
+        """Return the sensor name with current station."""
+        if self._nws_data.location_entity_id:
+            return f"{self._nws.station} {self.entity_description.name}"
+        return self._attr_name
 
     @property
     def native_value(self) -> float | datetime | None:

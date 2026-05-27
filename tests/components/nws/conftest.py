@@ -14,6 +14,7 @@ def mock_simple_nws():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):
@@ -36,6 +37,7 @@ def mock_simple_nws_times_out():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):

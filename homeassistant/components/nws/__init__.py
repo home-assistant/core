@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util import location as location_util
 
 from .const import (
     CONF_LOCATION_ENTITY,
@@ -35,7 +34,6 @@ from .const import (
     DEBOUNCE_TIME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    LOCATION_CHANGE_THRESHOLD,
     RETRY_INTERVAL,
     RETRY_STOP,
 )
@@ -114,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             """Retrieve forecast."""
             try:
                 await call_with_retry(
-                    nws_data.update_forecast,
+                    entry.runtime_data.api.update_forecast,
                     retry_interval,
                     retry_stop,
                     retry_no_data=True,
@@ -132,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             """Retrieve forecast hourly."""
             try:
                 await call_with_retry(
-                    nws_data.update_forecast_hourly,
+                    entry.runtime_data.api.update_forecast_hourly,
                     retry_interval,
                     retry_stop,
                     retry_no_data=True,
@@ -142,7 +140,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
         return update_forecast_hourly
 
-    coordinator_observation = NWSObservationDataUpdateCoordinator(hass, entry, nws_data)
+    coordinator_observation = NWSObservationDataUpdateCoordinator(
+        hass,
+        entry,
+        nws_data,
+        location_entity_id=location_entity_id,
+        initial_position=(latitude, longitude) if location_entity_id else None,
+    )
 
     # Don't use retries in setup
     coordinator_forecast = TimestampDataUpdateCoordinator(
@@ -194,8 +198,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     if location_entity_id:
 
         @callback
-        def _async_handle_location_change(event: Event[EventStateChangedData]) -> None:
-            """Handle location entity state changes."""
+        def _async_on_location_state_change(
+            event: Event[EventStateChangedData],
+        ) -> None:
+            """Request coordinator refresh when the location entity moves."""
             new_state = event.data["new_state"]
             if new_state is None or not has_location(new_state):
                 return
@@ -206,23 +212,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
                 and new_lon == entry.runtime_data.longitude
             ):
                 return
-            dist = location_util.distance(
-                entry.runtime_data.latitude,
-                entry.runtime_data.longitude,
-                new_lat,
-                new_lon,
-            )
-            if dist is not None and dist > LOCATION_CHANGE_THRESHOLD:
-                _LOGGER.info(
-                    "Location entity %s moved %.0f m, reloading NWS",
-                    location_entity_id,
-                    dist,
-                )
-                hass.config_entries.async_schedule_reload(entry.entry_id)
+            entry.async_create_task(hass, coordinator_observation.async_refresh())
 
         entry.async_on_unload(
             async_track_state_change_event(
-                hass, location_entity_id, _async_handle_location_change
+                hass, location_entity_id, _async_on_location_state_change
             )
         )
 

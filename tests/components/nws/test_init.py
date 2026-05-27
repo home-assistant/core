@@ -1,7 +1,5 @@
 """Tests for init module."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.nws.const import (
@@ -150,10 +148,10 @@ async def test_setup_with_location_entity_unavailable(
     assert config_entry.runtime_data.longitude == -75
 
 
-async def test_location_change_triggers_reload(
+async def test_location_change_updates_coordinates(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
-    """Test that a significant location change triggers a config entry reload."""
+    """Test that a significant location change updates the API without reload."""
     entity = location_entity_config["entry"]
     hass.states.async_set(
         entity.entity_id,
@@ -168,22 +166,28 @@ async def test_location_change_triggers_reload(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert mock_simple_nws.call_count == 1
 
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        hass.states.async_set(
-            entity.entity_id,
-            "away",
-            {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
-        )
-        await hass.async_block_till_done()
+    hass.states.async_set(
+        entity.entity_id,
+        "away",
+        {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
+    )
+    await config_entry.runtime_data.coordinator_observation.async_refresh()
+    await hass.async_block_till_done()
 
-        mock_reload.assert_called_once_with(config_entry.entry_id)
+    assert mock_simple_nws.call_count == 2
+    second_call = mock_simple_nws.call_args_list[1]
+    assert second_call[0][0] == 41.0
+    assert second_call[0][1] == -81.0
+    assert config_entry.runtime_data.latitude == 41.0
+    assert config_entry.runtime_data.longitude == -81.0
 
 
-async def test_location_change_within_threshold_no_reload(
+async def test_location_change_within_threshold_no_update(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
-    """Test that a small location change does not trigger reload."""
+    """Test that a small location change does not create a new API instance."""
     entity = location_entity_config["entry"]
     hass.states.async_set(
         entity.entity_id,
@@ -197,21 +201,23 @@ async def test_location_change_within_threshold_no_reload(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        hass.states.async_set(
-            entity.entity_id,
-            "home",
-            {ATTR_LATITUDE: 40.0001, ATTR_LONGITUDE: -80.0001},
-        )
-        await hass.async_block_till_done()
+    hass.states.async_set(
+        entity.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0001, ATTR_LONGITUDE: -80.0001},
+    )
+    await config_entry.runtime_data.coordinator_observation.async_refresh()
+    await hass.async_block_till_done()
 
-        mock_reload.assert_not_called()
+    assert mock_simple_nws.call_count == 1
+    assert config_entry.runtime_data.latitude == 40.0
+    assert config_entry.runtime_data.longitude == -80.0
 
 
-async def test_location_entity_becomes_unavailable_no_reload(
+async def test_location_entity_becomes_unavailable_no_update(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
-    """Test that entity becoming unavailable does not trigger reload."""
+    """Test that entity becoming unavailable does not update coordinates."""
     entity = location_entity_config["entry"]
     hass.states.async_set(
         entity.entity_id,
@@ -225,17 +231,19 @@ async def test_location_entity_becomes_unavailable_no_reload(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        hass.states.async_set(entity.entity_id, "unknown", {})
-        await hass.async_block_till_done()
+    hass.states.async_set(entity.entity_id, "unknown", {})
+    await config_entry.runtime_data.coordinator_observation.async_refresh()
+    await hass.async_block_till_done()
 
-        mock_reload.assert_not_called()
+    assert mock_simple_nws.call_count == 1
+    assert config_entry.runtime_data.latitude == 40.0
+    assert config_entry.runtime_data.longitude == -80.0
 
 
-async def test_state_change_same_coordinates_no_reload(
+async def test_same_coordinates_no_update(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
-    """Test that a state change without coordinate change does not trigger reload."""
+    """Test that unchanged coordinates do not create a new API instance."""
     entity = location_entity_config["entry"]
     hass.states.async_set(
         entity.entity_id,
@@ -249,21 +257,21 @@ async def test_state_change_same_coordinates_no_reload(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        hass.states.async_set(
-            entity.entity_id,
-            "away",
-            {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
-        )
-        await hass.async_block_till_done()
+    hass.states.async_set(
+        entity.entity_id,
+        "away",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+    await config_entry.runtime_data.coordinator_observation.async_refresh()
+    await hass.async_block_till_done()
 
-        mock_reload.assert_not_called()
+    assert mock_simple_nws.call_count == 1
 
 
 async def test_unload_with_location_entity(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
-    """Test unload cleans up the state change listener."""
+    """Test unload works cleanly with a location entity configured."""
     entity = location_entity_config["entry"]
     hass.states.async_set(
         entity.entity_id,
@@ -283,13 +291,3 @@ async def test_unload_with_location_entity(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        hass.states.async_set(
-            entity.entity_id,
-            "away",
-            {ATTR_LATITUDE: 50.0, ATTR_LONGITUDE: -90.0},
-        )
-        await hass.async_block_till_done()
-
-        mock_reload.assert_not_called()

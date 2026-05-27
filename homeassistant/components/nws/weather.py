@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any, Required, TypedDict, cast
 
+from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -153,13 +154,24 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             hourly_forecast_valid=FORECAST_VALID_TIME,
             twice_daily_forecast_valid=FORECAST_VALID_TIME,
         )
-        self.nws = nws_data.api
-
-        self.station = self.nws.station
+        self._nws_data = nws_data
+        self._last_api = nws_data.api
 
         self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
         self._attr_device_info = device_info(entry_data, nws_data)
-        self._attr_name = self.station
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle observation coordinator update and push forecasts if API changed."""
+        super()._handle_coordinator_update()
+        nws = self._nws_data.api
+        if nws is not self._last_api:
+            self._last_api = nws
+            assert self.coordinator.config_entry is not None
+            self.coordinator.config_entry.async_create_task(
+                self.hass,
+                self.async_update_listeners(("twice_daily", "hourly")),
+            )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -174,6 +186,16 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )
+
+    @property
+    def nws(self) -> SimpleNWS:
+        """Return the current SimpleNWS API instance."""
+        return self._nws_data.api
+
+    @property
+    def name(self) -> str:
+        """Return the station name."""
+        return self.nws.station
 
     @property
     def native_temperature(self) -> float | None:
