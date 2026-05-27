@@ -1,6 +1,13 @@
 """Support for EnOcean devices."""
 
-from enocean_async import DEVICE_TYPES, EURID, Gateway, Observable, Observation
+from enocean_async import (
+    DEVICE_TYPES,
+    EURID,
+    Gateway,
+    Observable,
+    Observation,
+    SenderAddress,
+)
 from enocean_async.address import Address, BaseAddress
 
 from homeassistant.config_entries import ConfigEntry
@@ -137,11 +144,13 @@ async def async_setup_entry(
             # if a sender_id_string is provided and valid, use that instead
             if sender_id_string is not None:
                 s = Address(sender_id_string)
-                if gateway.is_valid_sender(s):
-                    if s.is_base_address:
-                        sender = BaseAddress(sender_id_string)
-                    elif s.is_eurid and s == gateway.eurid:
-                        sender = EURID(sender_id_string)
+                typed: SenderAddress | None = None
+                if s.is_base_address:
+                    typed = BaseAddress(sender_id_string)
+                elif s.is_eurid and s == gateway.eurid:
+                    typed = EURID(sender_id_string)
+                if typed is not None and gateway.is_valid_sender(typed):
+                    sender = typed
 
             gateway.add_device(
                 address=enocean_id,
