@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from ipaddress import ip_address
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 import voluptuous as vol
@@ -49,6 +49,9 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
+if TYPE_CHECKING:
+    import axis
+
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f", "e8:27:25"}
 DEFAULT_PORT = 443
 DEFAULT_PROTOCOL = "https"
@@ -93,7 +96,8 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             else:
-                serial = api.vapix.serial_number
+                if (serial := self._get_serial_number(api)) is None:
+                    return self.async_abort(reason="no_serial_number")
                 config = {
                     CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                     CONF_HOST: user_input[CONF_HOST],
@@ -257,6 +261,19 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         return await self.async_step_user()
+
+    @staticmethod
+    def _get_serial_number(api: axis.AxisDevice) -> str | None:
+        """Retrieve the device serial number from the Axis API.
+
+        Tries basic_device_info first, then property_handler. Returns None if not found.
+        """
+        vapix = api.vapix
+        if vapix.basic_device_info.initialized:
+            return vapix.basic_device_info["0"].serial_number
+        if vapix.params.property_handler.initialized:
+            return vapix.params.property_handler["0"].system_serial_number
+        return None
 
 
 class AxisOptionsFlowHandler(OptionsFlow):

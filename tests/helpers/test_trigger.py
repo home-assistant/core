@@ -1937,6 +1937,188 @@ async def test_numerical_state_attribute_changed_error_handling(
         assert len(service_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are non-inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are treated as "not inside"
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+        # any — fires on every numerical change regardless of value
+        ({"threshold": {"type": "any"}}, 0, True),
+        ({"threshold": {"type": "any"}}, 50, True),
+        ({"threshold": {"type": "any"}}, 1000, True),
+    ],
+)
+async def test_numerical_state_attribute_changed_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test numerical changed trigger above/below/between/outside/any thresholds.
+
+    Verifies that the threshold limits are non-inclusive: a tracked value
+    exactly equal to a limit is treated as "not inside" the range.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a starting value that differs from new_value so
+    # the changed-transition is always satisfied; the test then exercises
+    # the is_valid_state boundary semantics for the new value.
+    initial_value = -1 if new_value != -1 else -2
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": initial_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
+
+
 async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -2843,6 +3025,195 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive, crossing exactly onto the limit does
+        # not enter the range
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are non-inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are treated as "not inside"
+        # and therefore enter the "outside" range from the inside seed value
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+    ],
+)
+async def test_numerical_state_attribute_crossed_threshold_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test crossed-threshold trigger above/below/between/outside thresholds.
+
+    Verifies the threshold limits are non-inclusive: transitioning to a value
+    exactly equal to a limit does not enter the range, so the trigger does
+    not fire. For "outside", values equal to either bound are considered
+    outside and therefore do cause the trigger to fire.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a value that is NOT in the target range so the
+    # transition into the new value is a potential "cross". The seed is
+    # chosen per threshold type to ensure is_valid_state(from_state) is
+    # False and the seed value differs from any parametrized new_value.
+    seed_values = {
+        "above": 0,  # 0 is not above 50
+        "below": 100,  # 100 is not below 50
+        "between": 0,  # 0 is not inside (20, 80)
+        "outside": 30,  # 30 is inside (20, 80), i.e. not "outside"
+    }
+    seed_value = seed_values[trigger_options["threshold"]["type"]]
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": seed_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.crossed_threshold",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
 
 
 async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_validation(
@@ -4244,3 +4615,154 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     assert len(calls) == expected_calls
 
     unsub()
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "state", "entity_id": ["sensor.a", "sensor.b"]},
+            ["sensor.a", "sensor.b"],
+            id="state",
+        ),
+        pytest.param(
+            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            ["sensor.a"],
+            id="numeric_state",
+        ),
+        pytest.param(
+            {"platform": "calendar", "options": {"entity_id": "calendar.x"}},
+            ["calendar.x"],
+            id="calendar",
+        ),
+        pytest.param(
+            {
+                "platform": "zone",
+                "entity_id": ["person.a"],
+                "zone": "zone.home",
+                "event": "enter",
+            },
+            ["person.a", "zone.home"],
+            id="zone-legacy",
+        ),
+        pytest.param(
+            {"platform": "geo_location", "zone": "zone.home"},
+            ["zone.home"],
+            id="geo_location",
+        ),
+        pytest.param(
+            {"platform": "sun"},
+            ["sun.sun"],
+            id="sun",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="event-with-entity-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": "not-a-valid-entity-id"},
+            },
+            [],
+            id="event-invalid-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            [],
+            id="event-entity-id-list-not-extracted",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            ["sensor.x", "sensor.y"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {}},
+            [],
+            id="modern-target-empty",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_entities(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from various trigger config shapes."""
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "device", "device_id": "abc123"},
+            ["abc123"],
+            id="device",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            ["abc123"],
+            id="event-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            ["abc123", "def456"],
+            id="tag-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag"},
+            [],
+            id="tag-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"device_id": "abc123"}},
+            ["abc123"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"device_id": ["abc123", "def456"]},
+            },
+            ["abc123", "def456"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_devices(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting devices from various trigger config shapes."""
+    assert trigger.async_extract_devices(trigger_conf) == expected

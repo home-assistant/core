@@ -562,6 +562,7 @@
     "info": {
       "agent_version": "Agent version",
       "board": "Board",
+      "disk_life_time": "Disk lifetime",
       "disk_total": "Disk total",
       "disk_used": "Disk used",
       "docker_version": "Docker version",

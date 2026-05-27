@@ -99,9 +99,18 @@
       },
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
+      },
+      "half_lock_calibration": {
+        "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
       }
     },
     "button": {
+      "half_lock": {
+        "name": "Half lock"
+      },
       "light_sensor": {
         "name": "Light sensor"
       },
