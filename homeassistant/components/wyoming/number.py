@@ -97,7 +97,6 @@ class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumb
         self._device.set_volume_multiplier(self._attr_native_value)
 
 
-
 class WyomingSatelliteCommandTimeoutNumber(
     WyomingSatelliteEntity, CommandTimeoutNumber
 ):
