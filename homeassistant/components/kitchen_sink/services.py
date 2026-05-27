@@ -14,7 +14,7 @@ SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
         vol.Required("field_1"): vol.Coerce(int),
         vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
         vol.Optional("field_3"): vol.Coerce(int),
-        vol.Optional("field_4"): vol.In(["forwards", "reverse"]),
+        vol.Optional("field_4"): vol.In(["forward", "reverse"]),
     }
 )
 
@@ -31,7 +31,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Kitchen Sink integration."""
 
     @callback
-    def service_handler(call: ServiceCall | None = None) -> ServiceResponse:
+    def service_handler(call: ServiceCall) -> ServiceResponse:
         """Do nothing."""
         return None
 
