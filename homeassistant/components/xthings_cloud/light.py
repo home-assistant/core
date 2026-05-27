@@ -23,16 +23,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up light platform."""
     coordinator = entry.runtime_data
-    entities = [
-        XthingsCloudLight(coordinator, device_id, device_data)
-        for device_id, device_data in coordinator.data.items()
-        if device_data.get("type") in ("light", "switch")
-    ]
+    entities: list[LightEntity] = []
+    for device_id, device_data in coordinator.data.items():
+        dev_type = device_data.get("type")
+        if dev_type == "light":
+            entities.append(XthingsCloudLight(coordinator, device_id, device_data))
+        elif dev_type == "switch":
+            entities.append(XthingsCloudSwitch(coordinator, device_id, device_data))
     async_add_entities(entities)
 
 
-class XthingsCloudLight(XthingsCloudEntity, LightEntity):
-    """Xthings Cloud light entity."""
+class XthingsCloudBaseLight(XthingsCloudEntity, LightEntity):
+    """Xthings Cloud base light entity."""
 
     _attr_min_color_temp_kelvin = 2000
     _attr_max_color_temp_kelvin = 6500
@@ -106,20 +108,20 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
+        raise NotImplementedError
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off light."""
+        raise NotImplementedError
+
+
+class XthingsCloudLight(XthingsCloudBaseLight):
+    """Xthings Cloud native light entity."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on light."""
         client = self.coordinator.client
 
-        # Handle switch devices exposed as lights
-        if self.device_data.get("type") == "switch":
-            if ATTR_BRIGHTNESS in kwargs:
-                modes = self._attr_supported_color_modes or set()
-                if ColorMode.BRIGHTNESS in modes:
-                    brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-                    await client.async_switch_brightness(self._device_id, brightness)
-                    return
-            await client.async_switch_on(self._device_id)
-            return
-
-        # Handle native light devices
         if ATTR_HS_COLOR in kwargs:
             hue, saturation = kwargs[ATTR_HS_COLOR]
             status = self.device_data["status"]
@@ -159,7 +161,23 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        if self.device_data.get("type") == "switch":
-            await self.coordinator.client.async_switch_off(self._device_id)
-        else:
-            await self.coordinator.client.async_brite_off(self._device_id)
+        await self.coordinator.client.async_brite_off(self._device_id)
+
+
+class XthingsCloudSwitch(XthingsCloudBaseLight):
+    """Xthings Cloud switch device exposed as a light entity."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on switch."""
+        client = self.coordinator.client
+        if ATTR_BRIGHTNESS in kwargs:
+            modes = self._attr_supported_color_modes or set()
+            if ColorMode.BRIGHTNESS in modes:
+                brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+                await client.async_switch_brightness(self._device_id, brightness)
+                return
+        await client.async_switch_on(self._device_id)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off switch."""
+        await self.coordinator.client.async_switch_off(self._device_id)
