@@ -1,9 +1,7 @@
 """Repairs for the Home Assistant Hardware integration."""
 
-from __future__ import annotations
-
-from homeassistant.components.repairs import RepairsFlow
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -65,7 +63,7 @@ class MultiPanMigrationRepairFlow(RepairsFlow):
         """Return the hardware config entry to migrate."""
         return self._repair_config_entry
 
-    async def _async_step_start_migration(self) -> ConfigFlowResult:
+    async def _async_step_start_migration(self) -> RepairsFlowResult:
         """Jump straight into the uninstall step of the migration flow.
 
         The repair flow's init data is the issue context, not user form input,

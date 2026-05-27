@@ -1,15 +1,17 @@
 """Repairs for the Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
     MultiPanMigrationRepairFlow,
 )
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .config_flow import HomeAssistantYellowMultiPanOptionsFlowHandler
@@ -25,7 +27,9 @@ class YellowMultiPanMigrationRepairFlow(
         HomeAssistantYellowMultiPanOptionsFlowHandler.__init__(self, hass, config_entry)
         self._repair_config_entry = config_entry
 
-    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
+    async def async_step_main_menu(  # type: ignore[override]
+        self, _: None = None
+    ) -> RepairsFlowResult:
         """Jump straight into the uninstall step."""
         return await self._async_step_start_migration()
 

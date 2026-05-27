@@ -1,15 +1,17 @@
 """Repairs for the Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
     MultiPanMigrationRepairFlow,
 )
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .config_flow import HomeAssistantSkyConnectMultiPanOptionsFlowHandler
@@ -25,9 +27,9 @@ class SkyConnectMultiPanMigrationRepairFlow(
         HomeAssistantSkyConnectMultiPanOptionsFlowHandler.__init__(self, config_entry)
         self._repair_config_entry = config_entry
 
-    async def async_step_init(
+    async def async_step_init(  # type: ignore[override]
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> RepairsFlowResult:
         """Jump straight into the uninstall step."""
         return await self._async_step_start_migration()
 
