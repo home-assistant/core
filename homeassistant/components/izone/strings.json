@@ -14,6 +14,9 @@
         "description": "Do you want to set up iZone?\n\nController UID: {controller_uid}\nController IP: {host}"
       },
       "select_controller": {
+        "data": {
+          "selected_controller_uid": "Controller"
+        },
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       }
     }

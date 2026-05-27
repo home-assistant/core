@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from err
 
         conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-        excluded_uids: set[str] = set(conf[CONF_EXCLUDE]) if conf else set()
+        excluded_uids: set[str] = set(conf.get(CONF_EXCLUDE, [])) if conf else set()
         configured_uids = {
             config_entry.unique_id
             for config_entry in hass.config_entries.async_entries(IZONE)

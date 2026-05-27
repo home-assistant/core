@@ -109,6 +109,8 @@ async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService
     )
 
     await disco.pi_disco.start_discovery()
+    # Stored after start_discovery() so concurrent callers never receive a
+    # partially-initialised DiscoveryService (no active UDP transport or scan loop).
     hass.data[DATA_DISCOVERY_SERVICE] = disco
 
     async def async_stop_discovery_on_shutdown(event: Event) -> None:
