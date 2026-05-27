@@ -23,6 +23,44 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     tuesday:
       example: |
         start1: 07:00:00
@@ -36,6 +74,44 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     wednesday:
       example: |
         start1: 07:00:00
@@ -49,6 +125,44 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     thursday:
       example: |
         start1: 07:00:00
@@ -62,11 +176,87 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     friday:
       example: "{}"
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     saturday:
       example: |
         start1: 09:00:00
@@ -76,6 +266,44 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
     sunday:
       example: |
         start1: 07:00:00
@@ -89,6 +317,44 @@ set_schedule:
       required: false
       selector:
         object:
+          multiple: true
+          fields:
+            start1:
+              required: false
+              selector:
+                time:
+            end1:
+              required: false
+              selector:
+                time:
+            start2:
+              required: false
+              selector:
+                time:
+            end2:
+              required: false
+              selector:
+                time:
+            start3:
+              required: false
+              selector:
+                time:
+            end3:
+              required: false
+              selector:
+                time:
+            start4:
+              required: false
+              selector:
+                time:
+            end4:
+              required: false
+              selector:
+                time:
+            delete:
+              required: false
+              selector:
+                boolean:
 
 set_holiday:
   target:
@@ -97,12 +363,12 @@ set_holiday:
       integration: eurotronic_cometblue
   fields:
     start:
-      example: 2023-12-24
+      example: 2023-12-24 17:00:00
       required: true
       selector:
         datetime:
     end:
-      example: 2023-12-31
+      example: 2023-12-31 23:30:00
       required: true
       selector:
         datetime:
