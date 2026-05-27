@@ -1720,7 +1720,7 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
         return [
             *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
-            *trigger_conf[CONF_OPTIONS][CONF_ZONE],
+            trigger_conf[CONF_OPTIONS][CONF_ZONE],
         ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
