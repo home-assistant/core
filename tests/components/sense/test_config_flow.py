@@ -1,6 +1,6 @@
 """Test the Sense config flow."""
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_flow_sense")
-def mock_flow_sense_fixture() -> Generator[MagicMock]:
+def mock_flow_sense_fixture() -> Iterator[MagicMock]:
     """Mock Sense object for authentication."""
     with patch(
         "homeassistant.components.sense.config_flow.ASyncSenseable"
