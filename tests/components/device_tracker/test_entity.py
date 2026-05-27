@@ -1006,7 +1006,9 @@ async def test_base_scanner_entity_associated_zone_removed_after_set(
     assert entity_state
     assert entity_state.state == "kitchen"
     assert entity_state.attributes[ATTR_IN_ZONES] == ["zone.kitchen", "zone.home"]
-    issue_id = f"associated_zone_missing_{entity_id}"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     # Remove the associated zone.
@@ -1059,7 +1061,7 @@ async def test_base_scanner_entity_associated_zone_missing_at_setup(
     await hass.async_block_till_done()
 
     # Pre-register the entity option pointing at a zone that does not exist.
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         TEST_DOMAIN,
         base_scanner_entity.unique_id,
@@ -1079,7 +1081,7 @@ async def test_base_scanner_entity_associated_zone_missing_at_setup(
     assert entity_state
     assert entity_state.state == STATE_UNKNOWN
     assert entity_state.attributes[ATTR_IN_ZONES] == []
-    issue_id = f"associated_zone_missing_{entity_id}"
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_placeholders == {
@@ -1116,7 +1118,9 @@ async def test_base_scanner_entity_associated_zone_issue_cleared_on_option_chang
     )
     await hass.async_block_till_done()
 
-    issue_id = f"associated_zone_missing_{entity_id}"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     # Clearing the option restores the default and clears the repair issue.
@@ -1157,7 +1161,9 @@ async def test_base_scanner_entity_associated_zone_issue_cleared_on_unload(
     )
     await hass.async_block_till_done()
 
-    issue_id = f"associated_zone_missing_{entity_id}"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    issue_id = f"associated_zone_missing_{entity_entry.id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -1,7 +1,7 @@
 """Provide functionality to keep track of devices."""
 
 import asyncio
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 from propcache.api import cached_property
 
@@ -342,11 +342,13 @@ class BaseScannerEntity(BaseTrackerEntity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Call when the scanner entity is about to be removed from hass."""
+        await super().async_internal_will_remove_from_hass()
+        if not self.registry_entry:
+            return
         if self._scanner_option_associated_zone_unsub is not None:
             self._scanner_option_associated_zone_unsub()
             self._scanner_option_associated_zone_unsub = None
         self._async_clear_associated_zone_issue()
-        await super().async_internal_will_remove_from_hass()
 
     @callback
     def async_registry_entry_updated(self) -> None:
@@ -424,7 +426,9 @@ class BaseScannerEntity(BaseTrackerEntity):
     @property
     def _associated_zone_issue_id(self) -> str:
         """Return the issue id for the associated-zone-missing repair."""
-        return f"associated_zone_missing_{self.entity_id}"
+        if TYPE_CHECKING:
+            assert self.registry_entry
+        return f"associated_zone_missing_{self.registry_entry.id}"
 
     @property
     def state(self) -> str | None:
