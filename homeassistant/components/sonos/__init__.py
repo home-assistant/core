@@ -114,8 +114,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
-    soco_reset()
     _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
+    soco_reset()
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
