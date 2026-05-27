@@ -1948,7 +1948,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
-        # between — both limits are non-inclusive
+        # between — both limits are inclusive
         (
             {
                 "threshold": {
@@ -1969,7 +1969,7 @@ async def test_numerical_state_attribute_changed_error_handling(
                 }
             },
             20,
-            False,
+            True,
         ),
         (
             {
@@ -1980,7 +1980,7 @@ async def test_numerical_state_attribute_changed_error_handling(
                 }
             },
             80,
-            False,
+            True,
         ),
         (
             {
@@ -2004,7 +2004,8 @@ async def test_numerical_state_attribute_changed_error_handling(
             90,
             False,
         ),
-        # outside — values equal to either bound are treated as "not inside"
+        # outside — values equal to either bound are inside the between range
+        # and therefore do NOT match outside
         (
             {
                 "threshold": {
@@ -2025,7 +2026,7 @@ async def test_numerical_state_attribute_changed_error_handling(
                 }
             },
             20,
-            True,
+            False,
         ),
         (
             {
@@ -2036,7 +2037,7 @@ async def test_numerical_state_attribute_changed_error_handling(
                 }
             },
             80,
-            True,
+            False,
         ),
         (
             {
@@ -3039,7 +3040,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
         ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
-        # between — both limits are non-inclusive
+        # between — both limits are inclusive
         (
             {
                 "threshold": {
@@ -3060,7 +3061,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
                 }
             },
             20,
-            False,
+            True,
         ),
         (
             {
@@ -3071,7 +3072,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
                 }
             },
             80,
-            False,
+            True,
         ),
         (
             {
@@ -3095,8 +3096,8 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
             90,
             False,
         ),
-        # outside — values equal to either bound are treated as "not inside"
-        # and therefore enter the "outside" range from the inside seed value
+        # outside — values equal to either bound are inside the between range
+        # and therefore do NOT match outside (no cross from the inside seed)
         (
             {
                 "threshold": {
@@ -3117,7 +3118,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
                 }
             },
             20,
-            True,
+            False,
         ),
         (
             {
@@ -3128,7 +3129,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
                 }
             },
             80,
-            True,
+            False,
         ),
         (
             {
