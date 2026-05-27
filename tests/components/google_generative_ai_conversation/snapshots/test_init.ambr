@@ -21,7 +21,7 @@
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash',
+      'model': 'gemini-3.1-flash-lite',
       'model_id': None,
       'name': 'Google AI Conversation',
       'name_by_user': None,
@@ -50,7 +50,7 @@
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash',
+      'model': 'gemini-3.1-flash-lite',
       'model_id': None,
       'name': 'Google AI STT',
       'name_by_user': None,
@@ -108,7 +108,7 @@
       'labels': set({
       }),
       'manufacturer': 'Google',
-      'model': 'gemini-2.5-flash',
+      'model': 'gemini-3.1-flash-lite',
       'model_id': None,
       'name': 'Google AI Task',
       'name_by_user': None,

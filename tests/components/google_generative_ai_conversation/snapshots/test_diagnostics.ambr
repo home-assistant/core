@@ -18,7 +18,7 @@
       }),
       'ulid-conversation': dict({
         'data': dict({
-          'chat_model': 'models/gemini-2.5-flash',
+          'chat_model': 'models/gemini-3.1-flash-lite',
           'dangerous_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
           'harassment_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
           'hate_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
