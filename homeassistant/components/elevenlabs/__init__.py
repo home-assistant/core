@@ -1,7 +1,5 @@
 """The ElevenLabs text-to-speech integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
@@ -10,7 +8,7 @@ from elevenlabs.core import ApiError
 from httpx import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -19,7 +17,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_MODEL, CONF_STT_MODEL
+from .const import CONF_STT_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 

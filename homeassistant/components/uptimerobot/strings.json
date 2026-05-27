@@ -50,13 +50,23 @@
           "not_checked_yet": "Not checked yet",
           "pause": "[%key:common::action::pause%]",
           "seems_down": "Seems down",
+          "started": "Started",
           "up": "Up"
         }
       }
     }
   },
   "exceptions": {
-    "api_exception": {
+    "api_authentication_exception": {
+      "message": "API authentication failed, please check your API key"
+    },
+    "api_generic_exception": {
+      "message": "API error: {error}"
+    },
+    "api_key_wrong_type": {
+      "message": "Wrong API key type detected, use the 'main' API key"
+    },
+    "api_switch_exception": {
       "message": "Could not turn on/off monitoring: {error}"
     }
   }

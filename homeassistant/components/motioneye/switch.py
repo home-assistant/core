@@ -1,7 +1,5 @@
 """Switch platform for motionEye."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,21 +14,19 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, listen_for_new_cameras
-from .const import DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
-from .coordinator import MotionEyeUpdateCoordinator
+from .const import TYPE_MOTIONEYE_SWITCH_BASE
+from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
         key=KEY_MOTION_DETECTION,
         translation_key="motion_detection",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
@@ -48,13 +44,11 @@ MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
         key=KEY_STILL_IMAGES,
         translation_key="still_images",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_MOVIES,
         translation_key="movies",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
@@ -68,11 +62,11 @@ MOTIONEYE_SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionEyeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:

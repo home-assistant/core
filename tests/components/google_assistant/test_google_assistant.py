@@ -15,7 +15,7 @@ from homeassistant.components import (
     light,
     media_player,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -146,9 +146,6 @@ async def test_sync_request(
         dev["id"] for dev in DEMO_DEVICES
     )
 
-    for dev in devices:
-        assert dev["id"] not in CLOUD_NEVER_EXPOSED_ENTITIES
-
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),
         sorted(DEMO_DEVICES, key=lambda d: d["id"]),
@@ -231,6 +228,7 @@ async def test_query_climate_request(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 20.0,
@@ -247,6 +245,7 @@ async def test_query_climate_request(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": 21,
@@ -295,6 +294,7 @@ async def test_query_climate_request_f(
     devices = body["payload"]["devices"]
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
+        "activeThermostatMode": "heat",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.7,
@@ -311,6 +311,7 @@ async def test_query_climate_request_f(
         "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
+        "activeThermostatMode": "cool",
         "online": True,
         "on": True,
         "thermostatTemperatureSetpoint": -6.1,

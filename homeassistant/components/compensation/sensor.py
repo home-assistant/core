@@ -1,7 +1,5 @@
 """Support for compensation sensor."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -10,6 +8,7 @@ import numpy as np
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -33,7 +32,10 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,6 +45,7 @@ from .const import (
     CONF_PRECISION,
     DATA_COMPENSATION,
     DEFAULT_NAME,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +63,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Compensation sensor."""
     if discovery_info is None:
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/compensation/",
+            logger=_LOGGER,
+        )
         return
 
     compensation: str = discovery_info[CONF_COMPENSATION]

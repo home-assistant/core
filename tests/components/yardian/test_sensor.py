@@ -1,7 +1,5 @@
 """Tests for Yardian sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 

@@ -1,7 +1,5 @@
 """YoLink device number type config settings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -15,12 +13,10 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 OPTIONS_VOLUME = "options_volume"
@@ -55,7 +51,6 @@ DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] 
         native_max_value=16,
         mode=NumberMode.SLIDER,
         native_step=1.0,
-        native_unit_of_measurement=None,
         exists_fn=lambda device: device.device_type in SUPPORT_SET_VOLUME_DEVICES,
         should_update_entity=lambda value: value is not None,
         value=get_volume_value,
@@ -65,11 +60,11 @@ DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device number type config option entity from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     config_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -94,7 +89,7 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkNumberTypeConfigEntityDescription,
     ) -> None:

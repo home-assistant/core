@@ -55,11 +55,11 @@ jobs:
       - name: Generate app token
         id: token
         # Pinned to a specific version of the action for security reasons
-        # v1.7.0
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a
+        # v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
-          app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }} # zizmor: ignore[secrets-outside-env]
-          private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }} # zizmor: ignore[secrets-outside-env]
+          app-id: ${{ secrets.ISSUE_TRIAGE_APP_ID }} # zizmor: ignore[secrets-outside-env]
+          private-key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }} # zizmor: ignore[secrets-outside-env]
 
       # The 90 day stale policy for issues
       # Used for:

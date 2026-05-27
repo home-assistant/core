@@ -1,7 +1,5 @@
 """Device Tracker platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME

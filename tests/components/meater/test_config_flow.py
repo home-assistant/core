@@ -46,12 +46,9 @@ async def test_user_flow(
         (Exception, "unknown_auth_error"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_meater_client: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_meater_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test that an invalid API/App Key throws an error."""
     result = await hass.config_entries.flow.async_init(

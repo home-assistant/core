@@ -29,6 +29,8 @@ from aiohomeconnect.model.program import (
     EnumerateProgram,
     EnumerateProgramConstraints,
     Execution,
+    Option,
+    Program,
     ProgramDefinitionConstraints,
     ProgramDefinitionOption,
 )
@@ -73,7 +75,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
@@ -215,7 +217,7 @@ async def test_select_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if select entities availability are based on the appliance connection state."""
+    """Test select entities availability based on appliance connection."""
     entity_ids = ["select.washer_active_program", "select.washer_temperature"]
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
@@ -1174,3 +1176,68 @@ async def test_favorite_001_program_not_exposed_as_option(
     entity_state = hass.states.get("select.dishwasher_selected_program")
     assert entity_state
     assert entity_state.attributes[ATTR_OPTIONS] == []
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    ("array_of_programs_param", "entity_id"),
+    [
+        ("active", "select.dishwasher_active_program"),
+        ("selected", "select.dishwasher_selected_program"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("options", "expected_state"),
+    [
+        (
+            [
+                Option(
+                    OptionKey.BSH_COMMON_BASE_PROGRAM,
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                )
+            ],
+            "dishcare_dishwasher_program_eco_50",
+        ),
+        (None, STATE_UNKNOWN),
+    ],
+)
+async def test_use_base_program_on_favorite_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    array_of_programs_param: str,
+    entity_id: str,
+    options: list[Option] | None,
+    expected_state: str,
+) -> None:
+    """Test that base program is used.
+
+    Assert that when the favorite program is active/selected,
+    use the base program if present to set the value of the entity;
+    if not present, the state should be unknown.
+    """
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            programs=[
+                EnumerateProgram(
+                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                    constraints=EnumerateProgramConstraints(
+                        execution=Execution.SELECT_AND_START,
+                    ),
+                ),
+            ],
+            **{
+                array_of_programs_param: Program(
+                    key=ProgramKey.BSH_COMMON_FAVORITE_001,
+                    options=options,
+                ),
+            },
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, expected_state)
