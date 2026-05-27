@@ -4,7 +4,7 @@ from datetime import time
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
+from bsblan import BSBLANError, DaySchedule, DHWSchedule, HeatingSchedule, TimeSlot
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -56,6 +56,14 @@ _WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
 
 
 SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        **_WEEKLY_SCHEDULE_FIELDS,
+    }
+)
+
+
+SERVICE_SET_HEATING_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         **_WEEKLY_SCHEDULE_FIELDS,
@@ -170,6 +178,21 @@ def _device_name(device_entry: dr.DeviceEntry) -> str:
     return device_entry.name_by_user or device_entry.name or device_entry.id
 
 
+def _circuit_from_device(device_entry: dr.DeviceEntry) -> int:
+    """Extract the heating circuit number from a sub-device identifier."""
+    for domain, identifier in device_entry.identifiers:
+        if domain != DOMAIN:
+            continue
+        prefix, separator, suffix = identifier.rpartition("-circuit-")
+        if separator and prefix and suffix.isdigit() and (circuit := int(suffix)) >= 1:
+            return circuit
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="not_a_heating_circuit_device",
+        translation_placeholders={"device_name": _device_name(device_entry)},
+    )
+
+
 def _ensure_water_heater_device(device_entry: dr.DeviceEntry) -> None:
     """Validate the service targets the water heater sub-device."""
     for domain, identifier in device_entry.identifiers:
@@ -206,6 +229,32 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     await entry.runtime_data.slow_coordinator.async_request_refresh()
 
 
+async def set_heating_schedule(service_call: ServiceCall) -> None:
+    """Set heating circuit schedule."""
+    entry, device_entry = _resolve_config_entry(service_call)
+    client = entry.runtime_data.client
+
+    circuit = _circuit_from_device(device_entry)
+    days = _build_weekly_schedule_days(service_call)
+    heating_schedule = HeatingSchedule(**days)
+
+    LOGGER.debug(
+        "Setting heating schedule for circuit %d: %s", circuit, heating_schedule
+    )
+
+    try:
+        await client.set_heating_schedule(heating_schedule, circuit=circuit)
+    except BSBLANError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="set_heating_schedule_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+    # Refresh the slow coordinator to get the updated schedule
+    await entry.runtime_data.slow_coordinator.async_request_refresh()
+
+
 async def async_sync_time(service_call: ServiceCall) -> None:
     """Synchronize BSB-LAN device time with Home Assistant."""
     entry, device_entry = _resolve_config_entry(service_call)
@@ -230,6 +279,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "set_hot_water_schedule",
         set_hot_water_schedule,
         schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_heating_schedule",
+        set_heating_schedule,
+        schema=SERVICE_SET_HEATING_SCHEDULE_SCHEMA,
     )
 
     hass.services.async_register(
