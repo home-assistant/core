@@ -403,7 +403,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise ConfigEntryNotReady(str(err)) from err
         except (InvalidToken, OAuthExpired) as err:
             _invalidate_access_token(hass, config_entry)
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(str(err)) from err
         except LoginRequired as err:
             raise ConfigEntryAuthFailed from err
         except TeslaFleetError as err:
@@ -414,9 +414,9 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
                     err,
                 )
                 return None
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(str(err)) from err
         except Exception as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(str(err)) from err
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""

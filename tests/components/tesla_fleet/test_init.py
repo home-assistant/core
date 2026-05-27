@@ -488,7 +488,7 @@ async def test_setup_retries_on_initial_energy_live_refresh_error(
     mock_live_status: AsyncMock,
 ) -> None:
     """Test setup retries when initial energy live status refresh fails."""
-    mock_live_status.side_effect = TeslaFleetError
+    mock_live_status.side_effect = TeslaFleetError()
 
     await setup_platform(hass, normal_config_entry)
 
@@ -498,16 +498,16 @@ async def test_setup_retries_on_initial_energy_live_refresh_error(
 @pytest.mark.parametrize(
     ("side_effect", "state"),
     [
-        (InvalidToken, ConfigEntryState.SETUP_RETRY),
-        (OAuthExpired, ConfigEntryState.SETUP_RETRY),
-        (LoginRequired, ConfigEntryState.SETUP_ERROR),
+        (InvalidToken(), ConfigEntryState.SETUP_RETRY),
+        (OAuthExpired(), ConfigEntryState.SETUP_RETRY),
+        (LoginRequired(), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_does_not_skip_initial_energy_site_auth_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
-    side_effect: type[BaseException],
+    side_effect: BaseException,
     state: ConfigEntryState,
 ) -> None:
     """Test site info auth failures still fail setup."""
@@ -537,14 +537,14 @@ async def test_setup_retries_on_initial_energy_site_bad_response(
     [
         RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}),
         InternalServerError({"response": None, "error": "temporary internal error"}),
-        TeslaFleetError,
+        TeslaFleetError(),
     ],
 )
 async def test_setup_retries_on_initial_energy_site_retryable_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_site_info: AsyncMock,
-    side_effect: BaseException | type[BaseException],
+    side_effect: BaseException,
 ) -> None:
     """Test setup retries when initial site info returns a retryable error."""
     mock_site_info.side_effect = side_effect
