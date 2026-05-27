@@ -29,6 +29,7 @@ class SonosHouseholdCoordinator:
         """Initialize the data."""
         self.hass = hass
         self.household_id = household_id
+        self._poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
         self.last_processed_event_id: int | None = None
         self.config_entry = config_entry
@@ -42,13 +43,23 @@ class SonosHouseholdCoordinator:
     def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self.async_poll = Debouncer[Coroutine[Any, Any, None]](
+        self._poll_debouncer = Debouncer[Coroutine[Any, Any, None]](
             self.hass,
             _LOGGER,
             cooldown=3,
             immediate=False,
             function=self._async_poll,
-        ).async_call
+        )
+        self.async_poll = self._poll_debouncer.async_call
+        self.config_entry.async_on_unload(self.async_shutdown)
+
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel any scheduled household refreshes during unload."""
+        if self._poll_debouncer is not None:
+            self._poll_debouncer.async_shutdown()
+            self._poll_debouncer = None
+        self.async_poll = None
 
     @property
     def class_type(self) -> str:
