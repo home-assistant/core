@@ -6,12 +6,14 @@ from datetime import timedelta
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, TypedDict
+from urllib.parse import urljoin
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
     ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
     ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
@@ -184,7 +186,7 @@ async def _transform_response(
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant,
     attachments: list[conversation.Attachment],
-) -> list[ChatCompletionContentPartImageParam | VideoUrlParam]:
+) -> list[ChatCompletionContentPartParam]:
     """Prepare files for use in a prompt.
 
     Caller needs to ensure that the files are allowed.
@@ -200,6 +202,8 @@ async def async_prepare_files_for_prompt(
                 def encode_video(
                     path: Path = file_path, mime: str = mime_type
                 ) -> VideoUrlParam:
+                    if not path.exists():
+                        raise HomeAssistantError(f"`{path}` does not exist, file may have been deleted/moved during encoding")
                     base64_file = base64.b64encode(path.read_bytes()).decode("utf-8")
                     return VideoUrlParam(
                         type="video_url",
@@ -225,7 +229,7 @@ async def async_prepare_files_for_prompt(
                 content.append(
                     VideoUrlParam(
                         type="video_url",
-                        video_url={"url": f"{external_url}{signed_path}"},
+                        video_url={"url": urljoin(external_url, signed_path)},
                     )
                 )
         elif mime_type.startswith(("image/", "application/pdf")):
@@ -246,7 +250,7 @@ async def async_prepare_files_for_prompt(
                 f"`{file_path}` has unsupported type: {mime_type}"
             )
 
-    return content
+    return cast(list[ChatCompletionContentPartParam], content)
 
 
 class OpenRouterEntity(Entity):
