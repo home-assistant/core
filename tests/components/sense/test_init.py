@@ -27,7 +27,7 @@ async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,
-    exception: type[Exception],
+    exception: Exception,
 ) -> None:
     """Test we handle exceptions during async_setup_entry and can recover."""
     mock_sense.update_realtime.side_effect = exception
