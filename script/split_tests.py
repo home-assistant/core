@@ -280,9 +280,7 @@ def _walk_test_tree(root: Path) -> tuple[list[Path], list[Path]]:
     return test_files, fixtures
 
 
-_PROJECT_ROOT_MARKERS: Final = frozenset(
-    {"pyproject.toml", "setup.py", "setup.cfg", "pytest.ini", "tox.ini"}
-)
+_PROJECT_ROOT_MARKER: Final = "pyproject.toml"
 
 
 def _find_ancestor_fixtures(root: Path) -> list[Path]:
@@ -291,7 +289,7 @@ def _find_ancestor_fixtures(root: Path) -> list[Path]:
     Includes conftests and helper modules (eg ``common.py``); subtree
     runs need both so shared ancestor helpers like
     ``tests/components/common.py`` still invalidate descendants.
-    Stops at the first ancestor containing a project-root marker so we
+    Stops at the first ancestor containing ``pyproject.toml`` so we
     don't read unrelated ``.py`` files outside the repo or trip on
     dirs we can't list.
     """
@@ -304,7 +302,7 @@ def _find_ancestor_fixtures(root: Path) -> list[Path]:
                 for entry in current.glob("*.py")
                 if not entry.name.startswith("test_")
             )
-        if any((current / marker).exists() for marker in _PROJECT_ROOT_MARKERS):
+        if (current / _PROJECT_ROOT_MARKER).exists():
             break
         if current == current.parent:
             break
