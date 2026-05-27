@@ -9,7 +9,7 @@ Support for controlling Policy Engine rules.
 """
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -74,8 +74,6 @@ PARALLEL_UPDATES = 1
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
-
-POLICY_ENGINE_INTERNET_MODE_TURN_OFF = "TURN_OFF_INTERNET"
 
 
 @callback
@@ -173,19 +171,14 @@ def async_object_oriented_network_config_supported_fn(
 ) -> bool:
     """Check if Policy Engine rule can be controlled as a switch."""
     config = hub.api.object_oriented_network_configs[obj_id]
-    try:
-        secure: Any = config.secure
-    except TypeError:
-        # aiounifi raises when raw UniFi data sets "secure" to null.
-        return False
-    if not isinstance(secure, Mapping):
+    if not (secure := config.raw.get("secure")):
         return False
 
     internet = secure.get("internet")
     return (
         secure.get("enabled") is True
-        and isinstance(internet, Mapping)
-        and internet.get("mode") == POLICY_ENGINE_INTERNET_MODE_TURN_OFF
+        and internet is not None
+        and internet.get("mode") == "TURN_OFF_INTERNET"
     )
 
 

@@ -48,16 +48,19 @@ class UnifiEntityLoader:
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._polling_api_handlers: tuple[APIHandler, ...] = (
-            hub.api.object_oriented_network_configs,
-            hub.api.traffic_rules,
-            hub.api.traffic_routes,
-        )
-        self._polling_api_handler_ids = {
-            id(handler) for handler in self._polling_api_handlers
+        self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+            id(hub.api.object_oriented_network_configs): UnifiDataUpdateCoordinator(
+                hub, hub.api.object_oriented_network_configs
+            ),
+            id(hub.api.traffic_rules): UnifiDataUpdateCoordinator(
+                hub, hub.api.traffic_rules
+            ),
+            id(hub.api.traffic_routes): UnifiDataUpdateCoordinator(
+                hub, hub.api.traffic_routes
+            ),
         }
-        self._polling_coordinators: dict[int, UnifiDataUpdateCoordinator] = {}
-        self._polling_coordinator_listeners: dict[int, Callable[[], None]] = {}
+        for coordinator in self._polling_coordinators.values():
+            coordinator.async_add_listener(lambda: None)
 
         self.platforms: list[
             tuple[
@@ -76,7 +79,10 @@ class UnifiEntityLoader:
         await asyncio.gather(
             self._refresh_api_data(),
             self._refresh_data(
-                [handler.update for handler in self._polling_api_handlers]
+                [
+                    coordinator.async_refresh
+                    for coordinator in self._polling_coordinators.values()
+                ]
             ),
         )
         self._restore_inactive_clients()
@@ -162,25 +168,6 @@ class UnifiEntityLoader:
         return self._polling_coordinators.get(id(handler))
 
     @callback
-    def _enable_polling_coordinator(self, handler: APIHandler) -> None:
-        """Enable periodic updates for a polling handler."""
-        handler_id = id(handler)
-        if handler_id not in self._polling_api_handler_ids:
-            return
-        if handler_id in self._polling_coordinator_listeners:
-            return
-
-        coordinator = self._polling_coordinators.get(handler_id)
-        if coordinator is None:
-            coordinator = self._polling_coordinators[handler_id] = (
-                UnifiDataUpdateCoordinator(self.hub, handler)
-            )
-
-        remove_listener = coordinator.async_add_listener(lambda: None)
-        self._polling_coordinator_listeners[handler_id] = remove_listener
-        self.hub.config.entry.async_on_unload(remove_listener)
-
-    @callback
     def _load_entities(
         self,
         unifi_platform_entity: type[UnifiEntity],
@@ -192,18 +179,12 @@ class UnifiEntityLoader:
         @callback
         def add_unifi_entities() -> None:
             """Add currently known UniFi entities."""
-            entities: list[UnifiEntity] = []
-            for description in descriptions:
-                handler = description.api_handler_fn(self.hub.api)
-                for obj_id in handler:
-                    if not self._should_add_entity(description, obj_id):
-                        continue
-                    entities.append(
-                        unifi_platform_entity(obj_id, self.hub, description)
-                    )
-                    self._enable_polling_coordinator(handler)
-
-            async_add_entities(entities)
+            async_add_entities(
+                unifi_platform_entity(obj_id, self.hub, description)
+                for description in descriptions
+                for obj_id in description.api_handler_fn(self.hub.api)
+                if self._should_add_entity(description, obj_id)
+            )
 
         add_unifi_entities()
 
@@ -223,9 +204,6 @@ class UnifiEntityLoader:
         ) -> None:
             """Create new UniFi entity on event."""
             if self._should_add_entity(description, obj_id):
-                self._enable_polling_coordinator(
-                    description.api_handler_fn(self.hub.api)
-                )
                 async_add_entities(
                     [unifi_platform_entity(obj_id, self.hub, description)]
                 )
