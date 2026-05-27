@@ -1632,7 +1632,7 @@ async def assert_trigger_options_supported(
         return {**(base_options or {}), **extra}
 
     # Behavior
-    for behavior in ("any", "first", "last"):
+    for behavior in ("each", "first", "all"):
         await _validate_trigger_options(
             hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
         )
@@ -1750,7 +1750,7 @@ async def assert_condition_behavior_all(
         assert cond.async_check() == state["condition_true"]
 
 
-async def assert_trigger_behavior_any(
+async def assert_trigger_behavior_each(
     hass: HomeAssistant,
     *,
     target_entities: dict[str, list[str]],
@@ -1761,7 +1761,7 @@ async def assert_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test trigger fires in mode any."""
+    """Test trigger fires in mode each."""
     calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
@@ -1855,7 +1855,7 @@ async def assert_trigger_behavior_first(
         assert len(calls) == 0
 
 
-async def assert_trigger_behavior_last(
+async def assert_trigger_behavior_all(
     hass: HomeAssistant,
     *,
     target_entities: dict[str, list[str]],
@@ -1866,7 +1866,7 @@ async def assert_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test trigger fires in mode last."""
+    """Test trigger fires in mode all."""
     calls: list[str] = []
     other_entity_ids = set(target_entities["included_entities"]) - {entity_id}
     excluded_entity_ids = set(target_entities["excluded_entities"]) - {entity_id}
@@ -1881,7 +1881,7 @@ async def assert_trigger_behavior_last(
     await arm_trigger(
         hass,
         trigger,
-        {"behavior": "last"} | trigger_options,
+        {"behavior": "all"} | trigger_options,
         trigger_target_config,
         calls,
     )
