@@ -184,12 +184,15 @@ async def test_per_entry_semaphores_are_independent(
 async def test_legacy_yaml_coordinator_has_no_semaphore(
     hass: HomeAssistant,
 ) -> None:
-    """Coordinators created from YAML config (no entry) skip the per-entry cap."""
+    """Coordinators created from YAML config (no entry) skip the per-entry cap.
+
+    Observable behavior: ``async_get_events`` completes without raising even
+    though no per-entry semaphore is wired up. If the coordinator tried to
+    enter ``None`` as an async context manager, this would error.
+    """
     calendar = MagicMock()
     calendar.search = MagicMock(return_value=[])
     coordinator = _build_coordinator(hass, calendar, semaphore=None)
-    assert coordinator._request_semaphore is None
-    # Search still completes without raising even without a semaphore.
     now = dt_util.now()
     await coordinator.async_get_events(hass, now, now)
 
@@ -198,11 +201,6 @@ def test_close_client_session_handles_no_session() -> None:
     """Helper is a no-op when the DAVClient has no ``session`` attribute yet."""
     client = MagicMock(spec=[])  # no `session` attr
     close_client_session(client)  # must not raise
-
-
-def test_close_client_session_handles_none() -> None:
-    """Helper is a no-op when given ``None`` (e.g. setup never completed)."""
-    close_client_session(None)
 
 
 def test_close_client_session_calls_session_close() -> None:

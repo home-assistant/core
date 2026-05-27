@@ -37,7 +37,7 @@ OFFSET = "!!"
 MAX_CONCURRENT_REQUESTS = 4
 
 
-def close_client_session(client: caldav.DAVClient | None) -> None:
+def close_client_session(client: caldav.DAVClient) -> None:
     """Close the DAVClient's HTTP session.
 
     caldav 2.1.0+ uses ``niquests`` with ``multiplexed=True`` (HTTP/2), so a
@@ -47,8 +47,6 @@ def close_client_session(client: caldav.DAVClient | None) -> None:
     time them out — at which point the integration is already gone and
     cannot recover them.
     """
-    if client is None:
-        return
     if session := getattr(client, "session", None):
         session.close()
 
