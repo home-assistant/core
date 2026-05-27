@@ -119,7 +119,11 @@ async def test_device_registry(
 ) -> None:
     """Validate device registry snapshots for all devices."""
 
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+    ):
+        await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     device_registry_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
