@@ -106,6 +106,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
             )
         )
+
     async_setup_services(hass)
 
     return True
