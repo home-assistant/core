@@ -184,7 +184,7 @@ class BaseTrackerEntity(Entity):
                 (
                     "%s::%s is overriding the deprecated battery_level property on "
                     "a subclass of BaseTrackerEntity, this will be unsupported from "
-                    "Home Assistant 2027.6, please %s"
+                    "Home Assistant 2027.7, please %s"
                 ),
                 cls.__module__,
                 cls.__name__,
@@ -197,7 +197,7 @@ class BaseTrackerEntity(Entity):
 
         Percentage from 0-100.
 
-        The property is deprecated and will be removed in Home Assistant 2027.6.
+        The property is deprecated and will be removed in Home Assistant 2027.7.
         """
         return None
 
