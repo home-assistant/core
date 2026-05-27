@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 async def test_command_timeout_number_restore(hass: HomeAssistant) -> None:
     """Test restoring command timeout number value."""
     number = CommandTimeoutNumber("test")
+    number.entity_id = "number.test_command_timeout"
     number.hass = hass
     restored = NumberExtraStoredData(
         native_max_value=MAX_COMMAND_TIMEOUT_SECONDS,

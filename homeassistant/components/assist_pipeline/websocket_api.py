@@ -55,8 +55,19 @@ CAPTURE_RATE: Final = 16000
 CAPTURE_WIDTH: Final = 2
 CAPTURE_CHANNELS: Final = 1
 MAX_CAPTURE_TIMEOUT: Final = 60.0
+
+
+def _finite_float(value: float) -> float:
+    """Validate that a float is finite."""
+    if not math.isfinite(value):
+        raise vol.Invalid("value must be finite")
+
+    return value
+
+
 COMMAND_TIMEOUT_SECONDS_SCHEMA: Final = vol.All(
     vol.Coerce(float),
+    _finite_float,
     vol.Range(
         min=MIN_COMMAND_TIMEOUT_SECONDS,
         max=MAX_COMMAND_TIMEOUT_SECONDS,
