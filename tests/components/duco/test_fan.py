@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import setup_platform_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -35,7 +35,7 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up only the fan platform for testing."""
-    return await setup_integration(hass, mock_config_entry, [Platform.FAN])
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.FAN])
 
 
 @pytest.mark.usefixtures("init_integration")
