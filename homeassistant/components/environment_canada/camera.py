@@ -20,13 +20,13 @@ from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
-    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow", "Precip Type"]),
+    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow", "Precipitation type"]),
 }
 
 _RADAR_TYPE_TO_LAYER: dict[str, str] = {
     "Rain": "rain",
     "Snow": "snow",
-    "Precip Type": "precip_type",
+    "Precipitation type": "precip_type",
 }
 
 

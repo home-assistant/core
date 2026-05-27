@@ -24,10 +24,21 @@ async def test_camera_entity(hass: HomeAssistant, ec_data: dict[str, Any]) -> No
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_radar_type_rain(
-    hass: HomeAssistant, ec_data: dict[str, Any]
+@pytest.mark.parametrize(
+    ("radar_type", "expected_layer"),
+    [
+        ("Rain", "rain"),
+        ("Snow", "snow"),
+        ("Precipitation type", "precip_type"),
+    ],
+)
+async def test_set_radar_type(
+    hass: HomeAssistant,
+    ec_data: dict[str, Any],
+    radar_type: str,
+    expected_layer: str,
 ) -> None:
-    """Test setting radar type to rain."""
+    """Test setting radar type."""
     config_entry = await init_integration(hass, ec_data)
     radar_coordinator = config_entry.runtime_data.radar_coordinator
     radar_mock = radar_coordinator.ec_data
@@ -35,54 +46,11 @@ async def test_set_radar_type_rain(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_RADAR_TYPE,
-        {"entity_id": "camera.home_radar", "radar_type": "Rain"},
+        {"entity_id": "camera.home_radar", "radar_type": radar_type},
         blocking=True,
     )
 
-    assert radar_mock.layer == "rain"
-    radar_mock.update.assert_awaited()
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_radar_type_snow(
-    hass: HomeAssistant, ec_data: dict[str, Any]
-) -> None:
-    """Test setting radar type to snow."""
-    config_entry = await init_integration(hass, ec_data)
-    radar_coordinator = config_entry.runtime_data.radar_coordinator
-    radar_mock = radar_coordinator.ec_data
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_RADAR_TYPE,
-        {"entity_id": "camera.home_radar", "radar_type": "Snow"},
-        blocking=True,
-    )
-
-    assert radar_mock.layer == "snow"
-    radar_mock.update.assert_awaited()
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_set_radar_type_precip_type(
-    hass: HomeAssistant, ec_data: dict[str, Any]
-) -> None:
-    """Test setting radar type to precip type."""
-    config_entry = await init_integration(hass, ec_data)
-    radar_coordinator = config_entry.runtime_data.radar_coordinator
-    radar_mock = radar_coordinator.ec_data
-
-    # First set to something else
-    radar_mock.layer = "rain"
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_RADAR_TYPE,
-        {"entity_id": "camera.home_radar", "radar_type": "Precip Type"},
-        blocking=True,
-    )
-
-    assert radar_mock.layer == "precip_type"
+    assert radar_mock.layer == expected_layer
     radar_mock.update.assert_awaited()
 
 
