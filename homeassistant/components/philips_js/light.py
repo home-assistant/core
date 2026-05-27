@@ -1,7 +1,9 @@
 """Component to integrate ambilight for TVs exposing the Joint Space API."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, cast
+from types import MappingProxyType
+from typing import Any, Final, cast
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -27,6 +29,72 @@ EFFECT_MODE = "Mode"
 EFFECT_EXPERT = "Expert"
 EFFECT_AUTO = "Auto"
 EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
+
+# Known menuSettings for the three ambilight styles, used as a fallback when
+# the TV's `getAmbilightSupportedStyles` returns an entry with no menuSettings.
+# Observed on quirked firmware (Linux / MSAF_) where /ambilight/supportedstyles
+# returns e.g. `{"styleName": "FOLLOW_VIDEO"}` with no menuSettings list even
+# though the named presets are user-selectable on the TV remote. See
+# home-assistant/core#156776 for the firmware-side bug.
+_KNOWN_MENU_SETTINGS_FALLBACK: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "FOLLOW_VIDEO": (
+            "STANDARD",
+            "NATURAL",
+            "VIVID",
+            "CINEMA",
+            "GAME",
+            "SPORTS",
+            "COMFORT",
+        ),
+        "FOLLOW_AUDIO": (
+            "ENERGY_ADAPTIVE_BRIGHTNESS",
+            "ENERGY_ADAPTIVE_COLORS",
+            "VU_METER",
+            "SPECTRUM_ANALYZER",
+            "KNIGHT_RIDER_CLOCKWISE",
+            "KNIGHT_RIDER_ALTERNATING",
+            "RANDOM_PIXEL_FLASH",
+            "STROBE",
+            "PARTY",
+        ),
+        "FOLLOW_COLOR": (
+            "PTA_LOUNGE",
+            "DEEP_WATER",
+            "HOT_LAVA",
+            "FRESH_NATURE",
+            "ISF_BLUE",
+        ),
+    }
+)
+
+
+def _menu_settings_for(
+    style: str, style_data: Mapping[str, Any], quirk_active: bool
+) -> list[str]:
+    """Return menuSettings for `style`, falling back to known defaults on quirked firmware.
+
+    If the TV returns a populated `menuSettings` list, we always use the
+    string entries from that list. Any value that is not specifically a
+    `list` (including a stray string, a dict, or None) is rejected and
+    treated the same as missing, to avoid iterating the characters of a
+    string or any other non-list iterable and generating bogus effects.
+    Non-string items inside the list are filtered out for the same reason
+    (e.g. a `[None, "STANDARD", 42]` becomes `["STANDARD"]`).
+
+    Only when no usable string entries remain AND the firmware is known
+    to drop `menuSettings` from `supportedstyles` do we substitute the
+    hardcoded fallback. Returns an empty list when neither path applies,
+    so TVs that legitimately don't expose presets are unaffected.
+    """
+    raw = style_data.get("menuSettings")
+    if isinstance(raw, list):
+        menu_settings = [item for item in raw if isinstance(item, str)]
+    else:
+        menu_settings = []
+    if not menu_settings and quirk_active:
+        menu_settings = list(_KNOWN_MENU_SETTINGS_FALLBACK.get(style, ()))
+    return menu_settings
 
 
 async def async_setup_entry(
@@ -161,7 +229,9 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         effects.extend(
             AmbilightEffect(mode=EFFECT_AUTO, style=style, algorithm=setting)
             for style, data in self._tv.ambilight_styles.items()
-            for setting in data.get("menuSettings", [])
+            for setting in _menu_settings_for(
+                style, data, self._tv.quirk_ambilight_mode_ignored
+            )
         )
 
         effects.extend(
