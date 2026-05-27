@@ -3,11 +3,13 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from sense_energy import SenseAPIException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -66,3 +68,26 @@ async def test_on_off_sensors(
 
     state = hass.states.get(f"binary_sensor.{DEVICE_2_NAME.lower()}_power")
     assert state.state == STATE_ON
+
+
+async def test_realtime_coordinator_binary_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that binary sensor entities become unavailable on realtime coordinator failure."""
+    await setup_platform(hass, config_entry, Platform.BINARY_SENSOR)
+
+    state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}_power")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_sense.update_realtime.side_effect = SenseAPIException("api error")
+
+    freezer.tick(timedelta(seconds=ACTIVE_UPDATE_RATE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{DEVICE_1_NAME.lower()}_power")
+    assert state.state == STATE_UNAVAILABLE
