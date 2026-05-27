@@ -108,7 +108,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                             vol.Optional("volume_multiplier"): float,
                             # Advanced use cases/testing
                             vol.Optional("no_vad"): bool,
-                            vol.Optional("command_timeout_seconds"): COMMAND_TIMEOUT_SECONDS_SCHEMA,
+                            vol.Optional(
+                                "command_timeout_seconds"
+                            ): COMMAND_TIMEOUT_SECONDS_SCHEMA,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
@@ -118,7 +120,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
                             vol.Optional("wake_word_phrase"): str,
-                            vol.Optional("command_timeout_seconds"): COMMAND_TIMEOUT_SECONDS_SCHEMA,
+                            vol.Optional(
+                                "command_timeout_seconds"
+                            ): COMMAND_TIMEOUT_SECONDS_SCHEMA,
                         }
                     },
                     extra=vol.ALLOW_EXTRA,
