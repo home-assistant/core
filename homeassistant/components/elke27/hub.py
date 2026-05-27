@@ -438,6 +438,7 @@ class Elke27Hub:
                     "Reconnect aborted because panel authentication requires attention: %s",
                     err,
                 )
+                self._reconnect_attempts = 0
                 return
             except (
                 ConfigEntryNotReady,
@@ -458,6 +459,7 @@ class Elke27Hub:
                 delay,
             )
             await asyncio.sleep(delay)
+        self._reconnect_attempts = 0
 
 
 def _event_type(event: Any) -> str | None:

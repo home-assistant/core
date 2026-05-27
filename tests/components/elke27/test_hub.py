@@ -877,8 +877,10 @@ async def test_reconnect_loop_stops_on_link_required(
         "112233445566",
         None,
     )
+    hub._reconnect_attempts = 2
     hub._async_connect = AsyncMock(side_effect=Elke27LinkRequiredError("nope"))
     await hub._async_reconnect_loop()
+    assert hub._reconnect_attempts == 0
 
 
 async def test_reconnect_loop_stops_on_auth_failed(
@@ -893,8 +895,26 @@ async def test_reconnect_loop_stops_on_auth_failed(
         "112233445566",
         None,
     )
+    hub._reconnect_attempts = 2
     hub._async_connect = AsyncMock(side_effect=ConfigEntryAuthFailed("nope"))
     await hub._async_reconnect_loop()
+    assert hub._reconnect_attempts == 0
+
+
+async def test_reconnect_loop_stopping_resets_attempts(hass: HomeAssistant) -> None:
+    """Verify reconnect loop resets attempts when stopping."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.76",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._reconnect_attempts = 2
+    hub._stopping = True
+    await hub._async_reconnect_loop()
+    assert hub._reconnect_attempts == 0
 
 
 def test_event_type_and_connection_state() -> None:
