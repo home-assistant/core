@@ -12,6 +12,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
+    CONF_MESSAGE_THREAD_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DEFAULT_API_ENDPOINT,
@@ -24,10 +25,11 @@ from homeassistant.components.telegram_bot.const import (
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, pytest
 from tests.typing import ClientSessionGenerator
@@ -568,6 +570,162 @@ async def test_subentry_flow(
     assert subentry.title == "mock title"
     assert subentry.unique_id == "987654321"
     assert subentry.data == {CONF_CHAT_ID: 987654321}
+
+
+async def test_subentry_flow_with_message_thread(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test subentry flow with a message thread."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["description_placeholders"] == {
+        **DESCRIPTION_PLACEHOLDERS,
+        "bot_username": "@mock_bot",
+        "bot_url": "https://t.me/mock_bot",
+        "most_recent_chat": "mock first_name (123456)",
+    }
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987},
+    )
+    await hass.async_block_till_done()
+
+    subentry_id = list(mock_broadcast_config_entry.subentries)[-1]
+    subentry: ConfigSubentry = mock_broadcast_config_entry.subentries[subentry_id]
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert subentry.subentry_type == SUBENTRY_TYPE_ALLOWED_CHAT_IDS
+    assert subentry.title == "mock title thread 987"
+    assert subentry.unique_id == "123456:987"
+    assert subentry.data == {CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987}
+
+
+async def test_subentry_flow_duplicate_message_thread(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test duplicate subentry flow with a message thread."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_subentry_flow_reconfigure_message_thread(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test subentry reconfigure flow with a message thread."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = list(mock_broadcast_config_entry.subentries)[0]
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987},
+    )
+    await hass.async_block_till_done()
+
+    subentry: ConfigSubentry = mock_broadcast_config_entry.subentries[subentry_id]
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert subentry.title == "mock title thread 987"
+    assert subentry.unique_id == "123456:987"
+    assert subentry.data == {CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987}
+
+
+async def test_subentry_flow_reconfigure_updates_notify_entity(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test subentry reconfigure updates the existing notify entity."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = list(mock_broadcast_config_entry.subentries)[0]
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_broadcast_config_entry.entry_id
+    )
+    notify_entry = next(
+        entry
+        for entry in entity_entries
+        if entry.domain == "notify" and entry.config_subentry_id == subentry_id
+    )
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 123456, CONF_MESSAGE_THREAD_ID: 987},
+    )
+    await hass.async_block_till_done()
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_broadcast_config_entry.entry_id
+    )
+    notify_entries = [entry for entry in entity_entries if entry.domain == "notify"]
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(notify_entries) == 2
+    updated_notify_entry = entity_registry.async_get(notify_entry.entity_id)
+    assert updated_notify_entry is not None
+    assert updated_notify_entry.unique_id == f"123456_{subentry_id}_notify"
+    assert updated_notify_entry.config_subentry_id == subentry_id
 
 
 async def test_subentry_flow_config_not_ready(
