@@ -521,17 +521,21 @@ async def test_async_connect_registers_stale_handler() -> None:
 
 
 async def test_on_websocket_stale_log_format(caplog: pytest.LogCaptureFixture) -> None:
-    """Log message includes seconds_since (rounded) and the diagnostic context."""
+    """Warning has the rounded seconds; diagnostic context is at debug level."""
     hap = HomematicipHAP(MagicMock(), MagicMock())
     hap.home = MagicMock()
     _set_diagnostic_defaults(hap.home)
     hap.home.websocket_message_count = Mock(return_value=42)
 
-    with caplog.at_level("WARNING"):
+    with caplog.at_level("DEBUG"):
         await hap._on_websocket_stale("warning", 423.7)
 
     assert "424" in caplog.text  # %.0f rounds
     assert "message_count=42" in caplog.text
+
+    warning_records = [r for r in caplog.records if r.levelname == "WARNING"]
+    assert any("424" in r.getMessage() for r in warning_records)
+    assert not any("message_count" in r.getMessage() for r in warning_records)
 
 
 async def test_get_state_clears_unreach_on_unchanged_devices() -> None:

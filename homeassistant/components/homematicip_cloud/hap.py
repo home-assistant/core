@@ -163,8 +163,9 @@ class HomematicipHAP:
             self._ws_connection_closed.set()
             self.set_all_to_unavailable()
         elif self._ws_connection_closed.is_set():
-            _LOGGER.info(
-                "HMIP access point has reconnected to the cloud (%s)",
+            _LOGGER.info("HMIP access point has reconnected to the cloud")
+            _LOGGER.debug(
+                "HMIP websocket diagnostics: %s",
                 self._websocket_diagnostic_context(),
             )
             self._start_get_state_task()
@@ -243,8 +244,11 @@ class HomematicipHAP:
         log = _LOGGER.error if severity == "error" else _LOGGER.warning
         log(
             "HomematicIP websocket has not received a message for "
-            "%.0f seconds while reporting connected (%s)",
+            "%.0f seconds while reporting connected",
             seconds_since,
+        )
+        _LOGGER.debug(
+            "HMIP websocket diagnostics: %s",
             self._websocket_diagnostic_context(),
         )
 
@@ -337,8 +341,9 @@ class HomematicipHAP:
 
     async def ws_disconnected_handler(self) -> None:
         """Handle websocket disconnection."""
-        _LOGGER.warning(
-            "Websocket connection to HomematicIP Cloud closed (%s)",
+        _LOGGER.warning("Websocket connection to HomematicIP Cloud closed")
+        _LOGGER.debug(
+            "HMIP websocket diagnostics: %s",
             self._websocket_diagnostic_context(),
         )
         self._ws_connection_closed.set()
@@ -347,8 +352,11 @@ class HomematicipHAP:
         """Handle websocket reconnection."""
         _LOGGER.info(
             "Websocket connection to HomematicIP Cloud trying to reconnect due to "
-            "reason: %s (%s)",
+            "reason: %s",
             reason,
+        )
+        _LOGGER.debug(
+            "HMIP websocket diagnostics: %s",
             self._websocket_diagnostic_context(),
         )
 
