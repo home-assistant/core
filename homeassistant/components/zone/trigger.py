@@ -66,9 +66,7 @@ _LEGACY_TRIGGER_OPTIONS_SCHEMA = vol.Schema(
 _ZONE_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): vol.All(
-                cv.ensure_list, [cv.entity_domain("zone")], vol.Length(min=1)
-            ),
+            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
         },
     }
 )
@@ -173,36 +171,36 @@ class ZoneTriggerBase(EntityTriggerBase):
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
         super().__init__(hass, config)
-        self._zones: set[str] = set(self._options[CONF_ZONE])
+        self._zone: str = self._options[CONF_ZONE]
 
-    def _in_target_zones(self, state: State) -> bool:
-        """Check if the entity is in any of the selected zones."""
-        in_zones = set(state.attributes.get(ATTR_IN_ZONES) or [])
-        return bool(in_zones.intersection(self._zones))
+    def _in_target_zone(self, state: State) -> bool:
+        """Check if the entity is in the selected zone."""
+        in_zones = state.attributes.get(ATTR_IN_ZONES) or ()
+        return self._zone in in_zones
 
 
 class EnteredZoneTrigger(ZoneTriggerBase):
-    """Trigger when an entity enters one of the selected zones."""
+    """Trigger when an entity enters the selected zone."""
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check that the entity was not already in any of the selected zones."""
-        return not self._in_target_zones(from_state)
+        """Check that the entity was not already in the selected zone."""
+        return not self._in_target_zone(from_state)
 
     def is_valid_state(self, state: State) -> bool:
-        """Check that the entity is now in at least one of the selected zones."""
-        return self._in_target_zones(state)
+        """Check that the entity is now in the selected zone."""
+        return self._in_target_zone(state)
 
 
 class LeftZoneTrigger(ZoneTriggerBase):
-    """Trigger when an entity leaves all of the selected zones."""
+    """Trigger when an entity leaves the selected zone."""
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check that the entity was previously in at least one of the selected zones."""
-        return self._in_target_zones(from_state)
+        """Check that the entity was previously in the selected zone."""
+        return self._in_target_zone(from_state)
 
     def is_valid_state(self, state: State) -> bool:
-        """Check that the entity is no longer in any of the selected zones."""
-        return not self._in_target_zones(state)
+        """Check that the entity is no longer in the selected zone."""
+        return not self._in_target_zone(state)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

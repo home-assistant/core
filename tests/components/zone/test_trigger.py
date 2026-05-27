@@ -377,14 +377,14 @@ ZONE_WORK = "zone.work"
 IN_ZONES_HOME = {"in_zones": [ZONE_HOME]}
 IN_ZONES_WORK = {"in_zones": [ZONE_WORK]}
 IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
-TRIGGER_ZONES = [ZONE_HOME, ZONE_WORK]
+TRIGGER_ZONE = ZONE_HOME
 
 
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("zone.entered", {"zone": TRIGGER_ZONES}, True, True),
-        ("zone.left", {"zone": TRIGGER_ZONES}, True, True),
+        ("zone.entered", {"zone": TRIGGER_ZONE}, True, True),
+        ("zone.left", {"zone": TRIGGER_ZONE}, True, True),
     ],
 )
 async def test_zone_trigger_options_validation(
@@ -433,24 +433,24 @@ async def target_zone_entities(
 _ZONE_TRIGGER_STATES = [
     *parametrize_trigger_states(
         trigger="zone.entered",
-        trigger_options={"zone": TRIGGER_ZONES},
+        trigger_options={"zone": TRIGGER_ZONE},
         target_states=[
             ("home", IN_ZONES_HOME),
-            ("Work", IN_ZONES_WORK),
         ],
         other_states=[
             ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
         ],
     ),
     *parametrize_trigger_states(
         trigger="zone.left",
-        trigger_options={"zone": TRIGGER_ZONES},
+        trigger_options={"zone": TRIGGER_ZONE},
         target_states=[
             ("not_home", IN_ZONES_NONE),
+            ("Work", IN_ZONES_WORK),
         ],
         other_states=[
             ("home", IN_ZONES_HOME),
-            ("Work", IN_ZONES_WORK),
         ],
     ),
 ]
