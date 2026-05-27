@@ -759,6 +759,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                         fw_data=fw_data,
                         flasher_cls=self._flasher_cls,
                         expected_installed_firmware_type=ApplicationType.EZSP,
+                        progress_callback=lambda offset, total: (
+                            self.async_update_progress(offset / total)
+                        ),
                     )
 
             self.install_task = self.hass.async_create_task(
