@@ -4,6 +4,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+import math
 from typing import Final
 
 from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
@@ -23,6 +24,9 @@ def normalize_command_timeout_seconds(value: float | str | None) -> float:
     try:
         timeout_seconds = float(value)
     except TypeError, ValueError:
+        return DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+    if not math.isfinite(timeout_seconds):
         return DEFAULT_COMMAND_TIMEOUT_SECONDS
 
     return min(

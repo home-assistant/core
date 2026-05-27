@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from homeassistant.components.assist_pipeline import CommandTimeoutNumber
+from homeassistant.components.assist_pipeline.number import CommandTimeoutNumber
 from homeassistant.components.number import NumberEntityDescription, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
