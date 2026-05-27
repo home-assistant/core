@@ -70,7 +70,7 @@ async def test_on_off_sensors(
     assert state.state == STATE_ON
 
 
-async def test_realtime_coordinator_binary_sensor_unavailable(
+async def test_realtime_update_exception(
     hass: HomeAssistant,
     mock_sense: MagicMock,
     config_entry: MockConfigEntry,

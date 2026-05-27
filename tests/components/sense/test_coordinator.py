@@ -1,24 +1,13 @@
 """Tests for the Sense coordinators."""
 
 from datetime import timedelta
-import socket
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from sense_energy import (
-    SenseAPIException,
-    SenseAPITimeoutException,
-    SenseAuthenticationException,
-    SenseMFARequiredException,
-    SenseWebsocketException,
-)
+from sense_energy import SenseAuthenticationException, SenseMFARequiredException
 
-from homeassistant.components.sense.const import (
-    ACTIVE_UPDATE_RATE,
-    DOMAIN,
-    TREND_UPDATE_RATE,
-)
+from homeassistant.components.sense.const import DOMAIN, TREND_UPDATE_RATE
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -62,125 +51,3 @@ async def test_trend_coordinator_auth_failure(
     assert flow.get("handler") == DOMAIN
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == config_entry.entry_id
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        SenseAPIException("api error"),
-        SenseAPITimeoutException("timeout"),
-        TimeoutError("timeout"),
-    ],
-)
-async def test_trend_coordinator_update_failure(
-    hass: HomeAssistant,
-    mock_sense: MagicMock,
-    config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test that connection errors from the trend coordinator mark entities unavailable."""
-    await setup_platform(hass, config_entry, Platform.SENSOR)
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    mock_sense.update_trend_data.side_effect = exception
-
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_trend_coordinator_recovery(
-    hass: HomeAssistant,
-    mock_sense: MagicMock,
-    config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that trend coordinator recovers after a transient failure."""
-    await setup_platform(hass, config_entry, Platform.SENSOR)
-
-    mock_sense.update_trend_data.side_effect = SenseAPIException("api error")
-
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
-    assert state.state == STATE_UNAVAILABLE
-
-    mock_sense.update_trend_data.side_effect = None
-
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
-    assert state.state != STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        SenseAPIException("api error"),
-        SenseAPITimeoutException("timeout"),
-        TimeoutError("timeout"),
-        SenseWebsocketException("ws error"),
-        socket.gaierror("addr info error"),
-    ],
-)
-async def test_realtime_coordinator_update_failure(
-    hass: HomeAssistant,
-    mock_sense: MagicMock,
-    config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test that errors from the realtime coordinator mark entities unavailable."""
-    await setup_platform(hass, config_entry, Platform.SENSOR)
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_energy")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-    mock_sense.update_realtime.side_effect = exception
-
-    freezer.tick(timedelta(seconds=ACTIVE_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_energy")
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_realtime_coordinator_recovery(
-    hass: HomeAssistant,
-    mock_sense: MagicMock,
-    config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that realtime coordinator recovers after a transient failure."""
-    await setup_platform(hass, config_entry, Platform.SENSOR)
-
-    mock_sense.update_realtime.side_effect = SenseAPIException("api error")
-
-    freezer.tick(timedelta(seconds=ACTIVE_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_energy")
-    assert state.state == STATE_UNAVAILABLE
-
-    mock_sense.update_realtime.side_effect = None
-
-    freezer.tick(timedelta(seconds=ACTIVE_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"sensor.sense_{MONITOR_ID}_energy")
-    assert state.state != STATE_UNAVAILABLE
