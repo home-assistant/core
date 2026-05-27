@@ -76,19 +76,9 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
 
     async def async_update(self) -> None:
         """Update state and refresh sw_version in device registry."""
-        try:
-            await self._feature.async_update()
-            if self._unavailable_logged:
-                _LOGGER.info("'%s' is back online", self.name)
-                self._unavailable_logged = False
-            self._attr_available = True
-        except Error as ex:
-            if not self._unavailable_logged:
-                _LOGGER.info("Updating '%s' failed: %s", self.name, ex)
-                self._unavailable_logged = True
-            self._attr_available = False
-            return
-        self._sync_sw_version()
+        await super().async_update()
+        if self._attr_available:
+            self._sync_sw_version()
 
     @property
     def installed_version(self) -> str | None:
