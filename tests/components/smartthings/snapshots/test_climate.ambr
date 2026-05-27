@@ -325,7 +325,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-entry]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -385,7 +385,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-state]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 25,
@@ -423,7 +423,7 @@
       'temperature': 25,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -559,7 +559,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-entry]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -606,7 +606,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -629,7 +629,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-state]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 27,
@@ -677,14 +677,14 @@
       'temperature': 23,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-entry]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -715,7 +715,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -738,7 +738,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-state]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 27,
@@ -764,7 +764,7 @@
       'temperature': 18,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1417,7 +1417,7 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-entry]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1440,7 +1440,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.virtual_thermostat',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1463,7 +1463,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-state]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 4734.6,
@@ -1484,7 +1484,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.virtual_thermostat',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

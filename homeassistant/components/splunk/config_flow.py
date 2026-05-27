@@ -1,4 +1,5 @@
 """Config flow for Splunk integration."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
 import logging

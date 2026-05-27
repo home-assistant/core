@@ -73,7 +73,8 @@ async def async_setup_entry(
         if not entry_data.available or not dashboard.last_update_success:
             return
 
-        # Do not add Dashboard Entity if this device is not known to the ESPHome dashboard.
+        # Do not add Dashboard Entity if this device is not
+        # known to the ESPHome dashboard.
         if dashboard.data is None or dashboard.data.get(device_name) is None:
             return
 

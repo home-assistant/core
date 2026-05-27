@@ -1,7 +1,5 @@
 """Support for rain sensors built into some Velux windows."""
 
-from __future__ import annotations
-
 from pyvlx import Window
 
 from homeassistant.components.binary_sensor import (
@@ -64,8 +62,10 @@ class VeluxRainSensor(
     @property
     def is_on(self) -> bool | None:
         """Return true if rain is detected."""
-        # Velux windows with rain sensors report an opening limitation when rain is detected.
-        # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
+        # Velux windows with rain sensors report an opening
+        # limitation when rain is detected. So far we've
+        # seen 89, 91, 93 (most cases) or 100 (Velux GPU).
+        # It probably makes sense to
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         if self.coordinator.data is None:

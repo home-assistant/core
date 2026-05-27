@@ -8,6 +8,7 @@ from functools import partial
 import logging
 import re
 from typing import Any, TypedDict, cast
+from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzActionError
@@ -24,7 +25,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -186,6 +187,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
+        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
+        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
+
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
@@ -226,7 +231,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         self.fritz_call = FritzCall(fc=self.connection)
-        info = self.fritz_status.get_device_info()
+        try:
+            info = self.fritz_status.get_device_info()
+        except ParseError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="error_parse_device_info",
+            ) from ex
 
         _LOGGER.debug(
             "gathered device info of %s %s",
@@ -708,6 +719,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
+                self._devices.pop(entry_mac, None)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -721,6 +733,29 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
+
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        tracked = fritz_data.tracked.get(self.unique_id, set())
+        for mac in tracked.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
+            tracked.remove(mac)
+
+        profile_switches = fritz_data.profile_switches.get(self.unique_id, set())
+        for mac in profile_switches.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
+            profile_switches.remove(mac)
+
+        wol_buttons = fritz_data.wol_buttons.get(self.unique_id, set())
+        for mac in wol_buttons.copy():
+            if mac in device_hosts:
+                continue
+            _LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
+            wol_buttons.remove(mac)
 
 
 class AvmWrapper(FritzBoxTools):

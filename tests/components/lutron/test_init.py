@@ -32,7 +32,7 @@ async def test_setup_entry(
     entity_registry = er.async_get(hass)
     # The light from mock_lutron has uuid="light_uuid" and guid="12345678901"
     expected_unique_id = "12345678901_light_uuid"
-    entry = entity_registry.async_get("light.test_light")
+    entry = entity_registry.async_get("light.test_area_test_light")
     assert entry.unique_id == expected_unique_id
 
 

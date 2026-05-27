@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, ParamSpec
+from typing import Any
 
 from pyvlx import Node, PyVLXException
 
@@ -14,8 +14,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-P = ParamSpec("P")
 
 
 def velux_unique_id(node: Node, config_entry_id: str) -> str:
@@ -34,7 +32,7 @@ def velux_device_info(node: Node, config_entry_id: str) -> DeviceInfo:
     )
 
 
-def wrap_pyvlx_call_exceptions(
+def wrap_pyvlx_call_exceptions[**P](
     func: Callable[P, Coroutine[Any, Any, None]],
 ) -> Callable[P, Coroutine[Any, Any, None]]:
     """Decorate pyvlx calls to handle exceptions.

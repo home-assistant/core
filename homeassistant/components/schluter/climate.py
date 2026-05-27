@@ -60,6 +60,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="schluter",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -134,5 +135,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         try:
             if target_temp is not None:
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)

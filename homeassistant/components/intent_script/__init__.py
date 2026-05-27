@@ -6,7 +6,7 @@ from typing import Any, TypedDict
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,7 +29,6 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
-CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
 CONF_CONTENT = "content"
@@ -77,10 +76,9 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
     existing_intents = hass.data[DOMAIN]
 
     for intent_type, conf in existing_intents.items():
-        if isinstance(conf.get(CONF_ACTION), script.Script):
-            await conf[CONF_ACTION].async_stop()
-            conf[CONF_ACTION].async_unload()
         intent.async_remove(hass, intent_type)
+        if isinstance(conf.get(CONF_ACTION), script.Script):
+            await conf[CONF_ACTION].async_unload()
 
     if not new_config or DOMAIN not in new_config:
         hass.data[DOMAIN] = {}
@@ -255,7 +253,8 @@ class ScriptIntentHandler(intent.IntentHandler):
             else:
                 action_res = await action.async_run(slots, intent_obj.context)
 
-                # if the action returns a response, make it available to the speech/reprompt templates below
+                # if the action returns a response, make it
+                # available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
                     slots["action_response"] = action_res.service_response
 

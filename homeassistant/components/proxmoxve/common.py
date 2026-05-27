@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.const import CONF_USERNAME
 
-from .const import AUTH_OTHER, CONF_AUTH_METHOD, CONF_REALM
+from .const import AUTH_OTHER, CONF_AUTH_METHOD, CONF_REALM, CONF_TOKEN_ID
 
 
 def sanitize_config_entry(input_data: Mapping[str, Any]) -> dict[str, Any]:
@@ -20,5 +20,8 @@ def sanitize_config_entry(input_data: Mapping[str, Any]) -> dict[str, Any]:
 
     data[CONF_REALM] = realm
     data[CONF_USERNAME] = f"{username}@{realm}"
+
+    if CONF_TOKEN_ID in data and "!" in data[CONF_TOKEN_ID]:
+        data[CONF_TOKEN_ID] = data[CONF_TOKEN_ID].split("!")[1]
 
     return data
