@@ -707,6 +707,7 @@ async def test_disabled_device_close_raises(
     await hass.async_block_till_done()
 
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    first_device.close.assert_awaited_once()
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
