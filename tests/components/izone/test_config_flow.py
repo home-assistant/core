@@ -90,27 +90,6 @@ def mock_izone_timeouts() -> Generator[None]:
 # ---------------------------------------------------------------------------
 
 
-async def test_found(hass: HomeAssistant, mock_entry_setup: None) -> None:
-    """Test finding iZone controller via broadcast discovery."""
-    controller = _make_controller(ip="192.0.2.1")
-
-    with patch(
-        "homeassistant.components.izone.config_flow.async_discover_controllers",
-        return_value={controller.device_uid: controller},
-    ):
-        result = await hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm"
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "iZone 000000001"
-    assert result["data"] == {}
-
-
 async def test_user_discovery_success(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -392,6 +371,35 @@ async def test_broadcast_aborts_when_all_discovered_are_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_flow_aborts_when_all_discovered_are_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """User flow aborts when every discovered controller has been explicitly ignored.
+
+    _async_get_unconfigured_controllers uses include_ignore=True so controllers
+    whose entries carry SOURCE_IGNORE are not re-offered as configurable, respecting
+    the user's earlier choice to dismiss them.
+    """
+    ignored_controller = _make_controller("000000001", "192.0.2.1")
+    MockConfigEntry(
+        domain=IZONE,
+        unique_id=ignored_controller.device_uid,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    ).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.izone.config_flow.async_discover_controllers",
+        return_value={ignored_controller.device_uid: ignored_controller},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_reuses_existing_discovery_service(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
@@ -460,7 +468,7 @@ async def test_import_starts_discovery_service(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["reason"] == "discovery_started"
     mock_start.assert_awaited_once_with(hass)
 
 

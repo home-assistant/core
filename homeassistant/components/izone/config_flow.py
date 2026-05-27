@@ -168,7 +168,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
             _LOGGER.debug("Unable to start iZone discovery from import", exc_info=True)
             return self.async_abort(reason="discovery_failed")
 
-        return self.async_abort(reason="no_devices_found")
+        # Discovery is now running; each controller will surface as an individual
+        # integration_discovery flow.  Use a dedicated abort reason so the UI does
+        # not misleadingly show "No devices found" when setup is actually in progress.
+        return self.async_abort(reason="discovery_started")
 
     async def async_step_user(
         self, _user_input: dict[str, Any] | None = None
@@ -280,9 +283,10 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
         if device_uid in _yaml_excluded_uids(self.hass):
             return self.async_abort(reason="no_devices_found")
 
-        if self.hass.config_entries.async_entry_for_domain_unique_id(IZONE, device_uid):
-            return self.async_abort(reason="already_configured")
-
+        # async_set_unique_id + _abort_if_unique_id_configured handles both existing
+        # entries (including SOURCE_IGNORE) and stale in-progress flows for this UID.
+        # A direct async_entry_for_domain_unique_id pre-check would miss the
+        # flow-deduplication side effect of async_set_unique_id(raise_on_progress=True).
         await self.async_set_unique_id(device_uid)
         self._abort_if_unique_id_configured()
 
@@ -428,7 +432,9 @@ class IZoneConfigFlow(ConfigFlow, domain=IZONE):
     ) -> list[pizone.Controller]:
         """Return sorted unconfigured controllers for the interactive user flow."""
         controllers = self._filter_yaml_exclude(self.hass, controllers)
-        configured_uids = self._async_current_ids(include_ignore=False)
+        # include_ignore=True ensures controllers whose entries have been explicitly
+        # ignored by the user (SOURCE_IGNORE) are not re-offered as configurable.
+        configured_uids = self._async_current_ids(include_ignore=True)
         return sorted(
             (
                 controller
