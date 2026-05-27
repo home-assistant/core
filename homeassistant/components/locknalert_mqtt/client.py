@@ -1,4 +1,11 @@
-"""Support for MQTT message handling."""
+"""HA-aware MQTT client for LocknAlert bridges.
+
+Each LocknAlert bridge runs its own embedded MQTT broker. Users may simultaneously
+run the built-in `mqtt` integration connected to a separate broker (e.g. for Tasmota
+or Zigbee2MQTT). Because the built-in `mqtt` integration is single-entry and supports
+only one broker at a time, this integration manages its own client connections rather
+than depending on `mqtt`.
+"""
 
 import asyncio
 from collections.abc import Callable

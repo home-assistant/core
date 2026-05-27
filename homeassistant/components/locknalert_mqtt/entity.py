@@ -113,8 +113,6 @@ from .models import (
     DATA_MQTT,
     MessageCallbackType,
     MqttSubentryData,
-    MqttValueTemplate,
-    MqttValueTemplateException,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -124,6 +122,7 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
+from .templates import MqttValueTemplate, MqttValueTemplateException
 from .util import (
     async_cleanup_device_registry,
     learn_more_url,

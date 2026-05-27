@@ -85,19 +85,21 @@ from .const import (
 from .models import (
     DATA_MQTT,
     DATA_MQTT_AVAILABLE,
-    MqttCommandTemplate,
     MqttData,
-    MqttValueTemplate,
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    convert_outgoing_mqtt_payload,
 )
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
+)
+from .templates import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    convert_outgoing_mqtt_payload,
 )
 from .util import (
     async_create_certificate_temp_files,
