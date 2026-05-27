@@ -11,14 +11,12 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    DOMAIN,
-    SourceType,
-)
-from homeassistant.components.device_tracker.config_entry import (
     CONNECTED_DEVICE_REGISTERED,
+    DOMAIN,
     BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
+    SourceType,
     TrackerEntity,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
@@ -685,15 +683,31 @@ async def test_load_unload_entry_tracker(
             None,
             1.0,
             2.0,
+            STATE_HOME,
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.home"],
+                ATTR_LATITUDE: 1.0,
+                ATTR_LONGITUDE: 2.0,
+            },
+            id="in_zones_wins_over_lat_long",
+        ),
+        pytest.param(
+            None,
+            [],
+            None,
+            50.0,
+            60.0,
             STATE_NOT_HOME,
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
                 ATTR_IN_ZONES: [],
-                ATTR_LATITUDE: 1.0,
-                ATTR_LONGITUDE: 2.0,
+                ATTR_LATITUDE: 50.0,
+                ATTR_LONGITUDE: 60.0,
             },
-            id="in_zones_ignored_when_lat_long_set",
+            id="empty_in_zones_wins_over_lat_long",
         ),
         pytest.param(
             None,
