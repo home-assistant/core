@@ -22,7 +22,7 @@ def normalize_command_timeout_seconds(value: float | str | None) -> float:
 
     try:
         timeout_seconds = float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return DEFAULT_COMMAND_TIMEOUT_SECONDS
 
     return min(
