@@ -217,7 +217,7 @@ class TrackerEntity(
     _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
-    # _attr_location_name is deprecated and will be removed in Home Assistant 2027.6
+    # _attr_location_name is deprecated and will be removed in Home Assistant 2027.7
     _attr_location_name: str | None = None
     _attr_longitude: float | None = None
     _attr_source_type: SourceType = SourceType.GPS
@@ -242,7 +242,7 @@ class TrackerEntity(
                 (
                     "%s::%s is overriding the deprecated location_name property on "
                     "an instance of TrackerEntity, this will be unsupported from "
-                    "Home Assistant 2027.6, please %s"
+                    "Home Assistant 2027.7, please %s"
                 ),
                 cls.__module__,
                 cls.__name__,
@@ -281,7 +281,7 @@ class TrackerEntity(
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device.
 
-        The property is deprecated and will be removed in Home Assistant 2027.6.
+        The property is deprecated and will be removed in Home Assistant 2027.7.
         """
         if (location_name := self._attr_location_name) is not None:
             if not self.__deprecated_attr_location_name_reported:
@@ -292,7 +292,7 @@ class TrackerEntity(
                     (
                         "%s::%s is setting the deprecated _attr_location_name attribute "
                         "on an instance of TrackerEntity, this will be unsupported from "
-                        "Home Assistant 2027.6, please %s"
+                        "Home Assistant 2027.7, please %s"
                     ),
                     self.__class__.__module__,
                     self.__class__.__name__,
