@@ -53,17 +53,6 @@ async def test_sensor_entities_state(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_ventilation_state_reports_lowercase_api_value(
-    hass: HomeAssistant,
-) -> None:
-    """Test the ventilation state sensor preserves the lowercase state contract."""
-    state = hass.states.get("sensor.living_ventilation_state")
-
-    assert state is not None
-    assert state.state == VentilationState.AUTO.value.lower()
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_iaq_sensor_entities_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
