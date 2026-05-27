@@ -62,7 +62,26 @@
         "name": "Mode end time"
       },
       "ventilation_state": {
-        "name": "Ventilation state"
+        "name": "Ventilation state",
+        "state": {
+          "aut1": "AUT1",
+          "aut2": "AUT2",
+          "aut3": "AUT3",
+          "auto": "AUTO",
+          "cnt1": "CNT1",
+          "cnt2": "CNT2",
+          "cnt3": "CNT3",
+          "empt": "EMPT",
+          "man1": "MAN1",
+          "man1x2": "MAN1x2",
+          "man1x3": "MAN1x3",
+          "man2": "MAN2",
+          "man2x2": "MAN2x2",
+          "man2x3": "MAN2x3",
+          "man3": "MAN3",
+          "man3x2": "MAN3x2",
+          "man3x3": "MAN3x3"
+        }
       }
     }
   },

@@ -53,14 +53,14 @@ async def test_sensor_entities_state(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_ventilation_state_reports_raw_api_value(
+async def test_ventilation_state_reports_lowercase_api_value(
     hass: HomeAssistant,
 ) -> None:
-    """Test the ventilation state sensor exposes the raw Duco API value."""
+    """Test the ventilation state sensor preserves the lowercase state contract."""
     state = hass.states.get("sensor.living_ventilation_state")
 
     assert state is not None
-    assert state.state == VentilationState.AUTO.value
+    assert state.state == VentilationState.AUTO.value.lower()
 
 
 @pytest.mark.usefixtures("init_integration")
