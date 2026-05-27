@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_states
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'editable': True,
+        'friendly_name': 'test home',
+        'icon': 'mdi:home',
+        'latitude': 32.87336,
+        'longitude': -117.22743,
+        'passive': False,
+        'persons': list([
+        ]),
+        'radius': 100,
+      }),
+      'context': <ANY>,
+      'entity_id': 'zone.home',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Demo scanner',
+        'in_zones': list([
+          'zone.home',
+        ]),
+        'source_type': <SourceType.ROUTER: 'router'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.demo_scanner',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'home',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Demo tracker',
+        'gps_accuracy': 10,
+        'in_zones': list([
+          'zone.home',
+        ]),
+        'latitude': 32.87336,
+        'longitude': -117.22743,
+        'source_type': <SourceType.GPS: 'gps'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.demo_tracker',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'home',
+    }),
+  })
+# ---
