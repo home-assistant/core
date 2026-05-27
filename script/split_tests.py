@@ -360,7 +360,7 @@ def _file_fixture_hash(
             if blob_cache is not None:
                 blob_cache[fixture] = blob
         digest.update(blob)
-    result = digest.hexdigest()
+    result = digest.hexdigest()[:16]
     if dir_cache is not None:
         dir_cache[test_dir] = result
     return result
