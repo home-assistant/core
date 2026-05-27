@@ -1,6 +1,7 @@
 """Tests for voice command segmenter."""
 
 import itertools as it
+import math
 
 import pytest
 
@@ -30,7 +31,7 @@ def test_defaults() -> None:
         (None, DEFAULT_COMMAND_TIMEOUT_SECONDS),
         ("unknown", DEFAULT_COMMAND_TIMEOUT_SECONDS),
         ("nan", DEFAULT_COMMAND_TIMEOUT_SECONDS),
-        (float("nan"), DEFAULT_COMMAND_TIMEOUT_SECONDS),
+        (math.nan, DEFAULT_COMMAND_TIMEOUT_SECONDS),
         (MIN_COMMAND_TIMEOUT_SECONDS - 1, MIN_COMMAND_TIMEOUT_SECONDS),
         (MAX_COMMAND_TIMEOUT_SECONDS + 1, MAX_COMMAND_TIMEOUT_SECONDS),
         ("30", 30.0),

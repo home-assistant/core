@@ -1,6 +1,6 @@
 """Number entities for VoIP integration."""
 
-from homeassistant.components.assist_pipeline.number import CommandTimeoutNumber
+from homeassistant.components.assist_pipeline import CommandTimeoutNumber
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
