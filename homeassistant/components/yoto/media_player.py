@@ -25,6 +25,9 @@ from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoEntity
 
 URI_SCHEME = "yoto"
+# First path segment names the content type. Only cards exist today;
+# reserving it leaves room for groups without breaking URIs.
+URI_CARD = "card"
 
 PARALLEL_UPDATES = 0
 
@@ -411,8 +414,8 @@ def _build_uri(
     chapter_key: str | None = None,
     track_key: str | None = None,
 ) -> str:
-    """Build a yoto:// URI from card/chapter/track parts."""
-    segments = [card_id]
+    """Build a yoto://card/... URI from card/chapter/track parts."""
+    segments = [URI_CARD, card_id]
     if chapter_key is not None:
         segments.append(chapter_key)
         if track_key is not None:
@@ -421,12 +424,12 @@ def _build_uri(
 
 
 def _parse_uri(media_id: str) -> tuple[str, str | None, str | None]:
-    """Parse a yoto:// URI into card/chapter/track parts.
+    """Parse a yoto://card/... URI into card/chapter/track parts.
 
     Parsed manually because URL parsers lower-case the authority and Yoto
     IDs are case-sensitive.
     """
-    prefix = f"{URI_SCHEME}://"
+    prefix = f"{URI_SCHEME}://{URI_CARD}/"
     if not media_id.startswith(prefix):
         raise ValueError(f"Not a Yoto media identifier: {media_id}")
     parts = [segment for segment in media_id[len(prefix) :].split("/") if segment]

@@ -192,15 +192,15 @@ async def test_state_idle_before_first_event(
     ("media_content_id", "expected_call"),
     [
         (
-            "yoto://card-test",
+            "yoto://card/card-test",
             {"chapter_key": None, "track_key": None, "seconds_in": None},
         ),
         (
-            "yoto://card-test/01",
+            "yoto://card/card-test/01",
             {"chapter_key": "01", "track_key": "01-INT", "seconds_in": 0},
         ),
         (
-            "yoto://card-test/01/01-INT",
+            "yoto://card/card-test/01/01-INT",
             {"chapter_key": "01", "track_key": "01-INT", "seconds_in": 0},
         ),
     ],
@@ -236,8 +236,9 @@ async def test_play_media(
     "media_content_id",
     [
         pytest.param("spotify:track:abc", id="wrong_scheme"),
-        pytest.param("yoto://", id="empty_path"),
-        pytest.param("yoto://card/chapter/track/extra", id="too_many_segments"),
+        pytest.param("yoto://card-test/01", id="missing_card_prefix"),
+        pytest.param("yoto://card/", id="missing_card_id"),
+        pytest.param("yoto://card/card-test/01/01-INT/extra", id="too_many_segments"),
     ],
 )
 async def test_play_media_invalid_uri_raises(
@@ -264,9 +265,9 @@ async def test_play_media_invalid_uri_raises(
 @pytest.mark.parametrize(
     "media_content_id",
     [
-        pytest.param("yoto://does-not-exist", id="unknown_card"),
-        pytest.param("yoto://card-test/does-not-exist", id="unknown_chapter"),
-        pytest.param("yoto://card-test/01/does-not-exist", id="unknown_track"),
+        pytest.param("yoto://card/does-not-exist", id="unknown_card"),
+        pytest.param("yoto://card/card-test/does-not-exist", id="unknown_chapter"),
+        pytest.param("yoto://card/card-test/01/does-not-exist", id="unknown_track"),
     ],
 )
 async def test_play_media_unknown_target_raises(
@@ -312,7 +313,7 @@ async def test_browse_media_root_lists_cards(
     children = response["result"]["children"]
     assert len(children) == 1
     assert children[0]["title"] == "Outer Space"
-    assert children[0]["media_content_id"] == "yoto://card-test"
+    assert children[0]["media_content_id"] == "yoto://card/card-test"
     assert children[0]["can_play"] is True
     assert children[0]["can_expand"] is True
 
@@ -336,7 +337,7 @@ async def test_browse_card_with_multiple_chapters_and_multiple_tracks(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "music",
-            "media_content_id": "yoto://card-test",
+            "media_content_id": "yoto://card/card-test",
         }
     )
     response = await client.receive_json()
@@ -366,7 +367,7 @@ async def test_browse_card_with_multiple_chapters_and_single_track(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "music",
-            "media_content_id": "yoto://card-test",
+            "media_content_id": "yoto://card/card-test",
         }
     )
     response = await client.receive_json()
@@ -396,7 +397,7 @@ async def test_browse_card_with_single_chapter_collapses_to_tracks(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "music",
-            "media_content_id": "yoto://card-test",
+            "media_content_id": "yoto://card/card-test",
         }
     )
     response = await client.receive_json()
@@ -408,7 +409,7 @@ async def test_browse_card_with_single_chapter_collapses_to_tracks(
         "Only chapter - Track 2",
         "Only chapter - Track 3",
     ]
-    assert children[0]["media_content_id"] == "yoto://card-test/01/01-01"
+    assert children[0]["media_content_id"] == "yoto://card/card-test/01/01-01"
 
 
 @pytest.mark.usefixtures("mock_yoto_client")
@@ -427,7 +428,7 @@ async def test_browse_media_chapter_shows_tracks(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "playlist",
-            "media_content_id": "yoto://card-test/01",
+            "media_content_id": "yoto://card/card-test/01",
         }
     )
     response = await client.receive_json()
@@ -435,7 +436,7 @@ async def test_browse_media_chapter_shows_tracks(
     assert response["success"]
     children = response["result"]["children"]
     assert [c["title"] for c in children] == ["Welcome", "The Story Begins"]
-    assert children[0]["media_content_id"] == "yoto://card-test/01/01-INT"
+    assert children[0]["media_content_id"] == "yoto://card/card-test/01/01-INT"
 
 
 async def test_browse_media_fetches_card_detail_lazily(
@@ -462,7 +463,7 @@ async def test_browse_media_fetches_card_detail_lazily(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "album",
-            "media_content_id": "yoto://card-test",
+            "media_content_id": "yoto://card/card-test",
         }
     )
     response = await client.receive_json()
@@ -487,7 +488,7 @@ async def test_browse_media_unknown_card_raises(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "album",
-            "media_content_id": "yoto://does-not-exist",
+            "media_content_id": "yoto://card/does-not-exist",
         }
     )
     response = await client.receive_json()
@@ -510,7 +511,7 @@ async def test_browse_media_unknown_chapter_raises(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "playlist",
-            "media_content_id": "yoto://card-test/does-not-exist",
+            "media_content_id": "yoto://card/card-test/does-not-exist",
         }
     )
     response = await client.receive_json()
@@ -537,7 +538,7 @@ async def test_browse_media_card_detail_failure_raises(
             "type": "media_player/browse_media",
             "entity_id": ENTITY_ID,
             "media_content_type": "album",
-            "media_content_id": "yoto://card-test",
+            "media_content_id": "yoto://card/card-test",
         }
     )
     response = await client.receive_json()
@@ -551,7 +552,10 @@ async def test_browse_media_card_detail_failure_raises(
         pytest.param(
             "play_card",
             SERVICE_PLAY_MEDIA,
-            {"media_content_type": "music", "media_content_id": "yoto://card-test"},
+            {
+                "media_content_type": "music",
+                "media_content_id": "yoto://card/card-test",
+            },
             id="play_media",
         ),
     ],
