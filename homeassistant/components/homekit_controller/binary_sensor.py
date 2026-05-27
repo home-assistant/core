@@ -195,7 +195,7 @@ class CharacteristicBinarySensor(CharacteristicEntity, BinarySensorEntity):
         super().__init__(conn, info, char)
         if description.has_entity_name and (
             translation := service_feature_translation(
-                char.service, description.device_class
+                char.service, description.translation_key or description.device_class
             )
         ):
             self._attr_translation_key, translation_placeholders = translation
@@ -272,7 +272,10 @@ def _should_skip_low_battery_characteristic(char: Characteristic) -> bool:
 
 
 def _has_earlier_low_battery_characteristic(char: Characteristic) -> bool:
-    """Check if the accessory already exposed the same low battery source."""
+    """Check if the accessory already exposed the same low battery source.
+
+    Unscoped low battery characteristics are treated as accessory-level duplicates.
+    """
     source_key = _low_battery_source_key(char.service)
     return any(
         service.iid < char.service.iid

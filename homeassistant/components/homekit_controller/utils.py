@@ -81,10 +81,11 @@ def normalized_service_label_index(service: Service) -> str | int | float | None
 def service_feature_scope(service: Service) -> ServiceFeatureScope | None:
     """Return scope metadata for a feature associated with a HomeKit service."""
     service_name = service.value(CharacteristicsTypes.NAME)
+    if service_name is not None:
+        service_name = str(service_name)
     if service_name and folded_name(service_name) != folded_name(
         service.accessory.name
     ):
-        service_name = str(service_name)
         return ServiceFeatureScope(
             key=f"name:{folded_name(service_name)}",
             translation_suffix="with_service_name",

@@ -119,7 +119,7 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
         if description.has_entity_name and (
             translation := service_feature_translation(
-                char.service, description.device_class
+                char.service, description.translation_key or description.device_class
             )
         ):
             self._attr_translation_key, translation_placeholders = translation
