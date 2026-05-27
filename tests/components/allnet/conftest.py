@@ -142,7 +142,7 @@ def mock_channels() -> tuple[Channel, ...]:
             value=False,
             raw={
                 "info": {"chipid": "74", "unit": ""},
-                "digitalToText": "offen/geschlossen",
+                "digitalToText": "open/closed",
             },
         ),
         Channel(

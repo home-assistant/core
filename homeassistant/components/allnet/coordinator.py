@@ -8,7 +8,6 @@ from allnet import AllnetClient, AllnetConnectionError
 from allnet.exceptions import AllnetAuthenticationError, AllnetInvalidResponseError
 from allnet.models import Channel
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -30,12 +29,11 @@ class AllnetDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Channel]]):
         client: AllnetClient,
     ) -> None:
         """Initialize the coordinator."""
-        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             logger=_LOGGER,
             name=f"{DOMAIN}_{entry.unique_id or entry.entry_id}",
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             config_entry=entry,
         )
         self.client = client

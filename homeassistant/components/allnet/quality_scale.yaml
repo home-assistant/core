@@ -5,8 +5,7 @@ rules:
   appropriate-polling:
     status: done
     comment: >
-      Uses DataUpdateCoordinator with a configurable scan interval
-      (default 30 s, min 10 s, max 3600 s) adjustable via the options flow.
+      Uses DataUpdateCoordinator with a fixed 30 s polling interval.
   brands:
     status: done
     comment: Brands PR submitted at home-assistant/brands#10384.
