@@ -39,9 +39,12 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util.aiohttp import MockRequest
 
 from .conftest import (
+    CONF_BC_ONLY,
+    CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
+    TEST_BC_PORT,
     TEST_CAM_NAME,
     TEST_HOST,
     TEST_MAC,
@@ -215,6 +218,8 @@ async def test_invalid_bc_connection(
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
             CONF_BC_CONNECT: "invalid_test",
         },
         options={
