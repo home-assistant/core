@@ -22,7 +22,7 @@ _FAN_OUT_DIRS: Final = frozenset({"components"})
 
 # Cache file format version; bump on any incompatible schema change so old
 # caches are ignored rather than misread.
-_CACHE_VERSION: Final = 3
+_CACHE_VERSION: Final = 1
 
 # Fall back from file-level to directory-level pytest collection when
 # misses make up more than this fraction of the tree; past that point
