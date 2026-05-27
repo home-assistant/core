@@ -11,15 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
 
-_PAYLOAD_WEATHER_STATE_LUX = (
-    '{"id":"UL60","properties":{"lightSouth":21},"type":"state"}'
-)
-_PAYLOAD_WEATHER_STATE_WIND = '{"id":"UL60","properties":{"wind":25},"type":"state"}'
-
 _TOPIC_WEATHER_STATE = "cloudapp/QBUSMQTTGW/UL1/UL60/state"
-
-_ILLUMINANCE_ENTITY_ID = "sensor.tuin_weersensor_illuminance_south"
-_WIND_ENTITY_ID = "sensor.tuin_weersensor_wind_speed"
 
 
 async def test_sensor(
@@ -62,10 +54,14 @@ async def test_weather_lux_uses_scale_factor(
 ) -> None:
     """Test whether lux values are using the scale factor."""
 
-    async_fire_mqtt_message(hass, _TOPIC_WEATHER_STATE, _PAYLOAD_WEATHER_STATE_LUX)
+    async_fire_mqtt_message(
+        hass,
+        _TOPIC_WEATHER_STATE,
+        '{"id":"UL60","properties":{"lightSouth":21},"type":"state"}',
+    )
     await hass.async_block_till_done()
 
-    assert hass.states.get(_ILLUMINANCE_ENTITY_ID).state == "21000"
+    assert hass.states.get("sensor.tuin_weersensor_illuminance_south").state == "21000"
 
 
 async def test_weather_wind_skips_scale_factor(
@@ -73,7 +69,11 @@ async def test_weather_wind_skips_scale_factor(
 ) -> None:
     """Test whether wind value is not using the scale factor."""
 
-    async_fire_mqtt_message(hass, _TOPIC_WEATHER_STATE, _PAYLOAD_WEATHER_STATE_WIND)
+    async_fire_mqtt_message(
+        hass,
+        _TOPIC_WEATHER_STATE,
+        '{"id":"UL60","properties":{"wind":25},"type":"state"}',
+    )
     await hass.async_block_till_done()
 
-    assert hass.states.get(_WIND_ENTITY_ID).state == "25"
+    assert hass.states.get("sensor.tuin_weersensor_wind_speed").state == "25"
