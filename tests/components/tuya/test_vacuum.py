@@ -99,7 +99,7 @@ async def test_platform_setup_and_discovery(
             "vacuum.v20",
             SERVICE_PAUSE,
             {},
-            {"code": "power_go", "value": False},
+            {"code": "pause", "value": True},
         ),
     ],
 )
