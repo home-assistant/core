@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from energieleser import GasleserDevice, StromleserOneDevice, WaermeleserDevice
+from energieleser import (
+    GasleserDevice,
+    StromleserOneDevice,
+    WaermeleserDevice,
+    WasserleserDevice,
+)
 import pytest
 
 from homeassistant.components.energieleser.const import DOMAIN
@@ -14,6 +19,7 @@ from tests.common import MockConfigEntry
 STROMLESER_DEVICE_ID = "STROM_ONE_8529546829"
 GASLESER_DEVICE_ID = "GAS_8530321017"
 WAERMELESER_DEVICE_ID = "HEAT_0000000001"
+WASSERLESER_DEVICE_ID = "WASSER_0499632826"
 
 STROMLESER_API_RESPONSE: dict = {
     "device_id": STROMLESER_DEVICE_ID,
@@ -52,6 +58,16 @@ WAERMELESER_API_RESPONSE: dict = {
     "rssi": "-51",
 }
 
+WASSERLESER_API_RESPONSE: dict = {
+    "device_id": WASSERLESER_DEVICE_ID,
+    "timestamp": "1779276532",
+    "total_consumption": "123.755 m3",
+    "today_consumption": "0.000 m3",
+    "current_flow_rate": "0 l/h",
+    "current_flow_rate_m3": "0.0000 m3/h",
+    "signal_strength": "-49 dBm",
+}
+
 
 @pytest.fixture
 def mock_stromleser_device() -> StromleserOneDevice:
@@ -69,6 +85,12 @@ def mock_gasleser_device() -> GasleserDevice:
 def mock_waermeleser_device() -> WaermeleserDevice:
     """Return a parsed wärmeleser device built from the API fixture."""
     return WaermeleserDevice.from_payload(WAERMELESER_API_RESPONSE)
+
+
+@pytest.fixture
+def mock_wasserleser_device() -> WasserleserDevice:
+    """Return a parsed wasserleser device built from the API fixture."""
+    return WasserleserDevice.from_payload(WASSERLESER_API_RESPONSE)
 
 
 @pytest.fixture
@@ -110,6 +132,20 @@ def mock_waermeleser_config_entry() -> MockConfigEntry:
             "device_id": WAERMELESER_DEVICE_ID,
         },
         unique_id=WAERMELESER_DEVICE_ID,
+    )
+
+
+@pytest.fixture
+def mock_wasserleser_config_entry() -> MockConfigEntry:
+    """Return a mocked config entry for a wasserleser device."""
+    return MockConfigEntry(
+        title=WASSERLESER_DEVICE_ID,
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.103",
+            "device_id": WASSERLESER_DEVICE_ID,
+        },
+        unique_id=WASSERLESER_DEVICE_ID,
     )
 
 

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from energieleser import GasleserDevice, WaermeleserDevice
+from energieleser import GasleserDevice, WaermeleserDevice, WasserleserDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -69,4 +69,21 @@ async def test_waermeleser_sensors(
     await _setup_integration(hass, mock_waermeleser_config_entry)
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_waermeleser_config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wasserleser_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_energieleser_client: AsyncMock,
+    mock_wasserleser_device: WasserleserDevice,
+    mock_wasserleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test all wasserleser sensors against a snapshot."""
+    mock_energieleser_client.get_device.return_value = mock_wasserleser_device
+    await _setup_integration(hass, mock_wasserleser_config_entry)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_wasserleser_config_entry.entry_id
     )

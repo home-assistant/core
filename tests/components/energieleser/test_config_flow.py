@@ -152,14 +152,27 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["data"]["device_id"] == STROMLESER_DEVICE_ID
 
 
-async def test_zeroconf_flow_cannot_connect(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        pytest.param(
+            EnergieleserConnectionError("boom"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            EnergieleserUnknownDeviceError("FOO_0000000001"),
+            "unknown_device_type",
+            id="unknown_device_type",
+        ),
+    ],
+)
+async def test_zeroconf_flow_errors(
     hass: HomeAssistant,
     mock_energieleser_client: AsyncMock,
+    side_effect: Exception,
+    expected_reason: str,
 ) -> None:
-    """Test that a zeroconf flow aborts when the device is unreachable."""
-    mock_energieleser_client.get_device.side_effect = EnergieleserConnectionError(
-        "boom"
-    )
+    """Test that a zeroconf flow aborts on client errors."""
+    mock_energieleser_client.get_device.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -176,4 +189,4 @@ async def test_zeroconf_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == expected_reason
