@@ -9,9 +9,6 @@ from unittest.mock import ANY, Mock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
-
 from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
@@ -30,6 +27,8 @@ from homeassistant.components.assist_pipeline.pipeline import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr
+from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 from .conftest import (
     BYTES_ONE_SECOND,
