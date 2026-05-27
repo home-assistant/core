@@ -1116,7 +1116,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1209,7 +1209,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1302,7 +1302,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1395,7 +1395,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1488,7 +1488,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1581,7 +1581,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1674,7 +1674,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1764,7 +1764,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1857,7 +1857,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1950,7 +1950,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -2043,7 +2043,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -2128,7 +2128,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -2217,7 +2217,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2310,7 +2310,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2403,7 +2403,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2496,7 +2496,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2589,7 +2589,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2682,7 +2682,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2775,7 +2775,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2868,7 +2868,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2961,7 +2961,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3054,7 +3054,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3147,7 +3147,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3240,7 +3240,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3333,7 +3333,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3423,7 +3423,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3513,7 +3513,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3603,7 +3603,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3696,7 +3696,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3789,7 +3789,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3882,7 +3882,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3975,7 +3975,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4068,7 +4068,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4161,7 +4161,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4254,7 +4254,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4347,7 +4347,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4440,7 +4440,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4533,7 +4533,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4626,7 +4626,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4711,7 +4711,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -4800,7 +4800,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -4890,7 +4890,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -4983,7 +4983,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5076,7 +5076,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5169,7 +5169,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5262,7 +5262,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5347,7 +5347,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5440,7 +5440,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5533,7 +5533,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5626,7 +5626,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5719,7 +5719,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5812,7 +5812,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5905,7 +5905,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -5998,7 +5998,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6091,7 +6091,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6184,7 +6184,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6277,7 +6277,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6370,7 +6370,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6455,7 +6455,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6545,7 +6545,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6638,7 +6638,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6723,7 +6723,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6816,7 +6816,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -6909,7 +6909,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7002,7 +7002,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7087,7 +7087,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7172,7 +7172,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7271,7 +7271,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7364,7 +7364,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7457,7 +7457,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7550,7 +7550,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7643,7 +7643,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7728,7 +7728,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7813,7 +7813,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7898,7 +7898,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -7983,7 +7983,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8068,7 +8068,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8153,7 +8153,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8246,7 +8246,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8331,7 +8331,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8416,8 +8416,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Gas meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -8505,8 +8505,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -8594,8 +8594,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Inlet heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -8679,8 +8679,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Warm water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -8768,8 +8768,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -8861,7 +8861,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -8951,7 +8951,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9044,7 +9044,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9137,7 +9137,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9230,7 +9230,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9315,7 +9315,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9408,7 +9408,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9501,7 +9501,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9594,7 +9594,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9687,7 +9687,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9780,7 +9780,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9873,7 +9873,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -9966,7 +9966,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10059,7 +10059,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10152,7 +10152,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10245,7 +10245,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10338,7 +10338,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10423,7 +10423,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10513,7 +10513,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10606,7 +10606,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10691,7 +10691,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10784,7 +10784,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10877,7 +10877,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -10970,7 +10970,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11055,7 +11055,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11140,7 +11140,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11239,7 +11239,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11332,7 +11332,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11425,7 +11425,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11518,7 +11518,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11611,7 +11611,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11696,7 +11696,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11781,7 +11781,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11866,7 +11866,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -11951,7 +11951,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12036,7 +12036,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12121,7 +12121,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12214,7 +12214,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12299,7 +12299,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12384,8 +12384,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Gas meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -12473,8 +12473,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -12562,8 +12562,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Inlet heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -12647,8 +12647,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Warm water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -12736,8 +12736,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -12829,7 +12829,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -12919,7 +12919,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13012,7 +13012,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13105,7 +13105,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13198,7 +13198,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13291,7 +13291,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13376,7 +13376,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13469,7 +13469,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13562,7 +13562,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13655,7 +13655,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13748,7 +13748,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13841,7 +13841,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -13934,7 +13934,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14027,7 +14027,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14120,7 +14120,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14213,7 +14213,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14306,7 +14306,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14399,7 +14399,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14484,7 +14484,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14574,7 +14574,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14667,7 +14667,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14752,7 +14752,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14845,7 +14845,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -14938,7 +14938,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15031,7 +15031,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15116,7 +15116,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15201,7 +15201,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15300,7 +15300,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15393,7 +15393,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15486,7 +15486,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15579,7 +15579,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15672,7 +15672,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15757,7 +15757,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15842,7 +15842,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -15927,7 +15927,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16012,7 +16012,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16097,7 +16097,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16182,7 +16182,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16275,7 +16275,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16360,7 +16360,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16445,8 +16445,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Gas meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -16534,8 +16534,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -16623,8 +16623,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Inlet heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -16708,8 +16708,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Warm water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -16797,8 +16797,8 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-P1',
-    'model_id': None,
+    'model': 'P1 Meter',
+    'model_id': 'HWE-P1',
     'name': 'Water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -16890,7 +16890,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -16980,7 +16980,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17073,7 +17073,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17166,7 +17166,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17259,7 +17259,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17352,7 +17352,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17445,7 +17445,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17538,7 +17538,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17631,7 +17631,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17724,7 +17724,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17817,7 +17817,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -17910,7 +17910,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18003,7 +18003,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18096,7 +18096,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18189,7 +18189,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18282,7 +18282,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18367,7 +18367,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18460,7 +18460,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18545,7 +18545,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18638,7 +18638,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18731,7 +18731,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18824,7 +18824,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -18917,7 +18917,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19010,7 +19010,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19103,7 +19103,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19196,7 +19196,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19281,7 +19281,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19366,7 +19366,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19451,7 +19451,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19536,7 +19536,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19621,7 +19621,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19706,7 +19706,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19799,7 +19799,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19884,7 +19884,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi P1 Meter',
+    'model': 'P1 Meter',
     'model_id': 'HWE-P1',
     'name': 'Device',
     'name_by_user': None,
@@ -19973,7 +19973,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20066,7 +20066,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20159,7 +20159,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20252,7 +20252,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20345,7 +20345,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20438,7 +20438,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20523,7 +20523,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20612,7 +20612,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20705,7 +20705,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20798,7 +20798,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20891,7 +20891,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -20984,7 +20984,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21077,7 +21077,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21170,7 +21170,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21260,7 +21260,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21353,7 +21353,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21446,7 +21446,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21539,7 +21539,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21632,7 +21632,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21717,7 +21717,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
+    'model': 'Energy Socket',
     'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
@@ -21806,7 +21806,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -21899,7 +21899,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -21992,7 +21992,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -22077,7 +22077,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Watermeter',
+    'model': 'Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -22166,7 +22166,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22259,7 +22259,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22352,7 +22352,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22445,7 +22445,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22538,7 +22538,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22631,7 +22631,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22724,7 +22724,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22814,7 +22814,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -22907,7 +22907,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23000,7 +23000,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23093,7 +23093,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23178,7 +23178,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model': 'kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23267,7 +23267,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23360,7 +23360,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23453,7 +23453,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23546,7 +23546,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23639,7 +23639,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23732,7 +23732,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23825,7 +23825,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -23918,7 +23918,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24011,7 +24011,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24104,7 +24104,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24197,7 +24197,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24290,7 +24290,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24383,7 +24383,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24473,7 +24473,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24563,7 +24563,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24653,7 +24653,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24746,7 +24746,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24839,7 +24839,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -24932,7 +24932,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25025,7 +25025,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25118,7 +25118,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25211,7 +25211,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25304,7 +25304,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25397,7 +25397,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25490,7 +25490,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25583,7 +25583,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25676,7 +25676,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -25761,7 +25761,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model': 'kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
