@@ -240,7 +240,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except AllnetUnsupportedFirmwareError:
                 errors["base"] = "unsupported_firmware"
-            except AllnetConnectionError, AllnetInvalidResponseError:
+            except (AllnetConnectionError, AllnetInvalidResponseError):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(unique_id)
@@ -292,7 +292,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except AllnetConnectionError, AllnetInvalidResponseError:
+            except (AllnetConnectionError, AllnetInvalidResponseError):
                 errors["base"] = "cannot_connect"
             else:
                 new_data = {**entry.data}

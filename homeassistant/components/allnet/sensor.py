@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -29,8 +30,6 @@ from homeassistant.helpers.typing import StateType
 from . import AllnetConfigEntry
 from .coordinator import AllnetDataUpdateCoordinator
 from .entity import AllnetEntity
-
-LIGHT_LUX = "lx"
 
 
 @dataclass(frozen=True)

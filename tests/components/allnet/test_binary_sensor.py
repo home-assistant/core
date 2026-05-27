@@ -57,7 +57,7 @@ async def test_binary_sensor_is_on_none_is_unavailable(
         value=None,
         raw={
             "info": {"chipid": "74", "unit": ""},
-            "digitalToText": "offen/geschlossen",
+            "digitalToText": "open/closed",
         },
     )
     mock_allnet_client.async_get_channels.return_value = (null_channel,)
