@@ -2,18 +2,18 @@
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Callable, Generator, Mapping
+from contextlib import contextmanager
 import copy
 import dataclasses
 import enum
-import functools
 import itertools
 import logging
 import queue
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -1388,30 +1388,24 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
-    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+@contextmanager
+def convert_zha_error_to_ha_error() -> Generator[None]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""
+    try:
+        yield
+    except TimeoutError as exc:
+        raise HomeAssistantError(
+            "Failed to send request: device did not respond"
+        ) from exc
+    except zigpy.exceptions.ZigbeeException as exc:
+        message = "Failed to send request"
 
-    @functools.wraps(func)
-    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            return await func(self, *args, **kwargs)
-        except TimeoutError as exc:
-            raise HomeAssistantError(
-                "Failed to send request: device did not respond"
-            ) from exc
-        except zigpy.exceptions.ZigbeeException as exc:
-            message = "Failed to send request"
+        if str(exc):
+            message = f"{message}: {exc}"
 
-            if str(exc):
-                message = f"{message}: {exc}"
-
-            raise HomeAssistantError(message) from exc
-        except ZHAException as err:
-            raise HomeAssistantError(err) from err
-
-    return handler
+        raise HomeAssistantError(message) from exc
+    except ZHAException as err:
+        raise HomeAssistantError(err) from err
 
 
 def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:

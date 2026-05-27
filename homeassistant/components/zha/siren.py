@@ -87,7 +87,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         """Return True if entity is on."""
         return self.entity_data.entity.is_on
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         await self.entity_data.entity.async_turn_on(
@@ -97,7 +97,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self.entity_data.entity.async_turn_off()
