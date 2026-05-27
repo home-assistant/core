@@ -1,6 +1,7 @@
 """Data update coordinator for caldav."""
 
 import asyncio
+import contextlib
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
@@ -24,24 +25,27 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
 
-# Cap concurrent CalDAV requests across all calendar/todo entities.
-# When a user has many calendars (e.g. an iCloud account with 30+ shared
-# calendars), every entity firing its first refresh in parallel at boot
-# saturates the HA thread pool and leaves sockets in CLOSE_WAIT against
-# Cloudflare-fronted CalDAV endpoints. Capping at 4 keeps overall throughput
-# high (each request takes <1 s in steady state) while preventing pool
-# exhaustion regardless of how many calendars are configured.
+# Cap concurrent CalDAV requests per config entry, shared between this
+# entry's calendar and todo entities. When a user has many calendars
+# (e.g. an iCloud account with 30+ shared calendars), every entity firing
+# its first refresh in parallel at boot saturates the HA thread pool.
+# Capping at 4 keeps overall throughput high (each request takes <1 s in
+# steady state) while preventing pool exhaustion regardless of how many
+# calendars are configured. The semaphore is created per entry in
+# ``__init__.async_setup_entry`` so a slow account cannot delay updates
+# for an unrelated account.
 MAX_CONCURRENT_REQUESTS = 4
-REQUEST_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
 
 def close_idle_connections(client: caldav.DAVClient | None) -> None:
-    """Drop urllib3 idle connections after each request.
+    """Close the DAVClient's HTTP session.
 
-    Prevents CLOSE_WAIT sockets from accumulating between polls when the
-    server (e.g. iCloud via Cloudflare) closes the connection silently and
-    urllib3 doesn't notice until the next use. requests.Session stays usable
-    — new pools are created lazily on next call.
+    caldav 2.1.0+ uses ``niquests`` with ``multiplexed=True`` (HTTP/2), so a
+    single ``Session`` object handles all requests for the client across the
+    entry's lifetime. This helper tears down the pooled sockets cleanly on
+    entry unload rather than waiting for the remote peer (or the OS) to
+    time them out — at which point the integration is already gone and
+    cannot recover them.
     """
     if client is None:
         return
@@ -74,25 +78,32 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self.include_all_day = include_all_day
         self.search = search
         self.offset: timedelta | None = None
+        # Per-entry semaphore (None for legacy YAML coordinators with no entry).
+        self._request_semaphore: asyncio.Semaphore | None = (
+            entry.runtime_data.request_semaphore if entry is not None else None
+        )
+
+    def _semaphore_ctx(self) -> contextlib.AbstractAsyncContextManager[None]:
+        """Return the per-entry semaphore, or a no-op for legacy YAML coordinators."""
+        if self._request_semaphore is None:
+            return contextlib.nullcontext()
+        return self._request_semaphore
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        try:
-            async with REQUEST_SEMAPHORE:
-                vevent_list = await hass.async_add_executor_job(
-                    partial(
-                        self.calendar.search,
-                        start=start_date,
-                        end=end_date,
-                        event=True,
-                        expand=True,
-                    )
+        async with self._semaphore_ctx():
+            vevent_list = await hass.async_add_executor_job(
+                partial(
+                    self.calendar.search,
+                    start=start_date,
+                    end=end_date,
+                    event=True,
+                    expand=True,
                 )
-        finally:
-            close_idle_connections(self.calendar.client)
+            )
         event_list = []
         for event in vevent_list:
             if not hasattr(event.instance, "vevent"):
@@ -126,19 +137,16 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        try:
-            async with REQUEST_SEMAPHORE:
-                results = await self.hass.async_add_executor_job(
-                    partial(
-                        self.calendar.search,
-                        start=start_of_today,
-                        end=start_of_tomorrow,
-                        event=True,
-                        expand=True,
-                    ),
-                )
-        finally:
-            close_idle_connections(self.calendar.client)
+        async with self._semaphore_ctx():
+            results = await self.hass.async_add_executor_job(
+                partial(
+                    self.calendar.search,
+                    start=start_of_today,
+                    end=start_of_tomorrow,
+                    event=True,
+                    expand=True,
+                ),
+            )
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original

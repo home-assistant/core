@@ -23,7 +23,6 @@ from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars, get_attr_value
-from .coordinator import REQUEST_SEMAPHORE, close_idle_connections
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +47,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
-    calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
+    calendars = await async_get_calendars(
+        hass, entry.runtime_data.client, SUPPORTED_COMPONENT
+    )
     async_add_entities(
         (
             WebDavTodoListEntity(
                 calendar,
                 entry.entry_id,
+                entry.runtime_data.request_semaphore,
             )
             for calendar in calendars
         ),
@@ -101,25 +103,28 @@ class WebDavTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
-    def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
+    def __init__(
+        self,
+        calendar: caldav.Calendar,
+        config_entry_id: str,
+        request_semaphore: asyncio.Semaphore,
+    ) -> None:
         """Initialize WebDavTodoListEntity."""
         self._calendar = calendar
         self._attr_name = (calendar.name or "Unknown").capitalize()
         self._attr_unique_id = f"{config_entry_id}-{calendar.id}"
+        self._request_semaphore = request_semaphore
 
     async def async_update(self) -> None:
         """Update To-do list entity state."""
-        try:
-            async with REQUEST_SEMAPHORE:
-                results = await self.hass.async_add_executor_job(
-                    partial(
-                        self._calendar.search,
-                        todo=True,
-                        include_completed=True,
-                    )
+        async with self._request_semaphore:
+            results = await self.hass.async_add_executor_job(
+                partial(
+                    self._calendar.search,
+                    todo=True,
+                    include_completed=True,
                 )
-        finally:
-            close_idle_connections(self._calendar.client)
+            )
         self._attr_todo_items = [
             todo_item
             for resource in results
