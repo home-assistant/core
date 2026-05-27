@@ -419,7 +419,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "show_advanced_options": True},
+            json={"handler": "test"},
         )
 
     assert resp.status == HTTPStatus.OK
@@ -469,7 +469,7 @@ async def test_initialize_flow_unmet_dependency(
     with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test2", "show_advanced_options": True},
+            json={"handler": "test2"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
@@ -785,7 +785,7 @@ async def test_get_progress_index(
         )
 
     for form in (form_hassio, form_user, form_reconfigure):
-        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["type"] is data_entry_flow.FlowResultType.FORM
         assert form["step_id"] == "account"
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
@@ -961,9 +961,9 @@ async def test_get_progress_subscribe(
                 "test", context=context
             )
 
-    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
     for key in ("hassio", "user", "reauth", "reconfigure"):
-        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
     for key in ("hassio", "user", "reauth", "reconfigure"):
@@ -1100,9 +1100,9 @@ async def test_get_progress_subscribe_in_progress(
                 "test", context=context
             )
 
-    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
     for key in ("hassio", "user", "reauth", "reconfigure"):
-        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
     await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
@@ -1235,16 +1235,16 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
                 "test", context=context
             )
 
-    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
     for key in ("hassio", "user", "reauth", "reconfigure"):
-        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
     with mock_config_flow("test2", BadFlow):
         forms["bad"] = await hass.config_entries.flow.async_init(
             "test2", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
         )
-    assert forms["bad"]["type"] == data_entry_flow.FlowResultType.FORM
+    assert forms["bad"]["type"] is data_entry_flow.FlowResultType.FORM
     assert forms["bad"]["step_id"] == "account"
 
     await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
