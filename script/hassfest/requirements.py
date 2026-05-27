@@ -170,7 +170,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "ipp": {"pyipp": {"backoff"}},
     "iqvia": {"pyiqvia": {"backoff"}},
-    "izone": {"python-izone": {"async-timeout"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
     "lametric": {"demetriek": {"backoff"}},

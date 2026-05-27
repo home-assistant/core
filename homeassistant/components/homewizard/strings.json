@@ -63,6 +63,7 @@
       "battery_group_mode": {
         "name": "Battery group charging strategy",
         "state": {
+          "predictive": "Smart charging",
           "standby": "Standby",
           "to_full": "One-time full charge",
           "zero": "Net zero",
@@ -104,6 +105,12 @@
       },
       "any_power_fail_count": {
         "name": "Power failures detected"
+      },
+      "battery_group_power_w": {
+        "name": "Battery group power"
+      },
+      "battery_group_target_power_w": {
+        "name": "Battery group target power"
       },
       "cycles": {
         "name": "Battery cycles"
@@ -181,6 +188,20 @@
     }
   },
   "issues": {
+    "battery_mode_cloud_disabled": {
+      "fix_flow": {
+        "error": {
+          "network_error": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Smart charging strategy is enabled for your battery group, but cloud connection is disabled. These settings are not compatible, as smart charging requires cloud connectivity.\n\nSelect **Submit** to enable cloud connection.",
+            "title": "[%key:component::homewizard::issues::battery_mode_cloud_disabled::title%]"
+          }
+        }
+      },
+      "title": "Enable cloud connection for smart charging strategy"
+    },
     "migrate_to_v2_api": {
       "fix_flow": {
         "error": {

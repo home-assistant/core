@@ -19,8 +19,4 @@ DEVICES = "devices"
 MANUFACTURER = "ABB"
 
 ATTR_DEVICE_NAME = "device_name"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_DEVICE_ID = "device_id"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"
