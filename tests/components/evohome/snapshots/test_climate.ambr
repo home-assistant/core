@@ -2,168 +2,168 @@
 # name: test_ctl_set_hvac_mode[default]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h032585]
   list([
     tuple(
-      <SystemMode.OFF: 'Off'>,
+      <TccSystemMode.OFF: 'Off'>,
     ),
     tuple(
-      <SystemMode.HEAT: 'Heat'>,
+      <TccSystemMode.HEAT: 'Heat'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h099625]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h139906]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h157546]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[minimal]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[sys_004]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h032585]
   list([
     tuple(
-      <SystemMode.OFF: 'Off'>,
+      <TccSystemMode.OFF: 'Off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h099625]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h139906]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h157546]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[minimal]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
   list([
     tuple(
-      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+      <TccSystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[default]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h032585]
   list([
     tuple(
-      <SystemMode.HEAT: 'Heat'>,
+      <TccSystemMode.HEAT: 'Heat'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h099625]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h139906]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h157546]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[minimal]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[sys_004]
   list([
     tuple(
-      <SystemMode.AUTO: 'Auto'>,
+      <TccSystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---

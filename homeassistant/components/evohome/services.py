@@ -5,10 +5,7 @@ from typing import Any, Final
 
 from evohomeasync2 import ControlSystem
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
-from evohomeasync2.schemas.const import (
-    S2_DURATION as SZ_DURATION,
-    S2_PERIOD as SZ_PERIOD,
-)
+from evohomeasync2.schemas import S2_DURATION as SZ_DURATION, S2_PERIOD as SZ_PERIOD
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
