@@ -70,6 +70,13 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
         self._attr_unique_id = (
             f"{client.device.system_id}_{zone_name.zone_number}_open_percentage"
         )
+        _LOGGER.debug(
+            "Airtouch5ZoneOpenPercentage __init__: unique_id=%s, zone_number=%s, zone_name=%s, system_id=%s",
+            self._attr_unique_id,
+            zone_name.zone_number,
+            zone_name.zone_name,
+            client.device.system_id,
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, f"{client.device.system_id}_{zone_name.zone_number}"),
@@ -94,12 +101,22 @@ class Airtouch5ZoneOpenPercentage(CoverEntity, Airtouch5Entity):
 
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5ZoneOpenPercentage async_added_to_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_added_to_hass()
         self._client.zone_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_zone_status)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
+        _LOGGER.debug(
+            "Airtouch5ZoneOpenPercentage async_will_remove_from_hass: entity_id=%s, unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
         await super().async_will_remove_from_hass()
         self._client.zone_status_callbacks.remove(self._async_update_attrs)
 
