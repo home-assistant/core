@@ -1,12 +1,14 @@
 """Tests for EZVIZ entities."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components import image
 from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -202,6 +204,40 @@ async def test_image_entity_created_without_alarm_pic(
     assert "last_alarm_pic" not in state.attributes
 
 
+@pytest.mark.parametrize(
+    ("last_alarm_time", "expected_state"),
+    [
+        pytest.param(
+            "2023-01-01T12:00:00Z",
+            "2023-01-01T12:00:00+00:00",
+            id="valid timestamp",
+        ),
+        pytest.param(None, STATE_UNKNOWN, id="missing timestamp"),
+        pytest.param(123, STATE_UNKNOWN, id="non-string timestamp"),
+    ],
+)
+async def test_image_entity_last_alarm_time_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    last_alarm_time: object,
+    expected_state: str,
+) -> None:
+    """Test image entity state from last_alarm_time data."""
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(
+            last_alarm_time=last_alarm_time,
+            last_alarm_pic="https://example.com/image.jpg",
+        )
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("image.camera_1_last_motion_image")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_image_entity_updates_last_alarm_pic_on_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -217,6 +253,15 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
     }
 
     await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.ezviz.image.EzvizLastMotion._fetch_url",
+        new_callable=AsyncMock,
+        return_value=Mock(content=b"image-1"),
+    ):
+        image_data = await image.async_get_image(
+            hass, "image.camera_1_last_motion_image"
+        )
+    assert image_data.content == b"image-1"
 
     mock_ezviz_client.load_cameras.return_value = {
         "C123456789": _mock_camera_data(
@@ -228,6 +273,16 @@ async def test_image_entity_updates_last_alarm_pic_on_refresh(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.ezviz.image.EzvizLastMotion._fetch_url",
+        new_callable=AsyncMock,
+        return_value=Mock(content=b"image-2"),
+    ):
+        image_data = await image.async_get_image(
+            hass, "image.camera_1_last_motion_image"
+        )
+    assert image_data.content == b"image-2"
 
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
@@ -249,6 +304,15 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
     }
 
     await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.ezviz.image.EzvizLastMotion._fetch_url",
+        new_callable=AsyncMock,
+        return_value=Mock(content=b"image-1"),
+    ):
+        image_data = await image.async_get_image(
+            hass, "image.camera_1_last_motion_image"
+        )
+    assert image_data.content == b"image-1"
 
     mock_ezviz_client.load_cameras.return_value = {
         "C123456789": _mock_camera_data(
@@ -259,6 +323,16 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.ezviz.image.EzvizLastMotion._fetch_url",
+        new_callable=AsyncMock,
+    ) as mock_fetch_url:
+        image_data = await image.async_get_image(
+            hass, "image.camera_1_last_motion_image"
+        )
+    assert image_data.content == b"image-1"
+    mock_fetch_url.assert_not_called()
 
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None

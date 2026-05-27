@@ -1,5 +1,6 @@
 """Support EZVIZ last motion image."""
 
+from datetime import datetime
 import logging
 
 from propcache.api import cached_property
@@ -23,6 +24,13 @@ IMAGE_TYPE = ImageEntityDescription(
     key="last_motion_image",
     translation_key="last_motion_image",
 )
+
+
+def _parse_last_alarm_time(last_alarm_time: object) -> datetime | None:
+    """Parse the last alarm time from the coordinator payload."""
+    if not isinstance(last_alarm_time, str):
+        return None
+    return dt_util.parse_datetime(last_alarm_time)
 
 
 async def async_setup_entry(
@@ -50,9 +58,12 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         ImageEntity.__init__(self, hass)
         self._attr_unique_id = f"{serial}_{IMAGE_TYPE.key}"
         self.entity_description = IMAGE_TYPE
-        self._attr_image_url = self.data.get("last_alarm_pic")
-        self._attr_image_last_updated = dt_util.parse_datetime(
-            str(self.data.get("last_alarm_time"))
+        last_alarm_pic = self.data.get("last_alarm_pic")
+        self._attr_image_url = (
+            last_alarm_pic if isinstance(last_alarm_pic, str) else None
+        )
+        self._attr_image_last_updated = _parse_last_alarm_time(
+            self.data.get("last_alarm_time")
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
@@ -68,6 +79,8 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
+        if not url:
+            return None
         if response := await self._fetch_url(url):
             image_data = response.content
             if self.data["encrypted"] and self.alarm_image_password is not None:
@@ -98,8 +111,8 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
 
             self._attr_image_url = last_alarm_pic
             self._cached_image = None
-            self._attr_image_last_updated = dt_util.parse_datetime(
-                str(self.data.get("last_alarm_time"))
+            self._attr_image_last_updated = _parse_last_alarm_time(
+                self.data.get("last_alarm_time")
             )
 
         super()._handle_coordinator_update()
