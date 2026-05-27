@@ -3,19 +3,17 @@
 from typing import Any
 
 import voluptuous as vol
-from zha.exceptions import ZHAException
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
-from .helpers import async_get_zha_device_proxy
+from .helpers import async_get_zha_device_proxy, convert_zha_error_to_ha_error
 from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
@@ -194,24 +192,25 @@ async def _execute_inovelli_all_led_effect(
     context: Context | None,
 ) -> None:
     cluster = _find_inovelli_cluster(hass, config)
-    try:
+
+    with convert_zha_error_to_ha_error():
         await cluster.led_effect(
             led_effect=config["effect_type"],
             led_color=config["color"],
             led_level=config["level"],
             led_duration=config["duration"],
         )
-    except ZHAException as err:
-        raise HomeAssistantError(err) from err
 
 
+@convert_zha_error_to_ha_error()
 async def _execute_inovelli_individual_led_effect(
     hass: HomeAssistant,
     config: dict[str, Any],
     context: Context | None,
 ) -> None:
     cluster = _find_inovelli_cluster(hass, config)
-    try:
+
+    with convert_zha_error_to_ha_error():
         await cluster.individual_led_effect(
             led_effect=config["effect_type"],
             led_color=config["color"],
@@ -219,8 +218,6 @@ async def _execute_inovelli_individual_led_effect(
             led_duration=config["duration"],
             led_number=config["led_number"],
         )
-    except ZHAException as err:
-        raise HomeAssistantError(err) from err
 
 
 ACTION_HANDLERS = {
