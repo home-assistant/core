@@ -119,7 +119,7 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
     if device.update_time:
         device.update_time = int(dt_util.as_timestamp(device.update_time))
     device.support_local = details.get("support_local")
-    device.local_strategy = details.get("local_strategy") or {}
+    device.local_strategy = details.get("local_strategy")
     device.mqtt_connected = details.get("mqtt_connected")
 
     device.function = {
