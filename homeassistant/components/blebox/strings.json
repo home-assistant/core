@@ -28,9 +28,9 @@
       "open_status": {
         "state": {
           "ajar": "Ajar",
-          "closed": "Closed",
+          "closed": "[%key:common::state::closed%]",
           "closed_but_unlocked": "Closed but unlocked",
-          "open": "Open",
+          "open": "[%key:common::state::open%]",
           "unclosed_or_unlocked": "Unclosed or unlocked"
         }
       }
