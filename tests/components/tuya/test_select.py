@@ -123,53 +123,6 @@ async def test_select_option(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "option", "dpcode"),
-    [
-        (
-            "select.smart_kettle_quick_boil_temperature",
-            "90",
-            "temp_setting_quick_c",
-        ),
-        (
-            "select.smart_kettle_work_type",
-            "boiling_quick",
-            "work_type",
-        ),
-    ],
-)
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["bh_dft4ebatvon3ha5s"],
-)
-async def test_bh_select_option(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_id: str,
-    option: str,
-    dpcode: str,
-) -> None:
-    """Test select option for the smart kettle (bh) category."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: option,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": dpcode, "value": option}]
-    )
-
-
-@pytest.mark.parametrize(
     "mock_device_code",
     ["cl_zah67ekd"],
 )

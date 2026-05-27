@@ -23,12 +23,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.TEMP_SETTING_QUICK_C,
             entity_category=EntityCategory.CONFIG,
-            translation_key="temp_setting_quick",
+            translation_key="quick_heat_temperature",
         ),
         SelectEntityDescription(
             key=DPCode.WORK_TYPE,
             entity_category=EntityCategory.CONFIG,
-            translation_key="kettle_work_type",
+            translation_key="kettle_work_mode",
         ),
     ),
     DeviceCategory.CL: (

@@ -478,6 +478,15 @@
           "1": "Continuous working mode"
         }
       },
+      "kettle_work_mode": {
+        "name": "Work mode",
+        "state": {
+          "boiling_quick": "Quick boil",
+          "setting_quick": "Quick heat",
+          "temp_boiling": "Boil and keep warm",
+          "temp_setting": "Heat and keep warm"
+        }
+      },
       "led_type": {
         "name": "Light source type",
         "state": {
@@ -515,6 +524,16 @@
           "smart": "Smart"
         }
       },
+      "quick_heat_temperature": {
+        "name": "Quick heat temperature",
+        "state": {
+          "80": "80 °C",
+          "85": "85 °C",
+          "90": "90 °C",
+          "95": "95 °C",
+          "100": "100 °C"
+        }
+      },
       "record_mode": {
         "name": "Record mode",
         "state": {
@@ -544,25 +563,6 @@
       },
       "target_humidity": {
         "name": "Target humidity"
-      },
-      "kettle_work_type": {
-        "name": "Work type",
-        "state": {
-          "boiling_quick": "Quick boil",
-          "setting_quick": "Quick heat",
-          "temp_boiling": "Boil and keep warm",
-          "temp_setting": "Heat and keep warm"
-        }
-      },
-      "temp_setting_quick": {
-        "name": "Quick boil temperature",
-        "state": {
-          "80": "80 °C",
-          "85": "85 °C",
-          "90": "90 °C",
-          "95": "95 °C",
-          "100": "100 °C"
-        }
       },
       "temperature_level": {
         "name": "Temperature level"
@@ -630,15 +630,6 @@
           "144h": "144h",
           "168h": "168h",
           "cancel": "Cancel"
-        }
-      },
-      "work_type": {
-        "name": "Work type",
-        "state": {
-          "boiling_quick": "Quick boil",
-          "setting_quick": "Quick heat",
-          "temp_boiling": "Boil and keep warm",
-          "temp_setting": "Heat and keep warm"
         }
       }
     },
