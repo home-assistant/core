@@ -80,6 +80,7 @@ FIXTURES = [
     "mock_room_airconditioner",
     "mock_solar_inverter",
     "mock_speaker",
+    "mock_soil_sensor",
     "mock_switch_unit",
     "mock_temperature_sensor",
     "mock_thermostat",
