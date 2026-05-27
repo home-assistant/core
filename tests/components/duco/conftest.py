@@ -30,6 +30,48 @@ TEST_MAC = "aa:bb:cc:dd:ee:ff"
 
 USER_INPUT = {CONF_HOST: TEST_HOST}
 
+UNSUPPORTED_BOARD_INFOS = [
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.0",
+        ),
+        id="version-too-low",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version=None,
+        ),
+        id="missing-version",
+    ),
+    pytest.param(
+        BoardInfo(
+            box_name="SILENT_CONNECT",
+            box_sub_type_name="Eu",
+            serial_board_box="ABC123",
+            serial_board_comm="DEF456",
+            serial_duco_box="GHI789",
+            serial_duco_comm="JKL012",
+            time=1700000000,
+            public_api_version="2.1.0-beta",
+        ),
+        id="malformed-version",
+    ),
+]
+
 
 def _node_from_dict(data: dict[str, Any]) -> Node:
     """Convert a node fixture payload into a Duco node model."""

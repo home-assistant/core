@@ -10,6 +10,7 @@ from victron_vrm.models import Site
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -19,7 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN
+from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3326,6 +3326,63 @@ async def _setup_numerical_condition(
             "90",
             False,
         ),
+        # outside (inverse of between) — limits are non-inclusive, so a value
+        # equal to either bound is treated as "not inside" and matches
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "50",
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "20",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "80",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "10",
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            "90",
+            True,
+        ),
     ],
 )
 async def test_numerical_condition_thresholds(
