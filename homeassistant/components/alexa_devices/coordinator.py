@@ -186,7 +186,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         """Handle changes on To-Do lists."""
         if list_event.list_id not in self._todo_list_items:
             _LOGGER.warning(
-                "To-do list has not been synced to Home Assistant yet. Please restart or try again later"
+                "To-do list has not been synced to Home Assistant yet. "
+                "Please restart or try again later: list_id=%s item_id=%s event_type=%s",
+                list_event.list_id,
+                list_event.item_id,
+                list_event.type,
             )
             return
 
