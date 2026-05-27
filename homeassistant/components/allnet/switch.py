@@ -1,7 +1,5 @@
 """Switch platform for ALLNET."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from allnet.exceptions import AllnetCommandError

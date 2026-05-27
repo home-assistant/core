@@ -1,18 +1,15 @@
 """Tests for the ALLNET switch platform."""
 
-from __future__ import annotations
-
-from unittest.mock import AsyncMock, patch
-
-import pytest
+from unittest.mock import AsyncMock
 
 from allnet.exceptions import AllnetCommandError
+import pytest
 
+from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_UNIQUE_ID
 
@@ -100,8 +97,6 @@ async def test_turn_on_raises_ha_error_on_command_error(
 @pytest.mark.asyncio
 async def test_switch_unique_id(hass: HomeAssistant, setup_integration) -> None:
     """Test that switch entities have the correct unique_id."""
-    from homeassistant.helpers import entity_registry as er
-
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get_entity_id(
         "switch", DOMAIN, f"{TEST_UNIQUE_ID}_relay_0_switch"

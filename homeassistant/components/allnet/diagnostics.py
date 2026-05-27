@@ -1,14 +1,11 @@
 """Diagnostics support for ALLNET."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import AllnetConfigEntry
-from .const import CONF_USE_SSL
 
 REDACTED = "**REDACTED**"
 

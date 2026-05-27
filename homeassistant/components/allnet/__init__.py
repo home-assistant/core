@@ -1,7 +1,5 @@
 """The ALLNET integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from allnet import AllnetClient, AllnetConnectionError
@@ -12,9 +10,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
-from .const import CONF_DEVICE_PROFILE, CONF_USE_SSL, DEFAULT_USE_SSL, DOMAIN
+from .const import CONF_USE_SSL, DEFAULT_USE_SSL, DOMAIN
 from .coordinator import AllnetDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
@@ -60,7 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AllnetConfigEntry) -> bo
     configuration_url = f"{'https' if use_ssl else 'http'}://{host}"
     connections: set[tuple[str, str]] = set()
     if device_info.mac_address:
-        from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
         connections = {(CONNECTION_NETWORK_MAC, device_info.mac_address)}
 
     ha_device_info = DeviceInfo(

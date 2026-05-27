@@ -1,11 +1,7 @@
 """Config flow for ALLNET."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
-
-import voluptuous as vol
 
 from allnet import AllnetClient
 from allnet.exceptions import (
@@ -14,9 +10,15 @@ from allnet.exceptions import (
     AllnetInvalidResponseError,
     AllnetUnsupportedFirmwareError,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -138,7 +140,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_firmware"
             except AllnetConnectionError:
                 errors["base"] = "cannot_connect"
-            except (AllnetInvalidResponseError, Exception):
+            except AllnetInvalidResponseError:
                 _LOGGER.exception("Unexpected error connecting to %s", host)
                 errors["base"] = "unknown"
             else:
@@ -190,7 +192,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AllnetAuthenticationError:
             # Auth required — still show confirmation, user will enter credentials
             pass
-        except (AllnetConnectionError, AllnetUnsupportedFirmwareError, Exception):
+        except (AllnetConnectionError, AllnetUnsupportedFirmwareError, AllnetInvalidResponseError):
             return self.async_abort(reason="cannot_connect")
         else:
             await self.async_set_unique_id(unique_id)
@@ -232,7 +234,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except AllnetUnsupportedFirmwareError:
                 errors["base"] = "unsupported_firmware"
-            except (AllnetConnectionError, Exception):
+            except (AllnetConnectionError, AllnetInvalidResponseError):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(unique_id)
@@ -284,7 +286,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AllnetAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except (AllnetConnectionError, Exception):
+            except (AllnetConnectionError, AllnetInvalidResponseError):
                 errors["base"] = "cannot_connect"
             else:
                 new_data = {**entry.data}

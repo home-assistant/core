@@ -1,7 +1,5 @@
 """Binary sensor platform for ALLNET."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from allnet.models import ChannelKind

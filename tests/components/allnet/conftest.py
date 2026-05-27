@@ -1,43 +1,39 @@
 """Fixtures for ALLNET integration tests."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from allnet.models import Channel, ChannelKind, ChannelState, DeviceInfo, DeviceProfile
 import pytest
 import pytest_asyncio
 
-from allnet.models import Channel, ChannelKind, ChannelState, DeviceInfo, DeviceProfile
-
 from homeassistant import config_entries, loader
+from homeassistant.components.allnet.const import (
+    CONF_DEVICE_PROFILE,
+    CONF_USE_SSL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
-    area_registry,
-    category_registry,
-    device_registry,
+    area_registry as ar,
+    category_registry as cr,
+    device_registry as dr,
     entity,
-    entity_registry,
-    floor_registry,
+    entity_registry as er,
+    floor_registry as fr,
     frame,
-    issue_registry,
-    label_registry,
+    issue_registry as ir,
+    label_registry as lr,
     restore_state,
     template,
     translation,
 )
 from homeassistant.helpers.storage import get_internal_store_manager
 from homeassistant.util.async_ import create_eager_task
-
-from homeassistant.components.allnet.const import (
-    CONF_DEVICE_PROFILE,
-    CONF_USE_SSL,
-    DOMAIN,
-)
 
 # ---------------------------------------------------------------------------
 # Default test data
@@ -54,7 +50,7 @@ TEST_MAC = "00:0f:c9:0e:cb:31"
 
 
 @pytest_asyncio.fixture
-async def hass(tmp_path) -> AsyncGenerator[HomeAssistant, None]:
+async def hass(tmp_path) -> AsyncGenerator[HomeAssistant]:
     """Create a minimal HomeAssistant instance for testing."""
     config_dir = str(tmp_path)
 
@@ -67,19 +63,19 @@ async def hass(tmp_path) -> AsyncGenerator[HomeAssistant, None]:
     frame.async_setup(_hass)
     template.async_setup(_hass)
     translation.async_setup(_hass)
-    device_registry.async_setup(_hass)
+    dr.async_setup(_hass)
 
     _hass.config_entries = config_entries.ConfigEntries(_hass, {})
 
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(_hass).async_initialize()),
-        create_eager_task(area_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(category_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(device_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(entity_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(floor_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(issue_registry.async_load(_hass, load_empty=True)),
-        create_eager_task(label_registry.async_load(_hass, load_empty=True)),
+        create_eager_task(ar.async_load(_hass, load_empty=True)),
+        create_eager_task(cr.async_load(_hass, load_empty=True)),
+        create_eager_task(dr.async_load(_hass, load_empty=True)),
+        create_eager_task(er.async_load(_hass, load_empty=True)),
+        create_eager_task(fr.async_load(_hass, load_empty=True)),
+        create_eager_task(ir.async_load(_hass, load_empty=True)),
+        create_eager_task(lr.async_load(_hass, load_empty=True)),
         create_eager_task(restore_state.async_load(_hass, load_empty=True)),
         create_eager_task(_hass.config_entries.async_initialize()),
     )

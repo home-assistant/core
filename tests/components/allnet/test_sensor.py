@@ -1,19 +1,16 @@
 """Tests for the ALLNET sensor platform."""
 
-from __future__ import annotations
-
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     UnitOfElectricCurrent,
     UnitOfTemperature,
-    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
-
-from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_UNIQUE_ID
 
@@ -22,9 +19,9 @@ from .conftest import TEST_UNIQUE_ID
 async def test_sensor_entities_created(hass: HomeAssistant, setup_integration) -> None:
     """Test that sensor entities are created for SENSOR channels."""
     # temp_0, current_0, humidity_0 (all kind=SENSOR)
-    state_temp = hass.states.get(f"sensor.allnet_test_device_temperature")
-    state_current = hass.states.get(f"sensor.allnet_test_device_current")
-    state_humidity = hass.states.get(f"sensor.allnet_test_device_humidity")
+    state_temp = hass.states.get("sensor.allnet_test_device_temperature")
+    state_current = hass.states.get("sensor.allnet_test_device_current")
+    state_humidity = hass.states.get("sensor.allnet_test_device_humidity")
 
     assert state_temp is not None
     assert state_current is not None
@@ -79,8 +76,6 @@ async def test_sensor_unavailable_when_value_none(hass: HomeAssistant, setup_int
 @pytest.mark.asyncio
 async def test_sensor_unique_id(hass: HomeAssistant, setup_integration) -> None:
     """Test that sensor entities have the correct unique_id."""
-    from homeassistant.helpers import entity_registry as er
-
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get_entity_id(
         "sensor", DOMAIN, f"{TEST_UNIQUE_ID}_temp_0_sensor"

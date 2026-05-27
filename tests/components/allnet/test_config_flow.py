@@ -1,22 +1,18 @@
 """Tests for the ALLNET config flow."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, patch
-
-import pytest
 
 from allnet.exceptions import (
     AllnetAuthenticationError,
     AllnetConnectionError,
     AllnetUnsupportedFirmwareError,
 )
+import pytest
 
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -30,9 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_HOST, TEST_UNIQUE_ID
-
-import pytest_asyncio
-
 
 # ---------------------------------------------------------------------------
 # Helpers

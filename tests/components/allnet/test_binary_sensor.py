@@ -1,16 +1,15 @@
 """Tests for the ALLNET binary sensor platform."""
 
-from __future__ import annotations
+from unittest.mock import MagicMock, patch
 
+from allnet.models import Channel, ChannelKind
 import pytest
 
-from unittest.mock import MagicMock
-
+from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_UNIQUE_ID
 
@@ -46,8 +45,6 @@ async def test_binary_sensor_is_on_none_is_unavailable(
     hass: HomeAssistant, setup_integration, mock_allnet_client, mock_channels
 ) -> None:
     """Test that value=None makes binary sensor unavailable after coordinator refresh."""
-    from allnet.models import Channel, ChannelKind
-
     # Replace channels with one that has value=None
     null_channel = Channel(
         id="door_0",
@@ -89,8 +86,6 @@ async def test_binary_sensor_door_no_specific_device_class(
 @pytest.mark.asyncio
 async def test_binary_sensor_unique_id(hass: HomeAssistant, setup_integration) -> None:
     """Test that binary sensor entities have the correct unique_id."""
-    from homeassistant.helpers import entity_registry as er
-
     ent_reg = er.async_get(hass)
     entry = ent_reg.async_get_entity_id(
         "binary_sensor", DOMAIN, f"{TEST_UNIQUE_ID}_door_0_binary_sensor"
@@ -103,9 +98,6 @@ async def test_binary_sensor_name_based_device_class(
     hass: HomeAssistant, config_entry, mock_allnet_client, mock_device_info
 ) -> None:
     """Test name-based heuristics for binary sensor device class (opening)."""
-    from allnet.models import Channel, ChannelKind
-    from unittest.mock import patch
-
     # Channel with "door" in name, chipid not 74 → name-based OPENING class
     door_channel = Channel(
         id="door_1",

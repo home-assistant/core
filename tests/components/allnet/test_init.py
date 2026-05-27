@@ -1,19 +1,16 @@
 """Tests for ALLNET async_setup_entry and async_unload_entry."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from allnet.exceptions import AllnetAuthenticationError, AllnetConnectionError
 import pytest
 
-from allnet.exceptions import AllnetAuthenticationError, AllnetConnectionError
-
+from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from homeassistant.components.allnet.const import DOMAIN
-
-from .conftest import TEST_HOST, TEST_UNIQUE_ID
+from .conftest import TEST_UNIQUE_ID
 
 
 @pytest.mark.asyncio
@@ -95,8 +92,6 @@ async def test_unload_entry(hass: HomeAssistant, setup_integration) -> None:
 @pytest.mark.asyncio
 async def test_setup_creates_device(hass: HomeAssistant, setup_integration) -> None:
     """Test that setup registers a device in the device registry."""
-    from homeassistant.helpers import device_registry as dr
-
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_device(identifiers={(DOMAIN, TEST_UNIQUE_ID)})
 

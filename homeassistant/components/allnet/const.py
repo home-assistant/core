@@ -1,7 +1,5 @@
 """Constants for the ALLNET integration."""
 
-from __future__ import annotations
-
 DOMAIN = "allnet"
 
 CONF_USE_SSL = "use_ssl"

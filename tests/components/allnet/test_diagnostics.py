@@ -1,14 +1,20 @@
 """Tests for the ALLNET diagnostics module."""
 
-from __future__ import annotations
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.allnet.const import (
+    CONF_DEVICE_PROFILE,
+    CONF_USE_SSL,
+    DOMAIN,
+)
+from homeassistant.components.allnet.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
-
-from homeassistant.components.allnet.diagnostics import async_get_config_entry_diagnostics
-from homeassistant.components.allnet.const import CONF_USE_SSL, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_HOST, TEST_UNIQUE_ID
 
@@ -18,10 +24,6 @@ async def test_diagnostics_password_redacted(
     hass: HomeAssistant, config_entry, mock_allnet_client, mock_device_info
 ) -> None:
     """Test that the password is redacted in diagnostics output."""
-    from unittest.mock import MagicMock, patch
-    from homeassistant.config_entries import ConfigEntry, SOURCE_USER
-    from homeassistant.components.allnet.const import CONF_DEVICE_PROFILE
-
     # Create an entry that has a password
     entry_with_pw = ConfigEntry(
         data={
