@@ -60,10 +60,10 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "[%key:common::config_flow::error::cannot_connect%]"
+      "message": "Failed to connect: {error}"
     },
     "invalid_access_token": {
-      "message": "[%key:common::config_flow::error::invalid_access_token%]"
+      "message": "Invalid access token: {error}"
     }
   }
 }

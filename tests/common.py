@@ -1851,6 +1851,8 @@ def import_and_test_deprecated_alias(
     alias_name: str,
     replacement: Any,
     breaks_in_ha_version: str,
+    *,
+    replacement_name: str | None = None,
 ) -> None:
     """Import and test deprecated alias replaced by a value.
 
@@ -1860,7 +1862,9 @@ def import_and_test_deprecated_alias(
     - Assert the deprecated alias is included in the modules.__dir__()
     - Assert the deprecated alias is included in the modules.__all__()
     """
-    replacement_name = f"{replacement.__module__}.{replacement.__name__}"
+    replacement_name = (
+        replacement_name or f"{replacement.__module__}.{replacement.__name__}"
+    )
     value = import_deprecated_constant(module, alias_name)
     assert value == replacement
     assert (
