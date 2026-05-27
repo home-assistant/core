@@ -6,6 +6,7 @@ from typing import Final, cast
 from indevolt_api import (
     IndevoltBattery,
     IndevoltConfig,
+    IndevoltEnergyMode,
     IndevoltGrid,
     IndevoltSolar,
     IndevoltSystem,
@@ -43,6 +44,7 @@ class IndevoltSensorEntityDescription(SensorEntityDescription):
 
     state_mapping: dict[str | int, str] = field(default_factory=dict)
     generation: tuple[int, ...] = (1, 2)
+    energy_mode: IndevoltEnergyMode | None = None
 
 
 SENSORS: Final = (
@@ -71,18 +73,38 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.ENUM,
     ),
     IndevoltSensorEntityDescription(
-        key=IndevoltBattery.RATED_CAPACITY_GEN2,
-        generation=(2,),
+        key=IndevoltBattery.RATED_CAPACITY,
         translation_key="rated_capacity",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltConfig.READ_DISCHARGE_LIMIT,
         generation=(1,),
         translation_key="discharge_limit",
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Real-time control state
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_COMMAND,
+        translation_key="realtime_command",
+        state_mapping={1000: "standby", 1001: "charging", 1002: "discharging"},
+        device_class=SensorDeviceClass.ENUM,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_TARGET_SOC,
+        translation_key="realtime_target_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltConfig.READ_REALTIME_POWER_LIMIT,
+        translation_key="realtime_power_limit",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        energy_mode=IndevoltEnergyMode.REAL_TIME_CONTROL,
     ),
     IndevoltSensorEntityDescription(
         key=IndevoltSystem.INPUT_POWER,
@@ -104,6 +126,14 @@ SENSORS: Final = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_CYCLE_COUNT,
+        generation=(2,),
+        translation_key="equivalent_full_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Electrical Energy Information
     IndevoltSensorEntityDescription(
@@ -218,6 +248,16 @@ SENSORS: Final = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_2_TRANSFORMER_TEMPERATURE,
+        generation=(2,),
+        translation_key="transformer_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # PV Operating Parameters
     IndevoltSensorEntityDescription(
@@ -460,6 +500,26 @@ SENSORS: Final = (
         entity_registry_enabled_default=False,
     ),
     IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_MOS_TEMPERATURE_CHARGE,
+        generation=(1,),
+        translation_key="mos_temperature_charge",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.GEN_1_MOS_TEMPERATURE_DISCHARGE,
+        generation=(1,),
+        translation_key="mos_temperature_discharge",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
         key=IndevoltBattery.GEN_1_PACK_1_TEMPERATURE,
         generation=(1,),
         translation_key="battery_pack_1_temperature",
@@ -543,6 +603,67 @@ SENSORS: Final = (
         key=IndevoltBattery.PACK_5_TEMPERATURE,
         generation=(2,),
         translation_key="battery_pack_5_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Battery Pack MOS Temperature
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.MAIN_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="main_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_1_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_1_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_2_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_2_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_3_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_3_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_4_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_4_mos_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_5_MOS_TEMPERATURE,
+        generation=(2,),
+        translation_key="battery_pack_5_mos_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -671,44 +792,103 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    # Battery Pack Cycles
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.MAIN_CYCLES,
+        generation=(2,),
+        translation_key="main_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_1_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_1_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_2_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_2_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_3_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_3_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_4_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_4_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
+        key=IndevoltBattery.PACK_5_CYCLES,
+        generation=(2,),
+        translation_key="battery_pack_5_cycles",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
-# Sensors per battery pack (SN, SOC, Temperature, Voltage, Current)
+# Sensors per battery pack (SN, SOC, Temperature, MOS Temperature, Voltage, Current, Cycles)
 BATTERY_PACK_SENSOR_KEYS = [
     (
         IndevoltBattery.PACK_1_SERIAL_NUMBER,
         IndevoltBattery.PACK_1_SOC,
         IndevoltBattery.PACK_1_TEMPERATURE,
+        IndevoltBattery.PACK_1_MOS_TEMPERATURE,
         IndevoltBattery.PACK_1_VOLTAGE,
         IndevoltBattery.PACK_1_CURRENT,
+        IndevoltBattery.PACK_1_CYCLES,
     ),
     (
         IndevoltBattery.PACK_2_SERIAL_NUMBER,
         IndevoltBattery.PACK_2_SOC,
         IndevoltBattery.PACK_2_TEMPERATURE,
+        IndevoltBattery.PACK_2_MOS_TEMPERATURE,
         IndevoltBattery.PACK_2_VOLTAGE,
         IndevoltBattery.PACK_2_CURRENT,
+        IndevoltBattery.PACK_2_CYCLES,
     ),
     (
         IndevoltBattery.PACK_3_SERIAL_NUMBER,
         IndevoltBattery.PACK_3_SOC,
         IndevoltBattery.PACK_3_TEMPERATURE,
+        IndevoltBattery.PACK_3_MOS_TEMPERATURE,
         IndevoltBattery.PACK_3_VOLTAGE,
         IndevoltBattery.PACK_3_CURRENT,
+        IndevoltBattery.PACK_3_CYCLES,
     ),
     (
         IndevoltBattery.PACK_4_SERIAL_NUMBER,
         IndevoltBattery.PACK_4_SOC,
         IndevoltBattery.PACK_4_TEMPERATURE,
+        IndevoltBattery.PACK_4_MOS_TEMPERATURE,
         IndevoltBattery.PACK_4_VOLTAGE,
         IndevoltBattery.PACK_4_CURRENT,
+        IndevoltBattery.PACK_4_CYCLES,
     ),
     (
         IndevoltBattery.PACK_5_SERIAL_NUMBER,
         IndevoltBattery.PACK_5_SOC,
         IndevoltBattery.PACK_5_TEMPERATURE,
+        IndevoltBattery.PACK_5_MOS_TEMPERATURE,
         IndevoltBattery.PACK_5_VOLTAGE,
         IndevoltBattery.PACK_5_CURRENT,
+        IndevoltBattery.PACK_5_CYCLES,
     ),
 ]
 
@@ -756,6 +936,16 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         # Sort options (prevent randomization) for ENUM values
         if description.device_class == SensorDeviceClass.ENUM:
             self._attr_options = sorted(set(description.state_mapping.values()))
+
+    @property
+    def available(self) -> bool:
+        """Return False when the device is not in the required energy mode."""
+        if self.entity_description.energy_mode is not None:
+            energy_mode = self.coordinator.data.get(IndevoltConfig.READ_ENERGY_MODE)
+            if energy_mode != self.entity_description.energy_mode:
+                return False
+
+        return super().available
 
     @property
     def native_value(self) -> str | int | float | None:

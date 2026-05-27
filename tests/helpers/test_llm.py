@@ -419,8 +419,10 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
-        "Only if the user wants to control a device, tell them to expose entities to their "
+        "Only if the user wants to control a device, tell them to expose"
+        " entities to their "
         "voice assistant in Home Assistant."
     )
 
@@ -582,7 +584,8 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+    exposed_entities_prompt = """\
+Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   state: unavailable
@@ -630,7 +633,8 @@ async def test_assist_api_prompt(
   state: unavailable
   areas: Test Area 2
 """
-    stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
+    stateless_exposed_entities_prompt = """\
+Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   areas: Test Area 2
@@ -674,30 +678,45 @@ async def test_assist_api_prompt(
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
-    dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+    dynamic_context_prompt = (
+        "You ARE equipped to answer questions about the"
+        " current state of\nthe home using the"
+        " `GetLiveContext` tool. This is a primary"
+        " function. Do not state you lack the\n"
+        "functionality if the question requires live"
+        " data.\nIf the user asks about device"
+        ' existence/type (e.g., "Do I have lights in'
+        ' the bedroom?"): Answer\nfrom the static'
+        " context below.\nIf the user asks about the"
+        ' CURRENT state, value, or mode (e.g., "Is'
+        ' the lock locked?",\n"Is the fan on?",'
+        ' "What mode is the thermostat in?", "What'
+        ' is the temperature outside?"):\n'
+        "    1.  Recognize this requires live data.\n"
+        "    2.  You MUST call `GetLiveContext`. This"
+        " tool will provide the needed real-time"
+        " information (like temperature from the local"
+        " weather, lock status, etc.).\n"
+        "    3.  Use the tool's response** to answer"
+        ' the user accurately (e.g., "The temperature'
+        ' outside is [value from tool].").\n'
+        "For general knowledge questions not about the"
+        " home: Answer truthfully from internal"
+        " knowledge.\n"
+    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
-    # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
+    # Verify that the GetLiveContext tool returns the same results
+    # as the exposed_entities_prompt
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="GetLiveContext", tool_args={})
     )
@@ -715,26 +734,27 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "You are in area Test Area (floor 2) and all generic commands"
+        " like 'turn on the lights' "
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
@@ -744,9 +764,9 @@ For general knowledge questions not about the home: Answer truthfully from inter
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}"""
     )
 
 

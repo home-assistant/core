@@ -360,7 +360,12 @@
           "name": "Search"
         }
       },
-      "name": "Get library items"
+      "name": "Get library items",
+      "sections": {
+        "pagination": {
+          "name": "Pagination"
+        }
+      }
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
@@ -450,7 +455,12 @@
           "name": "Search name"
         }
       },
-      "name": "Search Music Assistant"
+      "name": "Search Music Assistant",
+      "sections": {
+        "search_options": {
+          "name": "Search options"
+        }
+      }
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",

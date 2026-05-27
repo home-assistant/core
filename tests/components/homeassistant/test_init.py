@@ -132,18 +132,40 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
 @patch("homeassistant.components.homeassistant._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
+@pytest.mark.parametrize(
+    ("files_patch", "expected_error"),
+    [
+        (
+            {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])},
+            "YAML file .*configuration.yaml does not contain a dict",
+        ),
+        ({"not_existing": "blabla"}, "File not found: .*configuration.yaml"),
+    ],
+)
 async def test_reload_core_with_wrong_conf(
-    mock_process, mock_error, hass: HomeAssistant
+    mock_process,
+    mock_error,
+    hass: HomeAssistant,
+    files_patch: dict[str, str],
+    expected_error: str,
 ) -> None:
     """Test reload core conf service."""
-    files = {config.YAML_CONFIG_FILE: yaml.dump(["invalid", "config"])}
     await async_setup_component(hass, ha.DOMAIN, {})
-    with patch_yaml_files(files, True):
+    with (
+        patch_yaml_files(files_patch, True),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "Failed to reload the Home Assistant Core configuration - "
+                f"{expected_error}"
+            ),
+        ),
+    ):
         await hass.services.async_call(
             ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, blocking=True
         )
 
-    assert mock_error.called
+    assert mock_error.called is False
     assert mock_process.called is False
 
 
@@ -212,8 +234,8 @@ async def test_turn_on_skips_domains_without_service(
         "context": service_call.context,
     }
     assert (
-        "The service homeassistant.turn_on does not support entities binary_sensor.blub, sensor.bla"
-        in caplog.text
+        "The service homeassistant.turn_on does not support"
+        " entities binary_sensor.blub, sensor.bla" in caplog.text
     )
 
 
@@ -340,8 +362,8 @@ async def test_not_allowing_recursion(
             blocking=True,
         )
         assert (
-            f"Called service homeassistant.{service} with invalid entities homeassistant.light"
-            in caplog.text
+            f"Called service homeassistant.{service} with"
+            " invalid entities homeassistant.light" in caplog.text
         ), service
 
 
@@ -612,7 +634,8 @@ async def test_reload_all(
         pytest.raises(
             HomeAssistantError,
             match=(
-                "Cannot quick reload all YAML configurations because the configuration is "
+                "Cannot quick reload all YAML configurations"
+                " because the configuration is "
                 "not valid: Oh no, drama!"
             ),
         ),

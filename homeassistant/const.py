@@ -170,6 +170,7 @@ CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
+CONF_NOTE: Final = "note"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
 CONF_OPTIONS: Final = "options"
@@ -944,10 +945,6 @@ WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 PRECISION_WHOLE: Final = 1
 PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
-
-# Static list of entities that will never be exposed to
-# cloud, alexa, or google_home components
-CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 
 class EntityCategory(StrEnum):
