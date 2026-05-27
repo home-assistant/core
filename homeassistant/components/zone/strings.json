@@ -20,8 +20,8 @@
           "name": "[%key:component::zone::common::trigger_for_name%]"
         },
         "zone": {
-          "description": "The zones to trigger on.",
-          "name": "Zones"
+          "description": "The zone to trigger on.",
+          "name": "Zone"
         }
       },
       "name": "Entered zone"
@@ -36,8 +36,8 @@
           "name": "[%key:component::zone::common::trigger_for_name%]"
         },
         "zone": {
-          "description": "The zones to trigger on.",
-          "name": "Zones"
+          "description": "The zone to trigger on.",
+          "name": "Zone"
         }
       },
       "name": "Left zone"

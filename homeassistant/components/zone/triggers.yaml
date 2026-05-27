@@ -21,7 +21,6 @@
       selector:
         entity:
           domain: zone
-          multiple: true
 
 entered: *trigger_zone
 left: *trigger_zone
