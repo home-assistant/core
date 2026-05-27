@@ -30,7 +30,7 @@
       "needSymlinks": 0,
       "needTotalItems": 0,
       "pullErrors": 0,
-      "state": "syncing"
+      "state": "idle"
     }
   }
 }

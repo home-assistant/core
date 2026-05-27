@@ -1,5 +1,6 @@
 """Tests for the syncthing sensor platform."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,12 +11,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
-    FOLDER_PAUSED_RECEIVED,
-    FOLDER_SUMMARY_RECEIVED,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
-    STATE_CHANGED_RECEIVED,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -68,40 +66,43 @@ async def test_sensor_platform_no_sensors_on_config_error(
 
 
 @pytest.mark.parametrize(
-    ("event_id", "event"),
+    "event",
     [
-        (
-            FOLDER_SUMMARY_RECEIVED,
-            load_json_object_fixture("folder_summary_event.json", DOMAIN),
-        ),
-        (
-            STATE_CHANGED_RECEIVED,
-            load_json_object_fixture("state_changed_event.json", DOMAIN),
-        ),
-        (
-            FOLDER_PAUSED_RECEIVED,
-            load_json_object_fixture("folder_paused_event.json", DOMAIN),
-        ),
+        load_json_object_fixture("folder_summary_event.json", DOMAIN),
+        load_json_object_fixture("state_changed_event.json", DOMAIN),
+        load_json_object_fixture("folder_paused_event.json", DOMAIN),
     ],
 )
 async def test_folder_sensor_updates_on_event(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    mock_syncthing: MagicMock,
+    mock_syncthing_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    event_id: str,
     event: dict[str, Any],
 ) -> None:
     """Test folder sensor updates when receiving different event."""
-    dispatcher.async_dispatcher_send(
-        hass,
-        f"{event_id}-{SERVER_ID}-{FOLDER_ID}",
-        event,
-    )
-    await hass.async_block_till_done()
 
+    async def mock_listen():
+        """Mock events.listen that yields the test event then blocks."""
+        yield event
+        await asyncio.Event().wait()
+
+    mock_syncthing_client.events.listen = mock_listen
+    mock_syncthing_client.events.last_seen_id = 10
+
+    with patch(
+        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_folder_sensor_unavailable_on_server_unavailable(
