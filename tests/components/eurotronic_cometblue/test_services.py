@@ -51,16 +51,14 @@ async def test_set_schedule(
         "set_schedule",
         {
             "entity_id": ENTITY_ID,
-            "monday": {"start1": "08:00", "end1": "17:00"},
+            "monday": {"schedule": [{"start": "08:00", "end": "17:00"}]},
             "sunday": {
-                "start1": "09:00",
-                "end1": "11:30",
-                "start2": "13:00",
-                "end2": "15:00",
-                "start3": "18:00",
-                "end3": "22:00",
-                "start4": "23:00",
-                "end4": "23:40",
+                "schedule": [
+                    {"start": "09:00", "end": "11:30"},
+                    {"start": "13:00", "end": "15:00"},
+                    {"start": "18:00", "end": "22:00"},
+                    {"start": "23:00", "end": "23:40"},
+                ]
             },
         },
         blocking=True,
@@ -73,6 +71,31 @@ async def test_set_schedule(
         return_response=True,
     )
     assert schedule == snapshot(name="changed")
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_schedule",
+        {
+            "entity_id": ENTITY_ID,
+            "tuesday": {
+                "schedule": [
+                    {"start": "18:00", "end": "22:00"},
+                    {"start": "09:00", "end": "11:30"},
+                    {"start": "23:00", "end": "23:40"},
+                    {"start": "13:00", "end": "15:00"},
+                ]
+            },
+        },
+        blocking=True,
+    )
+    schedule = await hass.services.async_call(
+        DOMAIN,
+        "get_schedule",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert schedule == snapshot(name="sorted")
 
     # Test deleting schedule from device
     await hass.services.async_call(
@@ -109,19 +132,29 @@ async def test_set_schedule_errors(
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {"start1": "08:00", "end1": "24:01"},
+                "monday": {"schedule": [{"start": "08:00", "end": "24:01"}]},
             },
             blocking=True,
         )
 
-    with pytest.raises(vol.Invalid, match="expected a dictionary for dictionary value"):
+    with pytest.raises(vol.Invalid, match="expected a dictionary"):
         await hass.services.async_call(
             DOMAIN,
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {},
-                "tuesday": [],
+                "monday": [{"start": "08:00", "end": "17:00"}],
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(vol.Invalid, match="expected a list"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_schedule",
+            {
+                "entity_id": ENTITY_ID,
+                "monday": {"schedule": {"start": "08:00", "end": "17:00"}},
             },
             blocking=True,
         )
@@ -132,7 +165,7 @@ async def test_set_schedule_errors(
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {"start1": "08:00"},
+                "monday": {"schedule": [{"start": "08:00"}]},
             },
             blocking=True,
         )
@@ -143,7 +176,7 @@ async def test_set_schedule_errors(
             "set_schedule",
             {
                 "entity_id": ENTITY_ID,
-                "monday": {"start1": "08:00", "end1": "07:00"},
+                "monday": {"schedule": [{"start": "08:00", "end": "07:00"}]},
             },
             blocking=True,
         )
@@ -157,28 +190,10 @@ async def test_set_schedule_errors(
             {
                 "entity_id": ENTITY_ID,
                 "monday": {
-                    "start1": "08:00",
-                    "end1": "17:00",
-                    "start2": "16:00",
-                    "end2": "18:00",
-                },
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(
-        ServiceValidationError, match="Overlapping times found in schedule"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_schedule",
-            {
-                "entity_id": ENTITY_ID,
-                "monday": {
-                    "start1": "08:00",
-                    "end1": "17:00",
-                    "start2": "16:00",
-                    "end2": "18:00",
+                    "schedule": [
+                        {"start": "08:00", "end": "17:00"},
+                        {"start": "16:00", "end": "18:00"},
+                    ]
                 },
             },
             blocking=True,
