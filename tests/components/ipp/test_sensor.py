@@ -1,5 +1,6 @@
 """Tests for the IPP sensor platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from pyipp import IPPError
@@ -62,14 +63,23 @@ async def test_missing_entry_unique_id(
     assert entity.unique_id == f"{mock_config_entry.entry_id}_printer"
 
 
+@pytest.mark.parametrize(
+    "execute_response",
+    [
+        {"printers": [{}]},  # Empty printer dict
+        {"printers": []},    # Empty printers list
+        {},                  # Missing printers key
+    ],
+)
 async def test_no_page_count_sensors_when_unsupported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_ipp: MagicMock,
+    execute_response: dict[str, Any],
 ) -> None:
     """Test that page count sensors are not created when printer doesn't support them."""
-    mock_ipp.execute.return_value = {"printers": [{}]}
+    mock_ipp.execute.return_value = execute_response
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
