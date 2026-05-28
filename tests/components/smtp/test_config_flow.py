@@ -30,6 +30,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.usefixtures("smtp", "smtp_ssl")
 @pytest.mark.parametrize("encryption", ["tls", "starttls"])
@@ -85,6 +87,41 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Recipient"
     assert result["unique_id"] == "recipient@example.com"
+
+
+@pytest.mark.usefixtures("smtp")
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SENDER: "email@example.com",
+            CONF_SENDER_NAME: "Home Assistant",
+            CONF_SERVER: "mail.example.com",
+            CONF_PORT: 587,
+            CONF_ENCRYPTION: "tls",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -239,6 +276,38 @@ async def test_import_errors(
         domain=DOMAIN,
         issue_id="deprecated_yaml_import_issue_error",
     )
+
+
+@pytest.mark.usefixtures("smtp")
+async def test_import_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test import flow aborts if already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_NAME: "notifier_name",
+            CONF_SENDER: "email@example.com",
+            CONF_SENDER_NAME: "Home Assistant",
+            CONF_SERVER: "mail.example.com",
+            CONF_PORT: 587,
+            CONF_ENCRYPTION: "starttls",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_VERIFY_SSL: True,
+            CONF_RECIPIENT: "recipient@example.com",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("smtp")

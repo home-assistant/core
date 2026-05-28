@@ -109,6 +109,13 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_SERVER: user_input[CONF_SERVER],
+                    CONF_SENDER: user_input[CONF_SENDER],
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                }
+            )
             errors = await self.hass.async_add_executor_job(validate_input, user_input)
             if not errors:
                 return self.async_create_entry(
@@ -143,6 +150,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 CONF_SERVER: import_info.get(CONF_SERVER, DEFAULT_HOST),
                 CONF_SENDER: import_info[CONF_SENDER],
+                CONF_USERNAME: import_info.get(CONF_USERNAME),
             }
         )
 
