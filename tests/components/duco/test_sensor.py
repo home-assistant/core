@@ -1,7 +1,7 @@
 """Tests for the Duco sensor platform."""
 
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     DucoConnectionError,
@@ -22,6 +22,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import setup_platform_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
@@ -34,11 +36,7 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up only the sensor platform for testing."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.duco.PLATFORMS", [Platform.SENSOR]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
