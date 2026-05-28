@@ -84,20 +84,23 @@ async def test_diagnostic_sensor_entities_disabled_by_default(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "exception",
+    ("exception_type", "exception_message"),
     [
-        pytest.param(DucoConnectionError("offline"), id="connection_error"),
-        pytest.param(DucoError("api error"), id="duco_error"),
+        pytest.param(DucoConnectionError, "offline", id="connection_error"),
+        pytest.param(DucoError, "api error", id="duco_error"),
     ],
 )
 async def test_coordinator_update_failure_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
+    exception_type: type[Exception],
+    exception_message: str,
 ) -> None:
     """Test sensor entities become unavailable when the coordinator update fails."""
-    mock_duco_client.async_get_nodes = AsyncMock(side_effect=exception)
+    mock_duco_client.async_get_nodes = AsyncMock(
+        side_effect=exception_type(exception_message)
+    )
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
