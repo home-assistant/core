@@ -23,12 +23,11 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         """Initialize the Imou entity."""
         super().__init__(coordinator)
         self._entity_type = entity_type
-        self._device = device
-        device_key = imou_device_identifier(device)
-        self._attr_unique_id = f"{device_key}${entity_type}"
+        self._device_key = imou_device_identifier(device)
+        self._attr_unique_id = f"{self._device_key}${entity_type}"
         self._attr_translation_key = entity_type
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_key)},
+            identifiers={(DOMAIN, self._device_key)},
             name=device.channel_name or device.device_name,
             manufacturer=device.manufacturer,
             model=device.model,
@@ -37,13 +36,17 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
         )
 
     @property
+    def device(self) -> ImouHaDevice | None:
+        """Return the live device from the coordinator, or None if removed."""
+        return self.coordinator.get_device(self._device_key)
+
+    @property
     def available(self) -> bool:
         """Return if the entity is available."""
         if not super().available:
             return False
-        if PARAM_STATUS not in self._device.sensors:
+        if (device := self.device) is None:
             return False
-        return (
-            self._device.sensors[PARAM_STATUS][PARAM_STATE]
-            != DeviceStatus.OFFLINE.value
-        )
+        if PARAM_STATUS not in device.sensors:
+            return False
+        return device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value

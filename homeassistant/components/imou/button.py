@@ -74,10 +74,12 @@ class ImouButton(ImouEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle button press."""
+        if (device := self.device) is None:
+            raise HomeAssistantError("Device is no longer available")
         duration = PTZ_MOVE_DURATION_MS if self._entity_type in PTZ_BUTTON_TYPES else 0
         try:
             await self.coordinator.device_manager.async_press_button(
-                self._device,
+                device,
                 self._entity_type,
                 duration,
             )

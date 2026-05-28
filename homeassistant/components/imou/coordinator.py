@@ -17,7 +17,7 @@ from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 type ImouConfigEntry = ConfigEntry[ImouDataUpdateCoordinator]
 
@@ -55,6 +55,10 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def device_manager(self) -> ImouHaDeviceManager:
         """Return the device manager."""
         return self._device_manager
+
+    def get_device(self, device_key: str) -> ImouHaDevice | None:
+        """Return the current device for device_key, if still on the account."""
+        return self._devices_by_key.get(device_key)
 
     async def _async_update_data(self) -> None:
         """Update coordinator data."""

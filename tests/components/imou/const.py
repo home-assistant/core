@@ -40,12 +40,47 @@ def create_online_device(
     button_keys: tuple[str, ...] = (),
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
+    return create_device(
+        device_id,
+        name,
+        channel_id=channel_id,
+        button_keys=button_keys,
+        status=DeviceStatus.ONLINE,
+    )
+
+
+def create_offline_device(
+    device_id: str,
+    name: str,
+    *,
+    channel_id: str | None = None,
+    button_keys: tuple[str, ...] = (),
+) -> ImouHaDevice:
+    """Build an offline ImouHaDevice for tests."""
+    return create_device(
+        device_id,
+        name,
+        channel_id=channel_id,
+        button_keys=button_keys,
+        status=DeviceStatus.OFFLINE,
+    )
+
+
+def create_device(
+    device_id: str,
+    name: str,
+    *,
+    channel_id: str | None = None,
+    button_keys: tuple[str, ...] = (),
+    status: DeviceStatus = DeviceStatus.ONLINE,
+) -> ImouHaDevice:
+    """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
     if channel_id is not None:
         device.set_channel_id(channel_id)
     for key in button_keys:
         device._buttons[key] = {}
-    device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.ONLINE.value}
+    device._sensors[PARAM_STATUS] = {PARAM_STATE: status.value}
     return device
 
 

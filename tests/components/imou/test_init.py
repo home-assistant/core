@@ -2,14 +2,22 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
-from homeassistant.components.imou.const import DOMAIN, PARAM_MUTE, PARAM_PTZ_UP
+from homeassistant.components.imou.const import (
+    DOMAIN,
+    PARAM_MUTE,
+    PARAM_PTZ_UP,
+    PARAM_STATE,
+    PARAM_STATUS,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEFAULT_MOCK_DEVICES, create_online_device
+from .const import DEFAULT_MOCK_DEVICES, create_offline_device, create_online_device
 
 from tests.common import MockConfigEntry
 
@@ -107,6 +115,9 @@ async def test_multiple_channels_create_separate_devices(
         assert entry.translation_key == PARAM_MUTE
         device_key = entry.unique_id.split("$", 1)[0]
         assert entry.device_id == device_ids_by_key[device_key]
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -116,7 +127,6 @@ async def test_coordinator_adds_entities_for_new_device(
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """A device added to the Imou account is discovered on the next coordinator refresh."""
-    coordinator = mock_config_entry.runtime_data
     entity_registry = er.async_get(hass)
     assert (
         len(
@@ -131,7 +141,7 @@ async def test_coordinator_adds_entities_for_new_device(
         *DEFAULT_MOCK_DEVICES,
         create_online_device("d2", "Device 2", button_keys=(PARAM_PTZ_UP,)),
     ]
-    await coordinator.async_request_refresh()
+    await mock_config_entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done()
 
     entries = er.async_entries_for_config_entry(
@@ -139,6 +149,8 @@ async def test_coordinator_adds_entities_for_new_device(
     )
     assert len(entries) == 4
     assert "d2$ptz_up" in {entry.unique_id for entry in entries}
+    ptz_entry = next(entry for entry in entries if entry.unique_id == "d2$ptz_up")
+    assert hass.states.get(ptz_entry.entity_id).state != STATE_UNAVAILABLE
 
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
@@ -160,14 +172,14 @@ async def test_coordinator_adds_entities_for_new_device(
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_coordinator_removes_device_from_registry(
+async def test_coordinator_removes_device_updates_registries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
 ) -> None:
-    """A device removed from the Imou account is dropped from the device registry."""
-    coordinator = mock_config_entry.runtime_data
+    """A removed device is dropped from the device and entity registries."""
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     assert (
         len(
             dr.async_entries_for_config_entry(
@@ -176,9 +188,16 @@ async def test_coordinator_removes_device_from_registry(
         )
         == 2
     )
+    entries_before = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in entries_before} == {
+        "d1$mute",
+        "d2$ptz_up",
+    }
 
     mock_imou_ha_device_manager.async_get_devices.return_value = DEFAULT_MOCK_DEVICES
-    await coordinator.async_request_refresh()
+    await mock_config_entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(
@@ -186,3 +205,82 @@ async def test_coordinator_removes_device_from_registry(
     )
     assert len(devices) == 1
     assert (DOMAIN, "d1") in devices[0].identifiers
+
+    entries_after = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in entries_after} == {"d1$mute"}
+    mute_entry = next(entry for entry in entries_after if entry.unique_id == "d1$mute")
+    assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                button_keys=(PARAM_MUTE,),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_offline_device_marked_unavailable_after_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """An offline device reported on refresh marks button entities unavailable."""
+    entity_registry = er.async_get(hass)
+    mute_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$mute"
+    )
+    assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
+
+    async def set_device_offline(device: ImouHaDevice) -> None:
+        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+
+    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
+        set_device_offline
+    )
+    await mock_config_entry.runtime_data.async_request_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_offline_device(
+                "d1",
+                "Device 1",
+                button_keys=(PARAM_MUTE,),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_offline_device_unavailable_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An offline device marks button entities unavailable via the state machine."""
+    entity_registry = er.async_get(hass)
+    mute_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$mute"
+    )
+    assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
