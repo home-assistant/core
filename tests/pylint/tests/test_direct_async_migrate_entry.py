@@ -11,7 +11,7 @@ import pytest
 from tests.pylint import assert_no_messages
 
 # Pre-load so astroid can resolve ``async_migrate_entry`` in parsed snippets.
-astroid.MANAGER.ast_from_module_name("homeassistant.components.trafikverket_camera")
+astroid.MANAGER.ast_from_module_name("homeassistant.components.ps4")
 
 
 @pytest.fixture(name="checker")
@@ -28,17 +28,17 @@ def checker_fixture(linter: UnittestLinter) -> DirectAsyncMigrateEntry:
 async def test_setup(hass):
     await hass.config_entries.async_setup(entry.entry_id)
 """,
-            "tests.components.trafikverket_camera.test_init",
+            "tests.components.ps4.test_init",
             id="proper_setup_call",
         ),
         pytest.param(
             """
-from homeassistant.components.trafikverket_camera import async_migrate_entry
+from homeassistant.components.ps4 import async_migrate_entry
 
 async def test_setup(hass, mock_config_entry):
     await async_migrate_entry(hass, mock_config_entry)
 """,
-            "homeassistant.components.trafikverket_camera",
+            "homeassistant.components.ps4",
             id="not_a_test_module",
         ),
         pytest.param(
@@ -46,7 +46,7 @@ async def test_setup(hass, mock_config_entry):
 async def test_setup(hass, mock_config_entry):
     await some_local.async_migrate_entry(hass, mock_config_entry)
 """,
-            "tests.components.trafikverket_camera.test_init",
+            "tests.components.ps4.test_init",
             id="unresolved_attribute_call",
         ),
         pytest.param(
@@ -57,7 +57,7 @@ async def async_migrate_entry(hass, entry):
 async def test_setup(hass, entry):
     await async_migrate_entry(hass, entry)
 """,
-            "tests.components.trafikverket_camera.test_init",
+            "tests.components.ps4.test_init",
             id="local_async_migrate_entry_not_an_integration",
         ),
     ],
@@ -82,22 +82,22 @@ def test_no_warning(
     [
         pytest.param(
             """
-from homeassistant.components.trafikverket_camera import async_migrate_entry
+from homeassistant.components.ps4 import async_migrate_entry
 
 async def test_setup(hass, mock_config_entry):
     await async_migrate_entry(hass, mock_config_entry)
 """,
-            "tests.components.trafikverket_camera.test_init",
+            "tests.components.ps4.test_init",
             id="direct_name_call",
         ),
         pytest.param(
             """
-from homeassistant.components import trafikverket_camera
+from homeassistant.components import ps4
 
 async def test_setup(hass, mock_config_entry):
-    await trafikverket_camera.async_migrate_entry(hass, mock_config_entry)
+    await ps4.async_migrate_entry(hass, mock_config_entry)
 """,
-            "tests.components.trafikverket_camera.test_init",
+            "tests.components.ps4.test_init",
             id="attribute_call",
         ),
     ],
@@ -126,7 +126,7 @@ def test_multiple_calls_each_flagged(
     """Test that multiple direct calls are each flagged."""
     root_node = astroid.parse(
         """
-from homeassistant.components.trafikverket_camera import async_migrate_entry
+from homeassistant.components.ps4 import async_migrate_entry
 
 async def test_a(hass, mock_config_entry):
     await async_migrate_entry(hass, mock_config_entry)
@@ -134,7 +134,7 @@ async def test_a(hass, mock_config_entry):
 async def test_b(hass, mock_config_entry):
     await async_migrate_entry(hass, mock_config_entry)
 """,
-        "tests.components.trafikverket_camera.test_init",
+        "tests.components.ps4.test_init",
     )
     walker = ASTWalker(linter)
     walker.add_checker(checker)
