@@ -113,7 +113,7 @@ The JSON has this shape:
   every check whose status is `needs_agent` it contains two placeholders
   you must replace:
   - `{{CHECK_CELL:<pkg-name>:<check-kind>}}` — one cell of the summary
-    table. Replace with exactly one of `✅`, `⚠️`, `❌`, or `—` (em
+    table. Replace with exactly one of `✅`, `☑️`, `⚠️`, `❌`, or `—` (em
     dash, for a check that the per-kind instructions say to skip). The
     **`security`** check kind uses `☑️` instead of `✅` for the success
     case — see its section below for why.
