@@ -94,7 +94,7 @@ async def async_setup_entry(
         async_add_entities(device.zones.values())
 
     # create any components not yet created
-    for controller in disco.pi_disco.controllers.values():
+    for controller in (await disco.pi_disco.fetch_controllers()).values():
         init_controller(controller)
 
     # connect to register any further components
