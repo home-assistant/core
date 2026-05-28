@@ -95,7 +95,7 @@ class RepairsFlow(
             entry_id = config_flow["handler"]
         if entry_id is not None:
             result["result"] = self.hass.config_entries.async_get_known_entry(entry_id)
-        result["next_flow"] = next_flow
+            result["next_flow"] = next_flow
 
 
 class RepairsProtocol(Protocol):

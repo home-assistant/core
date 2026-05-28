@@ -112,12 +112,11 @@ def _prepare_repairs_flow_result_json(
     result: data_entry_flow.FlowResult,
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
-    if "result" not in result:
-        return prepare_result_json(result)
-    data = {key: val for key, val in result.items() if key not in ("data", "context")}
-    entry: ConfigEntry = result["result"]  # type: ignore[typeddict-item]
-    # Overwrite the ConfigEntry object with its json representation for frontend.
-    data["result"] = entry.as_json_fragment
+    entry: ConfigEntry | None = result.pop("result", None)  # type: ignore[typeddict-item]
+    data = prepare_result_json(result)
+    if entry is not None:
+        # Overwrite the ConfigEntry object with its json representation for frontend.
+        data["result"] = entry.as_json_fragment
     return data
 
 

@@ -19,7 +19,6 @@ from homeassistant.config_entries import (
     ConfigSubentry,
     ConfigSubentryFlow,
     OptionsFlow,
-    SubentryFlowResult,
 )
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
@@ -198,23 +197,22 @@ class MockFixFlowNextFlow(RepairsFlow):
         assert len(entries) == 1
         mock_entry: MockConfigEntry = entries[0]
         subentries = mock_entry.subentries
-        assert len(list(subentries.keys())) == 1
+        assert len(subentries.keys()) == 1
         mock_subentry_id = list(subentries.keys())[0]
 
         with mock_core_config_flow():
             if self.data["flow_type"] == FlowType.CONFIG_FLOW:
-                next_flow: (
-                    ConfigFlowResult | SubentryFlowResult
-                ) = await mock_entry.start_reconfigure_flow(self.hass)
+                next_flow = await mock_entry.start_reconfigure_flow(self.hass)
             elif self.data["flow_type"] == FlowType.OPTIONS_FLOW:
                 next_flow = await self.hass.config_entries.options.async_init(
                     mock_entry.entry_id
                 )
-            else:
-                # Subentry flow
+            elif self.data["flow_type"] == FlowType.CONFIG_SUBENTRIES_FLOW:
                 next_flow = await mock_entry.start_subentry_reconfigure_flow(
                     self.hass, mock_subentry_id
                 )
+            elif self.data["flow_type"] == "invalid_flow":
+                next_flow = {"flow_id": "fake_flow_id"}
             return self.async_create_entry(
                 data={},
                 next_flow=(
