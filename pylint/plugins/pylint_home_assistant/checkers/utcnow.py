@@ -27,6 +27,18 @@ def _attribute_path(node: nodes.NodeNG) -> tuple[str, ...] | None:
     return tuple(reversed(parts))
 
 
+def _is_zoneinfo_utc(node: nodes.NodeNG) -> bool:
+    """Return True if *node* is ``ZoneInfo("UTC")`` or ``*.ZoneInfo("UTC")``."""
+    match node:
+        case nodes.Call(
+            func=nodes.Name(name="ZoneInfo") | nodes.Attribute(attrname="ZoneInfo"),
+            args=[nodes.Const(value="UTC")],
+            keywords=[],
+        ):
+            return True
+    return False
+
+
 class HassEnforceUtcnowChecker(BaseChecker):
     """Checker that flags ``datetime.now(UTC)`` calls."""
 
@@ -89,13 +101,18 @@ class HassEnforceUtcnowChecker(BaseChecker):
                 keywords=[],
             ):
                 pass
+            case nodes.Call(
+                func=nodes.Attribute(attrname="now", expr=expr),
+                args=[],
+                keywords=[nodes.Keyword(arg="tz", value=arg)],
+            ):
+                pass
             case _:
                 return
 
-        if (
-            _attribute_path(expr) not in self._datetime_class_paths
-            or _attribute_path(arg) not in self._utc_paths
-        ):
+        if _attribute_path(expr) not in self._datetime_class_paths:
+            return
+        if _attribute_path(arg) not in self._utc_paths and not _is_zoneinfo_utc(arg):
             return
 
         self.add_message("home-assistant-enforce-utcnow", node=node)

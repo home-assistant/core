@@ -40,6 +40,16 @@ from . import assert_no_messages
             id="now_with_other_tz",
         ),
         pytest.param(
+            # ``tz=`` with a non-UTC time zone is allowed.
+            """
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(tz=ZoneInfo("Europe/Stockholm"))
+        """,
+            id="now_kwarg_with_other_tz",
+        ),
+        pytest.param(
             # Calling ``.now`` on something that is not ``datetime.datetime``
             # must not be flagged.
             """
@@ -122,6 +132,48 @@ def test_enforce_utcnow_good(
         now = datetime.datetime.now(datetime.timezone.utc)
         """,
             id="qualified_datetime_timezone_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime, UTC
+
+        now = datetime.now(tz=UTC)
+        """,
+            id="kwarg_datetime_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime, timezone
+
+        now = datetime.now(tz=timezone.utc)
+        """,
+            id="kwarg_datetime_timezone_utc",
+        ),
+        pytest.param(
+            """
+        import datetime
+
+        now = datetime.datetime.now(tz=datetime.UTC)
+        """,
+            id="kwarg_qualified_datetime_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(ZoneInfo("UTC"))
+        """,
+            id="zoneinfo_utc",
+        ),
+        pytest.param(
+            """
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(tz=ZoneInfo("UTC"))
+        """,
+            id="kwarg_zoneinfo_utc",
         ),
     ],
 )
