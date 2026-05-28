@@ -178,6 +178,7 @@
       'light_state': None,
       'local_url': None,
       'monitoring': True,
+      'motion_detection': False,
       'sd_status': 4,
       'supported_features': <CameraEntityFeature: 1>,
       'vpn_url': 'https://prodvpn-eu-6.netatmo.net/10.20.30.40/1111111111111/2222222222222,,',

@@ -273,6 +273,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             "vpn_url": self.device.vpn_url,
             "local_url": self.device.local_url,
             "light_state": self._light_state,
+            "motion_detection": self._attr_motion_detection_enabled,
         }
 
     async def async_turn_off(self) -> None:
