@@ -339,8 +339,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if not state or state.state == STATE_UNAVAILABLE:
             if self._replace_unavailable:
                 self._attr_available = True
-                self._state_list = []
-                self._last_valid_state_time = None
+                # Preserve the last valid timestamp and time-window history so the
+                # first valid sample after an unavailable gap can still be correlated
+                # to the prior valid sample.
                 self._write_native_value(Decimal(0))
                 return False
             self._attr_available = False
