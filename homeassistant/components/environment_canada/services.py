@@ -5,10 +5,9 @@ from typing import Any
 from env_canada import ECWeather
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
@@ -22,12 +21,6 @@ async def _async_get_alerts(call: ServiceCall) -> dict[str, Any]:
     entry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="service_entry_ex",
-        )
 
     ec: ECWeather | None = entry.runtime_data.weather_coordinator.ec_data
     if ec is None:
