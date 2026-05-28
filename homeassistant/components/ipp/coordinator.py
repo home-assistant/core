@@ -100,7 +100,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                     },
                 },
             )
-        except IPPError:
+        except Exception:
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
