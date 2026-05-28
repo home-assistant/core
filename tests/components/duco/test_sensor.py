@@ -122,16 +122,22 @@ async def test_coordinator_update_duco_error_marks_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("lan info error"), id="duco_error"),
+        pytest.param(DucoConnectionError("lan info offline"), id="connection_error"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_lan_info_duco_error_keeps_node_entities_available(
+async def test_lan_info_failures_keep_node_entities_available(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
-    """Test node entities stay available when async_get_lan_info raises DucoError."""
-    mock_duco_client.async_get_lan_info = AsyncMock(
-        side_effect=DucoError("lan info error")
-    )
+    """Test node entities stay available when LAN info retrieval fails."""
+    mock_duco_client.async_get_lan_info = AsyncMock(side_effect=exception)
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
