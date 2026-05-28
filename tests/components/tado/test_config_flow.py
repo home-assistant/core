@@ -241,6 +241,7 @@ async def test_show_progress_polling(
     event = threading.Event()
 
     def mock_tado_api_device_activation() -> None:
+        """Create a wait event."""
         event.wait(timeout=5)
 
     mock_tado_api.device_activation = mock_tado_api_device_activation
