@@ -67,12 +67,15 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_APP_ID): str,
                     vol.Required(CONF_APP_SECRET): str,
-                    vol.Required(CONF_API_URL, default="sg"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(API_URLS),
-                            translation_key="api_url",
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
+                    vol.Required(CONF_API_URL, default="sg"): vol.All(
+                        vol.In(list(API_URLS)),
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(API_URLS),
+                                translation_key="api_url",
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
                     ),
                 }
             ),

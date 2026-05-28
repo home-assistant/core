@@ -47,6 +47,10 @@ class ImouEntity(CoordinatorEntity[ImouDataUpdateCoordinator]):
             return False
         if (device := self.device) is None:
             return False
-        if PARAM_STATUS not in device.sensors:
+        status = device.sensors.get(PARAM_STATUS)
+        if not status:
             return False
-        return device.sensors[PARAM_STATUS][PARAM_STATE] != DeviceStatus.OFFLINE.value
+        state = status.get(PARAM_STATE)
+        if state is None:
+            return False
+        return state != DeviceStatus.OFFLINE.value
