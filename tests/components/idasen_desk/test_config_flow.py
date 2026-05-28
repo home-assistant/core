@@ -19,9 +19,14 @@ from tests.common import MockConfigEntry
 
 async def test_user_step_success(hass: HomeAssistant, mock_desk_api: MagicMock) -> None:
     """Test user step success path."""
-    with patch(
-        "homeassistant.components.idasen_desk.config_flow.async_discovered_service_info",
-        return_value=[NOT_IDASEN_DISCOVERY_INFO, IDASEN_DISCOVERY_INFO],
+    with (
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.async_discovered_service_info",
+            return_value=[NOT_IDASEN_DISCOVERY_INFO, IDASEN_DISCOVERY_INFO],
+        ),
+        patch(
+            "homeassistant.components.idasen_desk.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -29,6 +34,7 @@ async def test_user_step_success(hass: HomeAssistant, mock_desk_api: MagicMock) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     with patch(
         "homeassistant.components.idasen_desk.async_setup_entry", return_value=True

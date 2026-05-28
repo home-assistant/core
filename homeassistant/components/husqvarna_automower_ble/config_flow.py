@@ -69,7 +69,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             await async_get_manufacturer_data({discovery_info.address})
         )[discovery_info.address]
 
-        if manufacturer_data.product_type != ProductType.MOWER:
+        if manufacturer_data.product_type is not ProductType.MOWER:
             LOGGER.debug(
                 "Unsupported device: %s (%s)", manufacturer_data, discovery_info
             )
