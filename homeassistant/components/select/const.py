@@ -34,10 +34,13 @@ CONF_OPTION = "option"
 #
 # Backwards compatibility / needs to be formally deprecated
 #
-ATTR_CYCLE = "cycle"
-ATTR_OPTIONS = "options"
+ATTR_CYCLE = SelectServiceArgument.CYCLE
+ATTR_OPTION = SelectServiceArgument.OPTION
 
-SERVICE_SELECT_FIRST = "select_first"
-SERVICE_SELECT_LAST = "select_last"
-SERVICE_SELECT_NEXT = "select_next"
-SERVICE_SELECT_PREVIOUS = "select_previous"
+ATTR_OPTIONS = SelectEntityAttribute.OPTIONS
+
+SERVICE_SELECT_FIRST = SelectService.SELECT_FIRST
+SERVICE_SELECT_LAST = SelectService.SELECT_LAST
+SERVICE_SELECT_NEXT = SelectService.SELECT_NEXT
+SERVICE_SELECT_OPTION = SelectService.SELECT_OPTION
+SERVICE_SELECT_PREVIOUS = SelectService.SELECT_PREVIOUS

@@ -138,7 +138,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            SelectEntityAttribute.OPTIONS: self.options,
+            SelectEntityAttribute.OPTIONS.value: self.options,
         }
 
     @property
