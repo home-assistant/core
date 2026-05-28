@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_get_alerts
+  dict({
+    'advisories': dict({
+      'label': 'Advisories',
+      'value': list([
+        dict({
+          'date': 'Monday October 03, 2022 at 15:05 EDT',
+          'title': 'Frost Advisory',
+        }),
+      ]),
+    }),
+    'endings': dict({
+      'label': 'Endings',
+      'value': list([
+      ]),
+    }),
+    'statements': dict({
+      'label': 'Statements',
+      'value': list([
+      ]),
+    }),
+    'warnings': dict({
+      'label': 'Warnings',
+      'value': list([
+      ]),
+    }),
+    'watches': dict({
+      'label': 'Watches',
+      'value': list([
+      ]),
+    }),
+  })
+# ---

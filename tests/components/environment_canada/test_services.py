@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.environment_canada.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,7 +14,9 @@ from . import init_integration
 SERVICE_GET_ALERTS = "get_alerts"
 
 
-async def test_get_alerts(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
+async def test_get_alerts(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, ec_data: dict[str, Any]
+) -> None:
     """Test the get_alerts service returns active alerts."""
     config_entry = await init_integration(hass, ec_data)
 
@@ -24,7 +27,7 @@ async def test_get_alerts(hass: HomeAssistant, ec_data: dict[str, Any]) -> None:
         blocking=True,
         return_response=True,
     )
-    assert response == ec_data["alerts"]
+    assert response == snapshot
 
 
 async def test_get_alerts_not_connected(
