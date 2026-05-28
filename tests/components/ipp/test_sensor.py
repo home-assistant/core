@@ -67,8 +67,8 @@ async def test_missing_entry_unique_id(
     "execute_response",
     [
         {"printers": [{}]},  # Empty printer dict
-        {"printers": []},    # Empty printers list
-        {},                  # Missing printers key
+        {"printers": []},  # Empty printers list
+        {},  # Missing printers key
     ],
 )
 async def test_no_page_count_sensors_when_unsupported(

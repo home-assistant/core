@@ -29,7 +29,7 @@ from .const import (
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
 )
-from .coordinator import IPPConfigEntry, IPPDataUpdateCoordinator
+from .coordinator import IPPConfigEntry
 from .entity import IPPEntity
 
 
