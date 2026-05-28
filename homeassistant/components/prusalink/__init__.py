@@ -58,6 +58,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
+    info_data = coordinators["info"].data
+    if (
+        not entry.unique_id
+        and info_data is not None
+        and (serial := info_data.get("serial"))
+    ):
+        hass.config_entries.async_update_entry(entry, unique_id=serial)
+
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

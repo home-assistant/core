@@ -48,6 +48,40 @@ async def test_device_info(
     assert area.name == "Workshop"
 
 
+async def test_backfills_unique_id_for_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup backfills config entry unique_id from printer serial."""
+    assert mock_config_entry.unique_id is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.unique_id == "serial-1337"
+
+
+async def test_preserves_existing_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup does not overwrite existing unique_id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://example.com",
+            CONF_USERNAME: "dummy",
+            CONF_PASSWORD: "dummypw",
+        },
+        unique_id="existing-unique-id",
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.unique_id == "existing-unique-id"
+
+
 async def test_unloading(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,

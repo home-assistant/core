@@ -75,7 +75,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 
     ensure_printer_is_supported(version)
 
-    return {"title": version["hostname"] or version["text"]}
+    try:
+        async with asyncio.timeout(5):
+            info = await api.get_info()
+
+    except (TimeoutError, HTTPError, InvalidURL) as err:
+        _LOGGER.error("Could not connect to PrusaLink: %s", err)
+        raise CannotConnect from err
+
+    return {
+        "serial": info["serial"],
+        "title": version["hostname"] or version["text"],
+    }
 
 
 class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -116,6 +127,8 @@ class PrusaLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["serial"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=data)
 
         return self.async_show_form(
