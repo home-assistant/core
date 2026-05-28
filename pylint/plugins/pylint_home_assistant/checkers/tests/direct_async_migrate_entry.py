@@ -6,7 +6,7 @@ migration as part of the normal setup pipeline via
 ``await hass.config_entries.async_setup(entry.entry_id)`` so that the
 real migration flow (version updates, reloads, etc.) is exercised.
 
-This checker flags any ``await <something>.async_migrate_entry(...)``
+This checker flags any ``await <domain>.async_migrate_entry(...)``
 or ``await async_migrate_entry(...)`` call in a test module whose
 target resolves to a function defined in an integration's ``__init__``
 module under ``homeassistant.components.*``.
