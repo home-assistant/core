@@ -1,403 +1,378 @@
 ---
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - "requirements*.txt"
-      - "homeassistant/package_constraints.txt"
-      - "pyproject.toml"
-  workflow_dispatch:
-    inputs:
-      pull_request_number:
-        description: "Pull request number to (re-)check"
-        required: true
-        type: number
+  workflow_run:
+    workflows: ["Check requirements (deterministic)"]
+    types: [completed]
 permissions:
   contents: read
-  pull-requests: read
+  actions: read
   issues: read
+  pull-requests: read
 network:
   allowed:
     - python
 tools:
   web-fetch: {}
   github:
-    toolsets: [default]
+    toolsets: [default, actions]
+    min-integrity: unapproved
 safe-outputs:
   add-comment:
     max: 1
+    target: "${{ needs.extract_pr_number.outputs.pr_number }}"
+  needs:
+    - extract_pr_number
+jobs:
+  extract_pr_number:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      pr_number: ${{ steps.extract.outputs.pr_number }}
+    steps:
+      - name: Download deterministic-results artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: check-requirements-deterministic
+          path: /tmp/deterministic
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract PR number from artifact
+        id: extract
+        run: |
+          PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
+          echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+steps:
+  - name: Download deterministic-results artifact
+    if: github.event.workflow_run.conclusion == 'success'
+    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    with:
+      name: check-requirements-deterministic
+      path: /tmp/gh-aw/deterministic
+      run-id: ${{ github.event.workflow_run.id }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+post-steps:
+  - name: Verify agent produced an add_comment safe-output
+    if: always() && github.event.workflow_run.conclusion == 'success'
+    run: |
+      OUTPUT=/tmp/gh-aw/agent_output.json
+      if [ ! -f "${OUTPUT}" ]; then
+        echo "::error::Agent output file ${OUTPUT} is missing; the agent did not run to completion."
+        exit 1
+      fi
+      if ! grep -q '"add_comment"' "${OUTPUT}"; then
+        echo "::error::Agent did not emit an add_comment safe-output; no review comment was posted to the PR."
+        echo "Agent output:"
+        cat "${OUTPUT}"
+        exit 1
+      fi
 description: >
-  Checks changed Python package requirements on PRs targeting the core repo
-  (including PRs opened from forks) and verifies licenses match PyPI metadata, source
-  repositories are publicly accessible, PyPI releases were uploaded via
-  automated CI (Trusted Publisher attestation), the package's release pipeline
-  uses OIDC or equivalent automated credentials (not static tokens), and the PR
-  description contains the required links.
+  Resolves the deterministic-stage artifact's NEEDS_AGENT checks for changed
+  Python package requirements on PRs targeting the core repo, then posts the
+  final review comment. Triggered by completion of the deterministic workflow.
+  Reads the uploaded artifact from disk, replaces placeholders for any check
+  whose status is `needs_agent`, and posts the merged comment using the PR
+  number recorded inside the artifact itself. Each check kind has a dedicated
+  instruction section below; if the artifact contains a check kind that does
+  not have a section here, the agent fails hard rather than guess.
 ---
 
-# Requirements License and Availability Check
-
-You are a code review assistant for the Home Assistant project. Your job is to
-review changes to Python package requirements and verify they meet the project's
-standards.
-
-## Context
-
-- Home Assistant uses `requirements_all.txt` (all integration packages),
-  `requirements.txt` (core packages), `requirements_test.txt` (test
-  dependencies), and `requirements_test_all.txt` (all test dependencies) to
-  declare Python dependencies.
-- Each integration lists its packages in `homeassistant/components/<name>/manifest.json`
-  under the `requirements` field.
-- Allowed licenses are maintained in `script/licenses.py` under
-  `OSI_APPROVED_LICENSES_SPDX` (SPDX identifiers) and `OSI_APPROVED_LICENSES`
-  (classifier strings).
-
-## Step 1 — Identify Changed Packages
-
-Use the GitHub tool to fetch the PR diff. Look for lines that were added (`+`)
-or removed (`-`) in **any** of these files:
-- `requirements.txt`
-- `requirements_all.txt`
-- `requirements_test.txt`
-- `requirements_test_all.txt`
-- `homeassistant/package_constraints.txt`
-- `pyproject.toml`
-
-For each changed line that contains a package pin (e.g. `SomePackage==1.2.3`),
-classify it as:
-- **New package**: the package name appears only in `+` lines, with no
-  corresponding `-` line for the same package name.
-- **Version bump**: the same package name appears in both `+` lines (new
-  version) and `-` lines (old version), with different version numbers.
-
-Record the **old version** and **new version** for every version bump — you
-will need these values in Step 4.
-
-
-## Step 2 — Check License via PyPI
-
-For each new or bumped package:
-
-1. Fetch `https://pypi.org/pypi/{package_name}/json` (use the exact
-   package name as it appears on the requirements file).
-2. From the JSON response, extract:
-   - `info.license` — free-text license field
-   - `info.license_expression` — SPDX expression (if present)
-   - `info.classifiers` — filter for entries starting with `"License ::"`,
-     then normalize each match the same way as `script/licenses.py` by
-     extracting the final ` :: ` segment (for example,
-     `"License :: OSI Approved :: MIT License"` → `"MIT License"`).
-3. Determine if the license is in the approved list from `script/licenses.py`:
-   - SPDX identifiers: compare against `OSI_APPROVED_LICENSES_SPDX`
-   - Normalized classifier strings: compare against `OSI_APPROVED_LICENSES`
-4. Flag a package as ❌ if the license is unknown, missing, or not in the
-   approved list. Flag as ⚠️ if the license information is ambiguous or cannot
-   be definitively determined.
-
-## Step 2b — Verify PyPI Release Was Uploaded by CI
-
-For each new or bumped package, verify that the release on PyPI was published
-automatically by a CI pipeline (via OIDC Trusted Publisher), not uploaded
-manually.
-
-1. Fetch the PyPI JSON for the specific version being introduced or bumped:
-   `https://pypi.org/pypi/{package_name}/{version}/json`
-2. Inspect the `urls` array in the response. For each distribution file (wheel
-   or sdist), note the filename.
-3. For each filename, attempt to fetch the PyPI provenance attestation:
-   `https://pypi.org/integrity/{package_name}/{version}/{filename}/provenance`
-   - If the response is HTTP 200 and contains a valid attestation object,
-     inspect `attestation_bundles[*].publisher`. A Trusted Publisher attestation
-     will have a `kind` identifying the CI system (e.g. `"GitHub Actions"`,
-     `"GitLab"`) and a `repository` or `project` field matching the source
-     repository.
-   - If at least one distribution file has a valid Trusted Publisher attestation,
-     mark ✅ CI-uploaded.
-   - If no attestation is found for any file (404 for all), mark ❌ — "Release
-     has no provenance attestation; it may have been uploaded manually".
-   - If an attestation exists but the `publisher` does not identify a recognized
-     CI system or Trusted Publisher, mark ⚠️ — "Attestation present but
-     publisher cannot be verified as automated CI".
-
-Note: if PyPI returns an error fetching the per-version JSON, fall back to the
-latest JSON (`https://pypi.org/pypi/{package_name}/json`) and look up the
-specific version in the `releases` dict.
-
-## Step 3 — Identify Repository URL
-
-For each new or bumped package:
-
-1. From the PyPI JSON at `info.project_urls`, find the source repository URL
-   (keys such as `"Source"`, `"Homepage"`, `"Repository"`, or `"Source Code"`).
-2. Record that repository URL for later checks.
-3. If no suitable repository URL is present, mark ❌ with a note that the
-   source repository URL is missing and cannot be verified.
-
-## Step 4 — Check PR Description
-
-Read the PR body from the GitHub API using the PR number from the workflow
-context (`pull-request-number`). If that value is absent, use the
-`workflow_dispatch` input `pull_request_number`.
-Extract all URLs present in the PR body.
-
-### 4a — New packages: repository link required
-
-For **new packages** (brand-new dependency not previously in any requirements
-file): the PR description must contain a link that points to the package's
-**source repository** as identified in Step 3 (the URL recorded from
-`info.project_urls`). A PyPI page link alone is **not** acceptable — the link
-must point directly to the source repository (e.g. a GitHub or GitLab URL).
-
-- If a URL in the PR body matches (or is a sub-path of) the source repository
-  URL identified via PyPI, mark ✅.
-- If the PR body contains a source repository URL that does **not** match the
-  repository URL found in the package's PyPI metadata (`info.project_urls`),
-  mark ❌ — "PR description links to `<pr_url>` but PyPI reports the source
-  repository as `<pypi_repo_url>`; please use the correct repository URL."
-- If no source repository URL is present in the PR body at all, mark ❌ —
-  "PR description must link to the source repository at `<repo_url>` (found
-  via PyPI). A PyPI page link is not sufficient."
-
-### 4b — Version bumps: changelog or diff link required
-
-For **version bumps**: the PR description must contain a link to a changelog,
-release notes page, or a diff/comparison URL that references the **correct
-versions** being bumped (old → new).
-
-Checks to perform for each bumped package (old version = X, new version = Y):
-1. Extract all URLs from the PR body that contain the repository's domain or
-   path (as identified in Step 3).
-2. Verify that at least one such URL includes both the old version string and
-   new version string in some form — e.g. a GitHub compare URL like
-   `compare/vX...vY`, a releases URL mentioning version Y, or a
-   `CHANGELOG.md` anchor referencing Y.
-3. If no URL matches, check if the PR body contains any changelog/diff link at
-   all for this package.
-
-Outcome:
-- ✅ — a URL pointing to the correct repo with version references covering the
-  exact bump (X → Y).
-- ⚠️ — a changelog/diff link exists but does not clearly reference the correct
-  versions or the correct repository; explain what was found and what is
-  expected.
-- ❌ — no changelog or diff link found at all in the PR description for this
-  package.
-
-### 4c — Diff consistency check
-
-For each **version bump**, verify that the version change recorded in the diff
-(Step 1) is internally consistent:
-- The `-` line must contain the old version and the `+` line must contain the
-  new version for the same package name.
-- Flag ❌ if the diff shows a downgrade (new version < old version) without an
-  explanation, or if the version strings cannot be parsed.
-
-## Step 5 — Verify Source Repository is Publicly Accessible
-
-Before inspecting the release pipeline, confirm that the source repository
-identified in Step 3 is publicly reachable.
-
-For each new or bumped package:
-
-1. Use the source repository URL recorded in Step 3.
-2. If no repository URL was found in `info.project_urls`, mark ❌ — "No source
-   repository URL found in PyPI metadata; a public source repository is
-   required."
-3. If a repository URL was found, perform a GET request to that URL (using
-   web-fetch). If the response is HTTP 200 and returns a publicly accessible
-   page (not a login redirect or error page), mark ✅.
-4. If the response is non-200, the URL redirects to a login/authentication page,
-   or the repository appears private or unavailable, mark ❌ — "Source
-   repository at `<repo_url>` is not publicly accessible. Home Assistant
-   requires all dependencies to have publicly available source code." **Do not
-   proceed with the release pipeline check (Step 6) for this package.**
-
-## Step 6 — Check Release Pipeline Sanity
-
-For each new or bumped package, determine the source repository host from the
-URL identified in Step 3, then inspect whether the project's release/publish CI
-workflow is sane. The checks differ by hosting provider.
-
-### GitHub repositories (`github.com`)
-
-1. Using the GitHub API, list the workflows in the source repository:
-   `GET /repos/{owner}/{repo}/actions/workflows`
-2. Identify any workflow whose name or filename suggests publishing to PyPI
-   (e.g., contains "release", "publish", "pypi", or "deploy").
-3. Fetch the workflow file content and check the following:
-   a. **Trigger sanity**: The publish job should be triggered by `push` to tags,
-      `release: published`, or `workflow_run` on a release job — **not** solely
-      by `workflow_dispatch` with no additional guards. A `workflow_dispatch`
-      trigger alongside other triggers is acceptable. Mark ❌ if the only trigger
-      is manual `workflow_dispatch` with no environment protection rules.
-   b. **OIDC / Trusted Publisher**: The workflow should use OIDC-based publishing.
-      Look for `id-token: write` permission and one of:
-      - `pypa/gh-action-pypi-publish` action
-      - `actions/attest-build-provenance` action
-      - Any step that sets `TWINE_PASSWORD` from `secrets.PYPI_TOKEN` directly
-        (flag ❌ if a long-lived API token is used instead of OIDC).
-      Mark ✅ if OIDC is used, ⚠️ if the publish method cannot be determined,
-      ❌ if a static secret token is the only credential.
-   c. **No manual upload bypass**: Verify there is no step that calls
-      `twine upload` or `pip upload` outside of a properly gated job (e.g., one
-      that requires an environment approval). Flag ⚠️ if such steps exist.
-4. If no publish workflow is found in the repository, mark ⚠️ — "No publish
-   workflow found; it is unclear how this package is released to PyPI."
-
-### GitLab repositories (`gitlab.com` or self-hosted GitLab)
-
-1. Use the GitLab REST API to list CI/CD pipeline configuration files. First
-   resolve the project ID via
-   `GET https://gitlab.com/api/v4/projects/{url-encoded-namespace-and-name}`
-   and note the `id` field.
-2. Fetch the repository's `.gitlab-ci.yml` (and any included files) using
-   `GET https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`
-   (use web-fetch for public repos).
-3. Identify any job whose name or `stage` suggests publishing to PyPI
-   (e.g., "publish", "deploy", "release", "pypi").
-4. For each such job, check:
-   a. **Trigger sanity**: The job should run only on tag pipelines (`only: tags`
-      or `rules: - if: $CI_COMMIT_TAG`) or on protected branches — **not**
-      solely on manual triggers (`when: manual`) with no additional protection.
-      Mark ❌ if the only trigger is manual with no environment or protected-branch
-      guard.
-   b. **Automated credentials**: The job should use GitLab's OIDC ID token
-      (`id_tokens:` block) and `pypa/gh-action-pypi-publish` equivalent, or
-      reference `secrets.PYPI_TOKEN` / `$PYPI_TOKEN` injected from GitLab CI/CD
-      protected variables (flag ❌ if the token is hard-coded or unprotected).
-      Mark ✅ if OIDC or protected CI variables are used, ⚠️ if the method
-      cannot be determined, ❌ if credentials appear to be insecure.
-   c. **No manual upload bypass**: Flag ⚠️ if any job calls `twine upload`
-      without being behind a protected-variable or environment guard.
-5. If no publish job is found, mark ⚠️ — "No publish job found in .gitlab-ci.yml;
-   it is unclear how this package is released to PyPI."
-
-### Other code hosting providers
-
-For repositories hosted on platforms other than GitHub or GitLab (e.g.,
-Bitbucket, Codeberg, Gitea, Sourcehut):
-1. Use web-fetch to retrieve the repository's root page and look for any
-   publicly visible CI configuration files (e.g., `.circleci/config.yml`,
-   `Jenkinsfile`, `azure-pipelines.yml`, `bitbucket-pipelines.yml`,
-   `.builds/*.yml` for Sourcehut).
-2. Apply the same conceptual checks as above:
-   - Does publishing run on automated triggers (tags/releases), not solely
-     manual ones?
-   - Are credentials injected by the CI system (not hard-coded)?
-   - Is there a `twine upload` or equivalent step that could be run manually?
-3. If no CI configuration can be retrieved, mark ⚠️ — "Release pipeline could
-   not be inspected; hosting provider is not GitHub or GitLab."
-
-## Step 7 — Post a Review Comment
-
-**Always** post a review comment using `add_comment`, regardless of whether
-packages pass or fail. Use the following structure:
-
-**Note on deduplication**: The workflow automatically updates any previous
-requirements-check comment on the PR in place (preserving its position in the
-thread). If no previous comment exists, the newly created comment is kept as-is.
-You do not need to search for or update previous comments yourself.
-
-### Comment structure
-
-Begin every comment with the HTML marker `<!-- requirements-check -->` on its
-own line (this is used by the workflow to find the previous comment and update
-it on the next run).
-
-### 7a — Overall summary line
-
-Begin the comment with a single summary line, before anything else:
-
-- If everything passed: `All requirements checks passed. ✅`
-- If there are failures or warnings: `⚠️ Some checks require attention — see the details below.`
-
-### 7b — Summary table
-
-Render a compact table where every check column contains **only the status
-icon** (✅, ⚠️, or ❌). No explanatory text belongs inside the table cells —
-all detail goes in the per-package sections below.
-
-Use `—` (em dash) when a check was skipped (e.g. Release Pipeline is skipped
-when the repository is not publicly accessible).
-
-```
-<!-- requirements-check -->
-## Requirements Check
-
-| Package | Type | Old→New | License | Repo Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
-|---------|------|---------|---------|-------------|-----------|------------------|---------|-----------------|
-| PackageA | bump | 1.2.3→1.3.0 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| PackageB | new  | —→4.5.6 | ❌ | ✅ | ❌ | ⚠️ | ❌ | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ | ❌ | — | — | ⚠️ | ✅ |
-```
-
-### 7c — Per-package detail sections
-
-After the table, add one collapsible `<details>` block per package.
-
-- If **all checks passed** for that package, render the block **collapsed**
-  (no `open` attribute) so the comment stays concise.
-- If **any check failed or produced a warning**, render the block **open**
-  (`<details open>`) so the contributor sees the issues immediately.
-
-Each block must include the full detail for every check: the license found, the
-repository URL, whether a provenance attestation was found, the release
-pipeline findings, the PR link found (or missing), and whether the diff is
-consistent. For failed or warned checks, explain exactly what the contributor
-must fix, including the expected source repository URL, expected version range,
-etc.
-
-Template (repeat for each package):
-
-```
-<details open>
-<summary><strong>PackageB 📦 new —→4.5.6</strong></summary>
-
-- **License**: ❌ License is `UNKNOWN` — not in the approved list. Check PyPI metadata and `script/licenses.py`.
-- **Repository Public**: ✅ https://github.com/example/packageb is publicly accessible.
-- **CI Upload**: ❌ No provenance attestation found for any distribution file. The release may have been uploaded manually.
-- **Release Pipeline**: ⚠️ No publish workflow found in the repository; it is unclear how this package is released to PyPI.
-- **PR Link**: ❌ PR description must link to the source repository at https://github.com/example/packageb (a PyPI page link is not sufficient).
-- **Diff Consistent**: ✅
-
-</details>
-```
-
-Collapsed example (all checks passed):
-
-```
-<details>
-<summary><strong>PackageA 📦 bump 1.2.3→1.3.0</strong></summary>
-
-- **License**: ✅ MIT
-- **Repository Public**: ✅ https://github.com/example/packagea
-- **CI Upload**: ✅ Trusted Publisher attestation found (GitHub Actions).
-- **Release Pipeline**: ✅ OIDC via `pypa/gh-action-pypi-publish`; triggered on `release: published`; `environment: release` gate.
-- **PR Link**: ✅ https://github.com/example/packagea/compare/v1.2.3...v1.3.0
-- **Diff Consistent**: ✅
-
-</details>
-```
+# Check requirements (AW)
+
+You are a code review assistant for the Home Assistant project. The
+deterministic stage has already evaluated every check it can on its own
+and produced an artifact containing the PR number, per-package check
+results, and a pre-rendered comment with placeholders. **Your only job is
+to read that artifact, resolve any `needs_agent` checks, and post the
+final comment.**
+
+## Step 1 — Read the deterministic-stage artifact
+
+The deterministic stage uploaded its results to the runner at
+`/tmp/gh-aw/deterministic/results.json`.
+
+The JSON has this shape:
+
+- `pr_number` — the PR being checked. The `add_comment` safe-output is
+  already targeted at this PR (a pre-job extracts `pr_number` from the
+  artifact and the workflow wires it into the safe-output config via
+  `needs.extract_pr_number.outputs.pr_number`), so **you do not need to
+  set `item_number` yourself** — just emit `add_comment` with the
+  rendered body.
+- `needs_agent` — `true` iff any package's check needs resolution.
+- `packages[]` — one entry per changed package. Each entry has:
+  - `name`, `old_version` (`null` for a newly added package; otherwise the
+    previous pin), `new_version`, `repo_url`, `publisher_kind`.
+  - `checks` — a dict keyed by **check kind** (string). Each value has a
+    `status` (`pass`, `warn`, `fail`, or `needs_agent`) and `details`.
+- `rendered_comment` — the final PR comment body, already rendered. For
+  every check whose status is `needs_agent` it contains two placeholders
+  you must replace:
+  - `{{CHECK_CELL:<pkg-name>:<check-kind>}}` — one cell of the summary
+    table. Replace with exactly one of `✅`, `⚠️`, `❌`.
+  - `{{CHECK_DETAIL:<pkg-name>:<check-kind>}}` — the body of one bullet
+    in the package's `<details>` block. Replace with
+    `<icon> <one-line explanation>` (the bullet's leading
+    `- **<label>**:` is already rendered — replace only the placeholder).
+
+You **must not** modify any other content in `rendered_comment`. Do not
+re-evaluate checks that already have a deterministic status. Do not add
+or remove packages.
+
+## Step 2 — Resolve each `needs_agent` check
+
+For each `package` in `packages`:
+
+For each `(check_kind, result)` in `package.checks` where
+`result.status == "needs_agent"`:
+
+1. Look up `## Check kind: <check_kind>` in the **Check instructions**
+   section below.
+2. **If no matching section exists**: emit a single `add_comment` whose
+   body is:
+
+   ```
+   <!-- requirements-check -->
+   ## Check requirements
+
+   ❌ Internal error: the deterministic artifact contains a check kind
+   (`<check_kind>` on package `<pkg-name>`) that this workflow has no
+   instructions for. Update `.github/workflows/check-requirements.md`
+   to add a matching `## Check kind: <check_kind>` section, or remove
+   the kind from the deterministic stage.
+   ```
+
+   Then stop. **Do not improvise** a verdict for an unknown check kind.
+3. Otherwise, follow the instructions in that section. They tell you
+   which icon (✅/⚠️/❌) and one-line explanation to produce.
+
+## Step 3 — Post the comment
+
+1. Replace every `{{CHECK_CELL:…}}` and `{{CHECK_DETAIL:…}}` placeholder
+   in `rendered_comment` with the resolved value.
+2. Emit the resulting markdown using `add_comment` — set `body` to the
+   merged `rendered_comment` verbatim (the leading
+   `<!-- requirements-check -->` marker must be preserved). The PR
+   target is already set by the workflow; do not pass `item_number`.
+
+If the artifact's top-level `needs_agent` is `false` (no checks need
+you), emit `rendered_comment` unchanged.
+
+## Check instructions
+
+### Check kind: `repo_public`
+
+Verify that the package's source repository is publicly reachable.
+
+1. Read `package.repo_url`.
+2. Use the `web-fetch` tool to GET that URL.
+3. Decide the verdict:
+   - HTTP 200, returns a public repository page → ✅
+     `<repo_url> is publicly accessible.`
+   - HTTP 4xx/5xx, or the response redirects to a login / sign-in page →
+     ❌ `Source repository at <repo_url> is not publicly accessible.
+     Home Assistant requires all dependencies to have publicly available
+     source code.`
+   - Any other inconclusive result → ⚠️ with a one-line description.
+
+If `repo_public` resolves to ❌ for a package, **also** mark that
+package's `release_pipeline` and `async_blocking` cells/details as `—`
+(em dash) and explain `Skipped because the source repository is not
+publicly accessible.` — neither check can be performed without a public
+repo.
+
+### Check kind: `pr_link`
+
+Verify the PR description contains the right link for the change.
+
+1. Fetch the PR body via the GitHub MCP tool, using the `pr_number`
+   field from the artifact.
+2. Extract all URLs from the body.
+3. For a **new package** (`package.old_version` is `null`):
+   - The PR body must contain a URL that points at `package.repo_url`
+     (any sub-path of the same `owner/repo` on the same host is
+     acceptable). A PyPI link is **not** sufficient.
+   - ✅ if such a URL is present.
+   - ❌ otherwise:
+     `PR description must link to the source repository at <repo_url>.
+     A PyPI page link is not sufficient.`
+4. For a **version bump** (`package.old_version` is not `null`):
+   - The PR body must contain a URL on the same host as
+     `package.repo_url` that references **both** `package.old_version`
+     and `package.new_version` (e.g. a GitHub compare URL
+     `compare/vX...vY`, a release / changelog URL containing both
+     versions, etc.).
+   - ✅ if such a URL is present and the versions match the actual bump.
+   - ❌ otherwise:
+     `PR description should link to a changelog or compare URL on
+     <repo_url> that mentions both <old_version> and <new_version>.`
+
+### Check kind: `release_pipeline`
+
+Inspect the upstream project's release / publish CI pipeline.
+
+For each package needing inspection, determine the source repository
+host from `package.repo_url`, then apply the corresponding checklist.
+
+#### GitHub repositories (`github.com`)
+
+1. List workflows: `GET /repos/{owner}/{repo}/actions/workflows`.
+2. Identify any workflow whose name or filename suggests publishing to
+   PyPI (`release`, `publish`, `pypi`, or `deploy`).
+3. Fetch the workflow file and check:
+   - **Trigger sanity**: triggered by `push` to tags,
+     `release: published`, or `workflow_run` on a release job —
+     **not** solely `workflow_dispatch` with no environment-protection
+     guard.
+   - **OIDC / Trusted Publisher**: look for `id-token: write` and one of
+     `pypa/gh-action-pypi-publish`, `actions/attest-build-provenance`,
+     or `TWINE_PASSWORD` from a static `secrets.PYPI_TOKEN`.
+   - **No manual upload bypass**: no ungated `twine upload` or
+     `pip upload`.
+4. Verdict:
+   - ✅ if OIDC + sane triggers + no bypass.
+   - ⚠️ if static token but version bump, or details unclear.
+   - ❌ if static token on a new package, or only-manual triggers with
+     no environment protection.
+
+#### GitLab repositories (`gitlab.com` or self-hosted GitLab)
+
+1. Resolve the project ID via
+   `GET https://gitlab.com/api/v4/projects/{url-encoded-namespace-and-name}`.
+2. Fetch `.gitlab-ci.yml` via
+   `GET https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`.
+3. Apply the same conceptual checks: tag-only / protected-branch
+   triggers, GitLab OIDC `id_tokens` or CI/CD protected `PYPI_TOKEN`, no
+   ungated `twine upload`. Same verdict rules as GitHub.
+
+#### Other code hosting providers (Bitbucket, Codeberg, Gitea, Sourcehut, …)
+
+1. Use `web-fetch` to retrieve any visible CI configuration
+   (`.circleci/config.yml`, `Jenkinsfile`, `azure-pipelines.yml`,
+   `bitbucket-pipelines.yml`, `.builds/*.yml`).
+2. Apply the conceptual checks: automated triggers, CI-injected
+   credentials, no manual `twine upload`.
+3. If no CI config can be retrieved: ⚠️ `Release pipeline could not be
+   inspected; hosting provider is not GitHub or GitLab.`
+
+### Check kind: `async_blocking`
+
+Verify whether the dependency performs blocking I/O inside async code
+paths. Home Assistant runs on a single asyncio event loop, so a library
+that exposes an `async` surface must not call blocking APIs from inside
+its `async def` functions — that stalls the whole loop. A purely sync
+library is fine: Home Assistant integrations are expected to wrap such
+calls in an executor.
+
+**Two modes — pick by inspecting `package.old_version`:**
+
+- `old_version` is `null` → **new package**: review the *entire current
+  source tree*. Nothing about this dependency has been vetted before.
+- `old_version` is a string → **version bump**: review only the *diff
+  between `old_version` and `new_version`*. The previous version was
+  already accepted, so blocking calls that were present in
+  `old_version` are not regressions; report only what `new_version`
+  introduces.
+
+#### Step 1 — Decide whether the library exposes an async surface
+
+Use the `github` MCP tool (for `github.com` repos) or `web-fetch`
+(other hosts) on `package.repo_url`. Always inspect the tag /
+ref matching `new_version` (e.g. `v{new_version}` or `{new_version}`).
+
+- Locate the top-level package directory (usually named after the
+  import name, often equal or close to `package.name`).
+- Check `pyproject.toml` / `setup.py` / `setup.cfg` / `README*` for
+  async indicators (`Framework :: AsyncIO` trove classifier, `asyncio`
+  / `aiohttp` / `httpx` / `anyio` in dependencies, an async usage
+  example in the README).
+- Grep the package source for `async def`. A handful of `async def`
+  entries in the public modules is enough to treat the library as
+  having an async surface.
+
+If the library is **sync-only** (no `async def` in its public modules
+and no async framework dependency) → ✅
+`Sync-only library; Home Assistant integrations must wrap calls in an
+executor.` *This verdict is the same in both modes.*
+
+#### Step 2a — Mode: new package (`old_version` is `null`)
+
+Inspect **every `async def` in the public modules** for blocking
+patterns. Walk transitively into helpers the async functions call.
+
+#### Step 2b — Mode: version bump (`old_version` is a string)
+
+Fetch the diff between the two tags and review **only changed lines**:
+
+- GitHub: `GET /repos/{owner}/{repo}/compare/{old_tag}...{new_tag}` via
+  the `github` MCP tool, or
+  `https://github.com/{owner}/{repo}/compare/{old_tag}...{new_tag}.diff`
+  via `web-fetch`. Try the common tag formats in order until one
+  resolves: `v{version}`, `{version}`, `release-{version}`.
+- GitLab: `https://gitlab.com/{namespace}/{project}/-/compare/{old_tag}...{new_tag}.diff`.
+- Other hosts: use the project's equivalent compare URL via
+  `web-fetch`.
+
+If neither tag format resolves on the host, fall back to a full review
+(Step 2a) and mention in the detail that the diff was unavailable.
+
+When reviewing the diff, only flag blocking patterns that appear in
+**added lines** *inside or reachable from* an `async def`. A blocking
+call that existed in `old_version` and is unchanged is not a regression
+for this bump.
+
+#### Step 3 — Blocking patterns to look for
+
+In both modes, the patterns to flag inside `async def` bodies are:
+
+- Sync HTTP: `requests.`, `urllib.request`, `urllib3.` direct use,
+  `http.client.`, sync `httpx.Client(` / `httpx.get(` (NOT the
+  `AsyncClient`), `pycurl`.
+- `time.sleep(` (must be `await asyncio.sleep(`).
+- Sync sockets: bare `socket.socket` reads/writes, `ssl.wrap_socket`,
+  blocking `select.select`.
+- File I/O: `open(` / `pathlib.Path.read_*` / `.write_*` for
+  non-trivial sizes (small one-shot reads during import are
+  acceptable; reads/writes on the request path are not — prefer
+  `aiofiles` / executor).
+- Sync DB drivers used directly: `sqlite3`, `psycopg2`, `pymysql`,
+  `pymongo` (sync client), `redis.Redis` (sync client).
+- `subprocess.run` / `subprocess.call` / `os.system` (must be
+  `asyncio.create_subprocess_*`).
+
+A call that is clearly dispatched to an executor
+(`run_in_executor`, `asyncio.to_thread`, `anyio.to_thread.run_sync`)
+does NOT count as blocking.
+
+#### Step 4 — Verdict
+
+- ✅ — no offending blocking pattern in the surface being reviewed
+  (whole tree for a new package, added lines for a bump). For a bump,
+  phrase the detail as `No new blocking calls introduced in
+  {old_version} → {new_version}.`.
+- ⚠️ — blocking calls exist only in sync helpers that the async API
+  does not call, or only on a clearly non-hot path (e.g. one-shot
+  setup before the event loop is running). Cite at least one
+  `<file>:<line>` and explain why it is not on the hot path.
+- ❌ — a blocking call is reachable from an `async def` that is part
+  of the public API on the request / polling path (for a bump: the
+  call was introduced or moved onto the hot path by this version).
+  Cite the offending `<file>:<line>` as a clickable link on the repo
+  host so the contributor can jump to it.
 
 ## Notes
 
-- Be constructive and helpful. Provide direct links where possible so the
-  contributor can quickly fix the issue.
-- If PyPI returns an error for a package, mention that it could not be found and
-  suggest the contributor verify the package name.
-- For packages that only appear in `homeassistant/package_constraints.txt` or
-  `pyproject.toml` without being tied to a specific integration, the PR
-  description link requirement still applies.
-- When checking test-only packages (from `requirements_test.txt` or
-  `requirements_test_all.txt`), apply the same license, repository, and PR
-  description checks as for production dependencies.
-- A package that appears in both a production file and a test file should only
-  be reported once; use the production file entry as the canonical one.
-- This workflow is only triggered when a commit actually changes one of the
-  tracked requirements files (for `synchronize` events GitHub compares the
-  before/after SHAs of the push, not the entire PR diff). Members can manually
-  retrigger the workflow via `workflow_dispatch` with the PR number to re-run
-  the check after updating the PR description or fixing issues without changing
-  any requirements files. On a retrigger the existing comment is updated in
-  place so there is always exactly one requirements-check comment in the PR.
+- Be constructive and helpful. Reference the inspected workflow / CI
+  file by URL where useful so the contributor can fix the issue.
+- The dedup of the requirements-check comment is handled by gh-aw's
+  `add_comment` safe-output via the `<!-- requirements-check -->`
+  marker on the first line of `rendered_comment`.
+- If the deterministic workflow concluded with a non-success status,
+  this workflow's `if:` guard on `Download deterministic-results
+  artifact` skipped the download. If you find no file at
+  `/tmp/gh-aw/deterministic/results.json`, emit nothing — the post-step
+  verification is also gated and will not complain.

@@ -78,7 +78,6 @@ TEST_SENSORS = (
 )
 TEST_WEATHER = TemplatePlatformSetup(
     WEATHER_DOMAIN,
-    None,
     "template_weather",
     make_test_trigger(TEST_STATE_ENTITY_ID, *TEST_SENSORS),
 )
@@ -104,19 +103,6 @@ async def setup_weather(
 ) -> None:
     """Do setup of number integration."""
     await setup_entity(hass, TEST_WEATHER, style, 1, config)
-
-
-@pytest.mark.parametrize(
-    ("style", "config"),
-    [(ConfigurationStyle.LEGACY, TEST_LEGACY_REQUIRED)],
-)
-@pytest.mark.usefixtures("setup_weather")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("weather")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(

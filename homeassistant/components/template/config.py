@@ -18,6 +18,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -59,6 +60,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    device_tracker as device_tracker_platform,
     event as event_platform,
     fan as fan_platform,
     image as image_platform,
@@ -198,6 +200,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+            ),
+            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
             vol.Optional(EVENT_DOMAIN): vol.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
