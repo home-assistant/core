@@ -3,6 +3,7 @@
   "name": "Analytics",
   "after_dependencies": ["energy", "hassio", "recorder"],
   "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
   "dependencies": ["api", "websocket_api", "http"],
   "documentation": "https://www.home-assistant.io/integrations/analytics",
   "integration_type": "system",
@@ -14,5 +15,6 @@
       "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new"
     }
   },
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "single_config_entry": true
 }
