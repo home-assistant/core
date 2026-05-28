@@ -54,7 +54,9 @@ class KlikAanKlikUitSwitch(SwitchEntity, RestoreEntity):
             manufacturer="KlikAanKlikUit",
             model="KlikAanKlikUit switch",
             name=entry.title,
-            sw_version=format_device_summary(self._device_id, self._channel, self._group),
+            sw_version=format_device_summary(
+                self._device_id, self._channel, self._group
+            ),
         )
 
     async def async_added_to_hass(self) -> None:
