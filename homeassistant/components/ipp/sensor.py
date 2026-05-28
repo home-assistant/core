@@ -171,7 +171,6 @@ async def async_setup_entry(
     sensors.extend(
         IPPPageCountSensor(coordinator, description)
         for description in PAGE_COUNT_SENSORS
-        if description.ipp_attribute in coordinator.data.page_counts
     )
 
     async_add_entities(sensors, True)
