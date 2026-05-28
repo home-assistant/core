@@ -246,6 +246,7 @@ async def test_trend_energy_sensors(
         SenseAPIException("api error"),
         SenseAPITimeoutException("timeout"),
         TimeoutError("timeout"),
+        socket.gaierror("addr info error"),
     ],
 )
 async def test_trend_coordinator_update_failure(

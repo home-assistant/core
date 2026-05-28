@@ -186,8 +186,11 @@ async def test_form_mfa_exceptions(
     assert result["data"] == MOCK_CONFIG
 
 
-@pytest.mark.usefixtures("mock_flow_sense", "mock_setup_entry")
-async def test_reauth_no_form(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_flow_sense")
+async def test_reauth_no_form(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test reauth where no form needed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -199,6 +202,7 @@ async def test_reauth_no_form(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
