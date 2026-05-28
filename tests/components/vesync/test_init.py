@@ -54,6 +54,7 @@ async def test_async_setup_entry__no_devices(
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
@@ -81,6 +82,7 @@ async def test_async_setup_entry__loads_fans(
     manager._dev_list["fans"].append(fan)
 
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()

@@ -96,4 +96,5 @@ async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
     )
 
     with pytest.raises(ConfigEntryAuthFailed):
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await async_setup_entry(hass, entry)
