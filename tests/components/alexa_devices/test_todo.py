@@ -71,7 +71,6 @@ def mock_todo_items():
                 version=2,
             ),
         },
-        "custom_list_id": {},
     }
 
 
@@ -285,7 +284,7 @@ async def test_update_todo_item_errors(
         await alexa_entity.async_delete_todo_items(["non_existent"])
 
     # Lookup not found
-    alexa_entity._list.id = "unknown_list_id"
+    alexa_entity.coordinator._todo_list_items.pop(alexa_entity._list.id, None)
     with pytest.raises(
         ServiceValidationError, match="the cached list items could not be found"
     ):
