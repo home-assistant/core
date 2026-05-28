@@ -69,7 +69,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         self, coordinator: AmazonDevicesCoordinator, alexa_list: AmazonListInfo
     ) -> None:
         """Initialize an Alexa to-do list entity."""
-        self._coordinator = coordinator
         self._list = alexa_list
 
         if alexa_list.list_type == AmazonListType.CUSTOM:
@@ -93,7 +92,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return all to-do items in the list."""
 
-        todo_items = self._coordinator.todo_list_items.get(self._list.id, {}).values()
+        todo_items = self.coordinator.todo_list_items.get(self._list.id, {}).values()
 
         return [
             TodoItem(
@@ -118,7 +117,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="todo_item_summary_empty",
             )
 
-        await self._coordinator.api.add_todo_list_item(self._list.id, item.summary)
+        await self.coordinator.api.add_todo_list_item(self._list.id, item.summary)
 
         _LOGGER.debug(
             "Successfully created todo item: %s for list: %s",
@@ -130,7 +129,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         """Delete items from the to-do list."""
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
 
-        list_items_lookup = self._coordinator.todo_list_items.get(self._list.id)
+        list_items_lookup = self.coordinator.todo_list_items.get(self._list.id)
 
         if list_items_lookup is None:
             raise ServiceValidationError(
@@ -157,7 +156,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 uid,
                 existing_item.version,
             )
-            await self._coordinator.api.delete_todo_list_item(
+            await self.coordinator.api.delete_todo_list_item(
                 self._list.id, uid, existing_item.version
             )
             _LOGGER.debug(
@@ -175,7 +174,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="todo_item_summary_uid_required",
             )
 
-        list_items_lookup = self._coordinator.todo_list_items.get(self._list.id)
+        list_items_lookup = self.coordinator.todo_list_items.get(self._list.id)
 
         if list_items_lookup is None:
             raise ServiceValidationError(
@@ -207,7 +206,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 "Updating item %s with checked status %s", item.uid, item.status
             )
 
-            await self._coordinator.api.set_todo_list_item_checked_status(
+            await self.coordinator.api.set_todo_list_item_checked_status(
                 self._list.id,
                 item.uid,
                 item.status == TodoItemStatus.COMPLETED,
@@ -230,7 +229,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             else:
                 version = existing_item.version
 
-            await self._coordinator.api.rename_todo_list_item(
+            await self.coordinator.api.rename_todo_list_item(
                 self._list.id, item.uid, item.summary, version
             )
             _LOGGER.debug(
