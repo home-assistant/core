@@ -626,15 +626,20 @@ async def test_migration_from_future_version(
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migration_1_2(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("sensor_device")
+async def test_migration_1_2(
+    hass: HomeAssistant,
+    sensor_entity_entry: er.RegistryEntry,
+    switch_entity_entry: er.RegistryEntry,
+) -> None:
     """Test migration from 1.2 to 1.3 copies CONF_MIN_DUR to CONF_DUR_COOLDOWN."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "My generic thermostat",
-            "heater": "switch.test",
-            "target_sensor": "sensor.test",
+            "heater": switch_entity_entry.entity_id,
+            "target_sensor": sensor_entity_entry.entity_id,
             CONF_MIN_DUR: {"hours": 0, "minutes": 5, "seconds": 0},
             "ac_mode": False,
             "cold_tolerance": 0.3,
@@ -646,10 +651,10 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    # Run migration
-    # pylint: disable-next=home-assistant-tests-direct-async-migrate-entry
-    result = await generic_thermostat.async_migrate_entry(hass, config_entry)
-    assert result is True
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # After migration, cooldown should be set to min_cycle_duration
     # and minor version bumped
@@ -658,4 +663,5 @@ async def test_migration_1_2(hass: HomeAssistant) -> None:
         "minutes": 5,
         "seconds": 0,
     }
+    assert config_entry.version == 1
     assert config_entry.minor_version == 3
