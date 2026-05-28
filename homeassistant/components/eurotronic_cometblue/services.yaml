@@ -12,346 +12,256 @@ set_schedule:
   fields:
     monday:
       example: |
-        start1: 07:00:00
-        end1: 09:00:00
-        start2: 10:00:00
-        end2: 12:00:00
-        start3: 13:00:00
-        end3: 17:00:00
-        start4: 20:00:00
-        end4: 23:00:00
+        - start: 07:00:00
+          end: 09:00:00
+        - start: 10:00:00
+          end: 12:00:00
+        - start: 13:00:00
+          end: 17:00:00
+        - start: 20:00:00
+          end: 23:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     tuesday:
       example: |
-        start1: 07:00:00
-        end1: 09:00:00
-        start2: 10:00:00
-        end2: 12:00:00
-        start3: 13:00:00
-        end3: 17:00:00
-        start4: 20:00:00
-        end4: 23:00:00
+        - start: 07:00:00
+          end: 09:00:00
+        - start: 10:00:00
+          end: 12:00:00
+        - start: 13:00:00
+          end: 17:00:00
+        - start: 20:00:00
+          end: 23:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     wednesday:
       example: |
-        start1: 07:00:00
-        end1: 09:00:00
-        start2: 10:00:00
-        end2: 12:00:00
-        start3: 13:00:00
-        end3: 17:00:00
-        start4: 20:00:00
-        end4: 23:00:00
+        - start: 07:00:00
+          end: 09:00:00
+        - start: 10:00:00
+          end: 12:00:00
+        - start: 13:00:00
+          end: 17:00:00
+        - start: 20:00:00
+          end: 23:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     thursday:
       example: |
-        start1: 07:00:00
-        end1: 09:00:00
-        start2: 10:00:00
-        end2: 12:00:00
-        start3: 13:00:00
-        end3: 17:00:00
-        start4: 20:00:00
-        end4: 23:00:00
+        - start: 07:00:00
+          end: 09:00:00
+        - start: 10:00:00
+          end: 12:00:00
+        - start: 13:00:00
+          end: 17:00:00
+        - start: 20:00:00
+          end: 23:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     friday:
-      example: "{}"
+      example: |
+        - delete: true
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     saturday:
       example: |
-        start1: 09:00:00
-        end1: 12:00:00
-        start2: 17:00:00
-        end2: 19:00:00
+        - start: 09:00:00
+          end: 12:00:00
+        - start: 17:00:00
+          end: 19:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:
     sunday:
       example: |
-        start1: 07:00:00
-        end1: 09:00:00
-        start2: 10:00:00
-        end2: 12:00:00
-        start3: 13:00:00
-        end3: 17:00:00
-        start4: 20:00:00
-        end4: 23:00:00
+        - start: 07:00:00
+          end: 09:00:00
+        - start: 10:00:00
+          end: 12:00:00
+        - start: 13:00:00
+          end: 17:00:00
+        - start: 20:00:00
+          end: 23:00:00
       required: false
       selector:
         object:
-          multiple: true
           fields:
-            start1:
+            schedule:
+              label: Schedule
               required: false
               selector:
-                time:
-            end1:
-              required: false
-              selector:
-                time:
-            start2:
-              required: false
-              selector:
-                time:
-            end2:
-              required: false
-              selector:
-                time:
-            start3:
-              required: false
-              selector:
-                time:
-            end3:
-              required: false
-              selector:
-                time:
-            start4:
-              required: false
-              selector:
-                time:
-            end4:
-              required: false
-              selector:
-                time:
+                object:
+                  label_field: start
+                  description_field: end
+                  multiple: true
+                  fields:
+                    start:
+                      label: Start
+                      required: false
+                      selector:
+                        time:
+                    end:
+                      label: End
+                      required: false
+                      selector:
+                        time:
             delete:
+              label: Delete
               required: false
               selector:
                 boolean:

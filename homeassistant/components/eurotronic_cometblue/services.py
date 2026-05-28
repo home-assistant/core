@@ -2,7 +2,7 @@
 
 from datetime import datetime, time
 import logging
-from typing import Final
+from typing import Final, TypedDict
 
 import voluptuous as vol
 
@@ -48,6 +48,20 @@ ATTR_ALL_DAYS: Final = {
 }
 
 
+class ScheduleEntry(TypedDict, total=False):
+    """A single schedule entry passed to the service."""
+
+    start: time
+    end: time
+
+
+class DaySchedule(TypedDict, total=False):
+    """A single day's schedule payload."""
+
+    schedule: list[ScheduleEntry]
+    delete: bool
+
+
 def _validate_half_precision(value: float) -> float:
     """Return True if the value is a half precision float."""
 
@@ -62,65 +76,68 @@ def _validate_half_precision(value: float) -> float:
     return value
 
 
-def _validate_cometblue_schedule(schedule: dict[str, time]) -> dict[str, time] | None:
-    """Validate the schedule of time ranges.
+def _validate_cometblue_schedule(
+    day_schedule: DaySchedule,
+) -> dict[str, time] | None:
+    """Validate day schedule time ranges.
 
     Ensure they have no overlap and the end time is greater than the start time.
     """
-    # If delete is set, return empty schedule
-    if schedule.pop(ATTR_DELETE, False):
+    if day_schedule.get(ATTR_DELETE):
         return {}
 
-    # Emtpty schedule is valid, but should not do anything
+    schedule = day_schedule.get(ATTR_SCHEDULE, [])
+
     if not schedule:
         return None
 
-    previous_to = None
-    for i in range(1, 5):
-        curr_start = f"{ATTR_START}{i}"
-        curr_end = f"{ATTR_END}{i}"
+    if len(schedule) > 4:
+        raise ServiceValidationError("A maximum of 4 schedule entries is supported")
 
-        curr_keys = {curr_start, curr_end}.intersection(schedule)
+    schedule = sorted(
+        schedule,
+        key=lambda entry: entry.get(ATTR_START, time.min),
+    )
 
-        # No keys is valid (i.e. empty schedule)
-        if len(curr_keys) == 0:
-            continue
-
-        # Check that both start and end entries are present
-        if len(curr_keys) != 2:
+    normalized_schedule: dict[str, time] = {}
+    previous_to: time | None = None
+    for i, entry in enumerate(schedule, start=1):
+        if ATTR_START not in entry or ATTR_END not in entry:
+            curr_keys = {ATTR_START, ATTR_END}.intersection(entry)
             raise ServiceValidationError(
                 f"Missing start/end entry, only received {', '.join(repr(c) for c in curr_keys)}"
             )
 
+        start = entry[ATTR_START]
+        end = entry[ATTR_END]
+
         # Check if the start time of the current event is before the end time of the current event
-        if schedule[curr_start] >= schedule[curr_end]:
+        if start >= end:
             raise ServiceValidationError(
-                f"Invalid time range {i}, {schedule[curr_start]} is after"
-                f" {schedule[curr_end]}"
+                f"Invalid time range {i}, {start} is after {end}"
             )
 
         # Check if the from time of the event is after the to time of the previous event
-        if previous_to is not None and previous_to > schedule[curr_start]:
+        if previous_to is not None and previous_to > start:
             raise ServiceValidationError(
-                f"Overlapping times found in schedule, '{curr_start}' is before '{ATTR_END}{i - 1}'"
+                f"Overlapping times found in schedule, {start} is earlier than previous entry {previous_to} ends"
             )
 
-        previous_to = schedule[curr_end]
+        normalized_schedule[f"{ATTR_START}{i}"] = start
+        normalized_schedule[f"{ATTR_END}{i}"] = end
+        previous_to = end
 
-    return schedule
-
-
-def _valid_cometblue_schedule_keys() -> list[str]:
-    """Return a list of valid schedule keys."""
-    return [f"{ATTR_START}{i}" for i in range(1, 5)] + [
-        f"{ATTR_END}{i}" for i in range(1, 5)
-    ]
+    return normalized_schedule
 
 
+SCHEDULE_ENTRY_SCHEMA = {
+    vol.Optional(ATTR_START): cv.time,
+    vol.Optional(ATTR_END): cv.time,
+}
 SCHEDULE_DAY_SCHEMA = vol.All(
     {
+        vol.Optional(ATTR_SCHEDULE): [SCHEDULE_ENTRY_SCHEMA],
         vol.Optional(ATTR_DELETE): cv.boolean,
-        **{vol.Optional(item): cv.time for item in _valid_cometblue_schedule_keys()},
     },
     _validate_cometblue_schedule,
 )
