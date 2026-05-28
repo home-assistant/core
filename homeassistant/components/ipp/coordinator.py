@@ -6,7 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyipp import IPP, IPPConnectionError, IPPError, Printer as IPPPrinter
+from pyipp import (
+    IPP,
+    IPPConnectionError,
+    IPPError,
+    IPPResponseError,
+    Printer as IPPPrinter,
+)
 from pyipp.enums import IppOperation
 
 from homeassistant.config_entries import ConfigEntry
@@ -101,7 +107,12 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
                     },
                 },
             )
-        except (IPPError, IPPConnectionError, asyncio.TimeoutError):
+        except (
+            IPPError,
+            IPPConnectionError,
+            IPPResponseError,
+            asyncio.TimeoutError,
+        ):
             _LOGGER.debug(
                 "Failed to fetch page count attributes from printer", exc_info=True
             )
