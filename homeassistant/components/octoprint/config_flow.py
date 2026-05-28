@@ -155,8 +155,11 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await self._sessions.pop().close()
 
-        await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
+        if discovery and (unique_id := discovery.upnp_uuid):
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+        else:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 

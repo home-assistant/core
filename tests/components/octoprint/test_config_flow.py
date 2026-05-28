@@ -608,3 +608,50 @@ async def test_reauth_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_form_discovery_plugin_disabled(hass: HomeAssistant) -> None:
+    """Test setup succeeds when discovery plugin is disabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_server_info",
+            return_value=True,
+        ),
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=None,
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "1.1.1.1"
