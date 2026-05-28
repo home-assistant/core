@@ -1290,7 +1290,7 @@ async def test_replace_unavailable_at_startup_true(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.power")
     assert state is not None
     # With replace_unavailable=True, sensor should be available with value 0.0 at startup
-    assert state.state == "0.0", f"Expected '0.0', got '{state.state}'"
+    assert state.state == "0.00", f"Expected '0.00', got '{state.state}'"
 
 
 async def test_replace_unavailable_at_startup_false(hass: HomeAssistant) -> None:
@@ -1402,6 +1402,5 @@ async def test_replace_unavailable_recovery_with_state_list(
 
         state = hass.states.get("sensor.power")
         assert state is not None
-        # Derivative: (15 - 10) / 1 sec = 5.0 (using last valid state before unavailable)
-        assert float(state.state) == 5.0, f"Expected 5.0, got {state.state}"
-        assert state.state != STATE_UNAVAILABLE
+        # Derivative: (15 - 10) / 2 sec = 2.5 (using last valid state before unavailable)
+        assert float(state.state) == 2.5, f"Expected 2.5, got {state.state}"

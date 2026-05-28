@@ -55,6 +55,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "time_window": {"seconds": 0.0},
         "unit_time": "min",
         "max_sub_interval": {"minutes": 1.0},
+        "replace_unavailable": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -141,6 +142,7 @@ async def test_options(
         "source": "sensor.valid",
         "time_window": {"seconds": 10.0},
         "unit_time": "h",
+        "replace_unavailable": False,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
