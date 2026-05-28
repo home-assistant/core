@@ -10,8 +10,10 @@ See `docs/ble-proxy-protocol.md` in the matter-server repository for the
 protocol specification.
 """
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from bleak.backends.device import BLEDevice
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
@@ -104,9 +106,18 @@ def _to_advertisement_data(
 
 def create_matter_ble_proxy(hass: HomeAssistant, ws_url: str) -> MatterBleProxy:
     """Return a `MatterBleProxy` wired into Home Assistant's bluetooth component."""
+
+    def _background_task_factory(
+        coro: Coroutine[Any, Any, Any],
+    ) -> asyncio.Task[Any]:
+        # Background task: the library's `_message_loop` runs for the lifetime
+        # of the connection, so `async_create_task` would block bootstrap until
+        # the startup timeout fires.
+        return hass.async_create_background_task(coro, name="matter_ble_proxy")
+
     return MatterBleProxy(
         ws_url=ws_url,
         scan_source=HaBluetoothScanSource(hass),
         device_resolver=HaBluetoothDeviceResolver(hass),
-        task_factory=hass.async_create_task,
+        task_factory=_background_task_factory,
     )
