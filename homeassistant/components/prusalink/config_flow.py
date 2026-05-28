@@ -20,6 +20,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUEST_TIMEOUT = 5
+
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -66,21 +68,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     )
 
     try:
-        async with asyncio.timeout(5):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             version = await api.get_version()
 
     except (TimeoutError, HTTPError, InvalidURL) as err:
-        _LOGGER.error("Could not connect to PrusaLink: %s", err)
+        _LOGGER.debug("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
     ensure_printer_is_supported(version)
 
     try:
-        async with asyncio.timeout(5):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             info = await api.get_info()
 
     except (TimeoutError, HTTPError, InvalidURL) as err:
-        _LOGGER.error("Could not connect to PrusaLink: %s", err)
+        _LOGGER.debug("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 
     return {
