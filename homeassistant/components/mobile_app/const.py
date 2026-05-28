@@ -9,7 +9,7 @@ DOMAIN = "mobile_app"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 2
-STORAGE_SAVE_DELAY = 10
+STORAGE_SAVE_DELAY_SECONDS = 10
 
 # A Live Activity can be active for up to eight hours unless its app or a person ends it before this limit. https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities#Understand-constraints
 LIVE_ACTIVITY_TOKEN_TTL_SECONDS = 8 * 3600
@@ -48,12 +48,11 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
+ATTR_EXPIRES_AT = "expires_at"
+ATTR_TOKEN = "token"
 ATTR_TAG = "tag"
 
-# When a notification with this message arrives with a tag matching a stored
-# Live Activity token, end the activity remotely instead of letting it fall
-# through to a regular clear_notification banner.
-LIVE_ACTIVITY_CLEAR_MESSAGE = "clear_notification"
+CLEAR_NOTIFICATION = "clear_notification"
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"

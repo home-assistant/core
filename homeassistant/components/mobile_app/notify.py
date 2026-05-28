@@ -2,10 +2,11 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
+from enum import StrEnum
 from functools import partial
 from http import HTTPStatus
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from aiohttp import ClientError, ClientSession
 
@@ -37,6 +38,7 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_EXPIRES_AT,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
     ATTR_OS_VERSION,
@@ -48,13 +50,14 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     ATTR_TAG,
+    ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
+    CLEAR_NOTIFICATION,
     DATA_CONFIG_ENTRIES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
-    LIVE_ACTIVITY_CLEAR_MESSAGE,
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
@@ -63,7 +66,13 @@ from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
-type LiveActivityEvent = Literal["start", "update", "end"]
+
+class LiveActivityEvent(StrEnum):
+    """ActivityKit lifecycle action the relay should apply to a Live Activity push."""
+
+    START = "start"
+    UPDATE = "update"
+    END = "end"
 
 
 async def async_setup_entry(
@@ -256,24 +265,25 @@ class MobileAppNotificationService(BaseNotificationService):
         )
         stored = device_tokens.get(tag)
         stored_token_valid = (
-            stored is not None and stored["expires_at"] > dt_util.utcnow().timestamp()
+            stored is not None
+            and stored[ATTR_EXPIRES_AT] > dt_util.utcnow().timestamp()
         )
 
         # clear_notification ends a known activity; if no token is stored for
         # the tag, fall through to the normal clear_notification path.
-        if data.get(ATTR_MESSAGE) == LIVE_ACTIVITY_CLEAR_MESSAGE:
+        if data.get(ATTR_MESSAGE) == CLEAR_NOTIFICATION:
             if stored_token_valid:
-                return stored["token"], "end"
+                return stored[ATTR_TOKEN], LiveActivityEvent.END
             return None
 
         if not notification_data.get(ATTR_LIVE_UPDATE):
             return None
 
         if stored_token_valid:
-            return stored["token"], "update"
+            return stored[ATTR_TOKEN], LiveActivityEvent.UPDATE
 
         if push_to_start := entry.data[ATTR_APP_DATA].get(ATTR_LIVE_ACTIVITY_TOKEN):
-            return push_to_start, "start"
+            return push_to_start, LiveActivityEvent.START
 
         return None
 
@@ -321,7 +331,7 @@ def _translate_live_activity_payload(
     notification_data = {**(data.get(ATTR_DATA) or {}), "event": event}
     new_data = {**data, ATTR_DATA: notification_data}
 
-    if event == "end":
+    if event == LiveActivityEvent.END:
         # clear_notification is a command string, not body text the user wants
         # to see briefly before dismissal — strip it so the relay doesn't copy
         # it into content_state.message.

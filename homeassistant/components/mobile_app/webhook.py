@@ -60,6 +60,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_EXPIRES_AT,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_PUSH_TOKEN,
@@ -76,6 +77,7 @@ from .const import (
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
     ATTR_SUPPORTS_ENCRYPTION,
+    ATTR_TOKEN,
     ATTR_TAG,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
@@ -103,7 +105,7 @@ from .const import (
     SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
-    STORAGE_SAVE_DELAY,
+    STORAGE_SAVE_DELAY_SECONDS,
 )
 from .device_tracker import LOCATION_UPDATE_SCHEMA
 from .helpers import (
@@ -801,11 +803,14 @@ async def webhook_update_live_activity_token(
     # Empty-before-add means no cleanup loop is running; start one.
     was_empty = not live_activity_tokens
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
-        "token": data[ATTR_PUSH_TOKEN],
-        "expires_at": dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
+        ATTR_TOKEN: data[ATTR_PUSH_TOKEN],
+        ATTR_EXPIRES_AT: dt_util.utcnow().timestamp() + LIVE_ACTIVITY_TOKEN_TTL_SECONDS,
     }
+    # Debounce disk writes: ActivityKit can hand a fresh per-tag token to the
+    # iOS app multiple times in quick succession (e.g. when several activities
+    # start back-to-back), and we don't need to fsync after each one.
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
-        partial(savable_state, hass), STORAGE_SAVE_DELAY
+        partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
     )
     if was_empty:
         async_schedule_next_cleanup(hass)
@@ -832,8 +837,18 @@ async def webhook_live_activity_dismissed(
         # Clean up the device key if no activities remain.
         if not live_activity_tokens[webhook_id]:
             del live_activity_tokens[webhook_id]
+        # Debounce disk writes: bulk dismissals (e.g. user clears all
+        # activities) hit this handler in quick succession.
         hass.data[DOMAIN][DATA_STORE].async_delay_save(
-            partial(savable_state, hass), STORAGE_SAVE_DELAY
+            partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
+        )
+    else:
+        # Typically means the token already expired via the cleanup loop or
+        # the activity predates this code shipping — both expected, not a bug.
+        _LOGGER.debug(
+            "Received live_activity_dismissed for tag %s but no tokens stored for webhook %s",
+            activity_tag,
+            webhook_id,
         )
 
     return empty_okay_response()

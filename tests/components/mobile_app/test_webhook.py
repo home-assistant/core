@@ -1500,6 +1500,57 @@ async def test_webhook_live_activity_token_schedules_cleanup(
     assert tokens == {}
 
 
+async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test cleanup reschedules itself when some tokens remain after a sweep."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    # First token at t=0, expires at t=TTL.
+    await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {"tag": "first", "push_token": "a" * 64},
+        },
+    )
+
+    # Advance halfway through TTL, then store a second token. Its expiry is
+    # TTL/2 later than the first's, so the initial cleanup sweep should remove
+    # only the first and reschedule itself for the second's expiry.
+    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS // 2))
+    await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {"tag": "second", "push_token": "b" * 64},
+        },
+    )
+
+    tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert set(tokens[webhook_id]) == {"first", "second"}
+
+    # Fire just past the first token's expiry. The originally scheduled sweep
+    # runs, removes the first token, and reschedules itself for the second.
+    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS // 2 + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert set(tokens[webhook_id]) == {"second"}
+
+    # Fire past the second token's expiry. The rescheduled sweep should run
+    # and remove the second token, draining the store.
+    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_TOKEN_TTL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert webhook_id not in tokens
+
+
 async def test_webhook_live_activity_dismissed(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],

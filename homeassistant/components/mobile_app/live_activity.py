@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_LIVE_ACTIVITY_TOKENS, DATA_STORE, DOMAIN
+from .const import ATTR_EXPIRES_AT, DATA_LIVE_ACTIVITY_TOKENS, DATA_STORE, DOMAIN
 from .helpers import savable_state
 
 
@@ -24,7 +24,7 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     earliest_expires_at = min(
         (
-            token["expires_at"]
+            token[ATTR_EXPIRES_AT]
             for device_tokens in tokens.values()
             for token in device_tokens.values()
         ),
@@ -42,7 +42,14 @@ def async_schedule_next_cleanup(hass: HomeAssistant) -> None:
 
 
 async def async_cleanup_expired_tokens(hass: HomeAssistant) -> None:
-    """Sweep expired tokens, keep the loop alive if any remain, save changes."""
+    """Remove expired tokens and reschedule the next sweep at the earliest expiry.
+
+    Runs as a one-shot callback scheduled by ``async_schedule_next_cleanup``. After
+    sweeping, if any tokens remain it calls ``async_schedule_next_cleanup`` again to
+    queue the next sweep — this self-rescheduling chain is what "the loop" refers to.
+    When tokens are empty no further sweep is scheduled; the chain restarts the next
+    time the webhook stores a token into an empty store.
+    """
     now = dt_util.utcnow().timestamp()
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
     changed = False
@@ -50,7 +57,7 @@ async def async_cleanup_expired_tokens(hass: HomeAssistant) -> None:
     for webhook_id in list(tokens):
         device_tokens = tokens[webhook_id]
         for tag, data in list(device_tokens.items()):
-            if data["expires_at"] <= now:
+            if data[ATTR_EXPIRES_AT] <= now:
                 del device_tokens[tag]
                 changed = True
         if not device_tokens:
