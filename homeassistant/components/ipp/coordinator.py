@@ -108,16 +108,13 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPData]):
         parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
 
         for attr in PAGE_COUNT_INT_ATTRIBUTES:
-            value = parsed.get(attr)
-            if isinstance(value, int):
+            if (value := parsed.get(attr)) is not None:
                 page_counts[attr] = value
 
         for attr in PAGE_COUNT_COLLECTION_ATTRIBUTES:
-            collection = parsed.get(attr)
-            if not isinstance(collection, dict):
-                continue
-            for sub_key, sub_value in collection.items():
-                if isinstance(sub_value, int):
-                    page_counts[f"{attr}/{sub_key}"] = sub_value
+            if isinstance(collection := parsed.get(attr), dict):
+                for sub_key, sub_value in collection.items():
+                    if sub_value is not None:
+                        page_counts[f"{attr}/{sub_key}"] = sub_value
 
         return page_counts
