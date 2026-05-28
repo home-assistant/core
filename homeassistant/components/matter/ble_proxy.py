@@ -104,7 +104,6 @@ def _to_advertisement_data(
 
 def create_matter_ble_proxy(hass: HomeAssistant, ws_url: str) -> MatterBleProxy:
     """Return a `MatterBleProxy` wired into Home Assistant's bluetooth component."""
-
     return MatterBleProxy(
         ws_url=ws_url,
         scan_source=HaBluetoothScanSource(hass),
