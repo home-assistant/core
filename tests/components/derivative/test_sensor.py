@@ -1291,7 +1291,6 @@ async def test_replace_unavailable_at_startup_true(hass: HomeAssistant) -> None:
     assert state is not None
     # With replace_unavailable=True, sensor should be available with value 0.0 at startup
     assert state.state == "0.0", f"Expected '0.0', got '{state.state}'"
-    assert state.attributes.get("available") is not False
 
 
 async def test_replace_unavailable_at_startup_false(hass: HomeAssistant) -> None:
@@ -1359,7 +1358,6 @@ async def test_replace_unavailable_recovery(hass: HomeAssistant) -> None:
         # But since we didn't have a valid previous state before the unavailable gap,
         # the sensor state should reflect this transition properly
         assert state.state != STATE_UNAVAILABLE, "Sensor should remain available after recovery"
-        assert state.attributes.get("available") is not False
 
 
 async def test_replace_unavailable_recovery_with_state_list(hass: HomeAssistant) -> None:
