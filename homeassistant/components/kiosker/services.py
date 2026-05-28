@@ -14,11 +14,15 @@ from kiosker import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    selector,
+)
 
 from .const import (
     ATTR_BACKGROUND,
@@ -28,7 +32,6 @@ from .const import (
     ATTR_DISMISSIBLE,
     ATTR_EXPIRE,
     ATTR_FOREGROUND,
-    ATTR_ICON,
     ATTR_SOUND,
     ATTR_TEXT,
     ATTR_URL,
@@ -37,33 +40,33 @@ from .const import (
 )
 from .coordinator import KioskerDataUpdateCoordinator
 
-_RGB_COLOR = vol.All(
-    list,
-    vol.Length(min=3, max=3),
-    [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
-)
-
 NAVIGATE_URL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): vol.Any(str, [str]),
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_URL): str,
     }
 )
 
 SET_BLACKOUT_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): vol.Any(str, [str]),
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
         vol.Optional(ATTR_TEXT): str,
-        vol.Optional(ATTR_BACKGROUND, default=[0, 0, 0]): _RGB_COLOR,
-        vol.Optional(ATTR_FOREGROUND, default=[255, 255, 255]): _RGB_COLOR,
+        vol.Optional(ATTR_BACKGROUND, default=[0, 0, 0]): selector.ColorRGBSelector(),
+        vol.Optional(
+            ATTR_FOREGROUND, default=[255, 255, 255]
+        ): selector.ColorRGBSelector(),
         vol.Optional(ATTR_ICON): str,
         vol.Optional(ATTR_EXPIRE, default=60): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100000)
         ),
         vol.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
-        vol.Optional(ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]): _RGB_COLOR,
-        vol.Optional(ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]): _RGB_COLOR,
+        vol.Optional(
+            ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]
+        ): selector.ColorRGBSelector(),
+        vol.Optional(
+            ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]
+        ): selector.ColorRGBSelector(),
         vol.Optional(ATTR_BUTTON_TEXT): str,
         vol.Optional(ATTR_SOUND): str,
     }
@@ -99,40 +102,23 @@ def handle_kiosker_api_errors(
     return wrapper
 
 
-async def _collect_coordinators(
+async def _get_coordinator(
     call: ServiceCall,
-) -> list[KioskerDataUpdateCoordinator]:
-    """Collect coordinators for the targeted devices."""
+) -> KioskerDataUpdateCoordinator:
+    """Get the coordinator for the targeted device."""
     registry = dr.async_get(call.hass)
-    device_ids: set[str] = set()
+    device_id: str = call.data[ATTR_DEVICE_ID]
+    device = registry.async_get(device_id)
 
-    if ATTR_DEVICE_ID in call.data:
-        direct_ids = call.data[ATTR_DEVICE_ID]
-        if not isinstance(direct_ids, list):
-            direct_ids = [direct_ids]
-        device_ids.update(direct_ids)
+    if device:
+        for entry_id in device.config_entries:
+            entry = call.hass.config_entries.async_get_entry(entry_id)
+            if entry and entry.domain == DOMAIN:
+                if entry.state != ConfigEntryState.LOADED:
+                    raise HomeAssistantError(f"{entry.title} is not loaded")
+                return entry.runtime_data
 
-    if not device_ids:
-        raise HomeAssistantError("No devices targeted")
-
-    config_entries: dict[str, ConfigEntry] = {}
-    for device_id in device_ids:
-        device = registry.async_get(device_id)
-        if device:
-            for entry_id in device.config_entries:
-                entry = call.hass.config_entries.async_get_entry(entry_id)
-                if entry and entry.domain == DOMAIN:
-                    config_entries[entry.entry_id] = entry
-
-    if not config_entries:
-        raise HomeAssistantError(f"No {DOMAIN} devices found in targeted selection")
-
-    coordinators: list[KioskerDataUpdateCoordinator] = []
-    for config_entry in config_entries.values():
-        if config_entry.state != ConfigEntryState.LOADED:
-            raise HomeAssistantError(f"{config_entry.title} is not loaded")
-        coordinators.append(config_entry.runtime_data)
-    return coordinators
+    raise ServiceValidationError(f"No {DOMAIN} devices found in targeted selection")
 
 
 def _rgb_to_hex(rgb: list[int]) -> str:
@@ -143,10 +129,10 @@ def _rgb_to_hex(rgb: list[int]) -> str:
 @handle_kiosker_api_errors
 async def navigate_url(call: ServiceCall) -> None:
     """Navigate to a URL on the Kiosker device."""
-    for coordinator in await _collect_coordinators(call):
-        await call.hass.async_add_executor_job(
-            coordinator.api.navigate_url, call.data[ATTR_URL]
-        )
+    coordinator = await _get_coordinator(call)
+    await call.hass.async_add_executor_job(
+        coordinator.api.navigate_url, call.data[ATTR_URL]
+    )
 
 
 @handle_kiosker_api_errors
@@ -166,19 +152,17 @@ async def set_blackout(call: ServiceCall) -> None:
         sound=call.data.get(ATTR_SOUND),
     )
 
-    for coordinator in await _collect_coordinators(call):
-        await call.hass.async_add_executor_job(coordinator.api.blackout_set, blackout)
-        await coordinator.async_request_refresh()
+    coordinator = await _get_coordinator(call)
+    await call.hass.async_add_executor_job(coordinator.api.blackout_set, blackout)
+    await coordinator.async_request_refresh()
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Kiosker integration."""
-    if not hass.services.has_service(DOMAIN, "navigate_url"):
-        hass.services.async_register(
-            DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
-        )
-    if not hass.services.has_service(DOMAIN, "set_blackout"):
-        hass.services.async_register(
-            DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
-        )
+    hass.services.async_register(
+        DOMAIN, "navigate_url", navigate_url, schema=NAVIGATE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "set_blackout", set_blackout, schema=SET_BLACKOUT_SCHEMA
+    )

@@ -16,16 +16,15 @@ from homeassistant.components.kiosker.const import (
     ATTR_DISMISSIBLE,
     ATTR_EXPIRE,
     ATTR_FOREGROUND,
-    ATTR_ICON,
     ATTR_SOUND,
     ATTR_TEXT,
     ATTR_URL,
     ATTR_VISIBLE,
     DOMAIN,
 )
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -194,43 +193,13 @@ async def test_schema_rejects_invalid_input(
     mock_kiosker_api.blackout_set.assert_not_called()
 
 
-async def test_no_duplicate_calls_for_shared_config_entry(
-    hass: HomeAssistant,
-    mock_kiosker_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that two device IDs sharing one config entry produce a single API call."""
-    await _setup(hass, mock_kiosker_api, mock_config_entry)
-
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
-    assert device is not None
-
-    second_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "second-device-id")},
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "navigate_url",
-        {
-            ATTR_DEVICE_ID: [device.id, second_device.id],
-            ATTR_URL: "https://example.com",
-        },
-        blocking=True,
-    )
-
-    mock_kiosker_api.navigate_url.assert_called_once()
-
-
 async def test_service_non_kiosker_device(
     hass: HomeAssistant,
     mock_kiosker_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test services raise HomeAssistantError when targeting a non-kiosker device."""
+    """Test services raise ServiceValidationError when targeting a non-kiosker device."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
     other_config_entry = MockConfigEntry(domain="other_domain")
@@ -240,7 +209,7 @@ async def test_service_non_kiosker_device(
         identifiers={("other_domain", "other_device")},
     )
 
-    with pytest.raises(HomeAssistantError, match=f"No {DOMAIN} devices"):
+    with pytest.raises(ServiceValidationError, match=f"No {DOMAIN} devices"):
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",
