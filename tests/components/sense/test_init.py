@@ -94,3 +94,30 @@ async def test_setup_get_monitor_data_retry_exceptions(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        SenseAPITimeoutException(),
+        TimeoutError(),
+        SenseAPIException("connect error"),
+        socket.gaierror(),
+        SenseWebsocketException("ws error"),
+        SenseAPIException(),
+    ],
+)
+async def test_setup_get_realtime_retry_exceptions(
+    hass: HomeAssistant,
+    mock_sense: MagicMock,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test timeout and connect exceptions from update_realtime result in a retryable entry."""
+    mock_sense.update_realtime.side_effect = exception
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
