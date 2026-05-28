@@ -150,7 +150,7 @@ async def test_form_mfa_exceptions(
     error: str,
 ) -> None:
     """Test we handle all MFA validation exceptions and can recover."""
-    mock_flow_sense.return_value.authenticate.side_effect = SenseMFARequiredException
+    mock_flow_sense.return_value.authenticate.side_effect = SenseMFARequiredException()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
