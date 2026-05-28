@@ -188,7 +188,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._monitoring = False
                 if self.device_type != "NDB":
                     self._attr_motion_detection_enabled = False
-                self._attr_is_streaming = False
             elif event_type == EVENT_TYPE_CONNECTION:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning on and marking as available",
@@ -256,6 +255,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
+
+        # Not all Netatmo cameras support streaming, but all support on/off.
+
         supported_features = CameraEntityFeature.ON_OFF
         if self.device_type != "NDB":
             supported_features |= CameraEntityFeature.STREAM
@@ -278,7 +280,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        # Return early if camera is already off or unavailable (None)
+        # Return early if camera is already off or unavailable (None).
         if self._monitoring is not True:
             return
         try:
@@ -298,7 +300,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        # Return early if camera is already on or unavailable (None)
+        # Return early if camera is already on or unavailable (None).
         if self._monitoring is not False:
             return
         try:
@@ -318,7 +320,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def stream_source(self) -> str | None:
         """Return the stream source."""
-        # Return empty if camera not capable to provide a live stream,
+        # Return empty if camera not capable to provide a live stream.
         if not self.available or not self._monitoring:
             return None
 
@@ -356,8 +358,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
         )
-
-        self.async_write_ha_state()
 
     def process_events(self, event_list: list[NaEvent]) -> dict:
         """Add meta data to events."""

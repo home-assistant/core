@@ -864,7 +864,10 @@ async def test_camera_image_with_attribute_change(
     polling_delta = timedelta(seconds=30)
 
     def attribute_modifier(payload):
-        """This function will be called by common.py during ANY homestatus call."""
+        """Mutate the homestatus payload before it is returned by the fake post request."""
+        # Used via the ``msg_callback`` hook to simulate backend changes to camera
+        # attributes such as monitoring state, power status, and server timestamp.
+
         nonlocal camera_monitoring, camera_alim_status, camera_timestamp
 
         if camera_timestamp is not None:
