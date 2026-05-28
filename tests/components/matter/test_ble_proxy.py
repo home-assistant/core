@@ -69,8 +69,14 @@ def test_create_matter_ble_proxy_wires_ha_backends(hass: HomeAssistant) -> None:
     assert kwargs["ws_url"] == "ws://localhost:5580/ble"
     assert isinstance(kwargs["scan_source"], HaBluetoothScanSource)
     assert isinstance(kwargs["device_resolver"], HaBluetoothDeviceResolver)
-    assert kwargs["task_factory"] == hass.async_create_task
     assert result is proxy_cls.return_value
+
+    coro = MagicMock()
+    with patch.object(hass, "async_create_background_task") as bg_task:
+        task = kwargs["task_factory"](coro)
+
+    bg_task.assert_called_once_with(coro, name="matter_ble_proxy")
+    assert task is bg_task.return_value
 
 
 async def test_scan_source_start_registers_passive_callback(
