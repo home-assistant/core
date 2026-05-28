@@ -25,6 +25,9 @@ from .const import (
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityAttribute,
+    SelectService,
+    SelectServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +53,10 @@ __all__ = [
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
     "SelectEntity",
+    "SelectEntityAttribute",
     "SelectEntityDescription",
+    "SelectService",
+    "SelectServiceArgument",
 ]
 
 # mypy: disallow-any-generics
@@ -64,32 +70,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SELECT_FIRST,
+        SelectService.SELECT_FIRST,
         None,
         SelectEntity.async_first.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_LAST,
+        SelectService.SELECT_LAST,
         None,
         SelectEntity.async_last.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        SelectService.SELECT_NEXT,
+        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
         SelectEntity.async_next.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
+        SelectService.SELECT_OPTION,
+        {vol.Required(SelectServiceArgument.OPTION.value): cv.string},
         SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        SelectService.SELECT_PREVIOUS,
+        {vol.Optional(SelectServiceArgument.CYCLE.value, default=True): bool},
         SelectEntity.async_previous.__name__,
     )
 
@@ -121,7 +127,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset({SelectEntityAttribute.OPTIONS})
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
@@ -132,7 +138,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_OPTIONS: self.options,
+            SelectEntityAttribute.OPTIONS: self.options,
         }
 
     @property
