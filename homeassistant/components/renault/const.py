@@ -6,6 +6,7 @@ DOMAIN = "renault"
 
 CONF_LOCALE = "locale"
 CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
+CONF_LOGIN_TOKEN = "login_token"
 
 # normal number of allowed calls per hour to the API
 # for a single car and the 7 coordinator, it is a scan every 7mn
