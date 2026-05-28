@@ -48,9 +48,16 @@ class UptimeRobotDataUpdateCoordinator(
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_exception",
+            ) from exception
         except UptimeRobotException as exception:
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_generic_exception",
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
+            ) from exception
 
         if TYPE_CHECKING:
             assert isinstance(response.data, list)
