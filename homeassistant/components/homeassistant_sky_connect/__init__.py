@@ -1,7 +1,5 @@
 """The Home Assistant SkyConnect integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import os.path
@@ -9,13 +7,20 @@ import os.path
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    async_create_multi_pan_migration_issue,
+    async_delete_multi_pan_migration_issue,
+)
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    multi_pan_addon_using_device,
+)
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
     async_register_port_event_callback,
     async_scan_serial_ports,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -94,6 +99,16 @@ async def async_setup_entry(
             translation_key="device_disconnected",
         )
 
+    try:
+        uses_multi_pan = await multi_pan_addon_using_device(hass, device_path)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+
+    if uses_multi_pan:
+        async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
+    else:
+        async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)
+
     # Create and store the firmware update coordinator in runtime_data
     session = async_get_clientsession(hass)
     coordinator = FirmwareUpdateCoordinator(
@@ -125,11 +140,17 @@ async def async_migrate_entry(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
-            # Add-on startup with type service get started before Core, always (e.g. the
-            # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
-            # so we can't safely probe here. Instead, we must make an educated guess!
+            # Add-on startup with type service get started before
+            # Core, always (e.g. the Multi-Protocol add-on).
+            # Probing the firmware would interfere with the
+            # add-on, so we can't safely probe here. Instead,
+            # we must make an educated guess!
             firmware_guess = await guess_firmware_info(hass, config_entry.data[DEVICE])
 
             new_data = {**config_entry.data}
@@ -195,6 +216,50 @@ async def async_migrate_entry(
                     version=1,
                     minor_version=4,
                 )
+
+        if config_entry.minor_version == 4:
+            serial_number = config_entry.data[SERIAL_NUMBER]
+
+            # Installations ended up with multiple config entries per physical adapter
+            # in 2026.5.0 and 2026.5.1. We need to delete the older entry.
+            duplicates = [
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get(SERIAL_NUMBER) == serial_number
+            ]
+            canonical = max(
+                duplicates,
+                key=lambda e: (
+                    e.source != SOURCE_IGNORE,
+                    e.disabled_by is None,
+                    e.minor_version,
+                    e.modified_at,
+                    e.entry_id,
+                ),
+            )
+
+            if canonical.entry_id != config_entry.entry_id:
+                # The canonical entry's migration will remove this duplicate.
+                return False
+
+            for duplicate in duplicates:
+                if duplicate.entry_id == config_entry.entry_id:
+                    continue
+                _LOGGER.warning(
+                    "Removing duplicate config entry %s for serial %s in favor of %s",
+                    duplicate.entry_id,
+                    serial_number,
+                    config_entry.entry_id,
+                )
+                await hass.config_entries.async_remove(duplicate.entry_id)
+
+            # Replace the synthetic unique ID with the USB serial number
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=serial_number,
+                version=1,
+                minor_version=5,
+            )
 
         _LOGGER.debug(
             "Migration to version %s.%s successful",

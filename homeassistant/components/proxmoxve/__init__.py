@@ -1,7 +1,5 @@
 """Support for Proxmox VE."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -11,6 +9,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
@@ -33,7 +32,6 @@ from .const import (
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     CONF_VMS,
@@ -199,7 +197,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
 
         realm = data[CONF_REALM].lower()
 
-        # If the realm is one of the base providers, set the provider to match the realm.
+        # If the realm is one of the base providers,
+        # set the provider to match the realm.
         data[CONF_AUTH_METHOD] = realm if realm in (AUTH_PAM, AUTH_PVE) else AUTH_OTHER
         data.setdefault(CONF_TOKEN, False)
 

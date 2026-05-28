@@ -1,7 +1,5 @@
 """Support for Toon switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -62,6 +60,7 @@ class ToonSwitch(ToonEntity, SwitchEntity):
 class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon program switch."""
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Toon program switch."""
@@ -69,6 +68,7 @@ class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
             ACTIVE_STATE_AWAY, PROGRAM_STATE_OFF
         )
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Toon program switch."""
@@ -80,6 +80,7 @@ class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
 class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon Holiday mode switch."""
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Toon holiday mode switch."""
@@ -87,6 +88,7 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
             ACTIVE_STATE_AWAY, PROGRAM_STATE_ON
         )
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Toon holiday mode switch."""

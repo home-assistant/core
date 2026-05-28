@@ -1,7 +1,6 @@
 """Tests for the mfa setup flow."""
 
 from homeassistant.auth import auth_manager_from_config
-from homeassistant.components.auth import mfa_setup_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -52,7 +51,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 10,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "mfa_module_id": "invalid_module",
         }
     )
@@ -65,7 +64,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 11,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "mfa_module_id": "example_module",
         }
     )
@@ -84,7 +83,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 12,
-            "type": mfa_setup_flow.WS_TYPE_SETUP_MFA,
+            "type": "auth/setup_mfa",
             "flow_id": flow["flow_id"],
             "user_input": {"pin": "654321"},
         }
@@ -103,7 +102,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 13,
-            "type": mfa_setup_flow.WS_TYPE_DEPOSE_MFA,
+            "type": "auth/depose_mfa",
             "mfa_module_id": "invalid_id",
         }
     )
@@ -116,7 +115,7 @@ async def test_ws_setup_depose_mfa(
     await client.send_json(
         {
             "id": 14,
-            "type": mfa_setup_flow.WS_TYPE_DEPOSE_MFA,
+            "type": "auth/depose_mfa",
             "mfa_module_id": "example_module",
         }
     )

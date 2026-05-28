@@ -1,7 +1,5 @@
 """Support for Sinch notifications."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -91,6 +89,7 @@ class SinchNotificationService(BaseNotificationService):
                 _LOGGER.debug(
                     'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
                 )
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ErrorResponseException as ex:
             _LOGGER.error(
                 "Caught ErrorResponseException. Response code: %s (%s)",

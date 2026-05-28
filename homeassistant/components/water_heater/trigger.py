@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityNumericalStateTriggerWithUnitBase,
@@ -28,14 +28,16 @@ from .const import DOMAIN
 
 CONF_OPERATION_MODE = "operation_mode"
 
-_OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
-    {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_OPERATION_MODE): vol.All(
-                cv.ensure_list, vol.Length(min=1), [str]
-            ),
-        },
-    }
+_OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
+                vol.Required(CONF_OPERATION_MODE): vol.All(
+                    cv.ensure_list, vol.Length(min=1), [str]
+                ),
+            },
+        }
+    )
 )
 
 
@@ -60,6 +62,13 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    def _should_include(self, state: State) -> bool:
+        """Skip water heater entities that do not expose a target temperature."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_TEMPERATURE) is not None
+        )
+
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
         # Water heater entities convert temperatures to the system unit via show_temp
@@ -83,7 +92,9 @@ class WaterHeaterTargetTemperatureCrossedThresholdTrigger(
 TRIGGERS: dict[str, type[Trigger]] = {
     "operation_mode_changed": WaterHeaterOperationModeChangedTrigger,
     "target_temperature_changed": WaterHeaterTargetTemperatureChangedTrigger,
-    "target_temperature_crossed_threshold": WaterHeaterTargetTemperatureCrossedThresholdTrigger,
+    "target_temperature_crossed_threshold": (
+        WaterHeaterTargetTemperatureCrossedThresholdTrigger
+    ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_origin_state_trigger(DOMAIN, from_state=STATE_OFF),
 }

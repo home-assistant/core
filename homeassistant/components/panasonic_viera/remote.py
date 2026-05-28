@@ -1,12 +1,10 @@
 """Remote control support for Panasonic Viera TV."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -14,7 +12,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PanasonicVieraConfigEntry, Remote
 from .const import (
     ATTR_DEVICE_INFO,
-    ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
     ATTR_UDN,
     DEFAULT_MANUFACTURER,

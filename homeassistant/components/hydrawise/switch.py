@@ -1,7 +1,5 @@
 """Support for Hydrawise cloud switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -21,6 +19,8 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_WATERING_TIME
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)

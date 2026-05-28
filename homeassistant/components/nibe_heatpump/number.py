@@ -1,7 +1,5 @@
 """The Nibe Heat Pump numbers."""
 
-from __future__ import annotations
-
 from nibe.coil import Coil, CoilData
 
 from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity, NumberMode

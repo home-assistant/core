@@ -7,11 +7,13 @@ import pytest
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon import schemas
 from renault_api.renault_account import RenaultAccount
+from renault_api.renault_session import RenaultSession
 
 from homeassistant import config_entries
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
+    CONF_LOGIN_TOKEN,
     DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -19,16 +21,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
 
+from .const import MOCK_LOGIN_TOKEN
+
 from tests.common import MockConfigEntry, async_load_fixture, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+def _mock_login(session: RenaultSession, login_id: str, password: str) -> None:
+    """Restore a login token like a successful Gigya login would."""
+    session.set_login_token(MOCK_LOGIN_TOKEN)
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (Exception, "unknown"),
-        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (Exception(), "unknown"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
         (
             InvalidCredentialsException(403042, "invalid loginID or password"),
             "invalid_credentials",
@@ -38,7 +47,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_single_account(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    exception: Exception | type[Exception],
+    exception: Exception,
     error: str,
 ) -> None:
     """Test we get the form."""
@@ -82,9 +91,10 @@ async def test_config_flow_single_account(
 
     # Account list single
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
         patch(
-            "renault_api.renault_account.RenaultAccount.account_id", return_value="123"
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
         ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
@@ -104,6 +114,7 @@ async def test_config_flow_single_account(
     assert result["title"] == "account_id_1"
     assert result["data"][CONF_USERNAME] == "email@test.com"
     assert result["data"][CONF_PASSWORD] == "test"
+    assert result["data"][CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert result["data"][CONF_LOCALE] == "fr_FR"
     assert result["context"]["unique_id"] == "account_id_1"
@@ -123,7 +134,11 @@ async def test_config_flow_no_account(
 
     # Account list empty
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
+        ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
             return_value=[],
@@ -168,7 +183,11 @@ async def test_config_flow_multiple_accounts(
 
     # Multiple accounts
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
+        ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
             return_value=[renault_account_1, renault_account_2],
@@ -199,6 +218,7 @@ async def test_config_flow_multiple_accounts(
     assert result["title"] == "account_id_2"
     assert result["data"][CONF_USERNAME] == "email@test.com"
     assert result["data"][CONF_PASSWORD] == "test"
+    assert result["data"][CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_2"
     assert result["data"][CONF_LOCALE] == "fr_FR"
     assert result["context"]["unique_id"] == "account_id_2"
@@ -227,7 +247,11 @@ async def test_config_flow_duplicate(
         await async_load_fixture(hass, "renault/vehicle_zoe_50.json")
     )
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
+        ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
             return_value=[renault_account],
@@ -284,7 +308,11 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     assert result2["errors"] == {"base": "invalid_credentials"}
 
     # Valid credentials
-    with patch("renault_api.renault_session.RenaultSession.login"):
+    with patch(
+        "renault_api.renault_session.RenaultSession.login",
+        autospec=True,
+        side_effect=_mock_login,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "any"},
@@ -295,6 +323,7 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert config_entry.data[CONF_USERNAME] == "email@test.com"
     assert config_entry.data[CONF_PASSWORD] == "any"
+    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
 
 
 async def test_reconfigure(
@@ -323,9 +352,10 @@ async def test_reconfigure(
 
     # Account list single
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
         patch(
-            "renault_api.renault_account.RenaultAccount.account_id", return_value="123"
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
         ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
@@ -346,6 +376,7 @@ async def test_reconfigure(
 
     assert config_entry.data[CONF_USERNAME] == "email2@test.com"
     assert config_entry.data[CONF_PASSWORD] == "test2"
+    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
     assert config_entry.data[CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert config_entry.data[CONF_LOCALE] == "fr_FR"
 
@@ -378,9 +409,10 @@ async def test_reconfigure_mismatch(
 
     # Account list single
     with (
-        patch("renault_api.renault_session.RenaultSession.login"),
         patch(
-            "renault_api.renault_account.RenaultAccount.account_id", return_value="1234"
+            "renault_api.renault_session.RenaultSession.login",
+            autospec=True,
+            side_effect=_mock_login,
         ),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
@@ -402,6 +434,7 @@ async def test_reconfigure_mismatch(
     # Unchanged values
     assert config_entry.data[CONF_USERNAME] == "email@test.com"
     assert config_entry.data[CONF_PASSWORD] == "test"
+    assert config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
     assert config_entry.data[CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert config_entry.data[CONF_LOCALE] == "fr_FR"
 

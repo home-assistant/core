@@ -1,7 +1,5 @@
 """Support for Toon thermostat."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from toonapi import (
@@ -104,12 +102,14 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

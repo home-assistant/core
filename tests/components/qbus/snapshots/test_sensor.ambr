@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.energie-entry]
+# name: test_sensor[sensor.garage_energie-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.energie',
+    'entity_id': 'sensor.garage_energie',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,26 +38,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_84',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unit_of_measurement': 'Wh',
   })
 # ---
-# name: test_sensor[sensor.energie-state]
+# name: test_sensor[sensor.garage_energie-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energie',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'unit_of_measurement': 'Wh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.energie',
+    'entity_id': 'sensor.garage_energie',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.gas-entry]
+# name: test_sensor[sensor.garage_gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gas',
+    'entity_id': 'sensor.garage_gas',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,26 +96,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_85',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    'unit_of_measurement': 'm³/h',
   })
 # ---
-# name: test_sensor[sensor.gas-state]
+# name: test_sensor[sensor.garage_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Gas',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      'unit_of_measurement': 'm³/h',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gas',
+    'entity_id': 'sensor.garage_gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.gas_flow-entry]
+# name: test_sensor[sensor.garage_gas_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gas_flow',
+    'entity_id': 'sensor.garage_gas_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -154,26 +154,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_86',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    'unit_of_measurement': 'm³/h',
   })
 # ---
-# name: test_sensor[sensor.gas_flow-state]
+# name: test_sensor[sensor.garage_gas_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Gas Flow',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      'unit_of_measurement': 'm³/h',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gas_flow',
+    'entity_id': 'sensor.garage_gas_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.lichtsterkte_tuin-entry]
+# name: test_sensor[sensor.garage_stroom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lichtsterkte_tuin',
+    'entity_id': 'sensor.garage_stroom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -203,7 +203,7 @@
         'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'qbus',
@@ -211,27 +211,27 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'ctd_000001_88',
-    'unit_of_measurement': 'lx',
+    'unique_id': 'ctd_000001_83',
+    'unit_of_measurement': 'A',
   })
 # ---
-# name: test_sensor[sensor.lichtsterkte_tuin-state]
+# name: test_sensor[sensor.garage_stroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'illuminance',
-      'friendly_name': 'Lichtsterkte Tuin',
+      'device_class': 'current',
+      'friendly_name': 'Stroom',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lichtsterkte_tuin',
+    'entity_id': 'sensor.garage_stroom',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.living_th_temperature-entry]
+# name: test_sensor[sensor.kitchen_vochtigheid_keuken-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -247,7 +247,62 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.living_th_temperature',
+    'entity_id': 'sensor.kitchen_vochtigheid_keuken',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'qbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ctd_000001_94-1',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.kitchen_vochtigheid_keuken-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Vochtigheid Keuken',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_vochtigheid_keuken',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.living_living_th_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.living_living_th_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -273,7 +328,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.living_th_temperature-state]
+# name: test_sensor[sensor.living_living_th_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -282,14 +337,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_th_temperature',
+    'entity_id': 'sensor.living_living_th_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.luchtdruk-entry]
+# name: test_sensor[sensor.living_vochtigheid_living-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -305,7 +360,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.luchtdruk',
+    'entity_id': 'sensor.living_vochtigheid_living',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -319,7 +374,7 @@
         'suggested_display_precision': 2,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'qbus',
@@ -327,78 +382,20 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'ctd_000001_81',
-    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    'unique_id': 'ctd_000001_87',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.luchtdruk-state]
+# name: test_sensor[sensor.living_vochtigheid_living-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'Luchtdruk',
+      'device_class': 'humidity',
+      'friendly_name': 'Vochtigheid Living',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.luchtdruk',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.luchtkwaliteit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.luchtkwaliteit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'qbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'ctd_000001_82',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_sensor[sensor.luchtkwaliteit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Luchtkwaliteit',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.luchtkwaliteit',
+    'entity_id': 'sensor.living_vochtigheid_living',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -463,7 +460,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.regenput-entry]
+# name: test_sensor[sensor.tuin_lichtsterkte_tuin-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -479,7 +476,181 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.regenput',
+    'entity_id': 'sensor.tuin_lichtsterkte_tuin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'qbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ctd_000001_88',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_sensor[sensor.tuin_lichtsterkte_tuin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Lichtsterkte Tuin',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tuin_lichtsterkte_tuin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.tuin_luchtdruk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tuin_luchtdruk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'qbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ctd_000001_81',
+    'unit_of_measurement': 'mbar',
+  })
+# ---
+# name: test_sensor[sensor.tuin_luchtdruk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Luchtdruk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'mbar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tuin_luchtdruk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.tuin_luchtkwaliteit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tuin_luchtkwaliteit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'qbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ctd_000001_82',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensor[sensor.tuin_luchtkwaliteit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'carbon_dioxide',
+      'friendly_name': 'Luchtkwaliteit',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tuin_luchtkwaliteit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.tuin_regenput-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tuin_regenput',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -502,26 +673,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ctd_000001_40',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    'unit_of_measurement': 'm',
   })
 # ---
-# name: test_sensor[sensor.regenput-state]
+# name: test_sensor[sensor.tuin_regenput-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Regenput',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+      'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.regenput',
+    'entity_id': 'sensor.tuin_regenput',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.stroom-entry]
+# name: test_sensor[sensor.tuin_weersensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -537,178 +708,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.stroom',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'qbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'ctd_000001_83',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensor[sensor.stroom-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Stroom',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.stroom',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.vochtigheid_keuken-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.vochtigheid_keuken',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'qbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'ctd_000001_94-1',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.vochtigheid_keuken-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Vochtigheid Keuken',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.vochtigheid_keuken',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.vochtigheid_living-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.vochtigheid_living',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'qbus',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'ctd_000001_87',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.vochtigheid_living-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Vochtigheid Living',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.vochtigheid_living',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.weersensor-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.weersensor',
+    'entity_id': 'sensor.tuin_weersensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -734,7 +734,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.weersensor-state]
+# name: test_sensor[sensor.tuin_weersensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -743,14 +743,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor',
+    'entity_id': 'sensor.tuin_weersensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_daylight-entry]
+# name: test_sensor[sensor.tuin_weersensor_daylight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -766,7 +766,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_daylight',
+    'entity_id': 'sensor.tuin_weersensor_daylight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -789,7 +789,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[sensor.weersensor_daylight-state]
+# name: test_sensor[sensor.tuin_weersensor_daylight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -798,14 +798,14 @@
       'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_daylight',
+    'entity_id': 'sensor.tuin_weersensor_daylight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance-entry]
+# name: test_sensor[sensor.tuin_weersensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -821,7 +821,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_illuminance',
+    'entity_id': 'sensor.tuin_weersensor_illuminance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -844,7 +844,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance-state]
+# name: test_sensor[sensor.tuin_weersensor_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -853,14 +853,14 @@
       'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_illuminance',
+    'entity_id': 'sensor.tuin_weersensor_illuminance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_east-entry]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_east-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -876,7 +876,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_illuminance_east',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_east',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -899,7 +899,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_east-state]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_east-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -908,14 +908,14 @@
       'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_illuminance_east',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_east',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_south-entry]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_south-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -931,7 +931,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_illuminance_south',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_south',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -954,7 +954,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_south-state]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_south-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -963,14 +963,14 @@
       'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_illuminance_south',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_south',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_west-entry]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_west-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -986,7 +986,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_illuminance_west',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_west',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1009,7 +1009,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[sensor.weersensor_illuminance_west-state]
+# name: test_sensor[sensor.tuin_weersensor_illuminance_west-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -1018,14 +1018,14 @@
       'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_illuminance_west',
+    'entity_id': 'sensor.tuin_weersensor_illuminance_west',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.weersensor_wind_speed-entry]
+# name: test_sensor[sensor.tuin_weersensor_wind_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1041,7 +1041,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.weersensor_wind_speed',
+    'entity_id': 'sensor.tuin_weersensor_wind_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1067,7 +1067,7 @@
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor[sensor.weersensor_wind_speed-state]
+# name: test_sensor[sensor.tuin_weersensor_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'wind_speed',
@@ -1076,7 +1076,7 @@
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.weersensor_wind_speed',
+    'entity_id': 'sensor.tuin_weersensor_wind_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,7 +1,5 @@
 """Support to send and receive Telegram messages."""
 
-from __future__ import annotations
-
 import logging
 from typing import Protocol, cast
 
@@ -650,7 +648,8 @@ def _deprecate_timeout(service: ServiceCall) -> None:
     if ATTR_TIMEOUT not in service.data:
         return
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -787,7 +786,8 @@ def _build_targets(
             )
 
         if not chat_ids and not targets:
-            # no targets from service data, so we default to the first allowed chat IDs of the config entry
+            # no targets from service data, so we default
+            # to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
             if not subentries:
                 raise ServiceValidationError(
@@ -859,7 +859,8 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
         else service.data[ATTR_TARGET]
     )
 
-    # default: service was called using frontend such as developer tools or automation editor
+    # default: service was called using frontend such as
+    # developer tools or automation editor
     service_call_origin = "call_service"
 
     origin = service.context.origin_event
@@ -885,9 +886,23 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
             "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
             "action_origin": service_call_origin,
             "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": f"```yaml\naction: {service.service}\ndata:\n  target:  # to be updated\n    - 1234567890\n...\n```",
-            "example_new_entity_id": f"```yaml\naction: {service.service}\ndata:\n  entity_id:\n    - notify.telegram_bot_1234567890_1234567890  # replace with your notify entity\n...\n```",
-            "example_new_chat_id": f"```yaml\naction: {service.service}\ndata:\n  chat_id:\n    - 1234567890  # replace with your chat_id\n...\n```",
+            "example_old": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  target:  # to be updated\n"
+                "    - 1234567890\n...\n```"
+            ),
+            "example_new_entity_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  entity_id:\n"
+                "    - notify.telegram_bot_1234567890_1234567890"
+                "  # replace with your notify entity\n...\n```"
+            ),
+            "example_new_chat_id": (
+                f"```yaml\naction: {service.service}\ndata:\n"
+                "  chat_id:\n"
+                "    - 1234567890"
+                "  # replace with your chat_id\n...\n```"
+            ),
         },
         learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
@@ -901,6 +916,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
         raise ConfigEntryNotReady from err

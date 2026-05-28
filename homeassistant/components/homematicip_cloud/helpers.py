@@ -1,7 +1,5 @@
 """Helper functions for Homematicip Cloud Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import json
@@ -46,7 +44,9 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
                 json.dumps(result),
             )
             raise HomeAssistantError(
-                f"Error while execute function {func.__name__}: {result.get('errorCode')}. See log for more information."
+                f"Error while execute function {func.__name__}:"
+                f" {result.get('errorCode')}."
+                " See log for more information."
             )
 
     return inner
