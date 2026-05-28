@@ -205,7 +205,7 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Controls - 14314 / ZW4002
+    # GE/Jasco - In-Wall Smart Fan Controls - 14287 / 14314 / ZW4002
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
@@ -220,16 +220,30 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Controls - 14287 / 55258 / ZW4002
+    # GE/Jasco - In-Wall Smart Fan Controls - 55258 / ZW4002 (firmware >= 5.51)
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3337},
         product_type={0x4944},
+        firmware_version_range=FirmwareVersionRange(min="5.51"),
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(
             FanValueMapping(speeds=[(1, 33), (34, 66), (67, 99)]),
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Controls - 55258 / ZW4002 (firmware <= 5.50)
+    ZWaveDiscoverySchema(
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x0063},
+        product_id={0x3337},
+        product_type={0x4944},
+        firmware_version_range=FirmwareVersionRange(max="5.50"),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
         ),
     ),
     # GE/Jasco - In-Wall Smart Fan Controls - 58446 / ZWA4013
