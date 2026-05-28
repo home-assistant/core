@@ -54,10 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     try:
         await homee.get_access_token()
     except HomeeConnectionFailedException as exc:
-        raise ConfigEntryNotReady(f"Connection to Homee failed: {exc.reason}") from exc
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from exc
     except HomeeAuthFailedException as exc:
         raise ConfigEntryAuthFailed(
-            f"Authentication to Homee failed: {exc.reason}"
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
         ) from exc
 
     hass.loop.create_task(homee.run())

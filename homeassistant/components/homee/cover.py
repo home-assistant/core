@@ -30,6 +30,11 @@ OPEN_CLOSE_ATTRIBUTES = [
     AttributeType.UP_DOWN,
 ]
 POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
+COVER_DEVICE_PROFILES = {
+    NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
+    NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
+    NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
+}
 IS_CLOSED_ATTRIBUTES = [
     AttributeType.OPEN_CLOSE,
     AttributeType.UP_DOWN,
@@ -75,12 +80,6 @@ def get_cover_features(
 
 def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     """Determine the device class a homee node based on the node profile."""
-    COVER_DEVICE_PROFILES = {
-        NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
-        NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
-        NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
-    }
-
     return COVER_DEVICE_PROFILES.get(node.profile)
 
 

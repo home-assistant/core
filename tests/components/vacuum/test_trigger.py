@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
@@ -107,7 +107,7 @@ async def test_vacuum_trigger_options_validation(
         ),
     ],
 )
-async def test_vacuum_state_trigger_behavior_any(
+async def test_vacuum_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
@@ -118,7 +118,7 @@ async def test_vacuum_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test vacuum state trigger fires when any vacuum changes to a specific state."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_vacuums,
         trigger_target_config=trigger_target_config,
@@ -223,7 +223,7 @@ async def test_vacuum_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_vacuum_state_trigger_behavior_last(
+async def test_vacuum_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_vacuums: dict[str, list[str]],
     trigger_target_config: dict,
@@ -234,7 +234,7 @@ async def test_vacuum_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test vacuum state trigger fires when last vacuum changes to a specific state."""
-    await assert_trigger_behavior_last(
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_vacuums,
         trigger_target_config=trigger_target_config,
