@@ -2088,6 +2088,36 @@ async def test_receive_backup_path_traversal(
     assert resp.status == 400
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "/absolute/path",
+        "../parent",
+        "with/slash",
+    ],
+)
+async def test_receive_backup_rejects_unsafe_inner_name(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    name: str,
+) -> None:
+    """Test receive backup rejects an inner name that would escape the backup dir."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    backup = replace(TEST_BACKUP_ABC123, name=name)
+    with patch(
+        "homeassistant.components.backup.manager.read_backup",
+        return_value=backup,
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 400
+
+
 async def test_receive_backup_busy_manager(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
