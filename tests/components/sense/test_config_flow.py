@@ -138,6 +138,7 @@ async def test_form_mfa_required(
     [
         (SenseAuthenticationException(), "invalid_auth"),
         (SenseAPITimeoutException(), "cannot_connect"),
+        (SenseAPIException(), "cannot_connect"),
         (Exception("Unknown exception"), "unknown"),
     ],
 )
