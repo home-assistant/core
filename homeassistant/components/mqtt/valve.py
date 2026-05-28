@@ -271,7 +271,7 @@ class MqttValve(MqttEntity, ValveEntity):
                     self._range, float(position_payload)
                 )
             except ValueError:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Ignoring non numeric payload '%s' received on topic '%s'",
                     position_payload,
                     msg.topic,
