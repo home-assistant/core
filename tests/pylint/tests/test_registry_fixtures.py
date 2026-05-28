@@ -153,6 +153,17 @@ from homeassistant.helpers import entity_registry as er
 
 
 async def test_something(hass) -> None:
+    registry = er.async_get(hass)
+""",
+            "tests.helpers.test_entity_registry",
+            id="tests_helpers_excluded",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers import entity_registry as er
+
+
+async def test_something(hass) -> None:
     something = other.async_get(hass)
 """,
             "tests.components.test_integration.test_init",

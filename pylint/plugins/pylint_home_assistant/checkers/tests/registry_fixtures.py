@@ -116,6 +116,10 @@ class RegistryFixturesChecker(BaseChecker):
         self._alias_map = {}
         if not is_test_module(node.name):
             return
+        # ``tests.helpers`` tests cover the registry helpers themselves and
+        # are expected to call ``async_get`` directly.
+        if node.name == "tests.helpers" or node.name.startswith("tests.helpers."):
+            return
         # Exempt ``conftest.py`` files entirely — registry fixtures live there.
         if node.file and Path(node.file).name == "conftest.py":
             return
