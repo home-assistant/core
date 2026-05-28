@@ -53,7 +53,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
 
     _attr_event_types = [EVENT_TYPE]
     coordinator: AmazonDevicesCoordinator
-    _last_seen_timestamp: int | None = None
+    _last_seen_timestamp: int = 0  #  January 1, 1970 at 12:00:00 AM
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -71,7 +71,8 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
             )
             return
 
-        if vocal_record.timestamp == self._last_seen_timestamp:
+        if vocal_record.timestamp <= self._last_seen_timestamp:
+            # Discard old events that have already been processed
             return
 
         self._last_seen_timestamp = vocal_record.timestamp
