@@ -59,7 +59,6 @@ FLOWS = {
         "amberelectric",
         "ambient_network",
         "ambient_station",
-        "analytics",
         "analytics_insights",
         "android_ip_webcam",
         "androidtv",

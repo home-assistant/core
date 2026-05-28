@@ -626,16 +626,6 @@ class Analytics:
                 err,
             )
 
-    @callback
-    def cancel_scheduled(self) -> None:
-        """Cancel all scheduled analytics tasks."""
-        if self._basic_scheduled is not None:
-            self._basic_scheduled()
-            self._basic_scheduled = None
-        if self._snapshot_scheduled is not None:
-            self._snapshot_scheduled()
-            self._snapshot_scheduled = None
-
     async def async_schedule(self) -> None:
         """Schedule analytics."""
         if not self.onboarded:
