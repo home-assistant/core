@@ -208,7 +208,7 @@ class LeftZoneTrigger(ZoneTriggerBase):
 _OCCUPANCY_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_id,
+            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
