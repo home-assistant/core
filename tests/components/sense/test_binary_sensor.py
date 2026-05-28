@@ -12,7 +12,6 @@ from homeassistant.components.sense.const import ACTIVE_UPDATE_RATE, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import setup_platform
@@ -111,7 +110,7 @@ async def test_migrate_unique_ids(
     assert old_entry.unique_id == DEVICE_1_ID
 
     with patch("homeassistant.components.sense.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await async_setup_component(hass, DOMAIN, {})
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     migrated = entity_registry.async_get(old_entry.entity_id)
