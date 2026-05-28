@@ -1702,6 +1702,42 @@ async def test_setup_raise_not_ready(
     assert entry.reason is None
 
 
+@pytest.mark.parametrize(
+    ("try_count", "expected_wait"),
+    [
+        pytest.param(0, 5, id="first_retry"),
+        pytest.param(4, 80, id="fifth_retry"),
+        pytest.param(7, 600, id="capped_at_10_min"),
+        pytest.param(20, 600, id="stays_capped"),
+    ],
+)
+async def test_setup_not_ready_exponential_backoff(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    try_count: int,
+    expected_wait: int,
+) -> None:
+    """Test setup retry uses exponential backoff capped at 10 minutes."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    # Simulate previous failed attempts
+    object.__setattr__(entry, "_tries", try_count)
+
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+        await manager.async_setup(entry.entry_id)
+
+    assert len(mock_call.mock_calls) == 1
+    _hass, wait_time, _setup = mock_call.mock_calls[0][1]
+    # The jitter adds 0.05–0.5 seconds
+    assert expected_wait <= wait_time <= expected_wait + 0.5
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_raise_not_ready_from_exception(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
