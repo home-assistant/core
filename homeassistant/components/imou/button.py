@@ -45,7 +45,7 @@ async def async_setup_entry(
     """Set up Imou button entities."""
     coordinator = entry.runtime_data
 
-    def _async_add_buttons(new_devices: list[ImouHaDevice]) -> None:
+    def _add_buttons(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
             ImouButton(coordinator, button_type, device)
@@ -53,8 +53,8 @@ async def async_setup_entry(
             if imou_device_identifier(device) in device_keys
         )
 
-    coordinator.new_device_callbacks.append(_async_add_buttons)
-    _async_add_buttons(coordinator.devices)
+    coordinator.new_device_callbacks.append(_add_buttons)
+    _add_buttons(coordinator.devices)
 
 
 class ImouButton(ImouEntity, ButtonEntity):
@@ -84,4 +84,4 @@ class ImouButton(ImouEntity, ButtonEntity):
                 duration,
             )
         except ImouException as e:
-            raise HomeAssistantError(e.message) from e
+            raise HomeAssistantError(str(e)) from e

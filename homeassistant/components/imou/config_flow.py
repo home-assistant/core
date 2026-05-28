@@ -50,7 +50,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             except ConnectFailedException, RequestFailedException:
                 errors["base"] = "cannot_connect"
             except ImouException as exception:
-                _LOGGER.debug("Imou error during config flow: %s", exception.message)
+                _LOGGER.debug("Imou error during config flow: %s", exception)
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
